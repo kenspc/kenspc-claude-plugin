@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, iterative task implementation with multi-angle review, and project guide generation.
+A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, task implementation with automatic code review, and project guide generation. Review phases use subagent architecture — serial review agents for plan/guide documents, parallel MapReduce review agents for code.
 
 ## Marketplace Structure
 
@@ -16,15 +16,31 @@ A Claude Code plugin marketplace containing structured development workflow plug
 ```
 plugins/kenspc/
 ├── .claude-plugin/plugin.json   # Plugin metadata (name, version, author)
-├── commands/                    # Slash commands (/kenspc-plan, etc.)
+├── commands/                    # Slash commands
+│   ├── kenspc-plan.md
+│   ├── kenspc-guide.md
+│   ├── kenspc-task-implement.md
+│   └── kenspc-task-review.md
 ├── hooks/
 │   ├── hooks.json               # Hook event configuration
 │   └── scripts/                 # Hook scripts (use ${CLAUDE_PLUGIN_ROOT})
 ├── references/                  # Example documents for user onboarding
 ├── skills/
-│   └── <skill-name>/
-│       ├── SKILL.md             # Skill definition
-│       └── prompts/             # Prompt templates
+│   ├── generate-plan/
+│   │   ├── SKILL.md
+│   │   └── prompts/review.md
+│   ├── generate-guide/
+│   │   ├── SKILL.md
+│   │   └── prompts/review.md
+│   ├── task-implement/
+│   │   ├── SKILL.md
+│   │   └── prompts/implement.md
+│   └── task-review/
+│       ├── SKILL.md
+│       └── prompts/
+│           ├── review-angle-{1..5}.md   # 5 parallel review agent prompts
+│           ├── fix.md                   # Fix agent prompt
+│           └── regression.md            # Regression verification prompt
 ├── README.md
 └── LICENSE
 ```
@@ -61,19 +77,28 @@ All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — n
 - Use `{{VARIABLE_NAME}}` placeholders (SCREAMING_SNAKE_CASE)
 - Store in the skill's `prompts/` subdirectory
 
-### Ralph-loop Integration (when applicable)
+### Subagent Review Architecture
 
-Not all skills use ralph-loop — it is optional. When a skill does integrate with ralph-loop:
-- State file: `.claude/ralph-loop.local.md` with YAML frontmatter (`active`, `iteration`, `max_iterations`, `completion_promise`)
-- Progress tracking: `.claude/<skill-name>-progress.tmp` (e.g., `plan-review-progress.tmp`, `task-review-progress.tmp`, `guide-review-progress.tmp`)
-- Completion promises use `SCREAMING_SNAKE_CASE` (e.g., `PLAN_REVIEW_COMPLETE`)
-- **State files (`.claude/ralph-loop.local.md`, `.claude/*.tmp`) must be deleted after use** — never leave stale state files behind after a skill finishes or errors out
+Skills use subagents (the Agent tool) for automated review. Two models exist:
+
+**Serial review (generate-plan, generate-guide):**
+- Single subagent reviews all angles in order (each angle builds on fixes from the previous one)
+- Suited for document review where angles have cascade dependencies
+- Subagent returns a structured change log (what changed, why)
+
+**Parallel MapReduce review (task-review):**
+- Phase 1: 5 read-only review subagents dispatched in parallel (one per angle)
+- Phase 2: Fix subagent receives all 5 reports, deduplicates, applies fixes, produces accountability list
+- Phase 3: Regression subagent cross-checks reports against accountability list, verifies fixes, runs build/test/lint
+- Suited for code review where angles are orthogonal (edge cases, bugs, test coverage, etc.)
+
+No shared state files — each subagent runs in its own context, eliminating concurrency conflicts.
 
 ### Writing Rules for Skill Content
 
 - Bilingual output: progress messages and summaries in English + Chinese (华语); code stays in its original language
 - Use ULTRATHINK before major analysis or generation steps
-- Multi-angle review: 4–6 review angles per review cycle
+- Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 
 ## Git
