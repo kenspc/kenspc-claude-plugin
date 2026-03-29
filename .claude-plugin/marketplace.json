@@ -1,0 +1,11 @@
+{
+  "name": "kenspc-claude-plugin",
+  "description": "Kenspc's Claude Code plugin marketplace",
+  "plugins": [
+    {
+      "name": "kenspc",
+      "description": "Structured development workflows for Claude Code",
+      "source": "./plugins/kenspc"
+    }
+  ]
+}
