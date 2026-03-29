@@ -1,6 +1,9 @@
 {
   "name": "kenspc-claude-plugin",
-  "description": "Kenspc's Claude Code plugin marketplace",
+  "owner": {
+    "name": "Sim Poh Chuan",
+    "email": "kenspc@hotmail.com"
+  },
   "plugins": [
     {
       "name": "kenspc",
