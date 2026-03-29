@@ -1,6 +1,6 @@
 # Example Task Document
 
-This file shows the expected format for task documents used with the `task-loop` skill.
+This file shows the expected format for task documents used with the `task-implement` skill.
 Copy this template and adapt it to your project.
 
 ---

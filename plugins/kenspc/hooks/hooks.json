@@ -1,5 +1,5 @@
 {
-  "description": "kenspc plugin hooks: dependency checks and stale state cleanup",
+  "description": "kenspc plugin hooks: session startup checks",
   "hooks": {
     "SessionStart": [
       {
