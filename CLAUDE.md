@@ -11,6 +11,24 @@ A Claude Code plugin marketplace containing structured development workflow plug
 - Root `.claude-plugin/marketplace.json` — plugin registry pointing to plugin directories
 - Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`skills/`, `commands/`, `hooks/`, `references/`)
 
+### Plugin Directory Layout
+
+```
+plugins/kenspc/
+├── .claude-plugin/plugin.json   # Plugin metadata (name, version, author)
+├── commands/                    # Slash commands (/kenspc-plan, etc.)
+├── hooks/
+│   ├── hooks.json               # Hook event configuration
+│   └── scripts/                 # Hook scripts (use ${CLAUDE_PLUGIN_ROOT})
+├── references/                  # Example documents for user onboarding
+├── skills/
+│   └── <skill-name>/
+│       ├── SKILL.md             # Skill definition
+│       └── prompts/             # Prompt templates
+├── README.md
+└── LICENSE
+```
+
 ## Skill Development Conventions
 
 ### File Structure
@@ -22,6 +40,21 @@ Each skill lives in `skills/<skill-name>/` with:
 Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`).
 
 Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
+
+References live in `references/` as example documents (task format, plan format) to help users get started.
+
+### Portable Paths
+
+All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — never hardcode absolute paths.
+
+### SKILL.md Frontmatter Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Skill identifier (kebab-case) |
+| `description` | Yes | When to activate (1-2 sentences, concise) |
+| `version` | Yes | Semver (e.g., `1.0.0`) |
+| `argument-hint` | Recommended | Shown in UI as placeholder (e.g., `<project-path>`) |
 
 ### Prompt Templates
 
@@ -46,3 +79,24 @@ Not all skills use ralph-loop — it is optional. When a skill does integrate wi
 ## Git
 
 Conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
+
+## Development Workflow
+
+### Test the plugin locally
+```bash
+claude --plugin-dir ./plugins/kenspc
+```
+
+Use `/reload-plugins` inside a session to pick up changes without restarting.
+
+### Validate plugin structure
+```bash
+# Check plugin.json is valid
+cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool
+
+# Check hooks.json is valid
+cat plugins/kenspc/hooks/hooks.json | python -m json.tool
+
+# Verify all SKILL.md files have required frontmatter
+grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
+```
