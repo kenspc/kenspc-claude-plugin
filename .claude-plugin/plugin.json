@@ -1,0 +1,11 @@
+{
+  "name": "kenspc",
+  "description": "Structured development workflows for Claude Code. Iterative task implementation with multi-angle review, project guide generation, and plan-before-code document generation with automated verification.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sim Poh Chuan",
+    "url": "https://github.com/kenspc"
+  },
+  "repository": "https://github.com/kenspc/kenspc-claude-plugin",
+  "license": "MIT"
+}
