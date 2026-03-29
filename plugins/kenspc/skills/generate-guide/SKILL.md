@@ -1,12 +1,9 @@
 ---
 name: generate-guide
 description: >
-  Generate a comprehensive project setup and deployment guide for any project or sub-project,
-  then automatically self-review the guide against the actual codebase using ralph-loop.
-  Use when the user asks to "generate guide", "write setup doc", "write guide", "项目指南",
-  "写文档指引", "setup instructions", or any request to create documentation for how to
-  configure, install, run, test, or deploy a project locally or in the cloud.
-  Requires the ralph-loop plugin to be installed for the self-review phase.
+  Generate a comprehensive, beginner-friendly project setup and deployment guide,
+  then automatically self-review it against the actual codebase using ralph-loop.
+version: 1.0.0
 argument-hint: <project-path> [custom instructions]
 ---
 
@@ -14,6 +11,13 @@ argument-hint: <project-path> [custom instructions]
 
 Create a comprehensive, beginner-friendly guide for a project or sub-project, then
 self-review it for accuracy. Two phases: generate, then review via ralph-loop.
+
+## Trigger Phrases
+
+Use this skill when the user says: "generate guide", "write setup doc", "write guide",
+"setup instructions", "项目指南", "写文档指引", "写个文档", "部署指南", or any request
+to create documentation for how to configure, install, run, test, or deploy a project
+locally or in the cloud.
 
 ## Prerequisites
 
@@ -123,9 +127,10 @@ Section 7 - Troubleshooting and FAQ:
 
 ### Writing Rules
 
-- Audience: A developer who is new to THIS project. Assume they are competent but have
-  never seen this codebase before. Explain project-specific decisions, not general
-  programming concepts.
+- Audience: A developer who is new to THIS project — possibly a junior developer or
+  someone unfamiliar with the tech stack. Explain not just what to do, but why each
+  step matters. Define project-specific jargon, acronyms, and conventions on first use.
+  When a step could go wrong, mention what the error looks like and how to fix it.
 - All commands must specify the working directory.
 - Include expected output or success indicators for each step.
 - Use relative paths from the project root.

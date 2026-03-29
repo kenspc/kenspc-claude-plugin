@@ -1,16 +1,32 @@
 ---
 name: task-loop
-description: Automated task implementation and code review using ralph-loop. Use this skill whenever the user wants to auto-implement tasks from a task document, or run a multi-angle code review against a task document. Triggers on phrases like "implement tasks", "auto-implement", "run task loop", "review my code against tasks", "ralph implement", "ralph review", or any request to iteratively implement or review code based on a task/feature document. Requires the ralph-loop plugin to be installed.
+description: >
+  Iteratively implement tasks from a task document or run multi-angle code review
+  against implemented code, powered by ralph-loop. Covers the implement-and-review
+  cycle for any task/feature document.
+version: 1.0.0
+argument-hint: <implement|review> <path-to-task-file>
 ---
 
 # Task Loop
 
 Automated implementation and review using ralph-loop.
 
+## Trigger Phrases
+
+Use this skill when the user says: "implement tasks", "auto-implement", "run task loop",
+"review my code against tasks", "ralph implement", "ralph review", "实现任务",
+"自动实现", "代码审查", "任务循环", "帮我实现", "逐个实现", or any request to
+iteratively implement or review code based on a task/feature document.
+
 ## Prerequisites
 
-- The ralph-loop plugin must be installed
+- The ralph-loop plugin must be installed (check with `/ralph-loop:help`)
 - A task document with clearly defined tasks and status markers
+
+If ralph-loop is not installed, inform the user:
+"This skill requires the ralph-loop plugin. Install it first, then retry."
+Do not proceed without ralph-loop.
 
 ## Usage
 
@@ -96,6 +112,6 @@ Iteratively implements incomplete tasks from the task document. Each task is bui
 Settings: max_iterations 15, completion_promise IMPL_COMPLETE
 
 ### review
-Multi-angle code review with progress tracking via .claude/review-progress.tmp. Covers 5 review angles plus a final regression pass. Progress file is deleted upon completion.
+Multi-angle code review with progress tracking via .claude/task-review-progress.tmp. Covers 5 review angles plus a final regression pass. Progress file is deleted upon completion.
 
 Settings: max_iterations 10, completion_promise REVIEW_COMPLETE

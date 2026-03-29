@@ -6,7 +6,7 @@ Small fixes: apply directly. Large structural changes spanning multiple files: r
 
 PREREQUISITES (execute each iteration as needed)
 1. Inspect key files in the project root to identify the tech stack, build/test/lint commands, and project conventions (prioritize CLAUDE.md).
-2. If .claude/review-progress.tmp does not exist, create it with this content:
+2. If .claude/task-review-progress.tmp does not exist, create it with this content:
    - [ ] 1. Requirements completeness
    - [ ] 2. Edge cases and error handling
    - [ ] 3. Code quality and project conventions
@@ -59,8 +59,8 @@ Note: code, code comments, commit messages, and technical identifiers remain in 
 
 COMPLETION
 When all items in the progress file are marked as passed:
-1. Delete .claude/review-progress.tmp
+1. Delete .claude/task-review-progress.tmp
 2. Output the bilingual summary then output <promise>REVIEW_COMPLETE</promise>
 
 If a problem cannot be fixed after 3 attempts (judge by git log), record the blocking reason in the progress file, skip it, and continue with other angles.
-If a git conflict or environment issue prevents continuing, delete .claude/review-progress.tmp and output <promise>REVIEW_COMPLETE</promise>.
+If a git conflict or environment issue prevents continuing, delete .claude/task-review-progress.tmp and output <promise>REVIEW_COMPLETE</promise>.

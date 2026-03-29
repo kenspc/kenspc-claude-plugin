@@ -1,13 +1,10 @@
 ---
 name: generate-plan
 description: >
-  Generate a comprehensive plan document through structured discussion, self-challenge,
-  and automated review. Use when the user asks to "generate plan", "write a plan",
-  "implementation plan", "写计划书", "规划", "plan this", "help me plan", "draft a plan",
-  "project plan", "technical plan", "architecture plan", or any request to plan, design,
-  or strategize before implementation. Also trigger when the user says phrases like
-  "let's plan", "I need a plan for", "before we start coding", "计划一下", or
-  "帮我规划". Requires the ralph-loop plugin for the automated verify phase.
+  Generate a comprehensive plan document through collaborative discussion,
+  self-challenge, and automated ralph-loop verification. Three phases:
+  Discover, Plan, Verify.
+version: 1.0.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 
@@ -15,6 +12,14 @@ argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 
 Create a comprehensive plan document through collaborative discussion, iterative
 self-challenge, and automated verification. Three phases: Discover, Plan, Verify.
+
+## Trigger Phrases
+
+Use this skill when the user says: "generate plan", "write a plan", "implementation plan",
+"plan this", "help me plan", "draft a plan", "project plan", "technical plan",
+"architecture plan", "let's plan", "I need a plan for", "before we start coding",
+"写计划书", "规划", "计划一下", "帮我规划", or any request to plan, design, or
+strategize before implementation.
 
 ## Prerequisites
 
