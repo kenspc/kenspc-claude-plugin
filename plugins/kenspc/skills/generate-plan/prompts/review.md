@@ -4,21 +4,17 @@ Project path: {{PROJECT_PATH}}
 OBJECTIVE
 Review the generated plan to ensure it is feasible, complete, consistent, and clear
 enough to be directly executed. Fix any issues found directly in the plan document.
+Track every change you make so you can report them at the end.
 
-PREREQUISITES (execute each iteration as needed)
+PREREQUISITES
 1. Read the plan document in full.
 2. If {{PROJECT_PATH}} is not "N/A":
    - Read CLAUDE.md for project conventions, tech stack, and constraints.
    - Scan the project structure and key config files (package.json, *.csproj,
      docker-compose.yml, .env.example, etc.).
-3. If .claude/plan-review-progress.tmp does not exist, create it with this content:
-   - [ ] 1. Feasibility & Execution Order
-   - [ ] 2. Completeness
-   - [ ] 3. Consistency
-   - [ ] 4. Clarity & Actionability
 
 REVIEW ANGLES
-Read the progress file and pick the next incomplete angle:
+Review all four angles in order (each angle builds on fixes from the previous one):
 
 1. Feasibility & Execution Order
    - Is every proposed technology, library, and tool actually available and suitable
@@ -70,35 +66,41 @@ FIXING RULES
 - After fixing, re-read the changed sections to confirm the fix is correct and does
   not introduce new issues.
 
-EXECUTION FLOW PER ITERATION
-1. Read the progress file to determine the current angle.
-2. ULTRATHINK to thoroughly review the current angle.
-3. No issues found → mark the angle as passed in the progress file, then continue
-   to the next angle if iterations remain.
-4. Objective issue found → fix it directly in the plan document.
-5. Subjective concern found → add it to the Risks or Open Questions section.
-6. After all fixes for this angle, re-read affected sections to verify correctness.
-7. Mark the angle complete in the progress file.
+EXECUTION FLOW
+For each angle, in order from 1 to 4:
+1. ULTRATHINK to thoroughly review the current angle.
+2. No issues found → record the angle as passed.
+3. Objective issue found → fix it directly in the plan document. Record what you
+   changed and why (one line per change).
+4. Subjective concern found → add it to the Risks or Open Questions section.
+   Record what you noted and why.
+5. After all fixes for this angle, re-read affected sections to verify correctness.
+6. Proceed to the next angle (which will see the fixes you just made).
 
 OUTPUT LANGUAGE
-All summaries and progress messages must be bilingual (English + Chinese).
-When reporting on a review angle, use this format:
-  Angle N: [name] - PASSED (no issues) / 通过（无问题）
-  Angle N: [name] - FIXED [count] issues / 修复了 [count] 个问题
-  Angle N: [name] - NOTED [count] concerns / 记录了 [count] 个关注点
-When completing, output a final summary in this format:
-  Plan Review Summary / 计划书审查总结:
-  - Angles passed: N/4 / 通过角度：N/4
-  - Issues fixed: N / 修复问题：N
-  - Concerns noted: N / 记录关注点：N
-  - [list each angle with result in bilingual format]
-Note: the plan document itself remains in whatever language it was written in.
+All summaries must be bilingual (English + Chinese).
+The plan document itself remains in whatever language it was written in.
 
 COMPLETION
-When all items in the progress file are marked as passed:
-1. Delete .claude/plan-review-progress.tmp
-2. Output the bilingual summary then output <promise>PLAN_REVIEW_COMPLETE</promise>
+When all four angles have been reviewed, output a final summary in this format:
+
+---
+Plan Review Summary / 计划书审查总结
+
+Angles: [list each angle with PASSED or FIXED or NOTED status]
+  Angle 1: Feasibility & Execution Order - PASSED / 通过
+  Angle 2: Completeness - FIXED 2 issues / 修复了 2 个问题
+  ...
+
+Changes made / 修改内容:
+(List every change. Each entry must state WHAT was changed and WHY.)
+  - [Angle N] Changed X → Y. Reason: ... / 原因：...
+  - [Angle N] Added section Z. Reason: ... / 原因：...
+  - [Angle N] Noted concern about W in Open Questions. Reason: ... / 原因：...
+
+If no changes were made, state: No changes needed / 无需修改
+---
 
 If a problem cannot be resolved after 3 attempts within the same angle, record the
-issue in the plan's Open Questions section as a known gap, mark the angle as passed
-with a note, and continue with other angles.
+issue in the plan's Open Questions section as a known gap, note it in the summary,
+and continue with other angles.

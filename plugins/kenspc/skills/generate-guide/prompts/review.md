@@ -4,20 +4,16 @@ Project path: {{PROJECT_PATH}}
 OBJECTIVE
 Review the generated guide against the actual project to ensure it is accurate, complete,
 executable, and consistent. Fix any issues found directly in the guide document.
+Track every change you make so you can report them at the end.
 
-PREREQUISITES (execute each iteration as needed)
+PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint commands,
    and project conventions (prioritize CLAUDE.md).
-2. If .claude/guide-review-progress.tmp does not exist, create it with this content:
-   - [ ] 1. Accuracy
-   - [ ] 2. Completeness
-   - [ ] 3. Executability
-   - [ ] 4. Consistency
-3. Read the guide document in full.
-4. Scan the project structure and key config files.
+2. Read the guide document in full.
+3. Scan the project structure and key config files.
 
 REVIEW ANGLES
-Read the progress file and pick the next incomplete angle:
+Review all four angles in order (each angle builds on fixes from the previous one):
 
 1. Accuracy
    - Verify every command in the guide actually works by checking it against package.json
@@ -53,35 +49,43 @@ Read the progress file and pick the next incomplete angle:
    - Check internal consistency within the guide itself (e.g., prerequisites section says
      Node 20 but a later command assumes Node 22).
 
-EXECUTION FLOW PER ITERATION
-1. Read the progress file to determine the current angle.
-2. Run "git log --oneline -5" to see what previous review iterations fixed.
-3. ULTRATHINK to thoroughly review the current angle.
-4. No issues found: mark the angle as passed in the progress file, then continue to the
-   next angle if iterations remain.
-5. Issue found: fix it directly in the guide document and git commit the fix.
-6. After fixing, re-read the changed sections to confirm the fix is correct.
-7. Actively look for blind spots that previous iterations may have missed.
+EXECUTION FLOW
+For each angle, in order from 1 to 4:
+1. ULTRATHINK to thoroughly review the current angle.
+2. No issues found → record the angle as passed.
+3. Issue found → fix it directly in the guide document and git commit the fix.
+   Record what you changed and why (one line per change).
+4. After fixing, re-read the changed sections to confirm the fix is correct.
+5. Proceed to the next angle (which will see the fixes you just made).
 
 OUTPUT LANGUAGE
-All summaries and progress messages must be bilingual (English + Chinese).
-When reporting on a review angle, use this format:
-  Angle N: [name] - PASSED (no issues) / 通过（无问题）
-  Angle N: [name] - FIXED [count] issues / 修复了 [count] 个问题
-When completing, output a final summary in this format:
-  Guide Review Summary / 指南审查总结:
-  - Angles passed: N/4 / 通过角度：N/4
-  - Issues fixed: N / 修复问题：N
-  - Issues unresolved: N / 未解决问题：N
-  - [list each angle with result in bilingual format]
-Note: the guide document itself remains in whatever language it was written in.
+All summaries must be bilingual (English + Chinese).
+The guide document itself remains in whatever language it was written in.
 
 COMPLETION
-When all items in the progress file are marked as passed:
-1. Delete .claude/guide-review-progress.tmp
-2. Output the bilingual summary then output <promise>GUIDE_REVIEW_COMPLETE</promise>
+When all four angles have been reviewed, output a final summary in this format:
 
-If a problem cannot be fixed after 3 attempts (judge by git log), record the issue in the
-guide's Troubleshooting section as a known gap, skip it, and continue with other angles.
-If a git conflict or environment issue prevents continuing, delete
-.claude/guide-review-progress.tmp and output <promise>GUIDE_REVIEW_COMPLETE</promise>.
+---
+Guide Review Summary / 指南审查总结
+
+Angles: [list each angle with PASSED or FIXED status]
+  Angle 1: Accuracy - PASSED / 通过
+  Angle 2: Completeness - FIXED 3 issues / 修复了 3 个问题
+  ...
+
+Changes made / 修改内容:
+(List every change. Each entry must state WHAT was changed, WHY, and the git commit.)
+  - [Angle N] Changed X → Y. Reason: ... Commit: abc1234 / 原因：...
+  - [Angle N] Added section Z. Reason: ... Commit: def5678 / 原因：...
+
+Unresolved gaps / 未解决的问题:
+(List any issues that could not be fixed, with explanation.)
+
+If no changes were made, state: No changes needed / 无需修改
+---
+
+If a problem cannot be fixed after 3 attempts, record the issue in the guide's
+Troubleshooting section as a known gap, note it in the summary, and continue with
+other angles.
+If a git conflict or environment issue prevents continuing, output the summary with
+whatever angles were completed and note the blocker.

@@ -2,7 +2,7 @@
 name: generate-guide
 description: >
   Generate a comprehensive, beginner-friendly project setup and deployment guide,
-  then automatically self-review it against the actual codebase using ralph-loop.
+  then automatically self-review it against the actual codebase via review agent.
 version: 1.0.0
 argument-hint: <project-path> [custom instructions]
 ---
@@ -10,7 +10,7 @@ argument-hint: <project-path> [custom instructions]
 # Generate Project Guide
 
 Create a comprehensive, beginner-friendly guide for a project or sub-project, then
-self-review it for accuracy. Two phases: generate, then review via ralph-loop.
+self-review it for accuracy. Two phases: generate, then review via review agent.
 
 ## Trigger Phrases
 
@@ -21,7 +21,6 @@ locally or in the cloud.
 
 ## Prerequisites
 
-- The ralph-loop plugin must be installed
 - A project with actual code to document
 
 ## Arguments
@@ -141,9 +140,9 @@ Section 7 - Troubleshooting and FAQ:
 - Custom instructions from $ARGUMENTS should be woven into the relevant sections,
   not appended as a separate section.
 
-## Phase 2: Self-Review via ralph-loop
+## Phase 2: Self-Review via review agent
 
-After the guide is written and saved, automatically launch a review cycle using ralph-loop.
+After the guide is written and saved, automatically launch a review cycle.
 Do not wait for user instruction.
 
 ### Step 1: Read the prompt template
@@ -156,40 +155,21 @@ Replace all occurrences of these placeholders in the template:
 - {{GUIDE_PATH}} with the actual path of the guide file that was just written
 - {{PROJECT_PATH}} with the target project path from $1
 
-### Step 3: Write the ralph-loop state file
-
-Create the directory .claude/ if it does not exist. Then write the file
-.claude/ralph-loop.local.md with the following structure:
-
-```
----
-active: true
-iteration: 0
-max_iterations: 8
-completion_promise: GUIDE_REVIEW_COMPLETE
----
-(rendered prompt content here)
-```
-
-The YAML frontmatter goes between the --- markers. The rendered prompt goes after the
-closing --- with no blank line.
-
-### Step 4: Confirm and begin
+### Step 3: Dispatch the review agent
 
 Tell the user:
-"Guide written. Starting self-review now."
+"Guide written to [path]. Dispatching review agent now. / 指南已写入 [path]。正在启动审查代理。"
 
-Then immediately begin working on the review prompt (read the guide, start verifying
-against the project). When you attempt to exit after completing a unit of work, the
-ralph-loop stop hook will intercept and re-feed the prompt automatically.
+Then dispatch a subagent using the Agent tool:
+- prompt: the rendered review prompt from Step 2
+- description: "Review guide document"
 
-### After Review Completes
+Do NOT write any state file. The subagent will execute the entire review
+(all four angles, in order) within its own context and return the summary.
 
-Inform the user:
+### Step 4: Present results
+
+When the subagent returns, present its summary to the user. The summary includes:
 - Which review angles passed cleanly
-- What was fixed during review (summarize the git commits)
+- Every change that was made, with the reason for each change (and associated git commits)
 - Any known gaps that could not be resolved
-
-### Cancellation
-
-The user can cancel the review with: /ralph-loop:cancel-ralph

@@ -2,7 +2,7 @@
 name: generate-plan
 description: >
   Generate a comprehensive plan document through collaborative discussion,
-  self-challenge, and automated ralph-loop verification. Three phases:
+  self-challenge, and automated verification via review agent. Three phases:
   Discover, Plan, Verify.
 version: 1.0.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
@@ -23,7 +23,6 @@ strategize before implementation.
 
 ## Prerequisites
 
-- The ralph-loop plugin must be installed for Phase 3 (Verify)
 - If verifying against a project, the project should have actual code or config files
 
 ## Arguments
@@ -143,14 +142,12 @@ ONLY when the user explicitly approves the plan (e.g., "write it", "save it",
 
 After writing, proceed to Phase 3.
 
-## Phase 3: Verify via ralph-loop
+## Phase 3: Verify via review agent
 
 Automatically launch a review cycle after the plan is written. Do not wait for
 user instruction.
 
-Skip this phase entirely if:
-- The ralph-loop plugin is not installed
-- The plan was not written to a file (discussion-only mode)
+Skip this phase entirely if the plan was not written to a file (discussion-only mode).
 
 ### Step 1: Read the prompt template
 
@@ -162,40 +159,21 @@ Replace all placeholders in the template:
 - {{PLAN_PATH}} — the actual path of the plan file that was just written
 - {{PROJECT_PATH}} — the project root path, or "N/A" if not in a project
 
-### Step 3: Write the ralph-loop state file
-
-Create the directory .claude/ if it does not exist. Then write the file
-.claude/ralph-loop.local.md with the following structure:
-
-```
----
-active: true
-iteration: 0
-max_iterations: 6
-completion_promise: PLAN_REVIEW_COMPLETE
----
-(rendered prompt content here)
-```
-
-The YAML frontmatter goes between the --- markers. The rendered prompt goes after the
-closing --- with no blank line.
-
-### Step 4: Confirm and begin
+### Step 3: Dispatch the review agent
 
 Tell the user:
-"Plan written to [path]. Starting automated review now."
+"Plan written to [path]. Dispatching review agent now. / 计划书已写入 [path]。正在启动审查代理。"
 
-Then immediately begin working on the review prompt. When you attempt to exit after
-completing a unit of work, the ralph-loop stop hook will intercept and re-feed the
-prompt automatically.
+Then dispatch a subagent using the Agent tool:
+- prompt: the rendered review prompt from Step 2
+- description: "Review plan document"
 
-### After Review Completes
+Do NOT write any state file. The subagent will execute the entire review
+(all four angles, in order) within its own context and return the summary.
 
-Inform the user:
+### Step 4: Present results
+
+When the subagent returns, present its summary to the user. The summary includes:
 - Which review angles passed cleanly
-- What was fixed during review (summarize changes)
-- Any issues recorded as open questions or known gaps
-
-### Cancellation
-
-The user can cancel the review with: /ralph-loop:cancel-ralph
+- Every change that was made, with the reason for each change
+- Any concerns noted in Open Questions
