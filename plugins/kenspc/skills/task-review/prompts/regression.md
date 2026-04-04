@@ -74,5 +74,10 @@ Regressions found / 发现的回归问题:
 Overall result / 总体结果:
   CLEAN — All issues handled, all checks pass / 全部通过
   or
-  HAS ISSUES — [summary of remaining problems] / 仍有问题
+  HAS ISSUES / 仍有问题:
+    For each remaining problem:
+    - Issue: [description and location]
+      Impact: [what functionality is affected, is the app still usable?]
+      Severity: HIGH | MEDIUM | LOW
+      Suggested action: [what the user should do about it]
 ---

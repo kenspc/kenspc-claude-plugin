@@ -3,7 +3,7 @@ name: generate-guide
 description: >
   Generate a comprehensive, beginner-friendly project setup and deployment guide,
   then automatically self-review it against the actual codebase via review agent.
-version: 1.0.0
+version: 1.1.0
 argument-hint: <project-path> [custom instructions]
 ---
 
@@ -14,10 +14,15 @@ self-review it for accuracy. Two phases: generate, then review via review agent.
 
 ## Trigger Phrases
 
-Use this skill when the user says: "generate guide", "write setup doc", "write guide",
-"setup instructions", "项目指南", "写文档指引", "写个文档", "部署指南", or any request
-to create documentation for how to configure, install, run, test, or deploy a project
-locally or in the cloud.
+Use this skill when the user explicitly asks to **create a guide document**, using phrases
+like: "generate guide", "write setup doc", "write guide", "setup instructions", "项目指南",
+"写文档指引", "写个文档", "部署指南", or invokes `/kenspc-guide` directly.
+
+**Do NOT trigger this skill** when the user:
+- Asks a quick question about setup or deployment (e.g., "how do I deploy this?",
+  "怎么部署？") — just answer directly
+- Wants to discuss or troubleshoot a specific configuration issue
+- References documentation without asking to generate a new one
 
 ## Prerequisites
 

@@ -11,7 +11,7 @@ Skills activate automatically when Claude Code detects a matching task context.
 | Skill | Description |
 |-------|-------------|
 | generate-plan | Three-phase plan document generation: collaborative discovery, drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). |
-| task-implement | Iterative task implementation from a task document. Each task is built, tested, committed, and marked complete. Automatically runs task-review on completion. |
+| task-implement | Automated batch task implementation from a task document. Confirms scope with user before starting. Each task is built, tested, committed, and marked complete. Automatically runs task-review on completion with a consolidated final report. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review recent changes. Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
 

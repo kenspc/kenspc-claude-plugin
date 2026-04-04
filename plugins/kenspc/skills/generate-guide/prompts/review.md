@@ -79,7 +79,8 @@ Changes made / 修改内容:
   - [Angle N] Added section Z. Reason: ... Commit: def5678 / 原因：...
 
 Unresolved gaps / 未解决的问题:
-(List any issues that could not be fixed, with explanation.)
+(List any issues that could not be fixed after 3 attempts, with explanation.)
+  - [Angle N] Issue description. Why unresolved: [reason] / 未解决原因：[原因]
 
 If no changes were made, state: No changes needed / 无需修改
 ---

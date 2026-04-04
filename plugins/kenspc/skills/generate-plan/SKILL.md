@@ -4,7 +4,7 @@ description: >
   Generate a comprehensive plan document through collaborative discussion,
   self-challenge, and automated verification via review agent. Three phases:
   Discover, Plan, Verify.
-version: 1.0.0
+version: 1.1.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 
@@ -15,11 +15,17 @@ self-challenge, and automated verification. Three phases: Discover, Plan, Verify
 
 ## Trigger Phrases
 
-Use this skill when the user says: "generate plan", "write a plan", "implementation plan",
-"plan this", "help me plan", "draft a plan", "project plan", "technical plan",
-"architecture plan", "let's plan", "I need a plan for", "before we start coding",
-"写计划书", "规划", "计划一下", "帮我规划", or any request to plan, design, or
-strategize before implementation.
+Use this skill when the user explicitly asks to **create a plan document**, using phrases
+like: "generate plan", "write a plan", "implementation plan", "plan this", "help me plan",
+"draft a plan", "project plan", "technical plan", "architecture plan", "let's plan",
+"I need a plan for", "before we start coding", "写计划书", "规划", "计划一下", "帮我规划",
+or invokes `/kenspc-plan` directly.
+
+**Do NOT trigger this skill** when the user:
+- Asks casually about approach (e.g., "what's the best way to...", "我想想怎么做",
+  "how should we approach this?") — just discuss directly
+- Wants a quick opinion on architecture or design choices
+- Is already in the middle of implementation and asks about next steps
 
 ## Prerequisites
 
@@ -175,5 +181,6 @@ Do NOT write any state file. The subagent will execute the entire review
 
 When the subagent returns, present its summary to the user. The summary includes:
 - Which review angles passed cleanly
-- Every change that was made, with the reason for each change
+- Every change that was made, with the reason for each change (and associated git commits)
+- Any unresolved issues that could not be fixed
 - Any concerns noted in Open Questions

@@ -45,11 +45,26 @@ When all tasks in the task document are completed or BLOCKED, output a final sum
 Implementation Summary / 实现总结
 
 Tasks completed / 已完成任务:
-  - Task N: [brief description] - DONE. Commit: abc1234 / 完成
-  - Task N: [brief description] - DONE. Commit: def5678 / 完成
+
+  Task N: [task name] - DONE. Commit: abc1234 / 完成
+    Changes / 变更:
+      - [key file created/modified]: [what was done and why]
+      - [key file created/modified]: [what was done and why]
+    Decisions / 设计决策: (only if non-obvious choices were made)
+      - [decision]: [why this approach over alternatives]
+    Notes / 注意事项: (only if post-implementation steps are needed)
+      - [e.g., run migration, set environment variable, update config]
+
+  Task N: [task name] - DONE. Commit: def5678 / 完成
+    Changes / 变更:
+      - ...
 
 Tasks blocked / 阻塞任务:
-  - Task N: [brief description] - BLOCKED: [reason] / 阻塞：[原因]
+
+  Task N: [task name] - BLOCKED / 阻塞
+    Attempted / 尝试过: [what was tried]
+    Root cause / 根本原因: [specific reason for the block]
+    Suggestion / 建议: [how to resolve this]
 
 If no tasks were completed, state: No tasks completed / 没有完成任何任务
 ---

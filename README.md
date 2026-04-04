@@ -23,7 +23,7 @@ Opinionated development workflows — plan before you code, structured task impl
 | Skill | What it does |
 |-------|-------------|
 | generate-plan | Collaborative discovery + drafting + automated 4-angle review |
-| task-implement | Iterative implementation from a task document with auto-review on completion |
+| task-implement | Automated batch implementation from a task document with confirmation gate and auto-review on completion |
 | task-review | Parallel 5-agent code review (MapReduce) with fix consolidation and regression verification |
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |
 

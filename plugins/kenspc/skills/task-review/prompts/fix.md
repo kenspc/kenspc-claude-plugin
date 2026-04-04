@@ -58,7 +58,10 @@ Issue accountability / 问题处置清单:
   - [Angle N] File:line — Issue description
     → DUPLICATE of [Angle M] issue above / 与上方 [Angle M] 问题重复
   - [Angle N] File:line — Issue description
-    → DEFERRED: Large structural change, requires architecture decision / 延后：大型结构性变更
+    → DEFERRED / 延后
+      Why: [specific reason this cannot be fixed now — what makes it too large or risky]
+      Risk: HIGH | MEDIUM | LOW — [what happens if this is not addressed]
+      Approach: [concrete steps for tackling this later, including prerequisites]
   - [Angle N] File:line — Issue description
     → NOT APPLICABLE: [reason] / 不适用：[原因]
 

@@ -70,10 +70,10 @@ EXECUTION FLOW
 For each angle, in order from 1 to 4:
 1. ULTRATHINK to thoroughly review the current angle.
 2. No issues found → record the angle as passed.
-3. Objective issue found → fix it directly in the plan document. Record what you
-   changed and why (one line per change).
-4. Subjective concern found → add it to the Risks or Open Questions section.
-   Record what you noted and why.
+3. Objective issue found → fix it directly in the plan document and git commit the fix.
+   Record what you changed and why (one line per change).
+4. Subjective concern found → add it to the Risks or Open Questions section and git
+   commit. Record what you noted and why.
 5. After all fixes for this angle, re-read affected sections to verify correctness.
 6. Proceed to the next angle (which will see the fixes you just made).
 
@@ -93,10 +93,14 @@ Angles: [list each angle with PASSED or FIXED or NOTED status]
   ...
 
 Changes made / 修改内容:
-(List every change. Each entry must state WHAT was changed and WHY.)
-  - [Angle N] Changed X → Y. Reason: ... / 原因：...
-  - [Angle N] Added section Z. Reason: ... / 原因：...
-  - [Angle N] Noted concern about W in Open Questions. Reason: ... / 原因：...
+(List every change. Each entry must state WHAT was changed, WHY, and the git commit.)
+  - [Angle N] Changed X → Y. Reason: ... Commit: abc1234 / 原因：...
+  - [Angle N] Added section Z. Reason: ... Commit: def5678 / 原因：...
+  - [Angle N] Noted concern about W in Open Questions. Reason: ... Commit: ghi9012 / 原因：...
+
+Unresolved issues / 未解决的问题:
+(List any issues that could not be fixed after 3 attempts, with explanation.)
+  - [Angle N] Issue description. Why unresolved: [reason] / 未解决原因：[原因]
 
 If no changes were made, state: No changes needed / 无需修改
 ---

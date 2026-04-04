@@ -4,7 +4,7 @@ description: >
   Multi-angle code review using parallel review agents, a fix agent, and a
   regression verification agent. Works with a task document (review against
   requirements) or standalone (review recent changes).
-version: 1.0.0
+version: 1.1.0
 argument-hint: [path-to-task-file]
 ---
 
