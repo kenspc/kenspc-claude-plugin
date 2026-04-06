@@ -1,6 +1,9 @@
 ---
 name: kenspc-task-implement
-description: Iteratively implement tasks from a task document, then auto-review
+description: >
+  Automated batch implementation (自动实现任务): auto-implements ALL incomplete tasks
+  from a task document, then runs automated code review. Only use when explicitly
+  requested for batch/unattended implementation
 argument-hint: <path-to-task-file>
 ---
 

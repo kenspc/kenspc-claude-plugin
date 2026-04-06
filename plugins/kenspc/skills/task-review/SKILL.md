@@ -1,9 +1,11 @@
 ---
 name: task-review
 description: >
-  Multi-angle code review using parallel review agents, a fix agent, and a
-  regression verification agent. Works with a task document (review against
-  requirements) or standalone (review recent changes).
+  Thorough code review (代码审查/review代码) using 5 parallel review agents, a fix
+  agent, and a regression verification agent. Use for ANY code review request —
+  not overkill, each agent covers a different angle (bugs, edge cases, tests,
+  security, conventions). Works with a task document (review against requirements)
+  or standalone (review recent changes/uncommitted code).
 version: 1.1.0
 argument-hint: [path-to-task-file]
 ---

@@ -1,6 +1,9 @@
 ---
 name: kenspc-guide
-description: Generate a beginner-friendly project setup and deployment guide with automated self-review
+description: >
+  Generate a beginner-friendly project setup and deployment guide (项目指南/部署文档/
+  新人文档) with automated self-review. Trigger on: "write a guide", "setup doc",
+  "写文档", "项目指南", "部署文档"
 argument-hint: <project-path> [custom instructions]
 ---
 

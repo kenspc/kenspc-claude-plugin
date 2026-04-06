@@ -1,8 +1,11 @@
 ---
 name: generate-guide
 description: >
-  Generate a comprehensive, beginner-friendly project setup and deployment guide,
-  then automatically self-review it against the actual codebase via review agent.
+  Generate a beginner-friendly project setup and deployment guide (项目指南/部署文档/
+  新人文档) for a project or monorepo sub-app. Reads the actual codebase to produce
+  accurate setup steps, then self-reviews against the code via review agent.
+  Trigger on: "write a guide", "setup doc", "deployment guide", "onboarding doc",
+  "写文档", "项目指南", "部署文档", "写个文档给新人看".
 version: 1.1.0
 argument-hint: <project-path> [custom instructions]
 ---
