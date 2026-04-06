@@ -1,9 +1,10 @@
 ---
 name: kenspc-plan
 description: >
-  Generate a comprehensive plan document (计划书/計劃書/计画书) through discussion,
-  self-challenge, and automated review. Trigger on: "write a plan", "写计划书",
-  "编写计划", "帮我规划", "计划一下"
+  Generate a comprehensive plan or task document (计划书/計劃書/计画书/任务分解) from
+  requirements, backlog items, or specs. Adapts to project-specific templates.
+  Includes discussion, self-challenge, and automated review.
+  Trigger on: "write a plan", "task breakdown", "写计划书", "编写计划", "帮我规划"
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 

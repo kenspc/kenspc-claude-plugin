@@ -1,11 +1,12 @@
 ---
 name: generate-plan
 description: >
-  Generate a comprehensive plan document (计划书/計劃書/计画书) through collaborative
-  discussion, self-challenge, and automated verification via review agent.
-  Trigger on: "write a plan", "generate plan", "implementation plan", "写计划书",
-  "编写计划", "帮我规划", "计划一下", or saving plan files to docs/tasks/.
-  Three phases: Discover, Plan, Verify.
+  Generate a comprehensive plan or task document (计划书/計劃書/计画书/任务分解) from
+  requirements, backlog items, or specs. Adapts to project-specific templates
+  (e.g., docs/tasks/_template.md). Includes collaborative discussion, self-challenge,
+  and automated verification via review agent. Three phases: Discover, Plan, Verify.
+  Trigger on: "write a plan", "generate plan", "task breakdown", "写计划书",
+  "编写计划", "帮我规划", "计划一下", or writing plan/task files to docs/.
 version: 1.1.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
