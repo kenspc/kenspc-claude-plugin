@@ -1,9 +1,11 @@
 ---
 name: generate-plan
 description: >
-  Generate a comprehensive plan document through collaborative discussion,
-  self-challenge, and automated verification via review agent. Three phases:
-  Discover, Plan, Verify.
+  Generate a comprehensive plan document (计划书/計劃書/计画书) through collaborative
+  discussion, self-challenge, and automated verification via review agent.
+  Trigger on: "write a plan", "generate plan", "implementation plan", "写计划书",
+  "编写计划", "帮我规划", "计划一下", or saving plan files to docs/tasks/.
+  Three phases: Discover, Plan, Verify.
 version: 1.1.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
@@ -18,7 +20,8 @@ self-challenge, and automated verification. Three phases: Discover, Plan, Verify
 Use this skill when the user explicitly asks to **create a plan document**, using phrases
 like: "generate plan", "write a plan", "implementation plan", "plan this", "help me plan",
 "draft a plan", "project plan", "technical plan", "architecture plan", "let's plan",
-"I need a plan for", "before we start coding", "写计划书", "规划", "计划一下", "帮我规划",
+"I need a plan for", "before we start coding", "写计划书", "编写计划", "计画书",
+"规划", "计划一下", "帮我规划", "帮我写计划",
 or invokes `/kenspc-plan` directly.
 
 **Do NOT trigger this skill** when the user:
