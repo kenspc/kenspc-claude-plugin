@@ -4,7 +4,7 @@ description: >
   Automated batch implementation: auto-implements ALL incomplete tasks from a task
   document without user interaction, then runs automated code review. Only use when
   the user explicitly requests automated/batch task implementation.
-version: 1.1.0
+version: 1.2.0
 argument-hint: <path-to-task-file>
 ---
 

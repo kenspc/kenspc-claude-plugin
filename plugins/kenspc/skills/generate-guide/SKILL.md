@@ -6,7 +6,7 @@ description: >
   accurate setup steps, then self-reviews against the code via review agent.
   Trigger on: "write a guide", "setup doc", "deployment guide", "onboarding doc",
   "写文档", "项目指南", "部署文档", "写个文档给新人看".
-version: 1.1.0
+version: 1.2.0
 argument-hint: <project-path> [custom instructions]
 ---
 

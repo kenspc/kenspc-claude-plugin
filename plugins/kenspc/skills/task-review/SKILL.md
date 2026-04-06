@@ -6,7 +6,7 @@ description: >
   not overkill, each agent covers a different angle (bugs, edge cases, tests,
   security, conventions). Works with a task document (review against requirements)
   or standalone (review recent changes/uncommitted code).
-version: 1.1.0
+version: 1.2.0
 argument-hint: [path-to-task-file]
 ---
 

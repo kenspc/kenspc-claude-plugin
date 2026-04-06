@@ -7,7 +7,7 @@ description: >
   and automated verification via review agent. Three phases: Discover, Plan, Verify.
   Trigger on: "write a plan", "generate plan", "task breakdown", "写计划书",
   "编写计划", "帮我规划", "计划一下", or writing plan/task files to docs/.
-version: 1.1.0
+version: 1.2.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 
