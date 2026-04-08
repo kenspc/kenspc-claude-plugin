@@ -36,6 +36,8 @@ EXECUTION FLOW
       Record as a suggestion in the accountability list.
    d. After fixing, run build/test/lint to verify the fix does not break anything.
 4. Track every action taken.
+5. After ALL fixes are applied, run build/test/lint one final time to catch
+   interaction issues between fixes.
 
 FIXING RULES
 - Follow established project conventions and patterns.
@@ -43,6 +45,13 @@ FIXING RULES
 - Each fix should be a separate, focused git commit with a clear message.
 - Do not introduce new features or refactor code beyond what the issue requires.
 - Code, code comments, and commit messages must be in English.
+
+FIXING PRIORITY
+- HIGH: MUST fix. These are bugs, security issues, or broken requirements.
+- MEDIUM: Fix if the change is localized (single file, few lines) and low-risk.
+  If the fix spans multiple files or requires structural changes, DEFER with a
+  detailed plan.
+- LOW: Do NOT fix. Record as acknowledged in the accountability list.
 
 OUTPUT FORMAT
 Produce an accountability list that maps EVERY issue from all 5 reports to an action:

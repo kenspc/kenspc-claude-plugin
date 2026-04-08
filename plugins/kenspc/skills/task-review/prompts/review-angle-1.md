@@ -35,6 +35,11 @@ scope and focus. Custom instructions take priority over the default checklist wh
 they conflict (e.g., if instructed to "only review src/api/", ignore files outside
 that directory).
 
+FILE COVERAGE
+Before reviewing, list all files that were added or modified (from git diff, git
+status, or the task document). Review each file in this list explicitly. Do not
+skip files.
+
 REVIEW CHECKLIST
 - Is every requirement / intended change fully implemented?
 - Are there any partially implemented features?

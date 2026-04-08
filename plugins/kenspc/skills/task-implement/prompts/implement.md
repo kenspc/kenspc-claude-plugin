@@ -28,6 +28,19 @@ QUALITY RULES
 - New code must have corresponding tests (if test framework is configured).
 - Do not modify code unrelated to the current task.
 
+QUALITY CHECKLIST (apply to code you write for this task — not existing code)
+- Edge cases: handle null, empty, and boundary values at public function entries.
+- Error handling: wrap external calls (DB, API, file I/O) with proper error handling;
+  do not silently swallow errors.
+- Resource cleanup: close connections, handles, and streams in finally/defer/using.
+- Async correctness: await all async operations; no unintended fire-and-forget.
+- No magic numbers: externalize config values to constants or config files.
+- Tests: cover happy path + at least one edge case + at least one error path per
+  new function. Test behavior, not implementation details.
+- Security: validate and sanitize user-facing inputs; no hardcoded secrets.
+
+Before committing each task, verify your implementation against this checklist.
+
 STUCK HANDLING
 - If the same task fails verification 3 times in a row, record the blocking reason
   under that task in the task document, mark it as BLOCKED, and skip to the next task.

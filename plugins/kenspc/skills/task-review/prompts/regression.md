@@ -43,9 +43,14 @@ Step 3: Build/test/lint verification
 
 Step 4: Cross-check for regressions
 - Review all fix commits (use git log and git show).
-- For each file touched by a fix commit, check whether the fix broke any logic that
-  was validated by earlier review angles.
-- If new issues are found, fix them and commit.
+- For each file touched by a fix commit, verify:
+  (a) The fix did not introduce a new null/undefined code path.
+  (b) The fix did not change a function's contract (parameters, return type, error
+      behavior) in a way that breaks callers.
+  (c) Any new tests added by the fix agent actually test the fix, not unrelated logic.
+  (d) The fix did not silently swallow errors or remove validation.
+- If new issues are found, do NOT fix them yourself. Flag each one in the output
+  report under "Regressions found" with file, line, description, and severity.
 
 OUTPUT FORMAT
 

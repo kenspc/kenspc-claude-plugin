@@ -22,6 +22,11 @@ If {{CUSTOM_INSTRUCTIONS}} is not "N/A", apply them to narrow or adjust your rev
 scope and focus. Custom instructions take priority over the default checklist when
 they conflict.
 
+FILE COVERAGE
+Before reviewing, list all files that were added or modified (from git diff, git
+status, or the task document). Review each file in this list explicitly. Do not
+skip files.
+
 REVIEW CHECKLIST
 - Malicious input: are user-facing inputs validated and sanitized?
 - Null/empty values: are null, undefined, empty string, and empty collection cases handled?

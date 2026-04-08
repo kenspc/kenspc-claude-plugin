@@ -6,7 +6,7 @@ description: >
   not overkill, each agent covers a different angle (bugs, edge cases, tests,
   security, conventions). Works with a task document (review against requirements)
   or standalone (review recent changes/uncommitted code).
-version: 1.2.0
+version: 1.3.0
 argument-hint: [path-to-task-file]
 ---
 
@@ -105,8 +105,33 @@ The regression agent verifies:
 
 ### Step 7: Present results
 
-When the regression agent returns, present the full summary to the user:
+When the regression agent returns, determine the verdict and present results.
+
+#### Pass/Fail Determination
+
+Based on the regression verification results, declare a verdict:
+
+**PASS** — all of these are true:
+  - Zero HIGH severity issues remain unresolved
+  - Zero INCORRECTLY FIXED items
+  - Build: PASS, Tests: PASS, Lint: PASS
+  - No regressions introduced by fix commits
+
+**FAIL** — any of these are true:
+  - 1+ HIGH severity issues remain unresolved
+  - 1+ INCORRECTLY FIXED items
+  - Build, test, or lint fails
+  - Fix commits introduced unresolved regressions
+
+MEDIUM and LOW issues do not affect the verdict but must be listed in the report.
+
+#### Summary
+
+Present the full summary to the user:
+- **Verdict: PASS or FAIL**
 - Each review angle's findings
 - All changes made with reasons
-- Any unresolved issues
+- Any unresolved issues (with severity)
 - Regression verification result
+- If PASS: "No further review needed. / 无需再次审查。"
+- If FAIL: "Address N HIGH issues and re-run review. / 请处理 N 个 HIGH 问题后重新审查。"

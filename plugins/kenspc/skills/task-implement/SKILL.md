@@ -4,7 +4,7 @@ description: >
   Automated batch implementation: auto-implements ALL incomplete tasks from a task
   document without user interaction, then runs automated code review. Only use when
   the user explicitly requests automated/batch task implementation.
-version: 1.2.0
+version: 1.3.0
 argument-hint: <path-to-task-file>
 ---
 
@@ -139,6 +139,11 @@ When all phases complete, present a consolidated final report to the user:
 - Build: PASS/FAIL
 - Tests: PASS/FAIL
 - Lint: PASS/FAIL
+
+### Review Verdict / 审查判定
+PASS or FAIL (based on task-review verdict criteria)
+If PASS: "No further review needed. / 无需再次审查。"
+If FAIL: "Address N HIGH issues and re-run review. / 请处理 N 个 HIGH 问题后重新审查。"
 
 ### Next Steps / 后续步骤
 [Concrete list of what the user should do next — manual steps, deferred items to plan, etc.]
