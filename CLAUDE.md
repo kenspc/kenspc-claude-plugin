@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, task implementation with automatic code review, and project guide generation. Review phases use subagent architecture — serial review agents for plan/guide documents, parallel MapReduce review agents for code.
+A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, plan-to-task decomposition, task implementation with automatic code review, and project guide generation. Review phases use subagent architecture — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code.
 
 ## Marketplace Structure
 
@@ -18,6 +18,7 @@ plugins/kenspc/
 ├── .claude-plugin/plugin.json   # Plugin metadata (name, version, author)
 ├── commands/                    # Slash commands
 │   ├── kenspc-plan.md
+│   ├── kenspc-task.md
 │   ├── kenspc-guide.md
 │   ├── kenspc-task-implement.md
 │   └── kenspc-task-review.md
@@ -27,6 +28,9 @@ plugins/kenspc/
 ├── references/                  # Example documents for user onboarding
 ├── skills/
 │   ├── generate-plan/
+│   │   ├── SKILL.md
+│   │   └── prompts/review.md
+│   ├── generate-task/
 │   │   ├── SKILL.md
 │   │   └── prompts/review.md
 │   ├── generate-guide/
@@ -81,7 +85,7 @@ All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — n
 
 Skills use subagents (the Agent tool) for automated review. Two models exist:
 
-**Serial review (generate-plan, generate-guide):**
+**Serial review (generate-plan, generate-task, generate-guide):**
 - Single subagent reviews all angles in order (each angle builds on fixes from the previous one)
 - Suited for document review where angles have cascade dependencies
 - Subagent returns a structured change log (what changed, why)

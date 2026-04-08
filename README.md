@@ -23,11 +23,12 @@ Opinionated development workflows — plan before you code, structured task impl
 | Skill | What it does |
 |-------|-------------|
 | generate-plan | Collaborative discovery + drafting + automated 4-angle review |
-| task-implement | Automated batch implementation from a task document with confirmation gate and auto-review on completion |
+| generate-task | Plan-to-task decomposition via code analysis + 2-angle review |
+| task-implement | Automated batch implementation with input validation and auto-review |
 | task-review | Parallel 5-agent code review (MapReduce) with fix consolidation and regression verification |
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |
 
-**Commands:** `/kenspc-plan`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`
+**Commands:** `/kenspc-plan`, `/kenspc-task`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`
 
 See the [plugin README](./plugins/kenspc/README.md) for full documentation, usage examples, and design principles.
 
