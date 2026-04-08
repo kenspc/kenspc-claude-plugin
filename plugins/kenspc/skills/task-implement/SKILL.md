@@ -87,6 +87,12 @@ If validation passes, retain the parsed task list for use in Step 4 (Confirm wit
 Replace all occurrences of `{{TASK_FILE}}` in the template with the actual task file
 path from $ARGUMENTS.
 
+### Prompt variables
+
+| Variable | Source | Values |
+|----------|--------|---------|
+| {{TASK_FILE}} | $ARGUMENTS PATH | Path to the task document |
+
 ### Step 4: Confirm with user
 
 Read the task document and identify all incomplete tasks. Present them to the user:
@@ -106,7 +112,7 @@ Tell the user:
 "Starting task implementation. Dispatching implement agent now. / 开始实现任务。正在启动实现代理。"
 
 Then dispatch a subagent using the Agent tool:
-- prompt: the rendered implement prompt from Step 2
+- prompt: the rendered implement prompt from Step 3
 - description: "Implement tasks from document"
 
 Do NOT write any state file. The subagent will implement all incomplete tasks within
