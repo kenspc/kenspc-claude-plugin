@@ -20,6 +20,24 @@ Use this skill when the user says: "review my code", "code review", "review agai
 "review changes", "代码审查", "审查代码", "review 一下", or any request to review
 implemented code for quality, correctness, and completeness.
 
+## Common Rationalizations
+
+| Agent says | Why it's wrong |
+|---|---|
+| "这个文件是 boilerplate，不需要 review" | Errors in boilerplate propagate across the entire project. FILE COVERAGE rule: every modified file must be reviewed. |
+| "所有 angle 报的 issue 都是 LOW/MEDIUM，跳过 fix agent" | Fix agent processes all severities. LOW is marked as acknowledged, MEDIUM is evaluated for fix. Skipping fix agent loses deduplication and accountability tracking. |
+| "Build 过了就不需要 regression agent" | Build passing does not mean fixes are correct. The regression agent verifies that fixes actually resolve the reported issues, not just that the code compiles. |
+| "AI 生成的代码应该没问题" | AI code needs *more* scrutiny, not less. It's confident and plausible, even when wrong. |
+| "能跑就行" | Working code that's unreadable, insecure, or architecturally wrong creates debt that compounds. |
+
+## Red Flags
+
+Stop and inform the user if any of these occur (thresholds are starting values — adjust based on project experience):
+
+- 5 review angles report a combined ~15+ HIGH issues → Code quality is below what review can fix. Inform the user that partial reimplementation may be needed.
+- Fix agent's DEFERRED items outnumber FIXED items → Most issues require architectural changes. Review is treating symptoms, not causes. Inform the user.
+- Regression agent finds that fix commits introduced new HIGH issues → Fix agent created new problems. Inform the user that manual intervention is needed.
+
 ## Prerequisites
 
 - A project with code to review
@@ -65,6 +83,14 @@ Replace placeholders in all templates:
 - `{{TASK_FILE}}` — the task file path, or "N/A"
 - `{{REVIEW_SCOPE}}` — "task" or "changes"
 - `{{CUSTOM_INSTRUCTIONS}}` — the user's custom instructions, or "N/A"
+
+### Prompt variables
+
+| Variable | Source | Values |
+|----------|--------|---------|
+| {{TASK_FILE}} | Step 1 | File path or "N/A" |
+| {{REVIEW_SCOPE}} | Step 1 | "task" or "changes" |
+| {{CUSTOM_INSTRUCTIONS}} | $ARGUMENTS | Free text or "N/A" |
 
 ### Step 4: Dispatch parallel review agents (Phase 1)
 
