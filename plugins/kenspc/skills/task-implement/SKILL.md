@@ -29,6 +29,25 @@ The key distinction: this skill is for **unattended, automated batch** implement
 ALL incomplete tasks. If the user wants a conversation, wants to drive development
 themselves, or only wants one specific task done, do NOT invoke this skill.
 
+## Common Rationalizations
+
+| Agent says | Why it's wrong |
+|---|---|
+| "这个 task 很简单不需要测试" | Simple functions are most easily broken during refactoring. At least one happy path test. |
+| "这个 task 依赖前一个 task，先实现前一个的功能再回来补" | Execute tasks in document order. If a dependency is not met, mark the task as BLOCKED. Do not jump between tasks. |
+| "顺便修一下旁边的代码" | NEVER boundary: do not modify code outside the task's scope. Record as a backlog item if needed. |
+| "测试框架没配好，跳过测试" | Mark the task as BLOCKED. Do not silently skip testing. |
+| "最后再一起测试" | Bugs compound. A bug in Task 1 makes Tasks 2-5 wrong. Verify each task individually. |
+| "一次实现多个 task 比较快" | It *feels* faster until something breaks and you can't isolate which task caused it. One task at a time. |
+
+## Red Flags
+
+Stop and inform the user if any of these occur (thresholds are starting values — adjust based on project experience):
+
+- More than half of the tasks end up BLOCKED → Likely a systemic issue with the task document, not individual tasks. Stop implementing remaining tasks and inform the user that the task document may need revision.
+- The same task fails build verification 3 times (existing stuck handling triggers), then the NEXT task also fails → Check whether the first task's implementation caused a cascading failure. Inform the user.
+- Implementing a task requires modifying more than ~5 files outside the task's stated scope → STOP. The task's scope definition is wrong. Mark as BLOCKED.
+
 ## Prerequisites
 
 - A task document with clearly defined tasks and status markers
@@ -47,12 +66,28 @@ If the user omits the path, ask them to provide it.
 
 Read the file `prompts/implement.md` from this skill's directory.
 
-### Step 2: Render the prompt
+### Step 2: Validate input document
+
+Read the file at the provided path. Check whether it is a task document or a plan document:
+
+- **Task document**: contains individual entries with `**Status:**` markers (TODO, IN PROGRESS, DONE, BLOCKED)
+- **Plan document**: contains Implementation Steps organized by Phase/Step, without Status markers
+
+If the file appears to be a plan document (has Phase/Step structure but no Status markers):
+Tell the user:
+"This appears to be a plan document, not a task document. Use /kenspc-task to generate
+a task document from this plan first. /
+这看起来是计划书而非任务文档。请先使用 /kenspc-task 从计划书生成任务文档。"
+Do NOT proceed with implementation.
+
+If validation passes, retain the parsed task list for use in Step 4 (Confirm with user).
+
+### Step 3: Render the prompt
 
 Replace all occurrences of `{{TASK_FILE}}` in the template with the actual task file
 path from $ARGUMENTS.
 
-### Step 3: Confirm with user
+### Step 4: Confirm with user
 
 Read the task document and identify all incomplete tasks. Present them to the user:
 
@@ -65,7 +100,7 @@ Proceed with automated implementation? / 是否开始自动实现？"
 Wait for explicit confirmation before proceeding. If the user declines or wants to
 adjust scope, follow their instructions instead.
 
-### Step 4: Dispatch the implement agent
+### Step 5: Dispatch the implement agent
 
 Tell the user:
 "Starting task implementation. Dispatching implement agent now. / 开始实现任务。正在启动实现代理。"
@@ -77,7 +112,7 @@ Then dispatch a subagent using the Agent tool:
 Do NOT write any state file. The subagent will implement all incomplete tasks within
 its own context and return a summary.
 
-### Step 5: Report progress
+### Step 6: Report progress
 
 When the subagent returns, present a brief progress update (not the full details):
 

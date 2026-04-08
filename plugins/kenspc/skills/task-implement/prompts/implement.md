@@ -14,7 +14,10 @@ PREREQUISITES
 
 EXECUTION FLOW
 For each incomplete task, in order:
-1. ULTRATHINK to analyze requirements, then implement the code.
+1. ULTRATHINK to plan the implementation approach for this task — which files
+   to create/modify, which patterns to follow, which edge cases to handle.
+   The task's scope and acceptance criteria are already defined; do not
+   decompose into sub-tasks or redefine scope.
 2. Run build/test/lint to verify. If the project has no test framework configured,
    skip test verification and note this in the task document.
 3. After verification passes, update the task status in the task document (use whatever
@@ -27,6 +30,28 @@ QUALITY RULES
 - Follow established project conventions and patterns.
 - New code must have corresponding tests (if test framework is configured).
 - Do not modify code unrelated to the current task.
+
+AUTONOMY BOUNDARIES
+
+ALWAYS (do without asking):
+- Follow existing project conventions (naming, structure, patterns from CLAUDE.md)
+- Write tests for new functions (if test framework is configured)
+- Use conventional commit format
+- Handle errors on external calls (DB, API, file I/O)
+- Run build/test/lint after each task
+
+STOP (mark task as BLOCKED with the specific decision needed):
+- Adding a new dependency not mentioned in the task document
+- Changing an existing API contract (parameters, return type, error codes)
+- Creating or modifying database schema beyond what the task specifies
+- Deviating from the task document's stated approach
+- Modifying files outside the task's stated scope
+
+NEVER (do not do even if it seems helpful):
+- Refactor code unrelated to the current task
+- Change project configuration (tsconfig, eslint, prettier, etc.)
+- Delete or rename existing public APIs
+- Commit code that doesn't build
 
 QUALITY CHECKLIST (apply to code you write for this task — not existing code)
 - Edge cases: handle null, empty, and boundary values at public function entries.
