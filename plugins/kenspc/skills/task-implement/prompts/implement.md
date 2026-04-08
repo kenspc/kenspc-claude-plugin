@@ -46,10 +46,10 @@ STOP (mark task as BLOCKED with the specific decision needed):
 - Creating or modifying database schema beyond what the task specifies
 - Deviating from the task document's stated approach
 - Modifying files outside the task's stated scope
+- Changing project configuration (tsconfig, eslint, prettier, etc.) unless the task explicitly requires it
 
 NEVER (do not do even if it seems helpful):
 - Refactor code unrelated to the current task
-- Change project configuration (tsconfig, eslint, prettier, etc.)
 - Delete or rename existing public APIs
 - Commit code that doesn't build
 

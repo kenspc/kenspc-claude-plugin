@@ -160,9 +160,12 @@ remove tasks), apply them and re-present.
 3. Create the directory if it does not exist
 
 **Filename:**
-- Entire plan: `{plan-name}-tasks.md` (e.g., `notification-plan.md` → `notification-tasks.md`)
-- Specific phase: `{plan-name}-phase{N}-tasks.md` (e.g., `notification-phase1-tasks.md`)
-- If the phase covers multiple phases: `{plan-name}-phase{N}-{M}-tasks.md`
+Derive the base name from the plan filename by removing the file extension and
+any trailing `-plan` suffix (e.g., `notification-plan.md` → `notification`,
+`auth-strategy.md` → `auth-strategy`).
+- Entire plan: `{base-name}-tasks.md` (e.g., `notification-tasks.md`)
+- Specific phase: `{base-name}-phase{N}-tasks.md` (e.g., `notification-phase1-tasks.md`)
+- If the phase covers multiple phases: `{base-name}-phase{N}-{M}-tasks.md`
 
 **Conflict check before writing:**
 - If writing a phase-specific file, check if a full-plan task file already exists for
