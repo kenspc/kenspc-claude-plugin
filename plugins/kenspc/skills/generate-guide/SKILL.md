@@ -27,6 +27,22 @@ like: "generate guide", "write setup doc", "write guide", "setup instructions", 
 - Wants to discuss or troubleshoot a specific configuration issue
 - References documentation without asking to generate a new one
 
+## Common Rationalizations
+
+| Agent says | Why it's wrong |
+|---|---|
+| "README 已经有 setup 说明了" | READMEs are often incomplete or outdated. The guide must be independently complete. Do not rely on README accuracy. |
+| "项目太简单不需要完整 guide" | Simple projects still need prerequisites, environment variables, and verification steps. Skip inapplicable sections, but do not skip the skill. |
+| "从 package.json 推断 setup 步骤就够了" | Inference is not verification. Every command and path must be confirmed against actual code. |
+
+## Red Flags
+
+Stop and inform the user if any of these occur (thresholds are starting values — adjust based on project experience):
+
+- The guide references commands or file paths that do not exist in the project → Code was not read carefully. Return to Phase 1 and re-scan the project.
+- More than half of the guide sections are marked "not applicable" → The target path may be wrong, or the project is too early-stage for a guide. Stop and inform the user.
+- Review agent reports issues across all 4 angles → Guide quality is too low for incremental fixes. Suggest re-reading the project and rewriting the guide.
+
 ## Prerequisites
 
 - A project with actual code to document
@@ -161,7 +177,14 @@ Read the file prompts/review.md from this skill's directory.
 
 Replace all occurrences of these placeholders in the template:
 - {{GUIDE_PATH}} with the actual path of the guide file that was just written
-- {{PROJECT_PATH}} with the target project path from $1
+- {{PROJECT_PATH}} with the target project path from $ARGUMENTS
+
+### Prompt variables
+
+| Variable | Source | Values |
+|----------|--------|---------|
+| {{GUIDE_PATH}} | Phase 1 Step 3 | Path of the written guide file |
+| {{PROJECT_PATH}} | $ARGUMENTS PROJECT_PATH | Project path |
 
 ### Step 3: Dispatch the review agent
 
