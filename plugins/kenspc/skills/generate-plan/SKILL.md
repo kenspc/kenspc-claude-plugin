@@ -1,12 +1,12 @@
 ---
 name: generate-plan
 description: >
-  Generate a comprehensive plan or task document (计划书/計劃書/计画书/任务分解) from
-  requirements, backlog items, or specs. Adapts to project-specific templates
-  (e.g., docs/tasks/_template.md). Includes collaborative discussion, self-challenge,
-  and automated verification via review agent. Three phases: Discover, Plan, Verify.
-  Trigger on: "write a plan", "generate plan", "task breakdown", "写计划书",
-  "编写计划", "帮我规划", "计划一下", or writing plan/task files to docs/.
+  Generate a comprehensive plan document (计划书/計劃書) from requirements,
+  backlog items, or specs. Adapts to project-specific templates. Includes
+  collaborative discussion, self-challenge, and automated verification via
+  review agent. Three phases: Discover, Plan, Verify.
+  Trigger on: "write a plan", "generate plan", "写计划书", "编写计划",
+  "帮我规划", "计划一下", or writing plan files to docs/plans/.
 version: 1.2.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
@@ -26,10 +26,28 @@ like: "generate plan", "write a plan", "implementation plan", "plan this", "help
 or invokes `/kenspc-plan` directly.
 
 **Do NOT trigger this skill** when the user:
+- Asks to break down a plan into tasks or decompose tasks (use generate-task instead)
 - Asks casually about approach (e.g., "what's the best way to...", "我想想怎么做",
   "how should we approach this?") — just discuss directly
 - Wants a quick opinion on architecture or design choices
 - Is already in the middle of implementation and asks about next steps
+
+## Common Rationalizations
+
+| Agent says | Why it's wrong |
+|---|---|
+| "需求很清楚，跳过 Discovery" | Even seemingly complete requirements need at least 2-3 clarifying questions. Plans without Discovery miss non-functional requirements and boundary conditions. |
+| "Plan 太短不需要 review" | Plan length does not determine review necessity. A 10-line wrong plan causes more damage than a 100-line correct plan. Phase 3 cannot be skipped. |
+| "用户说快点，跳过 self-challenge" | An unchallenged plan is wishful thinking. Phase 2's challenge step is quality assurance, not wasted time. |
+| "Planning is overhead, 直接开始写代码" | Planning IS the task. Implementation without a plan is just typing. 10 minutes of planning saves hours of rework. |
+
+## Red Flags
+
+Stop and inform the user if any of these occur (thresholds are starting values — adjust based on project experience):
+
+- Discovery continues beyond ~8 rounds with the user still changing core scope → Scope is fundamentally undefined. Stop and suggest the user write a brief scope statement before continuing.
+- Self-challenge reveals a fundamental flaw in the core technical approach → Do not patch the plan. Return to Discovery to re-discuss the technical approach.
+- Review agent reports 3+ HIGH issues in Angle 1 (Feasibility) → The plan may not be executable. Inform the user and suggest rewriting rather than patching.
 
 ## Prerequisites
 
@@ -76,6 +94,10 @@ This phase is principle-driven, not step-driven. Claude must:
 6. Do NOT attempt to write or outline the plan yet — this phase is pure discussion
 7. Adapt the depth and direction of questions based on the type of plan
    (implementation, architecture, migration, evaluation, etc.)
+8. Match Discovery depth to input clarity. A vague idea ("我想加个通知系统")
+   needs 3-5 rounds; a structured requirement with acceptance criteria may need
+   only 1 round of gap-filling. Never proceed to Phase 2 with unresolved scope
+   ambiguity.
 
 Continue this discussion until the user signals readiness to move forward
 (e.g., "OK", "let's write the plan", "可以了", "enough discussion", "go ahead").
@@ -141,14 +163,13 @@ ONLY when the user explicitly approves the plan (e.g., "write it", "save it",
 
 1. Determine output location:
    a. If CLAUDE.md specifies a documentation or plans directory, use it
-   b. If a `docs/plans/` directory exists, use it
-   c. Otherwise, ask the user where to save and what to name the file
-2. If a file already exists at the target path, ask the user whether to overwrite
-   or create a new file
-3. Determine document language:
+   b. Otherwise, use `docs/plans/` (create if it does not exist)
+   c. If a file already exists at the target path, ask the user whether to
+      overwrite or create a new file
+2. Determine document language:
    a. If the user specified a language, use it
    b. Otherwise, default to English
-4. Write the plan to the file
+3. Write the plan to the file
 
 After writing, proceed to Phase 3.
 
@@ -168,6 +189,13 @@ Read the file prompts/review.md from this skill's directory.
 Replace all placeholders in the template:
 - {{PLAN_PATH}} — the actual path of the plan file that was just written
 - {{PROJECT_PATH}} — the project root path, or "N/A" if not in a project
+
+### Prompt variables
+
+| Variable | Source | Values |
+|----------|--------|---------|
+| {{PLAN_PATH}} | Phase 2 Step 3 | Path of the written plan file |
+| {{PROJECT_PATH}} | Project root | Path or "N/A" |
 
 ### Step 3: Dispatch the review agent
 
