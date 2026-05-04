@@ -6,7 +6,7 @@ description: >
   not overkill, each agent covers a different angle (bugs, edge cases, tests,
   security, conventions). Works with a task document (review against requirements)
   or standalone (review recent changes/uncommitted code).
-version: 1.3.0
+version: 2.0.0
 argument-hint: [path-to-task-file]
 ---
 
@@ -70,27 +70,16 @@ If $ARGUMENTS is empty or contains no file path:
 - Set REVIEW_SCOPE to "changes"
 - Set TASK_FILE to "N/A"
 
-### Step 2: Read the prompt templates
+### Step 3: Construct CONTEXT block
 
-Read the following files from this skill's `prompts/` directory:
-- `review-angle-1.md` through `review-angle-5.md` (the 5 review angle prompts)
-- `fix.md` (the fix agent prompt)
-- `regression.md` (the regression verification prompt)
+Build a structured CONTEXT block that will be passed to every dispatched agent:
 
-### Step 3: Render prompts
-
-Replace placeholders in all templates:
-- `{{TASK_FILE}}` — the task file path, or "N/A"
-- `{{REVIEW_SCOPE}}` — "task" or "changes"
-- `{{CUSTOM_INSTRUCTIONS}}` — the user's custom instructions, or "N/A"
-
-### Prompt variables
-
-| Variable | Source | Values |
-|----------|--------|---------|
-| {{TASK_FILE}} | Step 1 | File path or "N/A" |
-| {{REVIEW_SCOPE}} | Step 1 | "task" or "changes" |
-| {{CUSTOM_INSTRUCTIONS}} | $ARGUMENTS | Free text or "N/A" |
+```
+CONTEXT
+- TASK_FILE: <task file path or "N/A">
+- REVIEW_SCOPE: <"task" or "changes">
+- CUSTOM_INSTRUCTIONS: <user's custom instructions or "N/A">
+```
 
 ### Step 4: Dispatch parallel review agents (Phase 1)
 
@@ -99,29 +88,53 @@ Tell the user:
 
 Dispatch **5 subagents in a single message** using the Agent tool, one for each
 review angle. Each subagent is read-only — it analyzes code and produces a report
-but does NOT modify any files.
+but does NOT modify any files. Pass the CONTEXT block from Step 3 as the dispatch
+prompt for every agent.
 
-- Agent 1: prompt from review-angle-1.md, description: "Review: requirements"
-- Agent 2: prompt from review-angle-2.md, description: "Review: edge cases"
-- Agent 3: prompt from review-angle-3.md, description: "Review: code quality"
-- Agent 4: prompt from review-angle-4.md, description: "Review: bug hunting"
-- Agent 5: prompt from review-angle-5.md, description: "Review: test coverage"
+- Agent name: `requirements-reviewer`, description: "Review: requirements"
+- Agent name: `edge-case-reviewer`, description: "Review: edge cases"
+- Agent name: `quality-reviewer`, description: "Review: code quality"
+- Agent name: `bug-reviewer`, description: "Review: bug hunting"
+- Agent name: `test-reviewer`, description: "Review: test coverage"
 
 ### Step 5: Dispatch fix agent (Phase 2)
 
-Collect all 5 review reports. Then dispatch a single subagent with:
-- prompt: rendered fix.md, with all 5 reports included
+Collect all 5 review reports. Then dispatch a single subagent:
+- Agent name: `code-fixer`
 - description: "Fix reported issues"
+- prompt: extend the CONTEXT block from Step 3 with a `REVIEW_REPORTS` field
+  containing all 5 reports inline, e.g.:
+
+```
+CONTEXT
+- TASK_FILE: <...>
+- REVIEW_SCOPE: <...>
+- CUSTOM_INSTRUCTIONS: <...>
+
+REVIEW_REPORTS
+
+[Angle 1 full report]
+---
+[Angle 2 full report]
+---
+[Angle 3 full report]
+---
+[Angle 4 full report]
+---
+[Angle 5 full report]
+```
 
 The fix agent will deduplicate overlapping findings, apply fixes, and commit.
 It must produce an accountability list mapping every reported issue to an action.
 
 ### Step 6: Dispatch regression agent (Phase 3)
 
-After the fix agent returns, dispatch a single subagent with:
-- prompt: rendered regression.md, with the original 5 reports AND the fix
-  agent's accountability list included
+After the fix agent returns, dispatch a single subagent:
+- Agent name: `regression-verifier`
 - description: "Regression verification"
+- prompt: extend the CONTEXT block with both the original 5 review reports
+  (`REVIEW_REPORTS`) and the fix agent's accountability list
+  (`ACCOUNTABILITY_LIST`).
 
 The regression agent verifies:
 1. Every issue from the 5 reports is accounted for in the fix list

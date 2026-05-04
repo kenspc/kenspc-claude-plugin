@@ -378,7 +378,7 @@ Structure:
 
 ### Task 12: Update task-review/SKILL.md to dispatch agents
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7
 
