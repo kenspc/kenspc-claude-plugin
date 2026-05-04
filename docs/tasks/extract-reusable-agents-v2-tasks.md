@@ -706,29 +706,48 @@ Subagents cannot spawn other subagents, so when invoked via
 "requires manual verification in fresh main-session". Run these tests manually
 after the implementation phase completes.
 
+**Precondition:** Run `/clear` (or open a new Claude Code session) immediately
+before each sub-test so no prior workflow state can influence dispatch.
+
 Execute three sub-tests per plan Testing Strategy section B:
 
 **Sub-test B.1**: Invoke `@kenspc:bug-reviewer` with no CONTEXT block.
-- Expected: agent outputs the standalone fallback usage block (showing example
-  CONTEXT block) and stops. No code modification.
+- Expected: agent outputs the standalone fallback usage block and stops. No
+  code modification. Verify the output contains the literal string
+  `This agent expects a CONTEXT block. Example:` followed by an example block
+  listing the keys `TASK_FILE`, `REVIEW_SCOPE`, `CUSTOM_INSTRUCTIONS`.
 
 **Sub-test B.2**: Invoke `@kenspc:code-fixer` with no input.
-- Expected: Layer 3 PREREQUISITE CHECK fires. Output contains "INTERNAL...
-  Invoke /kenspc-task-review instead." and the agent stops.
+- Expected: Layer 3 PREREQUISITE CHECK fires. Output contains both the literal
+  strings `code-fixer requires 5 review reports as input` and
+  `Invoke /kenspc-task-review instead.`. Agent stops without modifying any
+  file.
 
 **Sub-test B.3**: Invoke `@kenspc:task-implementer` pointing to a plan document
 path (any plan document, e.g., `docs/plans/extract-reusable-agents-v2.md`).
-- Expected: PREREQUISITE CHECK Step 3 fires. Output contains the bilingual
+- Expected: PREREQUISITE CHECK Step 4 fires. Output contains the bilingual
   "TASK_FILE points to a plan document..." / "TASK_FILE 是计划书..." refusal.
   Agent stops without implementing anything.
 
+**Sub-test B.4**: Invoke `@kenspc:code-fixer` with a CONTEXT block whose
+`REVIEW_REPORTS` field is empty (e.g., `REVIEW_REPORTS:` with no body).
+- Expected: PREREQUISITE CHECK fires on the empty-reports condition with the
+  same refusal message as B.2. Agent stops without modifying any file.
+
+**Sub-test B.5**: Invoke `@kenspc:regression-verifier` with a CONTEXT block
+that contains `REVIEW_REPORTS` but no `ACCOUNTABILITY_LIST`.
+- Expected: PREREQUISITE CHECK fires on the missing `ACCOUNTABILITY_LIST` and
+  outputs `Invoke /kenspc-task-review instead.`. Agent stops without modifying
+  any file.
+
 **Acceptance criteria:**
-- All three sub-tests executed in a fresh main-session and behaviors match the
+- All five sub-tests executed in a fresh main-session and behaviors match the
   expected outcomes.
 - No code modifications, no commits, no test artifacts created during the
   verification.
-- Verification result recorded: pass/fail per sub-test (in chat or separate
-  notes file — does not modify the codebase).
+- Verification result recorded as a "Test B Verification" subsection appended
+  to this task document's Plan-Level Concerns section, with one pass/fail line
+  per sub-test plus the observed output snippet for each.
 
 ---
 
@@ -741,27 +760,38 @@ path (any plan document, e.g., `docs/plans/extract-reusable-agents-v2.md`).
 **Note:** Same caveat as Task 22 — manual verification only. The implementing
 agent should mark this BLOCKED.
 
+**Precondition:** Run `/clear` (or open a new Claude Code session) immediately
+before each sub-test so no prior workflow state can influence dispatch.
+
 Execute three sub-tests per plan Testing Strategy section C in a fresh
 main-session where no review-related skill or workflow is active:
 
 **Sub-test C.1**: Type `我看到一个 bug, 你帮我看看`.
 - Expected: main session investigates directly via Read/Grep. The
-  `bug-reviewer` agent does NOT auto-trigger.
+  `bug-reviewer` agent does NOT auto-trigger. Verify by reviewing the
+  transcript that no Agent or Task tool invocation targeting
+  `kenspc:bug-reviewer` appears in the response chain.
 
 **Sub-test C.2**: Type `Can you review my plan?`.
 - Expected: main session asks a clarifying question (which plan? in this
   conversation? a file?). The `plan-document-reviewer` agent does NOT
-  auto-trigger.
+  auto-trigger. Verify by reviewing the transcript that no Agent or Task
+  tool invocation targeting `kenspc:plan-document-reviewer` appears in the
+  response chain.
 
 **Sub-test C.3**: Type `Fix this code`.
 - Expected: main session fixes directly via Edit/Write tools. The `code-fixer`
-  agent does NOT auto-trigger.
+  agent does NOT auto-trigger. Verify by reviewing the transcript that no
+  Agent or Task tool invocation targeting `kenspc:code-fixer` appears in the
+  response chain.
 
 **Acceptance criteria:**
 - All three sub-tests executed in a fresh main-session and behaviors match
   expected outcomes (no auto-delegation in any of the three).
-- Verification result recorded: pass/fail per sub-test (in chat or separate
-  notes file — does not modify the codebase).
+- Verification result recorded as a "Test C Verification" subsection appended
+  to this task document's Plan-Level Concerns section, with one pass/fail line
+  per sub-test plus the observed transcript evidence (specifically: confirmation
+  that no targeted Agent/Task tool invocation occurred).
 
 ---
 
