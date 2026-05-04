@@ -6,7 +6,7 @@ description: >
   accurate setup steps, then self-reviews against the code via review agent.
   Trigger on: "write a guide", "setup doc", "deployment guide", "onboarding doc",
   "写文档", "项目指南", "部署文档", "写个文档给新人看".
-version: 1.2.0
+version: 2.0.0
 argument-hint: <project-path> [custom instructions]
 ---
 
@@ -169,22 +169,15 @@ Section 7 - Troubleshooting and FAQ:
 After the guide is written and saved, automatically launch a review cycle.
 Do not wait for user instruction.
 
-### Step 1: Read the prompt template
+### Step 2: Construct CONTEXT block
 
-Read the file prompts/review.md from this skill's directory.
+Build a structured CONTEXT block to pass to the review agent:
 
-### Step 2: Render the prompt
-
-Replace all occurrences of these placeholders in the template:
-- {{GUIDE_PATH}} with the actual path of the guide file that was just written
-- {{PROJECT_PATH}} with the target project path from $ARGUMENTS
-
-### Prompt variables
-
-| Variable | Source | Values |
-|----------|--------|---------|
-| {{GUIDE_PATH}} | Phase 1 Step 3 | Path of the written guide file |
-| {{PROJECT_PATH}} | $ARGUMENTS PROJECT_PATH | Project path |
+```
+CONTEXT
+- GUIDE_PATH: <actual path of the guide file that was just written>
+- PROJECT_PATH: <target project path from $ARGUMENTS>
+```
 
 ### Step 3: Dispatch the review agent
 
@@ -192,8 +185,9 @@ Tell the user:
 "Guide written to [path]. Dispatching review agent now. / 指南已写入 [path]。正在启动审查代理。"
 
 Then dispatch a subagent using the Agent tool:
-- prompt: the rendered review prompt from Step 2
+- Agent name: `guide-document-reviewer`
 - description: "Review guide document"
+- prompt: the CONTEXT block from Step 2
 
 Do NOT write any state file. The subagent will execute the entire review
 (all four angles, in order) within its own context and return the summary.

@@ -497,7 +497,7 @@ Changes:
 
 ### Task 15: Update generate-guide/SKILL.md to dispatch agent
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 10
 
