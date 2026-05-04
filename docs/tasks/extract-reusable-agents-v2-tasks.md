@@ -322,7 +322,7 @@ Structure:
 
 ### Task 10: Create guide-document-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/guide-document-reviewer.md` from
 `plugins/kenspc/skills/generate-guide/prompts/review.md`. Same pattern as Task 9
