@@ -620,7 +620,7 @@ Changes:
 
 ### Task 19: Update plugins/kenspc/README.md
 
-**Status:** TODO
+**Status:** DONE
 
 Modify `plugins/kenspc/README.md` per plan Step 3.3.
 

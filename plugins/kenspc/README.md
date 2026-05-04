@@ -34,6 +34,44 @@ Skills can also be invoked via `/kenspc:generate-brief`, `/kenspc:generate-plan`
 `/kenspc:generate-task`, `/kenspc:task-implement`, `/kenspc:task-review`, and
 `/kenspc:generate-guide`.
 
+## Plugin Structure
+
+```
+plugins/kenspc/
+    .claude-plugin/
+    agents/               # 11 reusable subagents
+    commands/
+    hooks/
+    references/
+    shared/               # Cross-skill resources (e.g., discovery-framework.md)
+    skills/
+    README.md
+```
+
+## Agents
+
+Plugin agents live in `agents/` and are dispatched by skills via the Agent tool.
+They are also discoverable through `/agents` and can be `@kenspc:<name>`-mentioned
+where their description marks them safe to invoke standalone.
+
+| Agent | Type | Standalone | Description |
+|---|---|---|---|
+| `requirements-reviewer` | Code reviewer | Yes | Requirements completeness |
+| `edge-case-reviewer` | Code reviewer | Yes | Edge cases and error handling |
+| `quality-reviewer` | Code reviewer | Yes | Code quality and conventions |
+| `bug-reviewer` | Code reviewer | Yes | Bug hunting (skeptical mindset) |
+| `test-reviewer` | Code reviewer | Yes | Test coverage and quality |
+| `code-fixer` | Worker | No | Applies fixes from review reports |
+| `regression-verifier` | Verifier | No | Verifies fixes; read-only by design |
+| `task-implementer` | Worker | No | Implements tasks from a task document |
+| `plan-document-reviewer` | Doc reviewer | No | Reviews generated plan documents |
+| `guide-document-reviewer` | Doc reviewer | No | Reviews generated guide documents |
+| `task-document-reviewer` | Doc reviewer | No | Reviews generated task documents |
+
+Agents marked "Standalone: No" are orchestration-only — their description starts
+with `INTERNAL:` and their body refuses on missing CONTEXT. Invoke them through
+the parent slash command instead.
+
 ## Installation
 
 ### From GitHub marketplace
@@ -85,6 +123,7 @@ Use `/reload-plugins` to pick up changes without restarting.
 - **Stack-agnostic** — Skills inspect project config files rather than assuming specific frameworks
 - **Beginner-friendly guides** — Generated guides explain not just what to do, but why, with error recovery tips
 - **Bilingual output** — Progress messages and review summaries in English + Chinese; code and documents remain in their original language
+- **Reusable agents** — Subagent prompts live as plugin agents in `agents/`, discoverable via `/agents` and reusable across skills. Standalone-safe code reviewers can be `@kenspc:<name>`-invoked directly; orchestration-only workers are gated behind their parent slash commands
 
 ## Recommended Workflow
 
