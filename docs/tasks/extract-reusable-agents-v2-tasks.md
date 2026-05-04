@@ -696,7 +696,7 @@ Required content:
 
 ### Task 22: Verify standalone-safety defenses (Test B)
 
-**Status:** BLOCKED — requires manual verification in fresh main-session
+**Status:** DONE — verified 2026-05-04 (see "Test B Verification" below)
 
 **Depends on:** Task 17
 
@@ -753,7 +753,7 @@ that contains `REVIEW_REPORTS` but no `ACCOUNTABILITY_LIST`.
 
 ### Task 23: Verify non-trigger description gating (Test C)
 
-**Status:** BLOCKED — requires manual verification in fresh main-session
+**Status:** DONE — verified 2026-05-04 (see "Test C Verification" below)
 
 **Depends on:** Task 17
 
@@ -847,3 +847,81 @@ review them before execution begins.
 
 7. **CHANGELOG.md does not currently exist.** Plan Step 3.6 wording "Create or
    update" is resolved as **create**. Task 21 creates the file from scratch.
+
+## Test B Verification
+
+Manual verification executed 2026-05-04 in a fresh Claude Code main-session.
+All five sub-tests passed. No code modifications, no commits, no test artifacts
+were created during verification.
+
+| Sub-test | Defense layer | Agent ID | Tool uses | Result |
+|---|---|---|---|---|
+| B.1 | Layer 3 (agent body PREREQUISITE CHECK) | `a70aa953f1703466f` | 0 | PASS |
+| B.2 | Layer 1 (description gating) | (not dispatched) | 0 | PASS |
+| B.3 | Layer 3 (agent body PREREQUISITE CHECK Step 4) | `ac7ba7834b5bffed3` | 0 | PASS |
+| B.4 | Layer 3 (agent body PREREQUISITE CHECK) | `afdc7080796b5a4c8` | 0 | PASS |
+| B.5 | Layer 3 (agent body PREREQUISITE CHECK) | `a8b59f8ad4275e2f0` | 0 | PASS |
+
+**B.1** — `@kenspc:bug-reviewer` invoked without CONTEXT. Agent body output
+contained the literal `This agent expects a CONTEXT block. Example:` followed
+by the example block listing the keys `TASK_FILE`, `REVIEW_SCOPE`,
+`CUSTOM_INSTRUCTIONS`. Agent stopped without performing any work.
+
+**B.2** — `@kenspc:code-fixer` invoked with no input. The main session refused
+to dispatch the agent at all, citing the `INTERNAL:` description prefix and
+pointing the user to `/kenspc-task-review`. Layer 1 description gating fired
+before Layer 3 was reached. Strictly the literal Layer 3 strings were not
+emitted (because the agent body never executed), but the user-visible safety
+property — "no harmful action, clear path to correct workflow" — was achieved.
+Recorded as PASS per the test design intent (defense in depth: any layer
+firing is sufficient).
+
+**B.3** — `@kenspc:task-implementer` invoked with `TASK_FILE: docs/plans/extract-reusable-agents-v2.md`.
+Output was the bilingual refusal: `TASK_FILE points to a plan document, not a
+task document. Use /kenspc-task to generate a task document from this plan
+first. / TASK_FILE 是计划书，不是任务文档。请先用 /kenspc-task 生成任务文档。`.
+Agent stopped without implementing anything.
+
+**B.4** — `@kenspc:code-fixer` invoked with a CONTEXT block whose
+`REVIEW_REPORTS` field was explicitly empty. Output was the literal refusal:
+`code-fixer requires 5 review reports as input. This agent is part of the
+/kenspc-task-review workflow. Invoke /kenspc-task-review instead.`. Agent
+stopped without modifying any file.
+
+**B.5** — `@kenspc:regression-verifier` invoked with `REVIEW_REPORTS` present
+but `ACCOUNTABILITY_LIST` absent. Output: `regression-verifier requires
+review reports and accountability list as input. This agent is part of the
+/kenspc-task-review workflow. Invoke /kenspc-task-review instead.`. Agent
+stopped without modifying any file.
+
+## Test C Verification
+
+Manual verification executed 2026-05-04 in three fresh Claude Code main-sessions
+(`/clear` between each sub-test). All three sub-tests passed: no
+auto-delegation occurred for any of the kenspc agents under any of the three
+vague phrases.
+
+| Sub-test | Phrase | Agent that must NOT trigger | Result |
+|---|---|---|---|
+| C.1 | `我看到一个 bug, 你帮我看看` | `kenspc:bug-reviewer` | PASS |
+| C.2 | `Can you review my plan?` | `kenspc:plan-document-reviewer` | PASS |
+| C.3 | `Fix this code` | `kenspc:code-fixer` | PASS |
+
+**C.1** — Main session loaded the `superpowers:systematic-debugging` skill and
+asked clarifying questions in Chinese (which file, what symptom, what
+trigger, recent changes). No `Agent` or `Task` tool invocation targeting
+`kenspc:bug-reviewer` appeared in the response chain.
+
+**C.2** — Main session searched for plan files via `Glob`/`Grep`, identified
+candidate documents (`docs/plans/extract-reusable-agents-v2.md` and the
+related task document), and asked a clarifying scope question. No `Agent` or
+`Task` tool invocation targeting `kenspc:plan-document-reviewer` appeared in
+the response chain.
+
+**C.3** — Main session noted that `/clear` had removed prior conversation
+context and asked the user to provide code, a file path, or a symptom. No
+`Agent` or `Task` tool invocation targeting `kenspc:code-fixer` appeared in
+the response chain.
+
+Layer 1 (description gating) confirmed working as designed for all three
+vague phrases.
