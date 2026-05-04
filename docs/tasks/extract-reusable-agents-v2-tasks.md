@@ -464,7 +464,7 @@ Changes:
 
 ### Task 14: Update generate-plan/SKILL.md to dispatch agent
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 9
 

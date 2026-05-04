@@ -7,7 +7,7 @@ description: >
   review agent. Three phases: Discover, Plan, Verify.
   Trigger on: "write a plan", "generate plan", "写计划书", "编写计划",
   "帮我规划", "计划一下", or writing plan files to docs/plans/.
-version: 1.3.0
+version: 2.0.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 
@@ -222,22 +222,15 @@ user instruction.
 
 Skip this phase entirely if the plan was not written to a file (discussion-only mode).
 
-### Step 1: Read the prompt template
+### Step 2: Construct CONTEXT block
 
-Read the file prompts/review.md from this skill's directory.
+Build a structured CONTEXT block to pass to the review agent:
 
-### Step 2: Render the prompt
-
-Replace all placeholders in the template:
-- {{PLAN_PATH}} — the actual path of the plan file that was just written
-- {{PROJECT_PATH}} — the project root path, or "N/A" if not in a project
-
-### Prompt variables
-
-| Variable | Source | Values |
-|----------|--------|---------|
-| {{PLAN_PATH}} | Phase 2 Step 3 | Path of the written plan file |
-| {{PROJECT_PATH}} | Project root | Path or "N/A" |
+```
+CONTEXT
+- PLAN_PATH: <actual path of the plan file that was just written>
+- PROJECT_PATH: <project root path, or "N/A" if not in a project>
+```
 
 ### Step 3: Dispatch the review agent
 
@@ -245,8 +238,9 @@ Tell the user:
 "Plan written to [path]. Dispatching review agent now. / 计划书已写入 [path]。正在启动审查代理。"
 
 Then dispatch a subagent using the Agent tool:
-- prompt: the rendered review prompt from Step 2
+- Agent name: `plan-document-reviewer`
 - description: "Review plan document"
+- prompt: the CONTEXT block from Step 2
 
 Do NOT write any state file. The subagent will execute the entire review
 (all four angles, in order) within its own context and return the summary.
