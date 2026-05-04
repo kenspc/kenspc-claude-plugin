@@ -158,7 +158,7 @@ Angle 5 content (Test Coverage) and the `test-reviewer` description.
 
 ### Task 6: Create code-fixer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/code-fixer.md` from
 `plugins/kenspc/skills/task-review/prompts/fix.md`. This is an orchestration-only
