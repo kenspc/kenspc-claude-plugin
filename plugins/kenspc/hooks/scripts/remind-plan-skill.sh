@@ -28,6 +28,19 @@ If you have already invoked the skill, ignore this message.
 MSG
     exit 0
     ;;
+  */docs/briefs/*.md)
+    case "$file_path" in
+      *_template*|*template_*|*README*) exit 0 ;;
+    esac
+    cat <<'MSG'
+NOTE: You are writing a requirement brief directly. These should normally be
+generated using the generate-brief skill (invoke via Skill tool or /kenspc-brief)
+which runs a structured discovery conversation against the shared discovery
+framework before producing the brief.
+If you have already invoked the skill, ignore this message.
+MSG
+    exit 0
+    ;;
   */docs/tasks/*.md)
     case "$file_path" in
       *_template*|*template_*|*README*) exit 0 ;;
