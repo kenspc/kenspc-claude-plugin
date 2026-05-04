@@ -3,8 +3,10 @@
 ## Context
 
 Decomposition of [docs/plans/v3-bitter-lesson-refactor.md](../plans/v3-bitter-lesson-refactor.md)
-into 13 fine-grained, independently verifiable tasks. Tasks map 1:1 to the
-plan's commit sequence (C0 audit → C12 final version bump). Execute tasks in
+into 13 fine-grained, independently verifiable tasks. Tasks 1–13 map 1:1 to
+the plan's commit slots C0–C12. Task 1 and Task 11 are audit-only — they
+produced no commit because their audits found existing state already
+conforming, so the merged history lands 11 commits, not 13. Execute tasks in
 order — each task's commit (where applicable) must independently pass the
 relevant subset of acceptance criteria, and the final task (Task 13) must
 pass all 11.
@@ -12,7 +14,10 @@ pass all 11.
 Related plan: [v3-bitter-lesson-refactor.md](../plans/v3-bitter-lesson-refactor.md)
 
 > Tasks marked with "Depends on" assume prior tasks have been completed.
-> Execute tasks in order.
+> Execute tasks in order. Audit-only tasks (Task 1, Task 11) may produce no
+> commit when findings are clean; downstream "Depends on" then refers to
+> the audit decision being recorded in the task document, not to a commit
+> existing in git history.
 
 ## Tasks
 
@@ -70,7 +75,7 @@ No commit unless findings need to roll into Task 12.
 
 ---
 
-### Task 2: Update plugin.json description and init CHANGELOG (C1)
+### Task 2: Update plugin.json description and prepend v3 stub to CHANGELOG (C1)
 
 **Status:** DONE
 
@@ -515,6 +520,8 @@ Files: modify
 
 **Status:** DONE
 
+**Depends on:** Task 10
+
 **Audit findings:**
 - All 6 command `.md` files: CLEAN. No `MUST` / `NEVER` / `CRITICAL` /
   `ULTRATHINK` tokens. No bilingual output forcings (the inline Chinese
@@ -532,13 +539,10 @@ Files: modify
   `grep -rnE '/ 中|/ 华|中 /|华 /' plugins/kenspc/commands
   plugins/kenspc/hooks` returns zero matches; `cat plugins/kenspc/hooks/hooks.json
   | python -m json.tool` succeeds.
-- Decision: no commit produced — the AC content greps already pass, and
-  the project ethos (per global CLAUDE.md and CONTRIBUTING tone) is to
-  avoid empty / no-op commits. The "one commit touching 8 files" wording
-  in the AC reads as an assumed worst-case rather than a strict
-  requirement when no edits are needed.
-
-**Depends on:** Task 10
+- Decision: no commit produced — the AC content greps already pass, so no
+  edits were needed. The AC's "one commit touching 8 files" wording reads
+  as a worst-case assumption rather than a strict requirement when the
+  audit finds the files already conform.
 
 Apply Rules 5/6 to the thin command files and the two hook scripts. These
 edits are minimal — the command files are short shells that delegate to
@@ -574,7 +578,9 @@ phrasing.
   successfully.
 - The four reminder messages in `remind-plan-skill.sh` are English-only
   and reference the corresponding skill by name with a one-line rationale.
-- One commit produced touching these 8 files.
+- If the audit finds the files already clean → no commit required (record
+  findings inline in this task); if any file needs edits → one commit
+  touching the affected subset of these 8 files.
 
 ---
 
@@ -723,6 +729,11 @@ Task 1 flagged it.
 - Task 8 must remain atomic — splitting the 5-agent change into multiple
   commits creates drift windows that the project CLAUDE.md treats as a bug.
 - Rollback: per the plan's § Rollback section, soft rollback = revert
-  Task 13 only. Tasks 2–12 are scoped to be functionally consistent on
-  their own (the plugin still self-identifies as v2 because the version
-  flip is deferred to Task 13).
+  Task 13 only. Tasks 2–12 (excluding Task 11, which was a no-op audit
+  with no commit to revert) are scoped to be functionally consistent on
+  their own. Note that `plugin.json`'s `version` field still reads
+  `"2.0.0"` after the soft rollback because Task 13 is what flips it; the
+  three SKILL.md files refactored in Task 4, however, already declare
+  `version: 3.0.0` in their own frontmatter and remain at 3.0.0 across a
+  soft rollback. This asymmetry is acceptable because SKILL.md `version`
+  tracks the skill's interface contract, not the plugin distribution.
