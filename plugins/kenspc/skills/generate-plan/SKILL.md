@@ -7,7 +7,7 @@ description: >
   review agent. Three phases: Discover, Plan, Verify.
   Trigger on: "write a plan", "generate plan", "写计划书", "编写计划",
   "帮我规划", "计划一下", or writing plan files to docs/plans/.
-version: 1.2.0
+version: 1.3.0
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 
@@ -70,7 +70,26 @@ read that file and use its contents as the initial requirement.
 
 Goal: Understand what the user wants to build/do, reach consensus on scope and approach.
 
-### Read Project Context (if in a project directory)
+### Step 1: Detect Brief Document (if input is a file path)
+
+If the requirement was loaded from a file path, ULTRATHINK to determine whether the
+file is a Discovery brief produced by the generate-brief skill:
+
+- File starts with `# Requirement Brief:`, OR
+- Contains the structured sections: Outcome, Scope, Failure Modes, The Hard Part, Context
+
+If it is a brief:
+- Gap-check the brief against the five dimensions in the discovery framework
+  (loaded in Step 3 below)
+- If gaps are found: ask only about the gaps (1-2 rounds maximum), then proceed
+  to Phase 2
+- If no gaps: tell the user "Brief 已覆盖所有关键维度，直接进入 Plan 阶段。 /
+  Brief covers all key dimensions; proceeding directly to Phase 2." and skip
+  Step 4 (Engage in Discussion)
+
+If it is not a brief, continue with the normal Discovery flow below.
+
+### Step 2: Read Project Context (if in a project directory)
 
 Before asking questions, silently gather context:
 - Read CLAUDE.md (project and root level) for conventions, tech stack, constraints
@@ -81,26 +100,49 @@ Before asking questions, silently gather context:
 
 If not in a project directory, skip this step entirely.
 
-### Engage in Discussion
+### Step 3: Read Discovery Framework
 
-This phase is principle-driven, not step-driven. Claude must:
+Read the discovery framework at `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md`
+and use it as the structural guide for the following discussion. The framework
+defines the five dimensions to check, the four input clarity levels, conversation
+rules, and exit conditions.
+
+### Step 4: Engage in Discussion
+
+This phase is principle-driven, not step-driven. Follow the discovery framework
+loaded in Step 3. Claude must:
 
 1. ULTRATHINK to analyze the requirement before responding
-2. Ask focused questions to clarify what is unclear — scope, constraints, priorities,
-   non-functional requirements, edge cases, target audience
-3. Provide suggestions, alternatives, and trade-offs for the user to consider
-4. Do NOT ask too many questions at once — 2-4 per round is ideal
+2. Use the framework's five dimensions (Outcome, Failure Modes, The Hard Part,
+   Hidden Context, Stakes) as the internal checklist for what to ask. The
+   framework's `How to ask` column shows representative phrasings.
+3. Provide suggestions, alternatives, and trade-offs for the user to consider —
+   when the user is uncertain, recommend rather than just laying out options
+4. Do NOT ask too many questions at once — 2-4 per round is the upper bound;
+   one at a time is preferred for heavy questions (per framework Step 3)
 5. Do NOT make assumptions on technical decisions — ask when unsure
 6. Do NOT attempt to write or outline the plan yet — this phase is pure discussion
 7. Adapt the depth and direction of questions based on the type of plan
    (implementation, architecture, migration, evaluation, etc.)
-8. Match Discovery depth to input clarity. A vague idea ("我想加个通知系统")
-   needs 3-5 rounds; a structured requirement with acceptance criteria may need
-   only 1 round of gap-filling. Never proceed to Phase 2 with unresolved scope
-   ambiguity.
+8. Match Discovery depth to input clarity per the framework's four levels:
+   Level 1 → 1-2 rounds, Level 2 → 3-5 rounds, Level 3 → no limit,
+   Level 4 → trigger decomposition (see below)
 
-Continue this discussion until the user signals readiness to move forward
-(e.g., "OK", "let's write the plan", "可以了", "enough discussion", "go ahead").
+**Level 4 handling — too broad scope**: If the requirement spans multiple
+independent systems (e.g., "rebuild the entire backend" covering multiple
+services, schemas, and infrastructure), do NOT attempt a single plan. Stop
+the discussion, suggest decomposition, help identify natural module
+boundaries, then ask which module the user wants to plan first.
+
+**Exit conditions** — proceed to Phase 2 when **either** holds:
+
+- The user explicitly signals readiness ("OK", "let's write the plan",
+  "可以了", "go ahead", "enough discussion").
+- Claude judges that **Outcome, Failure Modes, and The Hard Part** are
+  sufficiently clear AND no remaining dimension has an obvious gap. In this
+  case, proactively suggest: "我觉得方向够清楚了，可以开始写计划了。还有什么需要讨论的吗？ /
+  Direction looks clear enough to start drafting. Anything else to discuss?"
+  The user may always continue the discussion.
 
 ## Phase 2: Plan
 
