@@ -534,17 +534,33 @@ Commit message format: `feat(v3): ...`, `refactor(v3): ...`, `fix(v3): ...`,
 
 ### C0 — Audit (no commit)
 
-**Goal**: confirm reference documents (#29, #30) need no narrative changes.
+**Goal**: confirm reference documents (#29, #30) need no narrative changes,
+and confirm the root `.claude-plugin/marketplace.json` does not require
+a version bump beyond what C12 will already do.
 
-**Inputs**: existing `plugins/kenspc/references/*.md`.
+**Inputs**: existing `plugins/kenspc/references/*.md`; root
+`.claude-plugin/marketplace.json`.
+
+**Audit checklist for each reference doc** (reject if any are present;
+fold into C11 if found):
+- Bilingual output (English + Chinese mixed in the same line)
+- Literal `MUST` / `NEVER` / `CRITICAL` / `ULTRATHINK` tokens
+- Numbered EXECUTION FLOW sections
+- "Common Rationalizations" tables
+- Numerical Red Flags (`~15+`, `more than half`, etc.)
+- Phrasing that depends on v2 dispatch architecture (e.g.,
+  template-variable substitution language)
 
 **DONE when**:
-- Both reference files reviewed. If clean (expected case): no commit;
-  proceed to C1.
+- Both reference files reviewed against the checklist. If clean
+  (expected case): no commit; proceed to C1.
 - If changes are needed: fold them into C11 (the README + project
   CLAUDE.md commit). C11's DONE-when criteria expand at that point to
   include the reference-doc edits — the implementer must add them
   explicitly.
+- `marketplace.json` reviewed: if it embeds a version field that
+  duplicates `plugin.json`, fold its bump into C12 alongside the
+  plugin.json bump; otherwise no action.
 
 ### C1 — Foundation: plugin.json description, CHANGELOG init
 
@@ -606,6 +622,8 @@ table above; Rules 2/3/4/5/6.
 - All bilingual output strings reduced to English.
 - `generate-guide` adds Dispatch Status Tables (Point 1 + Point 3) for
   the `guide-document-reviewer` dispatch.
+- `generate-task` adds Dispatch Status Tables (Point 1 + Point 3) for
+  the `task-document-reviewer` dispatch (Schema E result table).
 - `generate-brief` adds **no** dispatch tables — it has no review phase.
 
 **Constraint**: `generate-brief` must not gain a review phase. Spec is
@@ -719,6 +737,11 @@ Schema A + adopt the Anthropic code-review-harness coverage prompt to all
 **Constraint**: this commit must change all 5 agents together. Splitting
 into 5 commits creates drift windows; project CLAUDE.md treats drift
 between these 5 as a bug.
+
+**Frontmatter preservation**: when adding `effort:`, preserve every
+existing frontmatter field (`name`, `description`, `tools`, `model`).
+Do not reorder or rename them. `effort:` goes after `model:` to keep
+the diff minimal. This rule applies to C7, C8, and C9.
 
 ### C8 — 3 worker agents (code-fixer, regression-verifier, task-implementer)
 
@@ -840,13 +863,17 @@ done | tee /tmp/ac1.log
 test ! -s /tmp/ac1.log
 ```
 
-### AC2 — Plugin version
+### AC2 — Plugin version and description
 
 ```bash
 # plugin.json at 3.0.0
 grep -q '"version": "3.0.0"' plugins/kenspc/.claude-plugin/plugin.json
-# CHANGELOG has 3.0.0 entry
+# plugin.json description reflects v3 (mentions "Opus 4.7" and "design rules")
+grep -q 'Opus 4.7' plugins/kenspc/.claude-plugin/plugin.json
+grep -q 'design rules' plugins/kenspc/.claude-plugin/plugin.json
+# CHANGELOG has 3.0.0 entry, 2.0.0 entry preserved
 grep -q '^## 3.0.0' plugins/kenspc/CHANGELOG.md
+grep -q '^## 2.0.0' plugins/kenspc/CHANGELOG.md
 ```
 
 ### AC3 — No anti-rationalization tables
@@ -903,6 +930,10 @@ grep -q 'unconditional' plugins/kenspc/skills/task-implement/SKILL.md
 # Neither file uses the narrative "Then follow Steps" pattern for review dispatch.
 ! grep -E 'Then follow .* Step' plugins/kenspc/skills/task-review/SKILL.md
 ! grep -E 'Then follow .* Step' plugins/kenspc/skills/task-implement/SKILL.md
+# The canonical paragraph is byte-identical between the two files.
+diff <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task-review/SKILL.md | head -25) \
+     <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task-implement/SKILL.md | head -25)
+# Expected: empty diff (zero exit code).
 ```
 
 ### AC8 — Dispatch Status Tables present
@@ -925,11 +956,17 @@ test ! -s /tmp/ac8.log
 
 Manual review per agent. Confirm:
 - 5 review-angle agents — Schema A (HIGH/MED/LOW per angle)
-- `code-fixer` — Schema B (accountability table + DEFERRED prose)
+- `code-fixer` — Schema B (accountability table + DEFERRED prose);
+  output contract requires `short_label` (≤ 60 chars) per issue (Q5)
 - `regression-verifier` — Schema C (verification checks table)
 - `task-implementer` — Schema D (per-task table + BLOCKED prose)
 - 3 doc-reviewer agents — Schema E (angles × status × changes × commit);
   `task-document-reviewer` adds Plan-Level Concerns prose
+
+```bash
+# Cheap text-level sanity that supports the manual review:
+grep -q 'short_label' plugins/kenspc/agents/code-fixer.md
+```
 
 ### AC10 — README accurate
 
@@ -971,6 +1008,30 @@ cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
 4. **Regression check**: pick one task document from a prior session and
    re-run `/kenspc-task-implement`. Confirm the report shape matches
    Schema G and not the old bullet-list format.
+
+## Rollback
+
+This is a single-shot breaking refactor. If post-merge smoke testing
+fails or production reports critical regressions, rollback path:
+
+1. **Soft rollback (preferred)**: revert C12 only. The plugin still self-
+   identifies as v2.0.0 (since C12 is the version flip), so users on
+   `/plugin update` see no change. The intermediate commits (C1–C11) are
+   already merged, but each was scoped to be functionally consistent —
+   the v2 surface continues to work, just with v3-style internals.
+2. **Hard rollback**: `git revert` C1 through C12 in reverse order on a
+   `revert/v3.0` branch, merge back. Use this only if soft rollback
+   leaves user-visible breakage.
+3. **Targeted patch**: if a single skill or agent regresses (e.g.,
+   Risk 3 — `effort: max` on `generate-plan` overthinks), ship a 3.0.1
+   patch that downgrades the offending `effort:` value or restores a
+   specific deleted scaffolding line. Do **not** restore an entire
+   anti-rationalization table; per Anthropic 4.7 guidance the table
+   itself is the failure mode.
+
+Each commit C1–C11 is independently green against its scope (see each
+commit's DONE-when criteria); C12 is the only commit whose revert is
+sufficient to hide v3 from end users.
 
 ## Risks and Mitigations
 
