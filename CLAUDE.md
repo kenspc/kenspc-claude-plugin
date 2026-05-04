@@ -4,18 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, plan-to-task decomposition, task implementation with automatic code review, and project guide generation. Review phases use subagent architecture — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief skill has no review phase (it produces a discovery artifact, not a verifiable spec).
+A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, plan-to-task decomposition, task implementation with automatic code review, and project guide generation. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief skill has no review phase (it produces a discovery artifact, not a verifiable spec).
 
 ## Marketplace Structure
 
 - Root `.claude-plugin/marketplace.json` — plugin registry pointing to plugin directories
-- Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`skills/`, `commands/`, `hooks/`, `references/`, `shared/`)
+- Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`agents/`, `skills/`, `commands/`, `hooks/`, `references/`, `shared/`)
 
 ### Plugin Directory Layout
 
 ```
 plugins/kenspc/
 ├── .claude-plugin/plugin.json   # Plugin metadata (name, version, author)
+├── agents/                      # 11 reusable subagents (5 code reviewers + 3 doc reviewers + 3 workers)
 ├── commands/                    # Slash commands
 │   ├── kenspc-brief.md
 │   ├── kenspc-plan.md
@@ -33,23 +34,15 @@ plugins/kenspc/
 │   ├── generate-brief/
 │   │   └── SKILL.md             # No review phase — brief is a discovery artifact
 │   ├── generate-plan/
-│   │   ├── SKILL.md
-│   │   └── prompts/review.md
+│   │   └── SKILL.md
 │   ├── generate-task/
-│   │   ├── SKILL.md
-│   │   └── prompts/review.md
+│   │   └── SKILL.md
 │   ├── generate-guide/
-│   │   ├── SKILL.md
-│   │   └── prompts/review.md
+│   │   └── SKILL.md
 │   ├── task-implement/
-│   │   ├── SKILL.md
-│   │   └── prompts/implement.md
+│   │   └── SKILL.md
 │   └── task-review/
-│       ├── SKILL.md
-│       └── prompts/
-│           ├── review-angle-{1..5}.md   # 5 parallel review agent prompts
-│           ├── fix.md                   # Fix agent prompt
-│           └── regression.md            # Regression verification prompt
+│       └── SKILL.md
 ├── README.md
 └── LICENSE
 ```
@@ -60,7 +53,8 @@ plugins/kenspc/
 
 Each skill lives in `skills/<skill-name>/` with:
 - `SKILL.md` — skill definition with YAML frontmatter (`name`, `description`, `version`, `argument-hint`) followed by structured phases/modes
-- `prompts/` — prompt templates (optional)
+
+Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
 
 Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`).
 
@@ -83,31 +77,64 @@ All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — n
 | `version` | Yes | Semver (e.g., `1.0.0`) |
 | `argument-hint` | Recommended | Shown in UI as placeholder (e.g., `<project-path>`) |
 
-### Prompt Templates
-
-- Use `{{VARIABLE_NAME}}` placeholders (SCREAMING_SNAKE_CASE)
-- Store in the skill's `prompts/` subdirectory
-
 ### Subagent Review Architecture
 
-Skills use subagents (the Agent tool) for automated review. Two models exist:
+Skills use plugin agents (defined in `agents/`) as workers, dispatched via the
+Agent tool. Three orchestration patterns:
 
 **No review (generate-brief):**
-- Brief is a discovery artifact, not a verifiable spec — review happens downstream when `generate-plan` consumes the brief
-- Phase 1 detection in `generate-plan` recognises briefs and gap-checks against the same five dimensions
+Brief is a discovery artifact, not a verifiable spec. Review happens downstream
+when generate-plan consumes the brief. Phase 1 detection in generate-plan
+recognizes briefs and gap-checks against the same five dimensions defined in
+`shared/discovery-framework.md`.
 
 **Serial review (generate-plan, generate-task, generate-guide):**
-- Single subagent reviews all angles in order (each angle builds on fixes from the previous one)
-- Suited for document review where angles have cascade dependencies
-- Subagent returns a structured change log (what changed, why)
+Skill dispatches a single named agent (`plan-document-reviewer`,
+`task-document-reviewer`, or `guide-document-reviewer`) that reviews all
+angles in order in its own context. Each angle builds on fixes from the
+previous one (cascade dependency). Agent body returns a structured change log.
 
-**Parallel MapReduce review (task-review):**
-- Phase 1: 5 read-only review subagents dispatched in parallel (one per angle)
-- Phase 2: Fix subagent receives all 5 reports, deduplicates, applies fixes, produces accountability list
-- Phase 3: Regression subagent cross-checks reports against accountability list, verifies fixes, runs build/test/lint
-- Suited for code review where angles are orthogonal (edge cases, bugs, test coverage, etc.)
+**Parallel MapReduce (task-review):**
+- Phase 1: 5 read-only review agents dispatched in parallel
+  (`requirements-reviewer`, `edge-case-reviewer`, `quality-reviewer`,
+  `bug-reviewer`, `test-reviewer`) — one per angle.
+- Phase 2: `code-fixer` receives all 5 reports, deduplicates, applies fixes,
+  produces accountability list.
+- Phase 3: `regression-verifier` cross-checks reports against accountability
+  list, verifies fixes, runs build/test/lint.
 
-No shared state files — each subagent runs in its own context, eliminating concurrency conflicts.
+No shared state files — each agent runs in its own context, eliminating
+concurrency conflicts. Subagents cannot spawn other subagents; orchestration
+stays at the skill (main session) level.
+
+#### CONTEXT block contract
+
+Each agent declares its expected CONTEXT keys in its body. The dispatching
+SKILL.md must construct exactly those keys. See each agent file's
+"CONTEXT YOU WILL RECEIVE" section for the contract.
+
+#### Standalone safety classification
+
+- **Standalone-safe**: 5 review-angle agents (requirements, edge-case, quality,
+  bug, test) can be invoked directly. Description gates auto-delegation;
+  body refuses without CONTEXT.
+- **Orchestration-only**: 6 worker/document-reviewer agents (code-fixer,
+  regression-verifier, task-implementer, plan-document-reviewer,
+  guide-document-reviewer, task-document-reviewer) require structured
+  CONTEXT input from a calling skill. Their first description sentence is
+  "INTERNAL: ..." and their body has a prerequisite check that refuses on
+  missing CONTEXT.
+
+#### Maintenance note
+
+The 5 review-angle agents share PREREQUISITES, FILE COVERAGE, and CUSTOM
+INSTRUCTIONS sections by convention. When modifying any of these sections in
+one agent, apply the same change to the other 4. Duplication is intentional
+(each agent is independently readable); silent drift between them is a bug.
+
+### Non-Goals
+
+`shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at three call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would also break Phase 2's need for raw conversation context. See the v2 plan's Non-Goals section (`docs/plans/extract-reusable-agents-v2.md`) for the authoritative rationale.
 
 ### Writing Rules for Skill Content
 

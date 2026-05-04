@@ -583,7 +583,7 @@ it must never exist on a checked-out branch.
 
 ### Task 18: Update root CLAUDE.md
 
-**Status:** TODO
+**Status:** DONE
 
 Modify `CLAUDE.md` (project root) per plan Step 3.2.
 
