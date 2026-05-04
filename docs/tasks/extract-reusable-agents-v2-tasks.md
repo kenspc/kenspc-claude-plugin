@@ -694,7 +694,7 @@ Required content:
 
 ### Task 22: Verify standalone-safety defenses (Test B)
 
-**Status:** TODO
+**Status:** BLOCKED — requires manual verification in fresh main-session
 
 **Depends on:** Task 17
 
@@ -732,7 +732,7 @@ path (any plan document, e.g., `docs/plans/extract-reusable-agents-v2.md`).
 
 ### Task 23: Verify non-trigger description gating (Test C)
 
-**Status:** TODO
+**Status:** BLOCKED — requires manual verification in fresh main-session
 
 **Depends on:** Task 17
 
