@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, plan-to-task decomposition, task implementation with automatic code review, and project guide generation. Review phases use subagent architecture — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code.
+A Claude Code plugin marketplace containing structured development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, plan-to-task decomposition, task implementation with automatic code review, and project guide generation. Review phases use subagent architecture — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief skill has no review phase (it produces a discovery artifact, not a verifiable spec).
 
 ## Marketplace Structure
 
 - Root `.claude-plugin/marketplace.json` — plugin registry pointing to plugin directories
-- Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`skills/`, `commands/`, `hooks/`, `references/`)
+- Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`skills/`, `commands/`, `hooks/`, `references/`, `shared/`)
 
 ### Plugin Directory Layout
 
@@ -17,6 +17,7 @@ A Claude Code plugin marketplace containing structured development workflow plug
 plugins/kenspc/
 ├── .claude-plugin/plugin.json   # Plugin metadata (name, version, author)
 ├── commands/                    # Slash commands
+│   ├── kenspc-brief.md
 │   ├── kenspc-plan.md
 │   ├── kenspc-task.md
 │   ├── kenspc-guide.md
@@ -26,7 +27,11 @@ plugins/kenspc/
 │   ├── hooks.json               # Hook event configuration
 │   └── scripts/                 # Hook scripts (use ${CLAUDE_PLUGIN_ROOT})
 ├── references/                  # Example documents for user onboarding
+├── shared/                      # Cross-skill resources (referenced via ${CLAUDE_PLUGIN_ROOT}/shared/)
+│   └── discovery-framework.md   # Discovery logic shared by generate-brief and generate-plan
 ├── skills/
+│   ├── generate-brief/
+│   │   └── SKILL.md             # No review phase — brief is a discovery artifact
 │   ├── generate-plan/
 │   │   ├── SKILL.md
 │   │   └── prompts/review.md
@@ -63,6 +68,8 @@ Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
 
 References live in `references/` as example documents (task format, plan format) to help users get started.
 
+Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. The current entry is `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions).
+
 ### Portable Paths
 
 All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — never hardcode absolute paths.
@@ -84,6 +91,10 @@ All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — n
 ### Subagent Review Architecture
 
 Skills use subagents (the Agent tool) for automated review. Two models exist:
+
+**No review (generate-brief):**
+- Brief is a discovery artifact, not a verifiable spec — review happens downstream when `generate-plan` consumes the brief
+- Phase 1 detection in `generate-plan` recognises briefs and gap-checks against the same five dimensions
 
 **Serial review (generate-plan, generate-task, generate-guide):**
 - Single subagent reviews all angles in order (each angle builds on fixes from the previous one)

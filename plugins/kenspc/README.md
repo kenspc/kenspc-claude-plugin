@@ -10,7 +10,8 @@ Skills activate automatically when Claude Code detects a matching task context.
 
 | Skill | Description |
 |-------|-------------|
-| generate-plan | Three-phase plan document generation: collaborative discovery, drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). |
+| generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
+| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). |
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code. Confirms decomposition with user, then self-reviews for completeness and execution order via review agent. |
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete. Automatically runs task-review on completion with a consolidated final report. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review recent changes. Accepts custom instructions to narrow scope. |
@@ -22,14 +23,16 @@ Commands provide a direct way to invoke each skill.
 
 | Command | Usage |
 |---------|-------|
+| `/kenspc-brief` | `/kenspc-brief <rough idea or topic>` |
 | `/kenspc-plan` | `/kenspc-plan <requirement or path> [custom instructions]` |
 | `/kenspc-task` | `/kenspc-task <plan-document-path> [phase] [custom instructions]` |
 | `/kenspc-task-implement` | `/kenspc-task-implement <path-to-task-file>` |
 | `/kenspc-task-review` | `/kenspc-task-review [path-to-task-file] [custom instructions]` |
 | `/kenspc-guide` | `/kenspc-guide <project-path> [custom instructions]` |
 
-Skills can also be invoked via `/kenspc:generate-plan`, `/kenspc:generate-task`,
-`/kenspc:task-implement`, `/kenspc:task-review`, and `/kenspc:generate-guide`.
+Skills can also be invoked via `/kenspc:generate-brief`, `/kenspc:generate-plan`,
+`/kenspc:generate-task`, `/kenspc:task-implement`, `/kenspc:task-review`, and
+`/kenspc:generate-guide`.
 
 ## Installation
 
@@ -73,6 +76,7 @@ Use `/reload-plugins` to pick up changes without restarting.
 
 ## Design Principles
 
+- **Discover before plan** — Optional `/kenspc-brief` produces a requirement brief through structured discovery (five dimensions: Outcome, Failure Modes, The Hard Part, Hidden Context, Stakes). Both `generate-brief` and `generate-plan` share the same discovery framework so the brief→plan handoff is seamless
 - **Plan before code** — Structured discovery and planning before any implementation begins
 - **Implement then review** — Implementation and review are distinct phases; task-implement auto-triggers task-review to catch issues immediately
 - **Multi-angle review** — Each review cycle examines work from multiple dimensions (requirements, edge cases, code quality, bugs, test coverage)
@@ -85,10 +89,11 @@ Use `/reload-plugins` to pick up changes without restarting.
 ## Recommended Workflow
 
 ```
-Backlog → /kenspc-plan → docs/plans/*.md → /kenspc-task → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
+Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/plans/*.md → /kenspc-task → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
 ```
 
-1. **Plan**: Use `/kenspc-plan` to create a strategic plan through collaborative discussion
+0. **Brief (optional)**: Use `/kenspc-brief` when the idea is too vague to plan directly, or when you need a shareable discovery document before planning. Skip this step if you already have a clear, structured requirement.
+1. **Plan**: Use `/kenspc-plan` to create a strategic plan through collaborative discussion. If a brief was generated in step 0, pass it as the requirement: `/kenspc-plan docs/briefs/your-brief.md` — the skill detects briefs and gap-checks against the same five dimensions.
 2. **Decompose**: Use `/kenspc-task` to break the plan into fine-grained executable tasks
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone

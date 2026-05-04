@@ -16,19 +16,20 @@ A Claude Code plugin marketplace with structured development workflow plugins.
 
 ### [kenspc](./plugins/kenspc/)
 
-Opinionated development workflows — plan before you code, structured task implementation, iterative multi-angle code review, and project guide generation.
+Opinionated development workflows — discovery brief, plan before you code, structured task implementation, iterative multi-angle code review, and project guide generation.
 
 **Skills:**
 
 | Skill | What it does |
 |-------|-------------|
-| generate-plan | Collaborative discovery + drafting + automated 4-angle review |
+| generate-brief | Structured discovery conversation (five dimensions) producing a shareable requirement brief — no review phase |
+| generate-plan | Collaborative discovery (shared framework, brief-aware) + drafting + automated 4-angle review |
 | generate-task | Plan-to-task decomposition via code analysis + 2-angle review |
 | task-implement | Automated batch implementation with input validation and auto-review |
 | task-review | Parallel 5-agent code review (MapReduce) with fix consolidation and regression verification |
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |
 
-**Commands:** `/kenspc-plan`, `/kenspc-task`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`
+**Commands:** `/kenspc-brief`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`
 
 See the [plugin README](./plugins/kenspc/README.md) for full documentation, usage examples, and design principles.
 
@@ -45,6 +46,7 @@ plugins/
     commands/
     hooks/
     references/
+    shared/               # Cross-skill resources (e.g., discovery-framework.md)
     README.md
 ```
 
