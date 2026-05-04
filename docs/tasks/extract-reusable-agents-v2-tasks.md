@@ -98,7 +98,7 @@ structure naturally when rewriting to read from CONTEXT.
 
 ### Task 3: Create quality-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/quality-reviewer.md` from
 `plugins/kenspc/skills/task-review/prompts/review-angle-3.md`. Same structure as
