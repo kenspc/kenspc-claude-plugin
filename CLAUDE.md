@@ -107,6 +107,12 @@ No shared state files — each agent runs in its own context, eliminating
 concurrency conflicts. Subagents cannot spawn other subagents; orchestration
 stays at the skill (main session) level.
 
+As of v3.0, every SKILL.md and every agent .md declares an `effort:`
+frontmatter value (`low` / `medium` / `high` / `xhigh` / `max`). Reasoning
+depth is configured per skill and per agent via this field, not via inline
+directive tokens. See `docs/plans/v3-bitter-lesson-refactor.md` § Effort
+Allocation for the per-skill and per-agent rationale.
+
 #### CONTEXT block contract
 
 Each agent declares its expected CONTEXT keys in its body. The dispatching
@@ -138,8 +144,9 @@ one agent, apply the same change to the other 4. Duplication is intentional
 
 ### Writing Rules for Skill Content
 
-- Bilingual output: progress messages and summaries in English + Chinese (华语); code stays in its original language
-- Use ULTRATHINK before major analysis or generation steps
+- Use rationale-anchored business rules (Rule 2): frame each rule as "Why: ..." prose rather than command-style imperatives, so the model follows the intent of the rule, not just its letter
+- Output in English only: progress messages, final summaries, and status labels are English-only; the discovery framework's "How to ask" examples are the deliberate exception (illustrative phrasings showing the model how to phrase Discovery questions in the user's language)
+- Reasoning depth is controlled by the `effort:` frontmatter on each SKILL.md and agent .md, not by inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 

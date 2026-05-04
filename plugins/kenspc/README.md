@@ -114,16 +114,61 @@ Use `/reload-plugins` to pick up changes without restarting.
 
 ## Design Principles
 
-- **Discover before plan** — Optional `/kenspc-brief` produces a requirement brief through structured discovery (five dimensions: Outcome, Failure Modes, The Hard Part, Hidden Context, Stakes). Both `generate-brief` and `generate-plan` share the same discovery framework so the brief→plan handoff is seamless
-- **Plan before code** — Structured discovery and planning before any implementation begins
-- **Implement then review** — Implementation and review are distinct phases; task-implement auto-triggers task-review to catch issues immediately
-- **Multi-angle review** — Each review cycle examines work from multiple dimensions (requirements, edge cases, code quality, bugs, test coverage)
-- **Parallel review agents** — Task review dispatches independent review agents in parallel for speed, then consolidates fixes and verifies with regression
-- **Explicit decomposition** — Task decomposition is a visible, reviewable step between planning and implementation, not hidden inside the implementation agent
-- **Stack-agnostic** — Skills inspect project config files rather than assuming specific frameworks
-- **Beginner-friendly guides** — Generated guides explain not just what to do, but why, with error recovery tips
-- **Bilingual output** — Progress messages and review summaries in English + Chinese; code and documents remain in their original language
-- **Reusable agents** — Subagent prompts live as plugin agents in `agents/`, discoverable via `/agents` and reusable across skills. Standalone-safe code reviewers can be `@kenspc:<name>`-invoked directly; orchestration-only workers are gated behind their parent slash commands
+v3 follows six design rules. The authoritative spec lives in
+[docs/plans/v3-bitter-lesson-refactor.md](../../docs/plans/v3-bitter-lesson-refactor.md);
+the rules are summarized here:
+
+- **Workflow SOP** — The brief → plan → task → implement → review chain stays.
+  Each skill's phase structure is preserved; v3 changed how each phase is
+  executed, not what the phases are.
+- **Why-not-Command business rules** — Business rules are framed as rationale
+  ("Each task = one commit because the review unit is a task, not a session"),
+  not as command-style imperatives. Context and motivation help Claude follow
+  the intent, not just the letter, of each rule.
+- **DONE-criteria over step-by-step flow** — Skills and agents declare a
+  single-sentence Goal, the required Inputs, verifiable DONE criteria, and
+  Constraints. The model decides the order. Numbered EXECUTION FLOW prose
+  is removed.
+- **No anti-rationalization scaffolding** — "Common Rationalizations" tables
+  and fake numerical Red Flags (`~15+`, `~8 rounds`, `more than half`) are
+  removed; listing specific laziness scripts inside the prompt primes the
+  model toward those scripts.
+- **Plain language over aggressive tokens** — Uppercase imperatives like
+  `MUST` and `NEVER`, `CRITICAL` labels, and the deep-reasoning trigger token
+  used in earlier versions are all removed. Reasoning depth is now controlled
+  by the `effort:` frontmatter; "use" / "avoid" / "do not" replace `MUST` /
+  `NEVER`; stop-and-report prose replaces `STOP immediately`.
+- **English-only output** — Progress messages and final summaries are in
+  English. Display language is already controlled by session, global
+  CLAUDE.md, and project CLAUDE.md; forcing bilingual at the skill level
+  conflicts with those controls. The discovery framework's "How to ask"
+  examples are the deliberate exception (illustrative phrasings showing
+  the model how to phrase Discovery questions in the user's language).
+
+Cross-cutting properties from earlier versions are preserved:
+
+- **Multi-angle parallel review** — The 5 review-angle agents
+  (requirements / edge-case / quality / bug / test) dispatch in parallel,
+  feed `code-fixer`, then `regression-verifier`.
+- **Reusable agents** — Plugin agents live in `agents/`, discoverable via
+  `/agents`. Standalone-safe code reviewers can be
+  `@kenspc:<name>`-invoked directly; orchestration-only workers are gated
+  behind their parent slash commands.
+- **Stack-agnostic** — Skills inspect project config files rather than
+  assuming specific frameworks.
+
+### Effort levels
+
+Every SKILL.md and agent .md declares an `effort:` frontmatter value
+(`low` / `medium` / `high` / `xhigh` / `max`) per the
+[Claude Code skills frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference)
+and [subagent frontmatter reference](https://code.claude.com/docs/en/sub-agents#supported-frontmatter-fields).
+Discovery, planning, decomposition, implementation, and review all run at
+`xhigh` or `max`, matching Anthropic's recommendation for Claude Opus 4.7
+coding and agentic workloads. When running at `xhigh`/`max`, set a large
+max-output-token budget so the model has room to think and act across its
+subagents and tool calls (this is a session/API config concern, not a
+plugin concern).
 
 ## Recommended Workflow
 
@@ -142,10 +187,14 @@ Small fixes can skip all skills and be implemented directly.
 ## Requirements
 
 **Required:**
-- Claude Code v1.0.33+
+- Claude Code v2.1.0+ (the version line that supports the `effort:`
+  frontmatter on SKILL.md and agent .md files; required because v3 declares
+  `effort:` on every skill and agent).
 
 **Recommended:**
-- [superpowers](https://github.com/anthropics/claude-plugins-official) plugin — provides ULTRATHINK deep-reasoning used throughout the skills
+- A session that allows a generous max-output-token budget — when skills run
+  at `xhigh`/`max` effort, the model needs room to think and act across its
+  subagents and tool calls (Anthropic guidance for Claude Opus 4.7).
 
 ## Reference Documents
 

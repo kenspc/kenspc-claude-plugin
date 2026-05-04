@@ -580,7 +580,7 @@ phrasing.
 
 ### Task 12: Update README.md and project CLAUDE.md (C11)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 11
 
