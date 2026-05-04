@@ -419,7 +419,7 @@ Files: modify
 
 ### Task 9: Refactor 3 worker agents — code-fixer / regression-verifier / task-implementer (C8)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 8
 
