@@ -222,7 +222,7 @@ user instruction.
 
 Skip this phase entirely if the plan was not written to a file (discussion-only mode).
 
-### Step 2: Construct CONTEXT block
+### Step 1: Construct CONTEXT block
 
 Build a structured CONTEXT block to pass to the review agent:
 
@@ -232,7 +232,7 @@ CONTEXT
 - PROJECT_PATH: <project root path, or "N/A" if not in a project>
 ```
 
-### Step 3: Dispatch the review agent
+### Step 2: Dispatch the review agent
 
 Tell the user:
 "Plan written to [path]. Dispatching review agent now. / 计划书已写入 [path]。正在启动审查代理。"
@@ -240,12 +240,12 @@ Tell the user:
 Then dispatch a subagent using the Agent tool:
 - Agent name: `plan-document-reviewer`
 - description: "Review plan document"
-- prompt: the CONTEXT block from Step 2
+- prompt: the CONTEXT block from Step 1
 
 Do NOT write any state file. The subagent will execute the entire review
 (all four angles, in order) within its own context and return the summary.
 
-### Step 4: Present results
+### Step 3: Present results
 
 When the subagent returns, present its summary to the user. The summary includes:
 - Which review angles passed cleanly
