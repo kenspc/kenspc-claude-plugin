@@ -6,14 +6,15 @@ Shared discovery logic referenced by `generate-plan` and `generate-brief`.
 
 Understand what the user truly needs before any generation begins. Discovery is conversation, not generation. Resist the urge to draft, outline, or template.
 
-## Step 1: Assess Input Clarity (ULTRATHINK)
+## Step 1: Assess Input Clarity
 
-On first receiving input, classify it:
+On first receiving input, classify it. The calling skill's `effort:` setting
+controls how deeply this assessment runs.
 
 - **Level 1 — Clear.** Structured requirement or PRD; most dimensions answered. → Gap-check only, 1-2 rounds.
 - **Level 2 — Mostly clear.** User knows direction, has gaps. → 3-5 rounds to fill key dimensions.
 - **Level 3 — Vague.** User unsure of direction. → No round limit. Explore all dimensions.
-- **Level 4 — Too broad.** Spans multiple independent systems. → Stop. Suggest decomposition. Do NOT attempt a single plan/brief covering everything.
+- **Level 4 — Too broad.** Spans multiple independent systems. → Stop. Suggest decomposition. A single plan/brief covering everything would be too coarse to be useful.
 
 ## Step 2: The Five Dimensions (Claude's internal checklist)
 
@@ -34,7 +35,7 @@ Not a questionnaire. Use these to decide what to ask, in what order.
 - **When the user is uncertain, recommend.** Offer 2-3 options with brief pros/cons and pick one. Don't lay options out and walk away.
 - **Match the user's language.** Chinese → Chinese, English → English, mixed → follow the dominant.
 - **No round limit.** Depth adapts to clarity level.
-- **Do NOT produce output during Discovery.** No drafts, outlines, or templates. Resist jumping ahead.
+- **Do not produce output during Discovery.** No drafts, outlines, or templates. Resist jumping ahead — Discovery's job is to surface intent, not to start the deliverable.
 
 ## Step 4: Exit Conditions
 

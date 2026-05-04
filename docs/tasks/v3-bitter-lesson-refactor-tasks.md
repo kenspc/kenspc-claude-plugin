@@ -111,7 +111,7 @@ Files: modify
 
 ### Task 3: Clean up shared/discovery-framework.md (C2)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 2
 
