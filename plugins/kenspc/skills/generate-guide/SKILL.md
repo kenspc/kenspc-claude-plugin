@@ -169,7 +169,7 @@ Section 7 - Troubleshooting and FAQ:
 After the guide is written and saved, automatically launch a review cycle.
 Do not wait for user instruction.
 
-### Step 2: Construct CONTEXT block
+### Step 1: Construct CONTEXT block
 
 Build a structured CONTEXT block to pass to the review agent:
 
@@ -179,7 +179,7 @@ CONTEXT
 - PROJECT_PATH: <target project path from $ARGUMENTS>
 ```
 
-### Step 3: Dispatch the review agent
+### Step 2: Dispatch the review agent
 
 Tell the user:
 "Guide written to [path]. Dispatching review agent now. / 指南已写入 [path]。正在启动审查代理。"
@@ -187,12 +187,12 @@ Tell the user:
 Then dispatch a subagent using the Agent tool:
 - Agent name: `guide-document-reviewer`
 - description: "Review guide document"
-- prompt: the CONTEXT block from Step 2
+- prompt: the CONTEXT block from Step 1
 
 Do NOT write any state file. The subagent will execute the entire review
 (all four angles, in order) within its own context and return the summary.
 
-### Step 4: Present results
+### Step 3: Present results
 
 When the subagent returns, present its summary to the user. The summary includes:
 - Which review angles passed cleanly
