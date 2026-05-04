@@ -669,7 +669,7 @@ Modify `plugins/kenspc/.claude-plugin/plugin.json`:
 
 ### Task 21: Create CHANGELOG.md
 
-**Status:** TODO
+**Status:** DONE
 
 Create the new file `plugins/kenspc/CHANGELOG.md` with the v2.0.0 entry per plan
 Step 3.6 template.
