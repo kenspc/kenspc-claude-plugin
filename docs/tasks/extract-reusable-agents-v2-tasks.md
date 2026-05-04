@@ -74,7 +74,7 @@ Structure:
 
 ### Task 2: Create edge-case-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/edge-case-reviewer.md` from
 `plugins/kenspc/skills/task-review/prompts/review-angle-2.md`. Same structure as
