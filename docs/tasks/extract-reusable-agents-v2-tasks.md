@@ -201,7 +201,7 @@ Structure:
 
 ### Task 7: Create regression-verifier agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/regression-verifier.md` from
 `plugins/kenspc/skills/task-review/prompts/regression.md`. Orchestration-only
