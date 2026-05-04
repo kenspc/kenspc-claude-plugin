@@ -138,7 +138,7 @@ After Phase 1, check the implementation results:
 ### Step 1: Read the review skill dispatch sequence
 
 Read `${CLAUDE_PLUGIN_ROOT}/skills/task-review/SKILL.md` for its dispatch sequence
-(Steps 4-6 of its Execution section). Do NOT execute task-review's Step 1
+(Steps 3-5 of its Execution section). Do NOT execute task-review's Step 1
 ($ARGUMENTS parsing) — instead use the inputs constructed in this Phase 2 Step 2.
 
 ### Step 2: Construct CONTEXT block
@@ -160,11 +160,11 @@ CONTEXT
 Tell the user:
 "Implementation complete. Starting automatic code review. / 实现完成。正在启动自动代码审查。"
 
-Then follow task-review SKILL Steps 4-6: dispatch the 5 review-angle agents in
+Then follow task-review SKILL Steps 3-5: dispatch the 5 review-angle agents in
 parallel (`requirements-reviewer`, `edge-case-reviewer`, `quality-reviewer`,
 `bug-reviewer`, `test-reviewer`), then `code-fixer`, then `regression-verifier`,
 using the CONTEXT block from Step 2. The verdict and reporting follow task-review
-SKILL Step 7.
+SKILL Step 6.
 
 ### Step 4: Present final report
 

@@ -70,7 +70,7 @@ If $ARGUMENTS is empty or contains no file path:
 - Set REVIEW_SCOPE to "changes"
 - Set TASK_FILE to "N/A"
 
-### Step 3: Construct CONTEXT block
+### Step 2: Construct CONTEXT block
 
 Build a structured CONTEXT block that will be passed to every dispatched agent:
 
@@ -81,14 +81,14 @@ CONTEXT
 - CUSTOM_INSTRUCTIONS: <user's custom instructions or "N/A">
 ```
 
-### Step 4: Dispatch parallel review agents (Phase 1)
+### Step 3: Dispatch parallel review agents (Phase 1)
 
 Tell the user:
 "Starting parallel code review (5 angles). / 正在启动并行代码审查（5 个角度）。"
 
 Dispatch **5 subagents in a single message** using the Agent tool, one for each
 review angle. Each subagent is read-only — it analyzes code and produces a report
-but does NOT modify any files. Pass the CONTEXT block from Step 3 as the dispatch
+but does NOT modify any files. Pass the CONTEXT block from Step 2 as the dispatch
 prompt for every agent.
 
 - Agent name: `requirements-reviewer`, description: "Review: requirements"
@@ -97,12 +97,19 @@ prompt for every agent.
 - Agent name: `bug-reviewer`, description: "Review: bug hunting"
 - Agent name: `test-reviewer`, description: "Review: test coverage"
 
-### Step 5: Dispatch fix agent (Phase 2)
+After all 5 agents return, verify each one produced a complete report. If any
+agent returned an error, an empty response, or an obviously incomplete report
+(e.g., only a header with no findings or no closing summary), do NOT proceed to
+Step 4. Re-dispatch the failed agent(s) with the same CONTEXT block. If the
+re-dispatch also fails, stop and inform the user which angles are missing —
+proceeding to fix with fewer than 5 reports loses coverage silently.
+
+### Step 4: Dispatch fix agent (Phase 2)
 
 Collect all 5 review reports. Then dispatch a single subagent:
 - Agent name: `code-fixer`
 - description: "Fix reported issues"
-- prompt: extend the CONTEXT block from Step 3 with a `REVIEW_REPORTS` field
+- prompt: extend the CONTEXT block from Step 2 with a `REVIEW_REPORTS` field
   containing all 5 reports inline, e.g.:
 
 ```
@@ -127,7 +134,7 @@ REVIEW_REPORTS
 The fix agent will deduplicate overlapping findings, apply fixes, and commit.
 It must produce an accountability list mapping every reported issue to an action.
 
-### Step 6: Dispatch regression agent (Phase 3)
+### Step 5: Dispatch regression agent (Phase 3)
 
 After the fix agent returns, dispatch a single subagent:
 - Agent name: `regression-verifier`
@@ -142,7 +149,7 @@ The regression agent verifies:
 3. build/test/lint passes
 4. Fix commits did not introduce new issues
 
-### Step 7: Present results
+### Step 6: Present results
 
 When the regression agent returns, determine the verdict and present results.
 
