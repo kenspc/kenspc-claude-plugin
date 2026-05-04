@@ -27,7 +27,7 @@ Decisions made during decomposition (recorded in Plan-Level Concerns at bottom):
 
 ### Task 1: Create requirements-reviewer agent + agents/ directory
 
-**Status:** TODO
+**Status:** DONE
 
 Create the new agent file `plugins/kenspc/agents/requirements-reviewer.md` (this
 task also creates the `plugins/kenspc/agents/` directory as a side effect). Source
