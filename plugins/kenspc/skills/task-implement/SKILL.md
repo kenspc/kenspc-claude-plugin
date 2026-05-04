@@ -4,7 +4,7 @@ description: >
   Automated batch implementation: auto-implements ALL incomplete tasks from a task
   document without user interaction, then runs automated code review. Only use when
   the user explicitly requests automated/batch task implementation.
-version: 1.3.0
+version: 2.0.0
 argument-hint: <path-to-task-file>
 ---
 
@@ -62,10 +62,6 @@ If the user omits the path, ask them to provide it.
 
 ## Phase 1: Implement via subagent
 
-### Step 1: Read the prompt template
-
-Read the file `prompts/implement.md` from this skill's directory.
-
 ### Step 2: Validate input document
 
 Read the file at the provided path. Check whether it is a task document or a plan document:
@@ -82,16 +78,14 @@ Do NOT proceed with implementation.
 
 If validation passes, retain the parsed task list for use in Step 4 (Confirm with user).
 
-### Step 3: Render the prompt
+### Step 3: Construct CONTEXT block
 
-Replace all occurrences of `{{TASK_FILE}}` in the template with the actual task file
-path from $ARGUMENTS.
+Build a structured CONTEXT block to pass to the implement agent:
 
-### Prompt variables
-
-| Variable | Source | Values |
-|----------|--------|---------|
-| {{TASK_FILE}} | $ARGUMENTS PATH | Path to the task document |
+```
+CONTEXT
+- TASK_FILE: <path to the task document from $ARGUMENTS>
+```
 
 ### Step 4: Confirm with user
 
@@ -112,8 +106,9 @@ Tell the user:
 "Starting task implementation. Dispatching implement agent now. / 开始实现任务。正在启动实现代理。"
 
 Then dispatch a subagent using the Agent tool:
-- prompt: the rendered implement prompt from Step 3
+- Agent name: `task-implementer`
 - description: "Implement tasks from document"
+- prompt: the CONTEXT block from Step 3
 
 Do NOT write any state file. The subagent will implement all incomplete tasks within
 its own context and return a summary.
@@ -140,23 +135,36 @@ After Phase 1, check the implementation results:
   to Step 4 to present a simplified final report (omit Code Review and Build Status
   sections, keep Implementation and Next Steps).
 
-### Step 1: Read the review skill
+### Step 1: Read the review skill dispatch sequence
 
-Read the file `${CLAUDE_PLUGIN_ROOT}/skills/task-review/SKILL.md` and follow its
-instructions for reading prompt templates and dispatching agents.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/task-review/SKILL.md` for its dispatch sequence
+(Steps 4-6 of its Execution section). Do NOT execute task-review's Step 1
+($ARGUMENTS parsing) — instead use the inputs constructed in this Phase 2 Step 2.
 
-### Step 2: Render the review prompt
+### Step 2: Construct CONTEXT block
 
-Replace `{{TASK_FILE}}` with the same task file path. Set `{{REVIEW_SCOPE}}` to "task".
-Set `{{CUSTOM_INSTRUCTIONS}}` to "N/A" (unless the user provided specific review instructions).
+Build the CONTEXT block directly (do not call task-review's Step 1):
+- `TASK_FILE` = the same task document path from Phase 1
+- `REVIEW_SCOPE` = "task"
+- `CUSTOM_INSTRUCTIONS` = "N/A" (unless the user provided specific review instructions)
+
+```
+CONTEXT
+- TASK_FILE: <task path from Phase 1>
+- REVIEW_SCOPE: task
+- CUSTOM_INSTRUCTIONS: N/A
+```
 
 ### Step 3: Dispatch the review
 
 Tell the user:
 "Implementation complete. Starting automatic code review. / 实现完成。正在启动自动代码审查。"
 
-Then follow the review dispatch process as defined in the task-review skill
-(parallel review subagents → fix subagent → regression subagent).
+Then follow task-review SKILL Steps 4-6: dispatch the 5 review-angle agents in
+parallel (`requirements-reviewer`, `edge-case-reviewer`, `quality-reviewer`,
+`bug-reviewer`, `test-reviewer`), then `code-fixer`, then `regression-verifier`,
+using the CONTEXT block from Step 2. The verdict and reporting follow task-review
+SKILL Step 7.
 
 ### Step 4: Present final report
 
