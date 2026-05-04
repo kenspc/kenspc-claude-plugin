@@ -12,21 +12,30 @@ PREREQUISITE CHECK
      /kenspc-task-implement instead of using this agent directly."
    Then stop.
 
-2. Read the file at TASK_FILE. Inspect its structure:
+2. If the file at TASK_FILE does not exist or cannot be opened, mark the
+   run as BLOCKED with the reason "TASK_FILE not found or unreadable: <path>"
+   and stop.
+
+3. Read the file at TASK_FILE. Inspect its structure:
    - A task document contains entries with **Status:** markers
      (TODO, IN PROGRESS, DONE, BLOCKED).
    - A plan document contains Implementation Steps organized by Phase/Step,
      without Status markers.
 
-3. If the file is a plan document (Phase/Step structure, no Status markers),
+4. If the file is a plan document (Phase/Step structure, no Status markers),
    output:
      "TASK_FILE points to a plan document, not a task document. Use
      /kenspc-task to generate a task document from this plan first. /
      TASK_FILE 是计划书，不是任务文档。请先用 /kenspc-task 生成任务文档。"
    Then stop without implementing anything.
 
-4. If the file does not exist or cannot be parsed, mark the run as BLOCKED
-   with the reason and stop.
+5. If the file contains BOTH **Status:** markers AND a Phase/Step structure
+   (ambiguous document), mark the run as BLOCKED with reason "TASK_FILE
+   structure is ambiguous (contains both task and plan markers); ask the
+   user to confirm the intended document type" and stop.
+
+6. If the file cannot be parsed for any other reason, mark the run as
+   BLOCKED with the reason and stop.
 
 CONTEXT YOU WILL RECEIVE
 The dispatching skill provides a CONTEXT block with exactly this key:

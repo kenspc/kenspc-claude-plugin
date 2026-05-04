@@ -272,9 +272,11 @@ Structure:
 - File exists with frontmatter (`name: task-implementer`,
   `tools: Read, Write, Edit, Bash, Grep, Glob`, `model: inherit`).
 - Description starts with `INTERNAL:` and ends with "Do not auto-delegate.".
-- PREREQUISITE CHECK has 4 numbered steps; Step 3 contains both the English and
-  Chinese halves of the plan-vs-task refusal message (verify by string match for
-  both `TASK_FILE points to a plan document` and `TASK_FILE 是计划书`).
+- PREREQUISITE CHECK has 6 numbered steps (Step 2 checks file existence early,
+  Step 5 catches ambiguous task/plan documents); the plan-vs-task refusal step
+  contains both the English and Chinese halves of the message in the same
+  paragraph (verify by string match for both `TASK_FILE points to a plan
+  document` and `TASK_FILE 是计划书`).
 - CONTEXT section lists exactly 1 key (`TASK_FILE`).
 - AUTONOMY BOUNDARIES section contains ALWAYS, STOP, NEVER subsections unchanged
   from source.
