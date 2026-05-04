@@ -257,7 +257,7 @@ Files: modify
 
 ### Task 6: Refactor task-review SKILL.md with unconditional dispatch (C5)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 5
 

@@ -6,73 +6,67 @@ description: >
   not overkill, each agent covers a different angle (bugs, edge cases, tests,
   security, conventions). Works with a task document (review against requirements)
   or standalone (review recent changes/uncommitted code).
-version: 2.0.0
+version: 3.0.0
+effort: xhigh
 argument-hint: [path-to-task-file]
 ---
 
 # Task Review
 
-Parallel multi-angle code review with automated fix and regression verification.
+Parallel multi-angle code review with automated fix and regression
+verification.
 
 ## Trigger Phrases
 
-Use this skill when the user says: "review my code", "code review", "review against tasks",
-"review changes", "代码审查", "审查代码", "review 一下", or any request to review
-implemented code for quality, correctness, and completeness.
+Use this skill when the user says: "review my code", "code review", "review
+against tasks", "review changes", "代码审查", "审查代码", "review 一下", or
+any request to review implemented code for quality, correctness, and
+completeness.
 
-## Common Rationalizations
+## Quality bar
 
-| Agent says | Why it's wrong |
-|---|---|
-| "这个文件是 boilerplate，不需要 review" | Errors in boilerplate propagate across the entire project. FILE COVERAGE rule: every modified file must be reviewed. |
-| "所有 angle 报的 issue 都是 LOW/MEDIUM，跳过 fix agent" | Fix agent processes all severities. LOW is marked as acknowledged, MEDIUM is evaluated for fix. Skipping fix agent loses deduplication and accountability tracking. |
-| "Build 过了就不需要 regression agent" | Build passing does not mean fixes are correct. The regression agent verifies that fixes actually resolve the reported issues, not just that the code compiles. |
-| "AI 生成的代码应该没问题" | AI code needs *more* scrutiny, not less. It's confident and plausible, even when wrong. |
-| "能跑就行" | Working code that's unreadable, insecure, or architecturally wrong creates debt that compounds. |
-
-## Red Flags
-
-Stop and inform the user if any of these occur (thresholds are starting values — adjust based on project experience):
-
-- 5 review angles report a combined ~15+ HIGH issues → Code quality is below what review can fix. Inform the user that partial reimplementation may be needed.
-- Fix agent's DEFERRED items outnumber FIXED items → Most issues require architectural changes. Review is treating symptoms, not causes. Inform the user.
-- Regression agent finds that fix commits introduced new HIGH issues → Fix agent created new problems. Inform the user that manual intervention is needed.
+A useful review surfaces every real issue across five independent angles
+(requirements, edge cases, quality, bugs, tests), applies the fixes that
+should be applied, defers the rest with rationale, and verifies that the
+resulting code still builds, tests, and lints. Each modified file is
+covered; no file is silently skipped because it "looks routine".
 
 ## Prerequisites
 
-- A project with code to review
-- Optionally, a task document for requirements context
+- A project with code to review.
+- Optionally, a task document for requirements context.
 
 ## Arguments
 
 $ARGUMENTS format: [PATH] [CUSTOM_INSTRUCTIONS]
 
-- PATH (optional): first token, path to a task document. If omitted, the review covers
-  recent changes (uncommitted, staged, or recently committed) without a requirements
-  reference.
-- CUSTOM_INSTRUCTIONS (optional): everything after the path, free-text that narrows the
-  review scope or adds specific requirements (e.g., "only review src/api/", "focus on
-  security and SQL injection", "只review authentication相关的代码").
+- PATH (optional): first token, path to a task document. If omitted, the
+  review covers recent changes (uncommitted, staged, or recently committed)
+  without a requirements reference.
+- CUSTOM_INSTRUCTIONS (optional): everything after the path, free-text that
+  narrows the review scope or adds specific requirements (e.g., "only review
+  src/api/", "focus on security and SQL injection").
 
-If $ARGUMENTS contains no file path (first token is not a path), treat the entire
-input as CUSTOM_INSTRUCTIONS.
+If $ARGUMENTS contains no file path (first token is not a path), treat the
+entire input as CUSTOM_INSTRUCTIONS.
 
 ## Execution
 
 ### Step 1: Determine review scope
 
 If $ARGUMENTS contains a file path:
-- Set REVIEW_SCOPE to "task"
-- Set TASK_FILE to the provided path
-- Verify the file exists; if not, ask the user for the correct path
+- Set REVIEW_SCOPE to "task".
+- Set TASK_FILE to the provided path.
+- Verify the file exists; if not, ask the user for the correct path.
 
 If $ARGUMENTS is empty or contains no file path:
-- Set REVIEW_SCOPE to "changes"
-- Set TASK_FILE to "N/A"
+- Set REVIEW_SCOPE to "changes".
+- Set TASK_FILE to "N/A".
 
 ### Step 2: Construct CONTEXT block
 
-Build a structured CONTEXT block that will be passed to every dispatched agent:
+Build a structured CONTEXT block that will be passed to every dispatched
+agent:
 
 ```
 CONTEXT
@@ -81,15 +75,39 @@ CONTEXT
 - CUSTOM_INSTRUCTIONS: <user's custom instructions or "N/A">
 ```
 
-### Step 3: Dispatch parallel review agents (Phase 1)
+### Step 3: Render Planned Dispatch table and dispatch parallel review agents
 
-Tell the user:
-"Starting parallel code review (5 angles). / 正在启动并行代码审查（5 个角度）。"
+Render this 5-row Planned Dispatch table so the user sees the planned
+dispatch:
 
-Dispatch **5 subagents in a single message** using the Agent tool, one for each
-review angle. Each subagent is read-only — it analyzes code and produces a report
-but does NOT modify any files. Pass the CONTEXT block from Step 2 as the dispatch
-prompt for every agent.
+| # | Agent | Status |
+|---|-------|--------|
+| 1 | requirements-reviewer | pending |
+| 2 | edge-case-reviewer | pending |
+| 3 | quality-reviewer | pending |
+| 4 | bug-reviewer | pending |
+| 5 | test-reviewer | pending |
+
+## Code Review Phase (unconditional)
+
+Dispatch all 5 review-angle agents. This is a workflow contract, not a
+judgment call — the orchestrator does not decide whether a review is
+"needed". The reason: agents are unreliable evaluators of work they just
+produced (Anthropic, Harness Design, 2026), so the review exists precisely
+because self-evaluation is biased toward confirming the work just done.
+
+Dispatch even when:
+- The implementation just completed and the orchestrator saw all the code
+- Tests passed during implementation
+- The code looks correct
+
+The orchestrator's job in this phase is to dispatch and aggregate — not to
+pre-filter findings.
+
+Dispatch **5 subagents in a single message** using the Agent tool, one for
+each review angle. Each subagent is read-only — it analyzes code and
+produces a report but does not modify any files. Pass the CONTEXT block
+from Step 2 as the dispatch prompt for every agent.
 
 - Agent name: `requirements-reviewer`, description: "Review: requirements"
 - Agent name: `edge-case-reviewer`, description: "Review: edge cases"
@@ -97,14 +115,29 @@ prompt for every agent.
 - Agent name: `bug-reviewer`, description: "Review: bug hunting"
 - Agent name: `test-reviewer`, description: "Review: test coverage"
 
-After all 5 agents return, verify each one produced a complete report. If any
-agent returned an error, an empty response, or an obviously incomplete report
-(e.g., only a header with no findings or no closing summary), do NOT proceed to
-Step 4. Re-dispatch the failed agent(s) with the same CONTEXT block. If the
-re-dispatch also fails, stop and inform the user which angles are missing —
-proceeding to fix with fewer than 5 reports loses coverage silently.
+After all 5 agents return, verify each one produced a complete report. If
+any agent returned an error, an empty response, or an obviously incomplete
+report (e.g., only a header with no findings or no closing summary), do not
+proceed to Step 4. Re-dispatch the failed agent(s) with the same CONTEXT
+block. If the re-dispatch also fails, stop and inform the user which angles
+are missing — proceeding to fix with fewer than 5 reports loses coverage
+silently.
 
-### Step 4: Dispatch fix agent (Phase 2)
+### Step 4: Aggregate review findings (Schema A roll-up)
+
+Render the consolidated review findings table by aggregating Schema A
+output from all 5 review-angle agents:
+
+| Angle | HIGH | MEDIUM | LOW |
+|-------|------|--------|-----|
+| requirements | <n> | <n> | <n> |
+| edge-case    | <n> | <n> | <n> |
+| quality      | <n> | <n> | <n> |
+| bug          | <n> | <n> | <n> |
+| test         | <n> | <n> | <n> |
+| **Total**    | <n> | <n> | <n> |
+
+### Step 5: Dispatch fix agent
 
 Collect all 5 review reports. Then dispatch a single subagent:
 - Agent name: `code-fixer`
@@ -131,10 +164,19 @@ REVIEW_REPORTS
 [Angle 5 full report]
 ```
 
-The fix agent will deduplicate overlapping findings, apply fixes, and commit.
-It must produce an accountability list mapping every reported issue to an action.
+The fix agent deduplicates overlapping findings, applies fixes, and commits.
+It produces an accountability list mapping every reported issue to an
+action. Render its Schema B result table verbatim:
 
-### Step 5: Dispatch regression agent (Phase 3)
+| # | short_label | Severity | File:Line | Action | Commit |
+|---|-------------|----------|-----------|--------|--------|
+| 1 | <≤60 char>  | HIGH     | path:42   | FIXED  | abc1234 |
+| 2 | <≤60 char>  | MEDIUM   | path:99   | DEFERRED | — |
+
+Below the table, render the Deferred Issues prose verbatim from the agent's
+output.
+
+### Step 6: Dispatch regression agent
 
 After the fix agent returns, dispatch a single subagent:
 - Agent name: `regression-verifier`
@@ -144,40 +186,66 @@ After the fix agent returns, dispatch a single subagent:
   (`ACCOUNTABILITY_LIST`).
 
 The regression agent verifies:
-1. Every issue from the 5 reports is accounted for in the fix list
-2. Fixed issues are actually fixed in the code
-3. build/test/lint passes
-4. Fix commits did not introduce new issues
+- every issue from the 5 reports is accounted for in the fix list,
+- fixed issues are actually fixed in the code,
+- build / test / lint passes,
+- fix commits did not introduce new issues.
 
-### Step 6: Present results
+Render its Schema C result table verbatim:
 
-When the regression agent returns, determine the verdict and present results.
+| # | Check                            | Result | Detail                  |
+|---|----------------------------------|--------|-------------------------|
+| 1 | All accountability rows fixed    | PASS   | —                       |
+| 2 | Build succeeds                   | PASS   | —                       |
+| 3 | Tests pass                       | FAIL   | 2 failures (see below)  |
+| 4 | Lint passes                      | PASS   | —                       |
+| 5 | No regressions in non-fix files  | PASS   | —                       |
 
-#### Pass/Fail Determination
+Below the table, render the Detail prose verbatim for each non-PASS row.
+
+### Step 7: Final consolidated report (Schema F)
+
+Render the final consolidated report using Schema F:
+
+```
+## Review summary
+
+(Schema A roll-up across 5 agents — total HIGH / MEDIUM / LOW counts.)
+
+## Fixes
+
+(Schema B verbatim.)
+
+## Verification
+
+(Schema C verbatim.)
+
+## Verdict
+
+PASS / FAIL / PARTIAL — one paragraph rationale.
+
+## Next steps
+
+Bulleted list of follow-ups (deferred issues, regression failures,
+reviewer recommendations).
+```
+
+#### Verdict determination
 
 Based on the regression verification results, declare a verdict:
 
-**PASS** — all of these are true:
-  - Zero HIGH severity issues remain unresolved
-  - Zero INCORRECTLY FIXED items
-  - Build: PASS, Tests: PASS, Lint: PASS
-  - No regressions introduced by fix commits
+- **PASS** when all of: zero HIGH severity issues remain unresolved; zero
+  INCORRECTLY FIXED items; build / tests / lint all PASS; no regressions
+  introduced by fix commits.
+- **FAIL** when any of: one or more HIGH severity issues remain unresolved;
+  one or more INCORRECTLY FIXED items; build / test / lint fails; fix
+  commits introduced unresolved regressions.
+- **PARTIAL** when neither PASS nor FAIL applies cleanly — for example,
+  HIGH issues are deferred with explicit rationale and the user must decide
+  whether to accept.
 
-**FAIL** — any of these are true:
-  - 1+ HIGH severity issues remain unresolved
-  - 1+ INCORRECTLY FIXED items
-  - Build, test, or lint fails
-  - Fix commits introduced unresolved regressions
+MEDIUM and LOW issues do not change the verdict but appear in the report.
 
-MEDIUM and LOW issues do not affect the verdict but must be listed in the report.
-
-#### Summary
-
-Present the full summary to the user:
-- **Verdict: PASS or FAIL**
-- Each review angle's findings
-- All changes made with reasons
-- Any unresolved issues (with severity)
-- Regression verification result
-- If PASS: "No further review needed. / 无需再次审查。"
-- If FAIL: "Address N HIGH issues and re-run review. / 请处理 N 个 HIGH 问题后重新审查。"
+The Next steps bullets call out: deferred issues, regression failures,
+reviewer recommendations the user should act on, and whether re-running
+the review is suggested.
