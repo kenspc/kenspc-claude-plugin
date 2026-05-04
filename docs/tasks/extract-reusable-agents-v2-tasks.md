@@ -285,7 +285,7 @@ Structure:
 
 ### Task 9: Create plan-document-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/plan-document-reviewer.md` from
 `plugins/kenspc/skills/generate-plan/prompts/review.md`.
