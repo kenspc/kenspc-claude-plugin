@@ -140,7 +140,7 @@ naming alignment with the other 4 `*-reviewer` agents.
 
 ### Task 5: Create test-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/test-reviewer.md` from
 `plugins/kenspc/skills/task-review/prompts/review-angle-5.md`. Same structure with
