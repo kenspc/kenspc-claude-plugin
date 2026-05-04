@@ -239,7 +239,7 @@ Structure:
 
 ### Task 8: Create task-implementer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/task-implementer.md` from
 `plugins/kenspc/skills/task-implement/prompts/implement.md`. This agent embeds
