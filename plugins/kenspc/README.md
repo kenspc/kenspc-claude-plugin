@@ -129,8 +129,9 @@ the rules are summarized here:
   single-sentence Goal, the required Inputs, verifiable DONE criteria, and
   Constraints. The model decides the order. Numbered EXECUTION FLOW prose
   is removed.
-- **No anti-rationalization scaffolding** — "Common Rationalizations" tables
-  and fake numerical Red Flags (`~15+`, `~8 rounds`, `more than half`) are
+- **No anti-rationalization scaffolding** — The anti-rationalization tables
+  (`Common-Rationalizations`-style tables that listed laziness scripts) and
+  fake numerical Red Flags (`~15+`, `~8 rounds`, `more than half`) are
   removed; listing specific laziness scripts inside the prompt primes the
   model toward those scripts.
 - **Plain language over aggressive tokens** — Uppercase imperatives like

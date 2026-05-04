@@ -650,7 +650,7 @@ Files: modify
 
 ### Task 13: Bump plugin version and finalize CHANGELOG (C12)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 12
 
