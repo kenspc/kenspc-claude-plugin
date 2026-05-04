@@ -526,7 +526,7 @@ Changes:
 
 ### Task 16: Update generate-task/SKILL.md to dispatch agent
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 11
 

@@ -5,7 +5,7 @@ description: >
   Reads actual code to determine correct decomposition, then self-reviews via
   review agent. Trigger on: "generate tasks", "break down tasks", "create task
   document", "拆任务", "生成任务", "任务分解", "帮我拆任务".
-version: 1.0.0
+version: 2.0.0
 argument-hint: <plan-document-path> [phase] [custom instructions]
 ---
 
@@ -197,22 +197,16 @@ If cross-phase dependencies exist, add a note at the top of the document:
 After the task document is written, automatically launch a review cycle.
 Do not wait for user instruction.
 
-### Step 1: Read and render the review prompt
+### Step 1: Construct CONTEXT block
 
-Read the file `prompts/review.md` from this skill's directory.
+Build a structured CONTEXT block to pass to the review agent:
 
-Replace all placeholders:
-- `{{TASK_DOC_PATH}}` — path of the task document just written
-- `{{SOURCE_PATH}}` — the plan document path from $ARGUMENTS
-- `{{PROJECT_PATH}}` — project root path, or "N/A" if not in a project
-
-### Prompt variables
-
-| Variable | Source | Values |
-|----------|--------|---------|
-| {{TASK_DOC_PATH}} | Phase 2 Step 3 | Path of the written task document |
-| {{SOURCE_PATH}} | $ARGUMENTS PLAN_PATH | Plan document path |
-| {{PROJECT_PATH}} | Project root | Path or "N/A" |
+```
+CONTEXT
+- TASK_DOC_PATH: <path of the task document just written>
+- SOURCE_PATH: <plan document path from $ARGUMENTS>
+- PROJECT_PATH: <project root path, or "N/A" if not in a project>
+```
 
 ### Step 2: Dispatch the review agent
 
@@ -221,8 +215,9 @@ Tell the user:
 任务文档已写入 [path]。正在启动审查代理。"
 
 Dispatch a subagent using the Agent tool:
-- prompt: the rendered review prompt
+- Agent name: `task-document-reviewer`
 - description: "Review task document"
+- prompt: the CONTEXT block from Step 1
 
 ### Step 3: Present results
 
