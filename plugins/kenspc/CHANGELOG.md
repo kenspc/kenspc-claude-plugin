@@ -16,6 +16,11 @@ finalized when the version bump lands.
   + Constraints; Business Rules rewritten as rationale-anchored "Why:"
   framing instead of `MUST`/`NEVER` commands.
 
+### Notes
+
+- generate-plan ships at `effort: max`; if drafts bloat under real
+  workloads, downgrade to `xhigh` in 3.0.1.
+
 ## 2.0.0 — 2026-05-04
 
 ### Breaking changes

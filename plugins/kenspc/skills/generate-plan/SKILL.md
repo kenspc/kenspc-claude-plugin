@@ -7,7 +7,8 @@ description: >
   review agent. Three phases: Discover, Plan, Verify.
   Trigger on: "write a plan", "generate plan", "写计划书", "编写计划",
   "帮我规划", "计划一下", or writing plan files to docs/plans/.
-version: 2.0.0
+version: 3.0.0
+effort: max
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 
@@ -18,213 +19,246 @@ self-challenge, and automated verification. Three phases: Discover, Plan, Verify
 
 ## Trigger Phrases
 
-Use this skill when the user explicitly asks to **create a plan document**, using phrases
-like: "generate plan", "write a plan", "implementation plan", "plan this", "help me plan",
-"draft a plan", "project plan", "technical plan", "architecture plan", "let's plan",
-"I need a plan for", "before we start coding", "写计划书", "编写计划", "计画书",
-"规划", "计划一下", "帮我规划", "帮我写计划",
-or invokes `/kenspc-plan` directly.
+Use this skill when the user explicitly asks to **create a plan document**,
+using phrases like: "generate plan", "write a plan", "implementation plan",
+"plan this", "help me plan", "draft a plan", "project plan", "technical plan",
+"architecture plan", "let's plan", "I need a plan for", "before we start
+coding", "写计划书", "编写计划", "计画书", "规划", "计划一下", "帮我规划",
+"帮我写计划", or invokes `/kenspc-plan` directly.
 
-**Do NOT trigger this skill** when the user:
-- Asks to break down a plan into tasks or decompose tasks (use generate-task instead)
-- Asks casually about approach (e.g., "what's the best way to...", "我想想怎么做",
-  "how should we approach this?") — just discuss directly
-- Wants a quick opinion on architecture or design choices
-- Is already in the middle of implementation and asks about next steps
+Avoid triggering this skill when the user:
+- Asks to break down a plan into tasks or decompose tasks (use generate-task
+  instead).
+- Asks casually about approach (e.g., "what's the best way to...",
+  "我想想怎么做", "how should we approach this?") — just discuss directly.
+- Wants a quick opinion on architecture or design choices.
+- Is already in the middle of implementation and asks about next steps.
 
-## Common Rationalizations
+## Quality bar
 
-| Agent says | Why it's wrong |
-|---|---|
-| "需求很清楚，跳过 Discovery" | Even seemingly complete requirements need at least 2-3 clarifying questions. Plans without Discovery miss non-functional requirements and boundary conditions. |
-| "Plan 太短不需要 review" | Plan length does not determine review necessity. A 10-line wrong plan causes more damage than a 100-line correct plan. Phase 3 cannot be skipped. |
-| "用户说快点，跳过 self-challenge" | An unchallenged plan is wishful thinking. Phase 2's challenge step is quality assurance, not wasted time. |
-| "Planning is overhead, 直接开始写代码" | Planning IS the task. Implementation without a plan is just typing. 10 minutes of planning saves hours of rework. |
-
-## Red Flags
-
-Stop and inform the user if any of these occur (thresholds are starting values — adjust based on project experience):
-
-- Discovery continues beyond ~8 rounds with the user still changing core scope → Scope is fundamentally undefined. Stop and suggest the user write a brief scope statement before continuing.
-- Self-challenge reveals a fundamental flaw in the core technical approach → Do not patch the plan. Return to Discovery to re-discuss the technical approach.
-- Review agent reports 3+ HIGH issues in Angle 1 (Feasibility) → The plan may not be executable. Inform the user and suggest rewriting rather than patching.
+A useful plan has a clear, bounded objective; states the technical approach
+with rationale rather than asserting choices; gives every Implementation Step
+a concrete acceptance criterion (no vague language like "as appropriate", "if
+needed", "properly"); and surfaces unresolved questions instead of papering
+over them. The Phase 2 self-challenge exists because an unchallenged plan is
+wishful thinking — drafts should be revised, not just written.
 
 ## Prerequisites
 
-- If verifying against a project, the project should have actual code or config files
+- If verifying against a project, the project should have actual code or
+  config files.
 
 ## Arguments
 
 $ARGUMENTS format: REQUIREMENT [CUSTOM_INSTRUCTIONS]
 
-- REQUIREMENT: free-text description of what needs to be planned, OR a file path to a
-  requirements document (e.g., ./docs/requirements.md, PRD.md)
-- CUSTOM_INSTRUCTIONS: optional additional constraints or preferences
+- REQUIREMENT: free-text description of what needs to be planned, OR a file
+  path to a requirements document (e.g., `./docs/requirements.md`, `PRD.md`).
+- CUSTOM_INSTRUCTIONS: optional additional constraints or preferences.
 
 If no arguments are provided, ask the user what they want to plan.
 
-If the first token looks like a file path (starts with ./ or / or ends with .md/.txt),
-read that file and use its contents as the initial requirement.
+If the first token looks like a file path (starts with `./` or `/` or ends
+with `.md` / `.txt`), read that file and use its contents as the initial
+requirement.
 
 ## Phase 1: Discover
 
-Goal: Understand what the user wants to build/do, reach consensus on scope and approach.
+**Goal**: understand what the user wants to build, reach consensus on scope
+and approach, and surface the dimensions a plan needs before drafting starts.
 
-### Step 1: Detect Brief Document (if input is a file path)
+**Inputs**: REQUIREMENT (free-text or file path); the project's CLAUDE.md,
+README, and config files when running inside a project; the discovery
+framework at `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md`.
 
-If the requirement was loaded from a file path, ULTRATHINK to determine whether the
-file is a Discovery brief produced by the generate-brief skill:
-
-- File starts with `# Requirement Brief:`, OR
-- Contains the structured sections: Outcome, Scope, Failure Modes, The Hard Part, Context
-
-If it is a brief:
-- Gap-check the brief against the five dimensions in the discovery framework
-  (loaded in Step 3 below)
-- If gaps are found: ask only about the gaps (1-2 rounds maximum), then proceed
-  to Phase 2
-- If no gaps: tell the user "Brief 已覆盖所有关键维度，直接进入 Plan 阶段。 /
-  Brief covers all key dimensions; proceeding directly to Phase 2." and skip
-  Step 4 (Engage in Discussion)
-
-If it is not a brief, continue with the normal Discovery flow below.
-
-### Step 2: Read Project Context (if in a project directory)
-
-Before asking questions, silently gather context:
-- Read CLAUDE.md (project and root level) for conventions, tech stack, constraints
-- Read README.md, package.json, *.csproj, docker-compose.yml, .env.example,
-  app.json, eas.json, or any config files that reveal the stack
-- Scan the project structure (directory listing)
-- Note the tech stack, existing patterns, and constraints
-
-If not in a project directory, skip this step entirely.
-
-### Step 3: Read Discovery Framework
-
-Read the discovery framework at `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md`
-and use it as the structural guide for the following discussion. The framework
-defines the five dimensions to check, the four input clarity levels, conversation
-rules, and exit conditions.
-
-### Step 4: Engage in Discussion
-
-This phase is principle-driven, not step-driven. Follow the discovery framework
-loaded in Step 3. Claude must:
-
-1. ULTRATHINK to analyze the requirement before responding
-2. Use the framework's five dimensions (Outcome, Failure Modes, The Hard Part,
-   Hidden Context, Stakes) as the internal checklist for what to ask. The
-   framework's `How to ask` column shows representative phrasings.
-3. Provide suggestions, alternatives, and trade-offs for the user to consider —
-   when the user is uncertain, recommend rather than just laying out options
-4. Do NOT ask too many questions at once — 2-4 per round is the upper bound;
-   one at a time is preferred for heavy questions (per framework Step 3)
-5. Do NOT make assumptions on technical decisions — ask when unsure
-6. Do NOT attempt to write or outline the plan yet — this phase is pure discussion
-7. Adapt the depth and direction of questions based on the type of plan
-   (implementation, architecture, migration, evaluation, etc.)
-8. Match Discovery depth to input clarity per the framework's four levels:
-   Level 1 → 1-2 rounds, Level 2 → 3-5 rounds, Level 3 → no limit,
-   Level 4 → trigger decomposition (see below)
-
-**Level 4 handling — too broad scope**: If the requirement spans multiple
-independent systems (e.g., "rebuild the entire backend" covering multiple
-services, schemas, and infrastructure), do NOT attempt a single plan. Stop
-the discussion, suggest decomposition, help identify natural module
-boundaries, then ask which module the user wants to plan first.
-
-**Exit conditions** — proceed to Phase 2 when **either** holds:
+**DONE when** **either** holds:
 
 - The user explicitly signals readiness ("OK", "let's write the plan",
   "可以了", "go ahead", "enough discussion").
-- Claude judges that **Outcome, Failure Modes, and The Hard Part** are
-  sufficiently clear AND no remaining dimension has an obvious gap. In this
-  case, proactively suggest: "我觉得方向够清楚了，可以开始写计划了。还有什么需要讨论的吗？ /
-  Direction looks clear enough to start drafting. Anything else to discuss?"
-  The user may always continue the discussion.
+- Outcome, Failure Modes, and The Hard Part are sufficiently clear AND no
+  remaining dimension has an obvious gap. In this case, proactively suggest
+  drafting and let the user continue if they want more discussion.
+
+### Step 1: Detect brief document (if input is a file path)
+
+If the requirement was loaded from a file path, determine whether the file is
+a Discovery brief produced by the generate-brief skill:
+
+- The file starts with `# Requirement Brief:`, OR
+- The file contains the structured sections Outcome, Scope, Failure Modes,
+  The Hard Part, Context.
+
+If it is a brief:
+- Gap-check the brief against the five dimensions in the discovery framework
+  (loaded in Step 3).
+- If gaps exist, ask only about the gaps (one to two rounds maximum), then
+  proceed to Phase 2.
+- If no gaps, tell the user the brief covers all key dimensions and proceed
+  directly to Phase 2 — Step 4 is skipped.
+
+If it is not a brief, continue with the normal Discovery flow.
+
+### Step 2: Read project context (if in a project directory)
+
+Before asking questions, silently gather context:
+- Read CLAUDE.md (project and root level) for conventions, tech stack,
+  constraints.
+- Read README.md, package.json, *.csproj, docker-compose.yml, .env.example,
+  app.json, eas.json, or any config files that reveal the stack.
+- Scan the project structure (directory listing).
+- Note the tech stack, existing patterns, and constraints.
+
+If not in a project directory, skip this step entirely.
+
+### Step 3: Read the discovery framework
+
+Read the discovery framework at
+`${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md` and use it as the
+structural guide for the discussion. The framework defines the five
+dimensions to check, the four input clarity levels, conversation rules, and
+exit conditions.
+
+### Step 4: Engage in discussion
+
+This phase is principle-driven, not step-driven. Follow the discovery
+framework loaded in Step 3:
+
+- Use the framework's five dimensions (Outcome, Failure Modes, The Hard
+  Part, Hidden Context, Stakes) as the internal checklist for what to ask.
+  The framework's `How to ask` column shows representative phrasings.
+- Provide suggestions, alternatives, and trade-offs for the user to consider
+  — when the user is uncertain, recommend rather than just laying out
+  options.
+- Avoid asking too many questions at once. Two to four per round is the
+  upper bound; one at a time is preferred for heavy questions (per framework
+  Step 3).
+- Avoid making assumptions on technical decisions — ask when unsure.
+- Do not attempt to write or outline the plan yet — this phase is pure
+  discussion.
+- Adapt the depth and direction of questions based on the type of plan
+  (implementation, architecture, migration, evaluation, etc.).
+- Match Discovery depth to input clarity per the framework's four levels:
+  Level 1 → 1-2 rounds, Level 2 → 3-5 rounds, Level 3 → no limit, Level 4
+  → trigger decomposition (see below).
+
+**Level 4 handling — too broad scope**: if the requirement spans multiple
+independent systems (e.g., "rebuild the entire backend" covering multiple
+services, schemas, and infrastructure), do not attempt a single plan. Stop
+the discussion, suggest decomposition, help identify natural module
+boundaries, then ask which module the user wants to plan first. Why: a
+single plan that spans independent modules cannot satisfy DONE criteria for
+any of them.
 
 ## Phase 2: Plan
 
-Goal: Draft the plan, present it for challenge, revise until approved, then write to file.
+**Goal**: draft the plan, expose its weakest assumptions through self-
+challenge, revise until the user approves, then write to file.
+
+**Inputs**: Phase 1 outputs (requirements, discussion outcomes, project
+context if any, constraints).
+
+**DONE when**:
+- The user explicitly approves the plan (e.g., "write it", "save it",
+  "looks good, write it out", "写出来", "OK output it").
+- The plan is written to the resolved output path.
 
 ### Step 1: Draft
 
-ULTRATHINK to synthesize everything from Phase 1 — the requirements, discussion outcomes,
+Synthesize everything from Phase 1 — the requirements, discussion outcomes,
 project context (if any), and constraints. Then generate a plan document.
 
-The plan format is flexible and must adapt to the type of plan. However, always consider
-whether these elements are relevant (include only what applies):
+The plan format is flexible and must adapt to the type of plan. Always
+consider whether these elements are relevant (include only what applies):
 
-- **Objective** — What this plan aims to achieve, and explicit scope boundaries
-- **Background / Context** — Why this plan exists, what problem it solves
-- **Technical Approach** — Architecture, tech stack choices, key design decisions
-  with rationale
-- **Implementation Steps** — Ordered phases or steps, with dependencies between them
-  clearly stated. Each step should have:
-  - What to do (concrete, not vague)
-  - Expected input and output
-  - Acceptance criteria (how to know the step is done)
-- **Data Model / API Design** — If applicable
-- **Testing Strategy** — If applicable
-- **Deployment Strategy** — If applicable
-- **Risks and Mitigations** — Known risks with concrete mitigation plans
-- **Open Questions** — Anything unresolved that needs future decision
+- **Objective** — what this plan aims to achieve, and explicit scope
+  boundaries.
+- **Background / Context** — why this plan exists, what problem it solves.
+- **Technical Approach** — architecture, tech stack choices, key design
+  decisions with rationale.
+- **Implementation Steps** — ordered phases or steps, with dependencies
+  between them clearly stated. Each step should have:
+  - what to do (concrete, not vague),
+  - expected input and output,
+  - acceptance criteria (how to know the step is done).
+- **Data Model / API Design** — if applicable.
+- **Testing Strategy** — if applicable.
+- **Deployment Strategy** — if applicable.
+- **Risks and Mitigations** — known risks with concrete mitigation plans.
+- **Open Questions** — anything unresolved that needs future decision.
 
-### Writing Rules for the Plan
+#### Writing rules for the plan
 
-- Default language: English (unless the user explicitly requests otherwise)
-- Be specific and actionable. Every step must be concrete enough for a developer
-  (or Claude Code) to execute without guessing intent
-- Avoid vague language: never use "as appropriate", "if needed", "consider doing",
-  "optionally", or "as necessary" without specifying the condition. If something is
-  conditional, state the exact condition
-- Include rationale for significant decisions — the "why" matters as much as the "what"
-- If the plan references specific libraries, tools, or versions, be explicit
-- Do not invent requirements the user did not ask for
+- Default language: English (unless the user explicitly requests otherwise).
+- Be specific and actionable. Every step must be concrete enough for a
+  developer (or Claude Code) to execute without guessing intent.
+- Avoid vague language: do not use "as appropriate", "if needed", "consider
+  doing", "optionally", or "as necessary" without specifying the condition.
+  If something is conditional, state the exact condition.
+- Include rationale for significant decisions — the "why" matters as much as
+  the "what".
+- If the plan references specific libraries, tools, or versions, be explicit.
+- Do not invent requirements the user did not ask for.
 
-### Step 2: Present and Challenge
+### Step 2: Self-challenge the draft
 
-Present the draft plan in conversation. Do NOT write it to a file yet.
+**Goal**: expose the weakest assumption in the draft so revisions are
+grounded, not cosmetic.
 
-When the user asks to ULTRATHINK or review or challenge the plan:
-- Genuinely critique the plan — do not be self-congratulatory
-- Look for logical gaps, unstated assumptions, ordering mistakes, missing edge cases
-- Question whether each technical choice is the best option or just the first one
-  that came to mind
-- Check if the plan is actually executable as written
-- Propose specific improvements, not vague concerns
+**DONE when** the draft is accepted by the user OR the revised draft
+addresses every challenge raised so far.
 
-This draft-challenge cycle may repeat multiple times. Revise the plan based on each
-round of feedback and self-critique.
+**Constraints**:
+- No fix without rationale. Each revision states what changed and why,
+  including which assumption it now reflects.
+- Critique genuinely. Look for logical gaps, unstated assumptions, ordering
+  mistakes, missing edge cases. Question whether each technical choice is
+  the best option or just the first one that came to mind. Check whether the
+  plan is actually executable as written. Propose specific improvements, not
+  vague concerns.
+- Present the draft in conversation. Do not write it to a file yet.
 
-### Step 3: Write to File
+This draft-challenge cycle may repeat multiple times. Revise the plan based
+on each round of feedback and self-critique.
 
-ONLY when the user explicitly approves the plan (e.g., "write it", "save it",
-"looks good, write it out", "写出来", "OK output it"):
+### Step 3: Write to file
 
-1. Determine output location:
-   a. If CLAUDE.md specifies a documentation or plans directory, use it
-   b. Otherwise, use `docs/plans/` (create if it does not exist)
+Write only when the user explicitly approves the plan. On approval:
+
+1. Determine the output location:
+   a. If CLAUDE.md specifies a documentation or plans directory, use it.
+   b. Otherwise, use `docs/plans/` (create if it does not exist).
    c. If a file already exists at the target path, ask the user whether to
-      overwrite or create a new file
-2. Determine document language:
-   a. If the user specified a language, use it
-   b. Otherwise, default to English
-3. Write the plan to the file
+      overwrite or create a new file.
+2. Determine the document language:
+   a. If the user specified a language, use it.
+   b. Otherwise, default to English.
+3. Write the plan to the file.
 
 After writing, proceed to Phase 3.
 
 ## Phase 3: Verify via review agent
 
-Automatically launch a review cycle after the plan is written. Do not wait for
-user instruction.
+**Goal**: run the plan document through `plan-document-reviewer` and present
+the consolidated review summary.
 
-Skip this phase entirely if the plan was not written to a file (discussion-only mode).
+**Inputs**: path of the plan file just written; project root path (or "N/A"
+if not in a project).
 
-### Step 1: Construct CONTEXT block
+Skip this phase entirely if the plan was not written to a file (discussion-
+only mode).
 
-Build a structured CONTEXT block to pass to the review agent:
+### Step 1: Render Planned Dispatch table
+
+Before invoking the review agent, render this table so the user sees the
+planned dispatch:
+
+| # | Agent | Status |
+|---|-------|--------|
+| 1 | plan-document-reviewer | pending |
+
+### Step 2: Construct CONTEXT block and dispatch
+
+Build the structured CONTEXT block:
 
 ```
 CONTEXT
@@ -232,23 +266,30 @@ CONTEXT
 - PROJECT_PATH: <project root path, or "N/A" if not in a project>
 ```
 
-### Step 2: Dispatch the review agent
-
-Tell the user:
-"Plan written to [path]. Dispatching review agent now. / 计划书已写入 [path]。正在启动审查代理。"
+Tell the user: "Plan written to [path]. Dispatching review agent now."
 
 Then dispatch a subagent using the Agent tool:
 - Agent name: `plan-document-reviewer`
 - description: "Review plan document"
-- prompt: the CONTEXT block from Step 1
+- prompt: the CONTEXT block above
 
-Do NOT write any state file. The subagent will execute the entire review
-(all four angles, in order) within its own context and return the summary.
+The subagent executes the entire review (all four angles, in order) within
+its own context and returns the summary. No state file is written by the
+orchestrator.
 
-### Step 3: Present results
+### Step 3: Render the result table (Schema E) and present the summary
 
-When the subagent returns, present its summary to the user. The summary includes:
-- Which review angles passed cleanly
-- Every change that was made, with the reason for each change (and associated git commits)
-- Any unresolved issues that could not be fixed
-- Any concerns noted in Open Questions
+When the subagent returns, render the result table verbatim from the agent's
+output — Schema E:
+
+| Angle | Status     | Changes       | Commit  |
+|-------|------------|---------------|---------|
+| 1     | PASSED     | —             | —       |
+| 2     | FIXED (n)  | section X, Y  | def5678 |
+| 3     | NOTED      | open question | ghi9012 |
+| 4     | PASSED     | —             | —       |
+
+Below the table, present:
+- The Changes prose (per FIXED / NOTED row: what changed, why, commit hash).
+- Any unresolved issues that could not be fixed.
+- Any concerns noted in Open Questions.

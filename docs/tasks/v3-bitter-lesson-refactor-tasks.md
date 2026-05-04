@@ -151,7 +151,7 @@ Files: modify
 
 ### Task 4: Refactor 3 simpler SKILL.md — brief / generate-task / generate-guide (C3)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 3
 
@@ -205,7 +205,7 @@ Files: modify
 
 ### Task 5: Refactor generate-plan SKILL.md (C4)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 4
 
