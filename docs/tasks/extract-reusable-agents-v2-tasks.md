@@ -344,7 +344,7 @@ with `GUIDE_PATH` and `PROJECT_PATH`.
 
 ### Task 11: Create task-document-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/task-document-reviewer.md` from
 `plugins/kenspc/skills/generate-task/prompts/review.md`. Same pattern with
