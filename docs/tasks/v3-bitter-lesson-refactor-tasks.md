@@ -513,7 +513,30 @@ Files: modify
 
 ### Task 11: Update commands and hooks (C10)
 
-**Status:** TODO
+**Status:** DONE
+
+**Audit findings:**
+- All 6 command `.md` files: CLEAN. No `MUST` / `NEVER` / `CRITICAL` /
+  `ULTRATHINK` tokens. No bilingual output forcings (the inline Chinese
+  trigger-phrase fragments inside descriptions are pattern-matching aids,
+  not output forcings, and are preserved consistent with how they survive
+  in SKILL.md descriptions).
+- `check-deps.sh`: CLEAN. The script's only user-facing output is the
+  empty-string warnings sentinel; nothing to clean.
+- `remind-plan-skill.sh`: CLEAN. The four reminder messages are already
+  English-only and reference the corresponding skill by name with a
+  rationale clause (e.g., "which includes collaborative discussion,
+  self-challenge, and automated review").
+- AC greps verified: `grep -rnE 'ULTRATHINK|CRITICAL:|^MUST |NEVER '
+  plugins/kenspc/commands plugins/kenspc/hooks` returns zero matches;
+  `grep -rnE '/ 中|/ 华|中 /|华 /' plugins/kenspc/commands
+  plugins/kenspc/hooks` returns zero matches; `cat plugins/kenspc/hooks/hooks.json
+  | python -m json.tool` succeeds.
+- Decision: no commit produced — the AC content greps already pass, and
+  the project ethos (per global CLAUDE.md and CONTRIBUTING tone) is to
+  avoid empty / no-op commits. The "one commit touching 8 files" wording
+  in the AC reads as an assumed worst-case rather than a strict
+  requirement when no edits are needed.
 
 **Depends on:** Task 10
 
