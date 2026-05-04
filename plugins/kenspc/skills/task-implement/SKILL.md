@@ -62,7 +62,7 @@ If the user omits the path, ask them to provide it.
 
 ## Phase 1: Implement via subagent
 
-### Step 2: Validate input document
+### Step 1: Validate input document
 
 Read the file at the provided path. Check whether it is a task document or a plan document:
 
@@ -76,9 +76,9 @@ a task document from this plan first. /
 这看起来是计划书而非任务文档。请先使用 /kenspc-task 从计划书生成任务文档。"
 Do NOT proceed with implementation.
 
-If validation passes, retain the parsed task list for use in Step 4 (Confirm with user).
+If validation passes, retain the parsed task list for use in Step 3 (Confirm with user).
 
-### Step 3: Construct CONTEXT block
+### Step 2: Construct CONTEXT block
 
 Build a structured CONTEXT block to pass to the implement agent:
 
@@ -87,7 +87,7 @@ CONTEXT
 - TASK_FILE: <path to the task document from $ARGUMENTS>
 ```
 
-### Step 4: Confirm with user
+### Step 3: Confirm with user
 
 Read the task document and identify all incomplete tasks. Present them to the user:
 
@@ -100,7 +100,7 @@ Proceed with automated implementation? / 是否开始自动实现？"
 Wait for explicit confirmation before proceeding. If the user declines or wants to
 adjust scope, follow their instructions instead.
 
-### Step 5: Dispatch the implement agent
+### Step 4: Dispatch the implement agent
 
 Tell the user:
 "Starting task implementation. Dispatching implement agent now. / 开始实现任务。正在启动实现代理。"
@@ -108,12 +108,12 @@ Tell the user:
 Then dispatch a subagent using the Agent tool:
 - Agent name: `task-implementer`
 - description: "Implement tasks from document"
-- prompt: the CONTEXT block from Step 3
+- prompt: the CONTEXT block from Step 2
 
 Do NOT write any state file. The subagent will implement all incomplete tasks within
 its own context and return a summary.
 
-### Step 6: Report progress
+### Step 5: Report progress
 
 When the subagent returns, present a brief progress update (not the full details):
 
