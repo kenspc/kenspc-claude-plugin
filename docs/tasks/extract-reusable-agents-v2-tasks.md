@@ -118,7 +118,7 @@ Task 2 with Angle 3 content (Code Quality and Project Conventions) and the
 
 ### Task 4: Create bug-reviewer agent
 
-**Status:** TODO
+**Status:** DONE
 
 Create `plugins/kenspc/agents/bug-reviewer.md` from
 `plugins/kenspc/skills/task-review/prompts/review-angle-4.md`. Same structure with
