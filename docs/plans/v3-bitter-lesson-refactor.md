@@ -179,20 +179,33 @@ subagents and tool calls." Operationally this is a session/API-config concern
 (not a plugin concern), but include a note in `README.md` Requirements
 section.
 
+**Note on author-vs-reviewer asymmetry**: `generate-plan` runs at `max`
+while `plan-document-reviewer` runs at `high`. This is intentional —
+authoring needs deep multi-round draft/challenge thinking; document review
+against fixed criteria is closer to checklist verification and runs
+acceptably at `high` (parallel to the read-only `regression-verifier`
+rationale). The same logic applies to the `generate-task` /
+`task-document-reviewer` pair (`xhigh` author / `high` reviewer) and the
+`generate-guide` / `guide-document-reviewer` pair (`high` author /
+`high` reviewer — symmetric here because guide generation is closer to
+mechanical templating than open-ended planning).
+
 ## Decisions on Open Questions
 
-The spec surfaces 5 open questions. Resolutions and rationale:
+This refactor faces 5 open questions raised during planning. Resolutions
+and rationale:
 
 ### Q1 — Should every `SKILL.md` `version:` be bumped to 3.0.0?
 
 **Decision: yes, every SKILL.md bumps to 3.0.0.**
 
-Rationale: SKILL.md `version:` is the per-skill semver. It's already drifted
-once (skills at 2.0.0, plugin at 2.0.0 — coincidental, not enforced). For a
-coherent v3 release, `head -1 SKILL.md`-style inspection should reveal v3
-behavior without cross-referencing plugin.json. Agent .md files do **not**
-have a `version:` field per the subagent frontmatter reference, so they're
-left alone.
+Rationale: SKILL.md `version:` is the per-skill semver. v2 enforced
+SKILL.md = plugin.json (per the v2.0.0 CHANGELOG: "All 5 affected SKILL.md
+`version` fields bumped to 2.0.0 to align with plugin version"). v3
+continues that policy — `head -1 SKILL.md`-style inspection should reveal
+v3 behavior without cross-referencing plugin.json. Agent .md files do
+**not** have a `version:` field per the subagent frontmatter reference,
+so they're left alone.
 
 ### Q2 — Phase numbering inside skills: stay or rename to goal-named?
 
@@ -510,7 +523,7 @@ scope** list under § Objective.
 | 18 | `plugins/kenspc/agents/plan-document-reviewer.md` | edit | + `effort: high`, Rules 5/6, Schema E summary | C9 |
 | 19 | `plugins/kenspc/agents/guide-document-reviewer.md` | edit | + `effort: high`, Rules 5/6, Schema E summary | C9 |
 | 20 | `plugins/kenspc/agents/task-document-reviewer.md` | edit | + `effort: high`, Rules 5/6, Schema E summary + Plan-Level Concerns section | C9 |
-| 21 | `plugins/kenspc/commands/kenspc-brief.md` | edit | Rule 5 (thin) | C10 |
+| 21 | `plugins/kenspc/commands/kenspc-brief.md` | edit | Rule 5 | C10 |
 | 22 | `plugins/kenspc/commands/kenspc-plan.md` | edit | Rule 5 | C10 |
 | 23 | `plugins/kenspc/commands/kenspc-task.md` | edit | Rule 5 | C10 |
 | 24 | `plugins/kenspc/commands/kenspc-task-implement.md` | edit | Rule 5 | C10 |
@@ -939,15 +952,17 @@ diff <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task
 ### AC8 — Dispatch Status Tables present
 
 ```bash
-# Every dispatching skill mentions the Status pattern in both planned and
-# results contexts.
+# Every dispatching skill renders both the Planned Dispatch Table and the
+# results table. The grep keys ("Planned Dispatch" + "pending") match the
+# canonical table format defined in § Dispatch Status Tables.
 for f in \
   plugins/kenspc/skills/generate-plan/SKILL.md \
   plugins/kenspc/skills/generate-guide/SKILL.md \
   plugins/kenspc/skills/generate-task/SKILL.md \
   plugins/kenspc/skills/task-review/SKILL.md \
   plugins/kenspc/skills/task-implement/SKILL.md ; do
-  grep -q 'Dispatching' "$f" && grep -q 'pending' "$f" || echo "MISSING tables: $f"
+  grep -qiE 'Planned Dispatch|Dispatch Status' "$f" && grep -q 'pending' "$f" \
+    || echo "MISSING tables: $f"
 done | tee /tmp/ac8.log
 test ! -s /tmp/ac8.log
 ```
@@ -968,13 +983,25 @@ Manual review per agent. Confirm:
 grep -q 'short_label' plugins/kenspc/agents/code-fixer.md
 ```
 
-### AC10 — README accurate
+### AC10 — README and project CLAUDE.md accurate
 
-Manual review:
+Manual review of `plugins/kenspc/README.md`:
 - Skills table descriptions reflect v3
 - Design Principles section reflects the 6 rules
 - Bilingual claim removed; ULTRATHINK reference removed
 - Effort-levels subsection added
+
+Manual review of project root `CLAUDE.md`:
+- "Writing Rules for Skill Content" no longer asserts bilingual output
+- "Writing Rules for Skill Content" no longer instructs ULTRATHINK
+- "Use rationale-anchored business rules (Rule 2)" bullet present
+- "Output in English only" bullet present
+
+```bash
+# Cheap text-level sanity that supports the manual review:
+! grep -E '^- Bilingual output' CLAUDE.md
+! grep -E '^- Use ULTRATHINK' CLAUDE.md
+```
 
 ### AC11 — JSON sanity
 
