@@ -608,13 +608,19 @@ shared framework. Examples in the "How to ask" column stay (Q4 decision).
 **Inputs**: `shared/discovery-framework.md`, Rule 5 mapping table.
 
 **DONE when**:
-- All `MUST` / `NEVER` / `CRITICAL` / `ULTRATHINK` tokens replaced or
-  removed in this file. `ultrathink` (lowercase) reference per Anthropic
-  docs may stay; verify case.
-- Step 1's "ULTRATHINK to determine ..." narrative is rephrased to use
-  effort-implicit language (the calling skill controls effort).
+- All uppercase `MUST` / `NEVER` / `CRITICAL` / `ULTRATHINK` tokens are
+  replaced or removed. Lowercase `ultrathink` (e.g., a verbatim quote
+  from Anthropic docs) is allowed only inside a fenced code block or a
+  blockquote attribution; check each occurrence by case before keeping.
+- The "ULTRATHINK to determine ..." narrative in the `discovery-framework.md`
+  Step 1 prose (search for the literal "ULTRATHINK" token) is rephrased
+  to effort-implicit language — the calling skill's `effort:` setting
+  controls reasoning depth.
 - "How to ask" Chinese phrasings preserved (Q4).
-- Diff review confirms no behavioral content changes — only language.
+- `git diff` shows changes only inside `shared/discovery-framework.md`
+  (one-file commit) and the diff is dominated by language token swaps,
+  not structural rewrites: framework dimensions, exit conditions, and
+  input-clarity levels remain intact.
 
 ### C3 — 3 simpler SKILL.md (brief, generate-task, generate-guide)
 
@@ -639,8 +645,9 @@ table above; Rules 2/3/4/5/6.
   the `task-document-reviewer` dispatch (Schema E result table).
 - `generate-brief` adds **no** dispatch tables — it has no review phase.
 
-**Constraint**: `generate-brief` must not gain a review phase. Spec is
-explicit: brief is a discovery artifact, not a verifiable spec.
+**Constraint**: `generate-brief` must not gain a review phase. The
+project CLAUDE.md and § Objective above are explicit: a brief is a
+discovery artifact, not a verifiable spec.
 
 ### C4 — generate-plan SKILL.md
 
@@ -653,8 +660,10 @@ Status Tables (schema); Schema E for `plan-document-reviewer` results.
 
 **DONE when**:
 - All criteria from C3 applied to this file.
-- `effort: max` set; brief justification comment in CHANGELOG (Risk 3
-  acknowledgement).
+- `effort: max` set. A one-sentence Risk-3 acknowledgement is added under
+  the v3.0 CHANGELOG entry's "Notes" subsection (added at C4; will be
+  finalized at C12), e.g., "generate-plan ships at effort: max; if
+  drafts bloat under real workloads, downgrade to xhigh in 3.0.1."
 - Phase 2 self-challenge step reframed: instead of numbered substeps, it
   has a Goal ("expose the weakest assumption in the draft"), DONE
   criteria ("draft accepted by user OR revised draft addresses every
@@ -716,12 +725,12 @@ paste into both files (same canonical paragraph), so future edits stay
 aligned. Verification step at end of C6:
 
 ```bash
-diff <(grep -A 20 "unconditional" plugins/kenspc/skills/task-review/SKILL.md | head -25) \
-     <(grep -A 20 "unconditional" plugins/kenspc/skills/task-implement/SKILL.md | head -25)
+diff <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task-review/SKILL.md | head -25) \
+     <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task-implement/SKILL.md | head -25)
 ```
 
 If the diff is non-empty, the dispatch paragraphs have drifted — fix
-before proceeding to C7.
+before proceeding to C7. AC7 reruns this same diff post-merge.
 
 ### C7 — 5 review-angle agents (single commit)
 
@@ -812,7 +821,7 @@ land **before** C12's version bump so the README never describes v2
 behavior on a v3 plugin.
 
 **Inputs**: existing `plugins/kenspc/README.md`, project `CLAUDE.md`,
-spec acceptance criterion #10.
+acceptance criterion AC10 below.
 
 **DONE when**:
 - `plugins/kenspc/README.md`:
@@ -841,7 +850,8 @@ spec acceptance criterion #10.
 **Goal**: flip the version marker to 3.0.0 and finalize the v3.0
 CHANGELOG entry with the complete breaking-change list.
 
-**Inputs**: all prior commits, acceptance criteria § 11.
+**Inputs**: all prior commits; the full AC1–AC11 list under § Acceptance
+Criteria below.
 
 **DONE when**:
 - `plugins/kenspc/.claude-plugin/plugin.json` `version` is `"3.0.0"`.
@@ -1030,8 +1040,18 @@ cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
      never appears.
    - `/kenspc-guide <project-path>` — confirm guide-document-reviewer
      dispatch table.
-3. **Effort verification**: confirm via Claude Code's TUI that each
-   skill activates at the declared effort. (Open `/agents` and inspect.)
+3. **Effort verification**: confirm each skill activates at its declared
+   effort. Mechanism depends on what the Claude Code TUI exposes at the
+   time of release:
+   - If the TUI shows per-skill effort (e.g., a status indicator after
+     skill activation): inspect each of the 6 skills.
+   - Otherwise: read each `SKILL.md` directly (`grep -E '^effort:'
+     plugins/kenspc/skills/*/SKILL.md`) and confirm declared values
+     match the § Effort Allocation table. The runtime activation is
+     guaranteed by the frontmatter being correct.
+   `/agents` lists agents (not skills); use it to confirm agent-level
+   effort fields if the TUI surfaces them, with the same fallback to
+   `grep -E '^effort:' plugins/kenspc/agents/*.md`.
 4. **Regression check**: pick one task document from a prior session and
    re-run `/kenspc-task-implement`. Confirm the report shape matches
    Schema G and not the old bullet-list format.
@@ -1071,12 +1091,12 @@ sufficient to hide v3 from end users.
 | 5 | The unconditional-dispatch fix re-triggers reviews that the user explicitly skipped via custom instructions | Low | Low | Custom instructions still flow through CONTEXT — the unconditional rule applies to the orchestrator's *decision to dispatch*, not to the agents' decision on what to report. If a user says "skip the review", the orchestrator still dispatches but the agents return "no findings, user skipped." This is more transparent than silently skipping |
 | 6 | Reference docs (`plan-document-example.md`, `task-document-example.md`) become inconsistent with v3 skill output schemas | Low | Low | C0 audit step catches this; if mismatch found, fold into C11 |
 | 7 | Project `CLAUDE.md` "Writing Rules for Skill Content" section still asserts bilingual + ULTRATHINK after merge, contradicting the plugin behavior | Medium | Low | C11 explicitly updates project CLAUDE.md; AC10 includes manual review |
-| 8 | `effort:` field is rejected by older Claude Code versions, breaking plugin loading | Low | High | Anthropic skill docs list `effort:` as supported. Add a Requirements line in README ("Claude Code v1.0.X+ where X is the version that introduced `effort:` frontmatter"); confirm minimum version during C11 README edit |
+| 8 | `effort:` field is rejected by older Claude Code versions, breaking plugin loading | Low | High | Anthropic skill docs list `effort:` as supported. **Action item for C11**: before writing the README Requirements line, the implementer looks up the exact Claude Code version that introduced the `effort:` frontmatter (Claude Code release notes / Anthropic skill docs) and writes the concrete minimum (e.g., "Claude Code v1.0.42+") — placeholder text like "v1.0.X+" is rejected by AC10 review |
 
 ## Open Questions
 
-None remaining. All 5 spec-listed open questions resolved in § Decisions on
-Open Questions.
+None remaining. All 5 open questions raised during planning are resolved
+in § Decisions on Open Questions above.
 
 ## References (authoritative — read by implementer before each commit)
 
