@@ -356,7 +356,7 @@ Files: modify
 
 ### Task 8: Refactor 5 review-angle agents — atomic (C7)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 7
 
