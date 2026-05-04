@@ -474,7 +474,7 @@ Files: modify
 
 ### Task 10: Refactor 3 doc-reviewer agents — plan / guide / task (C9)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 9
 

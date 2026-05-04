@@ -4,6 +4,7 @@ description: >
   INTERNAL: Part of /kenspc-plan generation orchestration. Requires PLAN_PATH from a freshly generated plan document — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
+effort: high
 ---
 
 PREREQUISITE CHECK
@@ -23,9 +24,9 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - PROJECT_PATH — project root path, or "N/A" if not in a project
 
 OBJECTIVE
-Review the generated plan to ensure it is feasible, complete, consistent, and clear
-enough to be directly executed. Fix any issues found directly in the plan document.
-Track every change you make so you can report them at the end.
+Review the generated plan to ensure it is feasible, complete, consistent, and
+clear enough to be directly executed. Fix any issues found directly in the plan
+document. Track every change so you can report them at the end.
 
 PREREQUISITES
 1. Read the plan document at the path given by CONTEXT PLAN_PATH in full.
@@ -35,98 +36,103 @@ PREREQUISITES
      docker-compose.yml, .env.example, etc.).
 
 REVIEW ANGLES
-Review all four angles in order (each angle builds on fixes from the previous one):
+Review all four angles in order (each angle builds on fixes from the previous
+one):
 
 1. Feasibility & Execution Order
-   - Is every proposed technology, library, and tool actually available and suitable
-     for the stated purpose? If specific versions are mentioned, do they exist?
-   - Are the implementation steps in a correct dependency order? Does any step assume
-     something that has not been set up by a prior step?
-   - Are there implicit assumptions about infrastructure, services, or access that
-     are not stated?
+   - Is every proposed technology, library, and tool actually available and
+     suitable for the stated purpose? If specific versions are mentioned, do
+     they exist?
+   - Are the implementation steps in a correct dependency order? Does any step
+     assume something that has not been set up by a prior step?
+   - Are there implicit assumptions about infrastructure, services, or access
+     that are not stated?
    - Is the estimated scope realistic for the stated goals?
-   - If the CONTEXT block's PROJECT_PATH value is not "N/A": do the proposed
-     technologies align with what is already installed or configured in the project?
+   - If PROJECT_PATH is not "N/A": do the proposed technologies align with
+     what is already installed or configured in the project?
 
 2. Completeness
-   - Does the plan address every requirement that was discussed during discovery?
-   - Are there obvious scenarios, edge cases, or failure modes that the plan ignores?
-   - If the plan includes API endpoints: are all CRUD operations and error responses
-     covered?
-   - If the plan includes data models: are relationships, constraints, and indexes
-     considered?
-   - Are there missing steps between the stated phases (e.g., database migration
-     before seeding, build before deploy)?
+   - Does the plan address every requirement that was discussed during
+     discovery?
+   - Are there obvious scenarios, edge cases, or failure modes that the plan
+     ignores?
+   - If the plan includes API endpoints: are all CRUD operations and error
+     responses covered?
+   - If the plan includes data models: are relationships, constraints, and
+     indexes considered?
+   - Are there missing steps between the stated phases (e.g., database
+     migration before seeding, build before deploy)?
 
 3. Consistency
-   - If the CONTEXT block's PROJECT_PATH value is not "N/A": does the plan contradict
-     anything in CLAUDE.md, README.md, or existing project conventions (naming,
-     structure, patterns)?
-   - Does the plan contradict itself? (e.g., says "use PostgreSQL" in one section and
-     "configure SQL Server" in another)
-   - Are technology names, version numbers, and terminology used consistently throughout?
+   - If PROJECT_PATH is not "N/A": does the plan contradict anything in
+     CLAUDE.md, README.md, or existing project conventions (naming, structure,
+     patterns)?
+   - Does the plan contradict itself? (For example: says "use PostgreSQL" in
+     one section and "configure SQL Server" in another.)
+   - Are technology names, version numbers, and terminology used consistently
+     throughout?
    - Do the Risks section and the Implementation Steps tell the same story?
 
 4. Clarity & Actionability
-   - Could a developer (or Claude Code) execute each step without asking clarifying
-     questions? If not, what is ambiguous?
+   - Could a developer (or Claude Code) execute each step without asking
+     clarifying questions? If not, what is ambiguous?
    - Does every step have a clear acceptance criteria or expected outcome?
-   - Flag any vague language: "as appropriate", "if needed", "consider", "optionally",
-     "as necessary", "properly", "adequate", "sufficient" — these must be replaced
-     with specific conditions or concrete descriptions.
+   - Flag any vague language: "as appropriate", "if needed", "consider",
+     "optionally", "as necessary", "properly", "adequate", "sufficient" —
+     these must be replaced with specific conditions or concrete descriptions.
    - Are inputs and outputs of each step clearly defined?
-   - Is the plan structured so that progress can be tracked (e.g., checkboxes,
+   - Is the plan structured so progress can be tracked (e.g., checkboxes,
      numbered phases)?
 
 FIXING RULES
-- Objective issues (factual errors, contradictions, missing steps, vague language):
-  Fix directly in the plan document.
+- Objective issues (factual errors, contradictions, missing steps, vague
+  language): fix directly in the plan document and commit.
 - Subjective judgments (e.g., "maybe technology X would be better than Y"):
-  Do NOT change the plan's technical decisions. Instead, add the concern to the plan's
-  Risks or Open Questions section. The user made those decisions during discussion.
-- When fixing, preserve the plan's original structure and style.
-- After fixing, re-read the changed sections to confirm the fix is correct and does
-  not introduce new issues.
+  do not change the plan's technical decisions. Add the concern to the plan's
+  Risks or Open Questions section. The user made those decisions during
+  discussion.
+- Preserve the plan's original structure and style.
+- After fixing, re-read the changed sections to confirm the fix is correct
+  and does not introduce new issues.
 
-EXECUTION FLOW
+PROCESSING APPROACH
 For each angle, in order from 1 to 4:
-1. ULTRATHINK to thoroughly review the current angle.
-2. No issues found → record the angle as passed.
-3. Objective issue found → fix it directly in the plan document and git commit the fix.
-   Record what you changed and why (one line per change).
-4. Subjective concern found → add it to the Risks or Open Questions section and git
-   commit. Record what you noted and why.
-5. After all fixes for this angle, re-read affected sections to verify correctness.
-6. Proceed to the next angle (which will see the fixes you just made).
+- Review the current angle thoroughly.
+- No issues → record the angle as PASSED.
+- Objective issue → fix in the plan and commit; record what changed and why.
+- Subjective concern → add to Risks / Open Questions and commit; record what
+  was noted and why.
+- After all fixes for this angle, re-read affected sections to verify
+  correctness.
+- Proceed to the next angle (which sees the fixes you just made).
+
+STUCK HANDLING
+If a problem cannot be resolved after 3 attempts within the same angle,
+record the issue in the plan's Open Questions section as a known gap, mark
+it as NOTED in the summary, and continue with other angles.
 
 OUTPUT LANGUAGE
-All summaries must be bilingual (English + Chinese).
-The plan document itself remains in whatever language it was written in.
+Summaries are in English. The plan document itself remains in whatever
+language it was written in.
 
-COMPLETION
-When all four angles have been reviewed, output a final summary in this format:
+OUTPUT FORMAT (Schema E)
+Render the review summary as a single Review table followed by a Changes
+prose section.
 
----
-Plan Review Summary / 计划书审查总结
+## Review
 
-Angles: [list each angle with PASSED or FIXED or NOTED status]
-  Angle 1: Feasibility & Execution Order - PASSED / 通过
-  Angle 2: Completeness - FIXED 2 issues / 修复了 2 个问题
-  ...
+| Angle | Status     | Changes       | Commit  |
+|-------|------------|---------------|---------|
+| 1     | PASSED     | —             | —       |
+| 2     | FIXED (2)  | section X, Y  | def5678 |
+| 3     | NOTED      | open question | ghi9012 |
+| 4     | PASSED     | —             | —       |
 
-Changes made / 修改内容:
-(List every change. Each entry must state WHAT was changed, WHY, and the git commit.)
-  - [Angle N] Changed X → Y. Reason: ... Commit: abc1234 / 原因：...
-  - [Angle N] Added section Z. Reason: ... Commit: def5678 / 原因：...
-  - [Angle N] Noted concern about W in Open Questions. Reason: ... Commit: ghi9012 / 原因：...
+## Changes (prose)
 
-Unresolved issues / 未解决的问题:
-(List any issues that could not be fixed after 3 attempts, with explanation.)
-  - [Angle N] Issue description. Why unresolved: [reason] / 未解决原因：[原因]
+For each FIXED / NOTED row above, one short paragraph: what changed, why,
+commit hash. List unresolved issues (if any) at the end of this section
+with "Why unresolved: [reason]".
 
-If no changes were made, state: No changes needed / 无需修改
----
-
-If a problem cannot be resolved after 3 attempts within the same angle, record the
-issue in the plan's Open Questions section as a known gap, note it in the summary,
-and continue with other angles.
+If no changes were made across all four angles, state "No changes needed."
+in the Changes section and leave Status = PASSED for every row.
