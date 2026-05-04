@@ -1,7 +1,7 @@
 {
   "name": "kenspc",
-  "description": "Structured development workflows for Claude Code. Requirement brief generation through structured discovery, plan generation, task decomposition, automated batch implementation with multi-angle review, and project guide generation.",
-  "version": "1.5.0",
+  "description": "Structured development workflows for Claude Code. Eleven reusable subagents power requirement brief generation, plan generation, task decomposition, automated batch implementation with multi-angle review, and project guide generation.",
+  "version": "2.0.0",
   "author": {
     "name": "Sim Poh Chuan",
     "url": "https://github.com/kenspc"

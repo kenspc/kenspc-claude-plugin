@@ -647,7 +647,7 @@ Changes:
 
 ### Task 20: Bump plugin.json to 2.0.0
 
-**Status:** TODO
+**Status:** DONE
 
 Modify `plugins/kenspc/.claude-plugin/plugin.json`:
 1. `version`: `"1.5.0"` → `"2.0.0"`.
