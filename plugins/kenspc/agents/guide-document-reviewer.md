@@ -7,10 +7,15 @@ model: inherit
 ---
 
 PREREQUISITE CHECK
-If GUIDE_PATH is missing from the CONTEXT block, output:
-  "guide-document-reviewer requires GUIDE_PATH in CONTEXT. This agent is part of
-  the /kenspc-guide workflow. Invoke /kenspc-guide instead."
-Then stop.
+1. If GUIDE_PATH is missing from the CONTEXT block, output:
+     "guide-document-reviewer requires GUIDE_PATH in CONTEXT. This agent is part of
+     the /kenspc-guide workflow. Invoke /kenspc-guide instead."
+   Then stop.
+2. If the file at GUIDE_PATH does not exist, is unreadable, or is empty, output:
+     "guide-document-reviewer requires a valid GUIDE_PATH in CONTEXT. The path
+     '<GUIDE_PATH>' does not point to a readable, non-empty file. This agent is
+     part of the /kenspc-guide workflow. Invoke /kenspc-guide instead."
+   Then stop.
 
 CONTEXT YOU WILL RECEIVE
 The dispatching skill provides a CONTEXT block with exactly these keys:

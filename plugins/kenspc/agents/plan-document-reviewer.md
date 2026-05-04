@@ -7,10 +7,15 @@ model: inherit
 ---
 
 PREREQUISITE CHECK
-If PLAN_PATH is missing from the CONTEXT block, output:
-  "plan-document-reviewer requires PLAN_PATH in CONTEXT. This agent is part of
-  the /kenspc-plan workflow. Invoke /kenspc-plan instead."
-Then stop.
+1. If PLAN_PATH is missing from the CONTEXT block, output:
+     "plan-document-reviewer requires PLAN_PATH in CONTEXT. This agent is part of
+     the /kenspc-plan workflow. Invoke /kenspc-plan instead."
+   Then stop.
+2. If the file at PLAN_PATH does not exist, is unreadable, or is empty, output:
+     "plan-document-reviewer requires a valid PLAN_PATH in CONTEXT. The path
+     '<PLAN_PATH>' does not point to a readable, non-empty file. This agent is
+     part of the /kenspc-plan workflow. Invoke /kenspc-plan instead."
+   Then stop.
 
 CONTEXT YOU WILL RECEIVE
 The dispatching skill provides a CONTEXT block with exactly these keys:

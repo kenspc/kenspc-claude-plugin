@@ -7,10 +7,20 @@ model: inherit
 ---
 
 PREREQUISITE CHECK
-If TASK_DOC_PATH is missing from the CONTEXT block, output:
-  "task-document-reviewer requires TASK_DOC_PATH in CONTEXT. This agent is part
-  of the /kenspc-task workflow. Invoke /kenspc-task instead."
-Then stop.
+1. If TASK_DOC_PATH or SOURCE_PATH is missing from the CONTEXT block, output:
+     "task-document-reviewer requires TASK_DOC_PATH and SOURCE_PATH in CONTEXT.
+     This agent is part of the /kenspc-task workflow. Invoke /kenspc-task instead."
+   Then stop.
+2. If the file at TASK_DOC_PATH does not exist, is unreadable, or is empty, output:
+     "task-document-reviewer requires a valid TASK_DOC_PATH in CONTEXT. The path
+     '<TASK_DOC_PATH>' does not point to a readable, non-empty file. This agent is
+     part of the /kenspc-task workflow. Invoke /kenspc-task instead."
+   Then stop.
+3. If the file at SOURCE_PATH does not exist, is unreadable, or is empty, output:
+     "task-document-reviewer requires a valid SOURCE_PATH in CONTEXT. The path
+     '<SOURCE_PATH>' does not point to a readable, non-empty file. This agent is
+     part of the /kenspc-task workflow. Invoke /kenspc-task instead."
+   Then stop.
 
 CONTEXT YOU WILL RECEIVE
 The dispatching skill provides a CONTEXT block with exactly these keys:
