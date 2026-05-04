@@ -555,7 +555,7 @@ Changes:
 
 ### Task 17: Remove obsolete prompts/ directories
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 12, Task 13, Task 14, Task 15, Task 16
 
