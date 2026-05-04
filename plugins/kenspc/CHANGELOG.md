@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.0.0 (unreleased)
+
+Breaking refactor aligning the plugin with Claude Opus 4.7 at xhigh/max
+effort. Details fill in across the v3 commit sequence; this stub will be
+finalized when the version bump lands.
+
+- Removed: anti-rationalization tables, bilingual output forcing, fake
+  numerical Red Flags, `ULTRATHINK` directives, aggressive
+  `MUST`/`NEVER`/`CRITICAL` language.
+- Added: `effort:` frontmatter on every SKILL and agent; Dispatch Status
+  Tables at every dispatch site; tabulated final reports per Schemas A–G;
+  unconditional review dispatch in `task-review` and `task-implement`.
+- Changed: EXECUTION FLOW prose rewritten as Goal + Inputs + DONE criteria
+  + Constraints; Business Rules rewritten as rationale-anchored "Why:"
+  framing instead of `MUST`/`NEVER` commands.
+
 ## 2.0.0 — 2026-05-04
 
 ### Breaking changes
