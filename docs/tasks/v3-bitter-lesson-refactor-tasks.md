@@ -307,7 +307,7 @@ Files: modify
 
 ### Task 7: Refactor task-implement SKILL.md with unconditional dispatch (C6)
 
-**Status:** TODO
+**Status:** DONE
 
 **Depends on:** Task 6
 
