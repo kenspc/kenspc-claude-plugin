@@ -111,10 +111,6 @@ If a problem cannot be resolved after 3 attempts within the same angle,
 record the issue in the plan's Open Questions section as a known gap, mark
 it as NOTED in the summary, and continue with other angles.
 
-OUTPUT LANGUAGE
-Summaries are in English. The plan document itself remains in whatever
-language it was written in.
-
 OUTPUT FORMAT (Schema E)
 Render the review summary as a single Review table followed by a Changes
 prose section.

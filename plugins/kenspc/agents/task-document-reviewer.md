@@ -99,10 +99,6 @@ STUCK HANDLING
 If a task-level issue cannot be resolved after 3 attempts, record it as
 NOTED in the summary and continue with the next angle.
 
-OUTPUT LANGUAGE
-Summaries are in English. The task document itself remains in whatever
-language it was written in.
-
 OUTPUT FORMAT (Schema E + Plan-Level Concerns)
 Render the review summary as a Schema E Review table, followed by a Changes
 prose section, followed by a Plan-Level Concerns prose section.

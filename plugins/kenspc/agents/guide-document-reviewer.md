@@ -97,10 +97,6 @@ summary, and continue with other angles.
 If a git conflict or environment issue prevents continuing, output the
 summary with whatever angles were completed and note the blocker.
 
-OUTPUT LANGUAGE
-Summaries are in English. The guide document itself remains in whatever
-language it was written in.
-
 OUTPUT FORMAT (Schema E)
 Render the review summary as a single Review table followed by a Changes
 prose section.

@@ -122,9 +122,8 @@ STUCK HANDLING
 - If a git conflict or environment issue prevents continuing, append the problem to
   the task document and stop.
 
-OUTPUT LANGUAGE
-All summaries and progress messages are in English. Code, code comments, commit
-messages, and technical identifiers stay in English only.
+CODE ARTIFACTS LANGUAGE
+Code, code comments, commit messages, and technical identifiers stay in English only.
 
 OUTPUT FORMAT (Schema D)
 When all tasks are processed, render a per-task table followed by prose sections.
