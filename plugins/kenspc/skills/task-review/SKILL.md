@@ -88,6 +88,7 @@ dispatch:
 | 4 | bug-reviewer | pending |
 | 5 | test-reviewer | pending |
 
+<!-- canonical:dispatch:start -->
 ## Code Review Phase (unconditional)
 
 Dispatch all 5 review-angle agents. This is a workflow contract, not a
@@ -114,6 +115,7 @@ from Step 2 as the dispatch prompt for every agent.
 - Agent name: `quality-reviewer`, description: "Review: code quality"
 - Agent name: `bug-reviewer`, description: "Review: bug hunting"
 - Agent name: `test-reviewer`, description: "Review: test coverage"
+<!-- canonical:dispatch:end -->
 
 After all 5 agents return, verify each one produced a complete report. If
 any agent returned an error, an empty response, or an obviously incomplete
