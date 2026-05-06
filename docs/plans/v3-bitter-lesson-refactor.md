@@ -992,7 +992,7 @@ for f in \
   # No Status column header in the Planned Dispatch table window.
   # (Result tables in Schema A/E still have Status columns; those live in
   #  separate sections — bounded by the awk window cutoff.)
-  awk '/Planned Dispatch|即将派发/,/^##|^---$/' "$f" \
+  awk 'BEGIN{p=0} /Planned Dispatch|即将派发/{p=1; print; next} p && /^### Step|^## |^---$/{p=0} p' "$f" \
     | grep -qE '\| *Status *\|' \
     && echo "STATUS COLUMN STILL PRESENT in Planned Dispatch: $f"
 done | tee /tmp/ac8.log
