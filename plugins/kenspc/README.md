@@ -139,6 +139,7 @@ the rules are summarized here:
   used in earlier versions are all removed. Reasoning depth is now controlled
   by the `effort:` frontmatter; "use" / "avoid" / "do not" replace `MUST` /
   `NEVER`; stop-and-report prose replaces `STOP immediately`.
+
 Cross-cutting properties from earlier versions are preserved:
 
 - **Multi-angle parallel review** — The 5 review-angle agents
