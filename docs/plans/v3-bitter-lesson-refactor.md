@@ -1054,8 +1054,10 @@ cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 1. **Local install**: `claude --plugin-dir ./plugins/kenspc` and
    `/reload-plugins`. Confirm all 6 commands list and load.
 2. **Smoke test each skill** in a throwaway project:
-   - `/kenspc-brief` — confirm Discovery starts; no bilingual prefix on
-     the first prompt.
+   - `/kenspc-brief` — confirm Discovery starts; the first user-facing
+     prompt is a question (not a draft brief). Per v3.0.2 the
+     English-only assertion is retired — language follows session/global
+     CLAUDE.md context.
    - `/kenspc-plan <some requirement>` — confirm Phase 1 begins; check
      the Phase 3 dispatch table appears before the agent runs.
    - `/kenspc-task <plan-path>` — confirm decomposition runs; review
