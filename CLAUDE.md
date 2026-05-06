@@ -111,8 +111,47 @@ stays at the skill (main session) level.
 As of v3.0, every SKILL.md and every agent .md declares an `effort:`
 frontmatter value (`low` / `medium` / `high` / `xhigh` / `max`). Reasoning
 depth is configured per skill and per agent via this field, not via inline
-directive tokens. See `docs/plans/v3-bitter-lesson-refactor.md` § Effort
-Allocation for the per-skill and per-agent rationale.
+directive tokens. Anthropic's Opus 4.7 recommendation is `xhigh` for
+coding/agentic work and a minimum of `high` for intelligence-sensitive
+work. When running at `xhigh`/`max`, set a large max-output-token budget
+so the model has room to think and act across subagents and tool calls
+(this is a session/API-config concern, not a plugin concern).
+
+Skill effort:
+
+| Skill | effort | Rationale |
+|---|---|---|
+| `generate-brief` | `xhigh` | Discovery + drafting; coding-adjacent |
+| `generate-plan` | `max` | Multi-round draft/challenge across project context. Plan cost amortizes over downstream tasks |
+| `generate-task` | `xhigh` | Code-reading decomposition |
+| `task-implement` | `xhigh` | Long-horizon coding |
+| `task-review` | `xhigh` | Code-review harness — Anthropic's recommended floor |
+| `generate-guide` | `high` | Section-by-section documentation generation |
+
+Agent effort:
+
+| Agent | effort | Rationale |
+|---|---|---|
+| `requirements-reviewer` | `xhigh` | Coverage-mode bug-finding |
+| `edge-case-reviewer` | `xhigh` | Coverage-mode bug-finding |
+| `quality-reviewer` | `xhigh` | Coverage-mode bug-finding |
+| `bug-reviewer` | `xhigh` | Coverage-mode bug-finding |
+| `test-reviewer` | `xhigh` | Coverage-mode bug-finding |
+| `code-fixer` | `xhigh` | Cross-report deduplication and fix application |
+| `regression-verifier` | `high` | Read-only verification; lower depth acceptable |
+| `task-implementer` | `xhigh` | Long-horizon coding |
+| `plan-document-reviewer` | `high` | Document review against criteria |
+| `guide-document-reviewer` | `high` | Document review against criteria |
+| `task-document-reviewer` | `high` | Document review against criteria |
+
+Author-vs-reviewer asymmetry is intentional. `generate-plan` runs at `max`
+while `plan-document-reviewer` runs at `high` — authoring needs deep
+multi-round draft/challenge thinking; document review against fixed
+criteria is closer to checklist verification. The same logic applies to
+`generate-task` / `task-document-reviewer` (`xhigh` author / `high`
+reviewer). The `generate-guide` / `guide-document-reviewer` pair is
+symmetric at `high` because guide generation is closer to mechanical
+templating than open-ended planning.
 
 #### CONTEXT block contract
 
@@ -140,7 +179,7 @@ one agent, apply the same change to the other 4. Duplication is intentional
 (each agent is independently readable); silent drift between them is a bug.
 Run `bash scripts/check-review-agent-drift.sh` after editing any reviewer
 agent — it hashes each shared section across the 5 files and fails on
-non-identity. The same script is part of plan AC9.
+non-identity.
 
 The canonical `## Code Review Phase (unconditional)` block in
 `task-review/SKILL.md` and `task-implement/SKILL.md` is bounded by
@@ -148,11 +187,10 @@ The canonical `## Code Review Phase (unconditional)` block in
 markers and must remain byte-identical between the two files. Run
 `bash scripts/check-canonical-dispatch.sh` after editing either skill —
 it sha256-hashes the bounded block in both files and fails on drift.
-This script is the AC7 implementation.
 
 ### Non-Goals
 
-`shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at three call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would also break Phase 2's need for raw conversation context. See the v2 plan's Non-Goals section (`docs/plans/extract-reusable-agents-v2.md`) for the authoritative rationale.
+`shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at two call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would break the discovery phase's need for raw conversation context (the orchestrator must keep the full transcript to draft the brief or plan in Phase 2).
 
 ### Writing Rules for Skill Content
 
@@ -195,10 +233,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
 
 - `check-review-agent-drift.sh` — guards the byte-identity invariant
   across the 5 review-angle agents (PREREQUISITES, FILE COVERAGE, CUSTOM
-  INSTRUCTIONS). Implements plan AC9.
+  INSTRUCTIONS).
 - `check-canonical-dispatch.sh` — guards the byte-identity invariant on
   the `## Code Review Phase (unconditional)` canonical block between
-  `task-review/SKILL.md` and `task-implement/SKILL.md`. Implements plan AC7.
+  `task-review/SKILL.md` and `task-implement/SKILL.md`.
 
 Run before tagging any release; both should also be considered as
 pre-commit hook candidates when their target files change.
@@ -207,6 +245,6 @@ pre-commit hook candidates when their target files change.
 
 See [docs/release-checklist.md](docs/release-checklist.md) for the manual
 smoke-test checklist that exercises plugin load + every entry-point's
-first interactive surface. Mechanical AC1–AC11 alone cannot catch YAML
-parse breaks, missing path references, or other load-time failures —
-the smoke checklist is the gap-closer.
+first interactive surface. The pre-flight mechanical checks alone cannot
+catch YAML parse breaks, missing path references, or other load-time
+failures — the smoke checklist is the gap-closer.

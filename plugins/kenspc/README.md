@@ -114,9 +114,7 @@ Use `/reload-plugins` to pick up changes without restarting.
 
 ## Design Principles
 
-v3 follows five design rules. The authoritative spec lives in
-[docs/plans/v3-bitter-lesson-refactor.md](../../docs/plans/v3-bitter-lesson-refactor.md);
-the rules are summarized here:
+v3 follows five design rules:
 
 - **Workflow SOP** — The brief → plan → task → implement → review chain stays.
   Each skill's phase structure is preserved; v3 changed how each phase is

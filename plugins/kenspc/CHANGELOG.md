@@ -6,8 +6,7 @@ Over-constraint cleanup. Removes two v3.0.0-introduced constraints that
 violated v3's own bitter-lesson philosophy: forced English runtime output
 and the static `Status` column on Planned Dispatch tables. No new
 features; no SKILL interface or agent name changes; no CONTEXT block
-schema changes. The full plan lives at
-[docs/plans/v3.0.2-over-constraint-cleanup.md](../../docs/plans/v3.0.2-over-constraint-cleanup.md).
+schema changes.
 
 ### Removed
 
@@ -64,10 +63,6 @@ actually enforceable", not "fewer guards".
 - `.claude-plugin/marketplace.json` is unchanged (audited clean — its
   description is a one-sentence registry summary that never carried the
   English-only claim).
-
-### Source plan
-
-[docs/plans/v3.0.2-over-constraint-cleanup.md](../../docs/plans/v3.0.2-over-constraint-cleanup.md)
 
 ## 3.0.1 — 2026-05-05
 
@@ -137,18 +132,14 @@ identical to 3.0.0.
   misdiagnoses or cosmetic doc nits are not addressed — see the analysis
   recorded in the session that produced this release for the per-finding
   disposition.
-- The v3.0 plan and task documents are spec-historical and are not
-  retroactively rewritten; the strengthened ACs apply to all future
-  refactors that consume the plan as a template.
-
 ## 3.0.0 — 2026-05-04
 
 Breaking refactor aligning the plugin with Claude Opus 4.7 at xhigh/max
 effort. v3 follows six design rules: workflow SOP stays, business rules
 framed as why-not-command, DONE-criteria over step-by-step flow, no
 anti-rationalization scaffolding, plain language over aggressive directive
-tokens, and English-only output. The full plan lives at
-[docs/plans/v3-bitter-lesson-refactor.md](../../docs/plans/v3-bitter-lesson-refactor.md).
+tokens, and English-only output. (The English-only rule was retired in
+v3.0.2 — see that release's entry above.)
 
 ### Removed
 
@@ -170,8 +161,9 @@ tokens, and English-only output. The full plan lives at
 ### Added
 
 - `effort:` frontmatter on every SKILL.md and every agent .md (`xhigh` /
-  `max` for coding-adjacent work, `high` for read-only or document review,
-  per § Effort Allocation in the v3 plan).
+  `max` for coding-adjacent work, `high` for read-only or document review;
+  see CLAUDE.md § Subagent Review Architecture for the per-skill and
+  per-agent rationale).
 - Dispatch Status Tables (Planned Dispatch + result table) at every
   dispatching skill: `generate-plan`, `generate-task`, `generate-guide`,
   `task-implement`, `task-review`.
@@ -212,10 +204,10 @@ tokens, and English-only output. The full plan lives at
   DONE criteria and Constraints (no numbered substep list).
 - All SKILL.md `version:` fields bumped to 3.0.0 to align with plugin
   version.
-- README Design Principles section now distills the six v3 design rules
-  and references the v3 plan as the authoritative spec. Requirements
-  section names a concrete Claude Code minimum (v2.1.0+). Effort levels
-  subsection points to Anthropic's skill / subagent frontmatter docs.
+- README Design Principles section now distills the six v3 design rules.
+  Requirements section names a concrete Claude Code minimum (v2.1.0+).
+  Effort levels subsection points to Anthropic's skill / subagent
+  frontmatter docs.
 - Project CLAUDE.md "Writing Rules for Skill Content" replaces the
   bilingual and ULTRATHINK bullets with a Rule 2 rationale-anchored
   bullet, an English-only output bullet, and a reasoning-by-effort note.

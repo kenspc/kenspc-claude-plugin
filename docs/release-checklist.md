@@ -1,29 +1,29 @@
 # Release Checklist
 
 Manual verification steps that run before tagging any release. The
-mechanical AC1–AC11 in [docs/plans/v3-bitter-lesson-refactor.md](plans/v3-bitter-lesson-refactor.md)
-verify content; this checklist verifies that the plugin actually loads and
-that each entry-point reaches its first interactive surface.
+pre-flight checks below verify content; the smoke checklist verifies that
+the plugin actually loads and that each entry-point reaches its first
+interactive surface.
 
 ## Pre-flight: mechanical checks
 
 Run from the repository root:
 
 ```bash
-# AC1 — frontmatter completeness
+# Frontmatter completeness — every SKILL.md and agent .md declares effort
 for f in plugins/kenspc/skills/*/SKILL.md plugins/kenspc/agents/*.md; do
   grep -q '^effort:' "$f" || echo "MISSING effort: $f"
 done
 
-# AC11 — JSON sanity (all three)
+# JSON sanity (all three)
 cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
 cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
 cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 
-# AC7 — canonical dispatch byte-identity
+# Canonical dispatch byte-identity (task-review vs task-implement)
 bash scripts/check-canonical-dispatch.sh
 
-# AC9 — review-angle agents shared-section invariance
+# Review-angle agents shared-section invariance (5 reviewer agents)
 bash scripts/check-review-agent-drift.sh
 ```
 
@@ -68,8 +68,8 @@ git push origin main --tags
 
 ## Rationale
 
-This checklist exists because v3 review uncovered that all 11 mechanical
-ACs can pass while the plugin fails to load — for example, a missing
-colon in YAML frontmatter parses cleanly as text but breaks Claude Code's
-plugin loader. The smoke checklist is the cheapest gap-closer: it
-exercises the actual load + first-prompt surface that no grep can verify.
+This checklist exists because mechanical pre-flight checks can pass while
+the plugin fails to load — for example, a missing colon in YAML
+frontmatter parses cleanly as text but breaks Claude Code's plugin
+loader. The smoke checklist is the cheapest gap-closer: it exercises the
+actual load + first-prompt surface that no grep can verify.
