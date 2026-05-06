@@ -49,7 +49,7 @@ Inside the session:
 |---|---|---|
 | 1 | `/help` | Lists all 6 kenspc slash commands without error |
 | 2 | `/reload-plugins` | Reload completes; no YAML/JSON parse errors in console |
-| 3 | `/kenspc-brief` | Discovery starts; first user-facing prompt is English-only |
+| 3 | `/kenspc-brief` | Discovery starts; first user-facing prompt is a question (not a draft) |
 | 4 | `/kenspc-plan` | Phase 1 begins; Phase 3 dispatch table appears before plan-document-reviewer runs |
 | 5 | `/kenspc-task <plan-path>` | Decomposition runs; task-document-reviewer dispatch table appears |
 | 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE; Schema A → B → C → G report appears |

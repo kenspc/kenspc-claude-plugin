@@ -936,27 +936,14 @@ grep -rnwE 'ULTRATHINK|CRITICAL|MUST|NEVER' plugins/kenspc/skills plugins/kenspc
 (CHANGELOG / migration notes describing what was removed may use them.
 The path scope already excludes them.)
 
-### AC6 — No bilingual output
+### AC6 — Removed in v3.0.2
 
-```bash
-# Catches the bilingual-label antipattern: Latin word + " / " + CJK word
-# (and the reverse). The required surrounding spaces distinguish bilingual
-# labels (the antipattern) from compound terms like "代码审查/review代码"
-# inside trigger-phrase corpora (legitimate, no spaces around slash).
-grep -rnP '[A-Za-z]+\s\/\s[\x{4e00}-\x{9fff}]+|[\x{4e00}-\x{9fff}]+\s\/\s[A-Za-z]+' plugins/kenspc/skills plugins/kenspc/agents plugins/kenspc/commands plugins/kenspc/hooks --include='*.md' --include='*.sh' | wc -l
-# Expected: 0
-# Discovery framework "How to ask" examples are intentional (Q4) — that
-# file is excluded by path scope (it lives in plugins/kenspc/shared/).
-# CHANGELOG note about removal is excluded by path scope.
-```
-
-The regex deliberately requires single spaces around the slash, which is
-the typical layout of bilingual status labels and prompts. Trigger-phrase
-corpora in skill `description:` frontmatter and the parenthetical compound
-terms used as domain names (e.g., `(代码审查/review代码)`) do not include
-spaces around the slash, so the regex passes them through. Reviewer must
-spot-check for paragraph-level translations, parenthetical bilingual
-forms, and other variants the regex does not target.
+Retired by v3.0.2 plan design decision D1
+([docs/plans/v3.0.2-over-constraint-cleanup.md](v3.0.2-over-constraint-cleanup.md)).
+v3.0.0 forced English-only runtime output via SKILL/agent text; v3.0.2
+reversed that policy because runtime display language is properly decided
+by session/global/project CLAUDE.md context, not by skill content. AC
+numbering is preserved (AC7–AC11 references stay valid).
 
 ### AC7 — Unconditional dispatch fix verified
 
@@ -983,22 +970,31 @@ length. If a future legitimate edit changes the canonical block, the
 markers stay in place; only the contents inside them need to be edited
 identically in both files.
 
-### AC8 — Dispatch Status Tables present
+### AC8 — Planned Dispatch tables have no Status column
+
+Reversed by v3.0.2 plan design decision D2
+([docs/plans/v3.0.2-over-constraint-cleanup.md](v3.0.2-over-constraint-cleanup.md)).
+Planned Dispatch tables retain their visibility role but no longer carry
+a Status column with hard-coded "pending" markers (the static markdown
+cannot reflect live state — the TUI handles that channel).
 
 ```bash
-# Every dispatching skill renders both the Planned Dispatch Table and the
-# results table. The "pending" marker must appear inside an actual markdown
-# table row (a line starting with "|") so a stray "pending" in prose does
-# not falsely satisfy the check.
+# Every dispatching skill has a Planned Dispatch list/table that names all
+# agents it will dispatch, but does NOT have a Status column or "pending"
+# marker masquerading as live state.
 for f in \
   plugins/kenspc/skills/generate-plan/SKILL.md \
   plugins/kenspc/skills/generate-guide/SKILL.md \
   plugins/kenspc/skills/generate-task/SKILL.md \
   plugins/kenspc/skills/task-review/SKILL.md \
   plugins/kenspc/skills/task-implement/SKILL.md ; do
-  grep -qiE 'Planned Dispatch|Dispatch Status' "$f" \
-    && grep -qE '^\|.*\bpending\b.*\|' "$f" \
-    || echo "MISSING tables: $f"
+  grep -qiE 'Planned Dispatch|即将派发' "$f" || { echo "MISSING list: $f"; continue; }
+  # No Status column header in the Planned Dispatch table window.
+  # (Result tables in Schema A/E still have Status columns; those live in
+  #  separate sections — bounded by the awk window cutoff.)
+  awk '/Planned Dispatch|即将派发/,/^##|^---$/' "$f" \
+    | grep -qE '\| *Status *\|' \
+    && echo "STATUS COLUMN STILL PRESENT in Planned Dispatch: $f"
 done | tee /tmp/ac8.log
 test ! -s /tmp/ac8.log
 ```
@@ -1030,15 +1026,14 @@ bash scripts/check-review-agent-drift.sh
 
 Manual review of `plugins/kenspc/README.md`:
 - Skills table descriptions reflect v3
-- Design Principles section reflects the 6 rules
-- Bilingual claim removed; ULTRATHINK reference removed
+- Design Principles section reflects the 5 rules
+- English-only output feature claim removed; ULTRATHINK reference removed
 - Effort-levels subsection added
 
 Manual review of project root `CLAUDE.md`:
 - "Writing Rules for Skill Content" no longer asserts bilingual output
 - "Writing Rules for Skill Content" no longer instructs ULTRATHINK
 - "Use rationale-anchored business rules (Rule 2)" bullet present
-- "Output in English only" bullet present
 
 ```bash
 # Cheap text-level sanity that supports the manual review:
