@@ -10,6 +10,7 @@ A Claude Code plugin marketplace containing structured development workflow plug
 
 - Root `.claude-plugin/marketplace.json` — plugin registry pointing to plugin directories
 - Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`agents/`, `skills/`, `commands/`, `hooks/`, `references/`, `shared/`)
+- The `description` field in `.claude-plugin/marketplace.json` is the registry-list summary (one short sentence). The `description` field in `plugins/<name>/.claude-plugin/plugin.json` is the full plugin metadata loaded after the user selects the plugin. The two are deliberately layered — the marketplace summary is typically the first sentence of the full description. Do not sync them blindly.
 
 ### Plugin Directory Layout
 
@@ -137,6 +138,17 @@ The 5 review-angle agents share PREREQUISITES, FILE COVERAGE, and CUSTOM
 INSTRUCTIONS sections by convention. When modifying any of these sections in
 one agent, apply the same change to the other 4. Duplication is intentional
 (each agent is independently readable); silent drift between them is a bug.
+Run `bash scripts/check-review-agent-drift.sh` after editing any reviewer
+agent — it hashes each shared section across the 5 files and fails on
+non-identity. The same script is part of plan AC9.
+
+The canonical `## Code Review Phase (unconditional)` block in
+`task-review/SKILL.md` and `task-implement/SKILL.md` is bounded by
+`<!-- canonical:dispatch:start -->` / `<!-- canonical:dispatch:end -->`
+markers and must remain byte-identical between the two files. Run
+`bash scripts/check-canonical-dispatch.sh` after editing either skill —
+it sha256-hashes the bounded block in both files and fails on drift.
+This script is the AC7 implementation.
 
 ### Non-Goals
 
@@ -165,12 +177,37 @@ Use `/reload-plugins` inside a session to pick up changes without restarting.
 
 ### Validate plugin structure
 ```bash
-# Check plugin.json is valid
-cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool
-
-# Check hooks.json is valid
-cat plugins/kenspc/hooks/hooks.json | python -m json.tool
+# JSON sanity (all three: plugin metadata, hooks config, marketplace registry)
+cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
+cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
+cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 
 # Verify all SKILL.md files have required frontmatter
 grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
+
+# Cross-agent invariants
+bash scripts/check-review-agent-drift.sh
+bash scripts/check-canonical-dispatch.sh
 ```
+
+### Repository scripts/
+
+Project-level shell scripts live in `scripts/` at the repo root:
+
+- `check-review-agent-drift.sh` — guards the byte-identity invariant
+  across the 5 review-angle agents (PREREQUISITES, FILE COVERAGE, CUSTOM
+  INSTRUCTIONS). Implements plan AC9.
+- `check-canonical-dispatch.sh` — guards the byte-identity invariant on
+  the `## Code Review Phase (unconditional)` canonical block between
+  `task-review/SKILL.md` and `task-implement/SKILL.md`. Implements plan AC7.
+
+Run before tagging any release; both should also be considered as
+pre-commit hook candidates when their target files change.
+
+### Release procedure
+
+See [docs/release-checklist.md](docs/release-checklist.md) for the manual
+smoke-test checklist that exercises plugin load + every entry-point's
+first interactive surface. Mechanical AC1–AC11 alone cannot catch YAML
+parse breaks, missing path references, or other load-time failures —
+the smoke checklist is the gap-closer.
