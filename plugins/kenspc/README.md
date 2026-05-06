@@ -114,7 +114,7 @@ Use `/reload-plugins` to pick up changes without restarting.
 
 ## Design Principles
 
-v3 follows six design rules. The authoritative spec lives in
+v3 follows five design rules. The authoritative spec lives in
 [docs/plans/v3-bitter-lesson-refactor.md](../../docs/plans/v3-bitter-lesson-refactor.md);
 the rules are summarized here:
 
@@ -139,13 +139,6 @@ the rules are summarized here:
   used in earlier versions are all removed. Reasoning depth is now controlled
   by the `effort:` frontmatter; "use" / "avoid" / "do not" replace `MUST` /
   `NEVER`; stop-and-report prose replaces `STOP immediately`.
-- **English-only output** — Progress messages and final summaries are in
-  English. Display language is already controlled by session, global
-  CLAUDE.md, and project CLAUDE.md; forcing bilingual at the skill level
-  conflicts with those controls. The discovery framework's "How to ask"
-  examples are the deliberate exception (illustrative phrasings showing
-  the model how to phrase Discovery questions in the user's language).
-
 Cross-cutting properties from earlier versions are preserved:
 
 - **Multi-angle parallel review** — The 5 review-angle agents
