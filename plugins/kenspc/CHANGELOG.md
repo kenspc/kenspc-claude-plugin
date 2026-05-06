@@ -1,5 +1,74 @@
 # Changelog
 
+## 3.0.2 — 2026-05-06
+
+Over-constraint cleanup. Removes two v3.0.0-introduced constraints that
+violated v3's own bitter-lesson philosophy: forced English runtime output
+and the static `Status` column on Planned Dispatch tables. No new
+features; no SKILL interface or agent name changes; no CONTEXT block
+schema changes. The full plan lives at
+[docs/plans/v3.0.2-over-constraint-cleanup.md](../../docs/plans/v3.0.2-over-constraint-cleanup.md).
+
+### Removed
+
+- Forced English runtime output. Removed from 4 agents
+  (`plan-document-reviewer`, `guide-document-reviewer`,
+  `task-document-reviewer`, `task-implementer`), the project root
+  `CLAUDE.md` "Writing Rules for Skill Content" section, the plugin
+  `README.md` Design Principles section, and the `plugin.json`
+  description string's sixth design rule. v3 master plan AC6
+  ("No bilingual output") is retired with a placeholder section that
+  cites the retirement decision; AC numbering preserved so AC7–AC11
+  references stay valid. `code-fixer.md`'s code-artifacts English
+  constraint and `task-implementer.md`'s renamed CODE ARTIFACTS LANGUAGE
+  block are intentionally kept (they scope to code artifacts only).
+
+### Changed
+
+- Planned Dispatch table header: `Status` → `Role` across 5 dispatching
+  SKILL.md (6 tables total — `task-implement` has 2). Each row's `Role`
+  cell is a one-line agent purpose string (≤ 60 chars) drawn from the D3
+  mapping in the v3.0.2 plan. v3 master plan AC8 reversed: now asserts
+  the Planned Dispatch window has NO Status column / pending marker.
+- Plugin description rewritten from "six design rules ... and English-only
+  output" to "five design rules" (drops the sixth rule).
+- v3 master plan AC10 README review checklist updated: "6 rules" → "5
+  rules"; "Bilingual claim removed" → "English-only output feature claim
+  removed". CLAUDE.md review checklist drops the now-stale "Output in
+  English only bullet present" assertion.
+- `docs/release-checklist.md` row 3 (`/kenspc-brief` smoke) Pass
+  criterion changed from "first user-facing prompt is English-only" to
+  "first user-facing prompt is a question (not a draft)" — covers the
+  brief's no-draft-during-discovery invariant without enforcing language.
+
+### Rationale
+
+The v3.0.0 plan's Non-Goals item 7 already recorded the underlying root:
+"Live updating dispatch tables — Claude Code's TUI already handles this".
+v3.0.0 nonetheless shipped tables with hard-coded `pending` cells that
+the orchestrator could not edit after dispatch — the table always lied.
+The TUI bottom bar is the real live state. The forced-English output
+rule was the same antipattern in another dimension: using SKILL/agent
+text to constrain a runtime decision that session/global/project
+CLAUDE.md context already controls.
+
+This is a correction of v3.0.0 execution drift, not a reversal of
+direction. The bitter lesson is "guards should enforce things that are
+actually enforceable", not "fewer guards".
+
+### Note
+
+- Result tables (Schemas A/D/E/G — rendered after dispatch) keep their
+  `Status` columns. Those reflect real outcomes the orchestrator computes
+  before rendering, so they are correct.
+- `.claude-plugin/marketplace.json` is unchanged (audited clean — its
+  description is a one-sentence registry summary that never carried the
+  English-only claim).
+
+### Source plan
+
+[docs/plans/v3.0.2-over-constraint-cleanup.md](../../docs/plans/v3.0.2-over-constraint-cleanup.md)
+
 ## 3.0.1 — 2026-05-05
 
 Post-review hardening pass. The v3.0 implementation passed all 11 plan
