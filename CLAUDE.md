@@ -157,7 +157,6 @@ This script is the AC7 implementation.
 ### Writing Rules for Skill Content
 
 - Use rationale-anchored business rules (Rule 2): frame each rule as "Why: ..." prose rather than command-style imperatives, so the model follows the intent of the rule, not just its letter
-- Output in English only: progress messages, final summaries, and status labels are English-only; the discovery framework's "How to ask" examples are the deliberate exception (illustrative phrasings showing the model how to phrase Discovery questions in the user's language)
 - Reasoning depth is controlled by the `effort:` frontmatter on each SKILL.md and agent .md, not by inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
