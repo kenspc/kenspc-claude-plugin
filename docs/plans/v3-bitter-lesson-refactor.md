@@ -927,22 +927,36 @@ by the path scope.
 ### AC5 — No aggressive language
 
 ```bash
-grep -rnE 'ULTRATHINK|CRITICAL:|^MUST |NEVER ' plugins/kenspc/skills plugins/kenspc/agents | wc -l
+# Word-boundary match catches inline, indented, end-of-line, and
+# punctuation-followed forms that the v3.0 column-anchored pattern missed.
+grep -rnwE 'ULTRATHINK|CRITICAL|MUST|NEVER' plugins/kenspc/skills plugins/kenspc/agents | wc -l
 # Expected: 0
 ```
 
-(CHANGELOG / migration notes describing what was removed may use them.)
+(CHANGELOG / migration notes describing what was removed may use them.
+The path scope already excludes them.)
 
 ### AC6 — No bilingual output
 
 ```bash
-# Common bilingual separators in skill/agent/command/hook files
-grep -rnE '/ 中|/ 华|中 /|华 /' plugins/kenspc/skills plugins/kenspc/agents plugins/kenspc/commands plugins/kenspc/hooks | wc -l
+# Catches the bilingual-label antipattern: Latin word + " / " + CJK word
+# (and the reverse). The required surrounding spaces distinguish bilingual
+# labels (the antipattern) from compound terms like "代码审查/review代码"
+# inside trigger-phrase corpora (legitimate, no spaces around slash).
+grep -rnP '[A-Za-z]+\s\/\s[\x{4e00}-\x{9fff}]+|[\x{4e00}-\x{9fff}]+\s\/\s[A-Za-z]+' plugins/kenspc/skills plugins/kenspc/agents plugins/kenspc/commands plugins/kenspc/hooks --include='*.md' --include='*.sh' | wc -l
 # Expected: 0
 # Discovery framework "How to ask" examples are intentional (Q4) — that
-# file is excluded from this check.
+# file is excluded by path scope (it lives in plugins/kenspc/shared/).
 # CHANGELOG note about removal is excluded by path scope.
 ```
+
+The regex deliberately requires single spaces around the slash, which is
+the typical layout of bilingual status labels and prompts. Trigger-phrase
+corpora in skill `description:` frontmatter and the parenthetical compound
+terms used as domain names (e.g., `(代码审查/review代码)`) do not include
+spaces around the slash, so the regex passes them through. Reviewer must
+spot-check for paragraph-level translations, parenthetical bilingual
+forms, and other variants the regex does not target.
 
 ### AC7 — Unconditional dispatch fix verified
 
@@ -953,25 +967,37 @@ grep -q 'unconditional' plugins/kenspc/skills/task-implement/SKILL.md
 # Neither file uses the narrative "Then follow Steps" pattern for review dispatch.
 ! grep -E 'Then follow .* Step' plugins/kenspc/skills/task-review/SKILL.md
 ! grep -E 'Then follow .* Step' plugins/kenspc/skills/task-implement/SKILL.md
-# The canonical paragraph is byte-identical between the two files.
-diff <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task-review/SKILL.md | head -25) \
-     <(grep -A 20 'Code Review Phase (unconditional)' plugins/kenspc/skills/task-implement/SKILL.md | head -25)
-# Expected: empty diff (zero exit code).
+# The canonical block is byte-identical between the two files. Bounded by
+# explicit HTML comment markers so drift inside or outside any line window
+# is caught.
+bash scripts/check-canonical-dispatch.sh
+# Expected: exit 0 with "OK    canonical:dispatch — ..." line.
 ```
+
+The marker-based check supersedes the v3.0 `grep -A 20 ... | head -25`
+pipeline, which coupled the verification window to the canonical block's
+line count. The new approach extracts everything between
+`<!-- canonical:dispatch:start -->` and `<!-- canonical:dispatch:end -->`,
+hashes it, and compares — no magic numbers, no assumptions about block
+length. If a future legitimate edit changes the canonical block, the
+markers stay in place; only the contents inside them need to be edited
+identically in both files.
 
 ### AC8 — Dispatch Status Tables present
 
 ```bash
 # Every dispatching skill renders both the Planned Dispatch Table and the
-# results table. The grep keys ("Planned Dispatch" + "pending") match the
-# canonical table format defined in § Dispatch Status Tables.
+# results table. The "pending" marker must appear inside an actual markdown
+# table row (a line starting with "|") so a stray "pending" in prose does
+# not falsely satisfy the check.
 for f in \
   plugins/kenspc/skills/generate-plan/SKILL.md \
   plugins/kenspc/skills/generate-guide/SKILL.md \
   plugins/kenspc/skills/generate-task/SKILL.md \
   plugins/kenspc/skills/task-review/SKILL.md \
   plugins/kenspc/skills/task-implement/SKILL.md ; do
-  grep -qiE 'Planned Dispatch|Dispatch Status' "$f" && grep -q 'pending' "$f" \
+  grep -qiE 'Planned Dispatch|Dispatch Status' "$f" \
+    && grep -qE '^\|.*\bpending\b.*\|' "$f" \
     || echo "MISSING tables: $f"
 done | tee /tmp/ac8.log
 test ! -s /tmp/ac8.log
@@ -991,6 +1017,13 @@ Manual review per agent. Confirm:
 ```bash
 # Cheap text-level sanity that supports the manual review:
 grep -q 'short_label' plugins/kenspc/agents/code-fixer.md
+# Shared-section invariance across the 5 review-angle agents (project
+# CLAUDE.md treats drift between PREREQUISITES, FILE COVERAGE, and CUSTOM
+# INSTRUCTIONS as a bug; this script is the mechanical guard).
+bash scripts/check-review-agent-drift.sh
+# Brief skill must remain review-phase-free (generate-brief produces a
+# discovery artifact, not a verifiable spec).
+! grep -qiE '## Review|Review Phase|review-phase' plugins/kenspc/skills/generate-brief/SKILL.md
 ```
 
 ### AC10 — README and project CLAUDE.md accurate
@@ -1018,6 +1051,7 @@ Manual review of project root `CLAUDE.md`:
 ```bash
 cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
 cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
+cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 ```
 
 ## Validation Steps (post-merge)
