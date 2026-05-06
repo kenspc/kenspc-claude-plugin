@@ -159,9 +159,9 @@ path (or "N/A" if not in a project).
 Before invoking the review agent, render this table so the user sees the
 planned dispatch:
 
-| # | Agent | Status |
-|---|-------|--------|
-| 1 | task-document-reviewer | pending |
+| # | Agent | Role |
+|---|-------|------|
+| 1 | task-document-reviewer | Reviews task document and plan alignment |
 
 ### Step 2: Construct CONTEXT block and dispatch
 

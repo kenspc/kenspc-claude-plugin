@@ -252,9 +252,9 @@ only mode).
 Before invoking the review agent, render this table so the user sees the
 planned dispatch:
 
-| # | Agent | Status |
-|---|-------|--------|
-| 1 | plan-document-reviewer | pending |
+| # | Agent | Role |
+|---|-------|------|
+| 1 | plan-document-reviewer | Reviews plan document for feasibility |
 
 ### Step 2: Construct CONTEXT block and dispatch
 

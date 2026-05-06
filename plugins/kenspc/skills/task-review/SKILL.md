@@ -80,13 +80,13 @@ CONTEXT
 Render this 5-row Planned Dispatch table so the user sees the planned
 dispatch:
 
-| # | Agent | Status |
-|---|-------|--------|
-| 1 | requirements-reviewer | pending |
-| 2 | edge-case-reviewer | pending |
-| 3 | quality-reviewer | pending |
-| 4 | bug-reviewer | pending |
-| 5 | test-reviewer | pending |
+| # | Agent | Role |
+|---|-------|------|
+| 1 | requirements-reviewer | Reviews completeness against requirements |
+| 2 | edge-case-reviewer | Reviews edge cases and failure modes |
+| 3 | quality-reviewer | Reviews code quality and maintainability |
+| 4 | bug-reviewer | Reviews for bugs and correctness defects |
+| 5 | test-reviewer | Reviews test coverage and quality |
 
 <!-- canonical:dispatch:start -->
 ## Code Review Phase (unconditional)

@@ -159,9 +159,9 @@ consolidated review summary.
 Before invoking the review agent, render this table so the user sees the
 planned dispatch:
 
-| # | Agent | Status |
-|---|-------|--------|
-| 1 | guide-document-reviewer | pending |
+| # | Agent | Role |
+|---|-------|------|
+| 1 | guide-document-reviewer | Reviews project guide document |
 
 ### Step 2: Construct CONTEXT block and dispatch
 
