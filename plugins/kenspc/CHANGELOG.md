@@ -1,5 +1,77 @@
 # Changelog
 
+## 3.0.1 — 2026-05-05
+
+Post-review hardening pass. The v3.0 implementation passed all 11 plan
+ACs and shipped clean, but the post-implementation multi-angle code review
+surfaced verification-surface weaknesses (mostly in the AC commands
+themselves) that were worth closing before users encountered them. No
+behavioral change to skills or agents — the user-facing surface is
+identical to 3.0.0.
+
+### Added
+
+- `scripts/check-review-agent-drift.sh` — guards the byte-identity
+  invariant across the 5 review-angle agents (PREREQUISITES, FILE
+  COVERAGE, CUSTOM INSTRUCTIONS sections must stay identical). Project
+  CLAUDE.md flagged drift as a bug; this script is the mechanical guard.
+  Now part of plan AC9.
+- `scripts/check-canonical-dispatch.sh` — guards the byte-identity
+  invariant on the `## Code Review Phase (unconditional)` block between
+  `task-review/SKILL.md` and `task-implement/SKILL.md`. Replaces the v3.0
+  AC7 `grep -A 20 ... | head -25` pipeline, which coupled verification to
+  the canonical block's line count. The new approach extracts everything
+  between explicit `<!-- canonical:dispatch:start -->` /
+  `<!-- canonical:dispatch:end -->` markers and sha256-hashes it.
+- HTML comment markers (`<!-- canonical:dispatch:start -->` /
+  `<!-- canonical:dispatch:end -->`) around the canonical dispatch block
+  in both `task-review/SKILL.md` and `task-implement/SKILL.md`. The
+  markers are inert to the LLM (they are HTML comments) but make the
+  byte-identity contract explicit.
+- `docs/release-checklist.md` — manual smoke checklist that exercises
+  plugin load + first interactive surface of every entry point. Closes
+  the gap that v3.0's mechanical AC1–AC11 left open: a YAML frontmatter
+  break passes every grep but breaks plugin loading.
+- Project `CLAUDE.md` documents the marketplace.json / plugin.json
+  description-layering convention (registry summary vs full metadata —
+  not meant to be byte-synced) and the new `scripts/` directory.
+
+### Changed
+
+- Plan AC5 (no aggressive language) tightened from `^MUST | NEVER `
+  column-anchored regex to `grep -rnwE` word-boundary match. Catches
+  inline (`you MUST do X`), indented (`- MUST`), end-of-line, and
+  punctuation-followed forms that the v3.0 pattern missed.
+- Plan AC6 (no bilingual output) tightened from `/ 中|/ 华|中 /|华 /`
+  (only catches `中`/`华`) to a Latin/CJK-with-spaced-slash pattern that
+  catches any CJK character bilingual label, while still letting
+  unspaced compound terms like `(代码审查/review代码)` through. Reviewer
+  must spot-check for paragraph-level translations and other variants.
+- Plan AC7 replaced with `bash scripts/check-canonical-dispatch.sh`. No
+  more magic-number window.
+- Plan AC8 (Dispatch Status Tables) tightened to require `pending` to
+  appear inside an actual markdown table row (line starting with `|`) so
+  a stray `pending` in prose cannot satisfy the check.
+- Plan AC9 grew two cheap text-level sanity checks: drift script call
+  and a `! grep -qiE '## Review|Review Phase|review-phase'
+  generate-brief/SKILL.md` (brief must remain review-phase-free).
+- Plan AC11 (JSON sanity) extended to also validate
+  `.claude-plugin/marketplace.json` (the registry root).
+- Plugin version bumped to 3.0.1 in `plugin.json`.
+
+### Notes
+
+- Post-review surfaced ~32 unique findings; this release addresses the
+  ones that survive deep analysis as genuine forward-looking improvements
+  (drift invariant guard, canonical block markers, smoke checklist,
+  AC pattern hardening). Findings reclassified as reviewer
+  misdiagnoses or cosmetic doc nits are not addressed — see the analysis
+  recorded in the session that produced this release for the per-finding
+  disposition.
+- The v3.0 plan and task documents are spec-historical and are not
+  retroactively rewritten; the strengthened ACs apply to all future
+  refactors that consume the plan as a template.
+
 ## 3.0.0 — 2026-05-04
 
 Breaking refactor aligning the plugin with Claude Opus 4.7 at xhigh/max
@@ -82,7 +154,7 @@ tokens, and English-only output. The full plan lives at
 ### Notes
 
 - generate-plan ships at `effort: max`; if drafts bloat under real
-  workloads, downgrade to `xhigh` in 3.0.1.
+  workloads, downgrade to `xhigh` in a future patch.
 
 ## 2.0.0 — 2026-05-04
 
