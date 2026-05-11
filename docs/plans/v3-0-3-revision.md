@@ -195,30 +195,36 @@ CUSTOM_INSTRUCTIONS construction:
 ### Step P2.1 · regression-verifier 无测试工程项目 fallback
 
 **Files**:
-- `plugins/kenspc/agents/regression-verifier.md` —— PROCESSING APPROACH 段加 fallback 子段（主改动）
+- `plugins/kenspc/agents/regression-verifier.md` —— 在 VERIFICATION CHECKS 段（line 52-69）之后、OUTPUT FORMAT 段（line 71+）之前新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段（主改动；该 agent 实际无 `PROCESSING APPROACH` 段，沿用既有 ALL CAPS 段名风格新建顶层段）
 - `plugins/kenspc/skills/task-review/SKILL.md` —— Step 7 Verdict determination 段加 `SPOT-CHECK` 第三态说明（canonical 块之外，安全）
 - `plugins/kenspc/skills/task-implement/SKILL.md` —— Phase 2 Step 4 Verdict determination 段加 `SPOT-CHECK` 第三态说明（canonical 块之外，安全）
 
-**Edit (regression-verifier.md)**: PROCESSING APPROACH 段加入 "Fallback for projects without test suite" 子段：
+**Edit (regression-verifier.md)**: 在 VERIFICATION CHECKS 段（既有 4 个 check，line 52-69）之后、OUTPUT FORMAT 段（line 71+）之前，新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段。沿用 agent 既有 ALL CAPS 段名风格——与 PREREQUISITE CHECK / CONTEXT YOU WILL RECEIVE / ROLE / OBJECTIVE 等既有段同级，非 `## Markdown` 标题、非 `**bold**` 子段。下方代码块内的内容**逐字**写入 agent 文件，不要加任何 markdown header 前缀（`##` / `###`）或 `**bold**` 包裹——agent 文件全篇用 bare ALL CAPS 段名风格：
 
 ```markdown
-**Fallback for projects without test suite**:
+FALLBACK FOR NO-TEST-SUITE PROJECTS
 When the project has no test project / no `dotnet test` target /
 no `npm test` target / no equivalent test runner, skip the test
-execution step and replace it with a fallback spot-check of the
-changed files:
+execution step in VERIFICATION CHECKS item 3 and replace it with
+a fallback spot-check of the changed files:
 - For each file in code-fixer's accountability list, read the file
   and confirm the claimed fix is present (grep for the new text or
-  diff signature).
-- Report the verification mode in the Schema C result table row for
-  the "Tests pass" check by setting the Result cell to
+  diff signature in the changed file).
+- Report the verification mode in the Schema C result table row
+  numbered 3 ("Tests pass") by setting the Result cell to
   `SPOT-CHECK` and the Detail cell to `no test suite — accountability
   list spot-checked instead`. The Result value `SPOT-CHECK` is a
-  third state alongside `PASS` / `FAIL` and surfaces in the verdict
-  determination as neutral (does not force FAIL).
+  third state alongside `PASS` / `FAIL`. It surfaces in the verdict
+  determination as neutral (does not force FAIL). Row 2 ("Build
+  succeeds") and row 4 ("Lint passes") remain PASS/FAIL only —
+  SPOT-CHECK applies only to the test execution check.
 - This is not a failure mode; it is the correct behavior for
   projects without test infrastructure.
 ```
+
+**Schema C example row update**（同 commit 落入 regression-verifier.md）：在 Schema C 既有示例表（line 77-83）下方加一行 commentary 句子或在 row 3 的示例 Result 列下加注 `(or SPOT-CHECK when no test suite)`，让 Schema C 自描述 SPOT-CHECK 作为合法第三态——避免实施者 / 后续 reviewer 把它当成 ad-hoc 措辞。建议加注形式：在表下 OUTPUT FORMAT 描述段（line 71-74）末尾增一句 `Result values: PASS / FAIL for all checks; SPOT-CHECK additionally permitted for check 3 ("Tests pass") when the project has no test suite (see FALLBACK FOR NO-TEST-SUITE PROJECTS).`
+
+**Anchor placement rationale**（task-review 阶段反馈合入项）：新建**顶层段**而非作为 VERIFICATION CHECKS 第 3 个 check（Build / test / lint）的 sub-bullet，理由是 prompt 工程 mindset 下"显式段名 ≠ 嵌入子项"——顶层 ALL CAPS 段名是更强的 anchor，可被 grep / 直接段级阅读独立命中，避免该 fallback 被埋进 check 列表后失去存在感。原 plan 引用的 "PROCESSING APPROACH" 段名属误记，本次修订更正（regression-verifier.md 全文无此段名）。
 
 **Edit (both SKILLs Verdict determination)**: 在 `task-review/SKILL.md` Step 7 "#### Verdict determination" 段与 `task-implement/SKILL.md` "#### Verdict determination" 段，在 PASS 规则后加一行：
 
@@ -285,7 +291,7 @@ re-dispatch. The user decides whether plan re-work is warranted.
 
 ```json
 {
-  "description": "kenspc plugin hooks: session startup checks and skill reminders",
+  "description": "kenspc plugin hooks: session startup checks, skill reminders, and session-end telemetry",
   "hooks": {
     "SessionStart": [
       {
@@ -327,16 +333,34 @@ re-dispatch. The user decides whether plan re-work is warranted.
 }
 ```
 
-（仅 SessionEnd 段是新增；SessionStart / PreToolUse 段是既有内容，列出以表明插入位置。）
+（仅 SessionEnd 段是新增；SessionStart / PreToolUse 段是既有内容，列出以表明插入位置。**顶层 `description` 字段值同步更新**为 `kenspc plugin hooks: session startup checks, skill reminders, and session-end telemetry` —— 单字段润色反映新增的 SessionEnd 事件覆盖；task-review 阶段反馈合入项。）
 
 **Edit session-end-telemetry.sh**（bash，无 Python/Node 依赖）：
-- 读 session metadata（环境变量 `CLAUDE_SESSION_ID` 等，按 Claude Code hook context API 实际可用变量决定——实施前查文档确认）
+
+**Pre-implementation decision**（v3.0.3 发版前必须落地，不再 defer 到实施时——task-review 阶段反馈合入项）。实施 Task 6 前先查 Claude Code hook context API 文档确认**两个相互独立**的问题：
+
+1. **检测机制**——SessionEnd 脚本如何获知本 session 内调过哪些 slash command？Hook 进程不在 SKILL 调用栈内，须靠外部信号识别调用历史。候选三方案（详见 Open Question #6）：
+   - (a) 读 Claude Code 当前 session transcript 文件路径（若 hook context 提供路径变量）
+   - (b) 由 task-implement / task-review SKILL 落地时写状态文件——**超 v3.0.3 patch 范围**，因为要改 SKILL；除非简化为追加单行到 fixed-path 文件且 SKILL 改动 < 5 行可考虑
+   - (c) 扫描 `~/.claude/projects/<project>/<session>.jsonl`（dogfooding trace 所在位置）；hook 进程对该路径的读权限需实测确认
+
+   **若 (a) / (c) 任一可行**：选用并实施。**若均不可行且 (b) 超范围**：Task 6 降级为 `deferred (v3.0.4+)`，本 Step 跳过，CHANGELOG v3.0.3 段 P3 小节相应改为 "2/3 项落地"措辞。
+
+2. **session ID 字段来源**——JSON Lines 行的 `session_id` 字段值如何决定？
+   - **若存在稳定 session ID 变量**（如 `CLAUDE_SESSION_ID` / `CLAUDE_CODE_SESSION_ID` 或别名）：使用该变量值
+   - **若不存在**：`session_id` 字段填 `unknown` 或省略；telemetry 降级为粗粒度计数器（每条记录代表一次 task-implement-without-review 事件，不要求唯一 session 关联）
+   - **timestamp + PID 回退方案撤销**（task-review 阶段反馈）：PID 在不同 hook 触发间不保证一致（Claude Code 是否每 hook 一进程取决于实现，且 PID 在 OS / shell 间含义不一），与 telemetry 设计目的不符。早先 plan 草稿误列为回退方案，此处更正
+
+脚本主体行为（基于上述决策树选定的方案）：
+- 读 session metadata（按 Pre-implementation decision 第 1/2 项确定的变量名 / 文件路径）
 - 检测 session 中是否调用过 `/kenspc-task-implement` 但未调用 `/kenspc-task-review`
 - 若是，append 一行 JSON Lines 到 `${HOME}/.claude/kenspc/missed-reviews.log`：
 
 ```jsonl
 {"timestamp": "2026-05-11T14:23:45+08:00", "session_id": "abc...", "reason": "task-implement without task-review"}
 ```
+
+（若 Pre-implementation decision 第 2 项选粗粒度模式：`session_id` 字段可省略或填 `unknown`，acceptance criteria 中"JSON Lines 行"条目不强求该字段存在。）
 
 - 路径展开用 `${HOME}` 而非 `~`（bash 下 `~` 仅在 word 开头展开，嵌入字符串内的 `~/.claude/...` 不展开；`${HOME}` 在任何上下文都展开。Windows Git Bash 下 `${HOME}` 展开为 `/c/Users/kenspc` 类路径，目录创建可靠）
 - 文件不存在则创建（含父目录 `mkdir -p`）
@@ -571,13 +595,20 @@ no new SKILLs, agents, or components.
 
 1. **P3.2 anchor 词组频次下限的具体数字** —— 本计划列了"至少 1 次"作为通用下限，但实施前 grep 当前 SKILL 实测后，可能需要差异化（如 `unconditional` 至少 1 次，`single message` 至少 2 次因为是关键并行 anchor）。最终数字以 grep 实测结果为准。
 
-2. **P3.1 SessionEnd hook 在 Windows Git Bash 下的具体环境变量名称** —— `CLAUDE_SESSION_ID` 等变量是否真存在、是否有别名（`CLAUDE_CODE_SESSION_ID`？）——实施前查 Claude Code hook context API 文档确认；若变量不存在，回退用 timestamp + PID 组合作为 session 标识。
+2. ~~**P3.1 SessionEnd hook 在 Windows Git Bash 下的具体环境变量名称**~~ —— **已升级为 Step P3.1 内 Pre-implementation decision 第 2 项**（见 P3.1 段顶部决策树）。timestamp + PID 回退方案已撤销（PID 在不同 hook 触发间不保证一致，与 telemetry 设计目的不符）；改为"若稳定 session ID 变量不存在则降级为粗粒度计数器"。此 open question 已结清（task-review 阶段反馈，2026-05-11）。同时衍生新的 Open Question #6 surfacing 更深层 gap——见下方。
 
 3. **端到端 trace 验证记录文件** —— 是否落地为 `docs/traces/v3-0-3-greenfield.md`？hobby 节奏下不强制；由实施者决定。
 
 4. ~~**P2.2 隐含子任务的工作量**~~ —— **plan review 已确认 agent.md 现有 Plan-Level Concerns 输出字段**，P2.2 为纯 SKILL 改动；此 open question 已结清。
 
 5. **P2.1 引入 `SPOT-CHECK` 第三态对 SKILL Verdict 判定的连锁影响** —— 在 regression-verifier Schema C 增加 `SPOT-CHECK` 第三态后，`task-review/SKILL.md` Step 7 与 `task-implement/SKILL.md` Phase 2 Step 4 的 Verdict determination 段（PASS/FAIL/PARTIAL 规则）需同步声明"`SPOT-CHECK` 视为 neutral，不强制 FAIL"。该改动落在两个 SKILL 的 Verdict 子段、**在 canonical 块之外**——实施 P2.1 时一并修改这两段，否则 PASS 规则文字"build / tests / lint all PASS"会与 Schema C 中的 `SPOT-CHECK` 状态冲突。**plan 阶段评估**：纳入 P2.1 scope，不另立 Step；实施时 P2.1 commit 同时改一个 agent + 两个 SKILL 共 3 个文件。
+
+6. **P3.1 SessionEnd hook 如何获知 session 内调过的 slash command** —— **task-review 阶段反馈引出的更深层 gap**（2026-05-11）。Hook 进程不在 SKILL 调用栈内，需通过外部信号识别调用历史。候选机制（详见 Step P3.1 Pre-implementation decision 第 1 项）：
+   - (a) 读 Claude Code 当前 session transcript jsonl 文件（若 hook context 提供路径变量）
+   - (b) 由 task-implement / task-review SKILL 写状态文件——**超 v3.0.3 patch 范围**（要改 SKILL，与本计划"仅编辑既有 prompt 文本 + hook 脚本"边界冲突），除非简化为追加单行到 fixed-path 文件且 SKILL 改动 < 5 行
+   - (c) 扫描 `~/.claude/projects/<project>/<session>.jsonl`（dogfooding trace 所在位置；hook 进程对该路径的读权限需实测确认）
+
+   **plan 阶段评估**：Task 6 实施第一步选定方案 (a) 或 (c)；若两者均不可行，Task 6 降级为 `deferred (v3.0.4+)`，CHANGELOG v3.0.3 段 P3 小节改 "2/3 项落地" 措辞。本 open question 在 Task 6 实施时关闭，不阻塞其他任务起手。
 
 ## Constraints（继承 brief）
 
@@ -602,6 +633,7 @@ no new SKILLs, agents, or components.
 4. **P3.1 脚本路径用 `${HOME}` 不用 `~`** + 加 Windows Git Bash 兼容 acceptance criteria
 5. **P2.2 隐含子任务（agent 字段存在性 grep）记入 hidden dependency 段**
 6. **Implementation Steps 顶部加跨优先级依赖说明** —— P3.2 grep 需在 P0.2 落地后执行
+7. **task-review 阶段反馈合入 (2026-05-11)** —— task-document-reviewer 在 task 文档 review 时报出 3 项 plan-level concern，本次修订处理：(a) Step P2.1 引用了 regression-verifier 不存在的 `PROCESSING APPROACH` 段——更正为"VERIFICATION CHECKS 段后、OUTPUT FORMAT 段前新建 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段"，沿用 agent 既有 ALL CAPS 段名风格，并在 plan 内显式写出 anchor placement rationale（顶层段优于 sub-bullet 的 prompt 工程考量）; (b) Open Question #2 升级为 Step P3.1 内 Pre-implementation decision（两层决策树：检测机制 + session ID 字段来源），撤销 timestamp + PID 回退方案，并衍生 Open Question #6 surfacing 更深层 gap（SessionEnd 脚本如何获知 session 内 slash command 调用历史）; (c) hooks.json 顶层 `description` 字段值同步更新覆盖 SessionEnd 事件。修订原则：仍是 patch release v3.0.3 范围，不引入新 SKILL/agent/command/shared，不引入强语气词。task 文档（`docs/tasks/v3-0-3-revision-tasks.md`）Task 4 / Task 6 acceptance criteria 后续需同步——本次 generate-plan 仅修 plan，不动 task。
 
 ## Next Step
 
