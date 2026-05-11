@@ -55,6 +55,7 @@ Inside the session:
 | 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE; Schema A → B → C → G report appears |
 | 7 | `/kenspc-task-review` | 5-row dispatch table appears; Schema F final report; never logs "Code looks correct, skipping review" |
 | 8 | `/kenspc-guide <project-path>` | Guide runs; guide-document-reviewer dispatch table appears |
+| 9 | End-to-end trace verification on greenfield project (non-DungeonDescent) | Phase 2 auto-triggers without user prompt; no closure-wording disablelist words appear in trace; `Discovery Mode:` field present in brief output |
 
 If any step fails, do not tag the release. File the failure as a bug,
 fix, re-run the pre-flight + this checklist.

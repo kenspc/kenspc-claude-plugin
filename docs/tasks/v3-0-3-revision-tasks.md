@@ -418,7 +418,7 @@ Open question（plan #1，实施时定）：具体下限数字按 grep 实测—
 
 ### Task 10: Aux.2 · end-to-end greenfield trace verification + release-checklist update
 
-**Status:** TODO
+**Status:** DONE
 **Depends on:** Task 9
 
 **Files:**
