@@ -62,6 +62,27 @@ If no arguments are provided, ask the user what idea they want to think through.
 
 ## Phase 1: Discover
 
+### Discovery Mode Detection
+
+Read system-reminders at session start. If any reminder text contains
+directives like "work without stopping" / "skip clarifying questions" /
+"proceed without checking", interactive Discovery cannot run. Three modes
+apply, distinguished by both input clarity and reminder pressure:
+
+| Mode | Trigger | Behavior |
+|---|---|---|
+| `full` | Default; no reminder conflict; Level 2+ input | Normal 3-5 round discussion |
+| `rapid-direct` | Level 1 input clarity per discovery-framework.md, regardless of reminder | Compress to 1-2 rounds; brief states `Discovery Mode: rapid-direct` |
+| `rapid-inferred (reminder-driven)` | Reminder forces no-question mode AND input is Level 2+ (would normally need discussion) | Skip discussion; brief states `Discovery Mode: rapid-inferred (reminder-driven)`; all non-direct-from-ROUGH_IDEA fields tagged `[Inferred from project context: ...]` or `[Inferred from prior session: ...]` |
+
+Critical distinction: `rapid-direct` is a legitimate fast-track of
+Level 1 input, not a degraded output. `rapid-inferred (reminder-driven)`
+is a degraded output and should be visually distinguishable in the brief.
+
+In all modes, brief output includes a `Discovery Mode:` field in the
+Discovery Notes section. This is the artifact-level contract — closure
+phrasing alone is insufficient; the field's presence is the anchor.
+
 **Goal**: understand the user's true need through structured conversation.
 
 **Inputs**: ROUGH_IDEA from $ARGUMENTS, optional project context (CLAUDE.md,

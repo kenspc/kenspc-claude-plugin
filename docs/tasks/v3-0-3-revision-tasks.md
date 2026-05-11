@@ -92,7 +92,7 @@ Plan 段 "Implementation Steps 依赖说明" 明示：每个优先级组一个 c
 
 ### Task 2: P1.1 · generate-brief Discovery Mode Detection
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:**
 - `plugins/kenspc/skills/generate-brief/SKILL.md` — modify
@@ -122,7 +122,7 @@ Plan 段 "Implementation Steps 依赖说明" 明示：每个优先级组一个 c
 
 ### Task 3: P1.2 · CUSTOM_INSTRUCTIONS dynamic construction formalization (cross-SKILL atomic)
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:** (atomic — both edited in same task / same commit-group as Task 2)
 - `plugins/kenspc/skills/task-implement/SKILL.md` — modify

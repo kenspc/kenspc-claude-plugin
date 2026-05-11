@@ -75,6 +75,29 @@ CONTEXT
 - CUSTOM_INSTRUCTIONS: <user's custom instructions or "N/A">
 ```
 
+CUSTOM_INSTRUCTIONS construction:
+- Default: "N/A".
+- Override only when the session has accumulated any of the four
+  context categories below; fold applicable items into 2-4 sentences:
+  1. Project structural facts not yet in CLAUDE.md (e.g., no test
+     project in solution, no lint config, only one .csproj under
+     solution root).
+  2. User-authorized session-scoped permissions (e.g., auto-commit on
+     trivial fixes, auto-push to feature branch).
+  3. Cross-document narrative anchors (e.g., F1 phrase from a brief
+     that the agent should treat as load-bearing context).
+  4. Style preferences expressed in conversation (e.g., hobby pace,
+     surgical fixes only, no scope creep).
+- If none of the four apply to this session, retain "N/A". The
+  `only when ... applicable` and N/A-fallback wording are intentional:
+  they avoid the agent inventing content to populate the field.
+
+Note: this construction guidance covers how the dispatching SKILL fills
+the CUSTOM_INSTRUCTIONS field value at dispatch time. The 5 reviewer
+agents (requirements / edge-case / quality / bug / test) each have a
+"CUSTOM INSTRUCTIONS" section in their body that is byte-identity
+locked across all 5 — that section is not edited here.
+
 ### Step 3: Render Planned Dispatch table and dispatch parallel review agents
 
 Render this 5-row Planned Dispatch table so the user sees the planned
