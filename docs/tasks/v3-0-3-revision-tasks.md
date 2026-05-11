@@ -9,6 +9,8 @@ Source brief: [docs/briefs/v3-0-3-revision.md](../briefs/v3-0-3-revision.md).
 
 **Discovery / Task 拆解 Mode**: rapid-inferred (reminder-driven) — 用户 session reminder 要求 "work without stopping for clarifying questions"，generate-task 在 Phase 2 跳过交互式确认，按合理推断直接落盘。Mode 选择本身体现了 plan P1.1 引入的同名 artifact 字段规则。
 
+**Plan revision sync (2026-05-11)**: Task 4 (P2.1) 和 Task 6 (P3.1) 已同步对齐 plan revision 改动（commits acc2c04 / c0c1893）——3 项 plan-level concern 在 plan 阶段已修正：P2.1 段名笔误更正 + Schema C 行号 vs VERIFICATION CHECKS 项号歧义消除 + SPOT-CHECK 升级为 Schema C 文档化第三态；P3.1 Pre-implementation env probe 替代原 deferred Open Question #2，撤销 timestamp+PID 回退方案；hooks.json 顶层 description 字段同步更新。其他 Task（1/2/3/5/7/8/9/10）不受影响。
+
 ## Commit Strategy (binding to plan)
 
 Plan 段 "Implementation Steps 依赖说明" 明示：每个优先级组一个 commit（共 4 个），加附属 bump 一个、验证记录一个，合计 **6 个 commit 上限**。任务编号与 commit 映射：
@@ -157,11 +159,24 @@ grep -n CUSTOM_INSTRUCTIONS plugins/kenspc/skills/task-{implement,review}/SKILL.
 **Status:** TODO
 
 **Files:** (atomic — all three edited in same task / same commit-group as Task 5)
-- `plugins/kenspc/agents/regression-verifier.md` — modify（主改动）
+- `plugins/kenspc/agents/regression-verifier.md` — modify（主改动：在 VERIFICATION CHECKS 段后、OUTPUT FORMAT 段前新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段；同时更新 OUTPUT FORMAT 内 Schema C 示例行加 SPOT-CHECK 为正式第三态）
 - `plugins/kenspc/skills/task-review/SKILL.md` — modify（Step 7 Verdict determination 段加 SPOT-CHECK 第三态说明）
 - `plugins/kenspc/skills/task-implement/SKILL.md` — modify（Phase 2 Step 4 Verdict determination 段加 SPOT-CHECK 第三态说明）
 
-**改动一**（regression-verifier.md）—— **Plan-Level concern noted**：plan 段 P2.1 说"PROCESSING APPROACH 段加 fallback 子段"，但 regression-verifier.md 实际结构是 PREREQUISITE CHECK / CONTEXT YOU WILL RECEIVE / ROLE / OBJECTIVE / INPUTS / PREREQUISITES / DONE CRITERIA / **VERIFICATION CHECKS** / OUTPUT FORMAT——**没有 "PROCESSING APPROACH" 段**。落地处理：在 VERIFICATION CHECKS 段（既有 line 52-69，4 个 check）之后、OUTPUT FORMAT 段（line 71+）之前，新增一个 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段。文本采纳 plan 段 P2.1 提供的 markdown 块（"When the project has no test project / no `dotnet test` target / ... skip the test execution step and replace it with a fallback spot-check of the changed files: ..."）。
+**改动一**（regression-verifier.md）——**两件事原子完成**（plan revision 合入项）：
+
+1. **新增 FALLBACK FOR NO-TEST-SUITE PROJECTS 顶层段**：位置在 VERIFICATION CHECKS 段（既有 4 个 check，line 52-69）之后、OUTPUT FORMAT 段（line 71+）之前。沿用 agent 既有 ALL CAPS 段名风格——与 PREREQUISITE CHECK / CONTEXT YOU WILL RECEIVE / ROLE / OBJECTIVE 等同级，**非 `## Markdown` 标题、非 `**bold**` 子段**（plan revision 反复强调以防 code-fixer 反射性加装饰）。文本采纳 plan 段 P2.1 提供的 markdown 块（在 ```markdown ... ``` 围栏内 verbatim 复制段名行 + 段体）。
+
+2. **更新 OUTPUT FORMAT 段 Schema C 示例表**：在 Schema C 5 行示例表（line 78-83）的 row 3 ("Tests pass") 增列 `SPOT-CHECK` 作为正式第三态 Result 值，与 `PASS` / `FAIL` 并列。让 SPOT-CHECK 成为 agent 内**文档化的状态**，而不是 fallback 段临场发明的值。
+
+**关键编号区分**（plan revision 强调的歧义点）：regression-verifier.md 内存在**两套独立编号**——Schema C 行 1-5 vs VERIFICATION CHECKS 项 1-4：
+
+- **Schema C 行 3** = "Tests pass" check → SPOT-CHECK 适用于此行（不适用 row 2 "Build succeeds" 或 row 4 "Lint passes"）
+- **VERIFICATION CHECKS 项 3** = "Build / test / lint" → fallback 触发对应该项的 test 子目标
+
+实施时不要把两套编号混用。
+
+**Anchor placement rationale**（plan revision 文本已包含，commit message 引用）：新建顶层段而非作为 VERIFICATION CHECKS sub-bullet 的理由——顶层 ALL CAPS 段名是更强的 anchor，可被独立 grep 命中，避免 fallback 被埋进 check 列表后失去存在感。
 
 **改动二**（两 SKILL 的 Verdict determination 段）—— 在 PASS 规则后加一行（plan 段 P2.1 提供文本）：
 ```
@@ -176,9 +191,11 @@ grep -n CUSTOM_INSTRUCTIONS plugins/kenspc/skills/task-{implement,review}/SKILL.
 - 两段措辞**非** byte-identity 锁定（task-implement 多 BLOCKED 状态），新增 SPOT-CHECK 行只需符合各自既有结构，允许不同插入位置
 
 **Acceptance criteria:**
-- regression-verifier.md 含新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段，引用 Schema C 的 Result `SPOT-CHECK` 第三态值 + Detail 字符串 `no test suite — accountability list spot-checked instead`
+- regression-verifier.md 含新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 顶层段（ALL CAPS 段名，与既有段同级，无 `##` 或 `**bold**` 装饰）—— 验证：`grep -n '^FALLBACK FOR NO-TEST-SUITE PROJECTS$' plugins/kenspc/agents/regression-verifier.md` 命中 1 行
+- regression-verifier.md OUTPUT FORMAT 段的 Schema C 示例表 row 3 ("Tests pass") 列出 `SPOT-CHECK` 作为正式第三态 Result 值（与 `PASS` / `FAIL` 并列；不是 fallback 段临场发明）
+- fallback 段引用 Schema C 的 Result `SPOT-CHECK` 第三态值 + Detail 字符串 `no test suite — accountability list spot-checked instead`
 - 两个 SKILL 的 Verdict determination 段含 SPOT-CHECK neutral 说明
-- 在新建 `dotnet new console` 项目（无测试项目）跑 `/kenspc-task-review` → regression-verifier 不报"测试失败"，而是 Schema C 表 row 3 ("Tests pass") 输出 Result=`SPOT-CHECK` + Detail=`no test suite — accountability list spot-checked instead`，并完成 accountability 验证
+- 在新建 `dotnet new console` 项目（无测试项目）跑 `/kenspc-task-review` → regression-verifier 不报"测试失败"，而是 **Schema C 行 3** ("Tests pass") 输出 Result=`SPOT-CHECK` + Detail=`no test suite — accountability list spot-checked instead`，并完成 accountability 验证（SPOT-CHECK **不**适用于 row 2 "Build succeeds" 或 row 4 "Lint passes"）
 - 在有测试项目的项目里行为不变（fallback 判定依据是检测不到 test target 而非"测试失败"）
 - `bash scripts/check-review-agent-drift.sh` 退出 0（regression-verifier 不在 5 reviewer agent 锁定范围；本任务不动 5 reviewer agent）
 - `bash scripts/check-canonical-dispatch.sh` 退出 0（两个 SKILL 的改动都在 canonical 块外）
@@ -187,7 +204,8 @@ grep -n CUSTOM_INSTRUCTIONS plugins/kenspc/skills/task-{implement,review}/SKILL.
 - `check-review-agent-drift.sh` **不**校验 regression-verifier——agent 改动安全（commit message 注明）
 - 两 SKILL Verdict determination 段措辞**非** byte-identity 锁定，新增 SPOT-CHECK 行按各自既有结构插入
 - 检查 `task-review/SKILL.md` Step 6 / `task-implement/SKILL.md` Phase 2 Step 3 是否硬假设 regression-verifier 一定跑 `dotnet test` / `npm test`——若有，同步软化为 "or report SPOT-CHECK if no test target detected"
-- **Plan-level concern surfaced**：plan 提到的 "PROCESSING APPROACH" 段名与 agent 实际结构不匹配，落地处理是新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段——commit message 记一句"PROCESSING APPROACH 段名 plan 笔误，落地为新增 FALLBACK 段"
+- ~~Plan-level concern surfaced (PROCESSING APPROACH 段名笔误)~~ —— **已在 plan revision 中闭合**（commits acc2c04 / c0c1893）：原 plan P2.1 段名笔误更正为"VERIFICATION CHECKS 段后新建 FALLBACK 段"；Schema C 行号 vs VERIFICATION CHECKS 项号歧义同步消除。task 文档已对齐，commit message 无需再记 plan 笔误，但建议引用 plan revision commit 作为 traceability
+- **新防御点**（reviewer commit acc2c04 引入）：Schema C 表 row 编号与 VERIFICATION CHECKS 段 item 编号是两套独立编号，commit message 注明"SPOT-CHECK 只适用 Schema C row 3 (Tests pass)，不染 row 2/4"防止下游 review 误判
 
 ---
 
@@ -237,31 +255,71 @@ re-dispatch. The user decides whether plan re-work is warranted.
 - `plugins/kenspc/hooks/hooks.json` — modify（新增 SessionEnd 事件项）
 - `plugins/kenspc/hooks/scripts/session-end-telemetry.sh` — **新文件**（bash 脚本）
 
-**改动一**（hooks.json）—— 在既有顶层 `"hooks": { ... }` 对象内，与 `SessionStart` / `PreToolUse` 并列，加入 `SessionEnd` 键。matcher 用 `"*"`（与既有 `SessionStart` 一致，不要写 `".*"`）。文本采纳 plan 段 P3.1 提供的 JSON 块。
+**改动一**（hooks.json）—— 两件事同改（plan revision 合入项）：
+1. 在既有顶层 `"hooks": { ... }` 对象内，与 `SessionStart` / `PreToolUse` 并列，加入 `SessionEnd` 键。matcher 用 `"*"`（与既有 `SessionStart` 一致，不要写 `".*"`）。文本采纳 plan 段 P3.1 提供的 JSON 块。
+2. **顶层 `description` 字段值同步更新**：`kenspc plugin hooks: session startup checks and skill reminders` → `kenspc plugin hooks: session startup checks, skill reminders, and session-end telemetry`。单字段润色，反映新增的 SessionEnd 事件覆盖。
 
-**改动二**（session-end-telemetry.sh）—— bash 脚本，shebang `#!/usr/bin/env bash` + `set -euo pipefail`（与既有 `check-deps.sh` / `remind-plan-skill.sh` 风格一致）。逻辑：
-- 读 session metadata（环境变量 `CLAUDE_SESSION_ID` 等；实施前查 Claude Code hook context API 文档确认变量名；若变量不存在回退用 timestamp + PID 组合）
+**改动二**（session-end-telemetry.sh）—— bash 脚本，shebang `#!/usr/bin/env bash` + `set -euo pipefail`（与既有 `check-deps.sh` / `remind-plan-skill.sh` 风格一致）。
+
+**实施第一步：Pre-implementation env probe**（plan revision 强制条目，撤销原 timestamp+PID 回退方案）。写脚本主体前先做环境探针：
+
+```bash
+# 临时插入脚本草稿做一次环境采样（提交前删除）
+env | grep -iE 'claude|transcript|session' > /tmp/kenspc-hook-env.log
+```
+
+根据探针结果**逐项**回答两个独立问题：
+
+**问题 1 — 检测机制**（SessionEnd 脚本如何获知 session 内调过哪些 slash command）：候选三方案：
+- **(a)** 读 Claude Code 当前 session transcript jsonl 文件——若 hook context 提供路径变量（候选名：`CLAUDE_TRANSCRIPT_PATH` / `CLAUDE_SESSION_TRANSCRIPT` / `CLAUDE_CODE_TRANSCRIPT_PATH`）。Pass 判据：`[[ -r "$VAR" ]]` 返回 0
+- **(b)** 由 task-implement / task-review SKILL 写状态文件——**v3.0.3 硬排除**（要改 SKILL，与本计划"仅编辑既有 prompt 文本 + hook 脚本"边界冲突，plan revision 已明确）
+- **(c)** 扫描 `~/.claude/projects/<project>/<session>.jsonl`——**Windows Git Bash 为决定平台**（author 主用 Windows），Pass 判据：`[[ -r "$HOME/.claude/projects" ]]` + 能列出 jsonl 文件
+
+**Outcome**：若 (a) / (c) 任一可行 → 选用并实施。**若两者均不可行**：Task 6 降级为 `deferred (v3.0.4+)`，本任务跳过，Task 9 CHANGELOG v3.0.3 段 P3 小节相应改为 "2/3 项落地" 措辞。
+
+**问题 2 — session ID 字段来源**（JSON Lines 行的 `session_id` 字段值如何决定）：
+- 若存在稳定 session ID 变量（`CLAUDE_SESSION_ID` / `CLAUDE_CODE_SESSION_ID` 等）：使用该变量值
+- 若不存在：`session_id` 字段填 `unknown` 或省略；telemetry 降级为粗粒度计数器（每条记录代表一次 task-implement-without-review 事件，不要求唯一 session 关联）
+- **timestamp + PID 回退方案撤销**（plan revision 合入项）：hook bash 的 `$$` 与 Claude Code session 标识零关联（PID 在 OS / shell / hook 进程模型间含义不一），与 telemetry 设计目的不符
+
+**脚本主体行为**（基于上述决策树选定的方案）：
+- 读 session metadata（按问题 1/2 确定的变量名 / 文件路径）
 - 检测 session 中是否调用过 `/kenspc-task-implement` 但未调用 `/kenspc-task-review`
-- 若是，append 一行 JSON Lines 到 `${HOME}/.claude/kenspc/missed-reviews.log`（含 timestamp / session_id / reason 字段）
+- 若是，append 一行 JSON Lines 到 `${HOME}/.claude/kenspc/missed-reviews.log`：
+
+```jsonl
+{"timestamp": "2026-05-11T14:23:45+08:00", "session_id": "abc...", "reason": "task-implement without task-review"}
+```
+
+（若选粗粒度模式：`session_id` 字段省略或填 `unknown`，acceptance criteria 不强求该字段存在）
+
 - 路径展开用 `${HOME}` 而非 `~`（嵌入字符串内 `~` 不展开；`${HOME}` 在任何上下文展开。Windows Git Bash 下 `${HOME}` 展开为 `/c/Users/kenspc` 类路径）
 - 文件不存在则 `mkdir -p` 创建父目录
 - **零干扰**：不输出 stdout、不阻断 session 退出、所有错误吞掉（`2>/dev/null || true`）
 - 脚本以 git mode `100644` 入库（与既有 hook 脚本一致，`hooks.json` 用 `bash <path>` 调用，无需 executable bit）
+- **提交前移除环境探针那一行**（`env | grep ... > /tmp/...` 仅实施第一步用，不入仓）
 
-**Open question 转 sub-todo**：实施前需查 Claude Code hook context API 文档确认 `CLAUDE_SESSION_ID` / `CLAUDE_CODE_SESSION_ID` 等变量是否存在；若不存在回退用 `$(date -u +%Y-%m-%dT%H:%M:%S%z)-$$` 组合。
+**Open question 状态**（plan revision 合入项）：plan revision 将原 Open Question #2（session_id 变量名）升级为 Pre-implementation decision；新增 Open Question #6 surfacing 检测机制三方案。task 6 实施时按决策树执行，不再 defer；若 env probe 结论为"(a)(c) 均不可行"则有 deferred 路径，acceptance criteria 已涵盖。
 
 **Acceptance criteria:**
 - `cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null` 退出 0
+- hooks.json 顶层 `description` 字段已更新——验证：`python -c "import json; d=json.load(open('plugins/kenspc/hooks/hooks.json')); assert 'session-end telemetry' in d['description']"` exit 0
+- **Pre-implementation env probe 已执行**且结果记录在 commit message body（哪个候选变量名 / 路径被选定；问题 1 outcome 是 (a) 还是 (c)；问题 2 outcome 是稳定 session ID 还是粗粒度模式）
 - 新脚本以 git mode `100644` 入库（验证：`git ls-files -s plugins/kenspc/hooks/scripts/session-end-telemetry.sh` 显示 `100644`）
-- 在新建 .NET 项目跑 task-implement 后**未跑** review，退出 Claude Code session 后 `${HOME}/.claude/kenspc/missed-reviews.log` 出现新 JSON Lines 行
+- 在新建 .NET 项目跑 task-implement 后**未跑** review，退出 Claude Code session 后 `${HOME}/.claude/kenspc/missed-reviews.log` 出现新 JSON Lines 行（含 timestamp + reason 字段；`session_id` 字段在问题 2 选粗粒度模式时可省略或为 `unknown`）
 - 跑 task-implement 后**跑了** review，**无**新行 append
 - 用户体感零干扰（hook 静默运行，无 stderr/stdout 可见输出）
 - Windows Git Bash 兼容：`${HOME}` 展开后路径创建成功（`/c/Users/kenspc/.claude/kenspc/` 目录存在）
 - 脚本内不引入 Python/Node 依赖（纯 bash，与既有 hook 脚本一致）
+- 提交版本中不残留环境探针行（`env | grep ... > /tmp/...` 仅实施第一步用，不入仓）
+- **若 Pre-implementation env probe 结论为"(a)(c) 两方案均不可行"**：本任务 Status 改为 `DEFERRED`，commit message 注明降级原因；Task 9 CHANGELOG v3.0.3 段 P3 小节同步改为"2/3 项落地"措辞（Task 9 已知此联动）
 
 **F4 Conflict Self-Check** (commit message 附注):
 - 检查 hooks.json 既有事件项是否已有 SessionEnd 项——若有，merge（同事件下加入 hook，不覆盖）。实测当前 hooks.json 无 SessionEnd 项，直接新增
 - 脚本路径用 `${CLAUDE_PLUGIN_ROOT}`（plugin 内引用）+ `${HOME}`（用户家目录）两个变量，不混淆
+- hooks.json 顶层 `description` 字段同步更新——单字段润色，与新增 SessionEnd 事件原子化（plan revision 合入项）
+- ~~timestamp + PID 组合作为 session 标识回退方案~~ —— **已撤销**（plan revision 合入项）：bash `$$` 与 Claude Code session 标识零关联，与 telemetry 设计目的不符。改为"无稳定 session ID 变量时降级粗粒度计数器"
+- Pre-implementation env probe 结论写进 commit message body 供后续 audit 引用
 
 ---
 
@@ -435,8 +493,9 @@ Open question（plan #1，实施时定）：具体下限数字按 grep 实测—
 ### Open questions deferred to implementation
 
 1. **Task 7 anchor 词组频次下限的具体数字** —— grep 实测后定（plan #1）
-2. **Task 6 SessionEnd hook 环境变量名** —— 实施前查 Claude Code hook context API 文档确认（plan #2）
+2. ~~**Task 6 SessionEnd hook 环境变量名**~~ —— **已升级为 Task 6 实施第一步 Pre-implementation env probe**（plan revision 合入项；原 plan Open Question #2 close，新增 plan Open Question #6 surfacing 更深层 gap）。env 探针流程 + 候选变量名清单已写入 Task 6 改动二；若实施时探针发现 (a)(c) 均不可行，Task 6 自带 deferred 路径
 3. **Task 10 trace 文件是否落地** —— hobby 节奏下不强制（plan #3）
+4. **Task 6 检测机制三方案 (a)/(b)/(c) v3.0.3 可行性**（新增，task-review 阶段反馈衍生 / plan Open Question #6）—— env 探针实测后才能定；若 (a)(c) 均不可行则 Task 6 降级 deferred (v3.0.4+)，Task 9 CHANGELOG 段联动调整为"2/3 项落地"措辞
 
 ### Constraints inherited from plan + brief
 
