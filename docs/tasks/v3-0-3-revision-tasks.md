@@ -249,7 +249,7 @@ re-dispatch. The user decides whether plan re-work is warranted.
 
 ### Task 6: P3.1 · SessionEnd telemetry hook
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:**
 - `plugins/kenspc/hooks/hooks.json` — modify（新增 SessionEnd 事件项）
@@ -325,7 +325,7 @@ env | grep -iE 'claude|transcript|session' > /tmp/kenspc-hook-env.log
 
 ### Task 7: P3.2 · check-canonical-dispatch.sh anchor frequency dual check
 
-**Status:** TODO
+**Status:** DONE
 **Depends on:** Task 1 (P0)
 
 **Files:**
@@ -371,7 +371,7 @@ Open question（plan #1，实施时定）：具体下限数字按 grep 实测—
 
 ### Task 8: P3.3 · CLAUDE.md two design lessons
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:**
 - `CLAUDE.md`（项目根） — modify

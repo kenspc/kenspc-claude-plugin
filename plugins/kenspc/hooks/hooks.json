@@ -1,5 +1,5 @@
 {
-  "description": "kenspc plugin hooks: session startup checks and skill reminders",
+  "description": "kenspc plugin hooks: session startup checks, skill reminders, and session-end telemetry",
   "hooks": {
     "SessionStart": [
       {
@@ -20,6 +20,18 @@
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/remind-plan-skill.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-end-telemetry.sh",
             "timeout": 5
           }
         ]

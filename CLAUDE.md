@@ -248,3 +248,29 @@ smoke-test checklist that exercises plugin load + every entry-point's
 first interactive surface. The pre-flight mechanical checks alone cannot
 catch YAML parse breaks, missing path references, or other load-time
 failures — the smoke checklist is the gap-closer.
+
+## Plugin Design Lessons (Cumulative)
+
+### Phase transitions rely on artifacts, not wording
+Closure phrases ("complete", "landed", "wrapped up") are decorations.
+The model treats Phase N+1 as triggered only when Phase N has produced
+the artifact Phase N+1 reads as input. Anchor cross-phase contracts via
+artifacts (files written, fields filled, dispatch CONTEXT blocks) — not
+via closure-style natural language alone.
+Background: v3.0.2 task-implement Phase 1 → Phase 2 sometimes failed to
+auto-trigger because Phase 1 closure phrasing read as "session over" to
+the orchestrator.
+
+### Hooks are for environment constraints and post-hoc telemetry, not workflow state-machine guarding
+Hooks fire on harness events (SessionStart, SessionEnd, Stop, etc.) and
+do not observe SKILL-internal Phase state. Using a hook to enforce
+"task-implement should be followed by task-review" leads to false-positive
+blocking (Stop hook fires on legitimate Phase 1 → Phase 2 transitions
+within a single SKILL run). Use hooks for:
+- Environment setup / teardown
+- Cross-session telemetry (post-hoc analysis)
+- External system notifications
+Avoid using hooks for SKILL-internal workflow guarantees.
+Background: an early v3.0.3 design considered a Stop hook to force
+task-review dispatch; rebatched into a SessionEnd telemetry log after
+recognizing the misjudgement.
