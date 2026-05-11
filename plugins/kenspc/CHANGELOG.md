@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.3 — Phase Transition Anchors & Emergent Behavior Formalization
+## 3.0.3 — 2026-05-11 — Phase Transition Anchors & Emergent Behavior Formalization
 
 Patch release based on the first end-to-end DungeonDescent dogfooding
 trace (pixel-font-pass). Nine prompt-engineering refinements + meta-

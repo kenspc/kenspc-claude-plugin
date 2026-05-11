@@ -207,8 +207,10 @@ something other than the agent's fallback string "No plan-level
 concerns found."), proactively suggest:
 
 > Plan-level concerns detected. Consider re-running:
-> `/kenspc-plan {original-plan-path}`
+> `/kenspc-plan <plan path>`
 > to address these upstream issues before proceeding to implementation.
 
-Do not auto-invoke /kenspc-plan; this is a recommendation, not a
+In the suggestion, substitute `<plan path>` with the actual `PLAN_PATH`
+value from $ARGUMENTS (the same plan document this skill was invoked
+on). Do not auto-invoke `/kenspc-plan`; this is a recommendation, not a
 re-dispatch. The user decides whether plan re-work is warranted.

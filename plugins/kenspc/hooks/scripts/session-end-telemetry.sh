@@ -18,8 +18,12 @@
 #     variable available in Windows Git Bash).
 #   - Question 2 — session ID source: ${CLAUDE_CODE_SESSION_ID}
 #     environment variable (stable UUID observed during probe).
-#     If unset, telemetry degrades to coarse-grained mode and the
-#     session_id field is recorded as "unknown".
+#     If unset, telemetry degrades to coarse-grained mode: the transcript
+#     cannot be located so the hook silently exits without writing a
+#     record. When a record IS written, the session_id field is omitted
+#     from the JSON Lines payload rather than carrying the literal
+#     string "unknown" (avoids consumer-side confusion between unset
+#     and a real UUID).
 
 set -euo pipefail
 
@@ -27,13 +31,13 @@ LOG_DIR="${HOME}/.claude/kenspc"
 LOG_FILE="${LOG_DIR}/missed-reviews.log"
 PROJECTS_DIR="${HOME}/.claude/projects"
 
-# Best-effort session ID. Empty / unset is fine — recorded as "unknown".
-session_id="${CLAUDE_CODE_SESSION_ID:-unknown}"
+# Best-effort session ID. Empty / unset is tolerated.
+session_id="${CLAUDE_CODE_SESSION_ID:-}"
 
 # Locate this session's transcript jsonl. If we cannot find one, we
 # cannot decide whether review was skipped — silently exit.
 transcript=""
-if [[ -d "$PROJECTS_DIR" && "$session_id" != "unknown" ]]; then
+if [[ -d "$PROJECTS_DIR" && -n "$session_id" ]]; then
     # Scan all project subdirectories for a file matching the session ID.
     # The path encoding scheme (project dir name) is opaque from a hook's
     # perspective, so we glob rather than reconstruct it.
@@ -48,15 +52,25 @@ if [[ -z "$transcript" ]]; then
 fi
 
 # Detect whether /kenspc-task-implement was invoked and whether
-# /kenspc-task-review was invoked. The transcript records command
-# invocations as text in user / assistant entries; a literal substring
-# match is sufficient for telemetry purposes.
+# /kenspc-task-review was invoked. The transcript is JSON Lines; each
+# line is a record. To reduce substring false positives from quoted
+# reflections, system reminders, or assistant prose, match only when
+# the slash command appears as the leading token of a user-typed
+# message (record type "user" with content starting with the command).
+#
+# Pattern shape (case-sensitive, anchored to the start of a JSON
+# string value): `"content":"/kenspc-task-implement` or
+# `"text":"/kenspc-task-implement` — both forms occur depending on
+# how the transcript encodes user input. Trailing characters are
+# allowed (arguments after the command).
 implement_seen=0
 review_seen=0
-if grep -q -F -- "/kenspc-task-implement" "$transcript" 2>/dev/null; then
+implement_pattern='"(content|text)":"/kenspc-task-implement'
+review_pattern='"(content|text)":"/kenspc-task-review'
+if grep -q -E -- "$implement_pattern" "$transcript" 2>/dev/null; then
     implement_seen=1
 fi
-if grep -q -F -- "/kenspc-task-review" "$transcript" 2>/dev/null; then
+if grep -q -E -- "$review_pattern" "$transcript" 2>/dev/null; then
     review_seen=1
 fi
 
@@ -75,7 +89,15 @@ esac
 
 mkdir -p "$LOG_DIR" 2>/dev/null || exit 0
 
-printf '{"timestamp": "%s", "session_id": "%s", "reason": "task-implement without task-review"}\n' \
-    "$timestamp" "$session_id" >> "$LOG_FILE" 2>/dev/null || true
+# Build the JSON Lines record. Omit session_id when unset rather than
+# writing the literal "unknown" — consumer side can then cleanly
+# distinguish "no session id available" from a real UUID.
+if [[ -n "$session_id" ]]; then
+    printf '{"timestamp": "%s", "session_id": "%s", "reason": "task-implement without task-review"}\n' \
+        "$timestamp" "$session_id" >> "$LOG_FILE" 2>/dev/null || true
+else
+    printf '{"timestamp": "%s", "reason": "task-implement without task-review"}\n' \
+        "$timestamp" >> "$LOG_FILE" 2>/dev/null || true
+fi
 
 exit 0

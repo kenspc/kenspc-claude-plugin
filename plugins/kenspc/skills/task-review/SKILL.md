@@ -260,8 +260,9 @@ reviewer recommendations).
 Based on the regression verification results, declare a verdict:
 
 - **PASS** when all of: zero HIGH severity issues remain unresolved; zero
-  INCORRECTLY FIXED items; build / tests / lint all PASS; no regressions
-  introduced by fix commits.
+  INCORRECTLY FIXED items; build / tests / lint all PASS or `SPOT-CHECK`
+  on row 3 (no-test-suite fallback); no regressions introduced by fix
+  commits.
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
   if all other checks PASS and no HIGH issues remain. The Verdict

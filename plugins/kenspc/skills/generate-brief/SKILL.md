@@ -75,7 +75,7 @@ apply, distinguished by both input clarity and reminder pressure:
 | `rapid-direct` | Level 1 input clarity per discovery-framework.md, regardless of reminder | Compress to 1-2 rounds; brief states `Discovery Mode: rapid-direct` |
 | `rapid-inferred (reminder-driven)` | Reminder forces no-question mode AND input is Level 2+ (would normally need discussion) | Skip discussion; brief states `Discovery Mode: rapid-inferred (reminder-driven)`; all non-direct-from-ROUGH_IDEA fields tagged `[Inferred from project context: ...]` or `[Inferred from prior session: ...]` |
 
-Critical distinction: `rapid-direct` is a legitimate fast-track of
+Key distinction: `rapid-direct` is a legitimate fast-track of
 Level 1 input, not a degraded output. `rapid-inferred (reminder-driven)`
 is a degraded output and should be visually distinguishable in the brief.
 
@@ -177,8 +177,13 @@ norms, historical attempts, team preferences. Skip if everything was already
 in project files.]
 
 ## Discovery Notes
+Discovery Mode: <full | rapid-direct | rapid-inferred (reminder-driven)>
+
 [Key trade-off discussions and decisions from the conversation. Bullet form is
-fine. This is the audit trail of *why* the brief looks the way it does.]
+fine. This is the audit trail of *why* the brief looks the way it does. The
+`Discovery Mode:` field above is the artifact-level contract aligned with the
+Phase 1 Discovery Mode Detection sub-section — closure phrasing alone is
+insufficient; the field's presence is the anchor.]
 ```
 
 ### Writing rules for the brief

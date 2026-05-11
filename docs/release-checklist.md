@@ -27,8 +27,8 @@ bash scripts/check-canonical-dispatch.sh
 bash scripts/check-review-agent-drift.sh
 ```
 
-All four must exit 0. If any fail, fix before proceeding to the smoke
-checklist.
+All five must exit 0 (3 JSON validations + 2 shell drift guards). If any
+fail, fix before proceeding to the smoke checklist.
 
 ## Smoke checklist (manual, ~10 minutes)
 
@@ -55,7 +55,22 @@ Inside the session:
 | 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE; Schema A → B → C → G report appears |
 | 7 | `/kenspc-task-review` | 5-row dispatch table appears; Schema F final report; never logs "Code looks correct, skipping review" |
 | 8 | `/kenspc-guide <project-path>` | Guide runs; guide-document-reviewer dispatch table appears |
-| 9 | End-to-end trace verification on greenfield project (non-DungeonDescent) | Phase 2 auto-triggers without user prompt; no closure-wording disablelist words appear in trace; `Discovery Mode:` field present in brief output |
+| 9 | End-to-end trace verification on greenfield project (non-DungeonDescent) | All three sub-criteria hold (see row-9 detail below) |
+
+Row 9 sub-criteria (each is independently mechanically auditable against
+the captured trace):
+
+- Phase 2 auto-triggers without a user prompt: grep the trace for
+  `Proceeding to Phase 2` or `Proceeding to code review` and confirm it
+  appears immediately after Phase 1 Step 5 (not after a user reply).
+- No closure-wording disablelist words appear in the trace before Phase 2
+  dispatch. Grep the trace for each of: `整段落地`, `session 结束`,
+  `workflow 收口` (Chinese subset), and `Workflow complete.`,
+  `All phases done.`, `milestone landed` (English subset drawn from the
+  `task-implement` Closure Wording Boundary disablelist). Each must
+  return zero hits in the pre-Phase-2 trace window.
+- `Discovery Mode:` field present in the brief output, with a value in
+  {`full`, `rapid-direct`, `rapid-inferred (reminder-driven)`}.
 
 If any step fails, do not tag the release. File the failure as a bug,
 fix, re-run the pre-flight + this checklist.

@@ -99,12 +99,15 @@ project has no test suite (see FALLBACK FOR NO-TEST-SUITE PROJECTS).
 |---|----------------------------------|------------|----------------------------------------------------------|
 | 1 | All accountability rows fixed    | PASS       | —                                                        |
 | 2 | Build succeeds                   | PASS       | —                                                        |
-| 3 | Tests pass                       | SPOT-CHECK | no test suite — accountability list spot-checked instead |
+| 3 | Tests pass                       | PASS       | —                                                        |
 | 4 | Lint passes                      | PASS       | —                                                        |
 | 5 | No regressions in non-fix files  | PASS       | —                                                        |
 
-`SPOT-CHECK` in row 3 above is a documented third state for the
-"Tests pass" check only; rows 2 and 4 remain PASS/FAIL.
+Row 3 alternate (no-test-suite project — see FALLBACK FOR NO-TEST-SUITE
+PROJECTS): the Result cell becomes `SPOT-CHECK` and the Detail cell
+becomes `no test suite — accountability list spot-checked instead`.
+`SPOT-CHECK` is a documented third state for the "Tests pass" check
+only; rows 2 and 4 remain PASS/FAIL.
 
 ## Detail
 
@@ -113,6 +116,9 @@ where (file path, line, error message, suspected cause). Use this section to
 report INCORRECTLY FIXED items, UNRESOLVED issues from the completeness check,
 and any regressions surfaced by the cross-check.
 
-End with a one-line overall result: CLEAN (every check PASS) or HAS ISSUES
-(one or more checks not PASS). If HAS ISSUES, list each remaining problem with
-its severity and a suggested action for the user.
+End with a one-line overall result: CLEAN (every check PASS, or row 3 is
+`SPOT-CHECK` with all other checks PASS) or HAS ISSUES (one or more checks
+in FAIL). `SPOT-CHECK` on row 3 is neutral and does not by itself produce
+HAS ISSUES — it only flips the verdict when paired with a real failure
+elsewhere. If HAS ISSUES, list each remaining problem with its severity
+and a suggested action for the user.

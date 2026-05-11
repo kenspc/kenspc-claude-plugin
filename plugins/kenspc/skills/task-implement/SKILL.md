@@ -355,7 +355,8 @@ unblocks).
 #### Verdict determination
 
 - **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
-  PASS; no regressions introduced by fix commits.
+  PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
+  introduced by fix commits.
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
   if all other checks PASS and no HIGH issues remain. The Verdict
