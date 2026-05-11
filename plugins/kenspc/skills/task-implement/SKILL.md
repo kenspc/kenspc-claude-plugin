@@ -99,7 +99,18 @@ CONTEXT
 ### Step 3: Confirm with user
 
 Read the task document and identify all incomplete tasks. Present them to
-the user:
+the user as a **batch list confirmation only**. The Step 3 surface is a
+gate on the batch as a whole — do not pre-discuss any single task's
+implementation approach, file targets, or method-level changes here.
+That discussion belongs inside the implementer agent's per-task work,
+not at the confirmation gate.
+
+Why: Step 3 confirms scope of the batch run. Drifting into per-task
+implementation detail at this point pulls the orchestrator into one task
+prematurely and makes the user respond to a half-formed plan instead of
+the actual question (proceed yes/no on the batch).
+
+Allowed (positive example):
 
 ```
 Found N incomplete tasks to auto-implement:
@@ -107,6 +118,15 @@ Found N incomplete tasks to auto-implement:
 2. Task Y: [brief name]
 ...
 Proceed with automated implementation?
+```
+
+Disallowed (negative example — do not write Step 3 output like this):
+
+```
+Found 2 incomplete tasks. For Task X I plan to modify `src/Foo.cs`
+method `Bar()` to add null-check around the call to `Baz()`. For
+Task Y I will refactor the `Service` class to introduce a new
+interface. Proceed?
 ```
 
 Wait for explicit confirmation before proceeding. If the user declines or
@@ -158,6 +178,34 @@ Step 4 (final report) — Code Review / Fixes / Verification sections are
 omitted; verdict = BLOCKED.
 
 Full implementation details appear in the final report (Phase 2 Step 4).
+
+#### Closure Wording Boundary
+
+Phase-internal progress (allowed) is not the same as workflow-level
+closure (disallowed). Phase 1 → Phase 2 is a transition, not the end of
+the `/kenspc-task-implement` invocation. Phrasing the Phase 1 wrap-up as
+if the whole workflow has finished causes the orchestrator (and the
+user) to treat the run as done and skip the unconditional review.
+
+Avoid phrasing that implies the entire `/kenspc-task-implement`
+invocation has finished. Disallowed phrasing includes:
+
+- Cross-Phase summary phrasing: `整段落地` / `整段交付` /
+  `所有工作完成` / `workflow 收口` / `session 结束`
+- Milestone phrasing: `Step N of M 完成` / `✓ ... 落地` /
+  `milestone landed`
+- Terminal declarations: `Workflow complete.` / `All phases done.` /
+  `All implementation is done.` / `Ready to wrap up.`
+- And similar phrases that imply the entire `/kenspc-task-implement`
+  invocation has finished.
+
+Allowed (legitimate Phase-internal progress announcements):
+
+- `Implementation phase complete.` — the existing Step 5 template
+  phrasing above; this announces Phase 1 wrap, not the whole workflow.
+- `Proceeding to Phase 2.` / `Proceeding to code review.`
+- Per-task completion notes ("Task 1 done") inside the implementer
+  agent's work.
 
 ## Phase 2: Automatic code review
 

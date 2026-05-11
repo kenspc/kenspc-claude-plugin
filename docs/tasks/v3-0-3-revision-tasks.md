@@ -52,7 +52,7 @@ Plan 段 "Implementation Steps 依赖说明" 明示：每个优先级组一个 c
 
 ### Task 1: P0 · task-implement Phase 1 batch gate + closure wording boundary
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:**
 - `plugins/kenspc/skills/task-implement/SKILL.md` — modify
