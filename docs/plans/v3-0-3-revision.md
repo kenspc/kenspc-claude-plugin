@@ -341,15 +341,19 @@ re-dispatch. The user decides whether plan re-work is warranted.
 
 1. **检测机制**——SessionEnd 脚本如何获知本 session 内调过哪些 slash command？Hook 进程不在 SKILL 调用栈内，须靠外部信号识别调用历史。候选三方案（详见 Open Question #6）：
    - (a) 读 Claude Code 当前 session transcript 文件路径（若 hook context 提供路径变量）
-   - (b) 由 task-implement / task-review SKILL 落地时写状态文件——**超 v3.0.3 patch 范围**，因为要改 SKILL；除非简化为追加单行到 fixed-path 文件且 SKILL 改动 < 5 行可考虑
+   - (b) 由 task-implement / task-review SKILL 落地时写状态文件——**v3.0.3 排除**：要改 SKILL 文件，与本 patch "仅编辑既有 prompt 文本 + hook 脚本" 边界冲突，且会扩张 commit surface 让 byte-identity 守护脚本风险面增大；即便看似简化也不在 v3.0.3 考虑范围，留待 v3.0.4+ 重评
    - (c) 扫描 `~/.claude/projects/<project>/<session>.jsonl`（dogfooding trace 所在位置）；hook 进程对该路径的读权限需实测确认
 
-   **若 (a) / (c) 任一可行**：选用并实施。**若均不可行且 (b) 超范围**：Task 6 降级为 `deferred (v3.0.4+)`，本 Step 跳过，CHANGELOG v3.0.3 段 P3 小节相应改为 "2/3 项落地"措辞。
+   **viability 判定方式**（让 Task 6 实施者操作可机械化）：
+   - 对 (a)：在新建 .NET 项目跑一次 `/kenspc-task-implement` + session 退出后查看 hook 进程能见的环境变量。Task 6 第一步把如下 probe 行临时加进 `session-end-telemetry.sh` 草稿：`env | grep -iE 'claude|transcript|session' > /tmp/kenspc-hook-env.log 2>&1 || true`。退出后检查 log 是否含非空 path 变量（候选名：`CLAUDE_TRANSCRIPT_PATH` / `CLAUDE_SESSION_TRANSCRIPT` / `CLAUDE_CODE_TRANSCRIPT_PATH` / 任一含 `transcript` 或 `session` 字样且值是 existing readable file 的变量）。`bash -c "[[ -r \"$VAR\" ]]"` 返回 0 视为 viable
+   - 对 (c)：检查 hook 进程能否 `ls ~/.claude/projects/` 且能读其下 `*.jsonl`。Windows Git Bash 下 `~` 展开为 `/c/Users/kenspc`；WSL2 下 trace 位于 `/home/kenspc/.claude/projects/...`——两侧路径不同，Task 6 实施者需在**实际发版目标平台**（Windows Git Bash，即 plugin author 的主环境）跑一次，确认 path 与读权限；不需要兼顾 WSL2 路径，因为 SessionEnd hook 由 plugin 触发在其运行平台
+   - 任一 viable → 选用并实施 (优先 (a)；(a) 不 viable 则用 (c))
+   - 两者均不 viable → Task 6 降级为 `deferred (v3.0.4+)`，本 Step 跳过，CHANGELOG v3.0.3 段 P3 小节相应改为 "2/3 项落地"措辞
 
 2. **session ID 字段来源**——JSON Lines 行的 `session_id` 字段值如何决定？
-   - **若存在稳定 session ID 变量**（如 `CLAUDE_SESSION_ID` / `CLAUDE_CODE_SESSION_ID` 或别名）：使用该变量值
+   - **若存在稳定 session ID 变量**（候选名：`CLAUDE_SESSION_ID` / `CLAUDE_CODE_SESSION_ID` / 含 `session` 且值非空且看起来像 ID（hex / UUID / 短 token）的变量）：使用该变量值。判定方式同检测机制第 1 项的 env probe log
    - **若不存在**：`session_id` 字段填 `unknown` 或省略；telemetry 降级为粗粒度计数器（每条记录代表一次 task-implement-without-review 事件，不要求唯一 session 关联）
-   - **timestamp + PID 回退方案撤销**（task-review 阶段反馈）：PID 在不同 hook 触发间不保证一致（Claude Code 是否每 hook 一进程取决于实现，且 PID 在 OS / shell 间含义不一），与 telemetry 设计目的不符。早先 plan 草稿误列为回退方案，此处更正
+   - **timestamp + PID 回退方案撤销**（task-review 阶段反馈）：SessionEnd hook 单次触发，PID 只是该 hook bash 进程的 `$$`，与 Claude Code 真实 session identity 零关联，不构成可用的 session 替身——与 telemetry 设计目的不符。早先 plan 草稿误列为回退方案，此处更正
 
 脚本主体行为（基于上述决策树选定的方案）：
 - 读 session metadata（按 Pre-implementation decision 第 1/2 项确定的变量名 / 文件路径）
@@ -605,10 +609,10 @@ no new SKILLs, agents, or components.
 
 6. **P3.1 SessionEnd hook 如何获知 session 内调过的 slash command** —— **task-review 阶段反馈引出的更深层 gap**（2026-05-11）。Hook 进程不在 SKILL 调用栈内，需通过外部信号识别调用历史。候选机制（详见 Step P3.1 Pre-implementation decision 第 1 项）：
    - (a) 读 Claude Code 当前 session transcript jsonl 文件（若 hook context 提供路径变量）
-   - (b) 由 task-implement / task-review SKILL 写状态文件——**超 v3.0.3 patch 范围**（要改 SKILL，与本计划"仅编辑既有 prompt 文本 + hook 脚本"边界冲突），除非简化为追加单行到 fixed-path 文件且 SKILL 改动 < 5 行
+   - (b) 由 task-implement / task-review SKILL 写状态文件——**v3.0.3 排除**（与"仅编辑既有 prompt 文本 + hook 脚本"边界冲突；留待 v3.0.4+ 重评）
    - (c) 扫描 `~/.claude/projects/<project>/<session>.jsonl`（dogfooding trace 所在位置；hook 进程对该路径的读权限需实测确认）
 
-   **plan 阶段评估**：Task 6 实施第一步选定方案 (a) 或 (c)；若两者均不可行，Task 6 降级为 `deferred (v3.0.4+)`，CHANGELOG v3.0.3 段 P3 小节改 "2/3 项落地" 措辞。本 open question 在 Task 6 实施时关闭，不阻塞其他任务起手。
+   **plan 阶段评估**：Task 6 实施第一步用 P3.1 Pre-implementation decision 列出的 env probe 操作判定 (a) / (c) viability；优先 (a)，(a) 不 viable 则 (c)，两者均不 viable 则 Task 6 降级为 `deferred (v3.0.4+)`，CHANGELOG v3.0.3 段 P3 小节改 "2/3 项落地" 措辞。本 open question 在 Task 6 实施时关闭，不阻塞其他任务起手。
 
 ## Constraints（继承 brief）
 
