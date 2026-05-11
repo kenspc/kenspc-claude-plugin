@@ -202,6 +202,28 @@ The anti-rationalization tables, red flags, and autonomy boundaries in this plug
 are inspired by [agent-skills](https://github.com/addyosmani/agent-skills) by
 [Addy Osmani](https://github.com/addyosmani), licensed under MIT.
 
+The five-dimension discovery framework (`shared/discovery-framework.md`) — used by
+both `generate-brief` and `generate-plan` Phase 1 — is adapted from the structured
+thinking dimensions in [thinkfirst](https://github.com/garychen-ai/thinkfirst) by
+[Gary Chen](https://github.com/garychen-ai). Reduced from seven dimensions to five
+to fit the plan-before-code workflow: `Components` is handled downstream by
+`generate-task`, and `Success Criteria` by `generate-plan` Phase 2 acceptance
+criteria.
+
+The v3.0 refactor was motivated by Gary Chen's April 2026 video
+["Mythos 要來了，你的舊提示詞正在拖垮新模型？"](https://www.youtube.com/watch?v=MdZWB8eC83Q),
+which applied Sutton's [2019 Bitter Lesson essay](http://www.incompleteideas.net/IncIdeas/BitterLesson.html)
+to prompt and harness design with a sharper framing than Anthropic's Claude Opus 4.7
+prompting best practices and OpenAI's GPT-5.5 prompting guide: outdated scaffolding
+does not just become irrelevant — it actively drags down newer models.
+
+The technical principles applied here come from:
+
+- Anthropic, [Prompting best practices for Claude Opus 4.7](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)
+- Anthropic, [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (Sep 2025)
+- Anthropic, [Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-long-running-apps) (Mar 2026)
+- OpenAI, GPT-5.5 prompting guide — referenced in the migration notes for outcome-first prompting and the principle of avoiding step-by-step process guidance unless the exact path matters.
+
 ## License
 
 MIT

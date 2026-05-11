@@ -1,5 +1,14 @@
 # Changelog
 
+> **Note on v1.x entries:** Entries for v1.0.0 through v1.5.0 were
+> backfilled from git history on 2026-05-11. The original releases shipped
+> without CHANGELOG documentation — the project was a single-maintainer
+> dogfooding effort during the v1.x line, with version bumps recorded only
+> in `plugin.json` and commit messages. The backfilled entries reconstruct
+> Added/Changed/Removed scope from commit messages and `git diff`; for the
+> authoritative source, see git log between commits `871c7e3` (initial,
+> 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
+
 ## 3.0.3 — 2026-05-11 — Phase Transition Anchors & Emergent Behavior Formalization
 
 Patch release based on the first end-to-end DungeonDescent dogfooding
@@ -186,6 +195,34 @@ anti-rationalization scaffolding, plain language over aggressive directive
 tokens, and English-only output. (The English-only rule was retired in
 v3.0.2 — see that release's entry above.)
 
+*Note: The Rationale and Acknowledgements sections below were added
+2026-05-11 to document design provenance omitted from the original release
+notes. The Removed/Added/Changed/Notes content is unchanged from
+2026-05-04. Earlier mention of `generate-brief` in the headline was a
+backfill error — `generate-brief` was introduced in v1.5.0, not v3.0.0;
+see the v1.5.0 entry below.*
+
+### Rationale
+
+The kenspc plugin was originally designed against Sonnet 4.5 and Opus 4.5.
+Many of its components — anti-rationalization tables, hardcoded numerical
+thresholds, step-by-step EXECUTION FLOW sections, aggressive directive
+tokens (CRITICAL/MUST/NEVER/ULTRATHINK), and bilingual output — exist to
+compensate for failure modes those older models exhibited.
+
+Opus 4.7 changes that calculus. Per Anthropic's prompting guidance, the
+4.6/4.7 generation interprets prompts more literally, over-respects
+aggressive language, follows literal "don't nitpick" style instructions
+faithfully enough to suppress findings, and benefits from outcome-first
+prompts rather than prescriptive procedures. Scaffolding built for weaker
+models begins to actively harm stronger ones — the model spends effort
+honoring constraints that no longer encode real limits.
+
+v3.0 is a one-shot refactor that retires these compensations. It is a
+breaking refactor (no migration period) because the plugin is single-
+maintainer and the v2.0 surface area was small enough to refactor in one
+pass.
+
 ### Removed
 
 - Anti-rationalization tables (the `Common-Rationalizations`-style tables
@@ -262,6 +299,17 @@ v3.0.2 — see that release's entry above.)
 - generate-plan ships at `effort: max`; if drafts bloat under real
   workloads, downgrade to `xhigh` in a future patch.
 
+### Acknowledgements
+
+The Bitter Lesson framing that motivated this refactor came from external
+community analysis of Claude Opus 4.x prompting practices. Technical
+principles draw from Anthropic's Opus 4.7 prompting best practices,
+Anthropic's essays on context engineering and harness design, and OpenAI's
+GPT-5.5 prompting guide. (For thinkfirst attribution — relevant to the
+discovery framework introduced in v1.5.0, not v3.0.0 — see the v1.5.0
+entry below.) For full attribution with links, see the [plugin README
+Acknowledgments section](README.md#acknowledgments).
+
 ## 2.0.0 — 2026-05-04
 
 ### Breaking changes
@@ -286,3 +334,187 @@ v3.0.2 — see that release's entry above.)
   structured CONTEXT input (replaces template variable substitution).
 - All 5 affected SKILL.md `version` fields bumped to 2.0.0 to align with
   plugin version.
+
+## 1.5.0 — 2026-05-04
+
+Adds requirement brief generation and extracts discovery logic into a
+shared framework. Brief becomes a new entry point upstream of plan, for
+ideas too vague to plan directly.
+
+### Rationale
+
+generate-plan's Phase 1 Discover previously relied on Claude's own judgment
+to guide the discovery conversation, with no structural anchor for which
+dimensions to explore. This worked for clear requirements (Level 1-2) but
+produced inconsistent results for vague inputs (Level 3) — the quality of
+discovery questions varied across sessions depending on context window state.
+
+The shared discovery framework (`shared/discovery-framework.md`) extracts
+discovery logic into a single source of truth with five structured
+dimensions (Outcome, Failure Modes, The Hard Part, Hidden Context, Stakes),
+four input clarity levels, and explicit exit conditions. generate-plan
+Phase 1 now references it inline; generate-brief provides a standalone
+entry point for users who need to think through an idea before committing
+to a plan.
+
+The five-dimension approach is adapted from Gary Chen's thinkfirst skill,
+which uses seven dimensions for general-purpose prompt crafting. Two
+dimensions were dropped (Components → handled by generate-task; Success
+Criteria → handled by generate-plan Phase 2 acceptance criteria) to avoid
+overlap with existing pipeline stages.
+
+### Added
+
+- `generate-brief` skill (`skills/generate-brief/SKILL.md`) — structured
+  discovery conversation that produces a shareable requirement brief
+  (`docs/briefs/`). Two-phase (Discover, Produce Brief), no review phase.
+- `/kenspc-brief` command for invoking generate-brief directly.
+- `shared/discovery-framework.md` — five-dimension discovery framework,
+  shared by `generate-brief` Phase 1 and `generate-plan` Phase 1. Single
+  source of truth for the discovery conversation pattern.
+
+### Changed
+
+- generate-plan Phase 1 (Discover) now references
+  `shared/discovery-framework.md` inline instead of carrying its own
+  inline discovery logic.
+- `plugin.json` description updated to lead with "Requirement brief
+  generation through structured discovery".
+- Plugin README, root CLAUDE.md, and root README updated to document the
+  brief skill, the `/kenspc-brief` command, the `shared/` directory, and
+  the optional brief→plan workflow extension.
+
+### Acknowledgements
+
+The five-dimension discovery framework is adapted from
+[thinkfirst](https://github.com/garychen-ai/thinkfirst) by
+[Gary Chen](https://github.com/garychen-ai), reduced from seven dimensions
+to five. See [plugin README Acknowledgments](README.md#acknowledgments)
+for full attribution.
+
+## 1.4.0 — 2026-04-08
+
+Adds `generate-task` skill (plan→task decomposition) and hardens existing
+skills with anti-rationalization scaffolding tuned for the Sonnet 4.5 /
+Opus 4.5 models the plugin was being developed against. (Most of the
+scaffolding additions were removed in v3.0.0 once the plugin moved to
+Opus 4.7 — see v3.0.0 Rationale.)
+
+### Added
+
+- `generate-task` skill (`skills/generate-task/SKILL.md`) with review
+  prompt and `/kenspc-task` command — decomposes a plan document into
+  fine-grained executable tasks.
+- Anti-rationalization tables (Common-Rationalizations) added to:
+  `task-implement`, `task-review`, `generate-plan`, `generate-guide`.
+- Red flags (numerical thresholds and warning signals) added to the same
+  four skills.
+- Prompt variable tables added to `task-implement`, `task-review`, and
+  `generate-guide`.
+- Input validation and autonomy boundaries added to `task-implement`.
+- Discovery principle, output convention, and trigger cleanup added to
+  `generate-plan`.
+
+### Changed
+
+- `plugin.json` description updated to lead with "Plan generation, task
+  decomposition, automated batch implementation with multi-angle review,
+  and project guide generation".
+- `task-implement`: project config change moved to STOP boundary; task
+  filename convention clarified.
+- Reminder hook extended to cover `generate-task` (`docs/tasks/` path).
+
+### Fixed
+
+- `task-implement`: stale step reference corrected.
+
+## 1.3.0 — 2026-04-08
+
+Reduces review iteration rounds by tightening implementation quality at
+the source.
+
+### Changed
+
+- `task-implement`: implementation quality bar raised to align with
+  `task-review` standards. Goal: fewer review rounds needed because
+  implementation output passes more checks on first pass.
+
+## 1.2.0 — 2026-04-06
+
+Refines skill discoverability (descriptions and trigger keywords) and
+adds a PreToolUse hook reminder.
+
+### Added
+
+- `generate-plan`: bilingual trigger keywords (Chinese + English
+  invocation phrases) to broaden trigger coverage.
+- PreToolUse hook reminder to clarify when each skill should engage.
+
+### Changed
+
+- Skill descriptions enriched across all skills to reduce "might apply"
+  skips (cases where Claude would be unsure whether to activate the skill).
+- Skill capability scope statements clarified.
+
+## 1.1.0 — 2026-04-04
+
+Tightens skill triggers, adds user confirmation gate before batch task
+implementation, and enriches summaries.
+
+### Added
+
+- "Do NOT trigger" negative conditions on all skills, to prevent
+  accidental activation during interactive development.
+- `task-implement`: user confirmation step before dispatching batch
+  implementation.
+- `task-implement`: enriched implementation summary with
+  Changes / Decisions / Notes per task, and Attempted / Root cause /
+  Suggestion for blocked tasks.
+- `task-implement`: consolidated final report.
+- `task-implement`: `{{CUSTOM_INSTRUCTIONS}}` placeholder handling.
+- `task-review`: enriched DEFERRED format with Why / Risk / Approach.
+- `task-review`: enriched regression HAS ISSUES with per-problem
+  Impact / Severity / Suggested action.
+- `generate-plan`: git commit step in review agent execution flow +
+  summary; Unresolved issues section.
+- `generate-guide`: structured Unresolved gaps format in review summary.
+
+### Removed
+
+- Catch-all trigger phrases across all skills.
+
+### Fixed
+
+- `task-implement`: all-blocked logic gap.
+- `task-implement`: broken `review.md` reference.
+
+## 1.0.0 — 2026-03-29
+
+Initial release. Plugin marketplace with three skills:
+`generate-plan`, `task-implement`, `generate-guide`.
+
+### Initial scope
+
+- Three skills, each with `SKILL.md` and a per-skill `prompts/` directory:
+  - `generate-plan` — strategic plan document generation with review
+    prompt
+  - `task-implement` — task implementation with implementation and review
+    prompts (originally named `task-loop`; renamed within v1.0.0 — see
+    In-version changes below)
+  - `generate-guide` — project setup/deployment guide with review prompt
+- Marketplace structure: `.claude-plugin/marketplace.json` (root) →
+  `plugins/kenspc/` (plugin directory)
+- Hooks for skill activation reminders
+- References directory with task and plan example documents
+- Slash commands for each skill
+
+### In-version changes (same-day iterations within v1.0.0)
+
+- `task-loop` skill renamed to `task-implement` as part of replacing the
+  ralph-loop scripting model with a subagent-dispatched architecture
+  (commit `2f2e732`). The `scripts/setup.sh` from the original `task-loop`
+  was retired in this refactor.
+- Repo restructured from flat layout to marketplace + nested plugin
+  layout (commit `d02c080`).
+- `owner` field added to `marketplace.json` (commit `fca7309`) — required
+  by the marketplace registry.
