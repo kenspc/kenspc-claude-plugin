@@ -196,7 +196,11 @@ The `references/` directory contains example documents to help you get started:
 - `task-document-example.md` — Shows the expected task document format for `task-implement`
 - `plan-document-example.md` — Shows a typical plan output from `generate-plan`
 
-## Acknowledgments
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for version history.
+
+## Acknowledgements
 
 The anti-rationalization tables, red flags, and autonomy boundaries in this plugin
 are inspired by [agent-skills](https://github.com/addyosmani/agent-skills) by
@@ -209,6 +213,11 @@ thinking dimensions in [thinkfirst](https://github.com/garychen-ai/thinkfirst) b
 to fit the plan-before-code workflow: `Components` is handled downstream by
 `generate-task`, and `Success Criteria` by `generate-plan` Phase 2 acceptance
 criteria.
+
+The `agents/` directory structure (introduced in v2.0) follows the
+[Claude Code subagents convention](https://code.claude.com/docs/en/sub-agents) —
+agent files declared with standard frontmatter, discoverable through `/agents`,
+and `@kenspc:<name>`-mentionable for the standalone-safe ones.
 
 The v3.0 refactor was motivated by Gary Chen's April 2026 video
 ["Mythos 要來了，你的舊提示詞正在拖垮新模型？"](https://www.youtube.com/watch?v=MdZWB8eC83Q),

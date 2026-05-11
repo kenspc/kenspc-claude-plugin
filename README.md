@@ -42,6 +42,7 @@ plugins/
   kenspc/                 # Plugin directory
     .claude-plugin/
       plugin.json
+    agents/               # 11 reusable subagents
     skills/
     commands/
     hooks/
@@ -52,8 +53,14 @@ plugins/
 
 ## Requirements
 
-- Claude Code v1.0.33+
-- Recommended: [superpowers](https://github.com/anthropics/claude-plugins-official) plugin
+- Claude Code v2.1.0+
+- Recommended: [superpowers](https://github.com/obra/superpowers) plugin
+
+## Acknowledgements
+
+See [plugin Acknowledgements](./plugins/kenspc/README.md#acknowledgements) for
+attribution to thinkfirst, agent-skills, the Claude Code subagents convention,
+and the prompting research that informed v3.0.
 
 ## License
 

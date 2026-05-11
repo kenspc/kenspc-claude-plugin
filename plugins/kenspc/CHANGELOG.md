@@ -312,6 +312,26 @@ Acknowledgments section](README.md#acknowledgments).
 
 ## 2.0.0 — 2026-05-04
 
+Refactor: extract subagent definitions from per-skill `prompts/`
+directories into a top-level `agents/` directory, adopting the Claude
+Code subagents convention introduced in Claude Code v2.1.
+
+*Note: The Rationale and Acknowledgements sections below were added
+2026-05-11 to document design provenance omitted from the original release
+notes. The Breaking changes / Added / Changed content is unchanged from
+2026-05-04.*
+
+### Rationale
+
+Claude Code v2.1+ treats plugin `agents/` as a first-class directory:
+agent files get standard frontmatter (name, description, tools, model),
+appear in the `/agents` interface, and can be @-mentioned directly. The
+previous `prompts/` convention was invisible to Claude Code — agents were
+locked inside skills and could only be reached through their parent slash
+command. Adopting the official convention makes independently useful
+agents (the 5 code reviewers, the 3 document reviewers) directly
+accessible without losing orchestrated workflows.
+
 ### Breaking changes
 
 - Internal `prompts/` directories removed; subagent definitions migrated to
@@ -334,6 +354,13 @@ Acknowledgments section](README.md#acknowledgments).
   structured CONTEXT input (replaces template variable substitution).
 - All 5 affected SKILL.md `version` fields bumped to 2.0.0 to align with
   plugin version.
+
+### Acknowledgements
+
+The `agents/` directory structure follows the [Claude Code subagents
+convention](https://code.claude.com/docs/en/sub-agents). For full
+attribution with links, see the [plugin README Acknowledgments
+section](README.md#acknowledgments).
 
 ## 1.5.0 — 2026-05-04
 
