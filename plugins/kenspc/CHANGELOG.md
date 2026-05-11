@@ -1,5 +1,50 @@
 # Changelog
 
+## 3.0.3 — Phase Transition Anchors & Emergent Behavior Formalization
+
+Patch release based on the first end-to-end DungeonDescent dogfooding
+trace (pixel-font-pass). Nine prompt-engineering refinements + meta-
+lessons captured in CLAUDE.md. All edits are prompt-text refinements;
+no new SKILLs, agents, or components.
+
+### Phase 1 transitions (P0)
+- task-implement Phase 1 Step 3 hardened as batch-confirmation gate
+- task-implement Phase 1 Step 5+ disables cross-Phase closure wording
+  (with explicit allowlist for Phase-internal progress phrases)
+
+### Emergent behavior formalization (P1)
+- generate-brief Phase 1 system-reminder conflict detection + Discovery
+  Mode artifact field (full / rapid-direct / rapid-inferred)
+- task-implement / task-review CUSTOM_INSTRUCTIONS dynamic construction
+  formalized as conditional fold with N/A default
+
+### Coverage gaps (P2)
+- regression-verifier fallback for projects without test suite
+  (spot-check mode); Schema C row 3 ("Tests pass") gains SPOT-CHECK as
+  a documented third Result value alongside PASS / FAIL
+- generate-task suggests /kenspc-plan re-run when reviewer reports
+  non-empty Plan-Level Concerns
+
+### Long-term value (P3)
+- SessionEnd telemetry hook for missed-review tracking (zero
+  user-visible disruption; JSON Lines log at
+  `~/.claude/kenspc/missed-reviews.log`)
+- check-canonical-dispatch.sh upgraded to byte-identity + anchor phrase
+  frequency dual check
+- CLAUDE.md adds two design lessons: Phase transitions via artifacts;
+  hook scope boundaries
+
+### Meta-lessons (informing this patch)
+- Stop hook misjudgement: rebatched to SessionEnd telemetry after
+  recognizing hooks cannot observe SKILL-internal Phase state
+- Author warning: prompt changes are not code changes — verification
+  must be runtime trace inspection, not build/test pass
+
+### Known asymmetry (deferred to v3.0.4+)
+- generate-plan does NOT mirror generate-brief's Discovery Mode
+  Detection — generate-plan input is typically more structured;
+  reminder pressure has not been observed in plan generation traces
+
 ## 3.0.2 — 2026-05-06
 
 Over-constraint cleanup. Removes two v3.0.0-introduced constraints that

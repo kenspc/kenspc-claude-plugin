@@ -392,7 +392,7 @@ Open question（plan #1，实施时定）：具体下限数字按 grep 实测—
 
 ### Task 9: Aux.1 · version bump + CHANGELOG entry
 
-**Status:** TODO
+**Status:** DONE
 **Depends on:** Tasks 1-8
 
 **Files:**
