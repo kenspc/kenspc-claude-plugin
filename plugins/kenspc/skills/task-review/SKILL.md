@@ -262,6 +262,11 @@ Based on the regression verification results, declare a verdict:
 - **PASS** when all of: zero HIGH severity issues remain unresolved; zero
   INCORRECTLY FIXED items; build / tests / lint all PASS; no regressions
   introduced by fix commits.
+- `SPOT-CHECK` from regression-verifier (no test suite available) is
+  treated as neutral — it does not force FAIL; PASS may still apply
+  if all other checks PASS and no HIGH issues remain. The Verdict
+  paragraph should explicitly note "tests spot-checked due to no
+  test suite" when this state is present.
 - **FAIL** when any of: one or more HIGH severity issues remain unresolved;
   one or more INCORRECTLY FIXED items; build / test / lint fails; fix
   commits introduced unresolved regressions.

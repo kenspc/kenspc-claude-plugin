@@ -156,7 +156,7 @@ grep -n CUSTOM_INSTRUCTIONS plugins/kenspc/skills/task-{implement,review}/SKILL.
 
 ### Task 4: P2.1 · regression-verifier SPOT-CHECK fallback (3-file atomic)
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:** (atomic — all three edited in same task / same commit-group as Task 5)
 - `plugins/kenspc/agents/regression-verifier.md` — modify（主改动：在 VERIFICATION CHECKS 段后、OUTPUT FORMAT 段前新增 `FALLBACK FOR NO-TEST-SUITE PROJECTS` 段；同时更新 OUTPUT FORMAT 内 Schema C 示例行加 SPOT-CHECK 为正式第三态）
@@ -211,7 +211,7 @@ grep -n CUSTOM_INSTRUCTIONS plugins/kenspc/skills/task-{implement,review}/SKILL.
 
 ### Task 5: P2.2 · generate-task suggests /kenspc-plan re-run when Plan-Level Concerns non-empty
 
-**Status:** TODO
+**Status:** DONE
 
 **Files:**
 - `plugins/kenspc/skills/generate-task/SKILL.md` — modify

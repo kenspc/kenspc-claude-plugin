@@ -200,3 +200,15 @@ Below the table, present:
   upstream-plan issues the user should resolve at the plan level, not the
   task level).
 - Any unresolved issues.
+
+If the task-document-reviewer's output contains a non-empty
+`## Plan-Level Concerns` prose section (i.e., the section body is
+something other than the agent's fallback string "No plan-level
+concerns found."), proactively suggest:
+
+> Plan-level concerns detected. Consider re-running:
+> `/kenspc-plan {original-plan-path}`
+> to address these upstream issues before proceeding to implementation.
+
+Do not auto-invoke /kenspc-plan; this is a recommendation, not a
+re-dispatch. The user decides whether plan re-work is warranted.

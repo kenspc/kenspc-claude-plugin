@@ -68,19 +68,43 @@ VERIFICATION CHECKS
    Do not fix anything; flag each new issue with file, line, description, and
    severity.
 
+FALLBACK FOR NO-TEST-SUITE PROJECTS
+When the project has no test project / no `dotnet test` target /
+no `npm test` target / no equivalent test runner, skip the test
+execution step in VERIFICATION CHECKS item 3 and replace it with
+a fallback spot-check of the changed files:
+- For each file in code-fixer's accountability list, read the file
+  and confirm the claimed fix is present (grep for the new text or
+  diff signature in the changed file).
+- Report the verification mode in the Schema C result table row
+  numbered 3 ("Tests pass") by setting the Result cell to
+  `SPOT-CHECK` and the Detail cell to `no test suite — accountability
+  list spot-checked instead`. The Result value `SPOT-CHECK` is a
+  third state alongside `PASS` / `FAIL`. It surfaces in the verdict
+  determination as neutral (does not force FAIL). Row 2 ("Build
+  succeeds") and row 4 ("Lint passes") remain PASS/FAIL only —
+  SPOT-CHECK applies only to the test execution check.
+- This is not a failure mode; it is the correct behavior for
+  projects without test infrastructure.
+
 OUTPUT FORMAT (Schema C)
 Render the verification result as a single table followed by a Detail prose
-section for each non-PASS row.
+section for each non-PASS row. Result values: PASS / FAIL for all checks;
+SPOT-CHECK additionally permitted for check 3 ("Tests pass") when the
+project has no test suite (see FALLBACK FOR NO-TEST-SUITE PROJECTS).
 
 ## Verification
 
-| # | Check                            | Result | Detail                  |
-|---|----------------------------------|--------|-------------------------|
-| 1 | All accountability rows fixed    | PASS   | —                       |
-| 2 | Build succeeds                   | PASS   | —                       |
-| 3 | Tests pass                       | FAIL   | 2 failures (see below)  |
-| 4 | Lint passes                      | PASS   | —                       |
-| 5 | No regressions in non-fix files  | PASS   | —                       |
+| # | Check                            | Result     | Detail                                                   |
+|---|----------------------------------|------------|----------------------------------------------------------|
+| 1 | All accountability rows fixed    | PASS       | —                                                        |
+| 2 | Build succeeds                   | PASS       | —                                                        |
+| 3 | Tests pass                       | SPOT-CHECK | no test suite — accountability list spot-checked instead |
+| 4 | Lint passes                      | PASS       | —                                                        |
+| 5 | No regressions in non-fix files  | PASS       | —                                                        |
+
+`SPOT-CHECK` in row 3 above is a documented third state for the
+"Tests pass" check only; rows 2 and 4 remain PASS/FAIL.
 
 ## Detail
 

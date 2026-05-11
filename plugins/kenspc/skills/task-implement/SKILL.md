@@ -356,6 +356,11 @@ unblocks).
 
 - **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
   PASS; no regressions introduced by fix commits.
+- `SPOT-CHECK` from regression-verifier (no test suite available) is
+  treated as neutral — it does not force FAIL; PASS may still apply
+  if all other checks PASS and no HIGH issues remain. The Verdict
+  paragraph should explicitly note "tests spot-checked due to no
+  test suite" when this state is present.
 - **FAIL** — at least one HIGH unresolved; or one or more INCORRECTLY
   FIXED items; or build / test / lint failure; or fix commits introduced
   unresolved regressions.
