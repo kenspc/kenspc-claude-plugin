@@ -99,7 +99,7 @@ by zero header edits.
 
 ### Task 3: Add #17 dry-run report terminology subsection to task-review/SKILL.md
 
-**Status:** TODO
+**Status:** DONE
 
 Insert a new subsection `## Output convention — dry-run reports` in
 `plugins/kenspc/skills/task-review/SKILL.md` after the existing
