@@ -208,7 +208,7 @@ and all other sections untouched.
 
 ### Task 7: Update `agents/code-fixer.md` — inline principles, remove duplicate surgical bullets
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Tasks 2, 3
 
