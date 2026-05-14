@@ -285,7 +285,7 @@ Open Questions #1).
 
 ### Task 7: Sync docs/release-checklist.md mechanical-check block
 
-**Status:** TODO
+**Status:** DONE
 
 Extend the pre-flight mechanical-check `bash` block in
 `docs/release-checklist.md` (currently lines 10–34) to add four new

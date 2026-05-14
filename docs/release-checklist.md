@@ -28,10 +28,17 @@ bash scripts/check-review-agent-drift.sh
 
 # Code-craft canonical principle byte-identity (shared + 2 writer agents)
 bash scripts/check-code-craft-canonical.sh
+
+# Quality-reviewer bullet structure (3-condition gate on two new bullets)
+bash scripts/check-quality-reviewer-bullet-structure.sh
+
+# Mutation regression fixtures (self-test on the three canonical drift guards)
+bash scripts/check-code-craft-canonical.sh --self-test
+bash scripts/check-canonical-dispatch.sh --self-test
+bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
 ```
 
-All six must exit 0 (3 JSON validations + 3 shell drift guards). If any
-fail, fix before proceeding to the smoke checklist.
+All ten must exit 0 (3 JSON validations + 3 main-mode shell drift guards + 1 structural guard + 3 mutation regression self-tests). If any fail, fix before proceeding to the smoke checklist.
 
 ## Smoke checklist (manual, ~10 minutes)
 
