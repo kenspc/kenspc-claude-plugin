@@ -125,6 +125,14 @@ framed as rationale, not as command-style imperatives".
 
 ## Implementation Steps
 
+### Commit Strategy
+
+One commit per Step (1.1, 1.2, ..., 4.3) with a conventional-commit subject
+that names the file(s) touched. Phase 4 validation steps either produce no
+commit (the checks pass) or, if a defect is found, an additional fix commit
+in the same Step. The CHANGELOG entry (Step 3.3) is committed together with
+the `plugin.json` version bump so the v3.1.0 commit pair is atomic.
+
 ### Phase 1: Author `shared/code-craft-principles.md`
 
 **Step 1.1: Create the file with section skeleton**
@@ -427,16 +435,18 @@ What to do:
   than assuming specific frameworks. (Documentation examples in `shared/` may use
   specific languages — currently C# and TypeScript — to maximize teaching density;
   this does not constrain which projects the skills work with.)"
-- In the `## Acknowledgements` section, add a new bullet:
-  - "The Simplicity First and Surgical Changes principles in
-    `shared/code-craft-principles.md` are derived from Andrej Karpathy's
-    [October 2025 X post](https://x.com/karpathy/status/2015883857489522876) on
-    common LLM coding pitfalls, by way of the
-    [`andrej-karpathy-skills`](https://github.com/doggy8088/andrej-karpathy-skills)
-    `AGENTS.md` compilation by [doggy8088](https://github.com/doggy8088) (forked
-    from [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills)).
-    kenspc adopts two of the four principles; example code is original and
-    stack-specific to the maintainer's primary stacks."
+- In the `## Acknowledgements` section, add a new paragraph (matching the
+  existing paragraph-style entries — the section uses paragraphs, not bullets):
+
+  > The Simplicity First and Surgical Changes principles in
+  > `shared/code-craft-principles.md` are derived from Andrej Karpathy's
+  > [October 2025 X post](https://x.com/karpathy/status/2015883857489522876) on
+  > common LLM coding pitfalls, by way of the
+  > [`andrej-karpathy-skills`](https://github.com/doggy8088/andrej-karpathy-skills)
+  > `AGENTS.md` compilation by [doggy8088](https://github.com/doggy8088) (forked
+  > from [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills)).
+  > kenspc adopts two of the four principles; example code is original and
+  > stack-specific to the maintainer's primary stacks.
 
 Why: The original "Stack-agnostic" claim becomes literally false the moment C# / TS
 examples enter the plugin. The clarification distinguishes BEHAVIORAL
@@ -452,13 +462,16 @@ Output: Modified `README.md` with:
 
 - "Stack-agnostic" bullet reworded to "Stack-agnostic skill behavior" with
   one-sentence clarification.
-- New Acknowledgements bullet added (placed after the existing `agent-skills` and
-  before the `thinkfirst` bullet — the new bullet's substance is closer to the
-  agent-skills "behavioral guidelines" lineage than to `thinkfirst`'s discovery
-  framework lineage).
+- New Acknowledgements paragraph added (placed after the existing `agent-skills`
+  paragraph and before the `thinkfirst` paragraph — the new paragraph's
+  substance is closer to the agent-skills "behavioral guidelines" lineage than
+  to `thinkfirst`'s discovery framework lineage). The Acknowledgements section
+  uses paragraph format throughout; the new entry must match that format and
+  must NOT be introduced as a bullet.
 
 Done when: Both changes present; no other README content modified; Markdown
-renders cleanly.
+renders cleanly; the new Acknowledgements entry is a paragraph, not a list
+item.
 
 **Step 3.3: Update `plugins/kenspc/CHANGELOG.md` (v3.1.0 entry) and bump `plugin.json`**
 
@@ -609,12 +622,17 @@ original location.
 
 Input: Git diff of all modified files except the new shared file.
 
-Output: A line-count summary, e.g., "task-implementer: −5 +4 (net −1); code-fixer:
-−2 +1 (net −1); quality-reviewer: +2 (net +2); total: net 0".
+Output: A line-count summary that reflects the planned per-agent edits, e.g.,
+"task-implementer: −2 (2 scope-creep bullets) +4 (CODE-CRAFT PRINCIPLES
+reference section) = net +2; code-fixer: −2 (2 FIXING RULES bullets) +1
+(reference bullet) = net −1; quality-reviewer: +2 (over-engineering + drive-by
+bullets) = net +2; total agents: net +3 across three files."
 
-Done when: The summary is roughly net-zero (within ±5 lines across all agents); if
-significantly net-positive (e.g., +10 or more), the relocation is reviewed for
-incomplete subtraction.
+Done when: The summary is roughly small (within ±5 lines per file and within
+±10 lines total across all agent files); if any single file moves by more than
+±5 lines, the relocation is reviewed for incomplete subtraction or for the
+reference text growing beyond a single short paragraph. (The new shared file
+itself is excluded from this count — it is a deliberate net addition.)
 
 ## Risks and Mitigations
 
