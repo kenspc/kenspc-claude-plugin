@@ -245,7 +245,7 @@ and `OUTPUT FORMAT (Schema B)` fully untouched.
 
 ### Task 8: Update `agents/quality-reviewer.md` — add over-engineering and drive-by review bullets
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Task 1
 
