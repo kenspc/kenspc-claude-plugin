@@ -55,10 +55,26 @@ for f in "${FILES[@]}"; do
 done
 
 for key in "${KEYS[@]}"; do
+    start_marker="<!-- canonical:principle:${key}:start -->"
+    end_marker="<!-- canonical:principle:${key}:end -->"
     for f in "${FILES[@]}"; do
-        block=$(extract_block "$f" "$key")
-        if [[ -z "$block" ]]; then
-            echo "ERROR: canonical:principle:${key} markers not found in $f" >&2
+        # Exactly one start-marker line and one end-marker line per file. A
+        # missing end marker would cause sed to swallow content from start to
+        # EOF; a duplicated marker pair would let sed concatenate two blocks
+        # and a corrupted state could pass the byte-identity check below if
+        # all three files were similarly corrupted.
+        start_count=$(grep -c -F "$start_marker" "$f" || true)
+        end_count=$(grep -c -F "$end_marker" "$f" || true)
+        if [[ "$start_count" -ne 1 || "$end_count" -ne 1 ]]; then
+            echo "ERROR: canonical:principle:${key} markers malformed in $f" >&2
+            echo "       expected exactly 1 start and 1 end marker; found ${start_count} start and ${end_count} end" >&2
+            exit 2
+        fi
+        # Non-empty content between markers (strip the two marker lines and
+        # require at least one remaining non-empty line).
+        block_body=$(extract_block "$f" "$key" | sed -e "1d" -e "\$d")
+        if [[ -z "${block_body// }" ]]; then
+            echo "ERROR: canonical:principle:${key} block in $f has no content between markers" >&2
             exit 2
         fi
     done
