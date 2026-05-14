@@ -204,7 +204,13 @@ export class UserService {
 
 ## How Each Agent Applies These
 
-TODO
+Same principles, different operational stance per agent. Writer agents (`task-implementer`, `code-fixer`) **Apply** these at decision time; the reviewer agent (`quality-reviewer`) **Detects** violations after the fact and does not fix them.
+
+| Agent | Role | Simplicity | Surgical |
+|-------|------|-----------|----------|
+| `task-implementer` | Author at write time | Apply: write the minimum code that satisfies the task's stated acceptance criteria; do not add abstractions, options, or error handling for scenarios the task did not name. | Apply: edit only the files and lines the current task requires; if adjacent code feels wrong, file a follow-up task instead of fixing it in this commit. |
+| `code-fixer` | Author at fix time | Apply: apply only the fix the review report named; structural improvements not in the report are DEFERRED, not applied. | Apply: preserve the original file's naming, brace style, and member order; do not refactor adjacent code while applying the fix. |
+| `quality-reviewer` | Reviewer (read-only) | Detect: flag features, abstractions, or configurability beyond the task's stated requirements when no project convention or boundary-validation rule justifies them. | Detect: flag changes to adjacent code in the diff that the task did not require and that are not mechanically forced by the change or convergence to project style. |
 
 ## What This File Does NOT Define
 

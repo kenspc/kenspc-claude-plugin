@@ -126,7 +126,7 @@ Same content rules as Task 2's marker block (paragraph only between the markers)
 
 ### Task 4: Write "How Each Agent Applies These" applicability table
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Tasks 2, 3
 
