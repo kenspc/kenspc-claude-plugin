@@ -190,8 +190,13 @@ run_self_test() {
     # that block so we don't accidentally touch later occurrences of the
     # word in unrelated prose.
     sed -i "/<!-- canonical:dispatch:start -->/,/<!-- canonical:dispatch:end -->/{s/${mutation_target}/${mutation_replacement}/}" "$target_file"
-    if ! grep -qE "${mutation_replacement}" "$target_file"; then
-        echo "FAIL  self-test: mutation did not apply in $target_file" >&2
+    # Verify the replacement landed inside the canonical:dispatch block —
+    # not merely somewhere else in the file. Extract the block again and
+    # grep with -F (literal, no regex) to match the stricter post-state
+    # assertion used by check-code-craft-canonical.sh.
+    if ! sed -n '/<!-- canonical:dispatch:start -->/,/<!-- canonical:dispatch:end -->/p' "$target_file" \
+        | grep -qF -- "${mutation_replacement}"; then
+        echo "FAIL  self-test: mutation did not apply inside canonical:dispatch block of $target_file" >&2
         return 2
     fi
 
