@@ -245,7 +245,7 @@ Project-level shell scripts live in `scripts/` at the repo root:
   and the two writer agents (`task-implementer.md`, `code-fixer.md`)
   that inline them.
 
-Run before tagging any release; both should also be considered as
+Run before tagging any release; all three should also be considered as
 pre-commit hook candidates when their target files change.
 
 ### Release procedure
