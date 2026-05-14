@@ -30,7 +30,8 @@ plugins/kenspc/
 │   └── scripts/                 # Hook scripts (use ${CLAUDE_PLUGIN_ROOT})
 ├── references/                  # Example documents for user onboarding
 ├── shared/                      # Cross-skill resources (referenced via ${CLAUDE_PLUGIN_ROOT}/shared/)
-│   └── discovery-framework.md   # Discovery logic shared by generate-brief and generate-plan
+│   ├── discovery-framework.md   # Discovery logic shared by generate-brief and generate-plan
+│   └── code-craft-principles.md # Code-craft principles shared by task-implementer, code-fixer, quality-reviewer
 ├── skills/
 │   ├── generate-brief/
 │   │   └── SKILL.md             # No review phase — brief is a discovery artifact
@@ -63,7 +64,7 @@ Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
 
 References live in `references/` as example documents (task format, plan format) to help users get started.
 
-Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. The current entry is `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions).
+Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. Two entries today: `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions); and `code-craft-principles.md`, referenced by three agents (`task-implementer`, `code-fixer`, `quality-reviewer`) — it defines the Simplicity First and Surgical Changes principles with stack-specific C# / TypeScript diff examples, and explicitly does NOT define Goal-Driven Execution (covered by DONE-criteria in every SKILL), Think Before Coding for ad-hoc interactions (belongs in user-level or project-level CLAUDE.md), per-language style guides (delegated to project CLAUDE.md), or agent dispatch order / CONTEXT contracts (defined in the dispatching SKILL.md and each agent's header).
 
 ### Portable Paths
 

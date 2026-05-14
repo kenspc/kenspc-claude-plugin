@@ -304,7 +304,7 @@ drift guard still passes.
 
 ### Task 9: Update repo-root `CLAUDE.md` — extend Plugin Directory Layout and shared/ paragraph
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Task 1
 
