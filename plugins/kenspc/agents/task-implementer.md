@@ -78,7 +78,20 @@ For each incomplete task, in document order:
 QUALITY RULES
 - Follow established project conventions and patterns.
 - New code has corresponding tests when a test framework is configured.
-- Do not modify code unrelated to the current task.
+
+CODE-CRAFT PRINCIPLES
+
+<!-- canonical:principle:simplicity-first:start -->
+**Simplicity First.** Write the minimum code that solves the stated problem. Why: speculative abstractions ("we might need this later") and unrequested flexibility accumulate as dead weight when the speculation does not pay out, and they make the actual code path harder to follow for the next reader. The cost of adding the abstraction when a second or third concrete use case arrives is almost always lower than the cost of carrying it from day one across every reader who has to skip past it. Refactor toward abstraction when the second concrete use case lands, not the first.
+<!-- canonical:principle:simplicity-first:end -->
+
+<!-- canonical:principle:surgical-changes:start -->
+**Surgical Changes.** Touch only what the task requires. Why: a diff that mixes task-required edits with drive-by rewrites, adjacent-code "improvements", and personal style preferences forces the reviewer to disentangle intent before they can verify correctness, and inflates the blast radius of every revert. The reader of a diff trusts that everything they see is necessary for the stated change; that trust is what makes review fast. Keep unrelated changes for their own task, even when the cleanup feels obvious in the moment.
+<!-- canonical:principle:surgical-changes:end -->
+
+This agent's applicability stance (see shared file's table): author at write time.
+
+For worked C# / TypeScript diff examples and edge cases, see `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`.
 
 AUTONOMY BOUNDARIES
 
@@ -99,7 +112,6 @@ Stop and mark task as BLOCKED with the specific decision needed:
   task explicitly requires it.
 
 Do not do even if it seems helpful:
-- Refactor code unrelated to the current task.
 - Delete or rename existing public APIs.
 - Commit code that does not build.
 

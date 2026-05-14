@@ -178,7 +178,7 @@ each with a one-line rationale:
 
 ### Task 6: Update `agents/task-implementer.md` — inline principles, remove scope-creep duplicates
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Tasks 2, 3
 
