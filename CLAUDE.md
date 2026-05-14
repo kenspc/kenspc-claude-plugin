@@ -231,6 +231,7 @@ grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
 bash scripts/check-review-agent-drift.sh
 bash scripts/check-canonical-dispatch.sh
 bash scripts/check-code-craft-canonical.sh
+bash scripts/check-quality-reviewer-bullet-structure.sh
 ```
 
 ### Repository scripts/
@@ -248,8 +249,17 @@ Project-level shell scripts live in `scripts/` at the repo root:
   paragraphs across `shared/code-craft-principles.md` (authoritative)
   and the two writer agents (`task-implementer.md`, `code-fixer.md`)
   that inline them.
+- `check-quality-reviewer-bullet-structure.sh` — guards the structural
+  invariant on the two REVIEW CHECKLIST bullets in `quality-reviewer.md`
+  (Over-engineering, Drive-by refactoring): each must enumerate exactly
+  three numbered conditions gated by an `**all three**` qualifier.
 
-Run before tagging any release; all three should also be considered as
+The latter three scripts also accept a `--self-test` flag that runs a
+mutation regression fixture in a temp workdir (positive path, negative
+path on a deliberate mutation, restoration path on revert). See the
+release-checklist mechanical-check block for the full invocation order.
+
+Run before tagging any release; all four should also be considered as
 pre-commit hook candidates when their target files change.
 
 ### Release procedure
