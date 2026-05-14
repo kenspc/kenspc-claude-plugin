@@ -470,7 +470,43 @@ This task does not need to produce a commit if all checks pass.
 
 ### Task 14: Subtraction audit (per-file line-count check against expected bounds)
 
-**Status:** TODO
+**Status:** DONE
+
+Per-file net delta vs upper bound (baseline = 3c2131e, the commit
+immediately before this feature work):
+
+| File | Added | Removed | Net | Upper bound | OK? |
+|---|---|---|---|---|---|
+| `plugins/kenspc/agents/task-implementer.md` | 14 | 2 | +12 | +18 | yes |
+| `plugins/kenspc/agents/code-fixer.md` | 14 | 2 | +12 | +18 | yes |
+| `plugins/kenspc/agents/quality-reviewer.md` | 12 | 0 | +12 | +32 | yes |
+| `plugins/kenspc/README.md` | 15 | 2 | +13 | +14 | yes |
+| `CLAUDE.md` (root) | 3 | 2 | +1 | +10 | yes |
+| `plugins/kenspc/CHANGELOG.md` | 108 | 0 | +108 | +50 | exceeded |
+| `plugins/kenspc/.claude-plugin/plugin.json` | 1 | 1 | 0 | 0 | yes |
+
+CHANGELOG.md exceeds its +50 upper bound by +58 lines. Walked through
+the three diagnostic patterns and none apply:
+- (a) examples accidentally inlined alongside the principle paragraph —
+  no example code lives in CHANGELOG.md; the diff examples are entirely
+  inside `shared/code-craft-principles.md` (which is excluded from this
+  audit per Task 14's explicit instruction).
+- (b) scope-creep bullets not actually removed from their original
+  location and remaining duplicated — Task 12's phrase grep confirmed
+  zero residual matches in `plugins/kenspc/agents/`.
+- (c) applicability or reference text exceeding one short line each —
+  each agent file has exactly one applicability line and one examples
+  reference line; the line counts above for `task-implementer.md` and
+  `code-fixer.md` are well under their +18 bounds.
+
+The breach is structural: Task 11's acceptance criteria mandate six
+CHANGELOG subsections (opening summary, Rationale, Added, Changed,
+Acknowledgements, Out of scope). The Rationale subsection alone calls
+for "3-4 paragraphs". v3.0.3's CHANGELOG entry is similarly sized,
+suggesting the +50 bound was miscalibrated for v3-era release entries.
+No fix commit issued for the CHANGELOG — trimming would require
+violating Task 11's per-subsection criteria, which is the harder
+constraint. All six other files are within their bounds.
 
 Depends on: Tasks 1–11
 
