@@ -94,7 +94,113 @@ export async function getOpenAssignments(userId: string): Promise<Assignment[]> 
 
 ## Surgical Changes
 
-TODO
+<!-- canonical:principle:surgical-changes:start -->
+**Surgical Changes.** Touch only what the task requires. Why: a diff that mixes task-required edits with drive-by rewrites, adjacent-code "improvements", and personal style preferences forces the reviewer to disentangle intent before they can verify correctness, and inflates the blast radius of every revert. The reader of a diff trusts that everything they see is necessary for the stated change; that trust is what makes review fast. Keep unrelated changes for their own task, even when the cleanup feels obvious in the moment.
+<!-- canonical:principle:surgical-changes:end -->
+
+Checklist — what Surgical Changes rules out in practice:
+
+- Do not "improve" adjacent code, comments, or formatting while you are in the file for an unrelated reason.
+- Do not refactor things that are not broken, even when you would have written them differently from scratch.
+- Match the existing style — naming convention, brace style, async pattern, error-handling shape — even when you prefer another.
+- Remove imports, variables, or helpers that your changes orphaned; do not remove pre-existing dead code that your task did not touch.
+- If the cleanup is genuinely worth doing, file it as a follow-up task — do not smuggle it into the current diff.
+
+### Example 1 — C#: drive-by refactoring while fixing one method
+
+```csharp
+// ❌ Task said "fix the off-by-one in GetOpenAssignments". The diff also
+//    renames a field, reorders members, and changes the file's brace style.
+public class AssignmentRepository
+{
+    private readonly DbContext _ctx;  // was: _context
+    public AssignmentRepository(DbContext ctx) {
+        _ctx = ctx;
+    }
+
+    public async Task<int> CountOpenAsync(string userId) =>
+        await _ctx.Assignments.CountAsync(a => a.UserId == userId && a.Status == "open");
+
+    public async Task<List<Assignment>> GetOpenAssignmentsAsync(string userId, int page, int size) {
+        var skip = (page - 1) * size;  // off-by-one fix here
+        return await _ctx.Assignments
+            .Where(a => a.UserId == userId && a.Status == "open")
+            .Skip(skip).Take(size)
+            .ToListAsync();
+    }
+}
+```
+
+```csharp
+// ✅ Same off-by-one fix, nothing else.
+public class AssignmentRepository
+{
+    private readonly DbContext _context;
+
+    public AssignmentRepository(DbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<Assignment>> GetOpenAssignmentsAsync(string userId, int page, int size)
+    {
+        var skip = (page - 1) * size;  // off-by-one fix
+        return await _context.Assignments
+            .Where(a => a.UserId == userId && a.Status == "open")
+            .Skip(skip).Take(size)
+            .ToListAsync();
+    }
+
+    public async Task<int> CountOpenAsync(string userId)
+    {
+        return await _context.Assignments
+            .CountAsync(a => a.UserId == userId && a.Status == "open");
+    }
+}
+```
+
+### Example 2 — TypeScript: style drift while adding a field
+
+```ts
+// ❌ Task said "add `archivedAt` to the User type". The diff also switches
+//    the existing arrow-function members to method syntax and rewraps unrelated lines.
+export type User = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  archivedAt: Date | null;
+};
+
+export class UserService {
+  constructor(private readonly db: Db) {}
+
+  async findById(id: string): Promise<User | null> {
+    return this.db.user.findUnique({ where: { id } });
+  }
+
+  async findByEmail(
+    email: string,
+  ): Promise<User | null> {
+    return this.db.user.findUnique({ where: { email } });
+  }
+}
+```
+
+```ts
+// ✅ Only the new field. Existing style preserved exactly.
+export type User = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  archivedAt: Date | null;
+};
+
+export class UserService {
+  constructor(private readonly db: Db) {}
+  findById = (id: string) => this.db.user.findUnique({ where: { id } });
+  findByEmail = (email: string) => this.db.user.findUnique({ where: { email } });
+}
+```
 
 ## How Each Agent Applies These
 

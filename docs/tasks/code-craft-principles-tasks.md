@@ -95,7 +95,7 @@ Only the principle paragraph sits between these markers (no blank lines outside 
 
 ### Task 3: Write Surgical Changes principle and two examples
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Task 1
 
