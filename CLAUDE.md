@@ -70,6 +70,10 @@ Shared resources live in `shared/` as cross-skill files (prompt frameworks, temp
 
 All file references in hooks and commands must use `${CLAUDE_PLUGIN_ROOT}` — never hardcode absolute paths.
 
+### Writer-agent section header convention
+
+Writer-agent files (`task-implementer.md`, `code-fixer.md`) use ALL-CAPS section headers with no hyphens (e.g., `OBJECTIVE`, `PREREQUISITES`, `QUALITY RULES`, `FIXING PRIORITY`). The single canonical compound-adjective exception is `CODE-CRAFT PRINCIPLES`, where the hyphen joins "code" and "craft" into a single adjective modifying "principles" — removing it would change the meaning, not just the punctuation. Each occurrence of `CODE-CRAFT PRINCIPLES` in a writer-agent body is paired with an HTML guard comment on the line immediately above the header, naming the compound-adjective exception and pointing back to this paragraph. The co-location ensures that a future editor who would otherwise normalize away the hyphen sees the rationale next to the header before they edit, and so any future normalization edit must update this CLAUDE.md paragraph in the same commit.
+
 ### SKILL.md Frontmatter Fields
 
 | Field | Required | Description |

@@ -50,7 +50,7 @@ Do not modify the Task 12 guard HTML comment at line 103.
 
 ### Task 2: Document #16 hyphen-exception in CLAUDE.md + inline guards in both writer agents
 
-**Status:** TODO
+**Status:** DONE
 
 Decision (per plan Decision A2): **keep the hyphen** in `CODE-CRAFT
 PRINCIPLES` as a deliberate compound-adjective exception to the ALL-CAPS-

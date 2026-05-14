@@ -79,6 +79,7 @@ QUALITY RULES
 - Follow established project conventions and patterns.
 - New code has corresponding tests when a test framework is configured.
 
+<!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it marks a compound-adjective exception to the ALL-CAPS-no-hyphens writer-agent header convention documented in repo-root CLAUDE.md. Do not normalize without updating the CLAUDE.md convention paragraph in the same commit. -->
 CODE-CRAFT PRINCIPLES
 
 <!-- canonical:principle:simplicity-first:start -->
