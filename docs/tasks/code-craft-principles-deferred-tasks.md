@@ -323,7 +323,7 @@ the smoke checklist.`
 
 ### Task 8: Bump plugin.json to 3.1.1 and add CHANGELOG v3.1.1 entry
 
-**Status:** TODO
+**Status:** DONE
 
 Two file edits:
 

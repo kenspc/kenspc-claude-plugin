@@ -9,6 +9,79 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.1.1 — 2026-05-14
+
+Patch release closing the six DEFERRED items from the v3.1.0 5-angle
+review (`docs/briefs/code-craft-principles-deferred.md`) plus two
+natural release-support tasks. No new SKILL or agent interface; no
+CONTEXT block schema changes; no user-facing capability additions. New
+script behaviour is defense-in-depth tooling on top of the v3.1.0
+canonical-block byte-identity invariant.
+
+### Changed
+
+- `shared/code-craft-principles.md`: rewrite the awkward
+  "Refactor code unrelated to the current task is out;" bullet under
+  Surgical Changes into a grammatical sentence ("Don't refactor code
+  unrelated to the current task — that is out of scope; ...") while
+  preserving the verbatim substring `refactor code unrelated to the
+  current task` that Task 12's relocation grep contract pins. Brief
+  item #15. Commit `582d119`.
+- `CLAUDE.md` (repo root): new "Writer-agent section header convention"
+  subsection inside "Skill Development Conventions" records the canonical
+  compound-adjective exception (`CODE-CRAFT PRINCIPLES`) to the
+  ALL-CAPS-no-hyphens writer-agent header convention. Brief item #16.
+  Commit `d13ab61`.
+
+### Added
+
+- `agents/task-implementer.md` and `agents/code-fixer.md`: one-line HTML
+  guard comments immediately above each `CODE-CRAFT PRINCIPLES` header
+  pinning the hyphen as a compound-adjective exception and pointing back
+  to the CLAUDE.md convention paragraph. Co-location ensures a future
+  editor sees the rationale next to the header before normalizing it
+  away. Brief item #16. Commit `d13ab61`.
+- `skills/task-review/SKILL.md`: new subsection
+  `## Output convention — dry-run reports` after the Quality bar
+  section, defining the non-overlapping label vocabularies for future
+  dry-run reports (`CONDITION-MET` / `CONDITION-NOT-MET` at
+  per-condition level, `FLAG` / `PASS` at per-hunk level). The existing
+  v3.1.0 dry-run report at
+  `docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md` is preserved
+  as a historical artifact. Brief item #17. Commit `bc196bd`.
+- `scripts/check-code-craft-canonical.sh`: anchor-phrase frequency
+  guard appended after the byte-identity check, asserting that the
+  load-bearing labels `Simplicity First` and `Surgical Changes` each
+  remain present at least once in the shared file and in the two
+  writer-agent files. Refines the brief's "outside the byte-identity
+  hash range" scope to "anywhere in file" because the agent files
+  contain the anchor labels only inside the canonical block. Brief
+  item #31. Commit `19a69db`.
+- `scripts/check-quality-reviewer-bullet-structure.sh`: new structural
+  guard asserting that the two REVIEW CHECKLIST bullets added by v3.1.0
+  to `quality-reviewer.md` ("Over-engineering ...", "Drive-by
+  refactoring and style drift ...") each enumerate exactly three
+  numbered conditions gated by the `**all three**` qualifier. Separate
+  script per the one-guard-one-purpose pattern. Brief item #33. Commit
+  `c0b0d13`.
+- `--self-test` mutation regression mode on the three canonical drift
+  guards (`check-code-craft-canonical.sh`, `check-canonical-dispatch.sh`,
+  `check-quality-reviewer-bullet-structure.sh`). Each `--self-test`
+  invocation copies the script's input files into a temp workdir, runs
+  the main check (expect 0), applies a content-based mutation (expect
+  1), reverts (expect 0). Cross-platform (Git Bash on Windows + WSL2
+  Ubuntu). Opt-in flag; no-argument behaviour unchanged. Brief item #32.
+  Commit `25c770b`.
+- `docs/release-checklist.md` "Pre-flight: mechanical checks" extended
+  to invoke the new structural guard plus all three `--self-test`
+  modes; "must exit 0" count bumped from six to ten. Commit `09c818b`.
+
+### Fixed
+
+- Grammar of the Surgical Changes bullet that listed scope-creep examples.
+  See "Changed" above; cross-listed here because brief item #15 was filed
+  as a grammar bug. Brief item #15. Commit `582d119`.
+
 ## 3.1.0 — 2026-05-14
 
 Adds Simplicity First and Surgical Changes code-craft principles as a new
