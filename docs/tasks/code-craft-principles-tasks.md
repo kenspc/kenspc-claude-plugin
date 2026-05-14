@@ -61,7 +61,7 @@ and `#surgical-changes` that Task 13 will verify.
 
 ### Task 2: Write Simplicity First principle and two examples
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Task 1
 
