@@ -1,6 +1,6 @@
 # Code-Craft Principles
 
-Shared code-craft principles referenced by `task-implementer`, `code-fixer`, and `quality-reviewer`. Defines two write-time and review-time anchors — Simplicity First and Surgical Changes — with worked C# / TypeScript diff examples and a per-agent applicability table. Authoritative source for the principle paragraphs that the two writer agents inline byte-identical.
+Shared code-craft principles referenced by `task-implementer`, `code-fixer`, and `quality-reviewer`. Defines two write-time and review-time anchors — Simplicity First and Surgical Changes — with worked C# / TypeScript diff examples and a per-agent applicability table. Authoritative source for the principle paragraphs that the two writer agents inline as byte-identical copies.
 
 ## Simplicity First
 
@@ -100,6 +100,7 @@ export async function getOpenAssignments(userId: string): Promise<Assignment[]> 
 
 Checklist — what Surgical Changes rules out in practice:
 
+<!-- guard: the literal phrases "Do not modify code unrelated to the current task", "Refactor code unrelated", "Do not introduce new features or refactor", and "Preserve the original code's style" are pinned here by Task 12's relocation grep contract. Do not reword the opening of these bullets even if the grammar looks awkward; the verbatim substrings must remain present in this file. -->
 - Do not modify code unrelated to the current task, even when you are in the file for an unrelated reason. The diff stays scoped to what the task required.
 - Refactor code unrelated to the current task is out; do not refactor things that are not broken even when you would have written them differently from scratch.
 - Do not introduce new features or refactor code beyond what the task or review report requires; file follow-ups instead of smuggling them into the current diff.
