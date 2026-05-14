@@ -145,7 +145,9 @@ run_main_logic() {
         echo "Drift detected. The canonical principle paragraphs must be byte-identical" >&2
         echo "between shared/code-craft-principles.md (authoritative) and the two writer" >&2
         echo "agents that inline them. Apply the same edit to all three files." >&2
-        return 1
+        # Continue to Check 2 anyway so a single run reports both failure modes
+        # (byte-identity AND anchor-phrase frequency) when both apply. The final
+        # exit code is still 1 — see `drift_found` accumulation below.
     fi
 
     # ---- Check 2: anchor phrase frequency ----
@@ -215,13 +217,19 @@ run_main_logic() {
 #
 # Mutation regression fixture. Copies the three target files into a
 # temp workdir, runs the main check (expect 0), mutates one canonical
-# region (expect 1), reverts (expect 0). The mutation target is a content
-# fragment inside the canonical:principle:simplicity-first block of the
-# shared file: the literal `**Simplicity First.**`. Mutating to
-# `**Simplicity 1st.**` (a) breaks the byte-identity check (only the
-# shared file is mutated) and (b) breaks the anchor-phrase frequency
-# check (the anchor "Simplicity First" no longer matches in the shared
-# file). Either failure path produces exit code 1.
+# region (expect 1), reverts (expect 0). The mutation rewrites every
+# occurrence of the bare phrase `Simplicity First` to `Simplicity 1st`
+# in the shared file (4 occurrences in the current tree: H2 header,
+# description paragraph, the bolded sentence inside the canonical block,
+# and the trailing checklist sentence). This breaks BOTH
+#   (a) the byte-identity check (the canonical block in the shared file
+#       diverges from the inlined copies in the two writer agents), and
+#   (b) the anchor-phrase frequency check (the "Simplicity First" anchor
+#       count in the shared file drops from 4 to 0 — below the minimum
+#       of 1).
+# Hitting all occurrences (not just the bolded one) is what exercises
+# Check 2; mutating only `**Simplicity First.**` would leave 3 anchor
+# matches behind and Check 2 would silently still pass.
 run_self_test() {
     # WORK is set as a global (not local) so the EXIT trap can reference it
     # safely after this function returns. Under `set -u`, an EXIT trap that
@@ -236,8 +244,8 @@ run_self_test() {
     cp "$REPO_ROOT/plugins/kenspc/agents/task-implementer.md" "$WORK/plugins/kenspc/agents/task-implementer.md"
     cp "$REPO_ROOT/plugins/kenspc/agents/code-fixer.md" "$WORK/plugins/kenspc/agents/code-fixer.md"
 
-    local mutation_target='**Simplicity First.**'
-    local mutation_replacement='**Simplicity 1st.**'
+    local mutation_target='Simplicity First'
+    local mutation_replacement='Simplicity 1st'
     local target_file="$WORK/plugins/kenspc/shared/code-craft-principles.md"
 
     # Fixture-stale guard: if the mutation target phrase is not present in
@@ -257,11 +265,11 @@ run_self_test() {
         return 1
     fi
 
-    # Apply mutation (only to the shared file, so the byte-identity check
-    # diverges; the mutated phrase also drops the anchor count). Use a
-    # delimiter unlikely to appear in the principle paragraph and a
-    # substitution count check to catch silent fixture rot.
-    sed -i "s|\\*\\*Simplicity First\\.\\*\\*|\\*\\*Simplicity 1st.\\*\\*|g" "$target_file"
+    # Apply mutation to every occurrence of the bare phrase in the shared
+    # file. Replacing all occurrences (not just the bolded one inside the
+    # canonical block) is what drives the anchor count to 0 and exercises
+    # Check 2 alongside the byte-identity divergence in Check 1.
+    sed -i "s|${mutation_target}|${mutation_replacement}|g" "$target_file"
     if grep -qF -- "$mutation_target" "$target_file"; then
         echo "FAIL  self-test: mutation did not apply (target phrase still present in $target_file)" >&2
         return 2
