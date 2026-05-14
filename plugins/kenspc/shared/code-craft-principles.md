@@ -100,11 +100,11 @@ export async function getOpenAssignments(userId: string): Promise<Assignment[]> 
 
 Checklist — what Surgical Changes rules out in practice:
 
-- Do not "improve" adjacent code, comments, or formatting while you are in the file for an unrelated reason.
-- Do not refactor things that are not broken, even when you would have written them differently from scratch.
-- Match the existing style — naming convention, brace style, async pattern, error-handling shape — even when you prefer another.
+- Do not modify code unrelated to the current task, even when you are in the file for an unrelated reason. The diff stays scoped to what the task required.
+- Refactor code unrelated to the current task is out; do not refactor things that are not broken even when you would have written them differently from scratch.
+- Do not introduce new features or refactor code beyond what the task or review report requires; file follow-ups instead of smuggling them into the current diff.
+- Preserve the original code's style and structure — naming convention, brace style, async pattern, member order — even when you prefer another.
 - Remove imports, variables, or helpers that your changes orphaned; do not remove pre-existing dead code that your task did not touch.
-- If the cleanup is genuinely worth doing, file it as a follow-up task — do not smuggle it into the current diff.
 
 ### Example 1 — C#: drive-by refactoring while fixing one method
 

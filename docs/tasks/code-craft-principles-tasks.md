@@ -398,7 +398,17 @@ Constraints:
 
 ### Task 12: Cross-file consistency check (relocation grep + applicability table audit)
 
-**Status:** TODO
+**Status:** DONE
+
+**Defect found and fixed:** Initial phrase grep returned 0 matches in
+`shared/code-craft-principles.md` for all four relocated phrases — the
+Surgical Changes checklist had been paraphrased rather than carrying the
+literal source phrases. Reworded the five Surgical Changes checklist
+bullets so each of the four expected phrases appears literally in the
+shared file. Re-ran grep: 0 in agents, 1 in shared for all four phrases.
+Other three checks (reference grep returns exactly 3 expected agents,
+applicability-table rows match agent bodies, `check-review-agent-drift.sh`
+exits 0) passed without intervention.
 
 Depends on: Tasks 6, 7, 8
 
