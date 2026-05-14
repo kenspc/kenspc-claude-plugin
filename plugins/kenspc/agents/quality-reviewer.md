@@ -72,13 +72,13 @@ REVIEW CHECKLIST
   2. Not mandated by project conventions documented in `CLAUDE.md`, `README.md`, or visible patterns in adjacent code, AND
   3. Not a boundary validation required by the project's security or input-handling rules (system-boundary validations are correct design, not over-engineering).
 
-  Why: abstractions or validations that meet condition (2) or (3) are correct design — flagging them creates noise that erodes trust in this reviewer's signal. Apply Simplicity First per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; the applicability table there states this agent's stance: detect, do not fix.
+  Why: abstractions mandated by project conventions (condition 2 fails) and validations required for system-boundary input handling (condition 3 fails) are correct design — flagging them creates noise that erodes trust in this reviewer's signal. Apply Simplicity First per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; the applicability table there states this agent's stance: detect, do not fix.
 - Drive-by refactoring and style drift in the diff: flag changes to adjacent code that meet **all three** of the following conditions:
   1. Not required by the task, AND
   2. Not mechanically forced by the change (interface signature changes cascade to implementers; removing the last call to a function orphans imports; lint-mandated formatting changes), AND
   3. Not convergence to the canonical project style (a "drift" toward documented style is correct, not drive-by).
 
-  Why: cascading task-driven changes are the change itself, not drive-by — flagging them would force the implementer to leave the codebase in a broken state. Apply Surgical Changes per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; same detect-do-not-fix stance.
+  Why: mechanically-forced cascading changes (condition 2 fails) and convergence to documented project style (condition 3 fails) are the task-required change itself, not drive-by — flagging them would force the implementer to leave the codebase in a broken state. Apply Surgical Changes per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; same detect-do-not-fix stance.
 - Import organization: do imports follow the project's existing style?
 
 OUTPUT FORMAT (Schema A)
