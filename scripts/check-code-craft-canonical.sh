@@ -129,4 +129,62 @@ if [[ "$drift_found" -ne 0 ]]; then
     exit 1
 fi
 
+# ---- Check 2: anchor phrase frequency ----
+#
+# Brief item #31 named "outside the byte-identity hash range" — but the two
+# writer-agent files contain the anchor labels only inside the canonical
+# block. Counting "outside" the block in those files would always return 0
+# and produce a vacuous check. The refined scope is "anywhere in file": the
+# failure mode the brief targeted (a synchronized edit that replaces the
+# canonical block in all three files with content that drops the anchor)
+# is still caught — the byte-identity check passes after such an edit, but
+# the new "Simplicity First" / "Surgical Changes" anchor must remain
+# present somewhere in each file for the check to pass.
+ANCHORS=(
+    "Simplicity First|1"
+    "Surgical Changes|1"
+)
+
+count_phrase_in_file() {
+    # Count occurrences of a literal phrase (case-insensitive) in a file.
+    # grep returns 1 on no match, which under `set -o pipefail` would
+    # collapse the pipeline; tolerate that explicitly so a 0 count is
+    # reported as "0" instead of failing the script.
+    local phrase="$1"
+    local file="$2"
+    local n
+    n=$(grep -F -i -o -- "$phrase" "$file" || true)
+    if [[ -z "$n" ]]; then
+        echo 0
+    else
+        printf '%s\n' "$n" | wc -l | tr -d ' '
+    fi
+}
+
+anchor_ok=1
+for spec in "${ANCHORS[@]}"; do
+    phrase="${spec%|*}"
+    min="${spec##*|}"
+    for f in "${FILES[@]}"; do
+        count=$(count_phrase_in_file "$phrase" "$f")
+        if [[ "$count" -lt "$min" ]]; then
+            anchor_ok=0
+            drift_found=1
+            echo "MISSING anchor '$phrase' in $f: found $count, expected >= $min" >&2
+        fi
+    done
+done
+
+if [[ "$anchor_ok" -eq 1 ]]; then
+    echo "OK    code-craft anchor phrases — all minimum counts met in all three files"
+else
+    echo "" >&2
+    echo "One or more anchor phrases dropped below their minimum count in one of" >&2
+    echo "the three code-craft files. Restore the phrasing in the affected file(s)." >&2
+fi
+
+if [[ "$drift_found" -ne 0 ]]; then
+    exit 1
+fi
+
 exit 0

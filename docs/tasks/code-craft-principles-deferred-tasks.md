@@ -139,7 +139,7 @@ historical artifact.
 
 ### Task 4: Extend check-code-craft-canonical.sh with #31 anchor-phrase frequency guard
 
-**Status:** TODO
+**Status:** DONE
 
 After the existing byte-identity check, append a second check block to
 `scripts/check-code-craft-canonical.sh` that asserts the anchor phrases
