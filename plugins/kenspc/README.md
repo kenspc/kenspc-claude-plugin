@@ -43,7 +43,7 @@ plugins/kenspc/
     commands/
     hooks/
     references/
-    shared/               # Cross-skill resources (e.g., discovery-framework.md)
+    shared/               # Cross-skill resources (discovery-framework.md, code-craft-principles.md)
     skills/
     README.md
 ```
