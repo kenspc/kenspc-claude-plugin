@@ -9,6 +9,114 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.1.0 — 2026-05-14
+
+Adds Simplicity First and Surgical Changes code-craft principles as a new
+shared resource referenced by `task-implementer`, `code-fixer`, and
+`quality-reviewer`. Relocates scope-creep guards from agent bodies to a
+single source of truth. No breaking changes; no CONTEXT block schema
+changes; no SKILL or agent interface changes for callers.
+
+### Rationale
+
+The plugin had no Simplicity guidance anywhere — `task-implementer`'s
+QUALITY CHECKLIST was oriented at correctness (edge cases, error
+handling, async correctness), not at minimalism. Surgical guidance
+existed but was scattered in three places inside `task-implementer.md`
+(QUALITY RULES, AUTONOMY BOUNDARIES "Do not do even if it seems helpful",
+STOP-and-BLOCKED triggers) plus `code-fixer.md`'s FIXING RULES, with no
+single source of truth. Future drift between the four copies was likely.
+
+A research conversation analyzed `doggy8088/andrej-karpathy-skills` (the
+65-line `AGENTS.md` + 522-line `EXAMPLES.md` distilling Karpathy's four
+LLM-coding pitfalls). Two of those four principles fill the gap:
+Simplicity First and Surgical Changes. The other two were intentionally
+not adopted — Goal-Driven Execution is already covered by kenspc's
+DONE-criteria pattern across every SKILL, and Think Before Coding for
+ad-hoc interactions belongs at the user-level or project-level CLAUDE.md
+layer (a plugin has no reliable always-on mechanism, and adding one
+would violate kenspc's own "avoid triggering this skill when..."
+design rule).
+
+The implementation follows v3's design rules. Principles are framed as
+rationale ("Why: ...") rather than command-style imperatives
+(Why-not-Command, Rule 2). The new shared file is a single source of
+truth for principle definitions (SSoT, mirroring the
+`discovery-framework.md` pattern). The two writer agents
+(`task-implementer`, `code-fixer`) inline byte-identical copies of the
+canonical principle paragraphs in their system prompts so the rule is
+loaded into every dispatch without depending on a runtime Read; the
+shared file remains the authoritative source for the longer content
+(checklists, worked examples, applicability table). Byte-identity is
+enforced by a new check script modeled on
+`check-canonical-dispatch.sh`.
+
+### Added
+
+- `shared/code-craft-principles.md` — defines Simplicity First and
+  Surgical Changes with rationale-form principle paragraphs, 4–6
+  bullet practical checklists, and four worked diff examples
+  (`❌ / ✅` pairs in C# and TypeScript covering over-abstraction,
+  speculative-feature traps, drive-by refactoring, and style drift).
+  Canonical principle paragraphs are bounded by
+  `<!-- canonical:principle:<key>:start -->` /
+  `<!-- canonical:principle:<key>:end -->` markers and mirrored
+  byte-identical into the two writer agents. Includes a
+  per-agent applicability table (Apply / Detect) and a closing
+  "What This File Does NOT Define" section.
+- `quality-reviewer`: two new REVIEW CHECKLIST bullets
+  (over-engineering; drive-by refactoring / style drift), each gated
+  by three explicit exclusion conditions to prevent false positives on
+  project-convention abstractions, mechanically-forced cascades, and
+  canonical-style convergence.
+- `scripts/check-code-craft-canonical.sh` — new repo-level check
+  script that sha256-hashes the canonical principle blocks in the
+  shared file and in the two writer agents and fails on any
+  byte-divergence. Modeled on the existing `check-canonical-dispatch.sh`
+  invariant.
+
+### Changed
+
+- `agents/task-implementer.md`: 2 scope-creep bullets removed (one from
+  `QUALITY RULES`, one from `AUTONOMY BOUNDARIES` → "Do not do even if it
+  seems helpful"); new `CODE-CRAFT PRINCIPLES` section inserted between
+  `QUALITY RULES` and `AUTONOMY BOUNDARIES` containing both canonical
+  principle blocks with markers, the author-at-write-time applicability
+  line, and the examples reference using
+  `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`.
+- `agents/code-fixer.md`: 2 surgical bullets removed from `FIXING RULES`;
+  new `CODE-CRAFT PRINCIPLES` section inserted between `FIXING RULES`
+  and `FIXING PRIORITY` containing both canonical principle blocks with
+  markers, the author-at-fix-time applicability line naming the
+  DEFERRED disposition, and the examples reference.
+- `README.md`: "Stack-agnostic" reworded as "Stack-agnostic skill
+  behavior" with a clarifying clause about documentary examples being
+  stack-specific; new Acknowledgements paragraph crediting Karpathy /
+  doggy8088 / forrestchang inserted between the agent-skills paragraph
+  and the thinkfirst paragraph.
+- `CLAUDE.md` (root): Plugin Directory Layout tree under `shared/`
+  extended from one to two entries; the `shared/` paragraph extended
+  to cover the new file's consumers and explicit non-scope.
+  `Repository scripts/` section and `Validate plugin structure` block
+  extended to list the new check script.
+- `docs/release-checklist.md` "Pre-flight: mechanical checks" updated
+  to invoke the new check script; "must exit 0" count bumped from
+  five to six and "shell drift guards" from 2 to 3.
+
+### Acknowledgements
+
+Karpathy's October 2025 X post on LLM coding pitfalls is the source of
+the two adopted principles; see the plugin README Acknowledgements for
+the full lineage chain (Karpathy → forrestchang → doggy8088 → kenspc).
+
+### Out of scope (deferred / not adopted)
+
+- Karpathy Principle 1 "Think Before Coding" for ad-hoc non-workflow
+  interactions — intentionally not in the plugin (plugin has no
+  reliable always-on mechanism; belongs in user / project CLAUDE.md).
+- Karpathy Principle 4 "Goal-Driven Execution" — already covered by
+  kenspc's DONE-criteria pattern across all SKILLs.
+
 ## 3.0.3 — 2026-05-11 — Phase Transition Anchors & Emergent Behavior Formalization
 
 Patch release based on the first end-to-end DungeonDescent dogfooding

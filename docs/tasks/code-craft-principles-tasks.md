@@ -361,7 +361,7 @@ entry MUST be a paragraph, NOT a bulleted/numbered list item.
 
 ### Task 11: Add v3.1.0 CHANGELOG entry and bump `plugin.json` version (atomic commit)
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Tasks 1–10
 

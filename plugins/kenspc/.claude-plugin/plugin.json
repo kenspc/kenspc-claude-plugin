@@ -1,7 +1,7 @@
 {
   "name": "kenspc",
   "description": "Structured development workflows for Claude Code, aligned with Opus 4.7 at xhigh/max effort. Eleven reusable subagents drive brief generation, plan generation, task decomposition, automated batch implementation, and multi-angle parallel review. v3 follows five design rules: workflow SOP stays, business rules framed as why-not-command, DONE-criteria over step-by-step flow, no anti-rationalization scaffolding, and plain language over MUST/NEVER/CRITICAL/ULTRATHINK.",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "author": {
     "name": "Sim Poh Chuan",
     "url": "https://github.com/kenspc"
