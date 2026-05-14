@@ -542,7 +542,36 @@ This task does not need to produce a commit if all checks pass.
 
 ### Task 15: Create `check-code-craft-canonical.sh` and wire it into CLAUDE.md + release-checklist
 
-**Status:** TODO
+**Status:** DONE
+
+Created `scripts/check-code-craft-canonical.sh` modeled on
+`check-canonical-dispatch.sh`. For each of the two canonical principle
+keys (`simplicity-first`, `surgical-changes`), it sed-extracts the
+bounded block from three files (shared/, task-implementer, code-fixer),
+sha256-hashes each, and fails on any mismatch. Returns 0 on full
+identity, 1 on drift, 2 on missing files/markers. Uses
+`set -euo pipefail`.
+
+Wiring:
+- Root `CLAUDE.md` `### Repository scripts/` now lists the new script
+  with the "guards the byte-identity invariant" framing alongside the
+  two existing scripts.
+- Root `CLAUDE.md` `### Validate plugin structure` Cross-agent
+  invariants block includes the new `bash scripts/check-code-craft-canonical.sh`.
+- `docs/release-checklist.md` "Pre-flight: mechanical checks" code
+  block invokes the new script; the prose count changed from
+  "All five must exit 0 (3 JSON validations + 2 shell drift guards)"
+  to "All six must exit 0 (3 JSON validations + 3 shell drift guards)".
+
+Verification:
+- Ran the script on the current tree — exit 0 with both principle
+  keys reporting identical sha256 across all three files.
+- Deliberate mutation: changed "stated problem" to "stated problemX"
+  in `agents/task-implementer.md`'s simplicity-first canonical block.
+  Script exited 1 with a clear "DRIFT canonical:principle:simplicity-first"
+  message, identified `task-implementer.md` as the outlier, and printed
+  the diff against the shared file. Mutation reverted before commit;
+  re-run returned exit 0.
 
 Depends on: Tasks 2, 3, 6, 7
 

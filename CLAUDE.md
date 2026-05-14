@@ -226,6 +226,7 @@ grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
 # Cross-agent invariants
 bash scripts/check-review-agent-drift.sh
 bash scripts/check-canonical-dispatch.sh
+bash scripts/check-code-craft-canonical.sh
 ```
 
 ### Repository scripts/
@@ -238,6 +239,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
 - `check-canonical-dispatch.sh` — guards the byte-identity invariant on
   the `## Code Review Phase (unconditional)` canonical block between
   `task-review/SKILL.md` and `task-implement/SKILL.md`.
+- `check-code-craft-canonical.sh` — guards the byte-identity invariant
+  on the canonical Simplicity First and Surgical Changes principle
+  paragraphs across `shared/code-craft-principles.md` (authoritative)
+  and the two writer agents (`task-implementer.md`, `code-fixer.md`)
+  that inline them.
 
 Run before tagging any release; both should also be considered as
 pre-commit hook candidates when their target files change.

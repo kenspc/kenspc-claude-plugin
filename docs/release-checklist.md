@@ -25,9 +25,12 @@ bash scripts/check-canonical-dispatch.sh
 
 # Review-angle agents shared-section invariance (5 reviewer agents)
 bash scripts/check-review-agent-drift.sh
+
+# Code-craft canonical principle byte-identity (shared + 2 writer agents)
+bash scripts/check-code-craft-canonical.sh
 ```
 
-All five must exit 0 (3 JSON validations + 2 shell drift guards). If any
+All six must exit 0 (3 JSON validations + 3 shell drift guards). If any
 fail, fix before proceeding to the smoke checklist.
 
 ## Smoke checklist (manual, ~10 minutes)
