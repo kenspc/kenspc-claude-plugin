@@ -155,7 +155,7 @@ generic re-statement of the principle. The author-vs-reviewer distinction
 
 ### Task 5: Write "What This File Does NOT Define" section
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Task 1
 

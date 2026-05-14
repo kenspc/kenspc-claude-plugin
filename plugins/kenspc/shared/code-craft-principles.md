@@ -214,4 +214,7 @@ Same principles, different operational stance per agent. Writer agents (`task-im
 
 ## What This File Does NOT Define
 
-TODO
+- **Goal-Driven Execution** — covered by the DONE-criteria pattern that every SKILL.md and worker agent already declares. Adding it here would duplicate the existing per-skill contract.
+- **Think Before Coding for ad-hoc interactions** — out of scope for the plugin. A plugin has no reliable mechanism to enforce always-on pre-coding deliberation; this belongs in user-level or project-level `CLAUDE.md`, not in kenspc.
+- **Per-language style guides** — delegated to project `CLAUDE.md` and the existing project conventions that agents read in their PREREQUISITES step. The C# and TypeScript examples here illustrate the principles, not a project's house style.
+- **Agent dispatch order and CONTEXT block contracts** — defined in the dispatching SKILL.md and each agent's "CONTEXT YOU WILL RECEIVE" header. This file says nothing about which agent runs when.
