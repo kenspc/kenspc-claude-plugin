@@ -439,7 +439,16 @@ defect is found, fix and commit under this task.
 
 ### Task 13: Portable-path and anchor-slug check
 
-**Status:** TODO
+**Status:** DONE
+
+Verification-only. All four references to `code-craft-principles.md` in
+agent files use the `${CLAUDE_PLUGIN_ROOT}/shared/` prefix (two in
+`quality-reviewer.md`, one each in `task-implementer.md` and
+`code-fixer.md`). No hardcoded `~/` or absolute paths. The two principle
+headings in the shared file read exactly `## Simplicity First` and
+`## Surgical Changes`, producing `#simplicity-first` and
+`#surgical-changes` slugs under GitHub's auto-generation rules. No
+defect; no commit needed.
 
 Depends on: Tasks 6, 7, 8
 
