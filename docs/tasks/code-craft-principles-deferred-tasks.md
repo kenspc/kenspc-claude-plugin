@@ -223,7 +223,7 @@ one-purpose pattern).
 
 ### Task 6: Add --self-test mutation regression mode to three drift-guard scripts
 
-**Status:** TODO
+**Status:** DONE
 
 Add a `--self-test` flag to each of three guard scripts:
 
