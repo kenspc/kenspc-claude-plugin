@@ -179,7 +179,7 @@ that drops the anchor) is still caught.
 
 ### Task 5: Create scripts/check-quality-reviewer-bullet-structure.sh for #33
 
-**Status:** TODO
+**Status:** DONE
 
 Create a new shell script at
 `scripts/check-quality-reviewer-bullet-structure.sh` that asserts the two
