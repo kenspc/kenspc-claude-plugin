@@ -279,7 +279,8 @@ What to do:
 - In the `AUTONOMY BOUNDARIES` "Do not do even if it seems helpful" subsection, keep
   the BLOCKED-trigger items intact (these are workflow-specific, not principle-level)
   but remove the generic "Refactor code unrelated to the current task" bullet.
-- Add a new section near `QUALITY RULES`, titled `CODE-CRAFT PRINCIPLES`, with body:
+- Add a new section immediately AFTER the `QUALITY RULES` section and BEFORE
+  the `AUTONOMY BOUNDARIES` section, titled `CODE-CRAFT PRINCIPLES`, with body:
 
   > Read `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` before implementing
   > each task. Apply Simplicity First and Surgical Changes as defined there. The
@@ -642,7 +643,7 @@ itself is excluded from this count — it is a deliberate net addition.)
 | 2 | Stack-specific examples (C# / TS) make the file feel less universal; future contributors hesitant to add a Rust or Python example | Low | The README clarification makes the documentary-vs-behavioral distinction explicit; new contributors can add more languages later if real demand emerges, but the maintainer's primary stacks are the right default |
 | 3 | The new "over-engineering" REVIEW CHECKLIST bullet causes `quality-reviewer` to flag false positives on legitimate abstractions | Medium | The bullet is scoped to "for single-use code" and "unrequested" — these qualifiers exist precisely to prevent flagging real abstractions; if false positives appear in practice, tighten in v3.1.1 |
 | 4 | Examples grow over time; the shared file balloons to 300+ lines like Karpathy's EXAMPLES.md | Low | Phase 1 sizing caps each example at ≤ 25 lines per side; future additions go through plan/task review; if growth is real, split into per-principle files later |
-| 5 | `task-implementer`'s STOP-and-BLOCKED triggers and the new Simplicity reference could be read as contradictory by the agent (one says "stop if it changes API contract", the other says "minimum code") | Low | Step 1.4 applicability table explicitly states this agent's stance: STOP triggers are workflow-specific decision boundaries; Simplicity is the principle for the code that DOES get written. These operate at different levels |
+| 5 | `task-implementer`'s STOP-and-BLOCKED triggers and the new Simplicity reference could be read as contradictory by the agent (one says "stop if it changes API contract", the other says "minimum code") | Low | Step 2.1's preservation note keeps STOP-and-BLOCKED triggers and the QUALITY CHECKLIST local to the agent and explicitly labels them as workflow-specific decision boundaries / correctness checks (NOT code-craft principles). Step 1.4's applicability table covers the orthogonal author-vs-reviewer dimension. The two scopes — when to halt, vs. how to write the code that does get written — operate at different levels and do not conflict |
 | 6 | Bumping plugin version to 3.1.0 implies more substance than the change actually contains, inflating the changelog signal | Low | The CHANGELOG Rationale section honestly characterizes scope; 3.1.0 is consistent with v1.5.0's "add a new shared resource" precedent |
 
 ## Open Questions
