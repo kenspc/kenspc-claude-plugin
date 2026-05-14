@@ -20,7 +20,7 @@ This plan has no Phase sections; tasks reference each other directly via
 
 ### Task 1: Rewrite #15 grammar bullet in shared/code-craft-principles.md
 
-**Status:** TODO
+**Status:** DONE
 
 Replace the existing line 105 of
 `plugins/kenspc/shared/code-craft-principles.md` (the awkward verb-phrase-as-
