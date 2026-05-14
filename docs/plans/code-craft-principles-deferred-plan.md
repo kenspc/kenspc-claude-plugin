@@ -83,7 +83,7 @@ enumerate as items but that any release-quality change pulls in.
 | 5 | #33 three-condition structural assertion | Script | new `scripts/check-quality-reviewer-bullet-structure.sh` | `feat(scripts)` |
 | 6 | #32 mutation self-test | Script | `--self-test` flag added to 3 scripts | `feat(scripts)` |
 | 7 | release-checklist sync | Doc | `docs/release-checklist.md` mechanical-check block | `docs(release)` |
-| 8 | version + CHANGELOG | Release | `plugin.json` → 3.1.1, `CHANGELOG.md` v3.1.1 entry | `chore(release)` |
+| 8 | version + CHANGELOG | Release | `plugin.json` → 3.1.1, `plugins/kenspc/CHANGELOG.md` v3.1.1 entry | `chore(release)` |
 
 **Out of scope** (inherited from the brief — do not re-open):
 
@@ -778,15 +778,16 @@ the smoke checklist.`
 
 **Files**:
 - `plugins/kenspc/.claude-plugin/plugin.json` (version field).
-- `CHANGELOG.md` (new v3.1.1 entry).
+- `plugins/kenspc/CHANGELOG.md` (new v3.1.1 entry).
 
 **Action**:
 
 1. Bump `version` in `plugin.json` from `3.1.0` to `3.1.1`.
-2. Add a `## [3.1.1] — 2026-MM-DD` section at the top of `CHANGELOG.md`
-   (after the v3.1.0 entry), with `### Changed`, `### Added`, `### Fixed`
-   subsections summarizing the 6 brief items + 2 support tasks. Each
-   bullet cites the brief item number and the commit hash.
+2. Add a `## [3.1.1] — 2026-MM-DD` section at the top of
+   `plugins/kenspc/CHANGELOG.md` (after the v3.1.0 entry), with
+   `### Changed`, `### Added`, `### Fixed` subsections summarizing the
+   6 brief items + 2 support tasks. Each bullet cites the brief item
+   number and the commit hash.
 
 **Why patch (3.1.1), not minor (3.2.0)**:
 
@@ -804,9 +805,9 @@ the smoke checklist.`
    returns 1 match.
 2. `cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null`
    exits 0 (JSON still valid).
-3. `CHANGELOG.md` has a `[3.1.1]` entry with `### Changed`, `### Added`,
-   `### Fixed` subsections and at least one bullet per brief item
-   (#15, #16, #17, #31, #32, #33).
+3. `plugins/kenspc/CHANGELOG.md` has a `[3.1.1]` entry with
+   `### Changed`, `### Added`, `### Fixed` subsections and at least one
+   bullet per brief item (#15, #16, #17, #31, #32, #33).
 4. The CHANGELOG entry is internally consistent: every commit hash it
    references resolves via `git log`.
 
@@ -846,7 +847,7 @@ during the v3.1.1 task-review.
 | R2 | Step 1's rewrite accidentally edits content **inside** the byte-identity markers (lines 97/99 of `shared/code-craft-principles.md`), making `check-code-craft-canonical.sh` fail. | Low | High (CI red). | Step 1 acceptance test 3 + R3 mitigation. The implementer must only modify line 105, leaving lines 95–99 byte-identical. |
 | R3 | Step 2's guard comments accidentally land inside the canonical block (above the start marker instead of above the section header), breaking byte-identity. | Low | High. | The guard comment must sit on the line immediately above the `CODE-CRAFT PRINCIPLES` header, which is itself two lines above the `<!-- canonical:principle:simplicity-first:start -->` marker. Step 2 acceptance test 5 catches a regression. |
 | R4 | Step 3's new subsection lands inside the `<!-- canonical:dispatch:start -->` / `<!-- canonical:dispatch:end -->` block in `task-review/SKILL.md`, breaking byte-identity with `task-implement/SKILL.md`. | Low | High. | Placement is "after Quality bar, before Prerequisites", which is upstream of the dispatch block. Step 3 acceptance test 4 verifies. |
-| R5 | Step 4's anchor-phrase check counts case-insensitively and matches an unrelated paragraph that says "simplicity first" lowercase. | Low | Medium. | Anchors are matched as full literal phrases via `grep -F -i`, exactly mirroring the `check-canonical-dispatch.sh` pattern. Anchors `Simplicity First` and `Surgical Changes` are distinctive enough that a false positive would only come from intentional documentation, which is what we want to count. |
+| R5 | Step 4's anchor-phrase check counts case-insensitively and matches an unrelated lowercase `simplicity first` line elsewhere in the file. | Low | Medium. | Anchors are matched as full literal phrases via `grep -F -i`, mirroring `check-canonical-dispatch.sh`. The threat model is *synchronized edits to all 3 files dropping the canonical mention* — in that scenario, a lowercase decoy would need to pre-exist in all 3 files (separately auditable) for the check to false-pass. Distinctive multi-word phrases (`Simplicity First`, `Surgical Changes`) make incidental coincidence vanishingly unlikely; we therefore do **not** add a "decoy-detection" acceptance test, which would conflict with Simplicity First applied to the guard itself. |
 | R6 | Step 5's regex for the three-condition gate is brittle to whitespace or list-style edits. | Medium | Medium. | Use `grep -nE '^[[:space:]]*[0-9]+\.'` rather than a tight character class, and slice by blank-line boundary rather than fixed offset. Step 5 acceptance includes a deliberate counter-example test exercising the failure path. |
 | R7 | Step 6's self-test `mktemp -d` + path-rewriting interacts poorly with Git Bash on Windows (path style differences). | Medium | Medium | Use `mktemp -d` plus relative-path traversal from `$WORK` as the synthetic `REPO_ROOT`; avoid `cd` into `/tmp`-style absolutes. Test on both Git Bash and WSL2 before Step 7 closes. |
 | R8 | Step 6's content-based mutation target phrase is later edited out of the canonical block, silently breaking the self-test. | Medium | High (silent guard rot — the same failure mode #32 is designed to prevent). | The self-test detects `sed` substitution count = 0 and exits with a `FAIL  self-test fixture stale` message. This explicitly surfaces the staleness instead of allowing a silent green. |
@@ -863,13 +864,7 @@ during the v3.1.1 task-review.
    separate "drift-guard self-test parity" cleanup. Tracking note can be
    added at the bottom of CHANGELOG v3.1.1's "Deferred" or in a new
    `docs/briefs/` entry.
-2. **Step 8 version choice (3.1.1 vs 3.2.0)**: the plan picks `3.1.1`
-   (patch) per the rationale above. If maintainer policy prefers semver
-   `minor` for any new script-public behavior, bump to `3.2.0` and
-   re-title the plan. No structural changes to the plan body needed —
-   only the version number, the CHANGELOG section heading, and the
-   commit message in Step 8.
-3. **Self-test parallelism**: each `--self-test` does file copies and
+2. **Self-test parallelism**: each `--self-test` does file copies and
    sed mutations sequentially. With three scripts in the mechanical-
    check block, total wall-clock time on a cold filesystem is ~5
    seconds. If this becomes annoying, a future optimization could
