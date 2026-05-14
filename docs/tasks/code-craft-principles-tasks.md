@@ -481,7 +481,7 @@ immediately before this feature work):
 | `plugins/kenspc/agents/code-fixer.md` | 14 | 2 | +12 | +18 | yes |
 | `plugins/kenspc/agents/quality-reviewer.md` | 12 | 0 | +12 | +32 | yes |
 | `plugins/kenspc/README.md` | 15 | 2 | +13 | +14 | yes |
-| `CLAUDE.md` (root) | 3 | 2 | +1 | +10 | yes |
+| `CLAUDE.md` (root) | 9 | 2 | +7 | +10 | yes |
 | `plugins/kenspc/CHANGELOG.md` | 108 | 0 | +108 | +50 | exceeded |
 | `plugins/kenspc/.claude-plugin/plugin.json` | 1 | 1 | 0 | 0 | yes |
 
