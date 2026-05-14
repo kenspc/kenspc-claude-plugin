@@ -592,8 +592,13 @@ What to do:
   `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` and confirm the prefix is
   exactly that (no hardcoded `~/` or absolute paths).
 - Verify the new shared file's internal section anchors (`#simplicity-first`,
-  `#surgical-changes`) are not referenced from anywhere yet — if they are, confirm
-  the heading slugs match GitHub's auto-generation rules.
+  `#surgical-changes`) are not referenced from anywhere yet. If they are
+  referenced, confirm the actual headings produce those slugs under GitHub's
+  auto-generation rules (heading text lowercased, spaces → hyphens, most
+  punctuation stripped). For the two principles in this plan, the expected
+  pairings are `## Simplicity First` → `#simplicity-first` and `## Surgical
+  Changes` → `#surgical-changes` — any deviation from these heading strings
+  breaks the anchor link.
 
 Why: kenspc's portable-path rule (CLAUDE.md: "All file references in hooks and
 commands must use `${CLAUDE_PLUGIN_ROOT}` — never hardcode absolute paths"). Any
@@ -648,6 +653,27 @@ itself is excluded from this count — it is a deliberate net addition.)
 
 ## Open Questions
 
-None — all five design decisions are locked. Any new questions that surface during
-implementation should be raised back through `/kenspc-plan` rather than resolved
-unilaterally during execution.
+All five design decisions remain locked. The following observations surfaced
+during plan review and are recorded here for the maintainer to revisit after
+v3.1.0 ships rather than to resolve during execution:
+
+- **Reference-vs-inline cost.** Three agents reference the shared file via
+  `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` rather than inlining
+  the principle text. This is the SSoT-by-reference pattern that mirrors
+  `discovery-framework.md`, but it depends on the agent actually reading the
+  referenced file at invocation time. There is no automated check that the
+  read happened. If post-v3.1.0 traces show agents not honoring the principles
+  in practice, a v3.1.1 revision may need to either (a) inline a one-paragraph
+  summary in the agent body alongside the reference, or (b) add an explicit
+  prerequisite step to the agent that reads the shared file. Until traces
+  show a real problem, the reference-only approach stays per locked decision
+  B2.
+- **Quality-reviewer false-positive rate.** The new over-engineering and
+  drive-by REVIEW CHECKLIST bullets are a behavior change for the reviewer
+  agent. Risk #3 mitigation says "if false positives appear in practice,
+  tighten in v3.1.1" — this open question simply notes that the v3.1.0 ship
+  needs at least one real `task-review` run against a sample diff to confirm
+  the new bullets do not cascade into noise findings.
+
+Any new questions that surface during implementation should be raised back
+through `/kenspc-plan` rather than resolved unilaterally during execution.
