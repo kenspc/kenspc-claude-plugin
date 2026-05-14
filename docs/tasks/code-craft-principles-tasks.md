@@ -35,7 +35,7 @@ return 0.
 
 ### Task 1: Create `shared/code-craft-principles.md` skeleton
 
-**Status:** TODO
+**Status:** DONE
 
 Plan Step 1.1. Create the new file with section skeleton: top-level
 header `# Code-Craft Principles`, a one-paragraph Goal, two principle
