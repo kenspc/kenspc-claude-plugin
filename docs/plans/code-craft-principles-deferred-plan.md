@@ -3,620 +3,915 @@
 ## Objective
 
 Close the six DEFERRED items from the v3.1.0 (Code-Craft Principles) automated
-review without disturbing any of the invariants that v3.1.0 just locked in.
-After this work the plugin will: (1) read more fluently in the prose surfaces
-that are currently rough; (2) carry a recorded section-header convention that
-explains the lone hyphenated header in writer-agent files; (3) gain deeper
-drift defenses on the new byte-identity guard script and on `quality-reviewer`'s
-two new bullets; and (4) standardize the dry-run report terminology that any
-future task-review iteration will reuse — all while preserving the three-file
-byte-identity hash on canonical principle blocks, Task 12's four-phrase
-relocation grep, and the existing three-script drift-guard suite.
+5-angle review (`docs/briefs/code-craft-principles-deferred.md`) without
+disturbing any v3.1.0-locked invariant. After this plan ships:
 
-**In scope:**
+1. The Surgical Changes checklist bullet at
+   `plugins/kenspc/shared/code-craft-principles.md:105` reads as fluent English
+   while still containing the verbatim substring required by Task 12's
+   4-phrase relocation grep contract.
+2. The writer-agent section header `CODE-CRAFT PRINCIPLES` (with hyphen) is
+   documented as a deliberate exception to the ALL-CAPS-no-hyphens convention
+   used by the surrounding writer-agent headers, so future readers do not
+   "normalize" it.
+3. The unambiguous dry-run report labels `CONDITION-MET` /
+   `CONDITION-NOT-MET` (per-condition) and `FLAG` / `PASS` (per-hunk decision)
+   are written into `task-review/SKILL.md` as the standing output convention
+   that all future dry-run reports follow.
+4. Three additional drift-guard defenses are mechanically enforced in
+   `scripts/`:
+   - Anchor-phrase frequency check on the three canonical-principle files
+     (defends label survival when the byte-identity hash defends only content
+     sameness).
+   - Structural assertion on `quality-reviewer.md`'s two new REVIEW
+     CHECKLIST bullets (each must enumerate exactly three numbered
+     conditions, gated by an `all three` qualifier).
+   - Executable mutation regression fixture (`--self-test` flag) that proves
+     the canonical-drift guards detect a deliberate one-byte mutation —
+     converting Task 15 Step 6's manual mutation test into a permanent
+     negative-path assertion.
 
-- Single-line prose rewrite in `plugins/kenspc/shared/code-craft-principles.md`
-  (item #15).
-- A new short paragraph in the repository-root `CLAUDE.md` documenting the
-  writer-agent header convention and the deliberate `CODE-CRAFT PRINCIPLES`
-  hyphen exception (item #16).
-- A new short subsection in `plugins/kenspc/skills/task-review/SKILL.md`
-  defining dry-run report terminology (item #17).
-- Extension of `scripts/check-code-craft-canonical.sh` with an anchor-phrase
-  frequency check (item #31), plus a coordinated one-line prose addition in
-  `plugins/kenspc/agents/task-implementer.md` and
-  `plugins/kenspc/agents/code-fixer.md` so the anchor phrases have a survival
-  surface outside the byte-identity markers.
-- A new `scripts/check-quality-reviewer-bullet-structure.sh` asserting the
-  three-numbered-condition shape of the two new `REVIEW CHECKLIST` bullets in
-  `plugins/kenspc/agents/quality-reviewer.md` (item #33).
-- A `--self-test` flag added to three drift-guard scripts that performs a
-  mutation regression test (item #32):
-  `scripts/check-code-craft-canonical.sh`, `scripts/check-canonical-dispatch.sh`,
-  and the new `scripts/check-quality-reviewer-bullet-structure.sh`.
-- Synchronization edit to `docs/release-checklist.md` listing the new checks
-  in the pre-flight mechanical-check block.
-- `plugins/kenspc/CHANGELOG.md` v3.1.1 entry and
-  `plugins/kenspc/.claude-plugin/plugin.json` version bump.
+All v3.1.0 invariants — 3-file byte-identity hash on the canonical principle
+blocks, Task 12's 4-phrase relocation grep contract, the 5-reviewer-agent
+drift guard, and the `task-review` ↔ `task-implement` canonical dispatch
+byte-identity — remain intact. The pre-flight mechanical-check suite from
+`docs/release-checklist.md` continues to exit 0 on the post-work tree (and
+grows from 6 checks to 10 checks).
 
-**Out of scope:**
-
-- Any change to the byte-identity-hashed content of the canonical principle
-  blocks. The paragraphs between
-  `<!-- canonical:principle:*:start/end -->` markers in any of the three files
-  must not move.
-- Editing the existing v3.1.0 dry-run report
-  (`docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md`). That document
-  is preserved as a historical artifact of Task 16's analysis run; item #17's
-  convention applies to *future* reports only.
-- Renegotiating Task 12's four-phrase grep contract. The four literal phrases
-  (`Do not modify code unrelated to the current task`,
-  `Refactor code unrelated`, `Do not introduce new features or refactor`,
-  `Preserve the original code's style`) must still grep to 0 matches in
-  `plugins/kenspc/agents/` and ≥1 in `plugins/kenspc/shared/`.
-- Extending `--self-test` to `scripts/check-review-agent-drift.sh`. That
-  script predates v3.1.0 code-craft work and is not part of this brief's
-  scope; tracked as an Open Question.
-- Any new SKILL or agent CONTEXT-block contract change. The dispatch
-  contracts described in each agent's "CONTEXT YOU WILL RECEIVE" section stay
-  identical.
+Target release: v3.1.1 (patch). No new SKILL or agent interfaces, no
+CONTEXT block schema changes, no new external dependencies.
 
 ## Background
 
-All six items originated from the v3.1.0 automated 5-angle review run on
-2026-05-14. The reviewer reports flagged them; the code-fixer agent marked
-each as DEFERRED (not "won't fix") because each required either: (a)
-renegotiating a v3.1.0 trade-off the implementer and reviewers had agreed to
-lock — items #15, #16, #17, or (b) defense-in-depth tooling work that was
-not blocking the v3.1.0 ship — items #31, #32, #33.
+The v3.1.0 release (commits `9d20904`, `6a8c609`, `d1e3a0e`, `7e63072`,
+`1ac727d`, `f09de92`, and the version commit `12ab26c`) introduced the
+`Simplicity First` and `Surgical Changes` code-craft principles as a shared
+file (`plugins/kenspc/shared/code-craft-principles.md`) plus byte-identical
+inlined copies in the two writer agents (`task-implementer.md`,
+`code-fixer.md`). The release also added two new REVIEW CHECKLIST bullets
+to `quality-reviewer.md` (over-engineering, drive-by/style-drift), each
+gated by three numbered conditions with an "all three" qualifier.
 
-The brief at `docs/briefs/code-craft-principles-deferred.md` captures the six
-items with explicit per-item rationale, the cluster split, the v3.1.0
-invariants this work must preserve, and the recommended judgment calls on the
-prose/convention items. This plan accepts the brief's recommendations on
-Cluster A's three judgment calls (the brief's reasoning is sound and there is
-no evidence to re-open them) and adapts Cluster B's three implementation
-sketches to the current tree's actual line numbers and file structure.
+The v3.1.0 automated 5-angle review (run on 2026-05-14) produced an
+accountability list with six DEFERRED items. Each was deferred for one of
+two reasons:
 
-Two small drifts between the brief's references and the current tree were
-detected during planning and are corrected in this plan:
+- **Renegotiates a v3.1.0-locked contract**: items #15 (grammar rewrite of
+  a bullet whose verb-phrase wording is pinned by Task 12's grep contract),
+  #16 (writer-agent section header convention), #17 (dry-run report
+  terminology). Fixing in v3.1.0 would have either broken a contract or
+  desynchronized the agent files from the already-ratified task document.
+- **Defense-in-depth tooling that did not block ship**: items #31
+  (anchor-phrase frequency guard), #32 (mutation regression fixture), #33
+  (three-condition structural assertion). The v3.1.0 review classified
+  these as additional defenses against future drift, not as blockers.
 
-- The brief refers to `shared/code-craft-principles.md:104` for the bullet
-  beginning `Refactor code unrelated to the current task is out;`. After the
-  `f09de92` commit added the Task-12 guard comment above the bullet block,
-  that bullet now sits at line 105. The plan uses the current line.
-- The brief's Failure Modes section says the `:end` marker is at line 99 and
-  the start marker around line 96-98. The actual markers are at
-  `shared/code-craft-principles.md:7` / `:9` (simplicity-first) and `:97` /
-  `:99` (surgical-changes). The plan uses the actual markers.
+This plan addresses all six items, plus the two natural support tasks
+(release-checklist sync and version/CHANGELOG bump) that the brief did not
+enumerate as items but that any release-quality change pulls in.
 
-This is a patch release (3.1.0 → 3.1.1). No new user-facing capability, no
-breaking change, no SKILL or agent interface change for callers.
+## Scope
+
+**In scope** — eight ordered work items, one commit per item:
+
+| # | Brief item | Type | Files touched | Commit prefix |
+|---|------------|------|---------------|---------------|
+| 1 | #15 grammar rewrite | Prose | `shared/code-craft-principles.md` (line 105) | `fix(shared)` |
+| 2 | #16 convention decision | Doc | root `CLAUDE.md` + 1 guard comment per writer agent (2 files) | `docs` |
+| 3 | #17 dry-run terminology | Doc | `skills/task-review/SKILL.md` | `docs(task-review)` |
+| 4 | #31 anchor-phrase frequency | Script | `scripts/check-code-craft-canonical.sh` (extend) | `feat(scripts)` |
+| 5 | #33 three-condition structural assertion | Script | new `scripts/check-quality-reviewer-bullet-structure.sh` | `feat(scripts)` |
+| 6 | #32 mutation self-test | Script | `--self-test` flag added to 3 scripts | `feat(scripts)` |
+| 7 | release-checklist sync | Doc | `docs/release-checklist.md` mechanical-check block | `docs(release)` |
+| 8 | version + CHANGELOG | Release | `plugin.json` → 3.1.1, `CHANGELOG.md` v3.1.1 entry | `chore(release)` |
+
+**Out of scope** (inherited from the brief — do not re-open):
+
+- Any change to content **between** the `<!-- canonical:principle:*:start -->`
+  / `<!-- canonical:principle:*:end -->` markers in the three principle
+  files. The byte-identity hash defends this; v3.1.0 ratified it.
+- Rewriting the existing v3.1.0 dry-run report
+  (`docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md`). It is a
+  historical artifact of Task 16's analysis and is preserved as-is. Item #17
+  governs only *future* reports.
+- Renegotiation of Task 12's four-phrase grep contract. The four literal
+  substrings (`Do not modify code unrelated to the current task`,
+  `refactor code unrelated to the current task`,
+  `Do not introduce new features or refactor`,
+  `Preserve the original code's style`) must still grep to 0 matches in
+  `plugins/kenspc/agents/` and ≥1 in
+  `plugins/kenspc/shared/code-craft-principles.md`.
+- CHANGELOG line-count upper-bound recalibration (Task 14's `+50` cap).
+  Belongs to a future planning-conventions revision, not here.
+- `.gitattributes` LF enforcement and the three pre-existing
+  `#acknowledgments` dead anchors in CHANGELOG (review angle 4 #5).
+  Pre-existing, not introduced by v3.1.0; separate cleanup pass.
+- Adding `--self-test` to `check-review-agent-drift.sh`. That script is
+  pre-v3.1.0; covering it is a clean follow-up but stretches this plan's
+  scope. Listed in Open Questions.
 
 ## Technical Approach
 
-### Cluster split
+The eight steps split into two natural clusters:
 
-The six brief items fall into two natural clusters:
+- **Cluster A — Prose / convention decisions (Steps 1–3):** each requires
+  one judgment call followed by a mechanical edit. Hard part: making the
+  judgment without re-opening a v3.1.0 trade-off.
+- **Cluster B — Drift-guard script enhancements (Steps 4–6):** each adds a
+  new mechanical check. Hard part: sequencing so each script's `--self-test`
+  fixture can be authored against the final shape of the script's main
+  logic.
 
-| Cluster | Items | Nature |
-|---------|-------|--------|
-| A — Prose / convention | #15, #16, #17 | Judgment-call wording or anchor placement; mechanical propagation |
-| B — Script enhancements | #31, #33, #32 | New drift-guard logic, structural assertions, mutation regression |
+Steps 7 and 8 are pure release-hygiene tasks that follow standard kenspc
+release conventions.
 
-The clusters can be implemented in either order, but within Cluster B the
-sequence is fixed: `#31 → #33 → #32`. The mutation regression (#32) depends on
-the final shape of the scripts it tests, so it lands last.
+### Decision A1: Grammar rewrite candidate (#15)
 
-### Cluster A: prose / convention decisions
+The bullet at `shared/code-craft-principles.md:105` currently reads:
 
-#### Item #15 — grammar rewrite of the `Refactor code unrelated…` bullet
+> `Refactor code unrelated to the current task is out; do not refactor`
+> `things that are not broken even when you would have written them`
+> `differently from scratch.`
 
-Current text at `plugins/kenspc/shared/code-craft-principles.md:105`:
+This uses the verb-phrase `Refactor code unrelated to the current task` as
+a noun-phrase subject of `is out`, which reads as broken English.
 
-> `Refactor code unrelated to the current task is out; do not refactor things that are not broken even when you would have written them differently from scratch.`
+**Chosen rewrite** (verbatim — implementer copies this):
 
-The verb phrase `Refactor code unrelated to the current task` is used as the
-noun-phrase subject of `is out`, which reads as broken English. The verbatim
-phrase is load-bearing for Task 12's relocation grep contract, so a rewrite
-must preserve the literal substring `refactor code unrelated to the current
-task` (case-insensitive matches the existing grep).
+> `Don't refactor code unrelated to the current task — that is out of`
+> `scope; do not refactor things that are not broken even when you would`
+> `have written them differently from scratch.`
 
-Chosen rewrite:
+Why this candidate:
 
-> `Don't refactor code unrelated to the current task — that is out of scope; do not refactor things that are not broken even when you would have written them differently from scratch.`
+- Preserves the literal substring `refactor code unrelated to the current task`
+  required by Task 12's grep contract (the substring appears verbatim, just
+  preceded by `Don't ` and followed by ` — that is`).
+- Reads as a fluent sentence: imperative verb (`Don't refactor`),
+  em-dash-separated qualifier, semicolon-joined second clause.
+- Em-dash matches the punctuation style already used in the surrounding
+  Surgical Changes paragraph (e.g., `Surgical Changes. Touch only what the
+  task requires. Why: ...`).
+- Touches line 105 only. The byte-identity markers for `surgical-changes`
+  are at lines 97/99, so this edit is **outside** the hash-protected range.
+  `bash scripts/check-code-craft-canonical.sh` continues to exit 0 after
+  the edit.
 
-Why this candidate: simplest rewrite that keeps the verbatim substring inside
-a fluent sentence; the em-dash separates the negative imperative from the
-scope-statement; the rest of the bullet is untouched. The phrase being pinned
-by Task 12 (`refactor code unrelated to the current task`) remains intact.
+Alternative candidates considered and rejected:
 
-The edit lies on line 105, which is **outside** the surgical-changes byte-
-identity marker range (markers at lines 97/99). The hash check in
-`scripts/check-code-craft-canonical.sh` is unaffected.
+- `Refactoring code unrelated to the current task is out of scope; ...`
+  — would change the substring from `refactor` (imperative) to
+  `Refactoring` (gerund). **Drops the grep-required substring**.
+- Leave as-is and accept the awkward grammar. The f09de92 guard comment
+  already pins the substring, so the current bullet is *safe*, just *ugly*.
+  Rejected because the brief explicitly classified this as a deferred fix,
+  not a "won't fix".
 
-#### Item #16 — section-header naming convention
+### Decision A2: Writer-agent section header convention (#16)
 
-Current state: both `plugins/kenspc/agents/task-implementer.md:82` and
-`plugins/kenspc/agents/code-fixer.md:69` use `CODE-CRAFT PRINCIPLES` (with
-hyphen). Every other section header in those files (`CONTEXT YOU WILL
-RECEIVE`, `QUALITY RULES`, `FIXING RULES`, `AUTONOMY BOUNDARIES`,
-`DONE CRITERIA`, etc.) is ALL CAPS without hyphens.
+Current state on disk: both `task-implementer.md:82` and `code-fixer.md:69`
+have `CODE-CRAFT PRINCIPLES` (with hyphen). All other section headers in
+those two files (e.g., `CONTEXT YOU WILL RECEIVE`, `QUALITY RULES`,
+`FIXING RULES`, `AUTONOMY BOUNDARIES`, `DONE CRITERIA`) are ALL CAPS,
+space-separated, no hyphens.
 
-Decision: **keep** `CODE-CRAFT PRINCIPLES` (with hyphen). Rationale:
+**Chosen resolution: keep the hyphen.** The header stays
+`CODE-CRAFT PRINCIPLES` in both agent files; the task document's Task 6/7
+acceptance criteria (which already use this spelling — see
+`docs/tasks/code-craft-principles-tasks.md:189,202,218,238`) stay
+unchanged. Net file changes from this decision: zero header edits.
 
-1. "Code-Craft" is a hyphenated compound adjective in standard English.
-2. The hyphen visually distinguishes this section from the surrounding
-   two-word ALL CAPS headers, reinforcing that it is the single section
-   sourced from `shared/code-craft-principles.md` rather than agent-local
-   content.
-3. Default-keep minimizes blast radius. Dropping the hyphen would touch:
-   `agents/task-implementer.md`, `agents/code-fixer.md`, **and** four
-   acceptance-criteria locations in `docs/tasks/code-craft-principles-tasks.md`
-   (lines 189, 202, 218, 238) plus a CHANGELOG entry reference (line 374).
-   That is a five-line edit across three files for a cosmetic gain. Keeping
-   the hyphen requires zero file edits to agent or task files.
+This satisfies brief item #16's "propagate the winning header to Task 6/7
+acceptance criteria in the same commit" clause trivially: keeping the
+hyphen requires zero edits to the task document (its acceptance criteria
+already spell `CODE-CRAFT PRINCIPLES` with the hyphen), so propagation is
+already complete. Had the decision gone the other way (remove hyphen),
+Step 2 would also have edited Tasks 6/7 acceptance criteria in
+`docs/tasks/code-craft-principles-tasks.md`.
 
-Anchor for the decision: a new short paragraph in the repository-root
-`CLAUDE.md` under the existing "Skill Development Conventions" section,
-documenting the writer-agent header convention (ALL CAPS, words separated by
-spaces, no hyphens) and naming `CODE-CRAFT PRINCIPLES` as the canonical
-hyphenated compound-adjective exception. CLAUDE.md is loaded into every
-session's context, so the convention is visible to any future agent editing
-writer agents. No inline guard comment is added inside the agent files —
-the CLAUDE.md anchor carries the rationale once and avoids duplicating it
-in two agent files. If a future review angle finds the CLAUDE.md anchor
-insufficient (tracked in Open Question 2), an inline guard comment can be
-added in a follow-up plan.
+Why keep the hyphen:
 
-#### Item #17 — dry-run report terminology going forward
+- "Code-Craft" is a legitimate hyphenated compound adjective in English.
+  The hyphen is semantically correct, not stylistic noise.
+- Default-keep minimizes blast radius. Removing the hyphen would require
+  synchronized edits across **four** surfaces (two agent files + task
+  document's Tasks 6/7 acceptance criteria + any guard/grep that targets
+  the literal header).
+- The hyphen visually distinguishes this section from surrounding two-word
+  ALL-CAPS headers, which is useful — the new section is the only one
+  defining principles rather than rules/boundaries.
 
-The existing v3.1.0 dry-run report at
-`docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md` uses `PASSES`
-per-condition to mean "condition is satisfied → bullet *eligible* to flag
-the hunk" (e.g., line 76, `Condition 1 PASSES`) while the final-decision
-`PASS` (e.g., line 86, `Decision: PASS`) means "bullet does *not* flag → code
-is fine". Same word, opposite polarity, in the same paragraph.
+To prevent a future contributor from "normalizing" the hyphen away
+silently, this plan adds **two co-located, identically-worded markers**:
 
-Convention to adopt for future dry-runs:
+- **Anchor 1 (authoritative)**: a new short subsection in repo-root
+  `CLAUDE.md`, inside the existing "Skill Development Conventions" block,
+  documenting that:
+  - Writer-agent section headers are ALL CAPS, space-separated, no hyphens
+    **except** for hyphenated compound adjectives.
+  - `CODE-CRAFT PRINCIPLES` is the canonical and currently sole example of
+    the compound-adjective exception.
+- **Anchor 2 (drift-prevention)**: a one-line guard HTML comment placed
+  immediately above the `CODE-CRAFT PRINCIPLES` header in each writer
+  agent file (`task-implementer.md:82`, `code-fixer.md:69`). The comment
+  mirrors the existing Task 12 guard pattern at
+  `shared/code-craft-principles.md:103`. Suggested wording:
+  > `<!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it`
+  > `marks a compound-adjective exception to the ALL-CAPS-no-hyphens`
+  > `writer-agent header convention documented in repo-root CLAUDE.md.`
+  > `Do not normalize without updating the CLAUDE.md convention paragraph`
+  > `in the same commit. -->`
 
-| Surface | Old label | New label |
-|---------|-----------|-----------|
-| Per-condition evaluation, condition fires | `PASSES` | `CONDITION-MET` |
-| Per-condition evaluation, condition does not fire | `FAILS` | `CONDITION-NOT-MET` |
-| Per-hunk final decision, bullet flags the hunk | `FAIL` / `FLAG` | `FLAG` |
-| Per-hunk final decision, bullet does not flag | `PASS` | `PASS` |
+The CLAUDE.md anchor states the convention; the inline guard prevents a
+future edit that does not first read CLAUDE.md from silently regressing.
+Three small additions across three files, no header changes.
 
-The change is one-way for new labels: `PASS` retains its existing meaning at
-the final-decision level. The ambiguity is resolved by replacing the
-per-condition polarity label, not by overloading the existing one further.
+### Decision A3: Dry-run report terminology (#17)
 
-Anchor for the convention: a new short subsection
-`## Output convention — dry-run reports` in
-`plugins/kenspc/skills/task-review/SKILL.md`, placed after the existing
-"Quality bar" paragraph. The subsection states the four labels verbatim with
-the polarity definitions above, plus a one-line note that the existing
-v3.1.0 dry-run is preserved as a historical artifact under the old labels.
+The existing v3.1.0 dry-run report
+(`docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md`) uses
+`PASSES` per-condition to mean "condition is satisfied → bullet *eligible*
+to flag the hunk" (line 76) and `PASS` per-hunk to mean "bullet does *not*
+flag → code is fine" (line 86). Same word root, opposite polarity, in the
+same paragraph.
 
-### Cluster B: script enhancements
+**Standing convention written into `task-review/SKILL.md`:**
 
-#### Item #31 — anchor-phrase frequency guard in `check-code-craft-canonical.sh`
+| Decision level | Label vocabulary | Polarity |
+|----------------|------------------|----------|
+| Per-condition  | `CONDITION-MET` / `CONDITION-NOT-MET` | `MET` = the condition is true (the bullet's qualifier holds). |
+| Per-hunk final | `FLAG` / `PASS` | `FLAG` = the bullet reports the hunk; `PASS` = the bullet does not report the hunk (code is fine). |
 
-Threat model: a synchronized edit that replaces both canonical principle
-blocks across all three files with the same different content would still
-produce matching sha256 hashes — and the script would exit 0 on a tree
-where the principle labels have disappeared from the public-facing prose
-outside the markers. The byte-identity check defends *content sameness*; the
-new check defends *label survival*.
+The two vocabularies cannot collide: `MET` / `NOT-MET` only appears at
+per-condition level, `FLAG` / `PASS` only at per-hunk level. A reader
+seeing `CONDITION-MET` knows it is a condition evaluation; a reader seeing
+`FLAG` knows it is the final decision.
 
-**Pre-requisite prose edit (current tree has labels only inside markers in
-two of three files):** before adding the frequency check, edit the
-applicability line in `task-implementer.md` and `code-fixer.md` so each
-file mentions both labels outside the markers. Current lines (one line
-below the canonical blocks):
+**Anchor location**: a new short subsection
+`## Output convention — dry-run reports` in `task-review/SKILL.md`, placed
+after the "Quality bar" section and before "Prerequisites" (logical
+grouping: skill-level output conventions live near skill-level quality
+expectations). The convention paragraph defines the four labels verbatim
+in a table and explicitly cites the v3.1.0 historical artifact as an
+example of the *prior* ambiguous convention (so future readers
+understand the convention's motivation).
 
-> `task-implementer.md:92`: `This agent's applicability stance (see shared file's table): author at write time.`
-> `code-fixer.md:79`: `This agent's applicability stance (see shared file's table): author at fix time. Structural improvements not in the review report are DEFERRED, not applied.`
+The existing v3.1.0 dry-run report is **not** rewritten. It is preserved
+as a historical artifact per the brief's out-of-scope clause.
 
-Replace the leading clause `This agent's applicability stance (see shared
-file's table)` with `This agent's applicability stance for Simplicity First
-and Surgical Changes (see shared file's table)` in each file. The rest of
-each line (including `code-fixer.md`'s trailing
-`Structural improvements not in the review report are DEFERRED, not applied.`
-sentence) stays intact. Resulting lines:
+### Decision B1: #31 anchor-phrase frequency semantics (refinement of brief)
 
-> `task-implementer.md`: `This agent's applicability stance for Simplicity First and Surgical Changes (see shared file's table): author at write time.`
-> `code-fixer.md`: `This agent's applicability stance for Simplicity First and Surgical Changes (see shared file's table): author at fix time. Structural improvements not in the review report are DEFERRED, not applied.`
+The brief specifies (#31): "each of the three target files contains ≥1
+occurrence of `Simplicity First` and ≥1 of `Surgical Changes` **outside
+the byte-identity hash range**."
 
-This gives each anchor phrase a markers-external survival surface in every
-file. `shared/code-craft-principles.md` already contains both labels in
-multiple markers-external locations (the `## Simplicity First` and
-`## Surgical Changes` section headings, the applicability table, and the
-"What This File Does NOT Define" section) and needs no prose edit.
+Discovery against the current tree:
 
-**Frequency check, added to `scripts/check-code-craft-canonical.sh`:**
+| File | `Simplicity First` outside markers | `Surgical Changes` outside markers |
+|------|------------------------------------|------------------------------------|
+| `shared/code-craft-principles.md` | 3× (lines 3, 5, 11) | 3× (lines 3, 95, 101) |
+| `task-implementer.md` | **0×** | **0×** |
+| `code-fixer.md` | **0×** | **0×** |
 
-After the existing byte-identity check passes, for each of the three files:
+The brief's "outside the hash range" qualifier does not match the
+agent-file reality: in both writer agents, the principle labels appear
+**only inside the canonical marker block**, nowhere else. Two ways to
+honour the brief's stated invariant:
 
-1. Extract the file content with all bounded canonical blocks removed
-   (`sed -e '/<!-- canonical:principle:simplicity-first:start -->/,/<!-- canonical:principle:simplicity-first:end -->/d' -e '/<!-- canonical:principle:surgical-changes:start -->/,/<!-- canonical:principle:surgical-changes:end -->/d' "$file"`).
-2. Count occurrences of `Simplicity First` (case-insensitive, literal).
-   Assert ≥ 1.
-3. Count occurrences of `Surgical Changes` (case-insensitive, literal).
-   Assert ≥ 1.
+- **Path A — content addition**: edit both writer-agent files to add an
+  outside-marker mention of each label (e.g., a sentence near the section
+  header: `This agent's stance on Simplicity First and Surgical Changes
+  is defined inline below...`). Adds two lines per agent file. Increases
+  the surface area protected, but requires content edits the brief did
+  not request.
+- **Path B — semantic refinement**: relax the brief's "outside markers"
+  qualifier to "anywhere in file". The frequency check counts occurrences
+  in the entire file (both inside and outside markers), requiring ≥1 each.
+  This still defends the failure mode the brief named — a synchronized
+  edit that replaces all three canonical blocks with content not
+  mentioning `Simplicity First` would drop the count to 0 (since the
+  label only appears inside the block in the agent files anyway).
 
-Failure mode messages match the style of `check-canonical-dispatch.sh`:
-`MISSING anchor 'Simplicity First' in $f outside canonical blocks: found $count, expected >= 1`.
+**Chosen: Path B.** Justification:
 
-Lower bound is 1 (not exactly 1). This permits future legitimate edits to
-add more mentions; it only fires on label deletion.
+- Catches the exact failure mode the brief named ("synchronized edit
+  replaces both canonical blocks with the same different content") in all
+  three files, no content addition needed.
+- Simpler implementation: no need to subtract a marker-bounded region
+  from the count.
+- The "outside markers" wording in the brief reads as an over-correction
+  to avoid double-counting; double-counting is not a concern when the
+  predicate is `≥1`, not equality.
+- Honours the brief's spirit ("hash defends content sameness; frequency
+  defends label survival") with strictly weaker syntactic constraint and
+  strictly equal semantic strength.
 
-#### Item #33 — three-condition structure assertion on `quality-reviewer.md`
+This refinement is called out at the top of the implementing commit
+(`feat(scripts): add anchor-phrase frequency guard to
+check-code-craft-canonical`) so reviewers do not mistake it for brief-
+drift.
 
-Threat model: a future edit that drops one numbered condition from either of
-the two new bullets (over-engineering at
-`plugins/kenspc/agents/quality-reviewer.md:69-75`, drive-by/style-drift at
-`plugins/kenspc/agents/quality-reviewer.md:76-81`) would weaken the gate
-from a three-condition intersection to a two-condition over-trigger,
-generating false-positive flags on legitimate boundary validations or
-mechanically-forced cascade changes.
+### Decision B2: #33 placement — separate script vs. extend existing (one-guard-one-purpose)
 
-**New script:** `scripts/check-quality-reviewer-bullet-structure.sh`, modeled
-on the existing drift-guard pattern (`set -euo pipefail`, `SCRIPT_DIR` /
-`REPO_ROOT` resolution, exit codes 0/1/2).
+The brief is explicit: "May live in the same script as #31 or as a
+sibling check" and "Lean toward *two scripts* to keep the 'one guard,
+one purpose' pattern that the existing `check-canonical-dispatch.sh` and
+`check-review-agent-drift.sh` follow."
 
-For each of the two bullets, the script asserts:
+**Chosen: separate script.** New file:
+`scripts/check-quality-reviewer-bullet-structure.sh`.
 
-1. The bullet text contains the phrase `meet **all three** of the following
-   conditions:` (the exact "all three" qualifier).
-2. The three following lines, when stripped of leading whitespace, start
-   with `1. `, `2. `, `3. ` respectively.
-3. No `4. ` numbered condition exists between the bullet and the next blank
-   line.
+Why:
 
-The script identifies the two bullets by anchored text matching at the
-bullet's opening:
+- `check-code-craft-canonical.sh` operates on the three principle files
+  (shared + 2 writer agents). #33's invariant is on
+  `quality-reviewer.md`. Different files, different conceptual scope.
+- A single script that mixes "byte-identity of principle paragraphs in
+  3 files" with "three-condition structure of two bullets in 1 file"
+  fails the "one guard, one purpose" pattern that the repo otherwise
+  follows.
+- Adds one entry to release-checklist (acceptable cost).
 
-- Bullet 1 (over-engineering): line starting with `- Over-engineering`.
-- Bullet 2 (drive-by): line starting with `- Drive-by refactoring and style
-  drift in the diff`.
+### Decision B3: #32 self-test mode scope and implementation
 
-Choice of separate script (not adding to `check-code-craft-canonical.sh`):
-matches the existing repo pattern of "one guard, one purpose" seen in the
-existing three drift-guard scripts. Each script's name is self-describing;
-its failure message points to a single concern. Bundling unrelated checks
-into one script makes the failure mode log harder to read.
+Choice space the brief left open: "bats-style, shellspec-style, or a
+small `--self-test` flag — author's choice".
 
-#### Item #32 — automated mutation regression test (`--self-test`)
+**Chosen: `--self-test` flag** on each guard script.
 
-Threat model: the canonical drift guards rely on subtle bash + sed +
-sha256sum interactions. A future toolchain change (Git Bash version, WSL
-update, sed flavour difference) could silently break the extraction logic;
-the positive path can still exit 0 because comparing-nothing-to-nothing
-yields equal hashes. Without an executable negative-path assertion, the
-guard could be silently dead for months until a real drift event reveals
-it.
+Why:
 
-**Implementation:** a `--self-test` flag added to three scripts:
+- Zero new external dependencies. Honours the brief's "no new external
+  dependencies" constraint.
+- Cross-platform: bash is the only required runtime. Both Git Bash
+  (Windows) and WSL2 Ubuntu run the same fixture.
+- Co-located: the fixture lives in the same file as the logic it
+  validates. A change to the script's logic forces a co-located change
+  to the fixture. Two-file fixtures (bats spec + script) are easier to
+  desynchronize.
 
-- `scripts/check-code-craft-canonical.sh`
-- `scripts/check-canonical-dispatch.sh`
-- `scripts/check-quality-reviewer-bullet-structure.sh` (the new script from
-  item #33)
+**Self-test scope: three scripts.**
 
-When invoked with `--self-test`, the script:
+- `check-code-craft-canonical.sh --self-test` — primary target per brief.
+- `check-canonical-dispatch.sh --self-test` — brief noted the same gap
+  exists here ("the fixture should ideally cover both").
+- `check-quality-reviewer-bullet-structure.sh --self-test` — added in
+  Step 5; no cost to author its negative-path assertion in the same
+  commit.
 
-1. Creates a temporary directory (`mktemp -d`).
-2. Copies the target file(s) under the script's normal scope into the temp
-   directory, preserving relative paths.
-3. Applies a **content-based** mutation to one file: a single `sed -i`
-   substitution targeting a known phrase from the protected region. Per
-   script:
-   - `check-code-craft-canonical.sh`: change `Write the minimum` to
-     `WRITE the minimum` inside the simplicity-first block of the temp
-     copy of `task-implementer.md`.
-   - `check-canonical-dispatch.sh`: change `Code Review Phase` to
-     `CODE Review Phase` inside the temp copy of
-     `plugins/kenspc/skills/task-review/SKILL.md` (the substring lives
-     inside the canonical dispatch block bounded by
-     `<!-- canonical:dispatch:start -->` / `<!-- canonical:dispatch:end -->`;
-     verify on the current tree before relying on it).
-   - `check-quality-reviewer-bullet-structure.sh`: delete the `3. ` line
-     from the over-engineering bullet in the temp copy of
-     `quality-reviewer.md` (sed substitution of `^  3\. ` to `^  X. ` so
-     the third numbered condition is no longer recognized).
-4. Verifies the substitution actually happened (replacement count ≥ 1). If
-   the substitution found nothing, the fixture is stale — emits
-   `SELF-TEST FIXTURE STALE` and exits 2.
-5. Re-runs the script's main logic against the temp directory (overriding
-   `REPO_ROOT` to point to the temp dir).
-6. Asserts the re-run exits non-zero. If it exits 0, emits
-   `SELF-TEST FAILED — guard did not detect mutation` and exits 1.
-7. Cleans up the temp directory.
-8. Emits `OK self-test — guard correctly rejected mutation`.
+`check-review-agent-drift.sh --self-test` is **not** in scope. That
+script predates v3.1.0 and adding `--self-test` to it is unrelated to
+the code-craft work this plan closes. Listed in Open Questions.
 
-Content-based mutation (not byte-offset) means the fixture survives canonical
-content edits: as long as the substitution phrase still exists somewhere in
-the protected region, the mutation lands. If the canonical content is
-rewritten such that the substitution target disappears, the fixture-stale
-exit code fires loudly rather than silently passing.
+**Self-test fixture mechanics** (uniform across all three scripts):
 
-The `--self-test` mode is an in-band addition to each script — no separate
-fixture file, no bats / shellspec dependency. The flag is parsed as the
-first positional argument; absence of the flag preserves existing behavior
-exactly.
+1. Create a temp directory (`mktemp -d`).
+2. Copy every input file the script reads into the temp directory,
+   preserving relative paths under a synthetic repo root.
+3. **Positive path**: run the script's main logic with `REPO_ROOT`
+   overridden to the temp directory. Assert exit code 0.
+4. **Negative path**: apply a content-based mutation (`sed -i` with a
+   target string drawn from the canonical content) inside one guarded
+   region of one file. Run the script again. Assert exit code 1.
+5. **Restoration path**: revert the mutation. Run the script again.
+   Assert exit code 0 (confirms the mutation was the only failure
+   trigger).
+6. Clean up the temp directory.
+7. Print `OK    self-test passed for <script-name>` on success or
+   `FAIL  self-test failed at <step>` on any unexpected exit code.
 
-### Mechanical-check block sync
+Mutation targets use **content-based substitution** (e.g.,
+`sed -i 's/Write the minimum/WRITE the minimum/'`) rather than byte
+offsets, so the fixture survives content edits to the canonical blocks
+as long as the substitution target phrase persists. If the canonical
+block is rewritten such that the target phrase disappears (`sed`
+substitution count = 0), the self-test fails with a distinct
+"fixture-stale" error message instructing the maintainer to update
+the mutation target.
 
-`docs/release-checklist.md` currently lists six exit-coded pre-flight
-checks (three JSON validations + three shell drift guards) at lines
-12-31, plus a frontmatter-completeness `for`-loop (lines 13-16) that
-emits warning lines but does not propagate a non-zero exit. The
-"All six must exit 0" prose at line 33 counts only the exit-coded
-checks, not the frontmatter loop. After this work the block contains:
+### Implementation ordering
 
-- The frontmatter-completeness loop (unchanged, still advisory).
-- Three JSON validations (unchanged).
-- Three existing shell drift guards (unchanged).
-- One new shell drift guard:
-  `bash scripts/check-quality-reviewer-bullet-structure.sh`.
-- Three new self-test invocations:
-  `bash scripts/check-code-craft-canonical.sh --self-test`,
-  `bash scripts/check-canonical-dispatch.sh --self-test`,
-  `bash scripts/check-quality-reviewer-bullet-structure.sh --self-test`.
+Cluster A items (Steps 1–3) are independent of each other and of
+Cluster B. They could land in any order. Recommended order: Step 1 →
+Step 2 → Step 3 (smallest-blast-radius first, simplest verifier first).
 
-Total ten exit-coded checks (3 JSON + 4 drift + 3 self-test). All must
-exit 0 before proceeding to the smoke checklist. The frontmatter loop
-stays advisory (any `MISSING effort:` warning still requires the
-implementer's attention, but is not part of the ten-count).
+Cluster B items (Steps 4–6) are sequenced for self-test fixture
+authoring:
 
-### Version & CHANGELOG
+- Step 4 lands first: extends `check-code-craft-canonical.sh` with the
+  anchor-phrase frequency block. The script's main logic reaches its
+  final shape here.
+- Step 5 lands second: introduces a brand-new script
+  `check-quality-reviewer-bullet-structure.sh`. The script's main
+  logic reaches its final shape here.
+- Step 6 lands last: adds `--self-test` to all three guard scripts in
+  scope. Fixture mutation targets reference the *post-Step-5* shape of
+  `check-quality-reviewer-bullet-structure.sh` and the *post-Step-4*
+  shape of `check-code-craft-canonical.sh`.
 
-- `plugins/kenspc/.claude-plugin/plugin.json` `version` bumps from `3.1.0`
-  to `3.1.1`. No metadata other than `version` changes.
-- `plugins/kenspc/CHANGELOG.md` gains a new `## [3.1.1] - 2026-MM-DD`
-  entry (date set at release time) under `### Changed` and `### Added`,
-  listing each of the six brief items by id with one-line summaries
-  linking to the relevant files and commits.
+Steps 7 and 8 land at the tail: release-checklist sync after all script
+changes are in tree, version bump and CHANGELOG once the rest of the
+plan is committed.
 
 ## Implementation Steps
 
-Each step lands as one conventional-commit. Steps are sequential; an
-implementer can pause between steps. The pre-flight check
-suite must exit 0 after every step.
+Each step is one focused commit. Acceptance is testable from the
+repo root.
 
-### Step 1: rewrite the `Refactor code unrelated…` bullet (item #15)
+### Step 1 — #15 grammar rewrite
 
-- File: `plugins/kenspc/shared/code-craft-principles.md`.
-- Edit: replace the bullet text at line 105 with the chosen rewrite (see
-  Cluster A #15 above). Leave the guard comment at line 103 unchanged.
-- Acceptance:
-  - `grep -F "refactor code unrelated to the current task" plugins/kenspc/shared/code-craft-principles.md`
-    returns ≥ 1 match (case-insensitive, the verbatim Task-12 substring is
-    preserved).
-  - `grep -F "refactor code unrelated to the current task" plugins/kenspc/agents/`
-    (recursive) returns 0 matches (Task-12 relocation invariant unchanged).
-  - `bash scripts/check-code-craft-canonical.sh` exits 0 (the byte-identity
-    blocks were not touched).
-  - The new bullet text reads as a fluent English sentence (subjective
-    check by the implementer).
-- Commit: `fix(shared): rewrite refactor-code-unrelated bullet for grammar while preserving relocation grep phrase`.
+**Files**:
+- `plugins/kenspc/shared/code-craft-principles.md` (line 105 only).
 
-### Step 2: record the `CODE-CRAFT PRINCIPLES` hyphen convention (item #16)
+**Action**: replace the existing line 105
 
-- File: repository-root `CLAUDE.md`.
-- Edit: under the "Skill Development Conventions" section, add a short
-  paragraph (~4 lines) stating:
-  - Writer-agent section headers (e.g., `CONTEXT YOU WILL RECEIVE`,
-    `QUALITY RULES`, `FIXING RULES`, `AUTONOMY BOUNDARIES`,
-    `DONE CRITERIA`) follow an ALL CAPS, space-separated, no-hyphen
-    convention.
-  - `CODE-CRAFT PRINCIPLES` is a deliberate exception because "Code-Craft"
-    is a hyphenated compound adjective in standard English. Edits to
-    `task-implementer.md` and `code-fixer.md` must preserve this hyphen.
-- No edits to agent files or task files.
-- Acceptance:
-  - `grep -F "CODE-CRAFT PRINCIPLES" plugins/kenspc/agents/task-implementer.md plugins/kenspc/agents/code-fixer.md`
-    returns 1 match per file (unchanged from current state).
-  - `grep -F "CODE-CRAFT PRINCIPLES" CLAUDE.md` returns ≥ 1 match (the new
-    paragraph references the literal header).
-  - `grep -F "hyphenated compound adjective" CLAUDE.md` returns ≥ 1 match
-    (the rationale wording is anchored).
-- Commit: `docs(claude-md): document writer-agent header convention and CODE-CRAFT hyphen exception`.
+> `- Refactor code unrelated to the current task is out; do not refactor things that are not broken even when you would have written them differently from scratch.`
 
-### Step 3: define dry-run report terminology (item #17)
+with
 
-- File: `plugins/kenspc/skills/task-review/SKILL.md`.
-- Edit: insert a new `## Output convention — dry-run reports` subsection
-  after the existing "Quality bar" paragraph (and before
-  "Prerequisites"). Body specifies the four labels per the table in
-  Cluster A #17 above, plus the historical-record carve-out for the
-  existing v3.1.0 dry-run file.
-- No edits to the existing v3.1.0 dry-run file.
-- No edits to `quality-reviewer.md` (the convention is consumed by the
-  orchestrator, not the reviewer agent).
-- Acceptance:
-  - `grep -F "CONDITION-MET" plugins/kenspc/skills/task-review/SKILL.md`
-    returns ≥ 1 match.
-  - `grep -F "CONDITION-NOT-MET" plugins/kenspc/skills/task-review/SKILL.md`
-    returns ≥ 1 match.
-  - `grep -F "Output convention — dry-run reports" plugins/kenspc/skills/task-review/SKILL.md`
-    returns exactly 1 match (the new subsection heading is present).
-  - The new subsection's body contains the literal tokens `FLAG` and
-    `PASS` used per the polarity table in Cluster A #17 (verified by
-    reading the diff; greping for `FLAG` and `PASS` alone is too noisy
-    because both tokens already appear elsewhere in the file).
-  - `git diff plugins/kenspc/skills/task-implement/SKILL.md` shows no
-    changes (the canonical dispatch block is in both SKILLs, but the new
-    subsection is task-review specific and lies outside that block).
-  - `bash scripts/check-canonical-dispatch.sh` exits 0 (canonical block
-    untouched).
-- Commit: `docs(task-review): define dry-run report terminology (CONDITION-MET/NOT-MET and FLAG/PASS)`.
+> `- Don't refactor code unrelated to the current task — that is out of scope; do not refactor things that are not broken even when you would have written them differently from scratch.`
 
-### Step 4: add anchor-phrase frequency guard (item #31, with coordinated prose edit)
+**Acceptance**:
 
-- Files (coordinated edit, single commit):
-  - `plugins/kenspc/agents/task-implementer.md`: applicability line below
-    the canonical blocks — add `Simplicity First` and `Surgical Changes`
-    by name (see Cluster B #31 prose edit above).
-  - `plugins/kenspc/agents/code-fixer.md`: same edit pattern, with `fix
-    time` instead of `write time`.
-  - `scripts/check-code-craft-canonical.sh`: extend with the anchor-phrase
-    frequency check (see Cluster B #31 frequency check above).
-- Acceptance:
-  - `bash scripts/check-code-craft-canonical.sh` exits 0 on the post-edit
-    tree (both byte-identity and frequency checks pass).
-  - Reverting either agent's prose edit alone (keeping the script change)
-    causes the script to exit 1 with `MISSING anchor 'Simplicity First'
-    in plugins/kenspc/agents/task-implementer.md outside canonical blocks`
-    (or similar for `Surgical Changes` / `code-fixer.md`) — verify once
-    locally, revert.
-  - The script's existing byte-identity behavior is unchanged: deleting
-    one character inside any canonical block still triggers `DRIFT
-    canonical:principle:*` (verify once locally, revert).
-- Commit: `feat(scripts): add anchor-phrase frequency guard to check-code-craft-canonical`.
+1. `grep -F "refactor code unrelated to the current task" plugins/kenspc/shared/code-craft-principles.md`
+   returns **≥ 1** match (the substring survives; Task 12's grep contract
+   holds).
+2. `grep -F "refactor code unrelated to the current task" plugins/kenspc/agents/`
+   returns **0** matches (Task 12's relocation contract still holds).
+3. `bash scripts/check-code-craft-canonical.sh` exits **0** (edit was
+   outside the byte-identity range).
+4. `bash scripts/check-canonical-dispatch.sh` and
+   `bash scripts/check-review-agent-drift.sh` exit **0** (unrelated
+   invariants unaffected).
 
-### Step 5: add three-condition structure guard (item #33)
+**Commit**: `fix(shared): rewrite refactor-code-unrelated bullet for grammar while preserving Task 12 relocation grep substring`
 
-- File: new `scripts/check-quality-reviewer-bullet-structure.sh`.
-- Implementation: see Cluster B #33 above. Make the script executable
-  (`chmod +x`).
-- Acceptance:
-  - `bash scripts/check-quality-reviewer-bullet-structure.sh` exits 0 on
-    the current `quality-reviewer.md`.
-  - Locally delete the `3.` line from either bullet (in a temp branch),
-    re-run; script exits 1 with a clear message naming the bullet that
-    lost a condition. Revert.
-  - Locally delete the `**all three**` qualifier from either bullet
-    (in a temp branch), re-run; script exits 1 with a different clear
-    message. Revert.
-- Commit: `feat(scripts): add quality-reviewer three-condition bullet structure guard`.
+### Step 2 — #16 convention decision (CLAUDE.md anchor + agent guards)
 
-### Step 6: add `--self-test` mode to three scripts (item #32)
+**Files**:
+- repo-root `CLAUDE.md` — add a short subsection inside the existing
+  "Skill Development Conventions" block.
+- `plugins/kenspc/agents/task-implementer.md` — add a one-line HTML
+  guard comment immediately above the `CODE-CRAFT PRINCIPLES` header
+  (line 82).
+- `plugins/kenspc/agents/code-fixer.md` — same, above line 69.
 
-- Files:
-  - `scripts/check-code-craft-canonical.sh`: add `--self-test` flag at
-    argument-parse time; on flag, run the self-test routine described in
-    Cluster B #32 above.
-  - `scripts/check-canonical-dispatch.sh`: same pattern.
-  - `scripts/check-quality-reviewer-bullet-structure.sh`: same pattern.
-- Acceptance:
-  - `bash scripts/check-code-craft-canonical.sh --self-test` exits 0.
-  - `bash scripts/check-canonical-dispatch.sh --self-test` exits 0.
-  - `bash scripts/check-quality-reviewer-bullet-structure.sh --self-test`
-    exits 0.
-  - Invoking each script without `--self-test` preserves the existing
-    output and exit codes exactly (no behavioral drift on the positive
-    path).
-  - Force the self-test to fail by temporarily breaking the script's
-    main detection logic (in a throwaway branch), re-run `--self-test`,
-    confirm exit code 1 with `SELF-TEST FAILED — guard did not detect
-    mutation`. Revert.
-- Commit: `feat(scripts): add --self-test mutation regression mode to drift-guard scripts`.
+**Action**:
 
-### Step 7: update the release-checklist mechanical-check block
+In CLAUDE.md, append a new subsection under "Skill Development
+Conventions" titled "Writer-agent section header convention", with body:
 
-- File: `docs/release-checklist.md`.
-- Edit: extend the pre-flight code block (lines 12-31) to include the new
-  drift guard and the three `--self-test` invocations (see Mechanical-check
-  block sync above). Preserve the existing frontmatter-completeness
-  `for`-loop unchanged. Update the prose line "All six must exit 0 (3 JSON
-  validations + 3 shell drift guards)" to "All ten must exit 0 (3 JSON
-  validations + 4 drift guards + 3 self-test regressions)."
-- Acceptance:
-  - Running every command in the new pre-flight block, sequentially, all
-    exit-coded commands exit 0 on the post-Step-6 tree.
-  - The block enumerates exactly the expected ten exit-coded commands;
-    the prose count matches.
-  - The frontmatter-completeness `for`-loop is still present and still
-    advisory (emits warnings but does not affect exit status).
-- Commit: `docs(release): list new drift guards and self-tests in pre-flight block`.
+> Writer-agent section headers (the section names inside
+> `plugins/kenspc/agents/task-implementer.md` and
+> `plugins/kenspc/agents/code-fixer.md`) follow ALL CAPS,
+> space-separated, no hyphens — for example, `CONTEXT YOU WILL RECEIVE`,
+> `QUALITY RULES`, `FIXING RULES`, `AUTONOMY BOUNDARIES`,
+> `DONE CRITERIA`.
+>
+> The single deliberate exception is `CODE-CRAFT PRINCIPLES`, where the
+> hyphen marks the compound adjective "code-craft" (the principle name
+> in English). Future writer-agent headers may use a hyphen only when
+> the underlying compound is a hyphenated adjective in English; bare
+> two-word noun phrases stay space-separated.
+>
+> Each writer-agent file carries a one-line HTML guard comment
+> immediately above the `CODE-CRAFT PRINCIPLES` header that names this
+> convention so a contributor editing only the agent file does not
+> silently normalize the hyphen away.
 
-### Step 8: version bump and CHANGELOG entry
+In each writer-agent file, insert immediately above the section header
+line:
 
-- Files:
-  - `plugins/kenspc/.claude-plugin/plugin.json`: change `"version":
-    "3.1.0"` → `"version": "3.1.1"`.
-  - `plugins/kenspc/CHANGELOG.md`: prepend a new
-    `## [3.1.1] - YYYY-MM-DD` entry (date set at release time) with
-    `### Changed` and `### Added` sub-blocks citing each of the six
-    brief items by short id (e.g., "Brief #15: grammar rewrite of the
-    `Refactor code unrelated…` bullet") and the relevant commit short
-    SHAs.
-- Acceptance:
-  - `cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool >
-    /dev/null` exits 0 (the bump did not break JSON).
-  - `head -30 plugins/kenspc/CHANGELOG.md | grep -F "[3.1.1]"` returns
-    ≥ 1 match.
-  - The full pre-flight mechanical-check block from Step 7 exits 0.
-- Commit: `chore(release): bump version to 3.1.1 for code-craft deferred follow-ups`.
+> `<!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it marks a compound-adjective exception to the ALL-CAPS-no-hyphens writer-agent header convention documented in repo-root CLAUDE.md. Do not normalize without updating the CLAUDE.md convention paragraph in the same commit. -->`
+
+**Acceptance**:
+
+1. `grep -F "CODE-CRAFT PRINCIPLES" plugins/kenspc/agents/task-implementer.md plugins/kenspc/agents/code-fixer.md`
+   returns **2** matches (one per file, header unchanged).
+2. `grep -F "compound-adjective exception" plugins/kenspc/agents/task-implementer.md plugins/kenspc/agents/code-fixer.md`
+   returns **2** matches (guard comments inserted).
+3. `grep -F "compound-adjective exception" CLAUDE.md` returns **≥ 1**
+   match (CLAUDE.md anchor present).
+4. `bash scripts/check-review-agent-drift.sh` exits **0**. This script's
+   scope is the **5 reviewer agents** (requirements-, edge-case-,
+   quality-, bug-, test-reviewer.md); it does **not** scan
+   `task-implementer.md` or `code-fixer.md`, so guard-comment insertions
+   in the two writer agents cannot affect its result. The check is
+   listed here only to confirm the unrelated invariant is unaffected by
+   this commit.
+5. `bash scripts/check-code-craft-canonical.sh` exits **0** (canonical
+   block hashes unchanged — the guard comment sits outside the marker
+   range).
+6. `bash scripts/check-canonical-dispatch.sh` exits **0**.
+
+**Commit**: `docs(convention): record CODE-CRAFT-PRINCIPLES hyphen exception in CLAUDE.md and inline guards`
+
+### Step 3 — #17 dry-run report terminology convention
+
+**Files**:
+- `plugins/kenspc/skills/task-review/SKILL.md` — insert a new short
+  subsection `## Output convention — dry-run reports` after the
+  "Quality bar" section and before "Prerequisites".
+
+**Action**: insert (verbatim wording — implementer copies and adapts
+only the example reference if needed):
+
+```markdown
+## Output convention — dry-run reports
+
+When this skill produces a dry-run report (a per-hunk evaluation of
+how each reviewer-agent bullet *would* decide, without actually
+modifying files), the report uses two non-overlapping label vocabularies
+so a reader scanning the report cannot misread polarity:
+
+| Decision level | Labels | Meaning |
+|----------------|--------|---------|
+| Per-condition  | `CONDITION-MET` / `CONDITION-NOT-MET` | `CONDITION-MET` = the bullet's qualifier is true (the condition fires; the bullet remains a candidate to flag the hunk). |
+| Per-hunk final | `FLAG` / `PASS` | `FLAG` = the bullet reports the hunk. `PASS` = the bullet does **not** report the hunk (code is fine for this bullet's angle). |
+
+The two vocabularies cannot collide because `MET` / `NOT-MET` only
+appears at per-condition level and `FLAG` / `PASS` only at per-hunk
+level.
+
+Reason: the v3.1.0 dry-run report at
+`docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md` used the
+single word `PASS` for both polarities (`Condition 1 PASSES` meaning
+"condition fires" and `Decision: PASS` meaning "code is fine"),
+which is easy to misread in the same paragraph. That report is
+preserved as a historical artifact; future reports use the labels
+above.
+```
+
+**Acceptance**:
+
+1. `grep -F "CONDITION-MET" plugins/kenspc/skills/task-review/SKILL.md`
+   returns **≥ 1** match.
+2. `grep -F "CONDITION-NOT-MET" plugins/kenspc/skills/task-review/SKILL.md`
+   returns **≥ 1** match.
+3. `grep -nE "^\| Per-hunk final" plugins/kenspc/skills/task-review/SKILL.md`
+   returns **1** match (the convention table row).
+4. `bash scripts/check-canonical-dispatch.sh` exits **0** (the new
+   subsection is inserted **outside** the `<!-- canonical:dispatch:start
+   -->` / `<!-- canonical:dispatch:end -->` block in
+   `task-review/SKILL.md`; placement at "after Quality bar, before
+   Prerequisites" puts it before the dispatch block).
+5. `bash scripts/check-review-agent-drift.sh` and
+   `bash scripts/check-code-craft-canonical.sh` exit **0**.
+
+**Commit**: `docs(task-review): define dry-run report terminology (CONDITION-MET/NOT-MET, FLAG/PASS)`
+
+### Step 4 — #31 anchor-phrase frequency guard
+
+**Files**:
+- `scripts/check-code-craft-canonical.sh` (extend).
+
+**Action**: after the existing byte-identity check completes, append a
+new check block modeled on `check-canonical-dispatch.sh:96-117`. The
+block:
+
+1. Defines an `ANCHORS` array: `("Simplicity First|1" "Surgical Changes|1")`.
+2. Iterates over the three files (`SHARED_FILE`, `IMPLEMENTER_FILE`,
+   `FIXER_FILE`) and counts each anchor phrase **anywhere in the file**
+   using `grep -F -i -o` piped to `wc -l`, with the same `|| true`
+   pipefail-safe pattern from `check-canonical-dispatch.sh:55`.
+3. Fails with a distinct error message identifying the file and the
+   missing anchor if any count is below its minimum.
+4. Reports `OK    code-craft anchor phrases — all minimum counts met in
+   all three files` on success.
+5. Sets `drift_found=1` on failure (sharing the existing exit-code
+   variable) so the script's exit code is unchanged in semantics: 0 if
+   both checks pass, 1 if either fails.
+
+**Semantic refinement note in the commit body** (verbatim — explicit
+acknowledgement that this departs from the brief's "outside markers"
+wording, refining to "anywhere in file"; see Decision B1 above for
+rationale).
+
+**Acceptance**:
+
+1. `bash scripts/check-code-craft-canonical.sh` on the current tree
+   exits **0** and the output includes both `OK    canonical:principle
+   ... byte-identity` lines AND a new `OK    code-craft anchor
+   phrases ...` line.
+2. **Deliberate counter-example test (run during PR review, not in
+   tree)**:
+   - Temporarily replace `**Simplicity First.**` with
+     `**Minimalism.**` inside the canonical-principle block of all
+     three files (single text-replacement that keeps content equal so
+     byte-identity still passes).
+   - Run `bash scripts/check-code-craft-canonical.sh`. Expect exit
+     code **1**, with output naming the three files and the missing
+     `Simplicity First` anchor.
+   - Revert the mutation.
+3. `bash scripts/check-canonical-dispatch.sh` and
+   `bash scripts/check-review-agent-drift.sh` exit **0** (unaffected).
+
+**Commit**: `feat(scripts): add anchor-phrase frequency guard to check-code-craft-canonical (refines brief #31's "outside markers" to "anywhere in file")`
+
+### Step 5 — #33 three-condition structural assertion
+
+**Files**:
+- new `scripts/check-quality-reviewer-bullet-structure.sh`.
+
+**Action**: create the script. Top-level structure:
+
+```bash
+#!/usr/bin/env bash
+# check-quality-reviewer-bullet-structure.sh
+#
+# Asserts that the two new REVIEW CHECKLIST bullets in
+# plugins/kenspc/agents/quality-reviewer.md (over-engineering;
+# drive-by/style-drift) each enumerate exactly three numbered
+# conditions, gated by an "all three" qualifier. ...
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+QR_FILE="$REPO_ROOT/plugins/kenspc/agents/quality-reviewer.md"
+
+# Each entry: "anchor regex|expected condition count|qualifier regex"
+BULLETS=(
+    "Over-engineering and abstractions|3|\\*\\*all three\\*\\* of the following"
+    "Drive-by refactoring and style drift|3|\\*\\*all three\\*\\* of the following"
+)
+```
+
+Implementation:
+
+1. For each `BULLETS` entry, locate the bullet's first line via
+   `grep -nE`, capturing the line number.
+2. Slice the file from the bullet line to the next blank line followed
+   by a non-list line (the bullet's body).
+3. Inside that slice, count occurrences matching `^\s*[0-9]+\.` — must
+   equal the expected count.
+4. Inside that slice, verify the qualifier regex matches ≥ 1 time.
+5. Exit 0 if both bullets pass; exit 1 with named failures otherwise;
+   exit 2 if the bullet anchor is not found (structural error).
+
+**Acceptance**:
+
+1. `bash scripts/check-quality-reviewer-bullet-structure.sh` on the
+   current tree exits **0**.
+2. **Deliberate counter-example test**:
+   - Temporarily delete one of the three numbered conditions under
+     the over-engineering bullet (e.g., remove `3. Not a boundary
+     validation ...`).
+   - Run the script. Expect exit code **1**, output naming the bullet
+     and the count mismatch (`expected 3, found 2`).
+   - Revert.
+3. Script is executable (`chmod +x` applied).
+4. Script header docstring matches the format/discipline of
+   `check-code-craft-canonical.sh` (set -euo pipefail; exit-code
+   semantics documented at top; `$REPO_ROOT` derivation pattern).
+
+**Commit**: `feat(scripts): add three-condition structural guard for quality-reviewer.md REVIEW CHECKLIST bullets`
+
+### Step 6 — #32 mutation regression self-test
+
+**Files**:
+- `scripts/check-code-craft-canonical.sh` (extend).
+- `scripts/check-canonical-dispatch.sh` (extend).
+- `scripts/check-quality-reviewer-bullet-structure.sh` (extend).
+
+**Action**: add a `--self-test` flag to each script. Top-level dispatch:
+
+```bash
+if [[ "${1:-}" == "--self-test" ]]; then
+    run_self_test
+    exit $?
+fi
+```
+
+`run_self_test` (uniform shape, per-script mutation target):
+
+1. `WORK=$(mktemp -d)`; `trap 'rm -rf "$WORK"' EXIT`.
+2. Copy every file the script reads to `$WORK`, preserving the relative
+   path structure under a synthetic repo root.
+3. Override `REPO_ROOT="$WORK"` (or pass an env var) and rerun the
+   script's main logic. Capture exit code; assert it is **0**.
+4. Apply a content-based mutation to one file in `$WORK`. Mutation
+   target per script:
+   - `check-code-craft-canonical.sh`: change
+     `**Simplicity First.**` → `**Simplicity 1st.**` in
+     `$WORK/plugins/kenspc/shared/code-craft-principles.md` (mutation
+     drops both the canonical-block byte-identity AND the anchor-phrase
+     frequency check — exercises both guard paths).
+   - `check-canonical-dispatch.sh`: change `unconditional` → `notrequired`
+     (a wholly different word) once inside the canonical-dispatch block of
+     `$WORK/.../task-review/SKILL.md`. The mutation drops both invariants:
+     byte-identity diverges (only one of the two SKILL.md copies is
+     edited), and the anchor-phrase count for `unconditional` drops to 0
+     in the mutated file (the script's `grep -F -i` matches the literal
+     phrase case-insensitively — substituting `Unconditional` would NOT
+     drop the anchor count because the check is case-insensitive; only a
+     wholly different substring guarantees both guard paths fire).
+   - `check-quality-reviewer-bullet-structure.sh`: change
+     `3. Not a boundary validation` → `3. Not a boundary validation\n4. Extra`
+     (turns the three-condition bullet into four).
+5. Rerun the script's main logic. Assert exit code **1**.
+6. Revert the mutation in `$WORK`. Rerun. Assert exit code **0**.
+7. On success: `echo "OK    self-test passed for $(basename "$0")"`,
+   exit 0. On any unexpected exit code: print a `FAIL  self-test ...`
+   message and exit 1.
+
+**Fixture-stale handling**: if the `sed` substitution count is 0
+(mutation target phrase missing from the canonical content), the
+self-test exits 2 with message:
+> `FAIL  self-test fixture stale: mutation target "<phrase>" not`
+> `found in <file>. Update the mutation target in run_self_test().`
+
+**Acceptance**:
+
+1. `bash scripts/check-code-craft-canonical.sh --self-test` exits **0**.
+2. `bash scripts/check-canonical-dispatch.sh --self-test` exits **0**.
+3. `bash scripts/check-quality-reviewer-bullet-structure.sh --self-test`
+   exits **0**.
+4. Each `--self-test` produces a single line of output naming the
+   script and `passed`.
+5. `bash scripts/check-code-craft-canonical.sh` (no flag) still exits
+   **0** — the `--self-test` branch is opt-in, not implicit.
+6. Each script's positive-path main logic (no flag) still exits **0**
+   on the current tree.
+
+**Commit**: `feat(scripts): add --self-test mutation regression mode to three canonical drift guards`
+
+### Step 7 — release-checklist sync
+
+**Files**:
+- `docs/release-checklist.md` (mechanical-check block, lines 10–34).
+
+**Action**: extend the mechanical-check `bash` block to add four
+commands:
+
+```bash
+# Quality-reviewer bullet structure (3-condition gate on two new bullets)
+bash scripts/check-quality-reviewer-bullet-structure.sh
+
+# Mutation regression fixtures (self-test on the three canonical drift guards)
+bash scripts/check-code-craft-canonical.sh --self-test
+bash scripts/check-canonical-dispatch.sh --self-test
+bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
+```
+
+Update the trailing sentence from `All six must exit 0 (3 JSON
+validations + 3 shell drift guards).` to `All ten must exit 0 (3 JSON
+validations + 3 main-mode shell drift guards + 1 structural guard + 3
+mutation regression self-tests). If any fail, fix before proceeding to
+the smoke checklist.`
+
+**Acceptance**:
+
+1. Running the full mechanical-check block from
+   `docs/release-checklist.md:10` exits **0** end-to-end on the post-
+   work tree.
+2. Removing any one of the four new commands and rerunning still
+   exits 0 (independence — each new command stands alone).
+3. The "All ten must exit 0" sentence matches the count in the block
+   (verify by `grep -cE "^bash scripts/|^cat .*python -m json.tool"`
+   inside the bash fence).
+
+**Commit**: `docs(release): list new drift guards and self-tests in pre-flight mechanical-check block`
+
+### Step 8 — version bump + CHANGELOG entry
+
+**Files**:
+- `plugins/kenspc/.claude-plugin/plugin.json` (version field).
+- `CHANGELOG.md` (new v3.1.1 entry).
+
+**Action**:
+
+1. Bump `version` in `plugin.json` from `3.1.0` to `3.1.1`.
+2. Add a `## [3.1.1] — 2026-MM-DD` section at the top of `CHANGELOG.md`
+   (after the v3.1.0 entry), with `### Changed`, `### Added`, `### Fixed`
+   subsections summarizing the 6 brief items + 2 support tasks. Each
+   bullet cites the brief item number and the commit hash.
+
+**Why patch (3.1.1), not minor (3.2.0)**:
+
+- No new SKILL or agent interface. No new CONTEXT keys. No new commands.
+- New script behavior (#31, #33, #32) is defense-in-depth tooling — not
+  a user-facing capability. The plugin's behavior as observed by the
+  Claude harness is unchanged.
+- v3.1.0 used `minor` for a substantive feature addition (new shared
+  file, new agent behavior surface, new script). v3.1.x deferred follow-
+  ups have no equivalent surface change; `patch` is consistent.
+
+**Acceptance**:
+
+1. `grep -F '"version": "3.1.1"' plugins/kenspc/.claude-plugin/plugin.json`
+   returns 1 match.
+2. `cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null`
+   exits 0 (JSON still valid).
+3. `CHANGELOG.md` has a `[3.1.1]` entry with `### Changed`, `### Added`,
+   `### Fixed` subsections and at least one bullet per brief item
+   (#15, #16, #17, #31, #32, #33).
+4. The CHANGELOG entry is internally consistent: every commit hash it
+   references resolves via `git log`.
+
+**Commit**: `chore(release): bump version to 3.1.1 for code-craft principles deferred follow-ups`
 
 ## Testing Strategy
 
-This plugin/skill repo has no executable application code — verification is
-the pre-flight mechanical-check block from `docs/release-checklist.md`. After
-the work lands, the block contains ten checks: three JSON validations, four
-drift guards, three self-test regressions.
+The plan introduces no new application code — every change is markdown,
+shell scripts, or JSON. Three testing surfaces:
 
-Manual verification beyond the mechanical-check block:
+1. **Per-step acceptance tests**: each Step section above has an
+   `Acceptance` subsection with concrete `bash`/`grep` one-liners. These
+   are run by the implementer and by the v3.1.1 task-review pass.
 
-- **Item #15 grammar**: the implementer (or reviewer) reads the new bullet
-  aloud and confirms it parses as English.
-- **Item #16 anchor visibility**: open `task-implementer.md` and confirm the
-  CLAUDE.md anchor paragraph is discoverable by greping for the literal
-  header from CLAUDE.md.
-- **Item #17 convention adoption**: spot-check the next dry-run report (if
-  one is produced under this version) uses the new labels. If no dry-run
-  is produced before the next release, the convention is dormant but
-  documented; no further verification needed.
-- **Smoke checklist**: run the full smoke checklist in
-  `docs/release-checklist.md` after Step 8 (~10 minutes manual).
+2. **Pre-flight mechanical-check suite** (`docs/release-checklist.md`):
+   Steps 4, 5, 6, 7 each grow the suite. After Step 7 lands, running the
+   block from a clean checkout must exit 0 end-to-end.
+
+3. **Smoke checklist** (`docs/release-checklist.md` rows 1–9): no
+   user-facing surface changes in this plan, so smoke checklist behavior
+   is unchanged. Re-run it once before tagging v3.1.1 as a final
+   integration verification.
+
+**Counter-example tests** (deliberate violations to confirm guards
+fail correctly): the brief explicitly calls for these as the
+acceptance bar for each new check ("passes on the current tree,
+fails on a deliberate violation"). Each script's `--self-test` mode
+automates this. Additionally, Steps 4 and 5 acceptance criteria
+include manual deliberate-mutation tests that the reviewer reruns
+during the v3.1.1 task-review.
 
 ## Risks and Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Step 1 grammar rewrite accidentally drops the verbatim substring `refactor code unrelated to the current task` | Low | High (silently breaks Task-12 grep contract) | Step 1 acceptance criterion includes both a positive grep (≥1 in shared) and a negative grep (0 in agents). Pre-commit hook candidate. |
-| Step 4 anchor-phrase frequency check fails on current tree because labels are markers-internal in two of three files | Medium | Medium (Step 4 would not pass acceptance) | Plan explicitly bundles a coordinated prose edit in two agent files with the script change. Discovered during plan self-challenge; remediation baked into Step 4. |
-| Step 5's three-condition assertion regresses on a future legitimate expansion to four conditions | Low | Low (would force a deliberate script update, not silently break behavior) | The `3` constant is a single integer in one script; deliberate expansion is one commit. Documented as acceptable in the script comment. |
-| Step 6 self-test fixture goes stale when canonical content is rewritten | Medium | Low (self-test fails loudly with `SELF-TEST FIXTURE STALE`, exit 2 — not silently passes) | Content-based mutation (not byte-offset). Fixture-stale exit code is distinct from real failure exit code, so the implementer can tell at a glance which case fired. |
-| Step 6 `--self-test` mode introduces a behavior regression on the positive (no-flag) path | Low | High (silently breaks the normal pre-flight check) | Step 6 acceptance explicitly requires "Invoking each script without `--self-test` preserves the existing output and exit codes exactly". Re-run all three scripts after Step 6 in their normal mode and diff the output against pre-Step-6 expected output. |
-| Step 8 version bump lands before the previous steps' commits are merged, causing a tag that includes incomplete work | Low | High (mis-tagged release) | Sequential commits, single-PR or per-step PR; the bump commit is the last and depends on every prior step's commit. Reject re-ordering at review time. |
+| # | Risk | Likelihood | Impact | Mitigation |
+|---|------|------------|--------|------------|
+| R1 | Step 1's rewrite drops the substring `refactor code unrelated to the current task` (Task 12 grep contract regression). | Low | High (silent invariant break). | Step 1 acceptance test 1 + 2 explicitly grep for the substring's presence in `shared/` and absence in `agents/`. |
+| R2 | Step 1's rewrite accidentally edits content **inside** the byte-identity markers (lines 97/99 of `shared/code-craft-principles.md`), making `check-code-craft-canonical.sh` fail. | Low | High (CI red). | Step 1 acceptance test 3 + R3 mitigation. The implementer must only modify line 105, leaving lines 95–99 byte-identical. |
+| R3 | Step 2's guard comments accidentally land inside the canonical block (above the start marker instead of above the section header), breaking byte-identity. | Low | High. | The guard comment must sit on the line immediately above the `CODE-CRAFT PRINCIPLES` header, which is itself two lines above the `<!-- canonical:principle:simplicity-first:start -->` marker. Step 2 acceptance test 5 catches a regression. |
+| R4 | Step 3's new subsection lands inside the `<!-- canonical:dispatch:start -->` / `<!-- canonical:dispatch:end -->` block in `task-review/SKILL.md`, breaking byte-identity with `task-implement/SKILL.md`. | Low | High. | Placement is "after Quality bar, before Prerequisites", which is upstream of the dispatch block. Step 3 acceptance test 4 verifies. |
+| R5 | Step 4's anchor-phrase check counts case-insensitively and matches an unrelated paragraph that says "simplicity first" lowercase. | Low | Medium. | Anchors are matched as full literal phrases via `grep -F -i`, exactly mirroring the `check-canonical-dispatch.sh` pattern. Anchors `Simplicity First` and `Surgical Changes` are distinctive enough that a false positive would only come from intentional documentation, which is what we want to count. |
+| R6 | Step 5's regex for the three-condition gate is brittle to whitespace or list-style edits. | Medium | Medium. | Use `grep -nE '^[[:space:]]*[0-9]+\.'` rather than a tight character class, and slice by blank-line boundary rather than fixed offset. Step 5 acceptance includes a deliberate counter-example test exercising the failure path. |
+| R7 | Step 6's self-test `mktemp -d` + path-rewriting interacts poorly with Git Bash on Windows (path style differences). | Medium | Medium | Use `mktemp -d` plus relative-path traversal from `$WORK` as the synthetic `REPO_ROOT`; avoid `cd` into `/tmp`-style absolutes. Test on both Git Bash and WSL2 before Step 7 closes. |
+| R8 | Step 6's content-based mutation target phrase is later edited out of the canonical block, silently breaking the self-test. | Medium | High (silent guard rot — the same failure mode #32 is designed to prevent). | The self-test detects `sed` substitution count = 0 and exits with a `FAIL  self-test fixture stale` message. This explicitly surfaces the staleness instead of allowing a silent green. |
+| R9 | Brief item count drift: brief says 6 items, plan ships 8 commits (adds release-checklist sync + version bump). | Low | Low (paperwork only). | Plan Scope table clearly labels Steps 7 and 8 as "support" tasks not in the brief; v3.1.1 CHANGELOG names them explicitly so the audit trail is consistent. |
+| R10 | Step 8 chose `patch` semver, but external consumers expect `minor` for new tooling behavior. | Low | Low (no external consumers yet; this is an internal plugin marketplace). | Rationale documented in Step 8. If a future external consumer asks, the v3.1.1 entry text clarifies what changed. |
+| R11 | A subsequent edit (post-v3.1.1) adds a fourth condition to one of the over-engineering / drive-by bullets, silently failing #33. | Medium | Low (the check fires correctly — the question is whether the edit was intended). | Acceptable failure mode. A genuine fourth-condition addition is a deliberate edit; updating the `BULLETS` array constant in `check-quality-reviewer-bullet-structure.sh` is a one-line edit in the same commit. |
+| R12 | Step 2's CLAUDE.md edit increases the file size, potentially nudging the auto-loaded context allowance for the orchestrator. | Low | Low | The added subsection is ~10 lines. CLAUDE.md auto-loading already imports the full file; a 10-line addition is well within budget. |
 
 ## Open Questions
 
-1. **Should `scripts/check-review-agent-drift.sh` also gain a `--self-test`
-   mode?** The same silently-dead-guard threat model applies; the brief did
-   not enumerate it because it predates the v3.1.0 code-craft work. Decision
-   deferred to a follow-up planning pass.
-2. **Should the `CODE-CRAFT PRINCIPLES` convention paragraph also live as a
-   short guard comment inline near the header in `task-implementer.md` and
-   `code-fixer.md`, mirroring the existing Task-12 guard pattern at
-   `shared/code-craft-principles.md:103`?** This plan chooses the CLAUDE.md
-   single-anchor approach for lower blast radius; the inline-guard variant
-   adds two more files to the diff and duplicates the rationale. If a future
-   review angle finds CLAUDE.md insufficient as a guard surface, the inline
-   comment can be added in a follow-up.
-3. **CHANGELOG +50 line-cap convention from Task 14 of the v3.1.0 plan.**
-   The brief notes the +50 cap is unrealistic for v3-era entries; the v3.1.1
-   entry under this plan will likely also exceed it. This plan does not
-   address the convention itself (out of scope per the brief); the +50 cap
-   reconciliation belongs in a future planning-conventions revision.
-4. **Three pre-existing dead-anchor links in `plugins/kenspc/CHANGELOG.md`**
-   (the `#acknowledgments` vs `#acknowledgements` mismatch in v3.0.0 /
-   v2.0.0 / v1.5.0 entries) are pre-existing and not addressed here per
-   the brief's deferred-list.
+1. **`check-review-agent-drift.sh --self-test`**: should this pre-v3.1.0
+   script also receive a `--self-test` mode for consistency? Brief did
+   not request it. Recommendation: **defer to v3.1.2 or v3.2.0**, as a
+   separate "drift-guard self-test parity" cleanup. Tracking note can be
+   added at the bottom of CHANGELOG v3.1.1's "Deferred" or in a new
+   `docs/briefs/` entry.
+2. **Step 8 version choice (3.1.1 vs 3.2.0)**: the plan picks `3.1.1`
+   (patch) per the rationale above. If maintainer policy prefers semver
+   `minor` for any new script-public behavior, bump to `3.2.0` and
+   re-title the plan. No structural changes to the plan body needed —
+   only the version number, the CHANGELOG section heading, and the
+   commit message in Step 8.
+3. **Self-test parallelism**: each `--self-test` does file copies and
+   sed mutations sequentially. With three scripts in the mechanical-
+   check block, total wall-clock time on a cold filesystem is ~5
+   seconds. If this becomes annoying, a future optimization could
+   parallelize the three invocations behind a single `--self-test-all`
+   wrapper. Not addressed in this plan.
+
+## Constraints (recap, inherited from brief)
+
+- All v3.1.0 invariants stay intact: byte-identity hash on the canonical
+  principle blocks, Task 12's four-phrase relocation grep contract,
+  5-agent reviewer drift guard, canonical-dispatch byte-identity. The
+  pre-flight mechanical-check suite continues to exit 0 on the post-
+  work tree.
+- Conventional commits, per task: `fix:` for the grammar bullet, `docs`
+  for convention/terminology items, `feat(scripts):` for new script
+  behavior, `chore(release):` for the version bump.
+- No SKILL or agent interface changes for callers. CONTEXT block
+  contracts and Schema A–G output contracts stay unchanged.
+- Stack-agnostic shell scripts. Each new check script and each
+  `--self-test` mode runs on both Git Bash (Windows) and WSL2 Ubuntu.
+- No new external dependencies. The existing toolchain (`bash`, `sed`,
+  `grep`, `sha256sum`, `python -m json.tool`, `mktemp`) covers all
+  eight items.
+- No reopening of v3.1.0 locked trade-offs: CHANGELOG `+108` / `+50`
+  bound and Task 12's 4-phrase grep contract.
 
 ## Context
 
-- Brief: `docs/briefs/code-craft-principles-deferred.md`.
-- Originating review: v3.1.0 automated 5-angle review run on 2026-05-14.
-  Review reports and accountability list in the orchestrator's session
-  transcript and commits `9d20904`, `6a8c609`, `d1e3a0e`, `7e63072`,
-  `1ac727d`, `f09de92`.
-- v3.1.0 version-bump commit pair: `12ab26c`.
-- Discovery mode for this plan: rapid-direct. The brief was authored as a
-  Level 1 input with full rationale for each item; no further discovery
-  rounds were needed beyond gap-checking the brief against the five
-  Discovery dimensions and verifying the brief's line/file references
-  against the current tree.
+- Brief: `docs/briefs/code-craft-principles-deferred.md` (committed in
+  `8296382`).
+- v3.1.0 release commit pair: `12ab26c` (CHANGELOG + plugin.json
+  version bump).
+- v3.1.0 review-cycle commits referenced in the brief: `9d20904`,
+  `6a8c609`, `d1e3a0e`, `7e63072`, `1ac727d`, `f09de92`.
+- v3.1.0 dry-run report (preserved, do not edit):
+  `docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md`.
+- Existing v3.1.0 plan (do not overwrite — separate document):
+  `docs/plans/code-craft-principles-plan.md`.
+- Existing v3.1.0 task document (Tasks 6/7 acceptance criteria already
+  spell `CODE-CRAFT PRINCIPLES` with hyphen; no edit needed under this
+  plan's "keep hyphen" decision):
+  `docs/tasks/code-craft-principles-tasks.md`.
+- Suggested next step after this plan ships:
+  `/kenspc-task docs/plans/code-craft-principles-deferred-plan.md` to
+  decompose into the eight implementation tasks.
