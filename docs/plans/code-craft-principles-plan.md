@@ -77,22 +77,22 @@ plugins/kenspc/shared/
 └── code-craft-principles.md        (NEW — referenced by 3 AGENTS)
 ```
 
-The pattern mirrors `discovery-framework.md`:
+The pattern differs from `discovery-framework.md` in one important way. `discovery-framework.md` is referenced from SKILL.md files, which the main session loads at skill activation — a single Read at the start of the workflow is enough. `code-craft-principles.md` is referenced from agent bodies, and agents may be dispatched many times across a run. A pure reference-only model would either force a Read on every dispatch (wasteful) or risk the agent skipping the Read entirely (loss of guarantee).
 
-- Single markdown file under `shared/`.
-- Referenced by consumers via the portable path
-  `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`.
-- File starts with a one-paragraph Goal, lists principles with worked diff examples,
-  ends with a per-consumer applicability table and a "What This File Does NOT Define"
-  section.
+The chosen model is therefore a **hybrid (inline summary + reference for examples)** that mirrors Karpathy's own two-file split (`AGENTS.md` short + `EXAMPLES.md` long):
+
+- Single markdown file `shared/code-craft-principles.md` holds the **canonical** principle paragraphs, the per-principle checklists, the C# / TypeScript diff examples, the applicability table, and the "What This File Does NOT Define" section.
+- Each of the three consumer agents (`task-implementer`, `code-fixer`, `quality-reviewer` where applicable) **inlines a byte-identical copy of the two principle paragraphs** in its system-prompt body. This guarantees the principle is loaded into every dispatch without depending on a runtime Read.
+- The agent body **references** `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` for the long content (checklists, diff examples, applicability table). The agent only Reads it when it needs to disambiguate an edge case against an example.
+- Byte-identity of the inlined principle paragraphs across the agent bodies and the shared file is enforced by a new check script (Step 4.4), modeled on the existing `check-review-agent-drift.sh` / `check-canonical-dispatch.sh` invariants. Drift between any two copies is a CI failure, not a silent regression.
 
 ### Consumer wiring
 
 | Consumer | Current state | After this plan |
 |----------|--------------|------------------|
-| `agents/task-implementer.md` | Scope-creep guards in 3 places (QUALITY RULES, AUTONOMY BOUNDARIES, STOP triggers). No Simplicity guard. | Relocated guards → single reference line + adds Simplicity by reference. |
-| `agents/code-fixer.md` | Surgical guidance under FIXING RULES ("Do not introduce new features or refactor code beyond what the issue requires", "Preserve the original code's style and structure"). | Replaced with single reference line. |
-| `agents/quality-reviewer.md` | REVIEW CHECKLIST has "Code complexity" (asks to break down complex functions). No over-engineering check (the opposite direction — flagging code that goes beyond what was asked). | Adds an over-engineering check that defers to the shared file's Simplicity definition. |
+| `agents/task-implementer.md` | Scope-creep guards in 3 places (QUALITY RULES, AUTONOMY BOUNDARIES, STOP triggers). No Simplicity guard. | Relocated guards removed → new `CODE-CRAFT PRINCIPLES` section inlines both principle paragraphs (byte-identical to shared file) and references the shared file for examples and applicability. |
+| `agents/code-fixer.md` | Surgical guidance under FIXING RULES ("Do not introduce new features or refactor code beyond what the issue requires", "Preserve the original code's style and structure"). | Both surgical bullets replaced; new `CODE-CRAFT PRINCIPLES` section inlines both principle paragraphs (byte-identical to shared file) and references the shared file for examples. |
+| `agents/quality-reviewer.md` | REVIEW CHECKLIST has "Code complexity" (asks to break down complex functions). No over-engineering check (the opposite direction — flagging code that goes beyond what was asked). | Adds two new REVIEW CHECKLIST bullets (over-engineering; drive-by refactoring / style drift), each gated by three-layer qualifier conditions so cascading task-driven changes and project-convention-mandated abstractions are not flagged. References shared file for the underlying principle definitions and applicability stance. |
 
 ### Examples in shared file
 
@@ -168,6 +168,21 @@ What to do:
   "if you wrote 200 lines and 50 lines would do, rewrite"); and two `❌ / ✅` diff
   examples — one in C#, one in TypeScript — each ≤ 25 lines per side, demonstrating
   over-abstraction (the C# one) and a speculative-feature trap (the TypeScript one).
+- **Canonical paragraph contract.** The one-paragraph principle statement written in
+  this Step is the canonical source that Steps 2.1 and 2.2 will inline byte-identical
+  into `task-implementer.md` and `code-fixer.md`. Surround the paragraph in the
+  shared file with HTML-comment markers exactly as:
+
+  ```
+  <!-- canonical:principle:simplicity-first:start -->
+  **Simplicity First.** ... (the rationale-form paragraph) ...
+  <!-- canonical:principle:simplicity-first:end -->
+  ```
+
+  Step 4.4 sha256-hashes the bounded block and compares against the same block in
+  every agent file that inlines it. The marker pattern matches the existing
+  `<!-- canonical:dispatch:start -->` / `:end` invariant already used between
+  `task-review/SKILL.md` and `task-implement/SKILL.md`.
 
 Why: One paragraph of principle without examples reads as a slogan. One example
 without a contrasting `❌` reads as just another piece of code. The paired diff
@@ -184,7 +199,10 @@ that needs one method, written with strategy pattern; an endpoint with `option1`
 Output: A ~50-line Simplicity First section.
 
 Done when: Principle paragraph exists in rationale form (the word "Why" appears in or
-near the statement); checklist has 4–6 bullets; two diff examples present (one C#,
+near the statement); the paragraph is bounded by the
+`<!-- canonical:principle:simplicity-first:start -->` /
+`<!-- canonical:principle:simplicity-first:end -->` markers and is the only block
+between those markers; checklist has 4–6 bullets; two diff examples present (one C#,
 one TypeScript), each ≤ 25 lines per side; no example uses Python, Java, or any
 language not in scope; file commits cleanly.
 
@@ -199,6 +217,17 @@ What to do:
   your changes orphaned, but don't remove pre-existing dead code"); two `❌ / ✅`
   diff examples — one in C#, one in TypeScript — showing drive-by refactoring and
   style drift respectively.
+- **Canonical paragraph contract.** Surround the one-paragraph principle statement
+  with markers exactly as:
+
+  ```
+  <!-- canonical:principle:surgical-changes:start -->
+  **Surgical Changes.** ... (the rationale-form paragraph) ...
+  <!-- canonical:principle:surgical-changes:end -->
+  ```
+
+  Same enforcement as Step 1.2's canonical block — Step 4.4 hashes and compares
+  against every agent file that inlines this paragraph.
 
 Why: Surgical Changes is the principle kenspc currently mentions in the most places
 but defines least consistently — examples are the way to lock down what "surgical"
@@ -210,8 +239,9 @@ Input: Same as 1.2 — author's choice of scenario, but plausible for kenspc use
 
 Output: A ~50-line Surgical Changes section.
 
-Done when: Same shape as 1.2 (rationale-form paragraph, 4–6 checklist bullets, two
-diff examples meeting language and length constraints).
+Done when: Same shape as 1.2 (rationale-form paragraph wrapped in
+`<!-- canonical:principle:surgical-changes:start/end -->` markers, 4–6 checklist
+bullets, two diff examples meeting language and length constraints).
 
 **Step 1.4: Write the "How Each Agent Applies These" table**
 
@@ -280,12 +310,21 @@ What to do:
   the BLOCKED-trigger items intact (these are workflow-specific, not principle-level)
   but remove the generic "Refactor code unrelated to the current task" bullet.
 - Add a new section immediately AFTER the `QUALITY RULES` section and BEFORE
-  the `AUTONOMY BOUNDARIES` section, titled `CODE-CRAFT PRINCIPLES`, with body:
+  the `AUTONOMY BOUNDARIES` section, titled `CODE-CRAFT PRINCIPLES`. The body
+  has three parts in this exact order:
 
-  > Read `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` before implementing
-  > each task. Apply Simplicity First and Surgical Changes as defined there. The
-  > applicability table in that file states this agent's stance: author at write
-  > time.
+  1. **Inlined canonical paragraphs.** Copy the two canonical principle blocks
+     from the shared file byte-identical, including the surrounding
+     `<!-- canonical:principle:simplicity-first:start --> ... :end -->` and
+     `<!-- canonical:principle:surgical-changes:start --> ... :end -->`
+     markers. The markers must be present in the agent file so Step 4.4's
+     hash check can find and compare the bounded blocks.
+  2. **Applicability line.** Add one short sentence after the second canonical
+     block: "This agent's applicability stance (see shared file's table): author
+     at write time."
+  3. **Examples reference.** Add one short line: "For worked C# / TypeScript
+     diff examples and edge cases, see
+     `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`."
 
 - Keep `STOP and mark task as BLOCKED` triggers untouched (these are not
   principle-level — they are workflow-specific decision boundaries about when to
@@ -295,8 +334,12 @@ What to do:
   security — they are orthogonal to Simplicity and Surgical and remain agent-local).
 
 Why: Relocating the scope-creep guards eliminates the three-place duplication
-currently in this agent. Adding the Simplicity reference fills the gap that prompted
-this whole change (the agent had no minimum-code guidance). Keeping
+currently in this agent. Inlining the canonical principle paragraphs (rather than
+pure reference) guarantees the principles are loaded into every dispatch of this
+agent without depending on a runtime Read — and the byte-identity invariant
+enforced by Step 4.4 prevents drift between the inlined copy and the shared
+file's authoritative version. Adding the Simplicity content fills the gap that
+prompted this whole change (the agent had no minimum-code guidance). Keeping
 `STOP-and-BLOCKED` and `QUALITY CHECKLIST` local respects the principle that
 workflow-specific decision logic and correctness checklists are NOT code-craft
 principles and should not be confused with them.
@@ -306,27 +349,42 @@ Input: Current `agents/task-implementer.md`.
 Output: Modified `agents/task-implementer.md` with:
 
 - 2 bullets removed (from `QUALITY RULES` and `AUTONOMY BOUNDARIES`).
-- 1 new `CODE-CRAFT PRINCIPLES` section added (~4 lines).
+- 1 new `CODE-CRAFT PRINCIPLES` section added containing the two canonical
+  principle blocks (with markers), one applicability line, and one examples
+  reference line. Total ~12–16 lines added (depends on canonical paragraph
+  lengths).
 - All other sections (`PREREQUISITE CHECK`, `OBJECTIVE`, `DONE CRITERIA`,
   `PROCESSING APPROACH`, `STUCK HANDLING`, `CODE ARTIFACTS LANGUAGE`, `OUTPUT
   FORMAT`) untouched.
 
-Done when: A diff shows ≤ 4 lines removed and ~4 lines added; the agent file still
-parses as valid frontmatter + markdown; `task-implementer` still has all its
-prerequisite checks, autonomy boundaries (BLOCKED triggers), and Schema D output
-contract.
+Done when: A diff shows 2 lines removed and ~12–16 lines added; the agent file
+still parses as valid frontmatter + markdown; both canonical marker pairs are
+present and contain exactly the matching paragraph from the shared file (Step
+4.4 hash check will verify); `task-implementer` still has all its prerequisite
+checks, autonomy boundaries (BLOCKED triggers), and Schema D output contract.
 
-**Step 2.2: Update `agents/code-fixer.md` (replace surgical bullets with reference)**
+**Step 2.2: Update `agents/code-fixer.md` (replace surgical bullets with inlined principles + reference)**
 
 What to do:
 
 - In the `FIXING RULES` section, remove:
   - "Do not introduce new features or refactor code beyond what the issue requires."
   - "Preserve the original code's style and structure."
-- Replace with a single bullet:
-  - "Apply Simplicity First and Surgical Changes per
-    `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`. The applicability
-    table states this agent's stance: author at fix time."
+- After the `FIXING RULES` section and before `FIXING PRIORITY`, add a new
+  section titled `CODE-CRAFT PRINCIPLES` with the same three-part body shape
+  used in Step 2.1:
+
+  1. **Inlined canonical paragraphs.** Copy the two canonical principle blocks
+     from the shared file byte-identical, including the surrounding marker
+     pairs. The blocks here must be the same bytes as those in
+     `task-implementer.md` and the shared file — Step 4.4 hashes all three
+     locations and fails on any mismatch.
+  2. **Applicability line.** "This agent's applicability stance (see shared
+     file's table): author at fix time. Structural improvements not in the
+     review report are DEFERRED, not applied."
+  3. **Examples reference.** "For worked C# / TypeScript diff examples and
+     edge cases, see `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`."
+
 - Keep all other `FIXING RULES` bullets ("Follow established project conventions and
   patterns", "Each fix is a separate, focused git commit with a clear message",
   "Code, code comments, and commit messages stay in English") untouched.
@@ -334,19 +392,24 @@ What to do:
   fully untouched.
 
 Why: `code-fixer` already has the strongest Surgical wording in the plugin; this
-relocation is a SSoT consolidation rather than a behavior change. The
-author-at-fix-time stance in the applicability table preserves the existing intent
-(fixes are narrow, structural changes get DEFERRED, not applied).
+change is partly a SSoT consolidation (so the principle definition lives once)
+and partly a reliability fix (inlining the canonical paragraphs guarantees the
+principles are loaded into every dispatch). The author-at-fix-time stance
+preserves the existing intent (fixes are narrow, structural changes get
+DEFERRED, not applied).
 
 Input: Current `agents/code-fixer.md`.
 
-Output: Modified `agents/code-fixer.md` with 2 bullets removed and 1 reference bullet
-added in `FIXING RULES`.
+Output: Modified `agents/code-fixer.md` with 2 surgical bullets removed from
+`FIXING RULES` and a new `CODE-CRAFT PRINCIPLES` section added (containing two
+canonical blocks with markers, one applicability line, one examples reference
+line — total ~12–16 lines added).
 
-Done when: A diff shows 2 lines removed and 1 line added in `FIXING RULES`; nothing
-else changes; `FIXING PRIORITY` decision matrix (HIGH/MEDIUM/LOW action rules) is
-intact; Schema B output contract (with the `short_label` ≤ 60 chars requirement) is
-intact.
+Done when: A diff shows 2 lines removed and ~12–16 lines added; nothing
+else changes; both canonical marker pairs are present with matching bytes
+(verifiable via Step 4.4); `FIXING PRIORITY` decision matrix (HIGH/MEDIUM/LOW
+action rules) is intact; Schema B output contract (with the `short_label` ≤ 60
+chars requirement) is intact.
 
 **Step 2.3: Update `agents/quality-reviewer.md` (add over-engineering review angle)**
 
@@ -355,14 +418,43 @@ What to do:
 - In the `REVIEW CHECKLIST` section, KEEP the existing "Code complexity: are there
   overly complex functions that should be broken down?" bullet untouched (this is a
   legitimate readability check that catches a different failure mode).
-- ADD a new bullet immediately after it:
-  - "Over-engineering: features beyond the task requirement; abstractions for
-    single-use code; unrequested 'flexibility' or configurability. Apply
-    Simplicity First per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` —
-    the applicability table states this agent's stance: detect, do not fix."
-- ADD a second new bullet:
-  - "Drive-by refactoring and style drift in the diff: changes unrelated to the
-    task requirement. Apply Surgical Changes per the same file."
+- ADD a new bullet immediately after it (the **Over-engineering** bullet),
+  written with three explicit exclusion conditions so cascading task-driven
+  changes and project-convention-mandated abstractions are not flagged:
+
+  > **Over-engineering.** Flag features, abstractions, or configurability that
+  > meet **all three** of the following conditions:
+  >
+  > 1. Not in the task document's stated requirements, AND
+  > 2. Not mandated by project conventions documented in `CLAUDE.md`,
+  >    `README.md`, or visible patterns in adjacent code, AND
+  > 3. Not a boundary validation required by the project's security or input-
+  >    handling rules (system-boundary validations are correct design, not
+  >    over-engineering).
+  >
+  > Why: abstractions or validations that meet condition (2) or (3) are correct
+  > design — flagging them creates noise that erodes trust in this reviewer's
+  > signal. Apply Simplicity First per
+  > `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; the applicability
+  > table states this agent's stance: detect, do not fix.
+
+- ADD a second new bullet immediately after the over-engineering one (the
+  **Drive-by refactoring** bullet), with parallel three-condition gating:
+
+  > **Drive-by refactoring and style drift in the diff.** Flag changes to
+  > adjacent code that meet **all three** of the following conditions:
+  >
+  > 1. Not required by the task, AND
+  > 2. Not mechanically forced by the change (interface signature changes
+  >    cascade to implementers; removing the last call to a function orphans
+  >    imports; lint-mandated formatting changes), AND
+  > 3. Not convergence to the canonical project style (a "drift" toward
+  >    documented style is correct, not drive-by).
+  >
+  > Why: cascading task-driven changes are the change itself, not drive-by —
+  > flagging them would force the implementer to leave the codebase in a
+  > broken state. Apply Surgical Changes per the same shared file.
+
 - Keep all other checklist items (Naming, Project structure, DRY, SOLID, Magic
   numbers) untouched.
 
@@ -375,13 +467,26 @@ two new detection bullets fills this gap without removing existing coverage. The
 
 Input: Current `agents/quality-reviewer.md`.
 
-Output: Modified `agents/quality-reviewer.md` with 2 new bullets added to
-`REVIEW CHECKLIST`. The other 4 reviewer agents (requirements, edge-case, bug, test)
+Output: Modified `agents/quality-reviewer.md` with 2 new multi-line bullets added
+to `REVIEW CHECKLIST` (each ~10–14 lines including the three-condition gate and
+the Why line). The other 4 reviewer agents (requirements, edge-case, bug, test)
 are NOT modified.
 
-Done when: A diff shows 2 lines added in `REVIEW CHECKLIST`; the Schema A output
-contract is unchanged; `quality-reviewer`'s `effort: xhigh` stays; no other reviewer
-agent files are touched.
+Note: `quality-reviewer` does NOT inline the canonical principle paragraphs the
+way `task-implementer` and `code-fixer` do. The reviewer's content is the
+**detection** rules (above bullets), which reference but do not duplicate the
+**principle definitions**. This asymmetry matches the applicability-table
+stance "Apply" (writer agents need the principle text loaded for every write
+decision) vs "Detect" (reviewer's working tool is the detection bullets, not the
+principle text). Step 4.4 therefore only checks byte-identity across
+`task-implementer.md`, `code-fixer.md`, and the shared file.
+
+Done when: A diff shows ~20–28 lines added in `REVIEW CHECKLIST` (two
+multi-line bullets); both bullets list all three exclusion conditions; both
+bullets include the "Why:" line explaining the rationale (matching the Why-not-
+Command design rule); the Schema A output contract is unchanged;
+`quality-reviewer`'s `effort: xhigh` stays; no other reviewer agent files are
+touched.
 
 ### Phase 3: Update documentation and metadata
 
@@ -498,21 +603,35 @@ What to do:
 
   ### Added
 
-  - `shared/code-craft-principles.md` — defines Simplicity First and Surgical Changes
-    with C# and TypeScript diff examples; referenced by 3 agents.
+  - `shared/code-craft-principles.md` — defines Simplicity First and Surgical
+    Changes with C# and TypeScript diff examples; canonical principle paragraphs
+    are bounded by `<!-- canonical:principle:<key>:start/end -->` markers and
+    mirrored byte-identical into the writer agents.
   - `quality-reviewer`: two new REVIEW CHECKLIST bullets (over-engineering;
-    drive-by refactoring / style drift).
+    drive-by refactoring / style drift), each gated by three explicit
+    exclusion conditions to prevent false positives on project-convention
+    abstractions, mechanically-forced cascades, and canonical-style
+    convergence.
+  - `scripts/check-code-craft-canonical.sh` — new repo-level check script
+    that hashes the canonical principle blocks in the shared file and in the
+    two writer agents and fails on any byte-divergence. Modeled on the
+    existing `check-canonical-dispatch.sh` invariant.
 
   ### Changed
 
-  - `task-implementer`: 2 scope-creep bullets relocated to shared file; new
-    CODE-CRAFT PRINCIPLES reference section added.
-  - `code-fixer`: 2 surgical bullets in FIXING RULES replaced with reference to
-    shared file.
+  - `task-implementer`: 2 scope-creep bullets removed; new CODE-CRAFT
+    PRINCIPLES section inlines both canonical principle paragraphs (with
+    markers) and references the shared file for examples and applicability.
+  - `code-fixer`: 2 surgical bullets removed from FIXING RULES; new CODE-CRAFT
+    PRINCIPLES section inlines both canonical principle paragraphs (with
+    markers) and references the shared file for examples.
   - `README.md`: "Stack-agnostic" reworded as "Stack-agnostic skill behavior" with
-    clarification about documentary examples being stack-specific.
-  - `CLAUDE.md`: directory tree and `shared/` paragraph extended to cover the new
-    file.
+    clarification about documentary examples being stack-specific; new
+    Acknowledgements paragraph crediting Karpathy / forrestchang / doggy8088.
+  - `CLAUDE.md` (root): directory tree extended to list both shared files;
+    `shared/` paragraph extended to cover the new file; "Repository scripts/"
+    section extended to list the new check script; "Validate plugin structure"
+    block extended to invoke the new check script.
 
   ### Acknowledgements
 
@@ -611,34 +730,148 @@ Output: Verification report.
 
 Done when: All references use the portable prefix; no hardcoded paths found.
 
-**Step 4.3: Subtraction audit**
+**Step 4.3: Subtraction audit (revised for hybrid model)**
 
 What to do:
 
 - Count net lines added across all modified files (excluding the new
   `code-craft-principles.md` itself).
-- Confirm the count is roughly net-zero or net-negative — i.e., the agent files
-  shed approximately as many lines (relocated content) as they gained (reference
-  line + over-engineering bullets).
+- Compare each agent's net delta against the expected bounds below. The
+  expected growth is **not** net-zero because the hybrid model intentionally
+  inlines canonical principle paragraphs into the writer agents — accepting
+  a one-time net-positive in exchange for runtime-load reliability.
 
 Why: This change is justified partly by the v1.5 Subtraction Audit philosophy
-("compress to principle-level, retain signal"). If agent files net-grew
-significantly, something went wrong — likely the relocation kept too much in the
-original location.
+("compress to principle-level, retain signal"). Under the hybrid model the
+audit's purpose shifts: it no longer enforces zero growth, but it still
+catches **wrong-shape growth** — e.g., examples being inlined instead of just
+the principle paragraph, or scope-creep bullets being left in their original
+location and duplicated rather than relocated.
 
 Input: Git diff of all modified files except the new shared file.
 
-Output: A line-count summary that reflects the planned per-agent edits, e.g.,
-"task-implementer: −2 (2 scope-creep bullets) +4 (CODE-CRAFT PRINCIPLES
-reference section) = net +2; code-fixer: −2 (2 FIXING RULES bullets) +1
-(reference bullet) = net −1; quality-reviewer: +2 (over-engineering + drive-by
-bullets) = net +2; total agents: net +3 across three files."
+Output: A per-file line-count summary against the expected bounds:
 
-Done when: The summary is roughly small (within ±5 lines per file and within
-±10 lines total across all agent files); if any single file moves by more than
-±5 lines, the relocation is reviewed for incomplete subtraction or for the
-reference text growing beyond a single short paragraph. (The new shared file
-itself is excluded from this count — it is a deliberate net addition.)
+| File | Removed | Added | Net | Expected upper bound |
+|------|---------|-------|-----|---------------------|
+| `task-implementer.md` | 2 (scope-creep bullets) | ~12–16 (CODE-CRAFT PRINCIPLES section: 2 canonical blocks with markers + applicability line + examples reference) | +10 to +14 | +18 |
+| `code-fixer.md` | 2 (FIXING RULES surgical bullets) | ~12–16 (same shape) | +10 to +14 | +18 |
+| `quality-reviewer.md` | 0 | ~20–28 (two multi-line REVIEW CHECKLIST bullets with three-condition gates and Why lines) | +20 to +28 | +32 |
+| `README.md` | 1 (Stack-agnostic line) | ~10 (rewritten line + Acknowledgements paragraph) | +9 | +14 |
+| `CLAUDE.md` (root) | 1 (single shared/ tree line) | ~6 (two tree lines + extended paragraph) | +5 | +10 |
+| `CHANGELOG.md` | 0 | ~40 (v3.1.0 entry) | +40 | +50 (changelogs grow) |
+| `plugin.json` | 1 | 1 | 0 | 0 |
+| **Agents subtotal** | 4 | ~44–60 | **+40 to +56** | **+68** |
+
+Done when: Every file's net delta is within its expected upper bound. If any
+agent file exceeds its upper bound, the relocation is reviewed for one of:
+(a) examples accidentally inlined alongside the principle paragraph,
+(b) scope-creep bullets not actually removed from their original location and
+remaining duplicated, (c) applicability or reference text exceeding one short
+line each. The new shared file is excluded from this count — it is a deliberate
+net addition justified by SSoT consolidation.
+
+**Step 4.4: Byte-identity check for inlined canonical principle paragraphs**
+
+What to do:
+
+- Create a new script `scripts/check-code-craft-canonical.sh` modeled on the
+  existing `scripts/check-canonical-dispatch.sh`. The new script:
+  - For each of the two principle keys (`simplicity-first`, `surgical-changes`),
+    extracts the content between `<!-- canonical:principle:<key>:start -->` and
+    `<!-- canonical:principle:<key>:end -->` from three files:
+    1. `plugins/kenspc/shared/code-craft-principles.md` (authoritative)
+    2. `plugins/kenspc/agents/task-implementer.md`
+    3. `plugins/kenspc/agents/code-fixer.md`
+  - Sha256-hashes each extracted block.
+  - Fails with a clear error message if any of the three hashes for a given key
+    do not match. Reports which file is the outlier.
+  - Returns 0 if both keys' three-way hashes are identical across all three
+    files.
+- Update the repo-root `CLAUDE.md` "Repository scripts/" section to list the
+  new script alongside `check-review-agent-drift.sh` and
+  `check-canonical-dispatch.sh`, with the same "guards the byte-identity
+  invariant" framing.
+- Update the `## Development Workflow` → `Validate plugin structure` block in
+  the root `CLAUDE.md` to add `bash scripts/check-code-craft-canonical.sh` to
+  the "Cross-agent invariants" list.
+- Update `docs/release-checklist.md` (if it enumerates pre-release greps) to
+  include this script in the mechanical-check list.
+- Run the script locally and confirm it returns 0 against the freshly
+  committed agent and shared-file edits.
+
+Why: The hybrid inline-summary + reference-for-examples model only delivers its
+reliability promise if the inlined copies stay byte-identical with the
+authoritative version. Without an automated check, the three copies of each
+principle paragraph would drift over time as someone edits the shared file
+without re-syncing the agent bodies (or vice versa). This is the same pattern
+that `check-canonical-dispatch.sh` guards for the `## Code Review Phase`
+canonical block between `task-review/SKILL.md` and `task-implement/SKILL.md`,
+and that `check-review-agent-drift.sh` guards for the three shared sections
+across the 5 review-angle agents. Establishing the script in this Step (rather
+than as a follow-up) is what makes the hybrid model trustworthy.
+
+Input: Existing `scripts/check-canonical-dispatch.sh` as the template.
+
+Output: New script `scripts/check-code-craft-canonical.sh`; updated root
+`CLAUDE.md` "Repository scripts/" section and "Validate plugin structure"
+block; updated `docs/release-checklist.md` if applicable.
+
+Done when: Script exists, is executable on both Windows (Git Bash) and WSL2
+Ubuntu, returns 0 on the current tree, and is referenced from the two CLAUDE.md
+locations listed above; a deliberate test mutation (e.g., changing one
+character in one agent's canonical block) makes the script exit non-zero with
+a clear "files differ" message; the mutation is reverted before commit.
+
+**Step 4.5: Pre-ship sanity-check dry-run for `quality-reviewer`'s new bullets**
+
+What to do:
+
+- Pick **one** recently-merged real PR or commit from this repository that
+  contains a representative shape of change. The selection criteria are:
+  - The change includes at least one **mechanically-forced cascade** (e.g., an
+    interface signature change with implementer updates) OR at least one
+    **boundary validation** OR at least one **project-convention-mandated
+    abstraction** (e.g., a new agent file following the established 11-agent
+    structure).
+  - The change was reviewed and merged without raising over-engineering or
+    drive-by-refactoring concerns (i.e., it is a known-good baseline).
+- Perform a **dry-run paper review** of the selected diff against the new
+  `quality-reviewer` REVIEW CHECKLIST bullets only (over-engineering bullet
+  and drive-by bullet). Do NOT run the full task-review skill — this is
+  purely a sanity check on the two new bullets' three-condition gates.
+- For each suspicious diff hunk, walk through the three exclusion conditions
+  for that bullet and record whether the bullet would FLAG or PASS.
+- Tabulate results:
+  - If the bullet correctly PASSes all of the previously-merged hunks → the
+    three-condition gates are tight enough; ship v3.1.0 as-is.
+  - If the bullet would FLAG one or more hunks that were known-good →
+    record which condition failed to gate it, and either (a) tighten the
+    condition wording in Step 2.3 before shipping, or (b) downgrade Risk #3
+    from "Low residual" back to "Medium" and flag for explicit v3.1.1
+    revisit.
+
+Why: A "Why-not-Command" rule's reliability is only knowable by running it
+against real diffs. A purely-paper review can over- or under-tune the gates
+because rule-writers tend to picture their intended examples. Anchoring the
+test to a known-good past PR forces the gates to confront real-world shapes
+of change. This step exists because Risk #3's mitigation explicitly depends
+on it — without it, "Low residual" is unsubstantiated.
+
+Input: Repository git history (look for a recently-merged PR that meets the
+selection criteria — candidates include the `v2.0`-era plan/task refactors,
+the `v3.0`-era agent split, or any recent CLAUDE.md restructuring that
+involved cascading edits).
+
+Output: A short dry-run report appended to the v3.1.0 release notes or
+attached to the release-checklist run: the PR selected, the diff hunks
+walked, the bullet's FLAG/PASS decision for each, and a one-line ship/no-ship
+conclusion.
+
+Done when: The dry-run report exists, has at least 3 walked-through hunks,
+and ends in either "ship as-is" or "tighten Step 2.3 wording before ship"
+with a concrete tightening proposal. If "tighten", the proposal is applied
+to Step 2.3 and Step 4.5 is re-run.
 
 ## Risks and Mitigations
 
@@ -646,34 +879,49 @@ itself is excluded from this count — it is a deliberate net addition.)
 |---|------|------------|-----------|
 | 1 | Subtle wording in relocated text is load-bearing for the agent's behavior; relocation drift causes regression | Medium | Step 4.1 grep verification; review every removed line and check the shared file covers the same operational instruction, not just the slogan |
 | 2 | Stack-specific examples (C# / TS) make the file feel less universal; future contributors hesitant to add a Rust or Python example | Low | The README clarification makes the documentary-vs-behavioral distinction explicit; new contributors can add more languages later if real demand emerges, but the maintainer's primary stacks are the right default |
-| 3 | The new "over-engineering" REVIEW CHECKLIST bullet causes `quality-reviewer` to flag false positives on legitimate abstractions | Medium | The bullet is scoped to "for single-use code" and "unrequested" — these qualifiers exist precisely to prevent flagging real abstractions; if false positives appear in practice, tighten in v3.1.1 |
+| 3 | The new over-engineering and drive-by REVIEW CHECKLIST bullets cause `quality-reviewer` to flag false positives on legitimate abstractions, mechanically-forced cascading changes, or style convergence | Medium → Low | Step 2.3 phrases both bullets with **three explicit exclusion conditions** (must satisfy all three to flag) that name the most common false-positive sources: project-convention-mandated abstractions, boundary validations, mechanically-forced cascades (interface signature → implementers; orphaned imports), and convergence to canonical style. Step 4.5 runs a pre-ship dry-run against a known-good past PR to confirm the bullets do not over-trigger. The three-condition gate plus the dry-run sanity check together reduce the residual risk to Low; if false positives still appear in practice, tighten in v3.1.1 |
 | 4 | Examples grow over time; the shared file balloons to 300+ lines like Karpathy's EXAMPLES.md | Low | Phase 1 sizing caps each example at ≤ 25 lines per side; future additions go through plan/task review; if growth is real, split into per-principle files later |
 | 5 | `task-implementer`'s STOP-and-BLOCKED triggers and the new Simplicity reference could be read as contradictory by the agent (one says "stop if it changes API contract", the other says "minimum code") | Low | Step 2.1's preservation note keeps STOP-and-BLOCKED triggers and the QUALITY CHECKLIST local to the agent and explicitly labels them as workflow-specific decision boundaries / correctness checks (NOT code-craft principles). Step 1.4's applicability table covers the orthogonal author-vs-reviewer dimension. The two scopes — when to halt, vs. how to write the code that does get written — operate at different levels and do not conflict |
 | 6 | Bumping plugin version to 3.1.0 implies more substance than the change actually contains, inflating the changelog signal | Low | The CHANGELOG Rationale section honestly characterizes scope; 3.1.0 is consistent with v1.5.0's "add a new shared resource" precedent |
 
 ## Open Questions
 
-All five design decisions remain locked. The following observations surfaced
-during plan review and are recorded here for the maintainer to revisit after
-v3.1.0 ships rather than to resolve during execution:
+All five design decisions remain locked. Two observations that surfaced during
+plan review were RESOLVED by additions in this revision; one new observation
+is recorded for post-ship revisit.
 
-- **Reference-vs-inline cost.** Three agents reference the shared file via
-  `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md` rather than inlining
-  the principle text. This is the SSoT-by-reference pattern that mirrors
-  `discovery-framework.md`, but it depends on the agent actually reading the
-  referenced file at invocation time. There is no automated check that the
-  read happened. If post-v3.1.0 traces show agents not honoring the principles
-  in practice, a v3.1.1 revision may need to either (a) inline a one-paragraph
-  summary in the agent body alongside the reference, or (b) add an explicit
-  prerequisite step to the agent that reads the shared file. Until traces
-  show a real problem, the reference-only approach stays per locked decision
-  B2.
-- **Quality-reviewer false-positive rate.** The new over-engineering and
-  drive-by REVIEW CHECKLIST bullets are a behavior change for the reviewer
-  agent. Risk #3 mitigation says "if false positives appear in practice,
-  tighten in v3.1.1" — this open question simply notes that the v3.1.0 ship
-  needs at least one real `task-review` run against a sample diff to confirm
-  the new bullets do not cascade into noise findings.
+### Resolved during this plan revision
+
+- **~~Reference-vs-inline cost.~~ RESOLVED.** The original plan used a pure
+  reference-only SSoT model. Plan review surfaced that agents may skip the
+  Read at dispatch time, breaking the reliability promise. **Resolution:**
+  switched to a hybrid model — canonical principle paragraphs are now inlined
+  byte-identical into `task-implementer.md` and `code-fixer.md` (so the
+  principles are loaded into every dispatch via the agent's system prompt),
+  while the shared file remains the SSoT for examples, checklists, and the
+  applicability table. Byte-identity is enforced by a new check script (Step
+  4.4) modeled on existing canonical-dispatch / review-agent-drift
+  invariants. See revised Architecture section, Steps 1.2, 1.3, 2.1, 2.2,
+  and the new Step 4.4 for the implementation.
+- **~~Quality-reviewer false-positive rate.~~ RESOLVED (pending dry-run).**
+  The original plan's two new REVIEW CHECKLIST bullets were phrased
+  permissively, risking false positives on project-convention abstractions,
+  mechanically-forced cascades, and style convergence. **Resolution:** Step
+  2.3 now phrases both bullets with explicit three-condition exclusion
+  gates (must satisfy all three to flag) covering the most common false-
+  positive sources. Step 4.5 adds a pre-ship dry-run against a known-good
+  past PR to substantiate the "Low residual" risk rating. The "Resolved
+  pending dry-run" qualifier acknowledges that the substantiation is
+  completed by Step 4.5 during execution, not at plan time.
+
+### Recorded for post-v3.1.0 revisit
+
+- **Stack coverage of examples.** The shared file's diff examples are C# and
+  TypeScript per decision A2. The maintainer's primary stacks are well-served,
+  but if external contributors raise issues showing Rust / Python /
+  Java-specific over-engineering patterns that the current examples do not
+  cover, a v3.2.0 may add a third example pair. This is not blocking and is
+  not actionable during v3.1.0 — it depends on real usage signal.
 
 Any new questions that surface during implementation should be raised back
 through `/kenspc-plan` rather than resolved unilaterally during execution.
