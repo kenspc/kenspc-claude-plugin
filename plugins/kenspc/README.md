@@ -147,8 +147,11 @@ Cross-cutting properties from earlier versions are preserved:
   `/agents`. Standalone-safe code reviewers can be
   `@kenspc:<name>`-invoked directly; orchestration-only workers are gated
   behind their parent slash commands.
-- **Stack-agnostic** — Skills inspect project config files rather than
-  assuming specific frameworks.
+- **Stack-agnostic skill behavior** — Skills inspect project config files
+  rather than assuming specific frameworks. (Documentation examples in
+  `shared/` may use specific languages — currently C# and TypeScript — to
+  maximize teaching density; this does not constrain which projects the
+  skills work with.)
 
 ### Effort levels
 
@@ -205,6 +208,16 @@ See [CHANGELOG.md](./CHANGELOG.md) for version history.
 The anti-rationalization tables, red flags, and autonomy boundaries in this plugin
 are inspired by [agent-skills](https://github.com/addyosmani/agent-skills) by
 [Addy Osmani](https://github.com/addyosmani), licensed under MIT.
+
+The Simplicity First and Surgical Changes principles in
+`shared/code-craft-principles.md` are derived from Andrej Karpathy's
+[October 2025 X post](https://x.com/karpathy/status/2015883857489522876) on
+common LLM coding pitfalls, by way of the
+[`andrej-karpathy-skills`](https://github.com/doggy8088/andrej-karpathy-skills)
+`AGENTS.md` compilation by [doggy8088](https://github.com/doggy8088) (forked from
+[forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills)).
+kenspc adopts two of the four principles; example code is original and
+stack-specific to the maintainer's primary stacks.
 
 The five-dimension discovery framework (`shared/discovery-framework.md`) — used by
 both `generate-brief` and `generate-plan` Phase 1 — is adapted from the structured

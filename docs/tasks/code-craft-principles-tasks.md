@@ -334,7 +334,7 @@ and Validate plugin structure blocks are touched in Task 15.)
 
 ### Task 10: Update `plugins/kenspc/README.md` — clarify Stack-agnostic and add Acknowledgements paragraph
 
-**Status:** TODO
+**Status:** DONE
 
 Depends on: Task 1
 
