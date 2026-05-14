@@ -613,7 +613,39 @@ The script must be executable on both Windows (Git Bash) and WSL2 Ubuntu.
 
 ### Task 16: Pre-ship dry-run for `quality-reviewer` new bullets against a known-good past PR
 
-**Status:** TODO
+**Status:** DONE
+
+Dry-run report committed at
+`docs/dry-runs/v3.1.0-quality-reviewer-bullets-dry-run.md`.
+
+Selected commit: `4d86b87` (`feat(hooks,scripts,docs): SessionEnd
+telemetry + anchor frequency guard + design lessons`, v3.0.3 P3 patch,
+2026-05-11). Selection criteria all satisfied: contains a
+project-convention-mandated abstraction (new hook script), a
+mechanically-forced metadata cascade (hooks.json description
+synchronously refreshed for the new SessionEnd event), and an internal
+refactor mechanically forced by a new task-required check
+(check-canonical-dispatch.sh's `extract_block` helper extraction).
+Merged without raising over-engineering or drive-by-refactoring
+concerns at the time.
+
+Walked four diff hunks against both new bullets (over-engineering,
+drive-by/style-drift):
+1. CLAUDE.md design-lessons section addition.
+2. hooks.json SessionEnd entry + description refresh.
+3. check-canonical-dispatch.sh single-check → dual-check upgrade.
+4. New session-end-telemetry.sh script.
+
+All four hunks correctly PASS both bullets. Condition 1 (not in task
+requirements) handled the primary task changes; Condition 2
+(mechanically forced) correctly excluded the two adjacent-code
+modifications in hunks 2 and 3. Condition 3 (boundary validation) was
+non-load-bearing in this run but provides a second line of defense.
+
+Conclusion: **ship as-is**. The three-condition gates on both bullets
+correctly excluded all four known-good hunks. No tightening of Task 8's
+wording is needed before v3.1.0 release. Risk #3's "Low residual"
+rating is substantiated.
 
 Depends on: Task 8
 
