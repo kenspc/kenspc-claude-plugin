@@ -9,6 +9,28 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.1.2 — 2026-06-27
+
+Metadata-only patch. Scopes the plugin's user-facing description lead to
+"software development" so the registry summary and full metadata read
+unambiguously as a software-development plugin, disambiguating it from a
+forthcoming non-development personal plugin in the same marketplace. No
+SKILL, agent, command, or hook behaviour changes; no CONTEXT block schema
+changes; no rename.
+
+### Changed
+
+- `.claude-plugin/marketplace.json`: registry summary lead reworded
+  "Structured development workflows for Claude Code" → "Structured
+  software development workflows for Claude Code".
+- `plugins/kenspc/.claude-plugin/plugin.json`: full-description lead
+  clause reworded the same way ("Structured software development
+  workflows for Claude Code, ..."); everything after the lead clause is
+  unchanged, preserving the marketplace-summary / full-metadata layering.
+- `plugins/kenspc/README.md`, root `README.md`, and root `CLAUDE.md`:
+  lead sentences that described the plugin as "development workflow(s)"
+  now read "software development workflow(s)".
+
 ## 3.1.1 — 2026-05-14
 
 Patch release closing the six DEFERRED items from the v3.1.0 5-angle

@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "kenspc",
-      "description": "Structured development workflows for Claude Code",
+      "description": "Structured software development workflows for Claude Code",
       "source": "./plugins/kenspc"
     }
   ]

@@ -1,6 +1,6 @@
 # kenspc
 
-A Claude Code plugin with opinionated development workflows — plan before you
+A Claude Code plugin with opinionated software development workflows — plan before you
 code, structured task implementation, iterative multi-angle review, and project guide
 generation.
 

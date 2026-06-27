@@ -1,6 +1,6 @@
 # kenspc-claude-plugin
 
-A Claude Code plugin marketplace with structured development workflow plugins.
+A Claude Code plugin marketplace with structured software development workflow plugins.
 
 ## Installation
 
@@ -16,7 +16,7 @@ A Claude Code plugin marketplace with structured development workflow plugins.
 
 ### [kenspc](./plugins/kenspc/)
 
-Opinionated development workflows — discovery brief, plan before you code, structured task implementation, iterative multi-angle code review, and project guide generation.
+Opinionated software development workflows — discovery brief, plan before you code, structured task implementation, iterative multi-angle code review, and project guide generation.
 
 **Skills:**
 
