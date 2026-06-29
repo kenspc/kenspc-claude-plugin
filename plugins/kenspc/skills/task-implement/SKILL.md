@@ -161,7 +161,10 @@ Render the implementer's Schema D table verbatim:
 | 2 | T-002   | BLOCKED  | —             | —       |
 
 Below the table, render the BLOCKED prose, Decisions made, and Post-
-implementation notes verbatim from the agent's output.
+implementation notes verbatim from the agent's output. These prose sections
+are roll-ups of the per-task `**Implementation notes:**` blocks now persisted
+in the task document; the orchestrator still renders them verbatim from the
+agent's output rather than re-reading the document.
 
 Then present a brief progress update to the user:
 

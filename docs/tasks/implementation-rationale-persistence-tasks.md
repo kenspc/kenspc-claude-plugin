@@ -96,7 +96,11 @@ the end-of-run Schema D prose is assembled by reading those blocks back:
 
 ### Task 2: Sync Schema D roll-up wording in `task-implement/SKILL.md` Phase 1 Step 5
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none — added the single clause to the existing "render ... verbatim from the agent's output" sentence in Phase 1 Step 5, well outside both the `<!-- canonical:dispatch:* -->` and `<!-- canonical:verdict-shared:* -->` markers.
+- Changes/tradeoffs: explicitly kept "still renders verbatim from the agent's output rather than re-reading the document" so the clause does not accidentally read as instructing the orchestrator to re-source Schema D itself (that re-sourcing is the implementer agent's job, per Task 1). `version:` left at `3.0.0` per the owner's resolved decision and project CLAUDE.md.
 
 Depends on: Task 1
 
