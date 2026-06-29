@@ -292,6 +292,15 @@ Based on the regression verification results, declare a verdict:
   if all other checks PASS and no HIGH issues remain. The Verdict
   paragraph should explicitly note "tests spot-checked due to no
   test suite" when this state is present.
+- A test run that was involuntarily incomplete (a crash, a timeout, an error, or
+  tests that should have run did not) is recorded by regression-verifier as row-3
+  `FAIL` and forces a FAIL verdict like any other failed check — see that agent's
+  VERIFICATION CHECKS item 3.
+- When the test run passed but some tests were intentionally skipped, row 3 stays
+  `PASS` and its Detail lists the skips. A PASS verdict is still allowed, but the
+  Verdict paragraph must note "N tests skipped by design" so the PASS is never
+  silent about the reduced coverage. Why: the user should accept skipped coverage
+  knowingly, not discover it later.
 - **FAIL** when any of: one or more HIGH severity issues remain unresolved;
   one or more INCORRECTLY FIXED items; build / test / lint fails; fix
   commits introduced unresolved regressions.

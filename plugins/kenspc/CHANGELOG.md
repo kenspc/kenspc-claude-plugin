@@ -9,6 +9,75 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.2.0 — 2026-06-29
+
+Two review-quality strengthenings, both behavioural. The test-reviewer
+gains a falsifiability check (would each test fail if the logic it covers
+were wrong), and the regression-verifier no longer lets the "Tests pass"
+check hide an incomplete run: an involuntarily incomplete run (a crash, a
+timeout, or tests that should have run but did not) is recorded as FAIL,
+while intentional documented skips stay PASS but must be itemised in the
+Detail cell. Minor bump because both add new review behaviour; no CONTEXT
+block schema changes, no SKILL or agent interface changes for callers, and
+the no-test-suite `SPOT-CHECK` behaviour is unchanged.
+
+### Rationale
+
+Two failure modes let a review look thorough while verifying less than it
+claims. First, a test can pass no matter what the code does — asserting a
+value the function returns unconditionally, for example — so it survives any
+regression and protects nothing; the test-reviewer had no prompt to catch
+these. Second, the regression-verifier recorded the "Tests pass" row as PASS
+whenever the test command came back clean, even if the run had aborted
+partway or silently skipped tests, so an incomplete run could resolve to a
+clean PASS verdict and overstate what was verified. The fix splits the two
+cases an exit code blurs together: an involuntarily incomplete run (a crash,
+a timeout, or tests that should have run but did not) is now a FAIL, while
+intentional documented skips stay PASS but must be itemised in the Detail
+cell so the PASS is never silent about reduced coverage.
+
+Both strengthenings extend the same Karpathy-derived code-craft lineage
+already credited in the README Acknowledgements (Karpathy's October 2025 X
+post on LLM coding pitfalls, by way of the `andrej-karpathy-skills`
+compilation). The plugin previously adopted two of those four principles —
+Simplicity First and Surgical Changes; falsifiability ("a test that cannot
+fail is not a test") and fail-loud ("never report success you did not
+verify") are extensions in the same spirit, applied here to the review
+harness rather than to authored code.
+
+### Added
+
+- `agents/test-reviewer.md`: new REVIEW CHECKLIST bullet asking whether each
+  test would fail if the business logic it covers were wrong, flagging
+  tautological tests that pass regardless of the logic and noting what they
+  should assert instead. Inserted directly after the existing
+  behaviour-not-implementation bullet. REVIEW CHECKLIST is angle-specific and
+  is not one of the drift-guarded shared sections (PREREQUISITES / FILE
+  COVERAGE / CUSTOM INSTRUCTIONS), so the other four reviewer agents are
+  untouched.
+
+### Changed
+
+- `agents/regression-verifier.md`: VERIFICATION CHECKS item 3 now weighs how
+  completely the test run executed instead of trusting a clean exit code. A
+  full run with every test passing is `PASS`; an involuntarily incomplete run
+  — crashed, timed out, errored, or tests that should have run did not — is
+  `FAIL`, with the cause and the failed / unexecuted count in the Detail cell;
+  a run whose only gap is intentional documented skips (`Skip=` / `.skip` /
+  `[Ignore]` / env-or-trait gate) stays `PASS` but must list the skipped tests
+  and their reasons in Detail. The Schema C note documents both as distinct
+  from the no-test-suite `SPOT-CHECK`; `SPOT-CHECK` behaviour is unchanged.
+- `skills/task-review/SKILL.md` and `skills/task-implement/SKILL.md`: each
+  Verdict determination section gains the same two clauses — an involuntarily
+  incomplete test run is row-3 `FAIL` and forces a FAIL verdict; an
+  intentional-skip run stays row-3 `PASS` and may still reach a PASS verdict,
+  but the Verdict paragraph must note "N tests skipped by design" so the PASS
+  is never silent about reduced coverage. Applied to both skills because both
+  dispatch regression-verifier and consume its Schema C output through their
+  own verdict sections. The clauses sit in the verdict sections, outside the
+  byte-identity-guarded canonical dispatch block.
+- `plugins/kenspc/.claude-plugin/plugin.json`: version `3.1.2` → `3.2.0`.
+
 ## 3.1.2 — 2026-06-27
 
 Metadata-only patch. Scopes the plugin's user-facing description lead to

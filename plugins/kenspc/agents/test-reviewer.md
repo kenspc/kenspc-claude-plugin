@@ -63,6 +63,7 @@ REVIEW CHECKLIST
 - Are error paths tested (invalid input, service failures, timeouts)?
 - Do tests verify real behavior and outcomes, not implementation details?
   (e.g., testing return values, not whether a specific internal method was called)
+- Would each test fail if the business logic it covers were wrong? Tests that pass regardless of the logic — e.g. asserting a value the function returns unconditionally — give no regression protection. Flag any such tautological tests and note what they should assert instead.
 - Are there integration tests for critical paths (API endpoints, database operations)?
 - If tests are missing for new/modified code, note exactly which functions or paths
   need tests and what the tests should verify.

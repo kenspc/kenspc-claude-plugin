@@ -57,7 +57,26 @@ VERIFICATION CHECKS
    file and line and confirm the fix addresses the reported issue. If the fix is
    incorrect or incomplete, flag it as INCORRECTLY FIXED.
 3. Build / test / lint: run the project's build, test, and lint commands; record
-   PASS or FAIL.
+   PASS or FAIL. For the test run specifically, weigh how completely it ran:
+   - Full clean run — a suite exists, ran to completion, and every test executed
+     and passed: record PASS.
+   - Involuntarily incomplete — the run crashed, timed out, errored, or tests that
+     should have run did not (a collection error or an unexpected filter left them
+     unexecuted), or tests failed: record FAIL, with the cause and the failed or
+     unexecuted count in the "Tests pass" row's Detail cell. Why: an aborted run
+     verified less than it claims, and a PASS would hide that.
+   - Intentionally skipped — the suite ran and every executed test passed, but one
+     or more tests were deliberately skipped (a `Skip=` / `@skip(reason=…)` /
+     `.skip` / `[Ignore]` annotation, or a documented env / trait gate): record
+     PASS, and list the skipped tests and their stated reasons in the Detail cell.
+     Why: the skips are intentional so this is not a failure, but a PASS that does
+     not name them would overstate coverage — keep the PASS honest by surfacing
+     them so the user accepts the reduced coverage knowingly.
+   To tell the last two apart, read the test source for any skip: a skip carrying
+   an explicit reason or annotation is intentional, while tests dropped by a run
+   that ended early or errored — with no such annotation — are involuntarily
+   incomplete. Both differ from the no-test-suite SPOT-CHECK state in the fallback
+   below, where no test suite exists at all.
 4. Cross-check for regressions: review fix commits with `git log` and `git show`.
    For each file touched by a fix commit, verify:
    - The fix did not introduce a new null/undefined code path.
@@ -108,6 +127,16 @@ PROJECTS): the Result cell becomes `SPOT-CHECK` and the Detail cell
 becomes `no test suite — accountability list spot-checked instead`.
 `SPOT-CHECK` is a documented third state for the "Tests pass" check
 only; rows 2 and 4 remain PASS/FAIL.
+
+Row 3 takes `FAIL` when a test suite exists but the run was involuntarily
+incomplete — it crashed, timed out, errored, or tests that should have run did
+not — with the cause and the failed or unexecuted count in the Detail cell.
+
+When the suite ran and every executed test passed but some tests were
+intentionally skipped, Row 3 stays `PASS`; the Detail cell then lists the
+skipped tests and their reasons so the PASS is never silent about the reduced
+coverage. Neither case is a `SPOT-CHECK`, which is reserved for projects with
+no test suite at all.
 
 ## Detail
 
