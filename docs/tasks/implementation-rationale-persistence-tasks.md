@@ -129,7 +129,11 @@ only). All edits stay outside the `<!-- canonical:dispatch:start -->` /
 
 ### Task 3: Demonstrate the Implementation notes block in `references/task-document-example.md`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: placed the clarifier as a blockquote (`>`) immediately after Task 1's acceptance criteria so it reads as an annotation about the example rather than as part of the template content a user would copy.
+- Changes/tradeoffs: the example block's `Decisions:` sub-bullet reuses the existing `passwordHash` schema detail already in the example so the demonstration is concrete and self-consistent, rather than inventing an unrelated rationale; `Changes/tradeoffs: none` shows the "nothing notable" form. Block appears on the DONE task only; Tasks 2–5 untouched.
 
 Depends on: Task 1
 

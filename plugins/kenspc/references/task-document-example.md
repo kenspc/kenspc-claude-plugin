@@ -20,12 +20,22 @@ Related plan: `docs/plans/auth-plan.md`
 
 **Status:** DONE
 
+**Implementation notes:**
+- Decisions: named the column `passwordHash` (not `password`) to make the
+  hashed-only storage intent explicit at the schema level.
+- Changes/tradeoffs: none — implemented exactly as specified.
+
 Add a `User` model to the Prisma schema with fields: id, email (unique), passwordHash,
 createdAt, updatedAt. Run the migration.
 
 **Acceptance criteria:**
 - `prisma migrate dev` succeeds
 - User table exists with correct columns and constraints
+
+> The `**Implementation notes:**` block above is written by `task-implement` at
+> completion time (it captures the implementer's per-task rationale). You do not
+> pre-write it when authoring a task document — a freshly authored task is just
+> `Status: TODO` with no notes block.
 
 ---
 
