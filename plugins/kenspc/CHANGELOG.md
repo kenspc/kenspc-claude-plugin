@@ -644,7 +644,7 @@ Anthropic's essays on context engineering and harness design, and OpenAI's
 GPT-5.5 prompting guide. (For thinkfirst attribution — relevant to the
 discovery framework introduced in v1.5.0, not v3.0.0 — see the v1.5.0
 entry below.) For full attribution with links, see the [plugin README
-Acknowledgments section](README.md#acknowledgments).
+Acknowledgments section](README.md#acknowledgements).
 
 ## 2.0.0 — 2026-05-04
 
@@ -696,7 +696,7 @@ accessible without losing orchestrated workflows.
 The `agents/` directory structure follows the [Claude Code subagents
 convention](https://code.claude.com/docs/en/sub-agents). For full
 attribution with links, see the [plugin README Acknowledgments
-section](README.md#acknowledgments).
+section](README.md#acknowledgements).
 
 ## 1.5.0 — 2026-05-04
 
@@ -752,7 +752,7 @@ overlap with existing pipeline stages.
 The five-dimension discovery framework is adapted from
 [thinkfirst](https://github.com/garychen-ai/thinkfirst) by
 [Gary Chen](https://github.com/garychen-ai), reduced from seven dimensions
-to five. See [plugin README Acknowledgments](README.md#acknowledgments)
+to five. See [plugin README Acknowledgments](README.md#acknowledgements)
 for full attribution.
 
 ## 1.4.0 — 2026-04-08

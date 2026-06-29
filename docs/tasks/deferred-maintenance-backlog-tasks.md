@@ -17,7 +17,11 @@
 
 ### Task 1: 修复 Item 2 — CHANGELOG 三处死锚点
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none (机械替换，方向已由任务规格锁定)。只改链接锚点子串 `#acknowledgments` → `#acknowledgements`，README.md:206 的 `## Acknowledgements` heading 真相源保持不动，符合任务的"改链接不改 heading"方向锁定。
+- Changes/tradeoffs: none。三处链接的显示文字 "Acknowledgments"（美式拼写，历史散文）按规格保留不动；只动锚点目标。双向 grep 验收通过（死锚点 0、正确锚点 3），diff 为 1 file changed / +3 −3，README.md 零改动。此变更为 CHANGELOG 文档锚点修复，仓库无针对 CHANGELOG 内容的测试框架；该类变更的验证面是 Task 2 的 6 个 pre-flight 守卫脚本。
 
 在 `plugins/kenspc/CHANGELOG.md` 中，把链接目标 `README.md#acknowledgments` 改为
 `README.md#acknowledgements`（补回漏掉的 `e`），共 **3 处**，分别位于第 **647 / 699 / 755** 行
