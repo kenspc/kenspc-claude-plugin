@@ -14,7 +14,7 @@ disk, rather than content first written at the final render.
 - `plugins/kenspc/agents/task-implementer.md` — the core behavioural change
   (PROCESSING APPROACH, DONE CRITERIA, STUCK HANDLING, OUTPUT FORMAT / Schema D).
 - `plugins/kenspc/skills/task-implement/SKILL.md` — minimal Schema D-wording sync
-  in Phase 1 Step 5, plus the `version:` bump.
+  in Phase 1 Step 5 (no `version:` bump — see Resolved Decisions).
 - `plugins/kenspc/references/task-document-example.md` — show the new per-task
   block location/format on the one DONE task, plus a one-line clarifier.
 - `plugins/kenspc/.claude-plugin/plugin.json` — version bump.
@@ -205,17 +205,14 @@ still exits 0.
 In Phase 1 Step 5, add one clause noting that the rendered Decisions /
 Post-implementation / Blocked prose are roll-ups of the per-task notes now
 persisted in the task document (still rendered verbatim from the agent's output).
-The `version:` bump (`3.0.0 → 3.3.0`) is **contested** — it conflicts with the
-project CLAUDE.md uniform-`3.0.0` convention; do not execute it until the owner
-resolves the "SKILL `version:` bump contradicts project CLAUDE.md" item in Open
-Questions (Option A leaves it at `3.0.0`; Option B bumps it to `3.3.0` and
-updates CLAUDE.md in the same change). All edits stay outside the
+Leave the `version:` field at `3.0.0` (owner's resolved decision — see Resolved
+Decisions; the project CLAUDE.md keeps all six SKILL `version:` fields uniform at
+`3.0.0`). All edits stay outside the
 `<!-- canonical:dispatch:start -->` / `<!-- canonical:dispatch:end -->` markers
 and outside the shared verdict block.
 *Acceptance:* `bash scripts/check-canonical-dispatch.sh` and
-`bash scripts/check-verdict-shared.sh` still exit 0; the `version:` field
-reflects the owner's resolution of the Open Questions item (`3.0.0` under
-Option A, `3.3.0` under Option B).
+`bash scripts/check-verdict-shared.sh` still exit 0; the `version:` field is
+unchanged at `3.0.0`.
 
 **Step 6 — `references/task-document-example.md`.**
 Add an `**Implementation notes:**` block under Task 1's `**Status:** DONE` line
@@ -293,29 +290,20 @@ and that the end-of-run Schema D matches the persisted blocks.
   verdict-shared guard are run in Step 8; edits are scoped to sections outside
   every canonical marker.
 
-## Open Questions
+## Resolved Decisions
 
-- **SKILL `version:` bump contradicts project CLAUDE.md.** The SKILL.md
-  `version:` fields sit at `3.0.0` while `plugin.json` is at `3.2.0` (the 3.1.x
-  and 3.2.0 releases bumped only `plugin.json`). The brief's guardrail says to
-  bump every touched SKILL.md `version:` "to match", which would make
-  `task-implement/SKILL.md` jump `3.0.0 → 3.3.0` while the other five SKILLs
-  stay at `3.0.0`. **This directly contradicts a documented convention**: the
-  project CLAUDE.md ("SKILL.md Frontmatter Fields" section) states the per-skill
-  `version` field is "uniformly `3.0.0` across all six skills", "deliberately
-  decoupled from the plugin version", and should be bumped "only on a future
-  architecture-generation change (a v4 rewrite), and bump all six together so
-  the uniformity holds." Executing Step 5's bump as written would break that
-  all-six-uniform invariant. The two guidances conflict and the owner must
-  resolve which wins before implementation:
-  - **Option A (follow CLAUDE.md — recommended default):** leave
-    `task-implement/SKILL.md` at `version: 3.0.0`; the release is tracked by
-    `plugin.json` (`3.2.0 → 3.3.0`) and the CHANGELOG entry only. Drop the
-    `version:` bump from Step 5 (the Phase 1 Step 5 wording edit still applies).
-  - **Option B (follow the brief):** bump `task-implement/SKILL.md` to `3.3.0`
-    and, to preserve the documented uniformity invariant, update the CLAUDE.md
-    convention paragraph in the same change to reflect the new policy —
-    otherwise the plan ships a state CLAUDE.md explicitly forbids.
+- **SKILL `version:` field stays at `3.0.0` (resolved with the owner — Option A).**
+  The brief's guardrail said to bump every touched SKILL.md `version:` "to match",
+  which would have jumped `task-implement/SKILL.md` to `3.3.0` while the other
+  five stayed at `3.0.0`. That contradicts the project CLAUDE.md ("SKILL.md
+  Frontmatter Fields") invariant that all six SKILL `version:` fields stay uniform
+  at `3.0.0`, deliberately decoupled from the plugin version, bumped only on a v4
+  architecture rewrite (all six together). The brief's `(v3.x convention)` aside
+  shows it meant to follow the convention, not override it — and the documented
+  convention, matched by the 3.1.x / 3.2.0 release practice, is "bump only
+  `plugin.json`". Decision: follow CLAUDE.md. `task-implement/SKILL.md` stays at
+  `3.0.0`; the release is tracked by `plugin.json` (`3.2.0 → 3.3.0`) and the
+  CHANGELOG entry; CLAUDE.md is not edited.
 
 ## Post-merge (owner)
 
