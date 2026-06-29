@@ -69,6 +69,17 @@ DONE CRITERIA
   is configured, that gap is noted in the Schema D Post-implementation prose.
 
 PROCESSING APPROACH
+Before processing incomplete tasks, scan for any task already marked DONE or
+BLOCKED that has no `**Implementation notes:**` block on disk — for example a
+task whose status flip committed but whose block write was lost to a mid-run
+stall, or a task completed before this convention existed. For each such task,
+backfill a minimal block (a `Decisions:`/`Changes/tradeoffs:` pair for DONE, a
+`- Blocked:` line for BLOCKED) reconstructed from git history for that task, and
+commit it in its own task-document-only commit. If the rationale cannot be
+recovered, record `Decisions: not recoverable (block lost before persistence)`
+rather than fabricating one. This keeps the roll-up faithful when a re-run
+resumes after a stall.
+
 For each incomplete task, in document order:
 - Plan the implementation approach for this task — files to create or modify,
   patterns to follow, edge cases to handle. The task's scope and acceptance
