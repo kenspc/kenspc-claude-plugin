@@ -32,10 +32,12 @@ createdAt, updatedAt. Run the migration.
 - `prisma migrate dev` succeeds
 - User table exists with correct columns and constraints
 
-> The `**Implementation notes:**` block above is written by `task-implement` at
-> completion time (it captures the implementer's per-task rationale). You do not
-> pre-write it when authoring a task document — a freshly authored task is just
-> `Status: TODO` with no notes block.
+> The `**Implementation notes:**` block under Task 1's `**Status:**` line is
+> written by `task-implement` at completion time (it captures the implementer's
+> per-task rationale). You do not pre-write it when authoring a task document — a
+> freshly authored task carries no notes block regardless of its status, as Task 2
+> (IN PROGRESS) and Tasks 3–5 (TODO) below show. The block first appears once
+> `task-implement` reaches that task and records a DONE or BLOCKED outcome.
 
 ---
 
