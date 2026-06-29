@@ -255,6 +255,7 @@ bash scripts/check-canonical-dispatch.sh
 bash scripts/check-verdict-shared.sh
 bash scripts/check-code-craft-canonical.sh
 bash scripts/check-quality-reviewer-bullet-structure.sh
+bash scripts/check-notes-format-sync.sh
 ```
 
 ### Repository scripts/
@@ -283,13 +284,22 @@ Project-level shell scripts live in `scripts/` at the repo root:
   invariant on the two REVIEW CHECKLIST bullets in `quality-reviewer.md`
   (Over-engineering, Drive-by refactoring): each must enumerate exactly
   three numbered conditions gated by an `**all three**` qualifier.
+- `check-notes-format-sync.sh` — guards that the per-task Implementation
+  notes block's two sub-bullet labels (`Decisions:`, `Changes/tradeoffs:`)
+  stay present in both the live agent (`task-implementer.md`, which
+  prescribes the format) and the demonstrated example
+  (`references/task-document-example.md`, which users copy from). An
+  anchor-presence guard, not byte-identity — the surrounding prose differs
+  by design (the agent describes the format, the example shows a filled-in
+  instance); it catches a rename of either label in one file but not the
+  other.
 
-The latter four scripts also accept a `--self-test` flag that runs a
+The latter five scripts also accept a `--self-test` flag that runs a
 mutation regression fixture in a temp workdir (positive path, negative
 path on a deliberate mutation, restoration path on revert). See the
 release-checklist mechanical-check block for the full invocation order.
 
-Run before tagging any release; all five should also be considered as
+Run before tagging any release; all six should also be considered as
 pre-commit hook candidates when their target files change.
 
 ### Release procedure

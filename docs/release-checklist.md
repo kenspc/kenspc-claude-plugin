@@ -35,14 +35,18 @@ bash scripts/check-code-craft-canonical.sh
 # Quality-reviewer bullet structure (3-condition gate on two new bullets)
 bash scripts/check-quality-reviewer-bullet-structure.sh
 
-# Mutation regression fixtures (self-test on the four canonical drift guards)
+# Notes-format sync (DONE-block sub-bullet labels: agent vs example)
+bash scripts/check-notes-format-sync.sh
+
+# Mutation regression fixtures (self-test on the five self-test-capable guards)
 bash scripts/check-code-craft-canonical.sh --self-test
 bash scripts/check-canonical-dispatch.sh --self-test
 bash scripts/check-verdict-shared.sh --self-test
 bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
+bash scripts/check-notes-format-sync.sh --self-test
 ```
 
-All twelve must exit 0 (3 JSON validations + 4 main-mode shell drift guards + 1 structural guard + 4 mutation regression self-tests). If any fail, fix before proceeding to the smoke checklist.
+All fourteen must exit 0 (3 JSON validations + 4 main-mode shell drift guards + 2 structural/sync guards + 5 mutation regression self-tests). If any fail, fix before proceeding to the smoke checklist.
 
 ## Smoke checklist (manual, ~10 minutes)
 
