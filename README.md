@@ -33,6 +33,21 @@ Opinionated software development workflows — discovery brief, plan before you 
 
 See the [plugin README](./plugins/kenspc/README.md) for full documentation, usage examples, and design principles.
 
+## Design Philosophy
+
+The `kenspc` plugin is opinionated on purpose. It encodes a single end-to-end
+SOP — brief → plan → task → implement → review — rather than a grab-bag of
+commands, and it is written principle-first: outcome-and-rationale instructions
+over step-by-step scaffolding, tuned for how current-generation models read
+prompts. The v3 line was a deliberate refactor away from the aggressive
+directive tokens and anti-rationalization scaffolding that once helped weaker
+models but drag stronger ones down.
+
+See [Design Principles](./plugins/kenspc/README.md#design-principles) for the
+rules this follows, and
+[Acknowledgements](./plugins/kenspc/README.md#acknowledgements) for the
+prompt-engineering lineage behind them.
+
 ## Structure
 
 ```
