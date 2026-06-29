@@ -51,7 +51,11 @@
 
 ### Task 2: 跑 pre-flight 机械检查确认 invariant 未破坏
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none（纯验证任务，按规格运行 6 个守卫脚本，不改任何文件）。
+- Changes/tradeoffs: none。6 个守卫脚本全部 exit 0：check-review-agent-drift、check-canonical-dispatch、check-verdict-shared、check-code-craft-canonical、check-quality-reviewer-bullet-structure、check-notes-format-sync。确认 Task 1 的 CHANGELOG 锚点改动对所有 byte-identity / 结构 invariant 零影响，无需回到 Task 1 排查。此为确认性任务，无代码提交；本 notes 块单独提交（仅暂存任务文档）。
 
 **Depends on:** Task 1
 
