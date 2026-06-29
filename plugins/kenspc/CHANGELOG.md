@@ -9,6 +9,66 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.3.0 — 2026-06-29
+
+The implementer now checkpoints each task's rationale into the task document
+as that task completes, instead of holding it in context until the end-of-run
+Schema D render. An `**Implementation notes:**` block is written directly under
+each task's `**Status:**` line in the same per-task commit that already carries
+the code and the status flip, so a mid-run stall (the context ceiling reached
+while `autoCompactEnabled: false` waits for a manual `/compact`) can no longer
+lose the reasoning behind work already committed. Schema D's three prose
+sections become roll-ups assembled by reading those persisted blocks back from
+disk. Minor bump because this adds new implementer behaviour; no CONTEXT block
+schema change, no SKILL or agent interface change for callers, and no
+review-side change.
+
+### Rationale
+
+A task's `**Status:**` marker and a BLOCKED task's blocking reason were already
+written back per task and survived a stall, but a DONE task's
+decisions/changes/tradeoffs were not — they lived in agent context as run-level
+flat lists in `## Decisions made` / `## Post-implementation notes`, first
+written only at the final Schema D render. A stall before that render lost the
+rationale behind already-committed work. The fix widens an existing precedent
+rather than introducing a new mechanism: the same per-task write that persists
+Status now also persists the rationale, and the end-of-run Schema D is
+re-sourced from disk rather than from context. Because the agent writes each
+block and moves on, by end-of-run the rationale no longer lives in context to be
+recalled — reading the document is the natural source, which is what makes the
+roll-up faithful after a partial run.
+
+### Added
+
+- `agents/task-implementer.md`: PROCESSING APPROACH now writes an
+  `**Implementation notes:**` block (DONE: `Decisions:` + `Changes/tradeoffs:`
+  sub-bullets) under the task's `**Status:**` line in the same per-task commit;
+  DONE CRITERIA adds the per-task persistence requirement (DONE in the
+  code+status commit, BLOCKED written to disk) and read-from-disk Schema D
+  assembly.
+- `references/task-document-example.md`: an `**Implementation notes:**` block on
+  the one DONE example task plus a clarifier that the block is written by
+  `task-implement` at completion time, not pre-written when authoring.
+
+### Changed
+
+- `agents/task-implementer.md`: STUCK HANDLING re-points the blocking reason to a
+  `- Blocked:` line in the same `**Implementation notes:**` block (one
+  convention, one location); Schema D's `## Blocked tasks (prose)` /
+  `## Decisions made` / `## Post-implementation notes` are reframed as
+  task-ID-prefixed roll-ups of the per-task blocks with a source-of-truth pointer
+  line. The `## Tasks` table and the `<!-- canonical:principle:* -->` blocks are
+  unchanged.
+- `skills/task-implement/SKILL.md`: Phase 1 Step 5 notes the rendered prose are
+  roll-ups of the per-task persisted notes (still rendered verbatim from the
+  agent's output). The `version:` field stays at `3.0.0` per the project's
+  SKILL-version convention. Edits stay outside the canonical-dispatch and
+  verdict-shared markers.
+
+No CONTEXT block schema change and no review-side change: `task-review` and the
+five reviewer agents are untouched, and `requirements-reviewer` already reads the
+whole task document, so the per-task blocks are in its read path for free.
+
 ## 3.2.0 — 2026-06-29
 
 Two review-quality strengthenings, both behavioural. The test-reviewer

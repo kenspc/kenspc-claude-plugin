@@ -156,7 +156,11 @@ the TODO tasks (Tasks 3–5) get no block.
 
 ### Task 4: Version bump + CHANGELOG entry
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: matched the existing CHANGELOG entry shape (prose intro + `### Rationale` / `### Added` / `### Changed`) rather than a bare three-section list, since every prior entry from 3.2.0 down uses that structure; split the file changes across Added (new behaviour/artifacts) and Changed (reframed/re-pointed existing sections) to mirror that convention.
+- Changes/tradeoffs: folded the explicit "no CONTEXT-schema change, no review-side change" note into a closing paragraph after the Changed section so it reads as a scope statement covering the whole entry, not buried in one bullet.
 
 Depends on: Task 1, Task 2, Task 3
 
