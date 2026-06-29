@@ -185,7 +185,11 @@ entry.
 
 ### Task 5: Final verification — guard scripts + constraint greps
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none — verification-only task; ran the prescribed suite as-is.
+- Changes/tradeoffs: all five `scripts/check-*.sh` guards and the `plugin.json` JSON parse exit 0; `grep -ri "implementation-notes" plugins/` returns no notes-file artifact (C4 holds); the aggressive-language grep over `task-implementer.md` and `task-implement/SKILL.md` surfaces no `MUST`/`NEVER`/`CRITICAL`/`ULTRATHINK` token, and a `git diff dbfabcc..HEAD` over those two files confirms none was introduced by this series.
 
 Depends on: Task 1, Task 2, Task 3, Task 4
 
