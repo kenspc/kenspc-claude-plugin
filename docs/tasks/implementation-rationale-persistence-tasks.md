@@ -189,7 +189,7 @@ entry.
 
 **Implementation notes:**
 - Decisions: none — verification-only task; ran the prescribed suite as-is.
-- Changes/tradeoffs: all five `scripts/check-*.sh` guards and the `plugin.json` JSON parse exit 0; `grep -ri "implementation-notes" plugins/` returns no notes-file artifact (C4 holds); the aggressive-language grep over `task-implementer.md` and `task-implement/SKILL.md` surfaces no `MUST`/`NEVER`/`CRITICAL`/`ULTRATHINK` token, and a `git diff dbfabcc..HEAD` over those two files confirms none was introduced by this series.
+- Changes/tradeoffs: the guard list was later widened (post-review) to the full twelve-check pre-flight suite from `docs/release-checklist.md` — the five main-mode guards, the four `--self-test` mutation regressions, and the JSON parse on all three JSON files; all twelve exit 0. `grep -ri "implementation-notes" plugins/` returns no notes-file artifact (C4 holds); the aggressive-language grep over `task-implementer.md` and `task-implement/SKILL.md` surfaces no `MUST`/`NEVER`/`CRITICAL`/`ULTRATHINK` token introduced by this series.
 
 Depends on: Task 1, Task 2, Task 3, Task 4
 
@@ -198,14 +198,23 @@ to confirm no locked section drifted and the out-of-scope constraints hold. This
 task edits no source files (other than its own status); the acceptance criteria
 are the script exit codes and grep results.
 
-Guards to run:
+Guards to run (the full pre-flight suite per `docs/release-checklist.md` — the
+five main-mode drift/structure guards prove the locked sections did not drift,
+and the four `--self-test` mutation regressions prove those guards would still
+fail on a drift, so a passing main run is not a vacuous green):
 ```
 bash scripts/check-review-agent-drift.sh
 bash scripts/check-canonical-dispatch.sh
 bash scripts/check-verdict-shared.sh
 bash scripts/check-code-craft-canonical.sh
 bash scripts/check-quality-reviewer-bullet-structure.sh
+bash scripts/check-code-craft-canonical.sh --self-test
+bash scripts/check-canonical-dispatch.sh --self-test
+bash scripts/check-verdict-shared.sh --self-test
+bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
 cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
+cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
+cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 ```
 
 Constraint greps:
@@ -216,7 +225,7 @@ Constraint greps:
 - None (verification only).
 
 **Acceptance criteria:**
-- All five `scripts/check-*.sh` guards exit 0 and the `plugin.json` JSON parse exits 0.
+- All five `scripts/check-*.sh` main-mode guards exit 0; the four `--self-test` mutation regressions exit 0; and the JSON parse exits 0 for all three JSON files (`plugin.json`, `hooks.json`, `marketplace.json`) — matching the twelve-check pre-flight suite in `docs/release-checklist.md`.
 - `grep -ri "implementation-notes" plugins/` shows no new notes-file artifact.
 - The aggressive-language grep over the touched files surfaces no newly introduced directive tokens.
 - Single conventional commit (status update only).
