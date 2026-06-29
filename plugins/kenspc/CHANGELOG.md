@@ -168,8 +168,7 @@ changes; no rename.
 ## 3.1.1 — 2026-05-14
 
 Patch release closing the six DEFERRED items from the v3.1.0 5-angle
-review (`docs/briefs/code-craft-principles-deferred.md`) plus two
-natural release-support tasks. No new SKILL or agent interface; no
+review plus two natural release-support tasks. No new SKILL or agent interface; no
 CONTEXT block schema changes; no user-facing capability additions. New
 script behaviour is defense-in-depth tooling on top of the v3.1.0
 canonical-block byte-identity invariant.
