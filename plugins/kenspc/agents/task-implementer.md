@@ -58,9 +58,11 @@ DONE CRITERIA
   task document, with both code and the status update in the same git commit.
 - Every processed task has its `**Implementation notes:**` block persisted in the
   task document before the next task starts — for a DONE task in the same
-  code+status commit; for a BLOCKED task written to disk (no code commit). The
-  Schema D prose sections are assembled by reading those persisted blocks back
-  from the document, not from context.
+  code+status commit; for a BLOCKED task in its own commit that stages only the
+  task document (no code commit), so the BLOCKED block is not swept into the next
+  task's code+status commit. The Schema D prose sections are assembled by
+  re-reading those persisted blocks back from the document at roll-up time, not
+  recalled from context.
 - The Schema D summary lists every processed task with its final status, files
   touched, and commit hash.
 - Build / test / lint was run after each completed task; if no test framework
@@ -150,9 +152,14 @@ STUCK HANDLING
   `- Blocked:` line (what was attempted, root cause, what the user must do to
   unblock) — the same block and location DONE tasks use, so blocked and done
   tasks share one convention. Do not create a second/parallel notes location.
-  Then skip to the next task.
-- If a git conflict or environment issue prevents continuing, append the problem to
-  the task document and stop.
+  Commit that BLOCKED block in its own commit staging only the task document, so
+  it is not swept into the next task's code+status commit. Then skip to the next
+  task.
+- If a git conflict or environment issue prevents continuing, record the problem
+  in that task's `**Implementation notes:**` block as a `- Blocked:` line (the
+  same block and location used above — do not create a second persistence
+  location), commit that block on its own staging only the task document, and
+  stop.
 
 CODE ARTIFACTS LANGUAGE
 Code, code comments, commit messages, and technical identifiers stay in English only.
