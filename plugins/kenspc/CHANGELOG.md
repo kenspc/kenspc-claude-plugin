@@ -42,23 +42,28 @@ roll-up faithful after a partial run.
 
 - `agents/task-implementer.md`: PROCESSING APPROACH now writes an
   `**Implementation notes:**` block (DONE: `Decisions:` + `Changes/tradeoffs:`
-  sub-bullets) under the task's `**Status:**` line in the same per-task commit;
-  DONE CRITERIA adds the per-task persistence requirement (DONE in the
-  code+status commit, BLOCKED written to disk) and read-from-disk Schema D
-  assembly.
+  sub-bullets) under the task's `**Status:**` line in the same per-task commit,
+  and runs a stall-recovery pre-pass that backfills a missing block from git
+  history for any task already DONE/BLOCKED on a re-run; DONE CRITERIA adds the
+  per-task persistence requirement (DONE in the code+status commit; BLOCKED in
+  its own task-document-only commit so it is not swept into the next task's
+  commit) and read-from-disk Schema D assembly (a fresh Read of the task
+  document at roll-up time, not recall from context).
 - `references/task-document-example.md`: an `**Implementation notes:**` block on
   the one DONE example task plus a clarifier that the block is written by
   `task-implement` at completion time, not pre-written when authoring.
 
 ### Changed
 
-- `agents/task-implementer.md`: STUCK HANDLING re-points the blocking reason to a
-  `- Blocked:` line in the same `**Implementation notes:**` block (one
-  convention, one location); Schema D's `## Blocked tasks (prose)` /
-  `## Decisions made` / `## Post-implementation notes` are reframed as
-  task-ID-prefixed roll-ups of the per-task blocks with a source-of-truth pointer
-  line. The `## Tasks` table and the `<!-- canonical:principle:* -->` blocks are
-  unchanged.
+- `agents/task-implementer.md`: both STUCK HANDLING paths (3-strikes BLOCKED and
+  git-conflict/environment) re-point the blocking reason to a `- Blocked:` line in
+  the same `**Implementation notes:**` block (one convention, one location),
+  committed on its own staging only the task document; Schema D's
+  `## Blocked tasks (prose)` / `## Decisions made` / `## Post-implementation notes`
+  are reframed as task-ID-prefixed roll-ups of the per-task blocks, assembled by
+  re-reading the task document at roll-up time, closed by a single
+  source-of-truth pointer line. The `## Tasks` table and the
+  `<!-- canonical:principle:* -->` blocks are unchanged.
 - `skills/task-implement/SKILL.md`: Phase 1 Step 5 notes the rendered prose are
   roll-ups of the per-task persisted notes (still rendered verbatim from the
   agent's output). The `version:` field stays at `3.0.0` per the project's
