@@ -174,10 +174,18 @@ When all tasks are processed, render a per-task table followed by prose sections
 | 1 | T-001   | DONE     | a.ts, b.ts    | abc1234 |
 | 2 | T-002   | BLOCKED  | —             | —       |
 
-The three prose sections below are roll-ups assembled by reading the per-task
-`**Implementation notes:**` blocks back from the task document (the source of
-truth), not recalled from context. Prefix each rolled-up entry with its task ID,
-and end with a pointer line naming the task document.
+To assemble the three prose sections below, re-read the task document from disk
+now (a fresh Read of TASK_FILE) and roll up the per-task
+`**Implementation notes:**` blocks found there — do not reconstruct them from
+context, since after a mid-run stall the reasoning no longer lives in context to
+recall. Take each rolled-up entry's task ID from the heading of the task it sits
+under, and prefix the entry with that ID. If a processed task has no
+`**Implementation notes:**` block on disk (for example a task committed DONE
+before this convention existed), still list it with its task ID and the note
+"no recorded notes" rather than omitting it, so the roll-up stays faithful to
+what was actually processed. A single `Source of truth:` pointer line naming the
+task document closes the roll-up (in `## Post-implementation notes`, per its
+shape below) — not one pointer line per section.
 
 ## Blocked tasks (prose)
 
@@ -193,9 +201,12 @@ over Y because ...`). Skip the section if no such decisions were recorded.
 
 ## Post-implementation notes
 
-Anything the reviewer should know, rolled up from the `Changes/tradeoffs:`
-sub-bullets and any run-level observations — for example, missing test framework,
-new dependency added (and why), files outside task scope that were intentionally
-not touched, manual follow-up the user must run. Close with a `Source of truth:`
-line naming the per-task Implementation notes in the task document. Skip the
-section if there is nothing to flag.
+Anything the reviewer should know. Two sources feed this section: the per-task
+`Changes/tradeoffs:` sub-bullets re-read from disk (these survive a stall), plus
+any run-level observations held only in this run's context — for example, missing
+test framework, new dependency added (and why), files outside task scope that
+were intentionally not touched, manual follow-up the user must run. The run-level
+observations are not persisted per task, so a mid-run stall may lose them; only
+the per-task `Changes/tradeoffs:` content is guaranteed faithful after a partial
+run. Close with a `Source of truth:` line naming the per-task Implementation
+notes in the task document. Skip the section if there is nothing to flag.
