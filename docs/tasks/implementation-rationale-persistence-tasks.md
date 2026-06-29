@@ -43,7 +43,11 @@ principle blocks, the 5 reviewer agents' shared sections).
 
 ### Task 1: Persist per-task Implementation notes block + reframe Schema D as roll-up in `task-implementer.md`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none — followed plan Steps 1–4 verbatim; the four edited sections (PROCESSING APPROACH, DONE CRITERIA, STUCK HANDLING, OUTPUT FORMAT/Schema D) all sit outside the `<!-- canonical:principle:* -->` markers, so no locked block was touched.
+- Changes/tradeoffs: framed the Schema D `## Decisions made` and `## Post-implementation notes` roll-ups to source from the `Decisions:` and `Changes/tradeoffs:` sub-bullets respectively (a natural mapping the plan implied via D3), and kept the run-level Post-implementation observations the original wording already allowed (missing test framework, new dependency, etc.) so no reviewer-facing information is lost in the reframe.
 
 Plan Steps 1–4 (single coherent change to one file). Edit four sections of the
 agent so per-task rationale is written to disk before the next task starts, and

@@ -56,6 +56,11 @@ PREREQUISITES
 DONE CRITERIA
 - Every incomplete task has a final status (DONE or BLOCKED) recorded in the
   task document, with both code and the status update in the same git commit.
+- Every processed task has its `**Implementation notes:**` block persisted in the
+  task document before the next task starts — for a DONE task in the same
+  code+status commit; for a BLOCKED task written to disk (no code commit). The
+  Schema D prose sections are assembled by reading those persisted blocks back
+  from the document, not from context.
 - The Schema D summary lists every processed task with its final status, files
   touched, and commit hash.
 - Build / test / lint was run after each completed task; if no test framework
@@ -71,8 +76,18 @@ For each incomplete task, in document order:
   configured, skip test verification and note this in the Schema D
   Post-implementation prose.
 - After verification passes, update the task status in the task document
-  (using the document's existing status format). Include both code changes
-  and status update in the same git commit.
+  (using the document's existing status format) and write an
+  `**Implementation notes:**` block directly under that task's `**Status:**`
+  line. For a DONE task the block captures `Decisions:` (non-trivial choices and
+  their rationale; "none" if trivial) and `Changes/tradeoffs:` (deviations from
+  or elaborations beyond the task spec, plus any accepted tradeoffs; "none" if
+  nothing notable) — these sub-bullets are the illustrative shape, not a mandated
+  checklist, and `Changes/tradeoffs` is not a file list (the touched-files
+  enumeration stays in the Schema D `## Tasks` table and in git). Include the
+  code changes, the status update, and the notes block in the same git commit.
+  Why: this makes each task's rationale durable on disk before the next task
+  starts, so a mid-run stall cannot lose the reasoning behind work already
+  committed.
 - Record what was implemented and the commit hash; proceed to the next task.
 
 QUALITY RULES
@@ -130,8 +145,12 @@ QUALITY CHECKLIST (apply to code you write for this task — not existing code)
 Before committing each task, verify your implementation against this checklist.
 
 STUCK HANDLING
-- If the same task fails verification 3 times in a row, record the blocking reason
-  under that task in the task document, mark it as BLOCKED, and skip to the next task.
+- If the same task fails verification 3 times in a row, mark it as BLOCKED and
+  record the blocking reason in that task's `**Implementation notes:**` block as a
+  `- Blocked:` line (what was attempted, root cause, what the user must do to
+  unblock) — the same block and location DONE tasks use, so blocked and done
+  tasks share one convention. Do not create a second/parallel notes location.
+  Then skip to the next task.
 - If a git conflict or environment issue prevents continuing, append the problem to
   the task document and stop.
 
@@ -148,20 +167,28 @@ When all tasks are processed, render a per-task table followed by prose sections
 | 1 | T-001   | DONE     | a.ts, b.ts    | abc1234 |
 | 2 | T-002   | BLOCKED  | —             | —       |
 
+The three prose sections below are roll-ups assembled by reading the per-task
+`**Implementation notes:**` blocks back from the task document (the source of
+truth), not recalled from context. Prefix each rolled-up entry with its task ID,
+and end with a pointer line naming the task document.
+
 ## Blocked tasks (prose)
 
-For each BLOCKED row, one short paragraph: which task, why blocked, what was
-attempted, what the user needs to do to unblock.
+For each BLOCKED row, one short paragraph rolled up from that task's
+`- Blocked:` note: which task, why blocked, what was attempted, what the user
+needs to do to unblock.
 
 ## Decisions made
 
-Bulleted list of non-trivial implementation decisions taken during the run
-(e.g., chose library X over Y because ...). Skip the section if no such
-decisions were taken.
+Bulleted list of non-trivial implementation decisions, rolled up from the
+`Decisions:` sub-bullets of the per-task notes (e.g., `- T-002: chose library X
+over Y because ...`). Skip the section if no such decisions were recorded.
 
 ## Post-implementation notes
 
-Anything the reviewer should know — for example, missing test framework, new
-dependency added (and why), files outside task scope that were intentionally
-not touched, manual follow-up the user must run. Skip the section if there is
-nothing to flag.
+Anything the reviewer should know, rolled up from the `Changes/tradeoffs:`
+sub-bullets and any run-level observations — for example, missing test framework,
+new dependency added (and why), files outside task scope that were intentionally
+not touched, manual follow-up the user must run. Close with a `Source of truth:`
+line naming the per-task Implementation notes in the task document. Skip the
+section if there is nothing to flag.
