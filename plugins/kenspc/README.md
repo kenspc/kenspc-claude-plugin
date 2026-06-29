@@ -219,6 +219,12 @@ common LLM coding pitfalls, by way of the
 kenspc adopts two of the four principles; example code is original and
 stack-specific to the maintainer's primary stacks.
 
+In the same spirit, v3.2.0 extends the review harness with two further checks
+of kenspc's own — falsifiability (a test that cannot fail is not a test) and
+fail-loud on incomplete test runs (never report a clean pass you did not fully
+verify). These are kenspc additions applied to the review agents, not part of
+Karpathy's four principles.
+
 The five-dimension discovery framework (`shared/discovery-framework.md`) — used by
 both `generate-brief` and `generate-plan` Phase 1 — is adapted from the structured
 thinking dimensions in [thinkfirst](https://github.com/garychen-ai/thinkfirst) by

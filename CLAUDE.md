@@ -83,6 +83,16 @@ Writer-agent files (`task-implementer.md`, `code-fixer.md`) use ALL-CAPS section
 | `version` | Yes | Semver (e.g., `1.0.0`) |
 | `argument-hint` | Recommended | Shown in UI as placeholder (e.g., `<project-path>`) |
 
+The per-skill `version` field is uniformly `3.0.0` across all six skills and
+denotes the v3 architecture generation, not a per-skill change counter. It is
+deliberately decoupled from the plugin version in
+`plugins/kenspc/.claude-plugin/plugin.json`, which is the authoritative version
+and the only one bumped each release. It was set during the v3.0.0 rewrite and
+is intentionally left unchanged on subsequent releases — syncing six files
+every release is churn that has historically drifted anyway. Bump it only on a
+future architecture-generation change (a v4 rewrite), and bump all six together
+so the uniformity holds.
+
 ### Subagent Review Architecture
 
 Skills use plugin agents (defined in `agents/`) as workers, dispatched via the
@@ -193,6 +203,18 @@ markers and must remain byte-identical between the two files. Run
 `bash scripts/check-canonical-dispatch.sh` after editing either skill —
 it sha256-hashes the bounded block in both files and fails on drift.
 
+Likewise, the shared verdict-determination bullets in those same two
+SKILLs — the `SPOT-CHECK` neutral note plus the involuntary-incomplete and
+intentional-skip clauses that map `regression-verifier`'s row-3 Schema C
+states to a verdict — are bounded by
+`<!-- canonical:verdict-shared:start -->` /
+`<!-- canonical:verdict-shared:end -->` markers and must stay
+byte-identical between the two files. The surrounding PASS / FAIL /
+PARTIAL / BLOCKED bullets differ between the two skills by design and stay
+outside the markers. Run `bash scripts/check-verdict-shared.sh` after
+editing either verdict section — it sha256-hashes the bounded block in
+both files and fails on drift.
+
 ### Non-Goals
 
 `shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at two call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would break the discovery phase's need for raw conversation context (the orchestrator must keep the full transcript to draft the brief or plan in Phase 2).
@@ -230,6 +252,7 @@ grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
 # Cross-agent invariants
 bash scripts/check-review-agent-drift.sh
 bash scripts/check-canonical-dispatch.sh
+bash scripts/check-verdict-shared.sh
 bash scripts/check-code-craft-canonical.sh
 bash scripts/check-quality-reviewer-bullet-structure.sh
 ```
@@ -244,6 +267,13 @@ Project-level shell scripts live in `scripts/` at the repo root:
 - `check-canonical-dispatch.sh` — guards the byte-identity invariant on
   the `## Code Review Phase (unconditional)` canonical block between
   `task-review/SKILL.md` and `task-implement/SKILL.md`.
+- `check-verdict-shared.sh` — guards the byte-identity invariant on the
+  shared verdict-determination block (the `SPOT-CHECK` neutral note plus
+  the involuntary-incomplete and intentional-skip clauses that map
+  regression-verifier's row-3 Schema C states to a verdict) between
+  `task-review/SKILL.md` and `task-implement/SKILL.md`. The surrounding
+  PASS / FAIL / PARTIAL / BLOCKED bullets differ between the two skills by
+  design and stay outside the markers.
 - `check-code-craft-canonical.sh` — guards the byte-identity invariant
   on the canonical Simplicity First and Surgical Changes principle
   paragraphs across `shared/code-craft-principles.md` (authoritative)
@@ -254,12 +284,12 @@ Project-level shell scripts live in `scripts/` at the repo root:
   (Over-engineering, Drive-by refactoring): each must enumerate exactly
   three numbered conditions gated by an `**all three**` qualifier.
 
-The latter three scripts also accept a `--self-test` flag that runs a
+The latter four scripts also accept a `--self-test` flag that runs a
 mutation regression fixture in a temp workdir (positive path, negative
 path on a deliberate mutation, restoration path on revert). See the
 release-checklist mechanical-check block for the full invocation order.
 
-Run before tagging any release; all four should also be considered as
+Run before tagging any release; all five should also be considered as
 pre-commit hook candidates when their target files change.
 
 ### Release procedure

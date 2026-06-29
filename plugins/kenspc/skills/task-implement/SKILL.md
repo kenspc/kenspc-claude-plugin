@@ -357,6 +357,7 @@ unblocks).
 - **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
   PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
   introduced by fix commits.
+<!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
   if all other checks PASS and no HIGH issues remain. The Verdict
@@ -371,6 +372,7 @@ unblocks).
   Verdict paragraph must note "N tests skipped by design" so the PASS is never
   silent about the reduced coverage. Why: the user should accept skipped coverage
   knowingly, not discover it later.
+<!-- canonical:verdict-shared:end -->
 - **FAIL** — at least one HIGH unresolved; or one or more INCORRECTLY
   FIXED items; or build / test / lint failure; or fix commits introduced
   unresolved regressions.

@@ -287,6 +287,7 @@ Based on the regression verification results, declare a verdict:
   INCORRECTLY FIXED items; build / tests / lint all PASS or `SPOT-CHECK`
   on row 3 (no-test-suite fallback); no regressions introduced by fix
   commits.
+<!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
   if all other checks PASS and no HIGH issues remain. The Verdict
@@ -301,6 +302,7 @@ Based on the regression verification results, declare a verdict:
   Verdict paragraph must note "N tests skipped by design" so the PASS is never
   silent about the reduced coverage. Why: the user should accept skipped coverage
   knowingly, not discover it later.
+<!-- canonical:verdict-shared:end -->
 - **FAIL** when any of: one or more HIGH severity issues remain unresolved;
   one or more INCORRECTLY FIXED items; build / test / lint fails; fix
   commits introduced unresolved regressions.

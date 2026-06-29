@@ -23,6 +23,9 @@ cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 # Canonical dispatch byte-identity (task-review vs task-implement)
 bash scripts/check-canonical-dispatch.sh
 
+# Shared verdict block byte-identity (task-review vs task-implement)
+bash scripts/check-verdict-shared.sh
+
 # Review-angle agents shared-section invariance (5 reviewer agents)
 bash scripts/check-review-agent-drift.sh
 
@@ -32,13 +35,14 @@ bash scripts/check-code-craft-canonical.sh
 # Quality-reviewer bullet structure (3-condition gate on two new bullets)
 bash scripts/check-quality-reviewer-bullet-structure.sh
 
-# Mutation regression fixtures (self-test on the three canonical drift guards)
+# Mutation regression fixtures (self-test on the four canonical drift guards)
 bash scripts/check-code-craft-canonical.sh --self-test
 bash scripts/check-canonical-dispatch.sh --self-test
+bash scripts/check-verdict-shared.sh --self-test
 bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
 ```
 
-All ten must exit 0 (3 JSON validations + 3 main-mode shell drift guards + 1 structural guard + 3 mutation regression self-tests). If any fail, fix before proceeding to the smoke checklist.
+All twelve must exit 0 (3 JSON validations + 4 main-mode shell drift guards + 1 structural guard + 4 mutation regression self-tests). If any fail, fix before proceeding to the smoke checklist.
 
 ## Smoke checklist (manual, ~10 minutes)
 
