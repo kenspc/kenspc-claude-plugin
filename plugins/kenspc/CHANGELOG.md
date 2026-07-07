@@ -9,6 +9,63 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.4.1 — 2026-07-07
+
+Infra/docs patch: a single entry point for the guard scripts, a currency
+pass on the effort-guidance citation (Opus 4.7 → 4.8), and a structural
+cleanup of the repo-root CLAUDE.md. No skill, agent, or hook content
+changes; no CONTEXT block schema change.
+
+### Rationale
+
+The guard scripts had grown to six, each individually invoked in two
+places (CLAUDE.md's "Validate plugin structure" block and the release
+checklist pre-flight) — adding a seventh guard meant editing command
+lists in multiple files, exactly the silent-drift class the guards
+themselves exist to prevent. A wrapper that globs `scripts/check-*.sh`
+removes those sync points: new guards are picked up with zero doc edits.
+Separately, the effort-ladder rationale in CLAUDE.md cited "Anthropic's
+Opus 4.7 recommendation" undated — a generation-pinned claim that reads
+as stale as frontier models advance. The citation is now dated and
+re-verified at each release via a new checklist item; verified
+2026-07-07 that Opus 4.8 guidance keeps `xhigh` as the recommendation
+for coding/agentic work, so the plugin metadata and README now cite 4.8.
+
+### Added
+
+- `scripts/check-all.sh` — wrapper that runs every other `check-*.sh`
+  guard in main mode, reports PASS/FAIL per script, prints the failing
+  guard's output, and exits 1 on any failure. Glob-based and
+  self-excluding, so future guard scripts are picked up automatically.
+  Deliberately does not run the `--self-test` fixtures — those stay
+  explicit in the release checklist (slower; only needed before
+  tagging).
+- `docs/release-checklist.md` "Docs currency (manual)" section — before
+  tagging, confirm the CLAUDE.md effort-guidance citation still matches
+  the current frontier Claude generation and update its "last verified"
+  date.
+
+### Changed
+
+- `docs/release-checklist.md` pre-flight: the six individual guard
+  invocations collapse into one `bash scripts/check-all.sh`; the
+  "must exit 0" count drops from fourteen to nine (3 JSON validations +
+  `check-all.sh` + 5 mutation regression self-tests).
+- `.claude-plugin/plugin.json` description: "aligned with Opus 4.7" →
+  "aligned with Opus 4.8" (the underlying recommendation is unchanged —
+  see Rationale).
+- `README.md`: the two current-state effort-guidance references updated
+  from Opus 4.7 to 4.8. The Design Philosophy citations keep 4.7 by
+  design — they record the v3.0 refactor's historical provenance.
+- `CLAUDE.md` (repo root): guard-script mechanics now documented once
+  (in "Repository scripts/") with the Maintenance note deduplicated to
+  the invariants themselves; the two effort tables replaced by
+  default-plus-exceptions prose with the per-file `effort:` frontmatter
+  declared authoritative; the three hooks' runtime behaviour and the
+  transient `docs/` workflow-artifact convention documented; the
+  effort-guidance citation dated and generation-aware; the "## Git"
+  section removed (the maintainer's global conventions apply).
+
 ## 3.4.0 — 2026-07-07
 
 Two write-side strengthenings of the code-craft rules, both behavioural.

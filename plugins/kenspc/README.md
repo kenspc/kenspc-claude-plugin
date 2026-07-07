@@ -160,7 +160,7 @@ Every SKILL.md and agent .md declares an `effort:` frontmatter value
 [Claude Code skills frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference)
 and [subagent frontmatter reference](https://code.claude.com/docs/en/sub-agents#supported-frontmatter-fields).
 Discovery, planning, decomposition, implementation, and review all run at
-`xhigh` or `max`, matching Anthropic's recommendation for Claude Opus 4.7
+`xhigh` or `max`, matching Anthropic's recommendation for Claude Opus 4.8
 coding and agentic workloads. When running at `xhigh`/`max`, set a large
 max-output-token budget so the model has room to think and act across its
 subagents and tool calls (this is a session/API config concern, not a
@@ -190,7 +190,7 @@ Small fixes can skip all skills and be implemented directly.
 **Recommended:**
 - A session that allows a generous max-output-token budget — when skills run
   at `xhigh`/`max` effort, the model needs room to think and act across its
-  subagents and tool calls (Anthropic guidance for Claude Opus 4.7).
+  subagents and tool calls (Anthropic guidance for Claude Opus 4.8).
 
 ## Reference Documents
 
