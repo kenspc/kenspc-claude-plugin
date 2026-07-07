@@ -1,12 +1,8 @@
 ---
 name: kenspc-brief
-description: >
-  Run a structured discovery conversation around a rough idea and produce a
-  requirement brief (需求摘要). Use when the idea is too vague to plan
-  directly, or when you need a shareable document before planning.
-  Trigger on: "help me think through this", "brief this idea", "I have a
-  rough idea", "我想理清楚思路", "先讨论一下", "写个需求摘要"
+description: Explicit entry point for the generate-brief skill — produce a requirement brief (需求摘要) via structured discovery.
 argument-hint: <rough idea or topic>
+disable-model-invocation: true
 ---
 
 Invoke the **generate-brief** skill with the provided arguments.

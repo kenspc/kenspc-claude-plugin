@@ -19,7 +19,11 @@ Skills activate automatically when Claude Code detects a matching task context.
 
 ## Commands
 
-Commands provide a direct way to invoke each skill.
+Commands provide a direct way to invoke each skill. As of v3.4.2 they are
+explicit entry points only (`disable-model-invocation: true`, one-line
+descriptions): natural-language auto-routing belongs to the skills, whose
+descriptions carry the trigger phrases — the command wrappers no longer
+duplicate them as a competing routing surface.
 
 | Command | Usage |
 |---------|-------|

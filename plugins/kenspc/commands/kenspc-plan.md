@@ -1,11 +1,8 @@
 ---
 name: kenspc-plan
-description: >
-  Generate a comprehensive plan document (计划书/計劃書) from requirements,
-  backlog items, or specs. Adapts to project-specific templates. Includes
-  collaborative discussion, self-challenge, and automated review.
-  Trigger on: "write a plan", "generate plan", "写计划书", "编写计划", "帮我规划"
+description: Explicit entry point for the generate-plan skill — generate a plan document (计划书) with discovery, self-challenge, and review.
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
+disable-model-invocation: true
 ---
 
 Invoke the **generate-plan** skill with the provided arguments.
