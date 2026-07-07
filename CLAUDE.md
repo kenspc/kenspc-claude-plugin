@@ -337,3 +337,19 @@ Avoid using hooks for SKILL-internal workflow guarantees.
 Background: an early v3.0.3 design considered a Stop hook to force
 task-review dispatch; rebatched into a SessionEnd telemetry log after
 recognizing the misjudgement.
+
+### Hook logic that depends on harness-private encodings goes stale silently
+Hook scripts that parse harness-owned formats — the Write tool's path
+separator convention, the transcript's slash-command encoding, the shell
+expansion of the hook command string — have no stability contract. The
+v3.0.3 probe results were correct when taken and wrong by v3.4.2: every
+shipped hook was inert (backslash paths never matched forward-slash
+globs; transcript patterns matched an encoding that does not occur;
+unquoted `${CLAUDE_PLUGIN_ROOT}` split on the space in the plugin path).
+Verify any such hook against live data — simulated tool-input JSON for
+PreToolUse, real transcripts under `~/.claude/projects/` for
+transcript-scanning hooks — and rely on the release smoke test, not
+pre-flight greps, to catch this class: all four defects passed every
+mechanical check.
+Background: v3.4.2 hooks repair (2026-07-08); details in that CHANGELOG
+entry.
