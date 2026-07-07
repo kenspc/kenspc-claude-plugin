@@ -2,8 +2,11 @@
 # SessionEnd telemetry hook for kenspc plugin.
 #
 # Purpose: post-hoc telemetry only. Records when a session invoked
-# `/kenspc-task-implement` but did not subsequently invoke
-# `/kenspc-task-review`. Output is a single JSON Lines record appended
+# `/kenspc-task-implement` but no review evidence exists — neither a
+# `/kenspc-task-review` invocation nor the in-skill Phase 2 dispatch of
+# the review-angle agents (the normal path: task-implement runs review
+# internally, so agent dispatch, not a slash command, is the usual
+# evidence). Output is a single JSON Lines record appended
 # to ${HOME}/.claude/kenspc/missed-reviews.log.
 #
 # Design boundary (per project CLAUDE.md "Plugin Design Lessons"):
@@ -53,24 +56,32 @@ fi
 
 # Detect whether /kenspc-task-implement was invoked and whether
 # /kenspc-task-review was invoked. The transcript is JSON Lines; each
-# line is a record. To reduce substring false positives from quoted
-# reflections, system reminders, or assistant prose, match only when
-# the slash command appears as the leading token of a user-typed
-# message (record type "user" with content starting with the command).
-#
-# Pattern shape (case-sensitive, anchored to the start of a JSON
-# string value): `"content":"/kenspc-task-implement` or
-# `"text":"/kenspc-task-implement` — both forms occur depending on
-# how the transcript encodes user input. Trailing characters are
-# allowed (arguments after the command).
+# line is a record. A user-typed slash command is encoded as a "user"
+# record whose content value starts with a <command-message> tag
+# (verified 2026-07-08 against live transcripts):
+#   "content":"<command-message>kenspc:kenspc-task-implement</command-message>\n<command-name>/kenspc:kenspc-task-implement</command-name>"
+# The plugin namespace prefix (`kenspc:`) is present when the command
+# is invoked through the installed plugin; the pattern tolerates its
+# absence for bare invocations. Anchoring on the unescaped
+# `"content":"<command-message>` prefix keeps file contents quoted in
+# assistant messages (which the transcript stores with escaped quotes)
+# from matching.
+# Review evidence is either form: an explicit /kenspc-task-review
+# invocation, or the Agent-tool dispatch of the review-angle agents
+# (requirements-reviewer is always part of the 5-agent dispatch, so one
+# agent suffices as the marker). Without the second form, every healthy
+# task-implement run — whose Phase 2 reviews via agent dispatch, not a
+# slash command — would be logged as a missed review.
 implement_seen=0
 review_seen=0
-implement_pattern='"(content|text)":"/kenspc-task-implement'
-review_pattern='"(content|text)":"/kenspc-task-review'
+implement_pattern='"content":"<command-message>(kenspc:)?kenspc-task-implement'
+review_pattern='"content":"<command-message>(kenspc:)?kenspc-task-review'
+review_dispatch_pattern='"subagent_type":"(kenspc:)?requirements-reviewer"'
 if grep -q -E -- "$implement_pattern" "$transcript" 2>/dev/null; then
     implement_seen=1
 fi
-if grep -q -E -- "$review_pattern" "$transcript" 2>/dev/null; then
+if grep -q -E -- "$review_pattern" "$transcript" 2>/dev/null \
+    || grep -q -E -- "$review_dispatch_pattern" "$transcript" 2>/dev/null; then
     review_seen=1
 fi
 

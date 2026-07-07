@@ -8,11 +8,16 @@ set -euo pipefail
 # Read tool input from stdin
 input=$(cat)
 
-# Extract file_path from JSON (simple pattern match, no jq dependency)
-file_path=$(echo "$input" | grep -oP '"file_path"\s*:\s*"[^"]*"' | head -1 | sed 's/.*: *"//;s/"//')
+# Extract file_path from JSON (POSIX sed only — no jq, no GNU grep -P;
+# BSD grep on macOS has no -P and would abort the hook under pipefail)
+file_path=$(printf '%s' "$input" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
 
 # Skip if we couldn't extract a path
 [ -z "$file_path" ] && exit 0
+
+# Normalize Windows separators: the JSON-escaped "\\" and any stray "\"
+# both become "/" so the case globs below match on every platform.
+file_path=$(printf '%s' "$file_path" | sed 's#\\\\#/#g; s#\\#/#g')
 
 # Check if path matches plan/task/guide document directories
 case "$file_path" in
@@ -53,7 +58,7 @@ If you have already invoked the skill, ignore this message.
 MSG
     exit 0
     ;;
-  */docs/guides/*.md|*/docs/guide/*.md|*GUIDE.md|*SETUP.md|*ONBOARDING.md)
+  */docs/guides/*.md|*/docs/guide/*.md|*/GUIDE.md|*-GUIDE.md|*_GUIDE.md|*SETUP.md|*ONBOARDING.md)
     case "$file_path" in
       *_template*|*template_*|*README*) exit 0 ;;
     esac
