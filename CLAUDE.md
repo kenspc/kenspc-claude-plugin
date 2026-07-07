@@ -58,14 +58,16 @@ Each skill lives in `skills/<skill-name>/` with:
 
 Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
 
-Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`).
+Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`, `disable-model-invocation: true`). Commands are explicit entry points only: since Claude Code merged commands and skills, both descriptions load into context and compete for natural-language auto-routing — the skill's description owns the trigger phrases, so each command keeps a one-line description and opts out of model invocation (v3.4.2).
 
 Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
-Three hooks are registered: `SessionStart` → `check-deps.sh` (dependency
-check), `PreToolUse` on `Write` → `remind-plan-skill.sh` (plan-skill
-reminder — note it fires on every Write call, not only plugin-related
-ones), and `SessionEnd` → `session-end-telemetry.sh` (post-hoc telemetry;
-background in Plugin Design Lessons).
+Two hooks are registered: `PreToolUse` on `Write` → `remind-plan-skill.sh`
+(plan-skill reminder — note it fires on every Write call, not only
+plugin-related ones), and `SessionEnd` → `session-end-telemetry.sh`
+(post-hoc telemetry; background in Plugin Design Lessons). A former
+`SessionStart` → `check-deps.sh` hook was removed in v3.4.2: its
+ralph-loop dependency check was gutted by the v2 subagent refactor and
+the empty husk had been running as a no-op since.
 
 References live in `references/` as example documents (task format, plan format) to help users get started.
 
@@ -297,7 +299,10 @@ This repo dogfoods the plugin's own chain on itself: briefs land in
 These artifacts are transient by convention — completed plan/task
 documents are routinely deleted once shipped, so an empty directory or a
 missing document referenced by an old commit message is normal, not a
-gap. `docs/release-checklist.md` is the one permanent document there.
+gap. Two documents there are permanent: `docs/release-checklist.md`, and
+`docs/dry-runs/README.md` (the dry-run label-vocabulary convention,
+relocated out of `task-review/SKILL.md` in v3.4.2 because it governs
+repo-internal QA artifacts, not plugin behavior).
 
 ### Release procedure
 

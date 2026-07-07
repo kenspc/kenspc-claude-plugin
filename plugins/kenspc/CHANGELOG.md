@@ -9,6 +9,92 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.4.2 — 2026-07-08
+
+Bug-fix and cleanup patch driven by a full external-style review of the
+plugin (hooks, skills, commands, agents). Headline: the hooks subsystem
+was found entirely inert — one hook never fired on Windows, one had
+never logged a record, one was an empty husk — and is now repaired or
+removed. No CONTEXT block schema change; no agent contract change.
+
+### Rationale
+
+All three hook defects share one root cause: hook detection logic that
+depends on harness-private encodings (the Write tool's path separator
+convention, the transcript's slash-command encoding) with no contract
+guaranteeing those encodings stay stable. The v3.0.3 probe results had
+silently gone stale. Each fix was verified against live data (simulated
+tool input for the path hook; real session transcripts for the
+telemetry patterns). Separately, two routing/scaffolding cleanups align
+the plugin with its own v3 design rules: command wrappers no longer
+duplicate the skills' trigger-phrase surface, and the closure-phrase
+disablelist moved from the prompt to the smoke-test side.
+
+### Fixed
+
+- `remind-plan-skill.sh`: Windows backslash paths (`C:\\...` in the
+  tool-input JSON) never matched the forward-slash directory globs, so
+  the hook never fired on Windows. Path separators are now normalized
+  before matching. The `grep -oP` extraction (GNU-only; aborts the hook
+  under `pipefail` on macOS BSD grep) is replaced with POSIX `sed`. The
+  `*GUIDE.md` glob no longer false-positives on names like
+  `STYLEGUIDE.md` (word-boundary variants `*/GUIDE.md`, `*-GUIDE.md`,
+  `*_GUIDE.md`).
+- `session-end-telemetry.sh`: the detection patterns expected
+  `"content":"/kenspc-task-implement`, but real transcripts encode user
+  slash commands as
+  `"content":"<command-message>kenspc:kenspc-task-implement</command-message>…`
+  — the telemetry had never logged a record since it shipped in v3.0.3.
+  Patterns now match the real encoding (namespace prefix tolerated).
+  Review evidence now also accepts the in-skill Phase 2 dispatch of the
+  review-angle agents (`"subagent_type":"(kenspc:)?requirements-reviewer"`):
+  the normal task-implement flow reviews via agent dispatch, not a
+  slash command, so the old semantics would have logged every healthy
+  run as a missed review. Verified against three historical
+  task-implement transcripts (all now correctly classified).
+- Frontmatter: `argument-hint: [path-to-task-file] ...` values in the
+  task-review command and SKILL are now quoted — unquoted leading `[`
+  parses as a YAML flow sequence (the two-sequence command form is not
+  even valid strict YAML); Claude Code's parser tolerated it, but this
+  was exactly the latent parse-break class the release checklist warns
+  about.
+
+### Removed
+
+- `check-deps.sh` SessionStart hook (script + registration): its
+  ralph-loop dependency check was gutted by the v2.0 subagent refactor
+  and the empty husk had run as a no-op at every session start since.
+  Re-add a real dependency check if one is ever needed; the v1-era
+  logic remains in git history.
+
+### Changed
+
+- Commands: all six command wrappers now declare
+  `disable-model-invocation: true` and a one-line description. Claude
+  Code merged commands and skills, so both descriptions load into
+  context and compete for natural-language auto-routing; the skill
+  keeps the trigger-phrase surface, the command becomes a pure explicit
+  entry point (per the documented `disable-model-invocation` mechanism).
+- `task-implement` Closure Wording Boundary: the forbidden-phrase
+  enumeration moved out of the SKILL prompt into the release-checklist
+  smoke test (now the canonical home of the phrase list). Enumerating
+  forbidden phrasings in a prompt primes the model toward them — the
+  same reasoning as the v3.0 no-anti-rationalization rule; the prompt
+  keeps the positive template-only contract.
+- `task-review` SKILL: the dry-run label-vocabulary convention
+  relocated to `docs/dry-runs/README.md` — it governs repo-internal QA
+  artifacts, not plugin behavior, and was costing context on every
+  invocation.
+- `generate-brief`: the former Phase 3 (next-step suggestion) folded
+  into Phase 2, matching the skill's stated two-phase structure.
+- `generate-task`: the Phase 1 DONE criterion admits XS sizing
+  (previously "S or M", contradicting the sizing table that targets
+  XS/S/M).
+- Document reviewers (`plan-document-reviewer`, `task-document-reviewer`,
+  `guide-document-reviewer`): commits now stage only the document under
+  review, so unrelated working-tree changes cannot be swept into a
+  review commit.
+
 ## 3.4.1 — 2026-07-07
 
 Infra/docs patch: a single entry point for the guard scripts, a currency
