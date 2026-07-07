@@ -58,6 +58,12 @@ disablelist moved from the prompt to the smoke-test side.
   even valid strict YAML); Claude Code's parser tolerated it, but this
   was exactly the latent parse-break class the release checklist warns
   about.
+- `hooks.json`: the `${CLAUDE_PLUGIN_ROOT}` expansions in both hook
+  commands are now quoted. With an unquoted expansion, any plugin root
+  containing a space (e.g. a `--plugin-dir` dev checkout under
+  `C:\Projects\KENSPC\Claude Plugin`) split the argument and both hooks
+  failed with "No such file or directory" before their scripts ever
+  ran. Caught by the v3.4.2 smoke test.
 
 ### Removed
 
