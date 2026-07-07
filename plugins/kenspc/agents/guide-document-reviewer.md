@@ -87,6 +87,8 @@ For each angle, in order from 1 to 4:
 - Review the current angle thoroughly.
 - No issues → record the angle as PASSED.
 - Issue found → fix it in the guide and commit; record what changed and why.
+  When committing, stage only the guide document — do not sweep unrelated
+  working-tree changes into the review commit.
 - After fixing, re-read changed sections to confirm correctness.
 - Proceed to the next angle (which sees the fixes you just made).
 

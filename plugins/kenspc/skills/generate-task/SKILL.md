@@ -65,7 +65,8 @@ project's CLAUDE.md, README, and config files; the project's source tree.
   criteria.
 - Task dependencies form a valid DAG (no circular dependencies).
 - Files each task creates or modifies are identified up front.
-- Task sizing is S or M; L tasks have been broken further; XL is rejected.
+- Task sizing is XS, S, or M; L tasks have been broken further; XL is
+  rejected.
 - Each task touches a manageable scope of files (around 8 or fewer is the
   default; more requires explicit justification).
 

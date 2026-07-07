@@ -75,12 +75,18 @@ the captured trace):
 - Phase 2 auto-triggers without a user prompt: grep the trace for
   `Proceeding to Phase 2` or `Proceeding to code review` and confirm it
   appears immediately after Phase 1 Step 5 (not after a user reply).
-- No closure-wording disablelist words appear in the trace before Phase 2
-  dispatch. Grep the trace for each of: `整段落地`, `session 结束`,
-  `workflow 收口` (Chinese subset), and `Workflow complete.`,
-  `All phases done.`, `milestone landed` (English subset drawn from the
-  `task-implement` Closure Wording Boundary disablelist). Each must
-  return zero hits in the pre-Phase-2 trace window.
+- No workflow-closure wording appears in the trace before Phase 2
+  dispatch. This checklist is the canonical home of the closure-phrase
+  list (moved out of the `task-implement` SKILL prompt in v3.4.2 —
+  enumerating forbidden phrasings in a prompt primes the model toward
+  them; the prompt now states the positive template phrasings only).
+  Grep the pre-Phase-2 trace window for each of: `整段落地`, `整段交付`,
+  `所有工作完成`, `workflow 收口`, `session 结束` (Chinese), and
+  `Workflow complete.`, `All phases done.`,
+  `All implementation is done.`, `Ready to wrap up.`, `milestone landed`
+  (English). Each must return zero hits. Also scan that window manually
+  for pattern-shaped equivalents a fixed grep cannot pin down
+  (`Step N of M 完成`, `✓ ... 落地`).
 - `Discovery Mode:` field present in the brief output, with a value in
   {`full`, `rapid-direct`, `rapid-inferred (reminder-driven)`}.
 

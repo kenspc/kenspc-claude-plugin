@@ -200,12 +200,11 @@ insufficient; the field's presence is the anchor.]
   and task documents.
 - Code blocks must specify the language.
 
-## Phase 3: Suggest Next Step
+### Next-step suggestion
 
-After writing the brief, tell the user:
-
-- The path the brief was saved to.
-- The next-step suggestion: "To create a plan from this brief: `/kenspc-plan [path]`".
+After writing the brief, tell the user the path the brief was saved to and
+the next-step suggestion: "To create a plan from this brief:
+`/kenspc-plan [path]`".
 
 **Constraint**: do not auto-trigger generate-plan. The user decides whether
 to plan now, share the brief for discussion first, or set it aside — the

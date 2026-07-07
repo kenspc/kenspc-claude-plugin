@@ -74,7 +74,9 @@ ISSUE CLASSIFICATION
 
 Task-level issues (wrong order, missing criteria, uneven granularity,
 missing dependency annotation):
-→ Fix directly in the task document. Commit the fix.
+→ Fix directly in the task document. Commit the fix, staging only the
+  task document — do not sweep unrelated working-tree changes into the
+  review commit.
 
 Plan-level issues (plan step is contradictory, plan is missing a necessary
 step, plan's technical approach conflicts with existing code):

@@ -184,31 +184,26 @@ Full implementation details appear in the final report (Phase 2 Step 4).
 
 #### Closure Wording Boundary
 
-Phase-internal progress (allowed) is not the same as workflow-level
-closure (disallowed). Phase 1 → Phase 2 is a transition, not the end of
-the `/kenspc-task-implement` invocation. Phrasing the Phase 1 wrap-up as
-if the whole workflow has finished causes the orchestrator (and the
-user) to treat the run as done and skip the unconditional review.
+Phase-internal progress is not the same as workflow-level closure.
+Phase 1 → Phase 2 is a transition, not the end of the
+`/kenspc-task-implement` invocation — phrasing the Phase 1 wrap-up as if
+the whole workflow has finished causes the orchestrator (and the user)
+to treat the run as done and skip the unconditional review.
 
-Avoid phrasing that implies the entire `/kenspc-task-implement`
-invocation has finished. Disallowed phrasing includes:
-
-- Cross-Phase summary phrasing: `整段落地` / `整段交付` /
-  `所有工作完成` / `workflow 收口` / `session 结束`
-- Milestone phrasing: `Step N of M 完成` / `✓ ... 落地` /
-  `milestone landed`
-- Terminal declarations: `Workflow complete.` / `All phases done.` /
-  `All implementation is done.` / `Ready to wrap up.`
-- And similar phrases that imply the entire `/kenspc-task-implement`
-  invocation has finished.
-
-Allowed (legitimate Phase-internal progress announcements):
+Announce the Phase 1 wrap using these template phrasings:
 
 - `Implementation phase complete.` — the existing Step 5 template
   phrasing above; this announces Phase 1 wrap, not the whole workflow.
 - `Proceeding to Phase 2.` / `Proceeding to code review.`
 - Per-task completion notes ("Task 1 done") inside the implementer
   agent's work.
+
+Wording that reads as the entire invocation having finished belongs
+after Phase 2's final report, never at the Phase 1 boundary. (The
+release-checklist smoke test greps the pre-Phase-2 trace window for
+closure phrasings; the canonical phrase list lives there, not here —
+enumerating forbidden phrasings in a prompt primes the model toward
+them.)
 
 ## Phase 2: Automatic code review
 

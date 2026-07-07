@@ -92,6 +92,8 @@ FIXING RULES
   Risks or Open Questions section. The user made those decisions during
   discussion.
 - Preserve the plan's original structure and style.
+- When committing, stage only the plan document — do not sweep unrelated
+  working-tree changes into the review commit.
 - After fixing, re-read the changed sections to confirm the fix is correct
   and does not introduce new issues.
 
