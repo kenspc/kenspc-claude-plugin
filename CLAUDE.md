@@ -61,6 +61,11 @@ Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name
 Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`).
 
 Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
+Three hooks are registered: `SessionStart` → `check-deps.sh` (dependency
+check), `PreToolUse` on `Write` → `remind-plan-skill.sh` (plan-skill
+reminder — note it fires on every Write call, not only plugin-related
+ones), and `SessionEnd` → `session-end-telemetry.sh` (post-hoc telemetry;
+background in Plugin Design Lessons).
 
 References live in `references/` as example documents (task format, plan format) to help users get started.
 
@@ -126,47 +131,41 @@ stays at the skill (main session) level.
 As of v3.0, every SKILL.md and every agent .md declares an `effort:`
 frontmatter value (`low` / `medium` / `high` / `xhigh` / `max`). Reasoning
 depth is configured per skill and per agent via this field, not via inline
-directive tokens. Anthropic's Opus 4.7 recommendation is `xhigh` for
-coding/agentic work and a minimum of `high` for intelligence-sensitive
-work. When running at `xhigh`/`max`, set a large max-output-token budget
-so the model has room to think and act across subagents and tool calls
-(this is a session/API-config concern, not a plugin concern).
+directive tokens. The effort ladder follows Anthropic's guidance for
+frontier Claude models: `xhigh` for coding/agentic work and a minimum of
+`high` for intelligence-sensitive work (source: Opus 4.8 prompting
+guidance, unchanged from the Opus 4.7 guidance adopted at the v3.0
+rewrite; last verified against the current frontier generation
+2026-07-07 — re-verify at each release, see the release checklist). When running at `xhigh`/`max`, set a large
+max-output-token budget so the model has room to think and act across
+subagents and tool calls (this is a session/API-config concern, not a
+plugin concern).
 
-Skill effort:
+The `effort:` frontmatter in each file is authoritative — this prose
+records the rationale, not a second copy of the values. The default is
+`xhigh` across skills and agents: coverage-mode bug-finding (the 5
+review-angle agents), long-horizon coding (`task-implement` /
+`task-implementer`), cross-report deduplication (`code-fixer`), discovery
+plus drafting (`generate-brief`), code-reading decomposition
+(`generate-task`), and the recommended floor for the `task-review`
+harness. The exceptions:
 
-| Skill | effort | Rationale |
-|---|---|---|
-| `generate-brief` | `xhigh` | Discovery + drafting; coding-adjacent |
-| `generate-plan` | `max` | Multi-round draft/challenge across project context. Plan cost amortizes over downstream tasks |
-| `generate-task` | `xhigh` | Code-reading decomposition |
-| `task-implement` | `xhigh` | Long-horizon coding |
-| `task-review` | `xhigh` | Code-review harness — Anthropic's recommended floor |
-| `generate-guide` | `high` | Section-by-section documentation generation |
+- `generate-plan` runs at `max` — multi-round draft/challenge across
+  project context; plan cost amortizes over downstream tasks.
+- The 3 document reviewers (`plan-document-reviewer`,
+  `task-document-reviewer`, `guide-document-reviewer`) run at `high` —
+  review against fixed criteria is closer to checklist verification than
+  open-ended authoring.
+- `regression-verifier` runs at `high` — read-only verification; lower
+  depth acceptable.
+- `generate-guide` runs at `high` — section-by-section documentation
+  generation, closer to mechanical templating than open-ended planning.
 
-Agent effort:
-
-| Agent | effort | Rationale |
-|---|---|---|
-| `requirements-reviewer` | `xhigh` | Coverage-mode bug-finding |
-| `edge-case-reviewer` | `xhigh` | Coverage-mode bug-finding |
-| `quality-reviewer` | `xhigh` | Coverage-mode bug-finding |
-| `bug-reviewer` | `xhigh` | Coverage-mode bug-finding |
-| `test-reviewer` | `xhigh` | Coverage-mode bug-finding |
-| `code-fixer` | `xhigh` | Cross-report deduplication and fix application |
-| `regression-verifier` | `high` | Read-only verification; lower depth acceptable |
-| `task-implementer` | `xhigh` | Long-horizon coding |
-| `plan-document-reviewer` | `high` | Document review against criteria |
-| `guide-document-reviewer` | `high` | Document review against criteria |
-| `task-document-reviewer` | `high` | Document review against criteria |
-
-Author-vs-reviewer asymmetry is intentional. `generate-plan` runs at `max`
-while `plan-document-reviewer` runs at `high` — authoring needs deep
-multi-round draft/challenge thinking; document review against fixed
-criteria is closer to checklist verification. The same logic applies to
-`generate-task` / `task-document-reviewer` (`xhigh` author / `high`
-reviewer). The `generate-guide` / `guide-document-reviewer` pair is
-symmetric at `high` because guide generation is closer to mechanical
-templating than open-ended planning.
+Author-vs-reviewer asymmetry is intentional: `generate-plan` (`max`) vs
+`plan-document-reviewer` (`high`), and `generate-task` (`xhigh`) vs
+`task-document-reviewer` (`high`) — authoring needs deep multi-round
+thinking; document review against fixed criteria does not. The
+`generate-guide` / `guide-document-reviewer` pair is symmetric at `high`.
 
 #### CONTEXT block contract
 
@@ -192,28 +191,17 @@ The 5 review-angle agents share PREREQUISITES, FILE COVERAGE, and CUSTOM
 INSTRUCTIONS sections by convention. When modifying any of these sections in
 one agent, apply the same change to the other 4. Duplication is intentional
 (each agent is independently readable); silent drift between them is a bug.
-Run `bash scripts/check-review-agent-drift.sh` after editing any reviewer
-agent — it hashes each shared section across the 5 files and fails on
-non-identity.
 
-The canonical `## Code Review Phase (unconditional)` block in
-`task-review/SKILL.md` and `task-implement/SKILL.md` is bounded by
-`<!-- canonical:dispatch:start -->` / `<!-- canonical:dispatch:end -->`
-markers and must remain byte-identical between the two files. Run
-`bash scripts/check-canonical-dispatch.sh` after editing either skill —
-it sha256-hashes the bounded block in both files and fails on drift.
+Two more byte-identity invariants bind `task-review/SKILL.md` and
+`task-implement/SKILL.md`: the canonical `## Code Review Phase
+(unconditional)` block (bounded by `<!-- canonical:dispatch:start/end -->`
+markers) and the shared verdict-determination bullets (bounded by
+`<!-- canonical:verdict-shared:start/end -->` markers).
 
-Likewise, the shared verdict-determination bullets in those same two
-SKILLs — the `SPOT-CHECK` neutral note plus the involuntary-incomplete and
-intentional-skip clauses that map `regression-verifier`'s row-3 Schema C
-states to a verdict — are bounded by
-`<!-- canonical:verdict-shared:start -->` /
-`<!-- canonical:verdict-shared:end -->` markers and must stay
-byte-identical between the two files. The surrounding PASS / FAIL /
-PARTIAL / BLOCKED bullets differ between the two skills by design and stay
-outside the markers. Run `bash scripts/check-verdict-shared.sh` after
-editing either verdict section — it sha256-hashes the bounded block in
-both files and fails on drift.
+After editing any reviewer agent or either of those two SKILLs, run the
+matching guard script — `check-review-agent-drift.sh`,
+`check-canonical-dispatch.sh`, or `check-verdict-shared.sh`. What each
+guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
 
@@ -225,10 +213,6 @@ both files and fails on drift.
 - Reasoning depth is controlled by the `effort:` frontmatter on each SKILL.md and agent .md, not by inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
-
-## Git
-
-Conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
 
 ## Development Workflow
 
@@ -249,19 +233,18 @@ cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 # Verify all SKILL.md files have required frontmatter
 grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
 
-# Cross-agent invariants
-bash scripts/check-review-agent-drift.sh
-bash scripts/check-canonical-dispatch.sh
-bash scripts/check-verdict-shared.sh
-bash scripts/check-code-craft-canonical.sh
-bash scripts/check-quality-reviewer-bullet-structure.sh
-bash scripts/check-notes-format-sync.sh
+# Cross-agent invariants (runs every scripts/check-*.sh guard)
+bash scripts/check-all.sh
 ```
 
 ### Repository scripts/
 
 Project-level shell scripts live in `scripts/` at the repo root:
 
+- `check-all.sh` — wrapper that runs every other `check-*.sh` guard in
+  main mode and reports PASS/FAIL per script. The single entry point for
+  pre-commit and pre-flight runs; new guard scripts are picked up
+  automatically, no command list to update.
 - `check-review-agent-drift.sh` — guards the byte-identity invariant
   across the 5 review-angle agents (PREREQUISITES, FILE COVERAGE, CUSTOM
   INSTRUCTIONS).
@@ -294,13 +277,27 @@ Project-level shell scripts live in `scripts/` at the repo root:
   instance); it catches a rename of either label in one file but not the
   other.
 
-The latter five scripts also accept a `--self-test` flag that runs a
-mutation regression fixture in a temp workdir (positive path, negative
-path on a deliberate mutation, restoration path on revert). See the
-release-checklist mechanical-check block for the full invocation order.
+Five of the guards (`check-canonical-dispatch.sh`,
+`check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
+`check-quality-reviewer-bullet-structure.sh`,
+`check-notes-format-sync.sh`) also accept a `--self-test` flag that runs
+a mutation regression fixture in a temp workdir (positive path, negative
+path on a deliberate mutation, restoration path on revert). `check-all.sh`
+does not run the self-tests — they stay explicit in the release-checklist
+mechanical-check block.
 
-Run before tagging any release; all six should also be considered as
-pre-commit hook candidates when their target files change.
+Run `bash scripts/check-all.sh` before tagging any release; it is also
+the natural pre-commit hook candidate when guard-target files change.
+
+### Workflow artifacts under docs/
+
+This repo dogfoods the plugin's own chain on itself: briefs land in
+`docs/briefs/`, plan documents in `docs/plans/`, task documents in
+`docs/tasks/`, and manual dry-run transcripts in `docs/dry-runs/`.
+These artifacts are transient by convention — completed plan/task
+documents are routinely deleted once shipped, so an empty directory or a
+missing document referenced by an old commit message is normal, not a
+gap. `docs/release-checklist.md` is the one permanent document there.
 
 ### Release procedure
 
