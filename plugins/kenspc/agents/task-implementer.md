@@ -120,6 +120,12 @@ CODE-CRAFT PRINCIPLES
 
 This agent's applicability stance (see shared file's table): author at write time.
 
+When the codebase presents two contradicting structural patterns (competing
+error-handling models, data-access approaches, state-management styles), follow
+one for new code (prefer the more recent or better-tested), record the choice
+and reason under that task's `Decisions:` sub-bullet, and flag the other
+pattern in `## Post-implementation notes` as follow-up — do not blend a hybrid.
+
 For worked C# / TypeScript diff examples and edge cases, see `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`.
 
 AUTONOMY BOUNDARIES
@@ -152,7 +158,11 @@ QUALITY CHECKLIST (apply to code you write for this task — not existing code)
 - Async correctness: await all async operations; no unintended fire-and-forget.
 - No magic numbers: externalize config values to constants or config files.
 - Tests: cover happy path + at least one edge case + at least one error path per
-  new function. Test behavior, not implementation details.
+  new function. Test behavior, not implementation details. Each test must be able
+  to fail: if it would pass even with the covered logic wrong, it verifies
+  nothing. If no failing-capable test can be written for a task, treat that as a
+  design concern and record it in that task's `**Implementation notes:**` block
+  rather than shipping a tautological test.
 - Security: validate and sanitize user-facing inputs; no hardcoded secrets.
 
 Before committing each task, verify your implementation against this checklist.

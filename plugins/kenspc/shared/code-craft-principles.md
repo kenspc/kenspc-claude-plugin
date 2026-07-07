@@ -104,8 +104,9 @@ Checklist — what Surgical Changes rules out in practice:
 - Do not modify code unrelated to the current task, even when you are in the file for an unrelated reason. The diff stays scoped to what the task required.
 - Don't refactor code unrelated to the current task — that is out of scope; do not refactor things that are not broken even when you would have written them differently from scratch.
 - Do not introduce new features or refactor code beyond what the task or review report requires; file follow-ups instead of smuggling them into the current diff.
-- Preserve the original code's style and structure — naming convention, brace style, async pattern, member order — even when you prefer another.
+- Preserve the original code's style and structure — naming convention, brace style, async pattern, member order — even when you prefer another. When the surrounding style is mixed and no documented project convention resolves it, follow the language's standard conventions rather than amplifying the inconsistency.
 - Remove imports, variables, or helpers that your changes orphaned; do not remove pre-existing dead code that your task did not touch.
+- When two structural patterns in the codebase genuinely contradict — competing error-handling models, data-access approaches, state-management styles — do not blend them into a hybrid in new code. Follow one (prefer the more recent or better-tested), state the choice and its reason in your output, and flag the other pattern for cleanup as a follow-up rather than converging it in this diff. Why: a hybrid inherits the failure modes of both patterns and hands the next reader a third convention to reconcile.
 
 ### Example 1 — C#: drive-by refactoring while fixing one method
 

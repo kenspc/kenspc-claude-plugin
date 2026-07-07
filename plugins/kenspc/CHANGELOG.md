@@ -9,6 +9,61 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.4.0 — 2026-07-07
+
+Two write-side strengthenings of the code-craft rules, both behavioural.
+Surgical Changes gains a cosmetic-vs-structural split: the style-preservation
+checklist bullet now says what to do when the surrounding style is mixed
+(follow the language's standard conventions), and a new bullet covers
+genuinely contradicting structural patterns (follow one, state why, flag the
+other for cleanup — never blend a hybrid). Separately, the falsifiability
+check introduced review-side in v3.2.0 now also applies at authoring time:
+`task-implementer` requires each test it writes to be able to fail, and
+treats "no failing-capable test can be written" as a design concern to
+record, not a gap to paper over with a tautological test. Minor bump because
+both add new writer-agent behaviour; no CONTEXT block schema change, no
+review-side change, and the `<!-- canonical:principle:* -->` blocks are
+untouched — all edits sit outside the byte-identity hash ranges.
+
+### Rationale
+
+Two gaps surfaced when auditing the code-craft rules against their upstream
+sibling formulation (the maintainer's global code principles, refined
+2026-06-29). First, the Surgical Changes checklist told the writer agents to
+preserve the original code's style but assumed that style is consistent; in a
+mixed-style file the rule gave no answer, and in a codebase with two
+genuinely contradicting structural patterns (competing error-handling models,
+data-access approaches, state-management styles) the agents had no rule
+against producing a hybrid that inherits the failure modes of both. Second,
+v3.2.0 deliberately scoped falsifiability to the review harness ("applied
+here to the review harness rather than to authored code"); that left a
+review→fix round-trip as the only defence against tautological tests the
+implementer itself writes. Requiring falsifiability at write time closes the
+loop and mirrors the Apply/Detect symmetry the other two principles already
+have. The reviewer side deliberately gets no matching "hybrid blending"
+detect bullet: migration-in-progress codebases legitimately contain both
+patterns, and exclusion conditions tight enough to avoid false positives
+could not be written — prevention at write time is the better-placed control.
+
+### Changed
+
+- `shared/code-craft-principles.md`: the Surgical Changes checklist bullet
+  "Preserve the original code's style and structure" gains a mixed-style
+  fallback (follow the language's standard conventions when no documented
+  project convention resolves the inconsistency), and a new checklist bullet
+  covers contradicting structural patterns (follow one — prefer the more
+  recent or better-tested — state the choice and reason, flag the other for
+  follow-up cleanup; never blend a hybrid). Both edits are outside the
+  canonical principle blocks, so the two writer agents' inlined copies are
+  unaffected.
+- `agents/task-implementer.md`: a stance paragraph under CODE-CRAFT
+  PRINCIPLES maps the no-hybrid rule to this agent's persistence mechanism
+  (record the pattern choice under the task's `Decisions:` sub-bullet, flag
+  the losing pattern in `## Post-implementation notes`); the QUALITY
+  CHECKLIST Tests bullet now requires each authored test to be able to fail
+  and routes "no failing-capable test exists" into the task's
+  `**Implementation notes:**` block as a design concern.
+
 ## 3.3.0 — 2026-06-29
 
 The implementer now checkpoints each task's rationale into the task document

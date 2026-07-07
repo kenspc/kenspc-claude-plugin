@@ -223,7 +223,9 @@ In the same spirit, v3.2.0 extends the review harness with two further checks
 of kenspc's own — falsifiability (a test that cannot fail is not a test) and
 fail-loud on incomplete test runs (never report a clean pass you did not fully
 verify). These are kenspc additions applied to the review agents, not part of
-Karpathy's four principles.
+Karpathy's four principles. v3.4.0 extends the falsifiability rule to the
+write side as well: `task-implementer` requires each test it authors to be
+able to fail, closing the authoring/review loop.
 
 The five-dimension discovery framework (`shared/discovery-framework.md`) — used by
 both `generate-brief` and `generate-plan` Phase 1 — is adapted from the structured
