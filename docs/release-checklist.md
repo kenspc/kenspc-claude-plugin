@@ -20,23 +20,8 @@ cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
 cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
 cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 
-# Canonical dispatch byte-identity (task-review vs task-implement)
-bash scripts/check-canonical-dispatch.sh
-
-# Shared verdict block byte-identity (task-review vs task-implement)
-bash scripts/check-verdict-shared.sh
-
-# Review-angle agents shared-section invariance (5 reviewer agents)
-bash scripts/check-review-agent-drift.sh
-
-# Code-craft canonical principle byte-identity (shared + 2 writer agents)
-bash scripts/check-code-craft-canonical.sh
-
-# Quality-reviewer bullet structure (3-condition gate on two new bullets)
-bash scripts/check-quality-reviewer-bullet-structure.sh
-
-# Notes-format sync (DONE-block sub-bullet labels: agent vs example)
-bash scripts/check-notes-format-sync.sh
+# All drift/structure guards in main mode (runs every scripts/check-*.sh)
+bash scripts/check-all.sh
 
 # Mutation regression fixtures (self-test on the five self-test-capable guards)
 bash scripts/check-code-craft-canonical.sh --self-test
@@ -46,7 +31,16 @@ bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
 bash scripts/check-notes-format-sync.sh --self-test
 ```
 
-All fourteen must exit 0 (3 JSON validations + 4 main-mode shell drift guards + 2 structural/sync guards + 5 mutation regression self-tests). If any fail, fix before proceeding to the smoke checklist.
+All nine must exit 0 (3 JSON validations + `check-all.sh` covering every
+drift/structure guard in main mode + 5 mutation regression self-tests).
+If any fail, fix before proceeding to the smoke checklist.
+
+## Docs currency (manual)
+
+CLAUDE.md (§ Subagent Review Architecture) pins the effort ladder to
+Anthropic's published guidance and carries a "wording last reviewed"
+date. Confirm the guidance still matches the current frontier Claude
+generation and update that date before tagging.
 
 ## Smoke checklist (manual, ~10 minutes)
 
