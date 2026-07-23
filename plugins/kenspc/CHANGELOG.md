@@ -9,6 +9,26 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.4.3 — 2026-07-23
+
+Docs patch: the root `README.md` Requirements section no longer
+recommends the external superpowers plugin. Since the v3 rewrite, kenspc
+has no functional dependency on it — all orchestration ships with the
+plugin's own agents — and superpowers' aggressive-dispatcher style runs
+counter to the v3 design philosophy (plain language over aggressive
+tokens, no anti-rationalization scaffolding). No skill, agent, hook, or
+CONTEXT block change.
+
+### Changed
+
+- Root `README.md` Requirements: replaced the stale
+  `Recommended: superpowers` line with a neutral self-containedness
+  statement ("No external plugin dependencies — all workflows and
+  subagents ship with the plugin"). The recommendation dated from the
+  pre-v3 era, when the skills themselves used the deep-reasoning trigger
+  token and the pairing was deliberate; v3 removed that token, leaving
+  the recommendation stale and misleading.
+
 ## 3.4.2 — 2026-07-08
 
 Bug-fix and cleanup patch driven by a full external-style review of the

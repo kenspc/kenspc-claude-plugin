@@ -69,7 +69,7 @@ plugins/
 ## Requirements
 
 - Claude Code v2.1.0+
-- Recommended: [superpowers](https://github.com/obra/superpowers) plugin
+- No external plugin dependencies — all workflows and subagents ship with the plugin.
 
 ## Acknowledgements
 
