@@ -10,6 +10,9 @@ interactive surface.
 Run from the repository root:
 
 ```bash
+(
+set -e
+
 # Effort overrides — exactly these three files declare effort:, each xhigh;
 # every other skill and agent follows the session (diff exits 1 on any drift)
 diff <(grep -H '^effort:' plugins/kenspc/skills/*/SKILL.md plugins/kenspc/agents/*.md) - <<'EOF'
@@ -18,27 +21,22 @@ plugins/kenspc/agents/code-fixer.md:effort: xhigh
 plugins/kenspc/agents/task-implementer.md:effort: xhigh
 EOF
 
-# JSON sanity (all three)
-cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
-cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
-cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
-
-# All drift/structure guards in main mode (runs every scripts/check-*.sh)
-bash scripts/check-all.sh
-
-# Mutation regression fixtures (self-test on the seven self-test-capable guards)
-bash scripts/check-code-craft-canonical.sh --self-test
-bash scripts/check-canonical-dispatch.sh --self-test
-bash scripts/check-verdict-shared.sh --self-test
-bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
-bash scripts/check-notes-format-sync.sh --self-test
-bash scripts/check-no-model-names.sh --self-test
-bash scripts/check-run-contract.sh --self-test
+# Every guard in main mode (JSON validity included, via check-json.sh), then
+# every guard's mutation regression fixture. Expect "guards run: 9" after the
+# main pass and "self-tests run: 8" as the last line.
+bash scripts/check-all.sh --self-test
+)
 ```
 
-All twelve must exit 0: 1 effort-override diff + 3 JSON validations + 1
-`check-all.sh` run (every drift/structure guard in main mode) + 7 mutation
-regression self-tests = 12. If any fail, fix before proceeding to the smoke
+Both must pass: 1 effort-override diff + 1 `check-all.sh --self-test` run
+= 2. The block runs in a `( set -e … )` subshell, so pasted whole it stops at
+the first failure and returns that command's exit code — without closing an
+interactive shell, which a bare `set -e` would do. The `check-all.sh` run
+covers every guard in main mode, JSON validity included via `check-json.sh`,
+and then every self-test fixture. Its output must include `guards run: 9`
+and end with `self-tests run: 8`; a different number means a guard or
+fixture was added, removed, or no longer detected — find out which before
+continuing. If anything fails, fix it before proceeding to the smoke
 checklist.
 
 ## Docs currency (manual)
@@ -73,10 +71,21 @@ Inside the session:
 | 3 | `/kenspc-brief` | Discovery starts; first user-facing prompt is a question (not a draft) |
 | 4 | `/kenspc-plan` | Phase 1 begins; Phase 3 dispatch table appears before plan-document-reviewer runs |
 | 5 | `/kenspc-task <plan-path>` | Decomposition runs; task-document-reviewer dispatch table appears |
-| 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE; Schema A → B → C → G report appears |
-| 7 | `/kenspc-task-review` | 5-row dispatch table appears; Schema F final report; never logs "Code looks correct, skipping review" |
+| 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE; Schema A → B → C → G report appears; run-directory check passes (see below) |
+| 7 | `/kenspc-task-review` | 5-row dispatch table appears; Schema F final report; never logs "Code looks correct, skipping review"; run-directory check passes (see below) |
 | 8 | `/kenspc-guide <project-path>` | Guide runs; guide-document-reviewer dispatch table appears |
 | 9 | End-to-end trace verification on greenfield project (non-DungeonDescent) | All three sub-criteria hold (see row-9 detail below) |
+
+Run-directory check for rows 6 and 7 (v3.5.0):
+
+- The final report's Fixes section prints the full path of `schema-b.md`.
+- That directory holds `angle-1.md` through `angle-5.md` and `schema-b.md`.
+- From this repository, `bash scripts/check-run-contract.sh --file <that
+  path>` exits 0 — the real Schema B's Per-angle Results table and
+  statistics line agree with its rows.
+- In a project whose `.gitignore` does not yet cover `.kenspc/`, the run
+  adds exactly one commit before dispatch, touching only `.gitignore`; a
+  second run adds none.
 
 Row 9 sub-criteria (each is independently mechanically auditable against
 the captured trace):

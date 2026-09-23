@@ -247,16 +247,13 @@ Use `/reload-plugins` inside a session to pick up changes without restarting.
 
 ### Validate plugin structure
 ```bash
-# JSON sanity (all three: plugin metadata, hooks config, marketplace registry)
-cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
-cat plugins/kenspc/hooks/hooks.json | python -m json.tool > /dev/null
-cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
-
 # Verify all SKILL.md files have required frontmatter
 grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
 
-# Cross-agent invariants (runs every scripts/check-*.sh guard)
+# Every scripts/check-*.sh guard — cross-agent invariants and JSON validity;
+# --self-test also runs every guard's mutation regression fixture
 bash scripts/check-all.sh
+bash scripts/check-all.sh --self-test
 ```
 
 ### Repository scripts/
@@ -264,9 +261,12 @@ bash scripts/check-all.sh
 Project-level shell scripts live in `scripts/` at the repo root:
 
 - `check-all.sh` — wrapper that runs every other `check-*.sh` guard in
-  main mode and reports PASS/FAIL per script. The single entry point for
-  pre-commit and pre-flight runs; new guard scripts are picked up
-  automatically, no command list to update.
+  main mode, reports PASS/FAIL per script, and prints `guards run: N`. The
+  single entry point for pre-commit and pre-flight runs; new guard scripts
+  are picked up automatically, no command list to update. With
+  `--self-test` it then runs every guard's mutation fixture (see below) and
+  ends with a `self-tests run: N` line. The release checklist pins both
+  numbers.
 - `check-review-agent-drift.sh` — guards the byte-identity invariant
   across the 5 review-angle agents (CONTEXT YOU WILL RECEIVE, ROLE,
   PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, REPORT DELIVERY).
@@ -316,19 +316,31 @@ Project-level shell scripts live in `scripts/` at the repo root:
   DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`
   counts as NOT APPLICABLE). `--file PATH` runs the recount against a real
   `schema-b.md` from a run directory.
+- `check-json.sh` — guards that `plugin.json`, `hooks.json`, and
+  `marketplace.json` parse. It picks the interpreter itself — `python3`,
+  `python`, `py`, then `node`, each probed by running it, which skips the
+  Windows Store `python3` alias — so the same command works on macOS,
+  Windows, and WSL2.
 
-Seven of the guards (`check-canonical-dispatch.sh`,
+Eight of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
 `check-notes-format-sync.sh`, `check-no-model-names.sh`,
-`check-run-contract.sh`) also accept a `--self-test` flag that runs
+`check-run-contract.sh`, `check-json.sh`) also accept a `--self-test` flag
+that runs
 a mutation regression fixture in a temp workdir (positive path, negative
-path on a deliberate mutation, restoration path on revert). `check-all.sh`
-does not run the self-tests — they stay explicit in the release-checklist
-mechanical-check block.
+path on a deliberate mutation, restoration path on revert).
+`bash scripts/check-all.sh --self-test` runs them all after the main-mode
+pass: a guard implements a fixture when its dispatch matches the literal
+`--self-test` argument, guards without one are listed as skipped, and the
+closing `self-tests run: N` count makes a fixture that stops being detected
+visible. Before v3.5.0 the self-tests ran only as separate release-checklist
+commands, which is how five of them went unrun on macOS (BSD `sed -i`)
+without anyone noticing.
 
-Run `bash scripts/check-all.sh` before tagging any release; it is also
-the natural pre-commit hook candidate when guard-target files change.
+Run `bash scripts/check-all.sh --self-test` before tagging any release.
+Plain `bash scripts/check-all.sh` (main mode only) is the natural pre-commit
+hook candidate when guard-target files change.
 
 ### Workflow artifacts under docs/
 

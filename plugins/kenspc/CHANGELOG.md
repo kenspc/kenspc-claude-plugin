@@ -9,6 +9,231 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.5.0 — 2026-09-23
+
+Reviewer-layer rightsizing (G6). The five review angles now report against a
+severity-calibrated policy and a rubric of named failure modes instead of a
+coverage-maximizing checklist; review reports travel between agents through a
+per-run directory instead of through the main session's context; every
+finding carries an angle-prefixed ID that code-fixer and regression-verifier
+account for mechanically; and effort follows the session except in three
+files. Minor bump: the command surface is unchanged, and a standalone
+`@kenspc:<reviewer>` invocation keeps its output shape. CONTEXT contract
+change: `RUN_DIR` is added — optional for the 5 review-angle agents, required
+for `code-fixer` and `regression-verifier` — and `REVIEW_REPORTS` /
+`ACCOUNTABILITY_LIST` are retired.
+
+### Rationale
+
+Nine `/kenspc-task-implement` runs (2026-06-29 to 2026-09-08, on Opus 4.8,
+Fable 5, and Opus 5) produced 452 findings across their Schema B
+accountability lists:
+
+- HIGH: 37 reported, 12 after deduplication, all 12 handled.
+- MEDIUM: 59% fixed.
+- LOW: 289 findings — 64% of the total — with a 13% fix rate; code-fixer
+  judged 88 of them NOT APPLICABLE. The NOT APPLICABLE rate was 33% on
+  Fable 5 and 11% on Opus 5.
+
+The volume traced back to the reviewers' shared instruction to report every
+issue "including ones you are uncertain about … Your goal here is coverage",
+with filtering left to the fixer. It also cost the main session: rendering
+every report verbatim grew one run's context to 414k tokens and forced
+another to compact, and when the orchestrator relayed the reports to the
+verifier through its prompt it abbreviated the list, which produced a false
+FAIL.
+
+Anthropic's guidance for the Claude 5 generation points the same way:
+replace rules with judgement, stop over-constraining skills, and start from
+the model's default effort — re-tuned at each generation — raising it only
+where work under-executes:
+
+- Thariq Shihipar, [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models), claude.com blog, 2026-07-24
+- Lydia Hallie, [Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code), claude.com blog, 2026-07-07
+- Lance Martin, [Agent Harness Design: 3 Patterns for Harnessing Claude's Intelligence](https://claude.com/blog/harnessing-claudes-intelligence), claude.com blog, 2026-04-02
+- Claude Academy, [Choosing the right effort level in Claude Code](https://academy.claude.com/tutorials/choosing-the-right-effort-level-in-claude-code)
+
+v3.0 recorded that "don't nitpick"-style wording makes models suppress real
+findings, so the new policy keeps an explicit counterweight: uncertainty
+lowers a finding's Confidence instead of dropping a HIGH or MEDIUM candidate.
+A HIGH handling rate below 100% in the acceptance baseline
+(`docs/dry-runs/g6-baseline.md`) counts as a regression of that wording.
+
+Unchanged by design: fresh-context independent review, unconditional
+dispatch of all five angles, regression-verifier's re-verification of fixes,
+the Schema A–G section structure, `shared/code-craft-principles.md`, and
+`shared/discovery-framework.md`. Merging the bug and edge-case angles is
+deferred until the new rubrics have run.
+
+### Removed
+
+- The five reviewers' shared output paragraph ("Report every issue you find
+  … Your goal here is coverage") (G6-a).
+- `code-fixer`'s "LOW: do not fix" rule (G6-a).
+- Generic REVIEW CHECKLIST items — checks the model performs without being
+  told (G6-c):
+  - requirements: orphaned files or dead code from incomplete work. The
+    other three questions became named failure modes or the passing
+    statement.
+  - edge-case: boundary values (min/max, zero, negative, overflow) and
+    concurrency (bug's check-then-act covers the case that matters). The
+    generic null/empty, malicious-input, and resource-cleanup questions are
+    each replaced by a narrower named mode: empty treated as absent,
+    trusting boundary input, shared-resource lifetime.
+  - quality: naming conventions, project structure, DRY, SOLID, magic
+    numbers and hardcoded values, code complexity, import organization.
+    These are in scope now only where CLAUDE.md, README, or adjacent code
+    states them.
+  - bug: off-by-one, null/undefined references, missing async/await,
+    resource leaks, database query correctness and N+1, implicit type
+    coercion, and generic state management. Happy-path and error-path
+    tracing became the passing statement.
+  - test: "are core logic functions tested", edge-case coverage
+    (null/empty/boundary), integration tests for critical paths, and the
+    stand-alone behavior-not-implementation question. Error-path coverage,
+    naming the missing tests, and following the project's test framework
+    are folded into the passing statement.
+- `effort:` frontmatter from 14 files: the `generate-brief`,
+  `generate-task`, `generate-guide`, `task-implement`, and `task-review`
+  skills; the 5 review-angle agents; `regression-verifier`; and the 3
+  document reviewers (G6-e).
+- The CONTEXT keys `REVIEW_REPORTS` and `ACCOUNTABILITY_LIST` (G6-d).
+- `DEDUPED` as a Schema B row action — it is now a count (G6-f).
+- Pinned model-version wording ("aligned with Opus 4.8" and similar) in
+  `plugin.json`, README, and CLAUDE.md (G6-e). Historical CHANGELOG entries
+  and the document titles cited in the README Acknowledgements are left as
+  they are.
+- The release checklist's "every file declares effort" loop, which printed
+  a warning but always exited 0.
+
+### Changed
+
+- **Output policy (G6-a).** The 5 review-angle agents share a
+  severity-calibrated policy, byte-identical and drift-guarded. HIGH needs
+  a concrete failure path — wrong result, data loss, crash, or security
+  exposure — and the input or state that triggers it. MEDIUM needs a stated
+  consequence, or a departure from a written convention in CLAUDE.md,
+  README, or adjacent code. LOW is reported only when it is small, fixable
+  alongside the change, and anchored to a written convention or a specific
+  defect. A style preference with no written convention behind it is not a
+  finding and is not listed as an observation either.
+- **code-fixer triage (G6-a).** Triage uses the same definitions. LOW
+  follows MEDIUM's rule — fix if localized and low-risk, otherwise defer.
+  A NOT APPLICABLE row carries its reason in the Action cell
+  (`NOT APPLICABLE — <reason>`, naming the part of the definition that
+  fails); a DEFERRED paragraph names its constraint.
+- **Angle 3 (G6-b).** `quality-reviewer` now reviews project conventions and
+  existing patterns: rules written in CLAUDE.md or README and patterns
+  visible in adjacent code. The file and dispatch name are unchanged, and so
+  are the two triple-condition bullets (Over-engineering, Drive-by
+  refactoring). Its description, OBJECTIVE, and closing line ("Angle 3:
+  Project Conventions"), both Planned Dispatch tables, the task-review
+  Quality bar, the README agents table, and CLAUDE.md follow the new scope.
+- **Rubric checklists (G6-c).** Each REVIEW CHECKLIST is now a one-sentence
+  passing statement plus named failure modes; bullets per angle went from
+  4/7/9/9/9 to 3/6/4/4/3 (bug's four include one "not a finding"). Modes
+  taken from run evidence: tautological test; unverified interaction (a
+  stubbed collaborator whose call arguments are never asserted); fail-open
+  guard; spec–implementation drift; shared-resource lifetime and late
+  failure overwriting a settled result (the two HIGH clusters of the
+  2026-09-08 run); and compiler-enforced exhaustiveness reported as a
+  missing default case, listed as not a finding. Trusting boundary input is
+  kept without run evidence because it is a security boundary. bug and
+  edge-case do not list the same mode. The frontmatter descriptions of the
+  requirements, edge-case, bug, and test reviewers match their new rubrics.
+- **Run directory (G6-d).** `task-review` (Step 1) and `task-implement`
+  (Phase 2 Step 1) prepare `<repo root>/.kenspc/runs/<YYYYMMDD-HHMMSS>-<slug>`
+  (slug: the task document's name, or `changes`) as an absolute,
+  forward-slashed path and pass it as `RUN_DIR`. If
+  `git check-ignore -q .kenspc/` exits 1 (the trailing slash matters for a
+  directory that does not exist yet), `.kenspc/` is appended to `.gitignore`
+  and committed on its own with a pathspec commit. The message follows the
+  project's commit conventions, and a hook rejection stops the run — no
+  retry, no `--no-verify`. This procedure is a byte-identical
+  `canonical:run-dir` block in both skills. Each reviewer, read-only on the
+  working tree, writes only `RUN_DIR/angle-<n>.md` and replies with its
+  Findings table, the path, and its closing line; without `RUN_DIR` it
+  replies inline and writes nothing. `code-fixer` reads the reports from the
+  directory and writes `schema-b.md`; `regression-verifier` reads both.
+  Runs accumulate; there is no automatic cleanup.
+- **Final report (G6-d).** The Fixes section of Schema F and Schema G is
+  code-fixer's reply: statistics line, Per-angle Results table, HIGH and
+  MEDIUM rows with their Deferred Issues paragraphs, and the full path of
+  `schema-b.md`, where the LOW rows and prose remain. Next steps list each
+  HIGH or MEDIUM DEFERRED issue; LOW deferrals get one bullet with their
+  count and the path. The Schema A roll-up, Schema C, and the Verdict
+  section are unchanged.
+- **Accountability contract (G6-f).** Reviewer issue IDs carry the angle's
+  letter (`R`, `E`, `Q`, `B`, `T`) and a sequence number. Schema B has one
+  row per unique issue with a Source column listing every ID it accounts
+  for, primary first; the other IDs count as DEDUPED. A Per-angle Results
+  table and a fixed statistics line follow: `total reported N (R n, E n,
+  Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N,
+  NOT APPLICABLE N, DEDUPED N`. regression-verifier's row 1 compares the
+  reports' ID set with the Source IDs and checks total = FIXED + DEFERRED +
+  NOT APPLICABLE + DEDUPED and unique = FIXED + DEFERRED + NOT APPLICABLE.
+- **Effort (G6-e).** `generate-plan` goes from `max` to `xhigh`;
+  `task-implementer` and `code-fixer` stay at `xhigh`. Every other skill and
+  agent inherits the session's effort. CLAUDE.md and the README Effort
+  levels section give the reason for each override, and the release
+  checklist's Docs currency step now re-checks those reasons instead of
+  re-pinning values.
+- The canonical dispatch block's "Each subagent is read-only … does not
+  modify any files" now reads "read-only with respect to the working tree
+  and writes only its own report under `RUN_DIR`" (identical in both
+  skills; the block's hash changes on purpose).
+- `check-review-agent-drift.sh` also guards the reviewers' ROLE, CONTEXT
+  YOU WILL RECEIVE, and REPORT DELIVERY sections (3 → 6), which carry the
+  `RUN_DIR` contract and the one permitted write.
+- Release checklist: pre-flight is now two commands in a `( set -e … )`
+  block, so a pasted block stops at the first failure: the effort-override
+  diff and `bash scripts/check-all.sh --self-test`, which must report
+  `guards run: 9` and `self-tests run: 8`. The three hand-run
+  `python -m json.tool` lines are gone (see `check-json.sh`). Smoke rows 6
+  and 7 add a run-directory check, including `check-run-contract.sh --file`
+  on the real `schema-b.md`.
+- README and `plugin.json`: a sixth design rule (rubrics and named failure
+  modes over generic checklists), the rewritten Effort levels section, a
+  new Run directory section (location, accumulation, the one-time
+  `.gitignore` commit, and permission modes — an unattended
+  `/kenspc-task-implement` needs `acceptEdits` or `auto`, started from the
+  repository root), and the standalone reviewer note (angle-prefixed IDs
+  are the one format difference from v3.4.3).
+
+### Added
+
+- `scripts/check-no-model-names.sh` with `--self-test`: nothing under
+  `skills/`, `agents/`, `commands/`, or `shared/` names or pins a Claude
+  model, and every frontmatter `model:` value is `inherit` (G6-e).
+- `scripts/check-run-contract.sh` with `--self-test` and `--file PATH`: the
+  `canonical:run-dir` and `canonical:stats-line` blocks stay byte-identical,
+  and the worked Schema B example in `code-fixer.md` — or a real
+  `schema-b.md` given with `--file` — recounts to its own Per-angle Results
+  table and statistics line (G6-d/f).
+- `scripts/check-json.sh` with `--self-test`: `plugin.json`, `hooks.json`,
+  and `marketplace.json` parse, using the first interpreter that actually
+  runs (`python3`, `python`, `py`, then `node`).
+- `check-all.sh` prints `guards run: N` after the main-mode pass; with
+  `--self-test` it then runs every guard's mutation fixture and prints
+  `self-tests run: N`.
+- `docs/dry-runs/g6-baseline.md`: the pre-G6 baseline, a single-agent
+  pre-check, and a template for the acceptance run.
+
+### Fixed
+
+- The five guard self-tests that existed before this release
+  (`check-canonical-dispatch.sh`, `check-verdict-shared.sh`,
+  `check-code-craft-canonical.sh`,
+  `check-quality-reviewer-bullet-structure.sh`,
+  `check-notes-format-sync.sh`) exited 1 on macOS. They used GNU-only bare
+  `sed -i`, and two used `{s/…/…/}`, which BSD sed rejects without a `;`.
+  They now use `sed -i.bak … && rm …bak`. The failures went unnoticed
+  because the self-tests ran only as separate release-checklist commands;
+  `check-all.sh --self-test` now runs them together.
+- The JSON checks in the release checklist and CLAUDE.md called `python`,
+  which exits 127 on a macOS install that has only `python3`.
+  `check-json.sh` replaces them.
+
 ## 3.4.3 — 2026-07-23
 
 Docs patch: the root `README.md` Requirements section no longer

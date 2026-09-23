@@ -80,7 +80,9 @@ The five code reviewers are read-only on the working tree. Invoked standalone,
 they reply inline and write nothing. Dispatched by `/kenspc-task-review` or
 `/kenspc-task-implement`, which pass a run directory (`RUN_DIR`), each writes
 exactly one file — its own report — into that directory. The Write tool they
-carry is for that file; they already had Bash.
+carry is for that file; they already had Bash. Standalone output keeps the
+v3.4.3 shape (Findings table, Issues table, closing line); the one format
+difference is that issue IDs carry the angle's letter (`B1`, not `1`).
 
 ## Installation
 
@@ -124,7 +126,7 @@ Use `/reload-plugins` to pick up changes without restarting.
 
 ## Design Principles
 
-v3 follows five design rules:
+v3 follows six design rules:
 
 - **Workflow SOP** — The brief → plan → task → implement → review chain stays.
   Each skill's phase structure is preserved; v3 changed how each phase is
@@ -148,6 +150,14 @@ v3 follows five design rules:
   session's effort level, with `effort:` frontmatter overrides where a file
   needs more; "use" / "avoid" / "do not" replace `MUST` /
   `NEVER`; stop-and-report prose replaces `STOP immediately`.
+- **Rubrics and named failure modes over generic checklists** (v3.5.0) —
+  Each review angle states what passing looks like and names the failure
+  modes a model tends to miss, chosen from evidence in past runs; generic
+  checks the model already performs (null checks, naming, DRY) are left out.
+  Findings are calibrated by severity — HIGH needs a concrete failure path,
+  LOW is reported only when it can be fixed in the batch and is anchored to
+  a written convention or a specific defect — and a style preference with no
+  written convention behind it is not a finding.
 
 Cross-cutting properties from earlier versions are preserved:
 
@@ -202,6 +212,34 @@ Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/pl
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
 
 Small fixes can skip all skills and be implemented directly.
+
+## Run directory
+
+`/kenspc-task-review` and `/kenspc-task-implement` (Phase 2) keep each review
+run's reports in a directory at the root of your repository (since v3.5.0):
+
+```
+.kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
+    angle-1.md … angle-5.md    # full report from each review angle
+    schema-b.md                # code-fixer's full accountability list
+```
+
+- The final report shows code-fixer's statistics line, the per-angle results,
+  and the HIGH and MEDIUM rows, plus the full path of `schema-b.md`. The LOW
+  rows and the five full reports stay in the directory.
+- The first run in a repository that does not yet ignore `.kenspc/` appends a
+  `.kenspc/` line to `.gitignore` and commits that file on its own
+  (`chore: ignore kenspc run directory`, adapted to the commit conventions in
+  your CLAUDE.md). If a commit hook rejects it, the run stops and reports the
+  error; it does not retry or bypass the hook.
+- Runs accumulate: nothing is deleted automatically. Remove old run
+  directories when you no longer need them.
+- Permissions: each reviewer writes its report with the Write tool. In the
+  default permission mode every write asks for approval, so an unattended
+  `/kenspc-task-implement` needs `acceptEdits` or `auto` mode. The directory
+  sits at the repository root, so start the session there: when the
+  session's working directory is a subdirectory, the run directory lies
+  outside it and even `acceptEdits` asks.
 
 ## Requirements
 
