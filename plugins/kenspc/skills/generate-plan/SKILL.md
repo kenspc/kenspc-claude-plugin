@@ -8,7 +8,7 @@ description: >
   Trigger on: "write a plan", "generate plan", "写计划书", "编写计划",
   "帮我规划", "计划一下", or writing plan files to docs/plans/.
 version: 3.0.0
-effort: max
+effort: xhigh
 argument-hint: <requirement or path-to-requirements-file> [custom instructions]
 ---
 

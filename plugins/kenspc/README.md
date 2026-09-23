@@ -138,8 +138,9 @@ v3 follows five design rules:
   model toward those scripts.
 - **Plain language over aggressive tokens** — Uppercase imperatives like
   `MUST` and `NEVER`, `CRITICAL` labels, and the deep-reasoning trigger token
-  used in earlier versions are all removed. Reasoning depth is now controlled
-  by the `effort:` frontmatter; "use" / "avoid" / "do not" replace `MUST` /
+  used in earlier versions are all removed. Reasoning depth now follows the
+  session's effort level, with `effort:` frontmatter overrides where a file
+  needs more; "use" / "avoid" / "do not" replace `MUST` /
   `NEVER`; stop-and-report prose replaces `STOP immediately`.
 
 Cross-cutting properties from earlier versions are preserved:
@@ -159,16 +160,28 @@ Cross-cutting properties from earlier versions are preserved:
 
 ### Effort levels
 
-Every SKILL.md and agent .md declares an `effort:` frontmatter value
-(`low` / `medium` / `high` / `xhigh` / `max`) per the
+Skills and agents follow your session's effort level: a SKILL.md or agent
+.md without an `effort:` field inherits it, per the
 [Claude Code skills frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference)
 and [subagent frontmatter reference](https://code.claude.com/docs/en/sub-agents#supported-frontmatter-fields).
-Discovery, planning, decomposition, implementation, and review all run at
-`xhigh` or `max`, matching Anthropic's recommendation for Claude Opus 4.8
-coding and agentic workloads. When running at `xhigh`/`max`, set a large
-max-output-token budget so the model has room to think and act across its
-subagents and tool calls (this is a session/API config concern, not a
-plugin concern).
+Anthropic's guidance for the Claude 5 generation is to start from the
+model's default effort — which is re-tuned with each generation — and raise
+it only where the work under-executes or is hard to validate
+([Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code);
+[Choosing the right effort level in Claude Code](https://academy.claude.com/tutorials/choosing-the-right-effort-level-in-claude-code);
+last reviewed 2026-09-23).
+
+Three files override the session at `xhigh`:
+
+| File | Why |
+|---|---|
+| `agents/task-implementer.md` | Unattended long-horizon implementation — nobody is watching to catch a run that stops short or skips verification |
+| `agents/code-fixer.md` | Unattended deduplication and fix / build / test loops across all five review reports |
+| `skills/generate-plan/SKILL.md` | Multi-round draft/challenge; plan cost amortizes over every downstream task |
+
+When a session runs at `xhigh`/`max`, set a large max-output-token budget
+so the model has room to think and act across its subagents and tool calls
+(this is a session/API config concern, not a plugin concern).
 
 ## Recommended Workflow
 
@@ -188,13 +201,14 @@ Small fixes can skip all skills and be implemented directly.
 
 **Required:**
 - Claude Code v2.1.0+ (the version line that supports the `effort:`
-  frontmatter on SKILL.md and agent .md files; required because v3 declares
-  `effort:` on every skill and agent).
+  frontmatter on SKILL.md and agent .md files; required for the three
+  `xhigh` overrides listed under [Effort levels](#effort-levels)).
 
 **Recommended:**
-- A session that allows a generous max-output-token budget — when skills run
-  at `xhigh`/`max` effort, the model needs room to think and act across its
-  subagents and tool calls (Anthropic guidance for Claude Opus 4.8).
+- A session that allows a generous max-output-token budget — the three
+  overrides run at `xhigh`, and so does everything else when your session
+  does; the model needs room to think and act across its subagents and tool
+  calls.
 
 ## Reference Documents
 

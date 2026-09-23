@@ -4,7 +4,6 @@ description: >
   Reviews code with skeptical bug-hunting mindset: off-by-one errors, null references, async correctness, race conditions, query correctness, type safety. Used by /kenspc-task-review parallel review (Angle 4); also safe to invoke standalone with a project context.
 tools: Read, Grep, Glob, Bash
 model: inherit
-effort: xhigh
 ---
 
 PREREQUISITE CHECK

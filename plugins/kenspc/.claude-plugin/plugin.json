@@ -1,6 +1,6 @@
 {
   "name": "kenspc",
-  "description": "Structured software development workflows for Claude Code, aligned with Opus 4.8 at xhigh/max effort. Eleven reusable subagents drive brief generation, plan generation, task decomposition, automated batch implementation, and multi-angle parallel review. v3 follows five design rules: workflow SOP stays, business rules framed as why-not-command, DONE-criteria over step-by-step flow, no anti-rationalization scaffolding, and plain language over MUST/NEVER/CRITICAL/ULTRATHINK.",
+  "description": "Structured software development workflows for Claude Code, aligned with Claude 5 generation guidance (last reviewed 2026-09-23): effort follows the session, with three xhigh overrides (unattended implementation and fixing, multi-round planning). Eleven reusable subagents drive brief generation, plan generation, task decomposition, automated batch implementation, and multi-angle parallel review. v3 follows five design rules: workflow SOP stays, business rules framed as why-not-command, DONE-criteria over step-by-step flow, no anti-rationalization scaffolding, and plain language over MUST/NEVER/CRITICAL/ULTRATHINK.",
   "version": "3.4.3",
   "author": {
     "name": "Sim Poh Chuan",

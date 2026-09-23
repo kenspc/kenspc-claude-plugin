@@ -8,7 +8,6 @@ description: >
   "deployment guide", "onboarding doc", "写文档", "项目指南", "部署文档",
   "写个文档给新人看".
 version: 3.0.0
-effort: high
 argument-hint: <project-path> [custom instructions]
 ---
 

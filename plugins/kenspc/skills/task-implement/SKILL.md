@@ -5,7 +5,6 @@ description: >
   document without user interaction, then runs automated code review. Only use when
   the user explicitly requests automated/batch task implementation.
 version: 3.0.0
-effort: xhigh
 argument-hint: <path-to-task-file>
 ---
 

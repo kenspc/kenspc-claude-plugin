@@ -130,44 +130,38 @@ No shared state files — each agent runs in its own context, eliminating
 concurrency conflicts. Subagents cannot spawn other subagents; orchestration
 stays at the skill (main session) level.
 
-As of v3.0, every SKILL.md and every agent .md declares an `effort:`
-frontmatter value (`low` / `medium` / `high` / `xhigh` / `max`). Reasoning
-depth is configured per skill and per agent via this field, not via inline
-directive tokens. The effort ladder follows Anthropic's guidance for
-frontier Claude models: `xhigh` for coding/agentic work and a minimum of
-`high` for intelligence-sensitive work (source: Opus 4.8 prompting
-guidance, unchanged from the Opus 4.7 guidance adopted at the v3.0
-rewrite; last verified against the current frontier generation
-2026-07-07 — re-verify at each release, see the release checklist). When running at `xhigh`/`max`, set a large
+As of v3.5, effort follows the session by default: a SKILL.md or agent
+.md without an `effort:` field inherits the session's effort level (per
+the Claude Code skills and subagents frontmatter references). Reasoning
+depth is set this way, not via inline directive tokens. Anthropic's
+guidance is to start from each model's default effort and raise it only
+where the work under-executes or is hard for the user to validate; the
+default is re-tuned with each model generation, so the plugin does not
+pin per-generation values (sources: "Choosing a Claude model and effort
+level in Claude Code", claude.com blog, 2026-07-07; "Choosing the right
+effort level in Claude Code", Claude Academy). Guidance last reviewed
+against the Claude 5 generation 2026-09-23 — at each release, confirm
+the override rationale below still holds (see the release checklist).
+
+The `effort:` frontmatter in each file is authoritative — this prose
+records the rationale, not a second copy of the values. Three files
+override the session, each at `xhigh`:
+
+- `task-implementer` — unattended long-horizon implementation. Nobody is
+  watching to catch a run that stops short of the batch or skips a
+  verification step, so the thoroughness has to come from the agent.
+- `code-fixer` — also unattended: deduplication across five reports and
+  a fix / build / test loop per finding, with no user checkpoint before
+  regression-verifier runs.
+- `generate-plan` — multi-round draft/challenge across project context;
+  plan cost amortizes over downstream tasks (`max` through v3.4.x).
+
+Everything else — the 5 review-angle agents, `regression-verifier`, the
+3 document reviewers, and the other five skills — runs at the session's
+effort. When a session runs at `xhigh`/`max`, set a large
 max-output-token budget so the model has room to think and act across
 subagents and tool calls (this is a session/API-config concern, not a
 plugin concern).
-
-The `effort:` frontmatter in each file is authoritative — this prose
-records the rationale, not a second copy of the values. The default is
-`xhigh` across skills and agents: coverage-mode bug-finding (the 5
-review-angle agents), long-horizon coding (`task-implement` /
-`task-implementer`), cross-report deduplication (`code-fixer`), discovery
-plus drafting (`generate-brief`), code-reading decomposition
-(`generate-task`), and the recommended floor for the `task-review`
-harness. The exceptions:
-
-- `generate-plan` runs at `max` — multi-round draft/challenge across
-  project context; plan cost amortizes over downstream tasks.
-- The 3 document reviewers (`plan-document-reviewer`,
-  `task-document-reviewer`, `guide-document-reviewer`) run at `high` —
-  review against fixed criteria is closer to checklist verification than
-  open-ended authoring.
-- `regression-verifier` runs at `high` — read-only verification; lower
-  depth acceptable.
-- `generate-guide` runs at `high` — section-by-section documentation
-  generation, closer to mechanical templating than open-ended planning.
-
-Author-vs-reviewer asymmetry is intentional: `generate-plan` (`max`) vs
-`plan-document-reviewer` (`high`), and `generate-task` (`xhigh`) vs
-`task-document-reviewer` (`high`) — authoring needs deep multi-round
-thinking; document review against fixed criteria does not. The
-`generate-guide` / `guide-document-reviewer` pair is symmetric at `high`.
 
 #### CONTEXT block contract
 
@@ -212,7 +206,7 @@ guard checks is documented once, in "Repository scripts/" below.
 ### Writing Rules for Skill Content
 
 - Use rationale-anchored business rules (Rule 2): frame each rule as "Why: ..." prose rather than command-style imperatives, so the model follows the intent of the rule, not just its letter
-- Reasoning depth is controlled by the `effort:` frontmatter on each SKILL.md and agent .md, not by inline directive tokens
+- Reasoning depth follows the session's effort level, with `effort:` frontmatter overrides only where a file needs more (currently three), not inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 
@@ -278,11 +272,21 @@ Project-level shell scripts live in `scripts/` at the repo root:
   by design (the agent describes the format, the example shows a filled-in
   instance); it catches a rename of either label in one file but not the
   other.
+- `check-no-model-names.sh` — guards that no file under `skills/`,
+  `agents/`, `commands/`, or `shared/` names or pins a specific Claude
+  model. Three rules: frontmatter `model:` values must be `inherit`; no
+  model family name as a whole word (case-insensitive); no `claude-`
+  model-ID prefix (case-insensitive). The plugin's own `.claude-plugin`
+  directory name is stripped before the ID rule is tested, so a line
+  carrying both is still reported. Skills and agents follow the session's
+  model and effort; a model name in a prompt pins it to one generation.
+  CHANGELOG and `docs/` are out of scope.
 
-Five of the guards (`check-canonical-dispatch.sh`,
+Six of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
-`check-notes-format-sync.sh`) also accept a `--self-test` flag that runs
+`check-notes-format-sync.sh`, `check-no-model-names.sh`) also accept a
+`--self-test` flag that runs
 a mutation regression fixture in a temp workdir (positive path, negative
 path on a deliberate mutation, restoration path on revert). `check-all.sh`
 does not run the self-tests — they stay explicit in the release-checklist

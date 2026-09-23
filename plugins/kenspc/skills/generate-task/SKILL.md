@@ -6,7 +6,6 @@ description: >
   review agent. Trigger on: "generate tasks", "break down tasks", "create task
   document", "拆任务", "生成任务", "任务分解", "帮我拆任务".
 version: 3.0.0
-effort: xhigh
 argument-hint: <plan-document-path> [phase] [custom instructions]
 ---
 

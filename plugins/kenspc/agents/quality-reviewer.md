@@ -4,7 +4,6 @@ description: >
   Reviews code quality: project conventions, readability, maintainability, naming, and structural issues. Used by /kenspc-task-review parallel review (Angle 3); also safe to invoke standalone with a project context.
 tools: Read, Grep, Glob, Bash
 model: inherit
-effort: xhigh
 ---
 
 PREREQUISITE CHECK

@@ -4,7 +4,6 @@ description: >
   Reviews code for edge cases and error handling: null/empty/boundary values, error propagation, resource cleanup, server-side validation. Used by /kenspc-task-review parallel review (Angle 2); also safe to invoke standalone with a project context.
 tools: Read, Grep, Glob, Bash
 model: inherit
-effort: xhigh
 ---
 
 PREREQUISITE CHECK

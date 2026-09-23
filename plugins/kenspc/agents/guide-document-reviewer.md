@@ -4,7 +4,6 @@ description: >
   INTERNAL: Part of /kenspc-guide generation orchestration. Requires GUIDE_PATH from a freshly generated guide document — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
-effort: high
 ---
 
 PREREQUISITE CHECK

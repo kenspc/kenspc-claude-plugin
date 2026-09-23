@@ -4,7 +4,6 @@ description: >
   INTERNAL: Part of /kenspc-task generation orchestration. Requires TASK_DOC_PATH and SOURCE_PATH from a freshly generated task document — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
-effort: high
 ---
 
 PREREQUISITE CHECK

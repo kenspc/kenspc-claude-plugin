@@ -7,7 +7,6 @@ description: >
   security, conventions). Works with a task document (review against requirements)
   or standalone (review recent changes/uncommitted code).
 version: 3.0.0
-effort: xhigh
 argument-hint: "[path-to-task-file]"
 ---
 

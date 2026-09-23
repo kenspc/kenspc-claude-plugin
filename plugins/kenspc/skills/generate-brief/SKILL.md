@@ -9,7 +9,6 @@ description: >
   idea", "我想理清楚思路", "先讨论一下", "写个需求摘要", "帮我想想",
   "brain dump", or invokes /kenspc-brief directly.
 version: 3.0.0
-effort: xhigh
 argument-hint: <rough idea or topic>
 ---
 

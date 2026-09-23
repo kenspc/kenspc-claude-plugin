@@ -4,7 +4,6 @@ description: >
   INTERNAL: Part of /kenspc-task-review orchestration. Requires REVIEW_REPORTS and ACCOUNTABILITY_LIST CONTEXT — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Bash, Grep, Glob
 model: inherit
-effort: high
 ---
 
 PREREQUISITE CHECK

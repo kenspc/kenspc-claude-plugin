@@ -10,10 +10,13 @@ interactive surface.
 Run from the repository root:
 
 ```bash
-# Frontmatter completeness — every SKILL.md and agent .md declares effort
-for f in plugins/kenspc/skills/*/SKILL.md plugins/kenspc/agents/*.md; do
-  grep -q '^effort:' "$f" || echo "MISSING effort: $f"
-done
+# Effort overrides — exactly these three files declare effort:, each xhigh;
+# every other skill and agent follows the session (diff exits 1 on any drift)
+diff <(grep -H '^effort:' plugins/kenspc/skills/*/SKILL.md plugins/kenspc/agents/*.md) - <<'EOF'
+plugins/kenspc/skills/generate-plan/SKILL.md:effort: xhigh
+plugins/kenspc/agents/code-fixer.md:effort: xhigh
+plugins/kenspc/agents/task-implementer.md:effort: xhigh
+EOF
 
 # JSON sanity (all three)
 cat plugins/kenspc/.claude-plugin/plugin.json | python -m json.tool > /dev/null
@@ -23,24 +26,29 @@ cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 # All drift/structure guards in main mode (runs every scripts/check-*.sh)
 bash scripts/check-all.sh
 
-# Mutation regression fixtures (self-test on the five self-test-capable guards)
+# Mutation regression fixtures (self-test on the six self-test-capable guards)
 bash scripts/check-code-craft-canonical.sh --self-test
 bash scripts/check-canonical-dispatch.sh --self-test
 bash scripts/check-verdict-shared.sh --self-test
 bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
 bash scripts/check-notes-format-sync.sh --self-test
+bash scripts/check-no-model-names.sh --self-test
 ```
 
-All nine must exit 0 (3 JSON validations + `check-all.sh` covering every
-drift/structure guard in main mode + 5 mutation regression self-tests).
-If any fail, fix before proceeding to the smoke checklist.
+All eleven must exit 0: 1 effort-override diff + 3 JSON validations + 1
+`check-all.sh` run (every drift/structure guard in main mode) + 6 mutation
+regression self-tests = 11. If any fail, fix before proceeding to the smoke
+checklist.
 
 ## Docs currency (manual)
 
-CLAUDE.md (§ Subagent Review Architecture) pins the effort ladder to
-Anthropic's published guidance and carries a "wording last reviewed"
-date. Confirm the guidance still matches the current frontier Claude
-generation and update that date before tagging.
+CLAUDE.md (§ Subagent Review Architecture) records why three files
+override the session's effort at `xhigh` (`task-implementer`,
+`code-fixer`, `generate-plan`) and carries a "last reviewed" date against
+Anthropic's effort guidance. Confirm each override's rationale still holds
+for the current Claude generation — drop an override whose reason no longer
+applies rather than re-pinning a value — and update that date (also in
+`plugin.json` and the README Effort levels section) before tagging.
 
 ## Smoke checklist (manual, ~10 minutes)
 

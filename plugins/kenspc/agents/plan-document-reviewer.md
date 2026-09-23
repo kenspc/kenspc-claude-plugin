@@ -4,7 +4,6 @@ description: >
   INTERNAL: Part of /kenspc-plan generation orchestration. Requires PLAN_PATH from a freshly generated plan document — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
-effort: high
 ---
 
 PREREQUISITE CHECK

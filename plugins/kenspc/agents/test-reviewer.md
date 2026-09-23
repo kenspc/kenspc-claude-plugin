@@ -4,7 +4,6 @@ description: >
   Reviews test coverage and test quality: happy/edge/error path coverage, test correctness, behavior-not-implementation testing. Used by /kenspc-task-review parallel review (Angle 5); also safe to invoke standalone with a project context.
 tools: Read, Grep, Glob, Bash
 model: inherit
-effort: xhigh
 ---
 
 PREREQUISITE CHECK
