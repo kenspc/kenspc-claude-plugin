@@ -76,6 +76,12 @@ Agents marked "Standalone: No" are orchestration-only — their description star
 with `INTERNAL:` and their body refuses on missing CONTEXT. Invoke them through
 the parent slash command instead.
 
+The five code reviewers are read-only on the working tree. Invoked standalone,
+they reply inline and write nothing. Dispatched by `/kenspc-task-review` or
+`/kenspc-task-implement`, which pass a run directory (`RUN_DIR`), each writes
+exactly one file — its own report — into that directory. The Write tool they
+carry is for that file; they already had Bash.
+
 ## Installation
 
 ### From GitHub marketplace

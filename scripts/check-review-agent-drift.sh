@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # check-review-agent-drift.sh
 #
-# Verifies that the 5 review-angle agents share byte-identical PREREQUISITES,
-# FILE COVERAGE, and CUSTOM INSTRUCTIONS sections. Project CLAUDE.md flags
-# drift between these sections as a bug; this script is the mechanical guard.
+# Verifies that the 5 review-angle agents share byte-identical CONTEXT YOU
+# WILL RECEIVE, ROLE, PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, and
+# REPORT DELIVERY sections. Project CLAUDE.md flags drift between these
+# sections as a bug; this script is the mechanical guard. ROLE, CONTEXT YOU
+# WILL RECEIVE, and REPORT DELIVERY joined in v3.5.0: they carry the RUN_DIR
+# contract and the reviewers' one permitted write.
 #
-# Exit code 0: all 3 sections byte-identical across all 5 files.
+# Exit code 0: all shared sections byte-identical across all 5 files.
 # Exit code 1: drift detected. The first diverging section is printed via diff.
 #
 # Run from the repository root (or any directory — paths are resolved relative
@@ -25,7 +28,7 @@ FILES=(
     "$AGENTS_DIR/test-reviewer.md"
 )
 
-SECTIONS=("PREREQUISITES" "FILE COVERAGE" "CUSTOM INSTRUCTIONS")
+SECTIONS=("CONTEXT YOU WILL RECEIVE" "ROLE" "PREREQUISITES" "CUSTOM INSTRUCTIONS" "FILE COVERAGE" "REPORT DELIVERY")
 
 # Extract a named section from a reviewer agent file.
 # A section starts at a line whose entire content equals the section name
@@ -97,11 +100,11 @@ done
 
 if [[ "$drift_found" -ne 0 ]]; then
     echo "" >&2
-    echo "Drift detected. The 5 review-angle agents must keep PREREQUISITES," >&2
-    echo "FILE COVERAGE, and CUSTOM INSTRUCTIONS byte-identical (per project" >&2
-    echo "CLAUDE.md maintenance note). Apply the same edit to all 5 files." >&2
+    echo "Drift detected. The 5 review-angle agents must keep their shared" >&2
+    echo "sections (${SECTIONS[*]}) byte-identical (per project CLAUDE.md" >&2
+    echo "maintenance note). Apply the same edit to all 5 files." >&2
     exit 1
 fi
 
 echo ""
-echo "All 3 shared sections are byte-identical across the 5 review-angle agents."
+echo "All ${#SECTIONS[@]} shared sections are byte-identical across the 5 review-angle agents."

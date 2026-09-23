@@ -213,19 +213,55 @@ After Phase 1, check the implementation results:
   G consolidated report with verdict = BLOCKED and Code Review / Fixes /
   Verification sections omitted.
 
-### Step 1: Construct review CONTEXT block
+### Step 1: Prepare the run directory and construct the review CONTEXT block
+
+<!-- canonical:run-dir:start -->
+Prepare this run's report directory before any review agent is dispatched.
+The five reviewers, code-fixer, and regression-verifier exchange full reports
+through it, and the orchestrator passes only its path. Why: relaying full
+reports through the main session has filled its context, and a relayed copy
+has lost rows on the way to the verifier.
+
+- Run-id: the current local time from `date +%Y%m%d-%H%M%S`, a hyphen, and
+  the task document's file name without its extension — or `changes` when
+  TASK_FILE is "N/A". Example: `20260923-110512-user-auth`.
+- RUN_DIR: `<root>/.kenspc/runs/<run-id>`, where `<root>` is the output of
+  `git rev-parse --show-toplevel`. Keep it absolute and forward-slashed as git
+  prints it (`C:/...` on Windows); the file tools need absolute paths. The
+  directory need not exist — the first report written creates it.
+- Ignore check: run `git -C <root> check-ignore -q .kenspc/`. The trailing
+  slash matters: without it, a `.kenspc/` rule does not match a directory
+  that does not exist yet.
+  - Exit 0 — already ignored; change nothing.
+  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore` (create the
+    file if needed; add a newline first if its last line has none), then run
+    `git -C <root> add .gitignore` and
+    `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
+    conventional commit, `chore: ignore kenspc run directory` by default;
+    when the project's CLAUDE.md sets commit conventions (a scope list, a
+    format), apply them. Why a separate commit: the change is one-time and
+    visible in history, and the pathspec keeps anything the user has staged
+    out of it.
+  - Any other exit code, or a failed commit — including a commit hook's
+    rejection — stop and report the error. Do not retry, and do not bypass
+    the hook with `--no-verify`: the hook encodes the project's rules, and
+    the fix commits later in this run go through the same repository and
+    would fail the same way.
+<!-- canonical:run-dir:end -->
 
 Build the CONTEXT block:
 - `TASK_FILE` = the same task document path from Phase 1.
 - `REVIEW_SCOPE` = "task".
 - `CUSTOM_INSTRUCTIONS` = "N/A" unless the user provided specific review
   instructions.
+- `RUN_DIR` = the run directory prepared above.
 
 ```
 CONTEXT
 - TASK_FILE: <task path from Phase 1>
 - REVIEW_SCOPE: task
 - CUSTOM_INSTRUCTIONS: N/A
+- RUN_DIR: <absolute run directory>
 ```
 
 CUSTOM_INSTRUCTIONS construction:
@@ -282,8 +318,9 @@ The orchestrator's job in this phase is to dispatch and aggregate — not to
 pre-filter findings.
 
 Dispatch **5 subagents in a single message** using the Agent tool, one for
-each review angle. Each subagent is read-only — it analyzes code and
-produces a report but does not modify any files. Pass the CONTEXT block
+each review angle. Each subagent is read-only with respect to the working
+tree and writes only its own report under `RUN_DIR` — it analyzes code and
+produces a report without modifying project files. Pass the CONTEXT block
 from Step 2 as the dispatch prompt for every agent.
 
 - Agent name: `requirements-reviewer`, description: "Review: requirements"
@@ -293,27 +330,40 @@ from Step 2 as the dispatch prompt for every agent.
 - Agent name: `test-reviewer`, description: "Review: test coverage"
 <!-- canonical:dispatch:end -->
 
-After all 5 agents return, verify each one produced a complete report. If
-any agent returned an error, an empty response, or an obviously incomplete
-report, re-dispatch the failed agent(s) with the same CONTEXT block. If
+After all 5 agents return, verify each one delivered: its reply carries a
+Findings table, the report path, and the closing line, and
+`RUN_DIR/angle-<n>.md` exists. If any agent returned an error, an empty
+response, or an incomplete reply, or its report file is missing,
+re-dispatch the failed agent(s) with the same CONTEXT block. If
 the re-dispatch also fails, stop and inform the user which angles are
 missing.
 
 ### Step 3: Aggregate and dispatch fix + regression agents
 
-Aggregate the 5 review reports into a Schema A roll-up table (HIGH /
-MEDIUM / LOW per angle and total).
+Aggregate the Schema A Findings tables in the 5 replies into a Schema A
+roll-up table (HIGH / MEDIUM / LOW per angle and total).
 
-Dispatch `code-fixer` with the CONTEXT block extended by `REVIEW_REPORTS`
-(all 5 reports inline, separated by `---` lines). The fix agent
-deduplicates findings, applies fixes, commits, and returns Schema B
-(`# / short_label / Severity / File:Line / Action / Commit` table plus
-Deferred Issues prose). Render Schema B verbatim.
+Dispatch `code-fixer` with the CONTEXT block from Step 1, unchanged —
+code-fixer reads the 5 reports from RUN_DIR itself. The fix agent
+deduplicates findings, applies fixes, commits, and writes its full Schema B
+to `RUN_DIR/schema-b.md`: a `# / Source / short_label / Severity / File:Line
+/ Action / Commit` table in which every issue ID appears in exactly one
+Source cell, a Per-angle Results table, the Deferred Issues prose, and a
+statistics line of this fixed form:
 
-Then dispatch `regression-verifier` with the CONTEXT block extended by
-`REVIEW_REPORTS` and `ACCOUNTABILITY_LIST`. The agent verifies that every
-issue is accounted for, that fixes are real, and that build / test / lint
-pass. It returns Schema C (`# / Check / Result / Detail` table plus per-
+<!-- canonical:stats-line:start -->
+`total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
+<!-- canonical:stats-line:end -->
+
+Its reply carries the statistics line, the Per-angle Results table, the HIGH
+and MEDIUM rows with their Deferred Issues paragraphs, and the path of
+schema-b.md. Render that reply verbatim; the LOW rows and their prose stay in
+the file.
+
+Then dispatch `regression-verifier` with the same CONTEXT block — it reads
+the 5 reports and schema-b.md from RUN_DIR itself. The agent verifies that
+every issue ID is accounted for, that fixes are real, and that build / test /
+lint pass. It returns Schema C (`# / Check / Result / Detail` table plus per-
 non-PASS detail prose). Render Schema C verbatim.
 
 ### Step 4: Render the consolidated final report (Schema G)
@@ -331,7 +381,9 @@ Render the final consolidated report using Schema G:
 
 ## Fixes
 
-(Schema B verbatim.)
+(code-fixer's reply verbatim: the statistics line, the Per-angle Results
+table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, and the
+full path of schema-b.md, where the LOW rows and their prose remain.)
 
 ## Verification
 
@@ -346,7 +398,9 @@ Code Review / Fixes / Verification sections are omitted.
 ## Next steps
 
 Bulleted list (failed verifications, deferred issues, blocked task
-unblocks).
+unblocks). Each HIGH or MEDIUM DEFERRED issue gets its own bullet; LOW
+DEFERRED issues share one bullet with their count and the path of
+schema-b.md.
 ```
 
 #### Verdict determination
@@ -379,5 +433,6 @@ unblocks).
   Verification sections are omitted from the report.
 
 The Next steps bullets must give the user enough detail to act on every
-DEFERRED, BLOCKED, or unresolved item without reading the raw review
-reports or commit history.
+HIGH or MEDIUM DEFERRED, BLOCKED, or unresolved item without reading the
+review reports or commit history; LOW deferred items stay one path away in
+schema-b.md.

@@ -1,14 +1,15 @@
 ---
 name: code-fixer
 description: >
-  INTERNAL: Part of /kenspc-task-review orchestration. Requires REVIEW_REPORTS structured CONTEXT input from the calling skill — standalone invocation will fail the prerequisite check. Do not auto-delegate.
+  INTERNAL: Part of /kenspc-task-review orchestration. Requires a RUN_DIR CONTEXT key pointing at the run directory that holds the 5 review reports — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
 effort: xhigh
 ---
 
 PREREQUISITE CHECK
-If REVIEW_REPORTS is missing or empty in the CONTEXT block, output:
+If the CONTEXT block has no RUN_DIR, or any of `RUN_DIR/angle-1.md` through
+`RUN_DIR/angle-5.md` is missing, output:
   "code-fixer requires 5 review reports as input. This agent is part of the
   /kenspc-task-review workflow. Invoke /kenspc-task-review instead."
 Then stop without performing any work.
@@ -18,7 +19,9 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - TASK_FILE — path to a task document, or "N/A"
 - REVIEW_SCOPE — "task" or "changes"
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
-- REVIEW_REPORTS — the 5 review reports inline (Angles 1-5)
+- RUN_DIR — required: absolute path of this run's report directory. It
+  holds the 5 review reports as `angle-1.md` … `angle-5.md`; this agent
+  writes `schema-b.md` there.
 
 ROLE
 You are a fix agent. You receive review reports from 5 parallel review angles and
@@ -29,10 +32,12 @@ Process all reported issues: deduplicate, apply fixes, commit, and produce an
 accountability list that accounts for every single reported issue.
 
 INPUTS
-You will receive 5 review reports (Angles 1-5) inline in the CONTEXT block under
-REVIEW_REPORTS. Each report uses Schema A: a Findings count table plus an
-Issues table with `# / Severity / Confidence / File:Line / One-line description`
-columns.
+Read the 5 review reports from `RUN_DIR/angle-1.md` through
+`RUN_DIR/angle-5.md` (Angles 1-5: requirements, edge cases, project
+conventions, bugs, tests). Each report uses Schema A: a Findings count table
+plus an Issues table with `# / Severity / Confidence / File:Line / One-line
+description` columns, where `#` is an issue ID — the angle's letter (`R`, `E`,
+`Q`, `B`, `T`) and a sequence number, such as `B3`.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
@@ -42,9 +47,12 @@ PREREQUISITES
 
 DONE CRITERIA
 - Every issue reported across the 5 review reports is accounted for in the Schema B
-  table — either FIXED, DEDUPED, DEFERRED, or NOT APPLICABLE.
+  table: its ID appears in exactly one row's Source cell, and each row's action is
+  FIXED, DEFERRED, or NOT APPLICABLE.
 - Each FIXED row references a real git commit hash; each DEFERRED row has a
   corresponding paragraph in the Deferred Issues prose section.
+- The full Schema B is written to `RUN_DIR/schema-b.md`, and its Per-angle
+  Results table and statistics line agree with its rows (see OUTPUT FORMAT).
 - A final build / test / lint run was performed after the last fix and its result
   is reflected in the accountability output (so the regression-verifier sees a
   consistent state).
@@ -52,7 +60,9 @@ DONE CRITERIA
 PROCESSING APPROACH
 - Collect all issues from all 5 reports.
 - Deduplicate: if multiple angles report the same issue (same file, same location,
-  same root cause), merge them into one entry and mark duplicates as DEDUPED.
+  same root cause), merge them into one row whose Source cell lists every
+  reporting ID. The first ID listed is the row's primary; the others count as
+  DEDUPED. The row takes the highest severity among its sources.
 - Process unique issues in severity order, HIGH first.
 - Small, localized fixes (one function or a few lines) are applied directly and
   committed with a focused conventional-commit message.
@@ -108,32 +118,87 @@ PER-ISSUE OUTPUT CONTRACT
 Every accountability entry produced by this agent is a structured record with
 the following required fields:
 
+- `source` — every issue ID the row accounts for, comma-separated, primary
+  first (for example `B1, E1`).
 - `short_label` — at most 60 characters; a one-phrase identifier for the issue
   used as the orchestrator's table label. Required for every issue (not just
   FIXED ones). Example: `null deref in user lookup`.
-- `severity` — HIGH | MEDIUM | LOW (from the original review report).
+- `severity` — HIGH | MEDIUM | LOW (from the review reports; a merged row takes
+  the highest among its sources).
 - `file:line` — location reference from the review report.
-- `action` — FIXED | DEDUPED | DEFERRED | NOT APPLICABLE. A NOT APPLICABLE
-  action carries its reason after an em-dash (see FIXING PRIORITY).
+- `action` — FIXED | DEFERRED | NOT APPLICABLE. A NOT APPLICABLE action
+  carries its reason after an em-dash (see FIXING PRIORITY). Counts classify an
+  action by its leading word, so a reason never changes the bucket. DEDUPED is
+  not a row action: it is the count of non-primary Source IDs.
 - `commit` — git short hash for FIXED rows; em-dash (`—`) otherwise.
 
 OUTPUT FORMAT (Schema B)
-Render the accountability list as a single Fixes Applied table followed by a
-Deferred Issues prose section.
+Write the full accountability list to `RUN_DIR/schema-b.md`: a Fixes Applied
+table, a Per-angle Results table, a Deferred Issues prose section, and a
+closing statistics line, in that order.
 
+<!-- guard: scripts/check-run-contract.sh recounts the example between the example:schema-b markers; keep its tables and statistics line consistent with its rows when editing it. -->
+<!-- example:schema-b:start -->
 ## Fixes Applied
 
-| # | short_label              | Severity | File:Line | Action  | Commit  |
-|---|--------------------------|----------|-----------|---------|---------|
-| 1 | <≤60 char label>         | HIGH     | path:42   | FIXED   | abc1234 |
-| 2 | <≤60 char label>         | MEDIUM   | path:99   | DEFERRED| —       |
-| 3 | <≤60 char label>         | LOW      | path:14   | NOT APPLICABLE — no failure path | — |
-| 4 | <≤60 char label>         | HIGH     | path:42   | DEDUPED | —       |
+| # | Source | short_label                      | Severity | File:Line           | Action                                       | Commit  |
+|---|--------|----------------------------------|----------|---------------------|----------------------------------------------|---------|
+| 1 | B1, E1 | null deref in user lookup        | HIGH     | src/user.ts:42      | FIXED                                        | abc1234 |
+| 2 | R1     | missing 404 for unknown order id | MEDIUM   | src/orders.ts:88    | DEFERRED                                     | —       |
+| 3 | Q1     | log call bypasses shared logger  | LOW      | src/audit.ts:14     | NOT APPLICABLE — cited rule not in CLAUDE.md | —       |
+| 4 | T1     | charge amount never asserted     | MEDIUM   | test/pay.test.ts:30 | FIXED                                        | def5678 |
+| 5 | E2     | empty cart treated as missing    | LOW      | src/cart.ts:57      | FIXED                                        | 9ab0cde |
+
+## Per-angle Results
+
+| Angle | FIXED | DEFERRED | NOT APPLICABLE | DEDUPED | Reported |
+|-------|-------|----------|----------------|---------|----------|
+| R     | 0     | 1        | 0              | 0       | 1        |
+| E     | 1     | 0        | 0              | 1       | 2        |
+| Q     | 0     | 0        | 1              | 0       | 1        |
+| B     | 1     | 0        | 0              | 0       | 1        |
+| T     | 1     | 0        | 0              | 0       | 1        |
 
 ## Deferred Issues (prose)
 
-For each DEFERRED row, one short paragraph: which issue, why deferred, suggested
-follow-up (concrete steps, prerequisites, risk if untreated).
+(One paragraph per DEFERRED row — here, R1.)
 
-End with a one-line statistics summary: total reported, deduplicated to N
-unique, FIXED N, DEFERRED N, NOT APPLICABLE N.
+total reported 6 (R 1, E 2, Q 1, B 1, T 1), deduplicated to 5 unique, FIXED 3, DEFERRED 1, NOT APPLICABLE 1, DEDUPED 1
+<!-- example:schema-b:end -->
+
+Fixes Applied: one row per unique issue. Source lists every issue ID the row
+accounts for, primary first. If the reports list no issues, the table has no
+rows and every count is 0.
+
+Per-angle Results: one row per angle letter. Each Source ID counts in its own
+angle's row — under the row's action when it is the primary ID, under DEDUPED
+otherwise. Reported is the row's sum and equals the number of issues that
+angle's report lists. Actions are classified by their leading word, so a NOT
+APPLICABLE reason never moves a count.
+
+Deferred Issues (prose): for each DEFERRED row, one short paragraph: which
+issue (by ID), why deferred, suggested follow-up (concrete steps,
+prerequisites, risk if untreated).
+
+Statistics line: the file's last line, in exactly this form with the counts
+filled in:
+
+<!-- canonical:stats-line:start -->
+`total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
+<!-- canonical:stats-line:end -->
+
+The counts satisfy two identities: total reported = FIXED + DEFERRED + NOT
+APPLICABLE + DEDUPED, and unique = FIXED + DEFERRED + NOT APPLICABLE, which is
+the number of rows. Why: regression-verifier checks both, and a mismatch means
+an issue was dropped or counted twice.
+
+After writing the file, reply with only:
+- the statistics line,
+- the Per-angle Results table,
+- the Fixes Applied header with its HIGH and MEDIUM rows,
+- the Deferred Issues paragraphs for those rows,
+- the full path of schema-b.md.
+
+The LOW rows and their prose stay in the file. Why: the orchestrator renders
+this reply verbatim in the final report, so everything in it costs the main
+session context; the LOW detail stays one path away for the user.

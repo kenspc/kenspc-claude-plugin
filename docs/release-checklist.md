@@ -26,18 +26,19 @@ cat .claude-plugin/marketplace.json | python -m json.tool > /dev/null
 # All drift/structure guards in main mode (runs every scripts/check-*.sh)
 bash scripts/check-all.sh
 
-# Mutation regression fixtures (self-test on the six self-test-capable guards)
+# Mutation regression fixtures (self-test on the seven self-test-capable guards)
 bash scripts/check-code-craft-canonical.sh --self-test
 bash scripts/check-canonical-dispatch.sh --self-test
 bash scripts/check-verdict-shared.sh --self-test
 bash scripts/check-quality-reviewer-bullet-structure.sh --self-test
 bash scripts/check-notes-format-sync.sh --self-test
 bash scripts/check-no-model-names.sh --self-test
+bash scripts/check-run-contract.sh --self-test
 ```
 
-All eleven must exit 0: 1 effort-override diff + 3 JSON validations + 1
-`check-all.sh` run (every drift/structure guard in main mode) + 6 mutation
-regression self-tests = 11. If any fail, fix before proceeding to the smoke
+All twelve must exit 0: 1 effort-override diff + 3 JSON validations + 1
+`check-all.sh` run (every drift/structure guard in main mode) + 7 mutation
+regression self-tests = 12. If any fail, fix before proceeding to the smoke
 checklist.
 
 ## Docs currency (manual)

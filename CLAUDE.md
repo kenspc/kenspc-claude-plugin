@@ -118,20 +118,28 @@ angles in order in its own context. Each angle builds on fixes from the
 previous one (cascade dependency). Agent body returns a structured change log.
 
 **Parallel MapReduce (task-review):**
-- Phase 1: 5 read-only review agents dispatched in parallel
+- Phase 1: 5 review agents, read-only on the working tree, dispatched in parallel
   (`requirements-reviewer`, `edge-case-reviewer`, `quality-reviewer`,
   `bug-reviewer`, `test-reviewer`) — one per angle. Angle 3
   (`quality-reviewer`) covers project conventions and existing patterns
   — rules written in CLAUDE.md / README and patterns in adjacent code —
   since v3.5; the file name is kept so the canonical dispatch block stays
   unchanged.
-- Phase 2: `code-fixer` receives all 5 reports, deduplicates, applies fixes,
-  produces accountability list.
-- Phase 3: `regression-verifier` cross-checks reports against accountability
-  list, verifies fixes, runs build/test/lint.
+- Phase 2: `code-fixer` reads all 5 reports from the run directory,
+  deduplicates, applies fixes, and writes the accountability list (Schema B)
+  back to it.
+- Phase 3: `regression-verifier` cross-checks the reports' issue IDs against
+  the accountability list, verifies fixes, runs build/test/lint.
 
-No shared state files — each agent runs in its own context, eliminating
-concurrency conflicts. Subagents cannot spawn other subagents; orchestration
+Since v3.5 the agents exchange reports through a per-run directory,
+`<repo root>/.kenspc/runs/<run-id>/`, passed as the `RUN_DIR` CONTEXT key.
+The orchestrating skill prepares it and, when `.kenspc/` is not yet
+git-ignored, makes a one-time `.gitignore` commit. Each reviewer writes only
+its own `angle-<n>.md` and `code-fixer` only `schema-b.md`, so parallel
+writers never share a file, and the main session relays paths rather than
+report text. Issue IDs (`R` / `E` / `Q` / `B` / `T` plus a sequence number)
+and code-fixer's Source column let `regression-verifier` settle completeness
+by comparing ID sets. Subagents cannot spawn other subagents; orchestration
 stays at the skill (main session) level.
 
 As of v3.5, effort follows the session by default: a SKILL.md or agent
@@ -173,11 +181,20 @@ Each agent declares its expected CONTEXT keys in its body. The dispatching
 SKILL.md must construct exactly those keys. See each agent file's
 "CONTEXT YOU WILL RECEIVE" section for the contract.
 
+`RUN_DIR` (v3.5) is optional for the 5 review-angle agents — without it they
+reply inline and write nothing, which keeps standalone invocation working as
+before — and required for `code-fixer` and `regression-verifier`, which read
+their inputs from it. It replaces the earlier `REVIEW_REPORTS` and
+`ACCOUNTABILITY_LIST` keys: the file names inside the run directory are
+fixed, so one path is the only value the orchestrator has to get right.
+
 #### Standalone safety classification
 
 - **Standalone-safe**: 5 review-angle agents (requirements, edge-case, quality,
   bug, test) can be invoked directly. Description gates auto-delegation;
-  body refuses without CONTEXT.
+  body refuses without CONTEXT. They are read-only on the working tree; the
+  one file they write is their own report, and only when CONTEXT supplies
+  `RUN_DIR`.
 - **Orchestration-only**: 6 worker/document-reviewer agents (code-fixer,
   regression-verifier, task-implementer, plan-document-reviewer,
   guide-document-reviewer, task-document-reviewer) require structured
@@ -187,20 +204,25 @@ SKILL.md must construct exactly those keys. See each agent file's
 
 #### Maintenance note
 
-The 5 review-angle agents share PREREQUISITES, FILE COVERAGE, and CUSTOM
-INSTRUCTIONS sections by convention. When modifying any of these sections in
+The 5 review-angle agents share CONTEXT YOU WILL RECEIVE, ROLE,
+PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, and REPORT DELIVERY
+sections by convention. When modifying any of these sections in
 one agent, apply the same change to the other 4. Duplication is intentional
 (each agent is independently readable); silent drift between them is a bug.
 
-Two more byte-identity invariants bind `task-review/SKILL.md` and
+Three more byte-identity invariants bind `task-review/SKILL.md` and
 `task-implement/SKILL.md`: the canonical `## Code Review Phase
 (unconditional)` block (bounded by `<!-- canonical:dispatch:start/end -->`
-markers) and the shared verdict-determination bullets (bounded by
-`<!-- canonical:verdict-shared:start/end -->` markers).
+markers), the shared verdict-determination bullets (bounded by
+`<!-- canonical:verdict-shared:start/end -->` markers), and the run-directory
+preparation (bounded by `<!-- canonical:run-dir:start/end -->` markers). The
+Schema B statistics-line template (`<!-- canonical:stats-line:start/end -->`)
+is byte-identical across those two SKILLs and `code-fixer.md`.
 
-After editing any reviewer agent or either of those two SKILLs, run the
-matching guard script — `check-review-agent-drift.sh`,
-`check-canonical-dispatch.sh`, or `check-verdict-shared.sh`. What each
+After editing any reviewer agent, `code-fixer.md`, or either of those two
+SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
+`check-canonical-dispatch.sh`, `check-verdict-shared.sh`, or
+`check-run-contract.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -246,8 +268,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   pre-commit and pre-flight runs; new guard scripts are picked up
   automatically, no command list to update.
 - `check-review-agent-drift.sh` — guards the byte-identity invariant
-  across the 5 review-angle agents (PREREQUISITES, FILE COVERAGE, CUSTOM
-  INSTRUCTIONS).
+  across the 5 review-angle agents (CONTEXT YOU WILL RECEIVE, ROLE,
+  PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, REPORT DELIVERY).
 - `check-canonical-dispatch.sh` — guards the byte-identity invariant on
   the `## Code Review Phase (unconditional)` canonical block between
   `task-review/SKILL.md` and `task-implement/SKILL.md`.
@@ -285,12 +307,21 @@ Project-level shell scripts live in `scripts/` at the repo root:
   carrying both is still reported. Skills and agents follow the session's
   model and effort; a model name in a prompt pins it to one generation.
   CHANGELOG and `docs/` are out of scope.
+- `check-run-contract.sh` — guards the run-directory contract: the
+  `canonical:run-dir` block is byte-identical in the two SKILLs, the
+  `canonical:stats-line` template is byte-identical in the two SKILLs and
+  `code-fixer.md`, and the worked Schema B example in `code-fixer.md`
+  recounts — its Per-angle Results table and statistics line agree with its
+  rows (primary Source ID counts under the row's action, the rest as
+  DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`
+  counts as NOT APPLICABLE). `--file PATH` runs the recount against a real
+  `schema-b.md` from a run directory.
 
-Six of the guards (`check-canonical-dispatch.sh`,
+Seven of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
-`check-notes-format-sync.sh`, `check-no-model-names.sh`) also accept a
-`--self-test` flag that runs
+`check-notes-format-sync.sh`, `check-no-model-names.sh`,
+`check-run-contract.sh`) also accept a `--self-test` flag that runs
 a mutation regression fixture in a temp workdir (positive path, negative
 path on a deliberate mutation, restoration path on revert). `check-all.sh`
 does not run the self-tests — they stay explicit in the release-checklist

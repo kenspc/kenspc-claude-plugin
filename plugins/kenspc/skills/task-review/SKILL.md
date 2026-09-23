@@ -62,6 +62,40 @@ If $ARGUMENTS is empty or contains no file path:
 - Set REVIEW_SCOPE to "changes".
 - Set TASK_FILE to "N/A".
 
+<!-- canonical:run-dir:start -->
+Prepare this run's report directory before any review agent is dispatched.
+The five reviewers, code-fixer, and regression-verifier exchange full reports
+through it, and the orchestrator passes only its path. Why: relaying full
+reports through the main session has filled its context, and a relayed copy
+has lost rows on the way to the verifier.
+
+- Run-id: the current local time from `date +%Y%m%d-%H%M%S`, a hyphen, and
+  the task document's file name without its extension — or `changes` when
+  TASK_FILE is "N/A". Example: `20260923-110512-user-auth`.
+- RUN_DIR: `<root>/.kenspc/runs/<run-id>`, where `<root>` is the output of
+  `git rev-parse --show-toplevel`. Keep it absolute and forward-slashed as git
+  prints it (`C:/...` on Windows); the file tools need absolute paths. The
+  directory need not exist — the first report written creates it.
+- Ignore check: run `git -C <root> check-ignore -q .kenspc/`. The trailing
+  slash matters: without it, a `.kenspc/` rule does not match a directory
+  that does not exist yet.
+  - Exit 0 — already ignored; change nothing.
+  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore` (create the
+    file if needed; add a newline first if its last line has none), then run
+    `git -C <root> add .gitignore` and
+    `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
+    conventional commit, `chore: ignore kenspc run directory` by default;
+    when the project's CLAUDE.md sets commit conventions (a scope list, a
+    format), apply them. Why a separate commit: the change is one-time and
+    visible in history, and the pathspec keeps anything the user has staged
+    out of it.
+  - Any other exit code, or a failed commit — including a commit hook's
+    rejection — stop and report the error. Do not retry, and do not bypass
+    the hook with `--no-verify`: the hook encodes the project's rules, and
+    the fix commits later in this run go through the same repository and
+    would fail the same way.
+<!-- canonical:run-dir:end -->
+
 ### Step 2: Construct CONTEXT block
 
 Build a structured CONTEXT block that will be passed to every dispatched
@@ -72,6 +106,7 @@ CONTEXT
 - TASK_FILE: <task file path or "N/A">
 - REVIEW_SCOPE: <"task" or "changes">
 - CUSTOM_INSTRUCTIONS: <user's custom instructions or "N/A">
+- RUN_DIR: <absolute run directory from Step 1>
 ```
 
 CUSTOM_INSTRUCTIONS construction:
@@ -128,8 +163,9 @@ The orchestrator's job in this phase is to dispatch and aggregate — not to
 pre-filter findings.
 
 Dispatch **5 subagents in a single message** using the Agent tool, one for
-each review angle. Each subagent is read-only — it analyzes code and
-produces a report but does not modify any files. Pass the CONTEXT block
+each review angle. Each subagent is read-only with respect to the working
+tree and writes only its own report under `RUN_DIR` — it analyzes code and
+produces a report without modifying project files. Pass the CONTEXT block
 from Step 2 as the dispatch prompt for every agent.
 
 - Agent name: `requirements-reviewer`, description: "Review: requirements"
@@ -139,9 +175,10 @@ from Step 2 as the dispatch prompt for every agent.
 - Agent name: `test-reviewer`, description: "Review: test coverage"
 <!-- canonical:dispatch:end -->
 
-After all 5 agents return, verify each one produced a complete report. If
-any agent returned an error, an empty response, or an obviously incomplete
-report (e.g., only a header with no findings or no closing summary), do not
+After all 5 agents return, verify each one delivered: its reply carries a
+Findings table, the report path, and the closing line, and
+`RUN_DIR/angle-<n>.md` exists. If any agent returned an error, an empty
+response, or an incomplete reply, or its report file is missing, do not
 proceed to Step 4. Re-dispatch the failed agent(s) with the same CONTEXT
 block. If the re-dispatch also fails, stop and inform the user which angles
 are missing — proceeding to fix with fewer than 5 reports loses coverage
@@ -149,8 +186,8 @@ silently.
 
 ### Step 4: Aggregate review findings (Schema A roll-up)
 
-Render the consolidated review findings table by aggregating Schema A
-output from all 5 review-angle agents:
+Render the consolidated review findings table by aggregating the Schema A
+Findings tables in the 5 replies:
 
 | Angle | HIGH | MEDIUM | LOW |
 |-------|------|--------|-----|
@@ -163,54 +200,38 @@ output from all 5 review-angle agents:
 
 ### Step 5: Dispatch fix agent
 
-Collect all 5 review reports. Then dispatch a single subagent:
+Dispatch a single subagent:
 - Agent name: `code-fixer`
 - description: "Fix reported issues"
-- prompt: extend the CONTEXT block from Step 2 with a `REVIEW_REPORTS` field
-  containing all 5 reports inline, e.g.:
+- prompt: the CONTEXT block from Step 2, unchanged — code-fixer reads the 5
+  reports from RUN_DIR itself.
 
-```
-CONTEXT
-- TASK_FILE: <...>
-- REVIEW_SCOPE: <...>
-- CUSTOM_INSTRUCTIONS: <...>
+The fix agent deduplicates overlapping findings, applies fixes, commits, and
+writes its full Schema B accountability list to `RUN_DIR/schema-b.md`: a
+`# / Source / short_label / Severity / File:Line / Action / Commit` table in
+which every issue ID appears in exactly one Source cell, a Per-angle Results
+table, the Deferred Issues prose, and a statistics line of this fixed form:
 
-REVIEW_REPORTS
+<!-- canonical:stats-line:start -->
+`total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
+<!-- canonical:stats-line:end -->
 
-[Angle 1 full report]
----
-[Angle 2 full report]
----
-[Angle 3 full report]
----
-[Angle 4 full report]
----
-[Angle 5 full report]
-```
-
-The fix agent deduplicates overlapping findings, applies fixes, and commits.
-It produces an accountability list mapping every reported issue to an
-action. Render its Schema B result table verbatim:
-
-| # | short_label | Severity | File:Line | Action | Commit |
-|---|-------------|----------|-----------|--------|--------|
-| 1 | <≤60 char>  | HIGH     | path:42   | FIXED  | abc1234 |
-| 2 | <≤60 char>  | MEDIUM   | path:99   | DEFERRED | — |
-
-Below the table, render the Deferred Issues prose verbatim from the agent's
-output.
+Its reply carries the statistics line, the Per-angle Results table, the HIGH
+and MEDIUM rows with their Deferred Issues paragraphs, and the path of
+schema-b.md. Render that reply verbatim; the LOW rows and their prose stay in
+the file.
 
 ### Step 6: Dispatch regression agent
 
 After the fix agent returns, dispatch a single subagent:
 - Agent name: `regression-verifier`
 - description: "Regression verification"
-- prompt: extend the CONTEXT block with both the original 5 review reports
-  (`REVIEW_REPORTS`) and the fix agent's accountability list
-  (`ACCOUNTABILITY_LIST`).
+- prompt: the CONTEXT block from Step 2, unchanged — regression-verifier
+  reads the 5 reports and schema-b.md from RUN_DIR itself.
 
 The regression agent verifies:
-- every issue from the 5 reports is accounted for in the fix list,
+- every issue ID from the 5 reports is accounted for in schema-b.md, and the
+  statistics line agrees with the rows,
 - fixed issues are actually fixed in the code,
 - build / test / lint passes,
 - fix commits did not introduce new issues.
@@ -238,7 +259,9 @@ Render the final consolidated report using Schema F:
 
 ## Fixes
 
-(Schema B verbatim.)
+(code-fixer's reply verbatim: the statistics line, the Per-angle Results
+table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, and the
+full path of schema-b.md, where the LOW rows and their prose remain.)
 
 ## Verification
 
@@ -251,7 +274,9 @@ PASS / FAIL / PARTIAL — one paragraph rationale.
 ## Next steps
 
 Bulleted list of follow-ups (deferred issues, regression failures,
-reviewer recommendations).
+reviewer recommendations). Each HIGH or MEDIUM DEFERRED issue gets its own
+bullet; LOW DEFERRED issues share one bullet with their count and the path of
+schema-b.md.
 ```
 
 #### Verdict determination
