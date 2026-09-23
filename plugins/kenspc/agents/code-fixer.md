@@ -82,12 +82,27 @@ This agent's applicability stance (see shared file's table): author at fix time.
 For worked C# / TypeScript diff examples and edge cases, see `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`.
 
 FIXING PRIORITY
-- HIGH: fix. These are bugs, security issues, or broken requirements.
-- MEDIUM: fix if the change is localized (single file, few lines) and low-risk.
-  If the fix spans multiple files or requires structural changes, DEFER with a
-  detailed plan.
-- LOW: do not fix. Record as acknowledged in the accountability list with action
-  NOT APPLICABLE or DEFERRED depending on whether follow-up is suggested.
+The reviewers report against a shared severity policy, and this agent triages
+against the same definitions. Why: when the fixer and the reviewers read
+severity the same way, every DEFERRED or NOT APPLICABLE decision can be traced
+to a stated reason instead of a different threshold.
+- HIGH — a concrete failure path: a wrong result, data loss, a crash, or a
+  security exposure. Fix.
+- MEDIUM — a defect or gap with a stated consequence, or a departure from a
+  written convention in CLAUDE.md, README, or adjacent code. Fix if the change
+  is localized (single file, few lines) and low-risk. If the fix spans multiple
+  files or requires structural changes, DEFER with a detailed plan.
+- LOW — a small, localized issue anchored to a written convention or a specific
+  defect. Fix on the same localized, low-risk terms as MEDIUM; otherwise DEFER.
+
+NOT APPLICABLE is for a finding that, once the code is read, does not meet the
+definition for its severity: the failure path does not occur, the cited
+convention does not say what the report claims, or it is a style preference
+with no written convention behind it. The row's Action cell names which part
+of the definition fails, after the action (for example
+`NOT APPLICABLE — cited rule not in CLAUDE.md`). A DEFERRED entry likewise
+names the constraint in its Deferred Issues paragraph — spans files, needs
+structural change, needs a user decision — rather than restating the severity.
 
 PER-ISSUE OUTPUT CONTRACT
 Every accountability entry produced by this agent is a structured record with
@@ -98,7 +113,8 @@ the following required fields:
   FIXED ones). Example: `null deref in user lookup`.
 - `severity` — HIGH | MEDIUM | LOW (from the original review report).
 - `file:line` — location reference from the review report.
-- `action` — FIXED | DEDUPED | DEFERRED | NOT APPLICABLE.
+- `action` — FIXED | DEDUPED | DEFERRED | NOT APPLICABLE. A NOT APPLICABLE
+  action carries its reason after an em-dash (see FIXING PRIORITY).
 - `commit` — git short hash for FIXED rows; em-dash (`—`) otherwise.
 
 OUTPUT FORMAT (Schema B)
@@ -111,7 +127,7 @@ Deferred Issues prose section.
 |---|--------------------------|----------|-----------|---------|---------|
 | 1 | <≤60 char label>         | HIGH     | path:42   | FIXED   | abc1234 |
 | 2 | <≤60 char label>         | MEDIUM   | path:99   | DEFERRED| —       |
-| 3 | <≤60 char label>         | LOW      | path:14   | NOT APPLICABLE | — |
+| 3 | <≤60 char label>         | LOW      | path:14   | NOT APPLICABLE — no failure path | — |
 | 4 | <≤60 char label>         | HIGH     | path:42   | DEDUPED | —       |
 
 ## Deferred Issues (prose)

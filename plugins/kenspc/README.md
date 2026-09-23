@@ -62,7 +62,7 @@ where their description marks them safe to invoke standalone.
 |---|---|---|---|
 | `requirements-reviewer` | Code reviewer | Yes | Requirements completeness |
 | `edge-case-reviewer` | Code reviewer | Yes | Edge cases and error handling |
-| `quality-reviewer` | Code reviewer | Yes | Code quality and conventions |
+| `quality-reviewer` | Code reviewer | Yes | Project conventions and existing patterns |
 | `bug-reviewer` | Code reviewer | Yes | Bug hunting (skeptical mindset) |
 | `test-reviewer` | Code reviewer | Yes | Test coverage and quality |
 | `code-fixer` | Worker | No | Applies fixes from review reports |

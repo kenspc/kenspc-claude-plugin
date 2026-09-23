@@ -120,7 +120,11 @@ previous one (cascade dependency). Agent body returns a structured change log.
 **Parallel MapReduce (task-review):**
 - Phase 1: 5 read-only review agents dispatched in parallel
   (`requirements-reviewer`, `edge-case-reviewer`, `quality-reviewer`,
-  `bug-reviewer`, `test-reviewer`) — one per angle.
+  `bug-reviewer`, `test-reviewer`) — one per angle. Angle 3
+  (`quality-reviewer`) covers project conventions and existing patterns
+  — rules written in CLAUDE.md / README and patterns in adjacent code —
+  since v3.5; the file name is kept so the canonical dispatch block stays
+  unchanged.
 - Phase 2: `code-fixer` receives all 5 reports, deduplicates, applies fixes,
   produces accountability list.
 - Phase 3: `regression-verifier` cross-checks reports against accountability

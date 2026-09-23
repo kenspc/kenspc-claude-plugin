@@ -260,7 +260,7 @@ dispatch:
 |---|-------|------|
 | 1 | requirements-reviewer | Reviews completeness against requirements |
 | 2 | edge-case-reviewer | Reviews edge cases and failure modes |
-| 3 | quality-reviewer | Reviews code quality and maintainability |
+| 3 | quality-reviewer | Reviews adherence to project conventions and existing patterns |
 | 4 | bug-reviewer | Reviews for bugs and correctness defects |
 | 5 | test-reviewer | Reviews test coverage and quality |
 

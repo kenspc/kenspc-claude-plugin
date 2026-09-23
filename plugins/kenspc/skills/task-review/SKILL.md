@@ -25,9 +25,9 @@ completeness.
 ## Quality bar
 
 A useful review surfaces every real issue across five independent angles
-(requirements, edge cases, quality, bugs, tests), applies the fixes that
-should be applied, defers the rest with rationale, and verifies that the
-resulting code still builds, tests, and lints. Each modified file is
+(requirements, edge cases, project conventions, bugs, tests), applies the
+fixes that should be applied, defers the rest with rationale, and verifies
+that the resulting code still builds, tests, and lints. Each modified file is
 covered; no file is silently skipped because it "looks routine".
 
 ## Prerequisites
@@ -106,7 +106,7 @@ dispatch:
 |---|-------|------|
 | 1 | requirements-reviewer | Reviews completeness against requirements |
 | 2 | edge-case-reviewer | Reviews edge cases and failure modes |
-| 3 | quality-reviewer | Reviews code quality and maintainability |
+| 3 | quality-reviewer | Reviews adherence to project conventions and existing patterns |
 | 4 | bug-reviewer | Reviews for bugs and correctness defects |
 | 5 | test-reviewer | Reviews test coverage and quality |
 
