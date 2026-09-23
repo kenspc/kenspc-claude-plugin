@@ -125,8 +125,10 @@ run_self_test() {
     fi
 
     # Apply mutation: rename the label everywhere in the example file so the
-    # `Decisions:` substring is absent from that file.
-    sed -i "s|${mutation_target}|${mutation_replacement}|g" "$target_file"
+    # `Decisions:` substring is absent from that file. `-i.bak` (suffix
+    # attached) is the in-place form both GNU and BSD sed accept; bare `-i`
+    # fails on BSD sed (macOS).
+    sed -i.bak "s|${mutation_target}|${mutation_replacement}|g" "$target_file" && rm "$target_file.bak"
     if grep -qF -- "$mutation_target" "$target_file"; then
         echo "FAIL  self-test: mutation did not apply (target label still present in $target_file)" >&2
         return 2

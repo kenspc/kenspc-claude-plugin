@@ -178,9 +178,10 @@ run_self_test() {
     # after the existing third condition of the over-engineering bullet.
     # The new line uses the same two-space indentation as the existing
     # numbered conditions so it matches the `^[[:space:]]*[0-9]+\.`
-    # counter in run_main_logic.
-    sed -i "/${fixture_anchor}/a\\
-  4. Extra fixture condition inserted by self-test." "$target_file"
+    # counter in run_main_logic. `-i.bak` (suffix attached) is the in-place
+    # form both GNU and BSD sed accept; bare `-i` fails on BSD sed (macOS).
+    sed -i.bak "/${fixture_anchor}/a\\
+  4. Extra fixture condition inserted by self-test." "$target_file" && rm "$target_file.bak"
     if ! grep -qE '^  4\. Extra fixture condition' "$target_file"; then
         echo "FAIL  self-test: mutation did not apply (extra condition not inserted in $target_file)" >&2
         return 2

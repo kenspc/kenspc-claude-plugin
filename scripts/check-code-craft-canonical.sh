@@ -269,7 +269,9 @@ run_self_test() {
     # file. Replacing all occurrences (not just the bolded one inside the
     # canonical block) is what drives the anchor count to 0 and exercises
     # Check 2 alongside the byte-identity divergence in Check 1.
-    sed -i "s|${mutation_target}|${mutation_replacement}|g" "$target_file"
+    # `-i.bak` (suffix attached) is the in-place form both GNU and BSD sed
+    # accept; bare `-i` fails on BSD sed (macOS).
+    sed -i.bak "s|${mutation_target}|${mutation_replacement}|g" "$target_file" && rm "$target_file.bak"
     if grep -qF -- "$mutation_target" "$target_file"; then
         echo "FAIL  self-test: mutation did not apply (target phrase still present in $target_file)" >&2
         return 2

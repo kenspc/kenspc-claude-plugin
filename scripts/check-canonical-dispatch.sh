@@ -188,8 +188,10 @@ run_self_test() {
     # Apply mutation only inside the canonical:dispatch block of the
     # target file. Using sed's address range limits the substitution to
     # that block so we don't accidentally touch later occurrences of the
-    # word in unrelated prose.
-    sed -i "/<!-- canonical:dispatch:start -->/,/<!-- canonical:dispatch:end -->/{s/${mutation_target}/${mutation_replacement}/}" "$target_file"
+    # word in unrelated prose. `-i.bak` (suffix attached) and the `;` before
+    # `}` are the forms both GNU and BSD sed accept; BSD sed (macOS) rejects
+    # bare `-i` and a `}` directly after the s command.
+    sed -i.bak "/<!-- canonical:dispatch:start -->/,/<!-- canonical:dispatch:end -->/{s/${mutation_target}/${mutation_replacement}/;}" "$target_file" && rm "$target_file.bak"
     # Verify the replacement landed inside the canonical:dispatch block —
     # not merely somewhere else in the file. Extract the block again and
     # grep with -F (literal, no regex) to match the stricter post-state

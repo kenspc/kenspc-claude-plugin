@@ -124,8 +124,11 @@ run_self_test() {
 
     # Apply mutation only inside the canonical:verdict-shared block of the
     # task-review copy. sed's address range limits the substitution to that
-    # block so we do not touch occurrences elsewhere in the file.
-    sed -i "/<!-- canonical:verdict-shared:start -->/,/<!-- canonical:verdict-shared:end -->/{s/${mutation_target}/${mutation_replacement}/}" "$target_file"
+    # block so we do not touch occurrences elsewhere in the file. `-i.bak`
+    # (suffix attached) and the `;` before `}` are the forms both GNU and BSD
+    # sed accept; BSD sed (macOS) rejects bare `-i` and a `}` directly after
+    # the s command.
+    sed -i.bak "/<!-- canonical:verdict-shared:start -->/,/<!-- canonical:verdict-shared:end -->/{s/${mutation_target}/${mutation_replacement}/;}" "$target_file" && rm "$target_file.bak"
     if ! sed -n '/<!-- canonical:verdict-shared:start -->/,/<!-- canonical:verdict-shared:end -->/p' "$target_file" \
         | grep -qF -- "${mutation_replacement}"; then
         echo "FAIL  self-test: mutation did not apply inside canonical:verdict-shared block of $target_file" >&2
