@@ -25,8 +25,11 @@ filled at release.
 - **Documentation impact.** The one plan element generate-plan always
   writes (`## Documentation impact`): the durable documents the plan's steps
   make stale — per document the path, the section where known, what must
-  change, and the causing step — or the single line `N/A — <reason>`. The
-  durable documents are the ones the project's CLAUDE.md names (a
+  change, and the causing step — or the single line `N/A — <reason>`. A
+  document that was considered and is unaffected can be recorded among the
+  entries as `<path> — N/A for this document: <reason>`, which is not a list
+  entry and never mixes with the whole-body form (defined after acceptance
+  observation O1). The durable documents are the ones the project's CLAUDE.md names (a
   documentation table where one exists, otherwise the documents it names in
   prose), or README.md and CLAUDE.md when it names none.
   `plan-document-reviewer`'s Completeness angle checks the element: absent;
