@@ -123,7 +123,9 @@ When the plan's Documentation impact names documents, every task document
 gets the Doc-sync task, phase-specific ones included, carrying the element's
 full document list; its acceptance criteria are scoped to what the tasks in
 that document changed, and an entry whose causing plan step lies outside the
-document says so in the entry itself. Why: Documentation impact is plan-level
+document says so in the entry itself. A per-entry
+`<path> — N/A for this document: <reason>` record in the element is not a
+document entry and stays out of the list. Why: Documentation impact is plan-level
 while a task document may cover one phase; the full list keeps every affected
 document in view, and the scoping keeps a phase from documenting behavior
 another phase has not built yet — stated in the entry, because the
