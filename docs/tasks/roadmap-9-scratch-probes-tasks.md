@@ -124,8 +124,11 @@ The paragraph is byte-identical in all five files. It says, in substance:
 
 Write the paragraph once and copy it into the other four files.
 `check-review-agent-drift.sh` extracts ROLE up to the next line made only of
-capital letters and spaces. So no line of the paragraph may consist solely of
-capitals and spaces.
+capital letters and spaces, optionally followed by a parenthesized suffix (as
+in `OUTPUT FORMAT (Schema B)`). So no line of the paragraph may take either
+form. Why: such a line ends the extracted section in all five files alike, so
+the drift check still passes while no longer covering the rest of the
+paragraph.
 
 **Files to modify:**
 - `plugins/kenspc/agents/requirements-reviewer.md`
@@ -148,6 +151,9 @@ capitals and spaces.
   every existing ROLE line are unchanged.
 - `bash scripts/check-review-agent-drift.sh` exits 0, and ROLE is reported
   identical across 5 reviewers.
+- In every file, the ROLE section as the drift script extracts it (from the
+  `ROLE` line up to the next heading line) ends with the new paragraph's last
+  line, so the guard covers the whole paragraph.
 - `bash scripts/check-no-model-names.sh` and `bash scripts/check-all.sh`
   exit 0.
 
@@ -247,7 +253,8 @@ sentence "Put probe files, copies, and other temporary files under
   - the vitest and jest markers from the Fixed forms, and other runners'
     configured patterns;
   - mutant copies renamed as copied and run through a runner config kept in
-    its scratch directory;
+    `RUN_DIR/scratch/regression-verifier/` whose `include` matches the
+    renamed files (ruling M3, option a);
   - reset as a new subdirectory, never a delete.
 - The existing point stays: the directory is git-ignored with the run
   directory and needs no cleanup.
@@ -280,8 +287,8 @@ These stay unchanged:
 
 **Acceptance criteria:**
 - The `RUN_DIR` bullet names `RUN_DIR/scratch/regression-verifier/` and
-  states the naming rule with the Fixed-forms markers, the renamed-copy
-  method, and reset as a new subdirectory.
+  states the naming rule with the Fixed-forms markers, the renamed-copy and
+  scratch-local runner-config method, and reset as a new subdirectory.
 - Item 3 carries the unmodified-command clause, the scratch-only-failure
   FAIL rule with the paths in Detail, and the narrowed-re-run-is-information
   rule, with its Why.
