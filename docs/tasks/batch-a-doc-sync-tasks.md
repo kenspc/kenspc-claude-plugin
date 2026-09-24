@@ -541,7 +541,17 @@ also becomes three rows; the four-row tables in `generate-plan` and
 
 ### Task 10: Add the document-language rule to generate-task
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the rule is a `**Document language**` paragraph in Phase 2,
+  right after Output path resolution, in the same bold-label style as the
+  other Phase 2 write-time rules. It names the artifact kinds that fall under
+  CODE ARTIFACTS LANGUAGE (commit messages, code comments, identifiers) but
+  not the language that rule prescribes, so the skill states no default
+  language of its own.
+- Changes/tradeoffs: none. `task-document-reviewer.md` was not touched, per
+  C2.
 
 Plan Step 4.2 (ruling M6; plan Clarifications, C2). In Phase 2, add a
 document-language rule: the task document is written in the plan document's

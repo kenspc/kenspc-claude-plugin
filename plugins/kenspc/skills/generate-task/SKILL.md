@@ -220,6 +220,16 @@ Confirm, or adjust tasks before writing?
 1. CLAUDE.md-specified task document location.
 2. `docs/tasks/` (create if missing).
 
+**Document language**: write the task document in the plan document's
+language, unless the user explicitly requests otherwise; the plugin sets no
+default language of its own. Text the implementer will carry into code
+artifacts — commit messages, code comments, identifiers — follows
+`task-implementer`'s CODE ARTIFACTS LANGUAGE rule, whatever the document's
+language. Why: the implementer copies task text into commits, comments, and
+documents, so the task document's language becomes theirs; inheriting the
+plan's language gives `task-document-reviewer`'s Consistency with CLAUDE.md
+angle a plugin-side anchor without the plugin imposing a language.
+
 **Filename**: derive the base name from the plan filename by removing the
 `.md` extension and any trailing `-plan` suffix. Examples:
 `notification-plan.md` → `notification`; `auth-strategy.md` → `auth-strategy`.
