@@ -125,12 +125,12 @@ full document list; its acceptance criteria are scoped to what the tasks in
 that document changed, and an entry whose causing plan step lies outside the
 document says so in the entry itself. Why: Documentation impact is plan-level
 while a task document may cover one phase; the full list keeps every affected
-document in view, and the scoping keeps a phase from documenting behaviour
+document in view, and the scoping keeps a phase from documenting behavior
 another phase has not built yet — stated in the entry, because the
 implementer reads the task text, not this skill.
 
 The heading is fixed: `### Task N: Doc-sync`, where N is the last task
-number. Why: `task-document-reviewer` recognises the task by that heading,
+number. Why: `task-document-reviewer` recognizes the task by that heading,
 so a reworded heading is a detectable failure rather than a silent one.
 
 For a document that an earlier task in the same task document already edits
@@ -179,7 +179,7 @@ decision that only explains a local code choice where it is. Create or
 modify no document outside the list.
 
 **Acceptance criteria:**
-- Each listed document describes the behaviour Tasks 1-<N-1> implemented, so
+- Each listed document describes the behavior Tasks 1-<N-1> implemented, so
   that a reader of that document alone learns it.
 - Every promoted decision appears in the document named for it, in that
   document's language.

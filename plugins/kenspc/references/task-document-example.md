@@ -127,7 +127,7 @@ it nowhere. Leave a decision that only explains a local code choice where it is.
 or modify no document outside the list.
 
 **Acceptance criteria:**
-- Each listed document describes the behaviour Tasks 1-5 implemented, so that a reader of
+- Each listed document describes the behavior Tasks 1-5 implemented, so that a reader of
   that document alone learns it
 - Every promoted decision appears in the document named for it, in that document's
   language

@@ -25,7 +25,7 @@
 # One file writes an anchor, another checks it, a third renders or greps it.
 # If a future edit renames an anchor in one file but not the others, the
 # documentation chain breaks silently — a plan element nobody reads, a
-# Doc-sync task nobody recognises, a section nobody renders — while every
+# Doc-sync task nobody recognizes, a section nobody renders — while every
 # other check still passes. A byte-identity guard is wrong here (the prose
 # around each anchor differs by design), so this guard asserts only that each
 # label substring is present at least once in every file of its group.

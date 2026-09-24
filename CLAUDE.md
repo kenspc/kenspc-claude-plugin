@@ -142,7 +142,7 @@ rendered, `none` when empty, unlike Schema D's skip-when-empty sections: in an
 unattended run it is the only evidence that the promotion step ran. The
 dependency gate holds the chain together: `task-implementer` marks a task
 BLOCKED with `depends on Task N (<status>)` when its `Depends on` line names
-a task that is not DONE, so a Doc-sync task never documents behaviour a
+a task that is not DONE, so a Doc-sync task never documents behavior a
 blocked task did not build. The gate applies to every task with a
 `Depends on` line, not only the Doc-sync task.
 
@@ -436,10 +436,10 @@ not on it.
 | Document | Holds | Changes when |
 |---|---|---|
 | `README.md` | Marketplace overview: installation, the plugin list, one summary row per skill | A skill's summary changes (a new capability, a review-angle count), or a plugin is added |
-| `plugins/kenspc/README.md` | The plugin's user documentation: skills, commands, agents, design principles, recommended workflow, run directory, known behavior | Any user-visible behaviour of a skill, agent, command, or hook changes |
+| `plugins/kenspc/README.md` | The plugin's user documentation: skills, commands, agents, design principles, recommended workflow, run directory, known behavior | Any user-visible behavior of a skill, agent, command, or hook changes |
 | `CLAUDE.md` | The maintainer contract for this repository: layout, conventions, review architecture, guard scripts, design lessons | A convention, an orchestration pattern, a guard, or a guard count changes |
 | `plugins/kenspc/CHANGELOG.md` | Per-release record of what was added, changed, fixed, or removed | Every change that ships, under the next version's heading |
-| `docs/release-checklist.md` | Pre-flight mechanical checks and the smoke checklist run before tagging | A guard or self-test count changes, or an entry point gains behaviour the smoke test should exercise |
+| `docs/release-checklist.md` | Pre-flight mechanical checks and the smoke checklist run before tagging | A guard or self-test count changes, or an entry point gains behavior the smoke test should exercise |
 | `docs/roadmap.md` | Planned work not yet shipped | An item is planned, or ships (it then leaves the file) |
 | `docs/dry-runs/README.md` | The dry-run report label-vocabulary convention | The dry-run report convention changes |
 | `plugins/kenspc/references/plan-document-example.md` | An example plan document, the reference for `generate-plan`'s output | The plan format `generate-plan` produces changes |

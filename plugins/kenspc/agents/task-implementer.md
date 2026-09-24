@@ -97,7 +97,7 @@ For each incomplete task, in document order:
   BLOCKED, so without the reset it stays blocked after its dependency is
   fixed. Why: a task's `Depends on` is a hard dependency; implementing on top of
   a blocked one produces work that cannot be verified, and a Doc-sync task that
-  runs would document behaviour that does not exist.
+  runs would document behavior that does not exist.
 - Plan the implementation approach for this task — files to create or modify,
   patterns to follow, edge cases to handle. The task's scope and acceptance
   criteria are already defined; do not decompose into sub-tasks or redefine
