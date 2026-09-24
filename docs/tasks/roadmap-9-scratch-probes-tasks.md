@@ -182,20 +182,7 @@ paragraph.
 
 ### Task 2: Give code-fixer its own scratch directory, the scratch rule, the no-configuration-edit rule, and the scratch-pollution note
 
-**Status:** BLOCKED
-
-**Implementation notes:**
-- Blocked: the first edit, rewriting the `RUN_DIR` bullet in
-  `plugins/kenspc/agents/code-fixer.md` (new scratch directory, naming,
-  execution, and reset rule, no-configuration-edit rule), could not be made:
-  the session's auto-mode safety classifier returned no verdict on the Edit
-  call and reported a hard failure that a retry would repeat. The edit was
-  not routed through another tool, since that would sidestep the check
-  instead of answering it. `code-fixer.md` is unchanged. To unblock: set this
-  task back to TODO and re-run `/kenspc-task-implement` in a session whose
-  permission mode can approve edits to `code-fixer.md`, or apply Task 2 by
-  hand. Tasks 5-9 depend on this task; the run stopped before them (see
-  Task 4), so they are still TODO and need no reset.
+**Status:** TODO
 
 Plan Step 1.2 (rulings M1, M3, M4, clarifications C1, C2). This task makes
 three edits.
@@ -272,19 +259,7 @@ unchanged.
 
 ### Task 3: Give regression-verifier its own scratch directory and the scratch rule, and run build, test, and lint unmodified
 
-**Status:** BLOCKED
-
-**Implementation notes:**
-- Blocked: the first edit, rewriting the `RUN_DIR` bullet in
-  `plugins/kenspc/agents/regression-verifier.md` (new scratch directory,
-  naming, execution, and reset rule), failed the same way as Task 2's: the
-  session's auto-mode safety classifier returned no verdict on the Edit call
-  and reported a hard failure that a retry would repeat. The edit was not routed through
-  another tool. `regression-verifier.md` is unchanged, and the INPUTS and
-  VERIFICATION CHECKS item 3 edits were not attempted. To unblock: set this
-  task back to TODO and re-run `/kenspc-task-implement` in a session whose
-  permission mode can approve edits to the plugin's agent files, or apply
-  Task 3 by hand.
+**Status:** TODO
 
 Plan Steps 1.2 and 1.3 (rulings M1, M3, M4, clarifications C1, C4, C5). This
 task makes three edits.
@@ -361,21 +336,7 @@ These stay unchanged:
 
 ### Task 4: Rewrite the Scratch space bullet in both review skills and name the scratch-pollution note where they describe code-fixer's reply
 
-**Status:** BLOCKED
-
-**Implementation notes:**
-- Blocked: the first edit, rewriting the Scratch space bullet inside
-  `canonical:run-dir` in `plugins/kenspc/skills/task-review/SKILL.md`, failed
-  the same way as Tasks 2 and 3: the session's auto-mode safety classifier
-  returned no verdict on the Edit call and reported a hard failure that a
-  retry would repeat. Both SKILL.md files are unchanged, and the C4 edits
-  were not attempted. With three consecutive plugin-file edits unevaluated,
-  this is an environment issue rather than a task defect, so the run stopped
-  here: Tasks 5-9, which depend on Tasks 1-4, were not processed and are
-  still TODO. To unblock: set Tasks 2, 3, and 4 back to TODO and re-run
-  `/kenspc-task-implement` in a session whose permission mode can approve
-  edits to the plugin's agent and skill files (Task 1 is DONE and is
-  skipped), or apply Tasks 2-4 by hand.
+**Status:** TODO
 
 Plan Step 2.1 (ruling M1, clarifications C1, C4). This task makes two edits
 in each of the two review skills.
