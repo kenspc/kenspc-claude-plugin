@@ -213,7 +213,7 @@ Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/pl
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
 
-**Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built.
+**Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). Because the review's fixes land after the Doc-sync task, a run where both happened ends with a Next steps bullet naming the listed documents to re-check against the fix commits.
 
 Small fixes can skip all skills and be implemented directly.
 
@@ -278,8 +278,14 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   If a named task is not DONE, whether it was BLOCKED in this run or an
   earlier one or has not run yet, the task is marked BLOCKED with one
   `depends on Task N (<status>)` reason per such task instead of being
-  attempted. New in v3.6.0: a task that used to be attempted after a blocked
-  dependency is now blocked.
+  attempted; a number the task document does not contain gives the status
+  `not found`. `Depends on` names tasks in the same task document only: a
+  task document for a later phase treats earlier phases' work as existing
+  code and names the task documents it assumes in its Dependency note. A
+  later run skips a task already marked BLOCKED, so once the dependency is
+  DONE, set the task back to TODO yourself (for `not found`, correct the
+  `Depends on` line first). New in v3.6.0: a task that used to be attempted
+  after a blocked dependency is now blocked.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

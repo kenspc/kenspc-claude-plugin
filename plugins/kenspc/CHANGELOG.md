@@ -41,7 +41,10 @@ filled at release.
   Doc-sync task verifies it against the implementation instead of redoing
   the planned edit, while still correcting a statement the implementation
   contradicts and writing promoted decisions into it. The task is exempt
-  from the sizing table. `task-document-reviewer`'s Completeness angle checks
+  from the sizing table. A listed document that does not exist on disk
+  blocks the task, with the path named, instead of being created; an entry
+  that leaves its document to another task document is exempt, since a later
+  phase may create that document. `task-document-reviewer`'s Completeness angle checks
   that it exists, is last, covers every other task, and lists the element's
   documents; a plan without the element is a Plan-Level Concern. The task
   example shows it as Task 6.
@@ -52,7 +55,10 @@ filled at release.
   destination and written nowhere), or local, the default. Schema D gains an
   always-rendered `## Decisions needing a home` section (`none` when empty),
   and task-implement's Schema G turns each entry into a Next steps bullet,
-  plus one bullet when the Doc-sync task is BLOCKED. In a run without a
+  plus one bullet when the Doc-sync task is BLOCKED, and one naming the
+  listed documents to re-check against the fix commits when a Doc-sync task
+  was DONE and code-fixer's statistics line reports FIXED greater than 0 —
+  the review's fixes land after the Doc-sync task. In a run without a
   Doc-sync task, the roll-up classifies the DONE tasks' decisions itself and
   writes no document.
 - **Angle 3, Consistency with CLAUDE.md,** in `task-document-reviewer`:
@@ -68,13 +74,21 @@ filled at release.
 
 - **Dependency gate.** task-implementer reads each task's `Depends on` line
   and marks the task BLOCKED with `depends on Task N (<status>)` when a named
-  task is not DONE — BLOCKED in this run or an earlier one, or not yet
-  processed. This changes behaviour for every task with a `Depends on` line,
-  not only the Doc-sync task: a task that used to be attempted after a
-  blocked dependency is now blocked.
+  task is not DONE — BLOCKED in this run or an earlier one, not yet
+  processed, or absent from the task document (status `not found`). This
+  changes behavior for every task with a `Depends on` line, not only the
+  Doc-sync task: a task that used to be attempted after a blocked dependency
+  is now blocked. A later run skips a task already marked BLOCKED, so the
+  gate's unblock step tells the user to set the task back to TODO once the
+  dependency is DONE, correcting the `Depends on` line first for
+  `not found`.
 - **`Depends on` semantics.** The annotation covers any hard ordering
   dependency, within or across phases (a single task, an ASCII-hyphen range
   such as `Task 1-5`, or a comma-separated list), not only cross-phase ones.
+  It names tasks in the same task document only, since the gate looks task
+  numbers up in the document it runs; a phase-specific task document treats
+  earlier phases' work as existing code, and its Dependency note names the
+  earlier phases' task documents it assumes are implemented.
   The note at the top of a task document is now the "Dependency note", and
   `task-document-reviewer`'s Execution Order angle checks every task with a
   `Depends on` line.
