@@ -42,9 +42,12 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
   under the run directory. If the project's test command fails only because
   of files under `RUN_DIR/scratch`, say so in the scratch-pollution note (see
   OUTPUT FORMAT), naming the files, and verify your fixes with a narrowed
-  command if you need to. Why: a configuration change made for the plugin's
-  own files is a change to the user's project that the user did not ask for,
-  and it hides the pollution instead of removing it.
+  command if you need to, narrowed only to leave out the run directory (for
+  example vitest `--exclude '**/.kenspc/**'`). Why: a configuration change
+  made for the plugin's own files is a change to the user's project that the
+  user did not ask for, and it hides the pollution instead of removing it;
+  a narrower filter such as `--dir test` also drops tests kept beside the
+  source, so the run would verify less than it claims.
 
 ROLE
 You are a fix agent. You receive review reports from 5 parallel review angles and

@@ -153,12 +153,12 @@ filled at release.
   (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with
   no path filter or exclude added. When files under `RUN_DIR/scratch` make a
   command fail, alone or alongside failures in the project's own files, that
-  command's row is FAIL with those files named in the Detail cell; a
-  narrowed re-run may be added to Detail as information but does not change
-  the Result. Build and lint are included because those
-  tools walk the run directory too: ESLint's flat config ignores only
-  `node_modules` and `.git` by default. Keeping scratch files out of them is
-  still open (`docs/roadmap.md`). Source:
+  command's row is FAIL with those files named in the Detail cell; a re-run
+  narrowed only to leave out the run directory may be added to Detail as
+  information but does not change the Result. Build and lint are included
+  because those tools walk the run directory too: ESLint's flat config
+  ignores only `node_modules` and `.git` by default. Keeping scratch files
+  out of them is still open (`docs/roadmap.md`). Source:
   `docs/dry-runs/batch-a-acceptance.md` § 8, where regression-verifier
   passed the test row on a narrowed `npx vitest run --dir test` while the
   project's own `npm test` failed.
@@ -169,7 +169,9 @@ filled at release.
   fails only because of files under `RUN_DIR/scratch`, `schema-b.md` carries
   an optional scratch-pollution note after the Deferred Issues prose and
   before the statistics line, which stays the file's last line. The note
-  names those files and the narrowed command used to verify the fixes.
+  names those files and the command used to verify the fixes, narrowed only
+  to leave out the run directory: a filter such as `--dir test` would also
+  drop tests kept beside the source.
   code-fixer's reply carries the note, the `## Fixes` section of the Schema F
   and Schema G final reports renders it, and regression-verifier reads it as
   part of `schema-b.md`. Source:
