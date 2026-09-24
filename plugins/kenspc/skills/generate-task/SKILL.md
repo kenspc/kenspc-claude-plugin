@@ -169,7 +169,7 @@ no other file):
   is outside this task document: leave this change to the task document that
   covers it.
 
-**Promotion:** read the `Decisions:` sub-bullets in the Implementation notes
+**Promotion:** read the `Decisions` sub-bullets in the Implementation notes
 of Tasks 1-<N-1>. Write each decision that a future reader would look for in
 one of the listed documents into that document, in the document's own
 language and structure. List a decision that belongs in a durable document

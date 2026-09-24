@@ -118,7 +118,7 @@ file):
   `POST /api/auth/login` with their request bodies, responses, and error codes (plan
   Steps 2.1–2.2).
 
-**Promotion:** read the `Decisions:` sub-bullets in the Implementation notes of Tasks 1-5.
+**Promotion:** read the `Decisions` sub-bullets in the Implementation notes of Tasks 1-5.
 Write each decision that a future reader would look for in one of the listed documents
 into that document, in the document's own language and structure. List a decision that
 belongs in a durable document but fits none of the listed ones under
