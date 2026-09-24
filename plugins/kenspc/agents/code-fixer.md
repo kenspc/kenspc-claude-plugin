@@ -22,8 +22,28 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - RUN_DIR — required: absolute path of this run's report directory. It
   holds the 5 review reports as `angle-1.md` … `angle-5.md`; this agent
   writes `schema-b.md` there. Put probe files, copies, and other temporary
-  files under `RUN_DIR/scratch/` — it is git-ignored with the run directory
-  and needs no cleanup, so no `rm -rf` is needed.
+  files under `RUN_DIR/scratch/code-fixer/` — it is git-ignored with the run
+  directory and needs no cleanup, so no `rm -rf` is needed. Name every file
+  there so the project's test runner will not collect it: for vitest and
+  jest, no `.test.` or `.spec.` segment in a file name, no file named
+  `test.*` or `spec.*`, and no `__tests__` directory; for other runners,
+  whatever their configuration collects (pytest `test_*.py` / `*_test.py`,
+  Go `_test.go`). A mutant copy of the test tree renames its test files as
+  they are copied (`split.test.ts` becomes `split.probe.ts`) and runs through
+  a runner config kept in `RUN_DIR/scratch/code-fixer/` whose `include`
+  matches the renamed files; any other probe that has to execute runs as a
+  plain script. To start over, make a new subdirectory under
+  `RUN_DIR/scratch/code-fixer/` rather than deleting. Why: the run directory
+  is git-ignored, not tool-ignored, and a runner walking the tree collects
+  whatever looks like a test.
+  Do not modify the project's configuration — test-runner config, ignore
+  files, `tsconfig`, package scripts — to accommodate files the plugin wrote
+  under the run directory. If the project's test command fails only because
+  of files under `RUN_DIR/scratch`, say so in the scratch-pollution note (see
+  OUTPUT FORMAT), naming the files, and verify your fixes with a narrowed
+  command if you need to. Why: a configuration change made for the plugin's
+  own files is a change to the user's project that the user did not ask for,
+  and it hides the pollution instead of removing it.
 
 ROLE
 You are a fix agent. You receive review reports from 5 parallel review angles and
@@ -136,8 +156,9 @@ the following required fields:
 
 OUTPUT FORMAT (Schema B)
 Write the full accountability list to `RUN_DIR/schema-b.md`: a Fixes Applied
-table, a Per-angle Results table, a Deferred Issues prose section, and a
-closing statistics line, in that order.
+table, a Per-angle Results table, a Deferred Issues prose section, the
+scratch-pollution note when there is one, and a closing statistics line, in
+that order.
 
 <!-- guard: scripts/check-run-contract.sh recounts the example between the example:schema-b markers; keep its tables and statistics line consistent with its rows when editing it. -->
 <!-- example:schema-b:start -->
@@ -182,6 +203,14 @@ Deferred Issues (prose): for each DEFERRED row, one short paragraph: which
 issue (by ID), why deferred, suggested follow-up (concrete steps,
 prerequisites, risk if untreated).
 
+Scratch-pollution note (optional): one short paragraph, written only when the
+project's test command, run as the project configures it, fails only because
+of files under `RUN_DIR/scratch`. It lists those paths and the narrowed
+command you used to verify your fixes, and it sits after the Deferred Issues
+prose and before the statistics line. Why: the failure is the plugin's, not
+the user's code, and naming the files is the only report of it that does not
+change the user's project.
+
 Statistics line: the file's last line, in exactly this form with the counts
 filled in:
 
@@ -199,6 +228,7 @@ After writing the file, reply with only:
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,
+- the scratch-pollution note, when there is one,
 - the full path of schema-b.md.
 
 The LOW rows and their prose stay in the file. Why: the orchestrator renders

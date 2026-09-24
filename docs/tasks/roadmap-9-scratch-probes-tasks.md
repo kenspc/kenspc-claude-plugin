@@ -182,27 +182,29 @@ paragraph.
 
 ### Task 2: Give code-fixer its own scratch directory, the scratch rule, the no-configuration-edit rule, and the scratch-pollution note
 
-**Status:** BLOCKED
+**Status:** DONE
 
 **Implementation notes:**
-- Blocked: the first edit, rewriting the `RUN_DIR` bullet under CONTEXT YOU
-  WILL RECEIVE in `plugins/kenspc/agents/code-fixer.md`, failed on this
-  re-run exactly as in the first run (41edd9d): the session's auto-mode
-  safety classifier gave no verdict on the Edit call and reported a hard
-  failure that a retry would repeat. The edit was not routed through Write
-  or Bash, since that would sidestep the check instead of answering it.
-  `code-fixer.md` is unchanged, and the OUTPUT FORMAT edits were not
-  attempted. Root cause: the permission mode the run executes in cannot
-  evaluate edits to the plugin's agent files, so resetting the task to TODO
-  and re-running in the same mode reproduces the failure. This is an
-  environment issue, so the run stopped here: Tasks 3 and 4 (the same kind
-  of edit to `regression-verifier.md` and the two review skills, which also
-  failed in the first run) and Tasks 5-9 were not processed and are still
-  TODO. To unblock: re-run `/kenspc-task-implement` in a session whose
-  permission mode does not send these edits to the auto-mode classifier
-  (for example, default mode with each edit approved at the prompt), or
-  apply Task 2 by hand; then set this task back to TODO, or to DONE with
-  its notes if applied by hand.
+- Decisions: the no-configuration-edit rule stays in the `RUN_DIR` bullet,
+  where plan Step 1.2 places it. The bullet points to OUTPUT FORMAT for the
+  scratch-pollution note instead of restating where the note goes, so the
+  note's place is defined once, in the section C2 names. The mutant-copy
+  method names a concrete rename (`split.test.ts` becomes `split.probe.ts`),
+  matching the `**/*.probe.ts` include in the plan's Risks table. The
+  note's definition paragraph carries its own Why, like the other parts'
+  definitions.
+- Changes/tradeoffs: applied by hand in the orchestrating session. Two
+  implementer runs blocked on this task (41edd9d, b8dbc47): auto mode's
+  classifier gave no verdict on Edit calls to the plugin's agent and skill
+  files. The user switched the session's permission mode, and the edits
+  then went through the Edit tool. The rule reads "Do not modify" rather
+  than the spec's "never modify", in keeping with the file's
+  rationale-anchored prose. Verified: `check-run-contract.sh` and its
+  `--self-test`, `check-code-craft-canonical.sh`, `check-no-model-names.sh`,
+  and `check-all.sh` exit 0. A copy of the worked example with a
+  scratch-pollution paragraph before the statistics line passes
+  `check-run-contract.sh --file` (exit 0). The same copy with one wrong
+  FIXED count fails (exit 1).
 
 Plan Step 1.2 (rulings M1, M3, M4, clarifications C1, C2). This task makes
 three edits.
