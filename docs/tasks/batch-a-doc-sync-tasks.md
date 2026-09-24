@@ -112,7 +112,17 @@ forgotten one.
 
 ### Task 2: Show Documentation impact in the plan example
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: two entries, the two the task names (README § API for Steps
+  2.1–2.3, `docs/architecture.md` for Step 1.2), rather than a third invented
+  one; each entry also names a section, showing the "section where known"
+  field generate-plan asks for.
+- Changes/tradeoffs: a one-line lead-in states the determination basis (the
+  example project's CLAUDE.md documentation table), mirroring the M2 rule so a
+  reader copying the example sees where the list comes from. The example has
+  no CLAUDE.md of its own, so that table is implied, not shown.
 
 Plan Step 1.2. Add a `## Documentation impact` section between the last
 Implementation Step (Step 3.2) and `## Testing Strategy`, with two or three

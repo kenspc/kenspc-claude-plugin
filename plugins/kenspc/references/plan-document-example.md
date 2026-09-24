@@ -108,6 +108,18 @@ instance B.
 - Fetches initial state from GET /api/notifications, updates in real-time via socket
 - Done when: Component renders, shows correct unread count, updates on new notification
 
+## Documentation impact
+
+Determined from the project's CLAUDE.md, whose documentation table lists `README.md` and
+`docs/architecture.md`.
+
+- `README.md` § API — add `GET /api/notifications`, `PATCH /api/notifications/:id/read`,
+  and `POST /api/notifications/read-all` with their parameters, responses, and error
+  codes — Steps 2.1–2.3.
+- `docs/architecture.md` § Runtime components — add the Socket.IO server with the Redis
+  adapter, and Redis as a dependency of every API instance behind the load balancer —
+  Step 1.2.
+
 ## Testing Strategy
 
 - Unit tests: notification service methods (create, markAsRead, getUnread)
