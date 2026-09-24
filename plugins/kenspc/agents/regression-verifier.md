@@ -199,6 +199,11 @@ skipped tests and their reasons so the PASS is never silent about the reduced
 coverage. Neither case is a `SPOT-CHECK`, which is reserved for projects with
 no test suite at all.
 
+Row 3 also stays `PASS` when the test run passed but the runner collected
+files under `.kenspc/`; the Detail cell then names those files, as it names
+intentionally skipped tests, or says the check was not made for a runner with
+no list of collected files (see VERIFICATION CHECKS item 3).
+
 ## Detail
 
 For each non-PASS row above, one short paragraph describing what failed and
