@@ -468,7 +468,23 @@ wording of each spot the same.
 
 ### Task 5: Update the plugin README's Run directory section
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the C4 phrase is spelled "the scratch-pollution note when there
+  is one", without the second comma, as in the two review skills (Task 4). The
+  README's reader does not have code-fixer's OUTPUT FORMAT, so the probe-files
+  bullet ends by saying what the note is: when scratch files break the test
+  command, code-fixer's scratch-pollution note names them as well. The markers
+  are written out in full, as in the agents, rather than pointing to a
+  definition the README does not have.
+- Changes/tradeoffs: the layout tree nests the four subdirectories under
+  `scratch/`, one per line, and comments only `angle-<n>/` and
+  `orchestrator/`, whose names do not say who writes there. The bullet keeps
+  its existing "so none of them needs to delete anything" clause, now tied to
+  the reset rule. Verified: `check-all.sh` exits 0 with `guards run: 10`;
+  `git diff` touches only § Run directory, and the § Agents invariant
+  paragraph is unchanged.
 
 Depends on: Task 1-4
 

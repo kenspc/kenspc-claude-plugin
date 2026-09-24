@@ -226,12 +226,17 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 .kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
     angle-1.md … angle-5.md    # full report from each review angle
     schema-b.md                # code-fixer's full accountability list
-    scratch/                   # probe and temporary files; angle-<n>/ per reviewer
+    scratch/                   # probe and temporary files, one subdirectory per agent
+        angle-<n>/             # each reviewer
+        code-fixer/
+        regression-verifier/
+        orchestrator/          # the orchestrating session, only when it probes
 ```
 
 - The final report shows code-fixer's statistics line, the per-angle results,
-  and the HIGH and MEDIUM rows, plus the full path of `schema-b.md`. The LOW
-  rows and the five full reports stay in the directory.
+  the HIGH and MEDIUM rows, and the scratch-pollution note when there is one,
+  plus the full path of `schema-b.md`. The LOW rows and the five full reports
+  stay in the directory.
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
@@ -239,9 +244,20 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   path inside the directory, so a CRLF `.gitignore` with blank lines is read
   correctly. If a commit hook rejects the commit, the run stops and reports
   the error; it does not retry or bypass the hook.
-- The reviewers, `code-fixer`, and `regression-verifier` keep probe files and
-  other temporary files in the run's `scratch/` subdirectory (each reviewer
-  in its own `scratch/angle-<n>/`), so none of them needs to delete anything.
+- Each agent keeps its probe and temporary files in its own subdirectory of
+  the run's `scratch/` (`angle-<n>/` per reviewer, `code-fixer/`,
+  `regression-verifier/`), and the orchestrating session keeps its own in
+  `orchestrator/` when it probes. Every file there is named so the project's
+  test runner does not collect it: for vitest and jest, no `.test.` or
+  `.spec.` segment in a file name, no file named `test.*` or `spec.*`, and no
+  `__tests__` directory; for other runners, their configured pattern. An
+  agent that starts over makes a new subdirectory instead of deleting, so
+  none of them needs to delete anything. No agent edits the project's
+  configuration (runner config, ignore files, `tsconfig`, package scripts) to
+  make room for the plugin's files. If scratch files still break the
+  project's build, test, or lint command, `regression-verifier` fails the run
+  and names them; when they break the test command, code-fixer's
+  scratch-pollution note names them as well.
 - Runs accumulate: nothing is deleted automatically. Remove old run
   directories when you no longer need them.
 - Permissions: each reviewer writes its report with the Write tool. In the
