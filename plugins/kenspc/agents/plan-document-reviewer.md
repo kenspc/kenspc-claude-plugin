@@ -76,8 +76,10 @@ one):
      (1) the element is absent; (2) N/A without a reason, or with a reason
      the steps contradict (a step edits README while the element says N/A);
      (3) a document the steps themselves modify is missing; (4) a listed
-     document that no step changes anything it describes (padding). These
-     are objective issues under FIXING RULES: derive the list from the steps
+     document that no step changes anything it describes (padding). A
+     per-entry `<path> — N/A for this document: <reason>` record is not
+     padding, and mode 2 applies only to the whole-body `N/A — <reason>`.
+     These are objective issues under FIXING RULES: derive the list from the steps
      and the durable documents CLAUDE.md names (README.md and CLAUDE.md
      themselves when it names none), fix the plan, and commit. When an entry
      cannot be determined, record the gap under Open Questions and mark it
