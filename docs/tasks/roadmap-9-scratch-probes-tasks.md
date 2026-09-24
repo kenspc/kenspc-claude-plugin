@@ -182,7 +182,27 @@ paragraph.
 
 ### Task 2: Give code-fixer its own scratch directory, the scratch rule, the no-configuration-edit rule, and the scratch-pollution note
 
-**Status:** TODO
+**Status:** BLOCKED
+
+**Implementation notes:**
+- Blocked: the first edit, rewriting the `RUN_DIR` bullet under CONTEXT YOU
+  WILL RECEIVE in `plugins/kenspc/agents/code-fixer.md`, failed on this
+  re-run exactly as in the first run (41edd9d): the session's auto-mode
+  safety classifier gave no verdict on the Edit call and reported a hard
+  failure that a retry would repeat. The edit was not routed through Write
+  or Bash, since that would sidestep the check instead of answering it.
+  `code-fixer.md` is unchanged, and the OUTPUT FORMAT edits were not
+  attempted. Root cause: the permission mode the run executes in cannot
+  evaluate edits to the plugin's agent files, so resetting the task to TODO
+  and re-running in the same mode reproduces the failure. This is an
+  environment issue, so the run stopped here: Tasks 3 and 4 (the same kind
+  of edit to `regression-verifier.md` and the two review skills, which also
+  failed in the first run) and Tasks 5-9 were not processed and are still
+  TODO. To unblock: re-run `/kenspc-task-implement` in a session whose
+  permission mode does not send these edits to the auto-mode classifier
+  (for example, default mode with each edit approved at the prompt), or
+  apply Task 2 by hand; then set this task back to TODO, or to DONE with
+  its notes if applied by hand.
 
 Plan Step 1.2 (rulings M1, M3, M4, clarifications C1, C2). This task makes
 three edits.
