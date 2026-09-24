@@ -5,6 +5,9 @@ the CHANGELOG records it from then on.
 
 ## Next minor (3.6.0)
 
+At release, delete `docs/plans/batch-a-doc-sync.md` and
+`docs/tasks/batch-a-doc-sync-tasks.md`; batch A has shipped.
+
 1. Render Schema A / B / C once, in the final Schema G report, instead of
    again between dispatches in Step 3 (Mac O1).
 2. The scratch rule binds the orchestrator too; a "reset" creates a new
