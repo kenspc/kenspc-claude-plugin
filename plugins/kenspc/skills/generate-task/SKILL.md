@@ -82,12 +82,14 @@ config files; the project's source tree.
   interfaces of relevant modules — function signatures, exports, API routes,
   data models, type definitions — not every line of implementation.
 - **Dependency rule**: annotate a task with `Depends on` whenever it has a
-  hard ordering dependency on another task — it cannot start until that
-  task is DONE — within a phase or across phases: `Depends on: Task N` for
-  one task, `Depends on: Task 1-5` (ASCII hyphen) for a range, or a
-  comma-separated list. Why: `task-implementer` blocks a task whose
-  `Depends on` names a task that is not DONE, so the annotation is a gate,
-  not a hint. For tasks in the earliest in-scope phase, base analysis on
+  hard ordering dependency on another task in the same task document — it
+  cannot start until that task is DONE — within a phase or across phases:
+  `Depends on: Task N` for one task, `Depends on: Task 1-5` (ASCII hyphen)
+  for a range, or a comma-separated list. Why: `task-implementer` blocks a
+  task whose `Depends on` names a task that is not DONE, so the annotation is
+  a gate, not a hint, and it looks task numbers up only in the document it
+  runs; work from a phase outside the document counts as existing code, as
+  below. For tasks in the earliest in-scope phase, base analysis on
   existing code. For tasks in later phases that depend on earlier phases'
   output, base analysis on the plan's description of what those earlier
   phases will produce.
