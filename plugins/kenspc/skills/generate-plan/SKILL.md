@@ -190,7 +190,11 @@ element is indistinguishable from a forgotten one.
   section. It lists the durable documents the plan's steps make stale; for
   each: the path, the section where known, what must change, and the step
   that causes it. When no durable document is affected, the section's body
-  is the single line `N/A — <reason>`. The durable documents are the ones the
+  is the single line `N/A — <reason>`. A document that was considered and is
+  unaffected can be recorded among the entries as
+  `<path> — N/A for this document: <reason>`: a record that it was
+  considered, not a list entry, and never mixed with the whole-body
+  `N/A — <reason>` form. The durable documents are the ones the
   project's CLAUDE.md names — a documentation table where one exists,
   otherwise the documents it names in prose; when it names none, README.md
   and CLAUDE.md themselves.
