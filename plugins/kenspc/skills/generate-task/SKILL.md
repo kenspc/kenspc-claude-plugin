@@ -212,7 +212,10 @@ conventions (CLAUDE.md or `docs/tasks/` default); reference format at
   ends with the Doc-sync task, written from the Doc-sync Task template
   (Phase 1).
 - Dependency note is included at the top of the document if any task has a
-  `Depends on` annotation.
+  `Depends on` annotation. A phase-specific document for a later phase
+  carries a Dependency note naming the earlier phases' task documents it
+  assumes are already implemented, whether or not any task has a
+  `Depends on` line, since `Depends on` cannot point outside the document.
 
 **Presentation format** (Phase 2 Step 1):
 

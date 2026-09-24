@@ -90,8 +90,8 @@ one).
 2. Execution Order
    - Are dependencies between tasks correct? Does any task assume output
      from a later task?
-   - For tasks with a Depends on line: is every hard dependency annotated,
-     and is each annotation accurate?
+   - For tasks with a Depends on line: is every hard dependency on a task in
+     the same task document annotated, and is each annotation accurate?
    - Is granularity roughly uniform? Flag if one task touches 10+ files
      while another touches only 1 — this suggests uneven decomposition. The
      Doc-sync task is exempt and is not split: it is one task by design,
