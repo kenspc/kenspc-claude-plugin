@@ -172,7 +172,10 @@ reason to split). Add the Doc-sync line to the Phase 2 presentation format and
 the task to the Phase 2 DONE list. Add the Doc-sync body template from Step
 2.1: `**Status:** TODO`, `Depends on: Task 1-<N-1>`, the document list with
 per-document change, the promotion instruction, and the three acceptance
-criteria.
+criteria. The template also states the rule from the plan's Clarifications
+(Q1 / C1): for a document an earlier task in the same document already edits,
+the entry says so, and the Doc-sync task verifies that document against the
+implementation instead of editing it again.
 
 **Files to modify:**
 - `plugins/kenspc/skills/generate-task/SKILL.md`
@@ -197,6 +200,9 @@ criteria.
   suggested destination, writing it nowhere; leave a local decision where it
   is; create or modify no document outside the list) and the three Step 2.1
   acceptance criteria.
+- The template states that a document an earlier task already edits is marked
+  as such in its entry and verified against the implementation, not edited
+  again.
 - Fixed strings spelled exactly as in the plan's table: `### Task N: Doc-sync`,
   `Depends on: Task 1-<N-1>` (ASCII hyphen), `Documentation impact`,
   `N/A — <reason>`, `## Decisions needing a home`.
@@ -254,7 +260,7 @@ under Plan-Level Concerns, not fixed in the task document. Modes 1–3 are
 task-level: fix in the task document (generate the task from the
 `generate-task` Doc-sync template, referenced with a `${CLAUDE_PLUGIN_ROOT}`
 path; move it; complete the range; align the list) and commit. Also, per
-ruling M4 as settled with the spec author, reword Angle 2's "For cross-phase
+ruling M4 as the plan's Clarifications (Q3) record, reword Angle 2's "For cross-phase
 tasks: are dependency annotations present and accurate?" to:
 "For tasks with a Depends on line: is every hard dependency annotated, and is
 each annotation accurate?" — wording only, no mention of cross-phase.
@@ -374,8 +380,10 @@ Plan Step 4.1 (rulings M6, M7). Add Angle 3, "Consistency with CLAUDE.md",
 after Execution Order. Passing statement: every task can be executed as
 written without departing from a rule in a loaded CLAUDE.md (project or user
 level), and no task text the implementer will carry into a code artifact or a
-durable document is in a language other than that artifact's own. Named
-failure modes: (1) written-rule departure — fix the task to follow the rule;
+durable document is in a language other than that artifact's own. A
+preference no loaded CLAUDE.md states is not a finding — this sentence bounds
+the passing statement and is not a fourth failure mode (plan Clarifications,
+C3). Named failure modes: (1) written-rule departure — fix the task to follow the rule;
 (2) language carry-over, anchored to `task-implementer`'s CODE ARTIFACTS
 LANGUAGE rule and to the target document's language — fix by rewriting those
 fragments; (3) undecided git workflow step (a branch, pull-request, rebase, or
@@ -386,7 +394,7 @@ no CLAUDE.md contradicts is not a finding. ISSUE CLASSIFICATION gains the dual
 case (a plan-level cause with a task-level symptom is fixed in the task
 document and also recorded as a Plan-Level Concern) with its Why. "Review both
 angles in order …" becomes three angles, and the OUTPUT FORMAT example table
-shows three rows. As settled with the spec author, the Schema E example table
+shows three rows. Per the plan's Clarifications (Q5), the Schema E example table
 in `generate-task` Phase 3 Step 2 (the table the orchestrator renders from)
 also becomes three rows; the four-row tables in `generate-plan` and
 `generate-guide` stay, since their reviewers have four angles.
@@ -398,6 +406,8 @@ also becomes three rows; the four-row tables in `generate-plan` and
 **Acceptance criteria:**
 - Angle 3 exists after Angle 2 in rubric form with exactly the three failure
   modes above, including the "not a finding" exception in mode 3.
+- Angle 3 carries, outside the three numbered modes, the sentence that a
+  preference no loaded CLAUDE.md states is not a finding.
 - ISSUE CLASSIFICATION states the dual case with its Why (task-implement runs
   unattended and cannot ask; the fix keeps the run inside the written rules,
   the concern hands the decision back to the user).
@@ -415,8 +425,10 @@ also becomes three rows; the four-row tables in `generate-plan` and
 
 **Status:** TODO
 
-Plan Step 4.2 (ruling M6). In Phase 2, add a document-language rule: the task
-document is written in the plan document's language; text that the
+Plan Step 4.2 (ruling M6; plan Clarifications, C2). In Phase 2, add a
+document-language rule: the task document is written in the plan document's
+language unless the user explicitly requests otherwise (the same exception
+generate-plan's language rule has); text that the
 implementer will carry into code artifacts follows `task-implementer`'s CODE
 ARTIFACTS LANGUAGE rule. No default language of the plugin's own. Why: the
 implementer copies task text into commits, comments, and documents; and the
@@ -430,7 +442,8 @@ this rule, so `task-document-reviewer.md` is not edited here.
 - `plugins/kenspc/skills/generate-task/SKILL.md`
 
 **Acceptance criteria:**
-- Phase 2 contains the rule with its Why and names no default language.
+- Phase 2 contains the rule, including the "unless the user explicitly
+  requests otherwise" exception, with its Why, and names no default language.
 - No other part of the file, and no other file, changed in this commit.
 - `bash scripts/check-all.sh` exits 0.
 
@@ -687,3 +700,9 @@ the list.
   yet append a Doc-sync task; as the plan's Testing Strategy asks, Task 16 was
   added by hand from the Step 2.1 template, which makes it the template's first
   manual test.
+- Observation for the batch record (no action for any task): the pre-batch
+  `task-document-reviewer` drafted Task 16 on its own during the review, after
+  reading the plan's dogfood note, and committed it inside an Angle 1 review
+  commit. The draft was checked against the Step 2.1 template, kept unchanged,
+  and moved into a separate commit. It is early evidence for ruling D2: template
+  text that reaches an artifact already steers an agent's behaviour.
