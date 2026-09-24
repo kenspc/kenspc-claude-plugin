@@ -45,6 +45,29 @@ work (former items 2 and 9) have shipped.
    source probe out of a linter's pattern. Today `regression-verifier` runs
    build and lint unmodified and names the scratch files in the FAIL;
    keeping them out of those tools is open.
+9. Scratch convention follow-ups. The standalone review of the last
+   scratch-probe commits (`f42bd21`, `99574bb`, `979688e`) found no HIGH
+   issue and, under that plan's stop rule, deferred 14 findings, 9 MEDIUM
+   and 5 LOW, with no further round. The rows and each one's suggested
+   follow-up are in `.kenspc/runs/20260924-231237-changes/schema-b.md`
+   (git-ignored; only in the maintainer's macOS checkout). MEDIUM:
+   - a control mutant that keeps passing has no stated outcome, and which
+     module it must break is not stated;
+   - a mutation check reported as not made has no place in Schema A or B,
+     and regression-verifier's "not mutation-checked" none in Schema C;
+   - when the test row is FAIL, the Next steps delete bullet cannot tell
+     which collected `.kenspc/` files passed;
+   - a reviewer re-dispatched into the same run reuses scratch attempt
+     `1/`;
+   - the release target's tests need not depend on its setup file or
+     `globals`, so the baseline sub-check can pass vacuously;
+   - no release sub-check tests the numbered-attempt layout;
+   - CLAUDE.md's `--plugin-dir` editing rule has no CHANGELOG line.
+   LOW: CLAUDE.md's run-dir paragraph omits the numbered attempts and the
+   rename condition; smoke rows 6 and 7 omit the delete bullet; the baseline
+   sub-check is silent on a retried baseline; the CHANGELOG's "check 4" can
+   read as Schema C row 4; the worker agents' runner config sits outside
+   the attempt directory.
 
 ## Planned batches
 
