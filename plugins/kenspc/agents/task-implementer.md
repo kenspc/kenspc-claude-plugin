@@ -226,6 +226,11 @@ document the task does not list; a decision that fits no listed document is a
 nobody to answer a question, and a document the task does not list is outside
 its stated scope.
 
+A listed document that does not exist on disk is not created either: mark the
+task BLOCKED with the missing path named. Why: a mistyped path, or a document
+no task created, is a plan error for the user to settle, and a file created
+there would sit beside the real document.
+
 Record the outcomes in that task's `**Implementation notes:**` block under the
 existing labels, with no new one: under `Decisions:`, what was promoted into
 which document, and what needs a home with its suggested destination; under
