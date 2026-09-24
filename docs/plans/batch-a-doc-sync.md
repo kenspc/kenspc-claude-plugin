@@ -556,6 +556,20 @@ documents in prose today (Step 6.1 adds the table).
 | An anchor string appears in a guarded file for an unrelated reason and masks a rename | Low | Presence-only by design, scoped to the eight files that carry the anchors; the self-test proves the negative path. |
 | Angle 3 over-reports style as "written-rule departure" | Low | The passing statement requires a rule in a loaded CLAUDE.md; the v3.5 output policy already says an unanchored preference is not a finding. |
 
+## Clarifications during implementation (2026-09-24)
+
+Settled between the implementing session and the spec author after the task-document review; each entry binds like the rulings above.
+
+- Q1 / C1 — Overlap between explicit documentation steps and the Doc-sync task. Phase 6 tasks make the edits this plan prescribes; the Doc-sync task verifies each listed document against what Tasks 1..N-1 implemented and promotes their decisions. The Step 2.1 template states the general rule: for a document an earlier task in the same document already edits, the entry says so, and the Doc-sync task verifies it against the implementation instead of editing it again.
+- Q2 — The Doc-sync task's document list carries the eight affected documents only. A per-entry "N/A for this document" note in Documentation impact records a document that was considered and is unaffected; it is not a list entry.
+- Q3 — Ruling M4 also generalises the Angle 2 bullet "For cross-phase tasks: are dependency annotations present and accurate?" to every task with a `Depends on` line (Step 2.3, wording only).
+- Q4 — The task example gains a Dependency note in its Context section, as generate-task's Phase 2 DONE requires once a task carries `Depends on` (Step 2.2).
+- Q5 — generate-task's Phase 3 Step 2 Schema E example table shows three rows, matching the reviewer's three angles (Step 4.1 scope); the four-row tables in generate-plan and generate-guide stay.
+- Q6 — "List-only fallback" has two meanings and no third: within a Doc-sync run, a decision that fits no listed document is listed under Decisions needing a home and written nowhere; in a run without a Doc-sync task, the roll-up classifies each DONE task's decision as local or needs a home by the D3 criterion and writes nothing — no promoted outcome exists there.
+- C2 — Step 4.2's document-language rule is a generation-side rule. Angle 3 mode 2 does not cite it, because the reviewer cannot see whether the user asked for another language; its anchors stay CODE ARTIFACTS LANGUAGE and the target document's own language. The rule mirrors generate-plan's exception: the plan document's language unless the user explicitly requests otherwise. Step 4.2's Done-when reads accordingly.
+- C3 — Angle 3 carries its own not-a-finding sentence: a preference no loaded CLAUDE.md states is not a finding. It bounds the passing statement and is not a fourth failure mode; "exactly three modes" holds.
+- The guard task depends on every Phase 1–4 task (`Depends on: Task 1-10`): Phase 5 needs those phases complete, not merely the anchors present.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
