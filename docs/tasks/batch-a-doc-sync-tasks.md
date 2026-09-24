@@ -753,7 +753,20 @@ document and asks nothing).
 
 ### Task 14: Add the 3.6.0 CHANGELOG entry and update the roadmap
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the M7 stance is its own `### Branching stance` subsection after
+  Changed, since it states a position rather than a change. The intro
+  paragraph says the other 3.6.0 roadmap items extend this entry and that the
+  date is filled at release, so the `unreleased` heading reads as intended.
+  The entry says "No CONTEXT key changes and no command-surface changes",
+  following the 3.5.1 entry's convention.
+- Changes/tradeoffs: the Added bullets also summarise each check's failure
+  modes (plan reviewer, task reviewer Angle 1) and the C1 verify-not-re-edit
+  rule, beyond the item names the task lists, so the entry stands alone. The
+  roadmap edit removes only the batch A bullet; "In this order." still reads
+  correctly with B then C.
 
 Depends on: Task 1-11
 

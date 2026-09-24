@@ -29,10 +29,6 @@ the CHANGELOG records it from then on.
 
 In this order. The Workbench provides each batch's spec when work starts.
 
-- **A — doc-sync task.** Plans gain a Documentation impact element;
-  generate-task opens a doc-sync task from it; decisions that surface during
-  implementation are promoted through that task; task-document-reviewer
-  checks consistency with CLAUDE.md.
 - **B — `diagnose-bug` skill and `/kenspc-diagnose`.** Reproduce, diagnose,
   then write `docs/tasks/{name}.md` for task-implement by default; a fix that
   touches a contract, a schema, a new dependency, or config escalates to a

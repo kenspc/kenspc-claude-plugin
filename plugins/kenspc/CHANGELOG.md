@@ -9,6 +9,89 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.6.0 — unreleased
+
+Batch A: a documentation path from the plan to the implementation run. Plans
+state which durable documents they make stale, the task document ends with a
+Doc-sync task that brings those documents up to date, and decisions made
+during implementation are promoted into them or reported for the user to
+place. The task-document reviewer gains a third angle, Consistency with
+CLAUDE.md. No CONTEXT key changes and no command-surface changes. The other
+3.6.0 items in `docs/roadmap.md` extend this entry as they land; the date is
+filled at release.
+
+### Added
+
+- **Documentation impact.** The one plan element generate-plan always
+  writes (`## Documentation impact`): the durable documents the plan's steps
+  make stale — per document the path, the section where known, what must
+  change, and the causing step — or the single line `N/A — <reason>`. The
+  durable documents are the ones the project's CLAUDE.md names (a
+  documentation table where one exists, otherwise the documents it names in
+  prose), or README.md and CLAUDE.md when it names none.
+  `plan-document-reviewer`'s Completeness angle checks the element: absent;
+  N/A without a reason, or with one the steps contradict; a document the
+  steps modify is missing; a listed document no step changes. The plan
+  example shows the section.
+- **Doc-sync task.** When the plan's element names documents, generate-task
+  ends every task document, phase-specific ones included, with
+  `### Task N: Doc-sync` and `Depends on: Task 1-<N-1>`, written from a fixed
+  template that lists the documents and carries the promotion instruction in
+  the task's own text. A document an earlier task already edits is verified
+  against the implementation rather than edited again. The task is exempt
+  from the sizing table. `task-document-reviewer`'s Completeness angle checks
+  that it exists, is last, covers every other task, and lists the element's
+  documents; a plan without the element is a Plan-Level Concern. The task
+  example shows it as Task 6.
+- **Decisions needing a home.** task-implementer's DECISION PROMOTION rules
+  give each earlier decision a Doc-sync task reads one of three outcomes:
+  promoted (written into a listed document, in that document's language),
+  needs a home (no listed document fits; reported with a suggested
+  destination and written nowhere), or local, the default. Schema D gains an
+  always-rendered `## Decisions needing a home` section (`none` when empty),
+  and task-implement's Schema G turns each entry into a Next steps bullet,
+  plus one bullet when the Doc-sync task is BLOCKED.
+- **Angle 3, Consistency with CLAUDE.md,** in `task-document-reviewer`:
+  written-rule departures, task text carried into a code artifact or a
+  document in a language other than that artifact's own, and undecided git
+  workflow steps. A plan-level cause with a task-level symptom is fixed in
+  the task document and also recorded as a Plan-Level Concern.
+- `scripts/check-doc-sync-anchors.sh` with `--self-test`:
+  `Documentation impact`, `Doc-sync`, and `Decisions needing a home` stay
+  present in the eight files that write, check, or render them.
+
+### Changed
+
+- **Dependency gate.** task-implementer reads each task's `Depends on` line
+  and marks the task BLOCKED with `depends on Task N (<status>)` when a named
+  task is not DONE — BLOCKED in this run or an earlier one, or not yet
+  processed. This changes behaviour for every task with a `Depends on` line,
+  not only the Doc-sync task: a task that used to be attempted after a
+  blocked dependency is now blocked.
+- **`Depends on` semantics.** The annotation covers any hard ordering
+  dependency, within or across phases (a single task, an ASCII-hyphen range
+  such as `Task 1-5`, or a comma-separated list), not only cross-phase ones.
+  The note at the top of a task document is now the "Dependency note", and
+  `task-document-reviewer`'s Execution Order angle checks every task with a
+  `Depends on` line.
+- **Task-document language.** generate-task writes the task document in the
+  plan document's language unless the user asks otherwise; text carried into
+  code artifacts follows task-implementer's CODE ARTIFACTS LANGUAGE rule. The
+  plugin sets no default language of its own.
+- **Task-document reviewer angles: 2 → 3.** generate-task's review table
+  shows three rows.
+- **Guard counts:** `guards run: 10`, `self-tests run: 9`.
+
+### Branching stance
+
+The plugin takes no side on branching. The default is unchanged: no branch,
+commits on the current branch. Whether to branch is decided at plan time,
+when the user approves the plan. `task-document-reviewer` fixes a branch,
+pull-request, rebase, or tag step the plan did not prescribe, or that a
+loaded CLAUDE.md contradicts, back to the default and records a Plan-Level
+Concern naming both sources; `task-implementer` follows the task document as
+written and asks nothing.
+
 ## 3.5.1 — 2026-09-24
 
 Fixes from the v3.5.0 release smoke test (macOS headless; Windows TUI and
