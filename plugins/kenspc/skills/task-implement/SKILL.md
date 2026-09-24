@@ -131,13 +131,7 @@ interface. Proceed?
 Wait for explicit confirmation before proceeding. If the user declines or
 wants to adjust scope, follow their instructions instead.
 
-### Step 4: Render Planned Dispatch table and dispatch the implementer
-
-Render this Planned Dispatch table:
-
-| # | Agent | Role |
-|---|-------|------|
-| 1 | task-implementer | Implements all incomplete tasks in batch |
+### Step 4: Dispatch the implementer
 
 Tell the user: "Starting task implementation. Dispatching implement agent
 now."
@@ -146,6 +140,9 @@ Then dispatch a subagent using the Agent tool:
 - Agent name: `task-implementer`
 - description: "Implement tasks from document"
 - prompt: the CONTEXT block from Step 2
+- run_in_background: false — the next step reads this agent's result in the
+  same turn. A background call returns at once, and a headless session stops
+  the agent when it exits.
 
 The subagent implements all incomplete tasks within its own context and
 returns a Schema D summary. No state file is written by the orchestrator.
@@ -173,6 +170,12 @@ Implementation phase complete.
 - Blocked: N tasks (Task Z: [brief reason], ...)
 Proceeding to code review.
 ```
+
+Keep the first line, `Implementation phase complete.`, and the last line,
+`Proceeding to code review.`, in English exactly as written, whatever
+language the conversation uses; the lines between follow the conversation
+language. Why: the release checklist finds this boundary by grepping the
+trace for those two lines, the same way Schema labels stay fixed.
 
 If every task in the Schema D table is BLOCKED, replace the last line with
 "All tasks blocked. Skipping code review." and skip directly to Phase 2
@@ -229,13 +232,23 @@ has lost rows on the way to the verifier.
   `git rev-parse --show-toplevel`. Keep it absolute and forward-slashed as git
   prints it (`C:/...` on Windows); the file tools need absolute paths. The
   directory need not exist — the first report written creates it.
-- Ignore check: run `git -C <root> check-ignore -q .kenspc/`. The trailing
-  slash matters: without it, a `.kenspc/` rule does not match a directory
-  that does not exist yet.
+- Scratch space: probe files, copies, and other temporary files go under
+  `RUN_DIR/scratch/` — each reviewer in its own `scratch/angle-<n>/`,
+  code-fixer and regression-verifier in `scratch/` itself. It is ignored
+  along with the run directory and needs no cleanup. Why: deleting temporary
+  files with `rm -rf` can be denied by the user's permission rules, and a
+  verifier that could not clean up has fallen back to judging fixes by
+  reading code.
+- Ignore check: run `git -C <root> check-ignore -q .kenspc/runs/probe`. The
+  probe path need not exist; a `.kenspc/` rule matches any path under the
+  directory. Asking about `.kenspc/` itself is not reliable: a blank line in
+  a CRLF `.gitignore` parses as an empty pattern, and git then reports the
+  directory as ignored when nothing ignores it.
   - Exit 0 — already ignored; change nothing.
-  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore` (create the
-    file if needed; add a newline first if its last line has none), then run
-    `git -C <root> add .gitignore` and
+  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore`, ending it the
+    way the file's existing lines end (CRLF when they end in CRLF); create
+    the file if needed, and add a line break first if its last line has
+    none. Then run `git -C <root> add .gitignore` and
     `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
     conventional commit, `chore: ignore kenspc run directory` by default;
     when the project's CLAUDE.md sets commit conventions (a scope list, a
@@ -287,18 +300,9 @@ agents (requirements / edge-case / quality / bug / test) each have a
 "CUSTOM INSTRUCTIONS" section in their body that is byte-identity
 locked across all 5 — that section is not edited here.
 
-### Step 2: Render Planned Dispatch table
+### Step 2: Dispatch the review agents
 
-Render this 5-row Planned Dispatch table so the user sees the planned
-dispatch:
-
-| # | Agent | Role |
-|---|-------|------|
-| 1 | requirements-reviewer | Reviews completeness against requirements |
-| 2 | edge-case-reviewer | Reviews edge cases and failure modes |
-| 3 | quality-reviewer | Reviews adherence to project conventions and existing patterns |
-| 4 | bug-reviewer | Reviews for bugs and correctness defects |
-| 5 | test-reviewer | Reviews test coverage and quality |
+Tell the user: "Dispatching 5 review agents now."
 
 <!-- canonical:dispatch:start -->
 ## Code Review Phase (unconditional)
@@ -318,10 +322,15 @@ The orchestrator's job in this phase is to dispatch and aggregate — not to
 pre-filter findings.
 
 Dispatch **5 subagents in a single message** using the Agent tool, one for
-each review angle. Each subagent is read-only with respect to the working
-tree and writes only its own report under `RUN_DIR` — it analyzes code and
-produces a report without modifying project files. Pass the CONTEXT block
-from Step 2 as the dispatch prompt for every agent.
+each review angle, every call with `run_in_background: false`. Foreground
+calls sent in one message still run in parallel, and the next step reads all
+five results in this turn; a background call returns at once, and a headless
+session stops the agent when it exits.
+Each reviewer is read-only on the working tree and writes only under
+`RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
+files under `RUN_DIR/scratch/angle-<n>/`.
+Pass the CONTEXT block constructed above as the dispatch prompt for every
+agent.
 
 - Agent name: `requirements-reviewer`, description: "Review: requirements"
 - Agent name: `edge-case-reviewer`, description: "Review: edge cases"
@@ -343,7 +352,8 @@ missing.
 Aggregate the Schema A Findings tables in the 5 replies into a Schema A
 roll-up table (HIGH / MEDIUM / LOW per angle and total).
 
-Dispatch `code-fixer` with the CONTEXT block from Step 1, unchanged —
+Dispatch `code-fixer` in the foreground (`run_in_background: false`, as
+with the reviewers) with the CONTEXT block from Step 1, unchanged —
 code-fixer reads the 5 reports from RUN_DIR itself. The fix agent
 deduplicates findings, applies fixes, commits, and writes its full Schema B
 to `RUN_DIR/schema-b.md`: a `# / Source / short_label / Severity / File:Line
@@ -360,7 +370,8 @@ and MEDIUM rows with their Deferred Issues paragraphs, and the path of
 schema-b.md. Render that reply verbatim; the LOW rows and their prose stay in
 the file.
 
-Then dispatch `regression-verifier` with the same CONTEXT block — it reads
+Then dispatch `regression-verifier`, also in the foreground, with the same
+CONTEXT block — it reads
 the 5 reports and schema-b.md from RUN_DIR itself. The agent verifies that
 every issue ID is accounted for, that fixes are real, and that build / test /
 lint pass. It returns Schema C (`# / Check / Result / Detail` table plus per-

@@ -33,6 +33,15 @@ PREREQUISITES
 2. Read the guide document at the path given by CONTEXT GUIDE_PATH in full.
 3. Scan the project structure and key config files (use the path given by
    CONTEXT PROJECT_PATH).
+4. If the guide document is not yet tracked by git
+   (`git ls-files --error-unmatch <GUIDE_PATH>` exits non-zero), commit it
+   unchanged before any review fix: stage and commit only that file, with
+   the message `docs: add guide <file name without extension>` adapted to
+   the commit conventions in the project's CLAUDE.md. If a commit hook
+   rejects it, stop and report the error. Why: each angle's fix then shows
+   as its own diff against the document as written; without that baseline
+   the first review commit carries the whole document and hides what the
+   review changed.
 
 REVIEW ANGLES
 Review all four angles in order (each angle builds on fixes from the previous

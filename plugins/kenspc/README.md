@@ -76,11 +76,13 @@ Agents marked "Standalone: No" are orchestration-only — their description star
 with `INTERNAL:` and their body refuses on missing CONTEXT. Invoke them through
 the parent slash command instead.
 
-The five code reviewers are read-only on the working tree. Invoked standalone,
-they reply inline and write nothing. Dispatched by `/kenspc-task-review` or
-`/kenspc-task-implement`, which pass a run directory (`RUN_DIR`), each writes
-exactly one file — its own report — into that directory. The Write tool they
-carry is for that file; they already had Bash. Standalone output keeps the
+Each reviewer is read-only on the working tree and writes only under
+`RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
+files under `RUN_DIR/scratch/angle-<n>/`.
+Invoked standalone, without a run directory, they reply inline and write
+nothing. Dispatched by `/kenspc-task-review` or `/kenspc-task-implement`,
+which pass `RUN_DIR`, they write only there. The Write tool they carry is for
+those files; they already had Bash. Standalone output keeps the
 v3.4.3 shape (Findings table, Issues table, closing line); the one format
 difference is that issue IDs carry the angle's letter (`B1`, not `1`).
 
@@ -222,16 +224,22 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 .kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
     angle-1.md … angle-5.md    # full report from each review angle
     schema-b.md                # code-fixer's full accountability list
+    scratch/                   # probe and temporary files; angle-<n>/ per reviewer
 ```
 
 - The final report shows code-fixer's statistics line, the per-angle results,
   and the HIGH and MEDIUM rows, plus the full path of `schema-b.md`. The LOW
   rows and the five full reports stay in the directory.
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
-  `.kenspc/` line to `.gitignore` and commits that file on its own
-  (`chore: ignore kenspc run directory`, adapted to the commit conventions in
-  your CLAUDE.md). If a commit hook rejects it, the run stops and reports the
-  error; it does not retry or bypass the hook.
+  `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
+  commits that file on its own (`chore: ignore kenspc run directory`, adapted
+  to the commit conventions in your CLAUDE.md). The check asks git about a
+  path inside the directory, so a CRLF `.gitignore` with blank lines is read
+  correctly. If a commit hook rejects the commit, the run stops and reports
+  the error; it does not retry or bypass the hook.
+- The reviewers, `code-fixer`, and `regression-verifier` keep probe files and
+  other temporary files in the run's `scratch/` subdirectory (each reviewer
+  in its own `scratch/angle-<n>/`), so none of them needs to delete anything.
 - Runs accumulate: nothing is deleted automatically. Remove old run
   directories when you no longer need them.
 - Permissions: each reviewer writes its report with the Write tool. In the
@@ -240,6 +248,23 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   sits at the repository root, so start the session there: when the
   session's working directory is a subdirectory, the run directory lies
   outside it and even `acceptEdits` asks.
+
+## Known behavior
+
+- **Review scope without a task document.** With `/kenspc-task-review` and no
+  task document (`REVIEW_SCOPE=changes`), each of the five reviewers works
+  out the change set on its own from `git status`, `git diff`, and recent
+  commits, so the angles can review slightly different sets. A later minor
+  release will have the orchestrator compute the set once and pass it to all
+  five.
+- **Branches.** The plugin does not create branches. Commits follow the
+  branching rules in your project's CLAUDE.md and otherwise land on the
+  current branch.
+- **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
+  `/kenspc-task-implement` without a review to
+  `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
+  headless session runs several turns, or when a session ends at a
+  confirmation prompt.
 
 ## Requirements
 

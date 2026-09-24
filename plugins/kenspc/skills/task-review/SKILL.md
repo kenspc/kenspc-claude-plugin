@@ -76,13 +76,23 @@ has lost rows on the way to the verifier.
   `git rev-parse --show-toplevel`. Keep it absolute and forward-slashed as git
   prints it (`C:/...` on Windows); the file tools need absolute paths. The
   directory need not exist — the first report written creates it.
-- Ignore check: run `git -C <root> check-ignore -q .kenspc/`. The trailing
-  slash matters: without it, a `.kenspc/` rule does not match a directory
-  that does not exist yet.
+- Scratch space: probe files, copies, and other temporary files go under
+  `RUN_DIR/scratch/` — each reviewer in its own `scratch/angle-<n>/`,
+  code-fixer and regression-verifier in `scratch/` itself. It is ignored
+  along with the run directory and needs no cleanup. Why: deleting temporary
+  files with `rm -rf` can be denied by the user's permission rules, and a
+  verifier that could not clean up has fallen back to judging fixes by
+  reading code.
+- Ignore check: run `git -C <root> check-ignore -q .kenspc/runs/probe`. The
+  probe path need not exist; a `.kenspc/` rule matches any path under the
+  directory. Asking about `.kenspc/` itself is not reliable: a blank line in
+  a CRLF `.gitignore` parses as an empty pattern, and git then reports the
+  directory as ignored when nothing ignores it.
   - Exit 0 — already ignored; change nothing.
-  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore` (create the
-    file if needed; add a newline first if its last line has none), then run
-    `git -C <root> add .gitignore` and
+  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore`, ending it the
+    way the file's existing lines end (CRLF when they end in CRLF); create
+    the file if needed, and add a line break first if its last line has
+    none. Then run `git -C <root> add .gitignore` and
     `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
     conventional commit, `chore: ignore kenspc run directory` by default;
     when the project's CLAUDE.md sets commit conventions (a scope list, a
@@ -132,18 +142,9 @@ agents (requirements / edge-case / quality / bug / test) each have a
 "CUSTOM INSTRUCTIONS" section in their body that is byte-identity
 locked across all 5 — that section is not edited here.
 
-### Step 3: Render Planned Dispatch table and dispatch parallel review agents
+### Step 3: Dispatch parallel review agents
 
-Render this 5-row Planned Dispatch table so the user sees the planned
-dispatch:
-
-| # | Agent | Role |
-|---|-------|------|
-| 1 | requirements-reviewer | Reviews completeness against requirements |
-| 2 | edge-case-reviewer | Reviews edge cases and failure modes |
-| 3 | quality-reviewer | Reviews adherence to project conventions and existing patterns |
-| 4 | bug-reviewer | Reviews for bugs and correctness defects |
-| 5 | test-reviewer | Reviews test coverage and quality |
+Tell the user: "Dispatching 5 review agents now."
 
 <!-- canonical:dispatch:start -->
 ## Code Review Phase (unconditional)
@@ -163,10 +164,15 @@ The orchestrator's job in this phase is to dispatch and aggregate — not to
 pre-filter findings.
 
 Dispatch **5 subagents in a single message** using the Agent tool, one for
-each review angle. Each subagent is read-only with respect to the working
-tree and writes only its own report under `RUN_DIR` — it analyzes code and
-produces a report without modifying project files. Pass the CONTEXT block
-from Step 2 as the dispatch prompt for every agent.
+each review angle, every call with `run_in_background: false`. Foreground
+calls sent in one message still run in parallel, and the next step reads all
+five results in this turn; a background call returns at once, and a headless
+session stops the agent when it exits.
+Each reviewer is read-only on the working tree and writes only under
+`RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
+files under `RUN_DIR/scratch/angle-<n>/`.
+Pass the CONTEXT block constructed above as the dispatch prompt for every
+agent.
 
 - Agent name: `requirements-reviewer`, description: "Review: requirements"
 - Agent name: `edge-case-reviewer`, description: "Review: edge cases"
@@ -205,6 +211,9 @@ Dispatch a single subagent:
 - description: "Fix reported issues"
 - prompt: the CONTEXT block from Step 2, unchanged — code-fixer reads the 5
   reports from RUN_DIR itself.
+- run_in_background: false — the next step reads this agent's result in the
+  same turn. A background call returns at once, and a headless session stops
+  the agent when it exits.
 
 The fix agent deduplicates overlapping findings, applies fixes, commits, and
 writes its full Schema B accountability list to `RUN_DIR/schema-b.md`: a
@@ -228,6 +237,9 @@ After the fix agent returns, dispatch a single subagent:
 - description: "Regression verification"
 - prompt: the CONTEXT block from Step 2, unchanged — regression-verifier
   reads the 5 reports and schema-b.md from RUN_DIR itself.
+- run_in_background: false — the next step reads this agent's result in the
+  same turn. A background call returns at once, and a headless session stops
+  the agent when it exits.
 
 The regression agent verifies:
 - every issue ID from the 5 reports is accounted for in schema-b.md, and the

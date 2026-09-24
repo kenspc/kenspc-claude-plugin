@@ -10,7 +10,7 @@ A Claude Code plugin marketplace containing structured software development work
 
 - Root `.claude-plugin/marketplace.json` — plugin registry pointing to plugin directories
 - Each plugin lives in `plugins/<name>/` with its own `.claude-plugin/plugin.json`, `README.md`, `LICENSE`, and component directories (`agents/`, `skills/`, `commands/`, `hooks/`, `references/`, `shared/`)
-- The `description` field in `.claude-plugin/marketplace.json` is the registry-list summary (one short sentence). The `description` field in `plugins/<name>/.claude-plugin/plugin.json` is the full plugin metadata loaded after the user selects the plugin. The two are deliberately layered — the marketplace summary is typically the first sentence of the full description. Do not sync them blindly.
+- The `description` field of each entry in `.claude-plugin/marketplace.json`'s `plugins` list is the registry-list summary (one short sentence). The `description` field in `plugins/<name>/.claude-plugin/plugin.json` is the full plugin metadata loaded after the user selects the plugin. The two are deliberately layered — the marketplace summary is typically the first sentence of the full description. Do not sync them blindly. The marketplace manifest also has its own top-level `description`, describing the marketplace as a whole (added in v3.5.1; `claude plugin validate --strict` warns without it).
 
 ### Plugin Directory Layout
 
@@ -135,12 +135,19 @@ Since v3.5 the agents exchange reports through a per-run directory,
 `<repo root>/.kenspc/runs/<run-id>/`, passed as the `RUN_DIR` CONTEXT key.
 The orchestrating skill prepares it and, when `.kenspc/` is not yet
 git-ignored, makes a one-time `.gitignore` commit. Each reviewer writes only
-its own `angle-<n>.md` and `code-fixer` only `schema-b.md`, so parallel
-writers never share a file, and the main session relays paths rather than
+its own `angle-<n>.md` and `scratch/angle-<n>/`, and `code-fixer` only
+`schema-b.md` and `scratch/`, so parallel writers never share a file, and the
+main session relays paths rather than
 report text. Issue IDs (`R` / `E` / `Q` / `B` / `T` plus a sequence number)
 and code-fixer's Source column let `regression-verifier` settle completeness
 by comparing ID sets. Subagents cannot spawn other subagents; orchestration
 stays at the skill (main session) level.
+
+Every Agent dispatch in the skills sets `run_in_background: false`
+(v3.5.1): each skill reads the agent's result in the same turn, while a
+background call returns at once and is stopped when a headless session
+exits. Foreground calls sent in one message still run in parallel, which is
+how the five reviewers are dispatched.
 
 As of v3.5, effort follows the session by default: a SKILL.md or agent
 .md without an `effort:` field inherits the session's effort level (per
@@ -192,9 +199,11 @@ fixed, so one path is the only value the orchestrator has to get right.
 
 - **Standalone-safe**: 5 review-angle agents (requirements, edge-case, quality,
   bug, test) can be invoked directly. Description gates auto-delegation;
-  body refuses without CONTEXT. They are read-only on the working tree; the
-  one file they write is their own report, and only when CONTEXT supplies
-  `RUN_DIR`.
+  body refuses without CONTEXT.
+  Each reviewer is read-only on the working tree and writes only under
+  `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
+  files under `RUN_DIR/scratch/angle-<n>/`.
+  Without `RUN_DIR` (standalone) they write no file.
 - **Orchestration-only**: 6 worker/document-reviewer agents (code-fixer,
   regression-verifier, task-implementer, plan-document-reviewer,
   guide-document-reviewer, task-document-reviewer) require structured
@@ -247,6 +256,11 @@ Use `/reload-plugins` inside a session to pick up changes without restarting.
 
 ### Validate plugin structure
 ```bash
+# The plugin loader's own validation (marketplace manifest; plugin manifest,
+# skills, agents, commands)
+claude plugin validate --strict .
+claude plugin validate --strict ./plugins/kenspc
+
 # Verify all SKILL.md files have required frontmatter
 grep -l "^name:" plugins/kenspc/skills/*/SKILL.md
 
@@ -308,7 +322,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   model and effort; a model name in a prompt pins it to one generation.
   CHANGELOG and `docs/` are out of scope.
 - `check-run-contract.sh` — guards the run-directory contract: the
-  `canonical:run-dir` block is byte-identical in the two SKILLs, the
+  `canonical:run-dir` block is byte-identical in the two SKILLs; its
+  `git check-ignore` probe answers correctly against a CRLF `.gitignore`
+  holding a blank line (the v3.5.0 Windows failure), with global git config
+  masked; the
   `canonical:stats-line` template is byte-identical in the two SKILLs and
   `code-fixer.md`, and the worked Schema B example in `code-fixer.md`
   recounts — its Per-angle Results table and statistics line agree with its

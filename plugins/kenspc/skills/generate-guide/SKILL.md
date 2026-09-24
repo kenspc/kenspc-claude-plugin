@@ -153,16 +153,7 @@ consolidated review summary.
 
 **Inputs**: path of the guide just written; PROJECT_PATH.
 
-### Step 1: Render Planned Dispatch table
-
-Before invoking the review agent, render this table so the user sees the
-planned dispatch:
-
-| # | Agent | Role |
-|---|-------|------|
-| 1 | guide-document-reviewer | Reviews project guide document |
-
-### Step 2: Construct CONTEXT block and dispatch
+### Step 1: Construct CONTEXT block and dispatch
 
 Build the structured CONTEXT block:
 
@@ -178,12 +169,15 @@ Then dispatch a subagent using the Agent tool:
 - Agent name: `guide-document-reviewer`
 - description: "Review guide document"
 - prompt: the CONTEXT block above
+- run_in_background: false — the next step reads this agent's result in the
+  same turn. A background call returns at once, and a headless session stops
+  the agent when it exits.
 
 The subagent will execute the entire review (all four angles, in order)
 within its own context and return the summary. Do not write any state
 file.
 
-### Step 3: Render the result table (Schema E) and present the summary
+### Step 2: Render the result table (Schema E) and present the summary
 
 When the subagent returns, render the result table verbatim from the
 agent's output — Schema E:

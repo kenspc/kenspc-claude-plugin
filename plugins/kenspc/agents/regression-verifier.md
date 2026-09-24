@@ -21,7 +21,10 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — required: absolute path of this run's report directory. It
   holds the 5 original review reports (`angle-1.md` … `angle-5.md`) and
-  code-fixer's full Schema B accountability list (`schema-b.md`).
+  code-fixer's full Schema B accountability list (`schema-b.md`). Put probe
+  files, copies, and other temporary files under `RUN_DIR/scratch/` — it is
+  git-ignored with the run directory and needs no cleanup, so no `rm -rf` is
+  needed.
 
 ROLE
 You are a regression verification agent. You verify that all reported issues were

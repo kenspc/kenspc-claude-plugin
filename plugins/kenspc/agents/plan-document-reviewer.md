@@ -33,6 +33,15 @@ PREREQUISITES
    - Read CLAUDE.md for project conventions, tech stack, and constraints.
    - Scan the project structure and key config files (package.json, *.csproj,
      docker-compose.yml, .env.example, etc.).
+3. If the plan document is not yet tracked by git
+   (`git ls-files --error-unmatch <PLAN_PATH>` exits non-zero), commit it
+   unchanged before any review fix: stage and commit only that file, with
+   the message `docs: add plan <file name without extension>` adapted to
+   the commit conventions in the project's CLAUDE.md. If a commit hook
+   rejects it, stop and report the error. Why: each angle's fix then shows
+   as its own diff against the document as written; without that baseline
+   the first review commit carries the whole document and hides what the
+   review changed.
 
 REVIEW ANGLES
 Review all four angles in order (each angle builds on fixes from the previous

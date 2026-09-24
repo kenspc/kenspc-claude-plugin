@@ -9,7 +9,99 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.5.1 — 2026-09-24
+
+Fixes from the v3.5.0 release smoke test (macOS headless; Windows TUI and
+headless). v3.5.0 was not tagged, so this is the first tagged release of the
+G6 reviewer-layer changes. No CONTEXT key changes and no command-surface
+changes.
+
+### Fixed
+
+- **Ignore check misread CRLF `.gitignore` files (Windows).** A blank line in
+  a CRLF `.gitignore` parses as an empty pattern, and
+  `git check-ignore -q .kenspc/` then reported the directory as ignored when
+  nothing ignored it, so the one-time `.gitignore` commit was skipped. The
+  `canonical:run-dir` block now asks about a probe path under the directory,
+  `.kenspc/runs/probe`, which only a real `.kenspc/` rule matches, and the
+  appended line keeps the file's existing line endings.
+- **Background dispatch.** The skills never said whether an Agent call runs
+  in the foreground, and the model's choice varied from run to run. A
+  background call returns at once, so the next step ran without the result,
+  and a headless session stopped the agent when it exited. Every dispatch —
+  task-implementer, the five reviewers, code-fixer, regression-verifier, and
+  the three document reviewers — now sets `run_in_background: false`. The
+  five reviewers still go out in one message and run in parallel.
+- **Transition lines translated.** `Implementation phase complete.` and
+  `Proceeding to code review.` were rendered in the conversation language,
+  which broke the release checklist's grep for the Phase 1 → Phase 2
+  boundary. Both now stay in English; the lines between them follow the
+  conversation language.
+- The canonical dispatch block said "the CONTEXT block from Step 2", which
+  holds only in task-review. It now says "constructed above" (identical in
+  both skills; the block hash changes).
+- **Document reviewers and untracked documents.** When the plan, task, or
+  guide document was not yet tracked, its first review commit contained the
+  whole document, hiding what the review changed. `plan-document-reviewer`,
+  `task-document-reviewer`, and `guide-document-reviewer` now commit an
+  untracked document unchanged first (`docs: add <type> <name>`, adapted to
+  the project's commit conventions), then commit each angle's fixes.
+- `claude plugin validate --strict` failed on the marketplace manifest's
+  missing top-level `description`; it now has one.
+
+### Changed
+
+- **Planned Dispatch tables retired** from all six dispatch points
+  (task-implement Phase 1 and Phase 2, task-review, generate-plan,
+  generate-task, generate-guide). The tables were decorative — Agent calls
+  are visible in the TUI anyway — and whether they appeared depended on the
+  model: the July runs and Opus 5 rendered them, Opus 5.5 did not, headless
+  or TUI. A one-line notice stays before each dispatch; task-review and
+  task-implement Phase 2 gain "Dispatching 5 review agents now." Release
+  checklist rows 4–8 now pass on the Agent call followed by the result
+  schema.
+- **Scratch space.** Probe files, copies, and other temporary files go under
+  `RUN_DIR/scratch/`, which is ignored with the run directory and needs no
+  cleanup: each reviewer in its own `scratch/angle-<n>/` (so five parallel
+  reviewers never write the same file), code-fixer and regression-verifier
+  in `scratch/` itself. In the smoke test reviewers on both platforms left
+  probe files in `/tmp`, and a verifier's `rm -rf` was denied by the user's
+  permission rules, so it fell back to judging fixes by reading code. The
+  reviewer invariant now reads, identically in the reviewers' ROLE, the
+  canonical dispatch block, the README, and CLAUDE.md: "Each reviewer is
+  read-only on the working tree and writes only under `RUN_DIR`: its report
+  at `RUN_DIR/angle-<n>.md`, and probe and temporary files under
+  `RUN_DIR/scratch/angle-<n>/`." Standalone reviewers, without `RUN_DIR`,
+  still write no file.
+- Release checklist pre-flight adds `claude plugin validate --strict` for the
+  repository (marketplace manifest) and for `plugins/kenspc` (plugin
+  manifest, skills, agents, commands): four checks. Guard counts are
+  unchanged (`guards run: 9`, `self-tests run: 8`). The run-directory check
+  for rows 6 and 7 adds foreground dispatch, `scratch/`, and the CRLF
+  `.gitignore` case.
+- `check-run-contract.sh` runs the run-dir block's ignore probe against a
+  CRLF `.gitignore` holding a blank line, with and without a `.kenspc/`
+  rule, with global and system git config masked. Its self-test reverts the
+  probe to `.kenspc/` in both skills to reproduce the Windows case.
+
+### Known behavior
+
+Documented in the README; not changed in this release:
+
+- With `REVIEW_SCOPE=changes`, each reviewer works out the change set on its
+  own, so the five angles can review slightly different sets. Planned for
+  the next minor release: the orchestrator computes the set once and passes
+  it to all five.
+- The plugin does not create branches; commits follow the project's
+  CLAUDE.md and otherwise land on the current branch.
+- The SessionEnd telemetry hook can log a false missed-review entry when a
+  headless session runs several turns, or when a session exits at a
+  confirmation prompt.
+
 ## 3.5.0 — 2026-09-23
+
+> Not tagged: the release smoke test failed on macOS and Windows.
+> Superseded by 3.5.1, which lists the fixes.
 
 Reviewer-layer rightsizing (G6). The five review angles now report against a
 severity-calibrated policy and a rubric of named failure modes instead of a

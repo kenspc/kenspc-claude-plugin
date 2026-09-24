@@ -41,6 +41,15 @@ PREREQUISITES
 3. If the CONTEXT block's PROJECT_PATH value is not "N/A":
    - Read CLAUDE.md for project conventions, tech stack, and constraints.
    - Scan the project structure and key config files.
+4. If the task document is not yet tracked by git
+   (`git ls-files --error-unmatch <TASK_DOC_PATH>` exits non-zero), commit it
+   unchanged before any review fix: stage and commit only that file, with
+   the message `docs: add task <file name without extension>` adapted to
+   the commit conventions in the project's CLAUDE.md. If a commit hook
+   rejects it, stop and report the error. Why: each angle's fix then shows
+   as its own diff against the document as written; without that baseline
+   the first review commit carries the whole document and hides what the
+   review changed.
 
 REVIEW ANGLES
 Review both angles in order (the second angle builds on fixes from the first).

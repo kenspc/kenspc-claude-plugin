@@ -2,7 +2,7 @@
 # check-run-contract.sh
 #
 # Guards the run-directory contract that task-review and task-implement share
-# with code-fixer (v3.5.0). Three checks:
+# with code-fixer (v3.5.0). Four checks:
 #
 #   1. The run-directory preparation block (bounded by
 #      `<!-- canonical:run-dir:start/end -->`) is byte-identical in
@@ -11,13 +11,23 @@
 #      `<!-- canonical:stats-line:start/end -->`) is byte-identical in
 #      agents/code-fixer.md and both SKILLs. The orchestrators render the
 #      line code-fixer writes, so the three must agree on its vocabulary.
-#   3. The worked Schema B example in agents/code-fixer.md (bounded by
+#   3. The ignore probe in the run-dir block answers correctly: the path in
+#      its `check-ignore -q <path>` command is run against two throwaway
+#      repositories whose `.gitignore` uses CRLF line endings and holds a
+#      blank line — without a `.kenspc/` rule it must exit 1, with one it
+#      must exit 0. A blank CRLF line parses as an empty pattern that makes
+#      git report the bare directory `.kenspc/` as ignored (seen on Windows
+#      in the v3.5.0 smoke test); a path under the directory is immune.
+#      Global and system git config are masked so a user-level ignore rule
+#      cannot change the answer.
+#   4. The worked Schema B example in agents/code-fixer.md (bounded by
 #      `<!-- example:schema-b:start/end -->`) recounts: counting the Fixes
 #      Applied rows reproduces its Per-angle Results table and its statistics
 #      line, and the statistics line has the template's shape. The model
 #      imitates this example, so an example that miscounts teaches miscounting.
 #
-# Recount rules (the same ones code-fixer and regression-verifier follow):
+# Check 4's recount rules (the same ones code-fixer and regression-verifier
+# follow):
 # each Source ID is `[REQBT]<number>` and appears in one row only; the first
 # ID in a row is its primary and counts under the row's action, the others
 # count as DEDUPED; an action is classified by its leading word (FIXED,
@@ -25,24 +35,27 @@
 # APPLICABLE. Table cells are split on `|`, so a cell must not contain one.
 #
 # Exit code 0: all checks pass.
-# Exit code 1: a block diverges, or the recount disagrees.
-# Exit code 2: missing file, missing or repeated markers, or self-test
-#              fixture stale.
+# Exit code 1: a block diverges, the ignore probe answers wrongly, or the
+#              recount disagrees.
+# Exit code 2: missing file, missing or repeated markers, no git, no ignore
+#              command in the run-dir block, or self-test fixture stale.
 #
 # Same set -euo pipefail discipline and SCRIPT_DIR / REPO_ROOT derivation as
 # the other guards. Mutations use a literal awk replacement rather than
 # `sed -i`, whose in-place syntax differs between GNU and BSD sed.
 #
 # Optional flags:
-#   --file PATH    Run only check 3, against a real schema-b.md (for example
+#   --file PATH    Run only check 4, against a real schema-b.md (for example
 #                  one under .kenspc/runs/<run-id>/ after a review run).
 #   --self-test    Run the mutation regression fixture. Copies the three
 #                  target files into a temp workdir and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on seven mutations that must
+#                  prefix classification), then on eight mutations that must
 #                  each exit 1: stats-line template changed in one SKILL,
-#                  run-dir block changed in one SKILL, and five recount
+#                  run-dir block changed in one SKILL, the ignore probe
+#                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
+#                  case, which only check 3 can catch), and five recount
 #                  mutations that each leave exactly one rule to catch them
 #                  (an example row's action, one Per-angle Results cell, one
 #                  statistics-line number, the statistics-line wording, and
@@ -114,7 +127,7 @@ template_shape() {
         }'
 }
 
-# Check 3: recount a Schema B document against its own tables and stats line.
+# Check 4: recount a Schema B document against its own tables and stats line.
 recount_schema_b() {
     local file="$1" shape="$2"
     awk -v shape="$shape" '
@@ -188,7 +201,53 @@ recount_schema_b() {
     ' "$file"
 }
 
-# Run all checks (or only check 3 on an external file) against a repo root.
+# Print the path argument of the first `check-ignore -q <path>` command in
+# the given block text (the path ends at the closing backtick).
+probe_path() {
+    printf '%s\n' "$1" | awk '
+        {
+            i = index($0, "check-ignore -q ")
+            if (!i) next
+            s = substr($0, i + length("check-ignore -q "))
+            j = index(s, "`")
+            if (j) s = substr(s, 1, j - 1)
+            print s
+            exit
+        }'
+}
+
+# Check 3: run the probe against a CRLF .gitignore with a blank line, once
+# without and once with a `.kenspc/` rule. Returns 0/1/2.
+probe_behaves() {
+    local probe="$1" tmp rc_without rc_with
+    if ! command -v git >/dev/null 2>&1; then
+        echo "ERROR: git not found; the ignore-probe check needs it" >&2
+        return 2
+    fi
+    tmp=$(mktemp -d)
+    mkdir -p "$tmp/without-rule" "$tmp/with-rule"
+    printf 'node_modules/\r\n\r\ndist/\r\n' > "$tmp/without-rule/.gitignore"
+    printf 'node_modules/\r\n\r\n.kenspc/\r\n' > "$tmp/with-rule/.gitignore"
+    # HOME / XDG_CONFIG_HOME point at the empty temp dir and system config is
+    # skipped, so no global excludes file takes part in the answer.
+    (
+        export HOME="$tmp" XDG_CONFIG_HOME="$tmp" GIT_CONFIG_NOSYSTEM=1
+        git -C "$tmp/without-rule" init -q
+        git -C "$tmp/with-rule" init -q
+    ) || { rm -rf "$tmp"; echo "ERROR: git init failed in $tmp" >&2; return 2; }
+    HOME="$tmp" XDG_CONFIG_HOME="$tmp" GIT_CONFIG_NOSYSTEM=1 \
+        git -C "$tmp/without-rule" check-ignore -q "$probe" && rc_without=0 || rc_without=$?
+    HOME="$tmp" XDG_CONFIG_HOME="$tmp" GIT_CONFIG_NOSYSTEM=1 \
+        git -C "$tmp/with-rule" check-ignore -q "$probe" && rc_with=0 || rc_with=$?
+    rm -rf "$tmp"
+    if [[ "$rc_without" -ne 1 || "$rc_with" -ne 0 ]]; then
+        echo "PROBE '$probe': exit $rc_without without a .kenspc/ rule (want 1), exit $rc_with with one (want 0), in a CRLF .gitignore holding a blank line" >&2
+        return 1
+    fi
+    return 0
+}
+
+# Run all checks (or only check 4 on an external file) against a repo root.
 # Returns 0/1/2 via `return` (no `exit`).
 run_main_logic() {
     local repo_root="$1" external="${2:-}"
@@ -220,6 +279,17 @@ run_main_logic() {
     compare_block "canonical:run-dir" "$review" "$implement" && rc=0 || rc=$?
     [[ "$rc" -ne 0 ]] && return "$rc"
     echo "OK    canonical:run-dir — identical in task-review and task-implement"
+
+    local run_dir_block probe
+    run_dir_block=$(extract_block "$review" "canonical:run-dir") || return $?
+    probe=$(probe_path "$run_dir_block")
+    if [[ -z "$probe" ]]; then
+        echo "ERROR: no 'check-ignore -q <path>' command in the canonical:run-dir block" >&2
+        return 2
+    fi
+    probe_behaves "$probe" && rc=0 || rc=$?
+    [[ "$rc" -ne 0 ]] && return "$rc"
+    echo "OK    ignore probe — '$probe' answers correctly with a CRLF .gitignore holding a blank line"
 
     compare_block "canonical:stats-line" "$fixer" "$review" "$implement" && rc=0 || rc=$?
     [[ "$rc" -ne 0 ]] && return "$rc"
@@ -301,6 +371,29 @@ run_self_test() {
         fi
     }
 
+    # mutate_files_and_expect <label> <old> <new> <file>...: apply the same
+    # literal replacement to several files, expect exit 1, restore them.
+    mutate_files_and_expect() {
+        local label="$1" old="$2" new="$3" target hits
+        shift 3
+        for target in "$@"; do
+            hits=$(grep -cF -- "$old" "$WORK/$target" || true)
+            if [[ "$hits" -ne 1 ]]; then
+                echo "FAIL  self-test fixture stale: \"$old\" found on $hits lines of $target, expected 1 ($label)" >&2
+                return 2
+            fi
+            replace_literal "$WORK/$target" "$old" "$new"
+        done
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        for target in "$@"; do
+            cp "$REPO_ROOT/$target" "$WORK/$target"
+        done
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test $label mutation: expected exit 1, got $rc" >&2
+            return 1
+        fi
+    }
+
     ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
     if [[ "$rc" -ne 0 ]]; then
         echo "FAIL  self-test positive path: expected exit 0 on unmutated copy, got $rc" >&2
@@ -311,7 +404,14 @@ run_self_test() {
     mutate_and_expect "stats-line template" "$IMPLEMENT_REL" \
         "NOT APPLICABLE N, DEDUPED N" "NOT APPLICABLE N, MERGED N" || return $?
     mutate_and_expect "run-dir block" "$REVIEW_REL" \
-        "check-ignore -q .kenspc/" "check-ignore -q .kenspc" || return $?
+        "- Scratch space:" "- Scratch area:" || return $?
+    # The Windows case: the probe reverted to the bare directory in both
+    # SKILLs, so the blocks stay identical and only the probe check can
+    # catch it. If a future git stops parsing a blank CRLF line as an empty
+    # pattern, this mutation passes and the self-test reports it.
+    mutate_files_and_expect "probe reverted to .kenspc/" \
+        "check-ignore -q .kenspc/runs/probe" "check-ignore -q .kenspc/" \
+        "$REVIEW_REL" "$IMPLEMENT_REL" || return $?
     # Recount: each mutation below breaks exactly one recount rule.
     mutate_and_expect "example row action" "$FIXER_REL" \
         "| NOT APPLICABLE — cited rule not in CLAUDE.md |" "| DEFERRED |" || return $?

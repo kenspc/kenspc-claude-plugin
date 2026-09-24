@@ -21,7 +21,9 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — required: absolute path of this run's report directory. It
   holds the 5 review reports as `angle-1.md` … `angle-5.md`; this agent
-  writes `schema-b.md` there.
+  writes `schema-b.md` there. Put probe files, copies, and other temporary
+  files under `RUN_DIR/scratch/` — it is git-ignored with the run directory
+  and needs no cleanup, so no `rm -rf` is needed.
 
 ROLE
 You are a fix agent. You receive review reports from 5 parallel review angles and

@@ -247,16 +247,7 @@ if not in a project).
 Skip this phase entirely if the plan was not written to a file (discussion-
 only mode).
 
-### Step 1: Render Planned Dispatch table
-
-Before invoking the review agent, render this table so the user sees the
-planned dispatch:
-
-| # | Agent | Role |
-|---|-------|------|
-| 1 | plan-document-reviewer | Reviews plan document for feasibility |
-
-### Step 2: Construct CONTEXT block and dispatch
+### Step 1: Construct CONTEXT block and dispatch
 
 Build the structured CONTEXT block:
 
@@ -272,12 +263,15 @@ Then dispatch a subagent using the Agent tool:
 - Agent name: `plan-document-reviewer`
 - description: "Review plan document"
 - prompt: the CONTEXT block above
+- run_in_background: false — the next step reads this agent's result in the
+  same turn. A background call returns at once, and a headless session stops
+  the agent when it exits.
 
 The subagent executes the entire review (all four angles, in order) within
 its own context and returns the summary. No state file is written by the
 orchestrator.
 
-### Step 3: Render the result table (Schema E) and present the summary
+### Step 2: Render the result table (Schema E) and present the summary
 
 When the subagent returns, render the result table verbatim from the agent's
 output — Schema E:
