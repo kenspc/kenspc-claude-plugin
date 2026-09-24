@@ -1,7 +1,9 @@
 # Roadmap
 
 Planned work for the kenspc plugin. An item leaves this file when it ships;
-the CHANGELOG records it from then on.
+the CHANGELOG records it from then on. The remaining items are renumbered
+when one leaves, so text outside this file names an item by its subject, not
+its number.
 
 ## Next minor (3.6.0)
 

@@ -761,7 +761,44 @@ In `docs/roadmap.md`:
 
 ### Task 9: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: two promoted. T3's rule, that an agent's Why states its evidence
+  in its own words rather than citing the dry-run record (the record goes in
+  the CHANGELOG), went into `CLAUDE.md` § Writing Rules for Skill Content as
+  a new bullet. T8's reason for not citing roadmap item numbers went into
+  `docs/roadmap.md`'s header: the remaining items are renumbered when one
+  leaves, so text outside the file names an item by its subject. Needs a
+  home: none. Local: every other decision in Tasks 1-8, including T6's and
+  T8's evidence carried beside a dry-run citation. Those decisions cover the
+  reset example's placeholder, the other-runners examples, where the
+  no-configuration-edit rule and the note's definition sit, the rename
+  example, verbatim-kept sentences, the comma in the C4 phrase, the README's
+  inline definition of the note, sentence splits, list nesting, the
+  `.gitignore` clarifying sentence, and the per-entry `Source:` citations.
+- Changes/tradeoffs: the Writing Rules section is not among the CLAUDE.md
+  sections the plan names. The document is listed, and that section is where
+  a maintainer looks for skill-writing rules, as in batch A's Doc-sync
+  (T10's language rule). The rule was narrowed from "shipped text cites no
+  document of this repository" to dry-run records in a Why, because
+  `task-implement/SKILL.md` already names the release checklist in a
+  maintainer-facing parenthetical. A grep finds no dry-run citation in
+  skills, agents, commands, or shared files, while the same grep hits the
+  CHANGELOG. The roadmap sentence records renumbering as practice after one
+  instance: this batch is the first to remove numbered items, and plan
+  Step 3.4 chose to renumber. Verified against Tasks 1-8 as implemented,
+  with no further change needed:
+  - `plugins/kenspc/README.md` § Run directory. A row-3 FAIL forces a FAIL
+    verdict ("build / test / lint fails" in both review skills), so "fails
+    the run" holds.
+  - `CLAUDE.md`'s run-dir paragraph and lesson, whose Phase 3 line "runs
+    build/test/lint" is consistent.
+  - `docs/release-checklist.md`.
+  - The 3.6.0 CHANGELOG entries.
+  - The rest of `docs/roadmap.md`.
+
+  `check-all.sh` exits 0 with `guards run: 10`.
 
 Depends on: Task 1-8
 

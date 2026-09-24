@@ -286,6 +286,7 @@ guard checks is documented once, in "Repository scripts/" below.
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 - No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan
+- Evidence in a skill's or agent's Why is stated in its own words (what failed, and on which command), not cited as a dry-run record: skills and agents run as prompts in the user's project, where this repository's `docs/` does not exist, so the CHANGELOG entry cites the record instead (v3.6.0: regression-verifier's unmodified build, test, and lint rule)
 
 ## Development Workflow
 
