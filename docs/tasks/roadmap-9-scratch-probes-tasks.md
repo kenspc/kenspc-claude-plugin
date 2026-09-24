@@ -7,17 +7,22 @@ agent writes under `RUN_DIR/scratch/` is named so the project's test runner
 does not collect it. `code-fixer`, `regression-verifier`, and the
 orchestrating session each get their own scratch subdirectory, and starting
 over means a new subdirectory, never a delete. `regression-verifier` runs the
-project's test command unmodified, so pollution that still happens fails the
-run loudly. `code-fixer` never edits the project's configuration to make room
-for the plugin's files.
+project's build, test, and lint commands unmodified, so pollution that still
+happens fails the run loudly and names the files. `code-fixer` never edits the
+project's configuration to make room for the plugin's files.
 
 Related plan: `docs/plans/roadmap-9-scratch-probes.md`. The plan is the
 complete specification. Its Design decisions (M1–M7) and its Clarifications
-during implementation (C1–C3) are binding rulings:
+during implementation (C1–C5) are binding rulings:
 
 - C1 amends ruling M2's markers and the Fixed strings checklist probe.
 - C2 extends Step 1.2 to code-fixer's OUTPUT FORMAT.
 - C3 extends Step 3.4's roadmap edit.
+- C4 adds the scratch-pollution note to every other text that enumerates
+  code-fixer's reply (Tasks 3, 4, 5).
+- C5 widens ruling M4 from the test command to build, test, and lint
+  (Task 3), and adds a Risks row and a roadmap item for linters and build
+  tools that walk into `.kenspc/` (Task 8).
 
 Each task below cites its plan Step, which is the canonical source for what
 to write. The criteria listed here are the local DONE bar.
@@ -66,6 +71,8 @@ Constraints that apply to every task:
   - the worked Schema B example between the `example:schema-b` markers.
 
   Inside `canonical:run-dir`, only the Scratch space bullet changes (Task 4).
+  The C4 edits in the two review skills (Task 4) lie outside every canonical
+  block.
 - The five reviewers' shared sections stay byte-identical to each other.
 - No new CONTEXT keys.
 - `effort:` frontmatter and the per-skill `version: 3.0.0` are unchanged in
@@ -236,12 +243,12 @@ unchanged.
 
 ---
 
-### Task 3: Give regression-verifier its own scratch directory and the scratch rule, and run the test command unmodified
+### Task 3: Give regression-verifier its own scratch directory and the scratch rule, and run build, test, and lint unmodified
 
 **Status:** TODO
 
-Plan Steps 1.2 and 1.3 (rulings M1, M3, M4, clarification C1). This task
-makes two edits.
+Plan Steps 1.2 and 1.3 (rulings M1, M3, M4, clarifications C1, C4, C5). This
+task makes three edits.
 
 In the `RUN_DIR` bullet under CONTEXT YOU WILL RECEIVE, replace the current
 sentence "Put probe files, copies, and other temporary files under
@@ -259,20 +266,27 @@ sentence "Put probe files, copies, and other temporary files under
 - The existing point stays: the directory is git-ignored with the run
   directory and needs no cleanup.
 
-In VERIFICATION CHECKS item 3, add a clause after the opening sentence "run
-the project's build, test, and lint commands; record PASS or FAIL.". The
-clause says:
+In INPUTS (clarification C4), the description of `schema-b.md` ("every row
+with its Source IDs, the Per-angle Results table, the Deferred Issues prose,
+and the statistics line") gains "the scratch-pollution note, when there is
+one".
 
-- Run the project's test command as the project configures it
-  (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with
-  no path filter or exclude added.
-- When the run fails only because of files under `RUN_DIR/scratch`, record
-  FAIL with the offending paths in the Detail cell.
+In VERIFICATION CHECKS item 3, add a clause after the opening sentence "run
+the project's build, test, and lint commands; record PASS or FAIL.". Per
+clarification C5, the clause covers all three commands:
+
+- Run each of the build, test, and lint commands as the project configures
+  it (`package.json` scripts, CLAUDE.md, the solution or `pytest` config),
+  with no path filter or exclude added.
+- When a command fails only because of files under `RUN_DIR/scratch`, record
+  FAIL in that command's row, with the offending paths in the Detail cell.
 - A narrowed re-run may be added to Detail as information, but it does not
   change the Result.
 - Why: the batch A acceptance run passed row 3 on `--dir test` while the
   project's own `npm test` failed. A green row that hides the plugin's
-  pollution is worse than a red one.
+  pollution is worse than a red one. The Why may add that build and lint
+  tools walk into the run directory as well: ESLint's flat config ignores
+  only `node_modules` and `.git` by default.
 
 These stay unchanged:
 
@@ -289,9 +303,14 @@ These stay unchanged:
 - The `RUN_DIR` bullet names `RUN_DIR/scratch/regression-verifier/` and
   states the naming rule with the Fixed-forms markers, the renamed-copy and
   scratch-local runner-config method, and reset as a new subdirectory.
-- Item 3 carries the unmodified-command clause, the scratch-only-failure
-  FAIL rule with the paths in Detail, and the narrowed-re-run-is-information
-  rule, with its Why.
+- The INPUTS description of `schema-b.md` names the scratch-pollution note,
+  when there is one.
+- Item 3 states each of the following, for build, test, and lint alike, with
+  its Why:
+  - the unmodified-command clause;
+  - the scratch-only-failure rule: FAIL in that command's row, with the paths
+    in Detail;
+  - the narrowed-re-run-is-information rule.
 - `git diff` shows these unchanged: the three run-state bullets, the
   paragraph after them, FALLBACK FOR NO-TEST-SUITE PROJECTS, OUTPUT FORMAT,
   and the frontmatter.
@@ -301,13 +320,15 @@ These stay unchanged:
 
 ---
 
-### Task 4: Rewrite the Scratch space bullet in the canonical run-dir block of both review skills
+### Task 4: Rewrite the Scratch space bullet in both review skills and name the scratch-pollution note where they describe code-fixer's reply
 
 **Status:** TODO
 
-Plan Step 2.1 (ruling M1, clarification C1). Inside
-`<!-- canonical:run-dir:start/end -->`, rewrite the "Scratch space" bullet.
-It says:
+Plan Step 2.1 (ruling M1, clarifications C1, C4). This task makes two edits
+in each of the two review skills.
+
+Inside `<!-- canonical:run-dir:start/end -->`, rewrite the "Scratch space"
+bullet. It says:
 
 - Probe files, copies, and other temporary files go under `RUN_DIR/scratch/`:
   - each reviewer in `scratch/angle-<n>/`;
@@ -336,6 +357,19 @@ the fixture as stale when it finds it on zero lines or on more than one. For
 the same reason, `check-ignore -q .kenspc/runs/probe` stays unchanged, on
 exactly one line in each file.
 
+Per clarification C4, two texts in each skill enumerate code-fixer's reply,
+and each gains "the scratch-pollution note, when there is one":
+
+- the paragraph after the `canonical:stats-line` block that begins "Its reply
+  carries the statistics line, the Per-angle Results table, …";
+- the `## Fixes` placeholder "(code-fixer's reply verbatim: …)" in the final
+  report: Schema F in `task-review/SKILL.md`, Schema G in
+  `task-implement/SKILL.md`.
+
+Both spots lie outside every canonical block. The `canonical:stats-line`
+block directly above the paragraph stays untouched. Keep the two skills'
+wording of each spot the same.
+
 **Files to modify:**
 - `plugins/kenspc/skills/task-review/SKILL.md`
 - `plugins/kenspc/skills/task-implement/SKILL.md`
@@ -347,8 +381,11 @@ exactly one line in each file.
   - the other-runners clause;
   - reset as a new subdirectory;
   - the kept `rm -rf` Why and the one-sentence tool-ignored Why.
+- In both files, the "Its reply carries …" paragraph and the `## Fixes`
+  placeholder each name the scratch-pollution note, when there is one.
 - `git diff` shows no change to any other bullet or paragraph inside
-  `canonical:run-dir`, and no change outside it.
+  `canonical:run-dir`. Outside it, `git diff` shows only the two C4 spots in
+  each file.
 - `- Scratch space:` occurs on exactly one line of each file, and so does
   `check-ignore -q .kenspc/runs/probe`.
 - `bash scripts/check-run-contract.sh --self-test` exits 0.
@@ -365,8 +402,11 @@ exactly one line in each file.
 
 Depends on: Task 1-4
 
-Plan Step 3.1 (clarification C1). This task edits
+Plan Step 3.1 (clarifications C1, C4, C5). This task edits
 `plugins/kenspc/README.md` § Run directory.
+
+The first bullet ("The final report shows code-fixer's statistics line, …")
+gains the scratch-pollution note, when there is one (C4).
 
 The layout tree shows `scratch/` holding one subdirectory per agent:
 `angle-<n>/` per reviewer, `code-fixer/`, `regression-verifier/`, and
@@ -383,8 +423,8 @@ Rewrite the bullet that begins "The reviewers, `code-fixer`, and
 - An agent that starts over makes a new subdirectory instead of deleting.
 - No agent edits the project's configuration (runner config, ignore files,
   `tsconfig`, package scripts) to make room for the plugin's files.
-- If scratch files still break the project's test command,
-  `regression-verifier` fails the run and names them.
+- If scratch files still break the project's build, test, or lint command,
+  `regression-verifier` fails the run and names them (C5).
 
 The invariant paragraph in § Agents ("Each reviewer is read-only on the
 working tree …") is unchanged.
@@ -393,6 +433,7 @@ working tree …") is unchanged.
 - `plugins/kenspc/README.md`
 
 **Acceptance criteria:**
+- The first bullet names the scratch-pollution note, when there is one.
 - The layout tree names `code-fixer/`, `regression-verifier/`, and
   `orchestrator/` under `scratch/` alongside `angle-<n>/`.
 - The probe-files bullet states:
@@ -400,7 +441,7 @@ working tree …") is unchanged.
   - the naming rule with the Fixed-forms markers;
   - the reset rule;
   - the no-configuration-edit rule;
-  - the verifier's loud failure.
+  - the verifier's loud failure on build, test, or lint.
 - Nothing in the section contradicts Tasks 1–4 as implemented.
 - `git diff` touches only § Run directory. The § Agents invariant paragraph
   is unchanged.
@@ -516,7 +557,7 @@ Add three sub-checks:
 
 Depends on: Task 1-4
 
-Plan Step 3.4 (ruling M1, clarification C3). This task edits two files.
+Plan Step 3.4 (ruling M1, clarifications C3, C5). This task edits two files.
 
 In `plugins/kenspc/CHANGELOG.md`, under `## 3.6.0 — unreleased` →
 `### Changed`, add entries for:
@@ -524,10 +565,11 @@ In `plugins/kenspc/CHANGELOG.md`, under `## 3.6.0 — unreleased` →
 - the scratch layout: per-agent subdirectories, including `code-fixer/`,
   `regression-verifier/`, and `orchestrator/`;
 - the naming and reset rule, with the Fixed-forms markers;
-- the verifier's unmodified test command, with a scratch-only failure as
-  row-3 FAIL naming the files;
+- the verifier's unmodified build, test, and lint commands, with a failure
+  caused only by scratch files as FAIL in that command's row, naming the
+  files;
 - code-fixer's no-configuration-edit rule and the optional scratch-pollution
-  note in Schema B.
+  note in Schema B and in the final report.
 
 The entries cite `docs/dry-runs/batch-a-acceptance.md` § 8 as the source.
 
@@ -535,6 +577,15 @@ In `docs/roadmap.md`:
 
 - Remove items 2 and 9, and renumber the remaining items 1–7 with their text
   unchanged.
+- Append item 8 (clarification C5). It says:
+  - Linters and build tools still walk into `.kenspc/`. ESLint's flat config
+    ignores only `node_modules` and `.git` by default. Quote the ESLint
+    configuration migration guide: "In flat config, dotfiles (e.g.
+    `.dotfile.js`) are no longer ignored by default."
+  - A runner-safe probe such as `probe.mts` can therefore still fail
+    `eslint .`, and no name keeps a source probe out of a linter's pattern.
+  - Today `regression-verifier` runs build and lint unmodified and names the
+    scratch files in the FAIL. Keeping them out of those tools is open.
 - Extend the release note "At release, delete …" to name four files:
   - `docs/plans/batch-a-doc-sync.md`;
   - `docs/tasks/batch-a-doc-sync-tasks.md`;
@@ -548,9 +599,13 @@ In `docs/roadmap.md`:
 **Acceptance criteria:**
 - The 3.6.0 `### Changed` section carries entries for the four items above,
   citing the acceptance record. No other version's entry changed.
-- `docs/roadmap.md` lists seven items numbered 1–7, whose texts are former
-  items 1 and 3–8 unchanged. Neither the scratch rule (former item 2) nor the
-  runner-safe probe names (former item 9) remains.
+- `docs/roadmap.md` lists eight items numbered 1–8:
+  - items 1–7 are former items 1 and 3–8, with their text unchanged;
+  - item 8 is the linter and build-tool item, carrying the quoted ESLint
+    sentence.
+
+  Neither the scratch rule (former item 2) nor the runner-safe probe names
+  (former item 9) remains.
 - The release note names the four files.
 - The Planned batches section is unchanged.
 - `bash scripts/check-all.sh` exits 0.
@@ -574,21 +629,24 @@ no other file):
   naming rule; the git-ignored-is-not-tool-ignored lesson (plan Step 3.2);
   edited by Task 6: verify it against the implementation instead of editing
   it again.
-- `plugins/kenspc/README.md` § Run directory — the scratch layout, the naming
-  and reset rule, no configuration edits for the plugin's files (plan
-  Step 3.1); edited by Task 5: verify it against the implementation instead
-  of editing it again.
+- `plugins/kenspc/README.md` § Run directory — the scratch-pollution note in
+  the final report, the scratch layout, the naming and reset rule, no
+  configuration edits for the plugin's files, the verifier's loud failure on
+  build, test, or lint (plan Step 3.1); edited by Task 5: verify it against
+  the implementation instead of editing it again.
 - `docs/release-checklist.md` § Run-directory check for rows 6 and 7 — the
   per-agent scratch directories and the three sub-checks (plan Step 3.3);
   edited by Task 7: verify it against the implementation instead of editing
   it again.
 - `plugins/kenspc/CHANGELOG.md` § 3.6.0 — Changed entries for the scratch
-  layout, the naming and reset rule, the verifier's unmodified test command,
-  and code-fixer's no-configuration-edit rule (plan Step 3.4); edited by
-  Task 8: verify it against the implementation instead of editing it again.
-- `docs/roadmap.md` — items 2 and 9 removed, the rest renumbered, the release
-  note naming four files (plan Step 3.4); edited by Task 8: verify it against
+  layout, the naming and reset rule, the verifier's unmodified build, test,
+  and lint commands, and code-fixer's no-configuration-edit rule and
+  scratch-pollution note (plan Step 3.4); edited by Task 8: verify it against
   the implementation instead of editing it again.
+- `docs/roadmap.md` — items 2 and 9 removed, the rest renumbered, a new
+  linter and build-tool item, the release note naming four files (plan
+  Step 3.4); edited by Task 8: verify it against the implementation instead
+  of editing it again.
 
 **Promotion:** read the `Decisions` sub-bullets in the Implementation notes
 of Tasks 1-8. Write each decision that a future reader would look for in
