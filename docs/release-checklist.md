@@ -122,6 +122,12 @@ Run-directory check for rows 6 and 7 (v3.5.1):
      agent: `git status --short` lists no such file, and no fix commit
      touches one. The one-time `.gitignore` commit below is the
      orchestrating skill's, made before dispatch, and does not count.
+  4. regression-verifier ran each build, test, and lint command the project
+     defines as the project configures it, with no path filter or exclude
+     added: its Bash calls in the run's trace show the project's own
+     commands (such as `npm test`), and any narrowed re-run comes after the
+     unmodified one. Read the trace, not Schema C: a clean PASS row's Detail
+     is `—`, so the table cannot show which command ran.
 - From this repository, `bash scripts/check-run-contract.sh --file <that
   path>` exits 0 — the real Schema B's Per-angle Results table and
   statistics line agree with its rows.
