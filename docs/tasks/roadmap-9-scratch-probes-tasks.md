@@ -182,7 +182,20 @@ paragraph.
 
 ### Task 2: Give code-fixer its own scratch directory, the scratch rule, the no-configuration-edit rule, and the scratch-pollution note
 
-**Status:** TODO
+**Status:** BLOCKED
+
+**Implementation notes:**
+- Blocked: the first edit, rewriting the `RUN_DIR` bullet in
+  `plugins/kenspc/agents/code-fixer.md` (new scratch directory, naming,
+  execution, and reset rule, no-configuration-edit rule), was refused by the
+  session's auto-mode safety classifier. It returned no verdict and reported
+  the refusal as a hard failure that a retry would repeat. The edit was not
+  routed through another tool, since that would sidestep the check instead of
+  answering it. `code-fixer.md` is unchanged. To unblock: set this task back
+  to TODO and re-run `/kenspc-task-implement` in a session whose permission
+  mode can approve edits to `code-fixer.md`, or apply Task 2 by hand. Then
+  set Tasks 5-9 back to TODO, since the dependency gate blocked them on this
+  task.
 
 Plan Step 1.2 (rulings M1, M3, M4, clarifications C1, C2). This task makes
 three edits.
