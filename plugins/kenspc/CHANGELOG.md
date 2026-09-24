@@ -148,10 +148,11 @@ filled at release.
 - **regression-verifier runs build, test, and lint unmodified.**
   VERIFICATION CHECKS item 3 runs each command as the project configures it
   (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with
-  no path filter or exclude added. A failure caused only by files under
-  `RUN_DIR/scratch` is FAIL in that command's row, with the files named in
-  the Detail cell; a narrowed re-run may be added to Detail as information
-  but does not change the Result. Build and lint are included because those
+  no path filter or exclude added. When files under `RUN_DIR/scratch` make a
+  command fail, alone or alongside failures in the project's own files, that
+  command's row is FAIL with those files named in the Detail cell; a
+  narrowed re-run may be added to Detail as information but does not change
+  the Result. Build and lint are included because those
   tools walk the run directory too: ESLint's flat config ignores only
   `node_modules` and `.git` by default. Keeping scratch files out of them is
   still open (`docs/roadmap.md`). Source:
