@@ -113,6 +113,65 @@ filled at release.
 - CLAUDE.md gains a Durable documents table, the list this repository's own
   plans determine their Documentation impact from, and describes the
   documentation path and the dependency gate.
+- **Scratch layout: one subdirectory per writer.** Probe and temporary files
+  under `RUN_DIR/scratch/` go in `angle-<n>/` per reviewer (unchanged),
+  `code-fixer/`, `regression-verifier/`, and `orchestrator/` for the
+  orchestrating session when it runs a probe of its own. code-fixer and
+  regression-verifier used to write to `scratch/` itself. The
+  `canonical:run-dir` Scratch space bullet in both review skills, the two
+  worker agents' `RUN_DIR` bullets, the README's Run directory section, and
+  CLAUDE.md name the four locations. Source:
+  `docs/dry-runs/batch-a-acceptance.md` § 8, where the two workers made up
+  their own `scratch/fixer/` and `scratch/verifier/` directories.
+- **Runner-safe scratch names; starting over means a new subdirectory.**
+  Every file under the run's scratch directory is named so the project's
+  test runner does not collect it: for vitest and jest, no `.test.` or
+  `.spec.` segment in a file name, no file named `test.*` or `spec.*` (jest's
+  default `testMatch` collects both), and no `__tests__` directory; for other
+  runners, their configured pattern (pytest `test_*.py` / `*_test.py`, Go
+  `_test.go`). `probe.mts`, `probe-2.probe.ts`, and `.txt` for anything that
+  need not run are safe. A probe that has to execute runs as a plain script
+  or through a runner config kept in the agent's scratch directory; a mutant
+  copy of the test tree renames its test files as they are copied
+  (`split.test.ts` becomes `split.probe.ts`). An agent that starts over
+  makes a new subdirectory under its scratch directory, never a delete. The
+  rule is in the five reviewers' ROLE section (byte-identical, so
+  `check-review-agent-drift.sh` guards it), the two worker agents' `RUN_DIR`
+  bullets, and the `canonical:run-dir` block. The release checklist's
+  run-directory check gains a `find` probe for collectable names, an
+  unmodified test run from the repository root, and a check that no agent
+  added runner or ignore configuration. CLAUDE.md records the lesson:
+  git-ignored is not tool-ignored. Source:
+  `docs/dry-runs/batch-a-acceptance.md` § 8, where 68 probe files named
+  `*.test.ts`, single probes and whole copies of the `test/` tree, were
+  collected by vitest's default include and made a bare `npm test` fail.
+- **regression-verifier runs build, test, and lint unmodified.**
+  VERIFICATION CHECKS item 3 runs each command as the project configures it
+  (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with
+  no path filter or exclude added. A failure caused only by files under
+  `RUN_DIR/scratch` is FAIL in that command's row, with the files named in
+  the Detail cell; a narrowed re-run may be added to Detail as information
+  but does not change the Result. Build and lint are included because those
+  tools walk the run directory too: ESLint's flat config ignores only
+  `node_modules` and `.git` by default. Keeping scratch files out of them is
+  still open (`docs/roadmap.md`). Source:
+  `docs/dry-runs/batch-a-acceptance.md` § 8, where regression-verifier
+  passed the test row on a narrowed `npx vitest run --dir test` while the
+  project's own `npm test` failed.
+- **code-fixer changes no project configuration for the plugin's files,
+  and reports scratch pollution.** code-fixer does not modify test-runner
+  config, ignore files, `tsconfig`, or package scripts to accommodate files
+  the plugin wrote under the run directory. When the project's test command
+  fails only because of files under `RUN_DIR/scratch`, `schema-b.md` carries
+  an optional scratch-pollution note after the Deferred Issues prose and
+  before the statistics line, which stays the file's last line. The note
+  names those files and the narrowed command used to verify the fixes.
+  code-fixer's reply carries the note, the `## Fixes` section of the Schema F
+  and Schema G final reports renders it, and regression-verifier reads it as
+  part of `schema-b.md`. Source:
+  `docs/dry-runs/batch-a-acceptance.md` § 8, where code-fixer "fixed" the
+  collision by adding a `vitest.config.ts` that excludes `.kenspc/**` to the
+  user's project.
 
 ### Branching stance
 

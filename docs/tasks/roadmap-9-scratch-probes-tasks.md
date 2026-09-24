@@ -678,7 +678,29 @@ Add three sub-checks:
 
 ### Task 8: Record the change in the 3.6.0 CHANGELOG entry and update the roadmap
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each of the four CHANGELOG entries ends with its own `Source:`
+  citation of `docs/dry-runs/batch-a-acceptance.md` § 8, naming the finding
+  there that motivated it: the workers' improvised `scratch/fixer/` and
+  `scratch/verifier/`, the 68 collected `*.test.ts` probes, the row-3 PASS on
+  `--dir test`, and the added `vitest.config.ts`. That way the entry keeps its
+  evidence once the transient dry-run record is gone. The entries do not cite
+  "roadmap item 2/9": the renumbering gives those numbers to other items, so
+  the citation would point at the wrong work. The naming entry also records
+  the release-checklist sub-checks and the new CLAUDE.md lesson, following
+  the precedent of the existing "CLAUDE.md gains a Durable documents table"
+  entry. The roadmap's release note says why the two new files go: "batch A
+  and the scratch-probe work (former items 2 and 9) have shipped".
+- Changes/tradeoffs: the ESLint sentence in roadmap item 8 is quoted as the
+  task and plan clarification C5 give it; this run had no web access to
+  re-check it against the ESLint migration guide. Verified: items 1-7 match
+  former items 1 and 3-8 apart from their numbers. That was checked
+  mechanically by normalizing the list numbers in the old and new files and
+  diffing (24 lines on each side, no difference). The Planned batches section
+  is identical, and the CHANGELOG diff is a single hunk inside 3.6.0
+  `### Changed`. `check-all.sh` exits 0 with `guards run: 10`.
 
 Depends on: Task 1-4
 
