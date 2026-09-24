@@ -797,7 +797,18 @@ filled at release. `docs/roadmap.md`: remove batch A from "Planned batches".
 
 ### Task 15: Update the release checklist
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each smoke-row addition is appended to the existing pass
+  criterion after a semicolon, with the fixed strings spelled as in the
+  plan's table, so the rows keep one criterion cell each.
+- Changes/tradeoffs: row 5 does not also require the Schema E table to show
+  three rows (the plan's Testing Strategy mentions it, the task does not).
+  The full pre-flight block was extracted from the checklist and run with
+  bash: the effort-override diff, both `claude plugin validate --strict`
+  runs, and `check-all.sh --self-test` (`guards run: 10`,
+  `self-tests run: 9`) all passed.
 
 Depends on: Task 1-11
 

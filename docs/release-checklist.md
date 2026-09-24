@@ -28,8 +28,8 @@ claude plugin validate --strict .
 claude plugin validate --strict ./plugins/kenspc
 
 # Every guard in main mode (JSON validity included, via check-json.sh), then
-# every guard's mutation regression fixture. Expect "guards run: 9" after the
-# main pass and "self-tests run: 8" as the last line.
+# every guard's mutation regression fixture. Expect "guards run: 10" after the
+# main pass and "self-tests run: 9" as the last line.
 bash scripts/check-all.sh --self-test
 )
 ```
@@ -40,8 +40,8 @@ All four must pass: 1 effort-override diff + 2 `claude plugin validate
 returns that command's exit code — without closing an interactive shell,
 which a bare `set -e` would do. The `check-all.sh` run
 covers every guard in main mode, JSON validity included via `check-json.sh`,
-and then every self-test fixture. Its output must include `guards run: 9`
-and end with `self-tests run: 8`; a different number means a guard or
+and then every self-test fixture. Its output must include `guards run: 10`
+and end with `self-tests run: 9`; a different number means a guard or
 fixture was added, removed, or no longer detected — find out which before
 continuing. If anything fails, fix it before proceeding to the smoke
 checklist.
@@ -81,9 +81,9 @@ Inside the session:
 | 1 | `/help` | Lists all 6 kenspc slash commands without error |
 | 2 | `/reload-plugins` | Reload completes; no YAML/JSON parse errors in console |
 | 3 | `/kenspc-brief` | Discovery starts; first user-facing prompt is a question (not a draft) |
-| 4 | `/kenspc-plan` | Phase 1 begins; after the plan is written, a `plan-document-reviewer` Agent call appears, followed by the Schema E result table |
-| 5 | `/kenspc-task <plan-path>` | Decomposition runs; a `task-document-reviewer` Agent call appears, followed by the Schema E result table |
-| 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE: five reviewer Agent calls appear, then Schema A → B → C → G; run-directory check passes (see below) |
+| 4 | `/kenspc-plan` | Phase 1 begins; after the plan is written, a `plan-document-reviewer` Agent call appears, followed by the Schema E result table; the plan contains a `## Documentation impact` section (a list or `N/A — <reason>`) |
+| 5 | `/kenspc-task <plan-path>` | Decomposition runs; a `task-document-reviewer` Agent call appears, followed by the Schema E result table; when the plan's element names documents, the task document's last task is `### Task N: Doc-sync` with `Depends on: Task 1-<N-1>` |
+| 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE: five reviewer Agent calls appear, then Schema A → B → C → G; run-directory check passes (see below); Schema G contains `## Decisions needing a home`, and a run with one task forced BLOCKED shows the Doc-sync task BLOCKED with `depends on Task N (BLOCKED)` |
 | 7 | `/kenspc-task-review` | Five reviewer Agent calls appear, then the Schema A roll-up, B, C, and the Schema F final report; never logs "Code looks correct, skipping review"; run-directory check passes (see below) |
 | 8 | `/kenspc-guide <project-path>` | Guide runs; a `guide-document-reviewer` Agent call appears, followed by the Schema E result table |
 | 9 | End-to-end trace verification on greenfield project (non-DungeonDescent) | All three sub-criteria hold (see row-9 detail below) |
