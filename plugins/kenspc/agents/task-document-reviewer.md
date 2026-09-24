@@ -60,7 +60,8 @@ one).
      task document. Is every step covered by at least one task?
    - If a specific phase was requested: verify only that phase's steps are
      covered, but flag if tasks reference steps from other phases that are
-     not included.
+     not included. The Doc-sync task's document list is exempt: it carries
+     the plan's full Documentation impact, other phases' steps included.
    - Does each task's acceptance criteria have a concrete, verifiable
      condition? Flag vague language: "as appropriate", "if needed",
      "properly", "sufficient", "adequate", "correctly" — these must be
