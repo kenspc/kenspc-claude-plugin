@@ -278,6 +278,14 @@ Rulings made by the maintainer on 2026-09-24.
 | A runner whose pattern the rule does not list | Medium | The rule says "read the project's configuration"; the two named runners are examples, not the list. |
 | The verifier's unmodified run fails for reasons unrelated to scratch | Existing | Unchanged: any test failure is row-3 FAIL already; the new clause only forbids narrowing the command to make a failure disappear. |
 
+## Clarifications during implementation (2026-09-24)
+
+Settled between the implementing session, the spec author, and the maintainer before the task decomposition; each entry binds like the rulings above.
+
+- C1 — jest also collects files named `test.*` and `spec.*`. Its default `testMatch` pattern `**/?(*.)+(spec|test).?([mc])[jt]s?(x)` finds `test.js` and `spec.ts` as well as `*.test.*` (jestjs.io, Configuration, `testMatch`), which ruling M2's markers miss. The vitest and jest markers become: no `.test.` or `.spec.` segment in a file name, no file named `test.*` or `spec.*`, and no `__tests__` directory; other runners: their configured pattern. The checklist probe in [Fixed strings](#fixed-strings) becomes `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' \)` prints nothing. Every step that states the markers or the probe (Steps 1.1, 1.2, 2.1, 3.1–3.4) uses this form. Ruled by the maintainer.
+- C2 — code-fixer's scratch-pollution note (Step 1.2) is part of Schema B's contract, so its place is written in code-fixer's OUTPUT FORMAT, not only in the `RUN_DIR` bullet. The reply list gains an optional item, the scratch-pollution note: when the project's test command fails only because of files under `RUN_DIR/scratch`, it lists those paths and the narrowed command used to verify the fixes. In `schema-b.md` the same paragraph sits after Deferred Issues (prose) and before the statistics line, which stays the file's last line. The Deferred Issues definition and the worked Schema B example are unchanged. Step 1.2's edit location extends to OUTPUT FORMAT. Why: the orchestrator renders the reply and `schema-b.md` as that section specifies, and text outside the contract is either dropped or surprises the renderer.
+- C3 — `docs/roadmap.md` (Step 3.4): the note that deletes batch A's plan and task documents at release extends to this batch's `docs/plans/roadmap-9-scratch-probes.md` and `docs/tasks/roadmap-9-scratch-probes-tasks.md`, four files in all.
+
 ## Open Questions
 
 None.
