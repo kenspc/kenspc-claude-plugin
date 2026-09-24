@@ -130,8 +130,11 @@ Run-directory check for rows 6 and 7 (v3.5.1):
      defines as the project configures it, with no path filter or exclude
      added: its Bash calls in the run's trace show the project's own
      commands (such as `npm test`), and any narrowed re-run comes after the
-     unmodified one. Read the trace, not Schema C: a clean PASS row's Detail
-     is `—`, so the table cannot show which command ran.
+     unmodified one. After the test run, the trace also shows it listing
+     the files the runner collects (such as `vitest list --filesOnly`) to
+     compare them against `.kenspc/`. Read the trace, not Schema C: a clean
+     PASS row's Detail is `—`, so the table cannot show which command ran or
+     that the comparison was made.
   5. Nothing under `<RUN_DIR>` was deleted: the run's trace shows no `rm`
      or other delete of a path there, and an agent or the orchestrating
      session that started over did so in a new subdirectory of its own

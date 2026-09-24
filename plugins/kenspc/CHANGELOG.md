@@ -153,7 +153,8 @@ filled at release.
   changed test-runner config, linter config, ignore files, `tsconfig`, or
   package scripts,
   and trace checks that regression-verifier ran the project's commands
-  unmodified and that nothing under the run directory was deleted; the
+  unmodified and compared the runner's collected files against `.kenspc/`,
+  and that nothing under the run directory was deleted; the
   first two run in a vitest project with no vitest config, where they can
   fail. CLAUDE.md records the lesson: git-ignored is not tool-ignored.
   Source:
