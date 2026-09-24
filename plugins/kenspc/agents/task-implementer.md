@@ -85,9 +85,11 @@ resumes after a stall.
 For each incomplete task, in document order:
 - Before implementing the task, read its `Depends on` line, if it has one. The
   line names a single task (`Task 1`), a range (`Task 1-5`, meaning Tasks 1
-  through 5), or a comma-separated list. If any named task is not DONE —
-  BLOCKED in this run or an earlier one, or later in the document and not yet
-  processed — mark this task BLOCKED with the reason
+  through 5), or a comma-separated list. A named task that this document does
+  not contain counts as not DONE, with the status `not found`, since a typo or
+  a stale number is no evidence the dependency was built. If any named task is
+  not DONE — BLOCKED in this run or an earlier one, or later in the document
+  and not yet processed — mark this task BLOCKED with the reason
   `depends on Task N (<status>)` for each such task, persist the `- Blocked:`
   line and commit it as STUCK HANDLING prescribes, and continue with the next
   task. The line's unblock step tells the user to set this task back to TODO
