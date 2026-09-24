@@ -537,7 +537,24 @@ working tree …") is unchanged.
 
 ### Task 6: Update CLAUDE.md: the run-dir paragraph and a git-ignored-is-not-tool-ignored lesson
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the old sentence carried the report files and the scratch
+  directories together. The rewrite splits it: one sentence for the report
+  files, one sentence for the four scratch locations with the naming rule,
+  and the "parallel writers never share a file" conclusion after both, since
+  it now rests on both. The lesson's Background line adds one clause of what
+  § 8 found (68 `*.test.ts` probes failed a bare `npm test`; code-fixer added
+  a `vitest.config.ts` excluding `.kenspc/**`). Why: the dry-run record under
+  `docs/dry-runs/` is a transient artifact, so the lesson carries its own
+  evidence, as the older lessons' Background lines do.
+- Changes/tradeoffs: the paragraph's existing short line "main session
+  relays paths rather than" and the "report text. Issue IDs …" line after it
+  are kept as they were, so the diff touches only the sentence it rewrites.
+  Verified: `check-all.sh` exits 0 with `guards run: 10`; `git diff` has two
+  hunks, the run-dir paragraph and the appended lesson, and the invariant
+  sentence under § Standalone safety classification is unchanged.
 
 Depends on: Task 1-4
 

@@ -167,8 +167,14 @@ Since v3.5 the agents exchange reports through a per-run directory,
 `<repo root>/.kenspc/runs/<run-id>/`, passed as the `RUN_DIR` CONTEXT key.
 The orchestrating skill prepares it and, when `.kenspc/` is not yet
 git-ignored, makes a one-time `.gitignore` commit. Each reviewer writes only
-its own `angle-<n>.md` and `scratch/angle-<n>/`, and `code-fixer` only
-`schema-b.md` and `scratch/`, so parallel writers never share a file, and the
+its own `angle-<n>.md`, and `code-fixer` only `schema-b.md`. Probe and
+temporary files go in one scratch subdirectory per writer —
+`scratch/angle-<n>/` for each reviewer, `scratch/code-fixer/`,
+`scratch/regression-verifier/`, and `scratch/orchestrator/` for the main
+session — and are named so the project's test runner does not collect them
+(vitest and jest: no `.test.` or `.spec.` segment in a file name, no file
+named `test.*` or `spec.*`, and no `__tests__` directory; other runners:
+their configured pattern). So parallel writers never share a file, and the
 main session relays paths rather than
 report text. Issue IDs (`R` / `E` / `Q` / `B` / `T` plus a sequence number)
 and code-fixer's Source column let `regression-verifier` settle completeness
@@ -497,3 +503,15 @@ pre-flight greps, to catch this class: all four defects passed every
 mechanical check.
 Background: v3.4.2 hooks repair (2026-07-08); details in that CHANGELOG
 entry.
+
+### Git-ignored is not tool-ignored
+An ignored directory inside the project is skipped by git and by nothing
+else. Test runners, linters, and compilers walk the tree by their own
+patterns, so a scratch file that looks like a test is a test. Name scratch
+files outside those patterns, and treat a tool that trips over them as a
+plugin defect, never as a reason to change the user's configuration.
+Background: the batch A acceptance run,
+`docs/dry-runs/batch-a-acceptance.md` § 8 — 68 probe files named
+`*.test.ts` under the run's scratch directory made a bare `npm test` fail,
+and code-fixer answered by adding a `vitest.config.ts` that excludes
+`.kenspc/**` to the user's project.
