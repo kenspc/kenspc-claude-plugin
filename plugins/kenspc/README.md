@@ -278,7 +278,7 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   If a named task is not DONE, whether it was BLOCKED in this run or an
   earlier one or has not run yet, the task is marked BLOCKED with one
   `depends on Task N (<status>)` reason per such task instead of being
-  attempted. New in 3.6.0: a task that used to be attempted after a blocked
+  attempted. New in v3.6.0: a task that used to be attempted after a blocked
   dependency is now blocked.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to

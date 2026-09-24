@@ -276,7 +276,7 @@ guard checks is documented once, in "Repository scripts/" below.
 - Reasoning depth follows the session's effort level, with `effort:` frontmatter overrides only where a file needs more (currently three), not inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
-- No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan
+- No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan
 
 ## Development Workflow
 
