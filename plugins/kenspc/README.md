@@ -272,6 +272,14 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   fixes a branch step the plan did not prescribe, or that your CLAUDE.md
   contradicts, back to the default and records a Plan-Level Concern;
   `task-implementer` follows the task document as written and asks nothing.
+- **Dependency gate.** `/kenspc-task-implement` treats a task's `Depends on`
+  line — one task (`Depends on: Task 3`), an ASCII-hyphen range
+  (`Depends on: Task 1-5`), or a comma-separated list — as a hard dependency.
+  If a named task is not DONE, whether it was BLOCKED in this run or an
+  earlier one or has not run yet, the task is marked BLOCKED with one
+  `depends on Task N (<status>)` reason per such task instead of being
+  attempted. New in 3.6.0: a task that used to be attempted after a blocked
+  dependency is now blocked.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

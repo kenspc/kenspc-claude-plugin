@@ -37,8 +37,10 @@ filled at release.
   ends every task document, phase-specific ones included, with
   `### Task N: Doc-sync` and `Depends on: Task 1-<N-1>`, written from a fixed
   template that lists the documents and carries the promotion instruction in
-  the task's own text. A document an earlier task already edits is verified
-  against the implementation rather than edited again. The task is exempt
+  the task's own text. For a document an earlier task already edits, the
+  Doc-sync task verifies it against the implementation instead of redoing
+  the planned edit, while still correcting a statement the implementation
+  contradicts and writing promoted decisions into it. The task is exempt
   from the sizing table. `task-document-reviewer`'s Completeness angle checks
   that it exists, is last, covers every other task, and lists the element's
   documents; a plan without the element is a Plan-Level Concern. The task
@@ -50,7 +52,9 @@ filled at release.
   destination and written nowhere), or local, the default. Schema D gains an
   always-rendered `## Decisions needing a home` section (`none` when empty),
   and task-implement's Schema G turns each entry into a Next steps bullet,
-  plus one bullet when the Doc-sync task is BLOCKED.
+  plus one bullet when the Doc-sync task is BLOCKED. In a run without a
+  Doc-sync task, the roll-up classifies the DONE tasks' decisions itself and
+  writes no document.
 - **Angle 3, Consistency with CLAUDE.md,** in `task-document-reviewer`:
   written-rule departures, task text carried into a code artifact or a
   document in a language other than that artifact's own, and undecided git
@@ -80,7 +84,13 @@ filled at release.
   plugin sets no default language of its own.
 - **Task-document reviewer angles: 2 → 3.** generate-task's review table
   shows three rows.
-- **Guard counts:** `guards run: 10`, `self-tests run: 9`.
+- **Guard counts:** `guards run: 10`, `self-tests run: 9`. The release
+  checklist's pre-flight expects them, and smoke rows 4–6 check the
+  `## Documentation impact` section, the last `### Task N: Doc-sync` task,
+  and `## Decisions needing a home` together with a forced-BLOCKED run.
+- CLAUDE.md gains a Durable documents table, the list this repository's own
+  plans determine their Documentation impact from, and describes the
+  documentation path and the dependency gate.
 
 ### Branching stance
 

@@ -120,6 +120,10 @@ previous one (cascade dependency). Agent body returns a structured change log.
 `task-document-reviewer` reviews three — Completeness (including Doc-sync
 coverage), Execution Order, and Consistency with CLAUDE.md. The plan
 reviewer's Completeness angle checks the plan's Documentation impact element.
+Consistency with CLAUDE.md relies on subagents loading the project- and
+user-level CLAUDE.md files themselves (`omitClaudeMd` defaults to false); the
+reviewer does not read `~/.claude/CLAUDE.md`, so an agent that opts out of
+that loading loses the user-level rules the angle checks against.
 
 The documentation path runs from the plan to the implementation run. Every
 plan carries a Documentation impact element — the durable documents its steps
@@ -132,11 +136,15 @@ listed documents in line with what the earlier tasks built and promotes their
 recorded decisions into them. A decision that belongs in a durable document
 none of the listed ones fits is reported under `## Decisions needing a home`
 in Schema D, and task-implement's Schema G turns each entry into a Next steps
-bullet. The dependency gate holds the chain together: `task-implementer`
-marks a task BLOCKED with `depends on Task N (<status>)` when its
-`Depends on` line names a task that is not DONE, so a Doc-sync task never
-documents behaviour a blocked task did not build. The gate applies to every
-task with a `Depends on` line, not only the Doc-sync task.
+bullet. In a run without a Doc-sync task, the roll-up classifies the DONE
+tasks' decisions itself and writes no document. The section is always
+rendered, `none` when empty, unlike Schema D's skip-when-empty sections: in an
+unattended run it is the only evidence that the promotion step ran. The
+dependency gate holds the chain together: `task-implementer` marks a task
+BLOCKED with `depends on Task N (<status>)` when its `Depends on` line names
+a task that is not DONE, so a Doc-sync task never documents behaviour a
+blocked task did not build. The gate applies to every task with a
+`Depends on` line, not only the Doc-sync task.
 
 **Parallel MapReduce (task-review):**
 - Phase 1: 5 review agents, read-only on the working tree, dispatched in parallel
@@ -268,6 +276,7 @@ guard checks is documented once, in "Repository scripts/" below.
 - Reasoning depth follows the session's effort level, with `effort:` frontmatter overrides only where a file needs more (currently three), not inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
+- No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan
 
 ## Development Workflow
 
@@ -392,6 +401,12 @@ visible. Before v3.5.0 the self-tests ran only as separate release-checklist
 commands, which is how five of them went unrun on macOS (BSD `sed -i`)
 without anyone noticing.
 
+Guards run under the bash 3.2 that macOS ships as well as under newer bash,
+so they avoid bash 4 features such as associative arrays (`declare -A`):
+`check-doc-sync-anchors.sh` keeps its anchor groups in one flat `label|path`
+array for that reason, and its self-test copies its files from that same
+array so the fixture cannot drift from the groups it tests.
+
 Run `bash scripts/check-all.sh --self-test` before tagging any release.
 Plain `bash scripts/check-all.sh` (main mode only) is the natural pre-commit
 hook candidate when guard-target files change.
@@ -428,7 +443,7 @@ not on it.
 | `docs/roadmap.md` | Planned work not yet shipped | An item is planned, or ships (it then leaves the file) |
 | `docs/dry-runs/README.md` | The dry-run report label-vocabulary convention | The dry-run report convention changes |
 | `plugins/kenspc/references/plan-document-example.md` | An example plan document, the reference for `generate-plan`'s output | The plan format `generate-plan` produces changes |
-| `plugins/kenspc/references/task-document-example.md` | An example task document users copy, including the Implementation notes block and the Doc-sync task | The task-document format `generate-task` writes or `task-implementer` reads changes |
+| `plugins/kenspc/references/task-document-example.md` | An example task document users copy, including the Implementation notes block and the Doc-sync task | The task-document format `generate-task` writes or `task-implementer` reads changes. Its Task 6 is `generate-task`'s Doc-sync Task template filled in, so a change to that template changes Task 6 in the same commit |
 
 ### Release procedure
 

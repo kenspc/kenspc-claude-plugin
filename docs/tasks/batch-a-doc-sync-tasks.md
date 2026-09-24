@@ -840,7 +840,37 @@ forced BLOCKED shows the Doc-sync task BLOCKED with
 
 ### Task 16: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promoted — T4's reading of the C1 rule (a Doc-sync task does
+  not redo a planned edit but still corrects contradicted statements and
+  writes promoted decisions) into `plugins/kenspc/CHANGELOG.md`, 3.6.0 Added,
+  Doc-sync task bullet; T4's three `Depends on` forms and T7's gate details
+  (a task BLOCKED in an earlier run counts, one reason per unmet dependency)
+  into `plugins/kenspc/README.md` § Known behavior, a new Dependency gate
+  item; T5's "Task 6 is the generate-task template filled in" into
+  `CLAUDE.md` § Durable documents, the task-example row; T9's reliance on
+  subagents loading CLAUDE.md themselves into `CLAUDE.md` § Subagent Review
+  Architecture; T10's ruled-out plugin default language for task documents
+  into `CLAUDE.md` § Writing Rules for Skill Content; T11's bash 3.2
+  constraint (no associative arrays, hence the flat `label|path` array) into
+  `CLAUDE.md` § Repository scripts/. Needs a home: none. Local: every other
+  decision in Tasks 1–15 (element and section placement inside a skill or
+  agent, verbatim wording choices, example contents, table and row layout).
+- Changes/tradeoffs: verification against the implementation also added two
+  facts missing from the documents: in a run without a Doc-sync task the
+  roll-up classifies the DONE tasks' decisions itself and writes no document
+  (CLAUDE.md and CHANGELOG), and the section is always rendered, a
+  deliberate departure from skip-when-empty (CLAUDE.md; from T7's
+  Changes/tradeoffs). The CHANGELOG entry gained the release checklist's
+  smoke-row additions and the CLAUDE.md Durable documents table, which
+  Tasks 12 and 15 made but Task 14's item list did not name. The Writing
+  Rules section is not among the CLAUDE.md sections the plan named; the
+  document is listed, and that section is where a maintainer looks for
+  skill-writing rules. `README.md`, `docs/roadmap.md`,
+  `docs/release-checklist.md`, and both reference examples were verified and
+  needed no change.
 
 Depends on: Task 1-15
 
