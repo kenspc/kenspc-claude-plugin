@@ -156,11 +156,11 @@ Render the implementer's Schema D table verbatim:
 | 1 | T-001   | DONE     | a.ts, b.ts    | abc1234 |
 | 2 | T-002   | BLOCKED  | —             | —       |
 
-Below the table, render the BLOCKED prose, Decisions made, and Post-
-implementation notes verbatim from the agent's output. These prose sections
-are roll-ups of the per-task `**Implementation notes:**` blocks now persisted
-in the task document; the orchestrator still renders them verbatim from the
-agent's output rather than re-reading the document.
+Below the table, render the BLOCKED prose, Decisions made, Decisions needing
+a home, and Post-implementation notes verbatim from the agent's output. These
+prose sections are roll-ups of the per-task `**Implementation notes:**` blocks
+now persisted in the task document; the orchestrator still renders them
+verbatim from the agent's output rather than re-reading the document.
 
 Then present a brief progress update to the user:
 
@@ -384,7 +384,7 @@ Render the final consolidated report using Schema G:
 ```
 ## Implementation
 
-(Schema D verbatim.)
+(Schema D verbatim, including its `## Decisions needing a home` section.)
 
 ## Code Review
 
@@ -411,7 +411,10 @@ Code Review / Fixes / Verification sections are omitted.
 Bulleted list (failed verifications, deferred issues, blocked task
 unblocks). Each HIGH or MEDIUM DEFERRED issue gets its own bullet; LOW
 DEFERRED issues share one bullet with their count and the path of
-schema-b.md.
+schema-b.md. Each Decisions needing a home entry gets its own bullet with
+the decision and its suggested destination. When the Doc-sync task is
+BLOCKED, one bullet states that its listed documents were not synced, and
+why.
 ```
 
 #### Verdict determination

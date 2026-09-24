@@ -437,7 +437,18 @@ Plan Step 3.1 (rulings M5, D2, D3, D4). Three additions, each with its Why:
 
 ### Task 8: Render Decisions needing a home in task-implement
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the Schema G Implementation placeholder now reads "Schema D
+  verbatim, including its `## Decisions needing a home` section", so the
+  orchestrator sees the section is expected there without a second copy of
+  its rules. The two new Next steps rules extend the existing prose sentence
+  inside the Schema G block rather than adding a separate list, matching how
+  the DEFERRED bullets are already described.
+- Changes/tradeoffs: the Phase 1 Step 5 paragraph was rewrapped after the
+  insertion; every changed line stays inside Phase 1 Step 5 or Phase 2
+  Step 4, and the Verdict determination bullets are untouched.
 
 Depends on: Task 7
 
