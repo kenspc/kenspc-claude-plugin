@@ -30,9 +30,9 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 
 OBJECTIVE
 Review the generated task document against the source plan and actual project
-to ensure it is complete, correctly ordered, and actionable. Fix task-level
-issues directly. Record plan-level issues without modifying the plan. Track
-every change so you can report them at the end.
+to ensure it is complete, correctly ordered, actionable, and consistent with
+CLAUDE.md. Fix task-level issues directly. Record plan-level issues without
+modifying the plan. Track every change so you can report them at the end.
 
 PREREQUISITES
 1. Read the task document at the path given by CONTEXT TASK_DOC_PATH in full.
