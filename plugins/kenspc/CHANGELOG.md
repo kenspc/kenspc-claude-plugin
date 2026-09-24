@@ -69,6 +69,9 @@ filled at release.
 - `scripts/check-doc-sync-anchors.sh` with `--self-test`:
   `Documentation impact`, `Doc-sync`, and `Decisions needing a home` stay
   present in the eight files that write, check, or render them.
+- `docs/dry-runs/batch-a-acceptance.md`: the batch A acceptance run on
+  macOS — smoke rows 4–6 with their batch A additions, a forced-BLOCKED
+  round, and the three reviewer negative cases.
 
 ### Changed
 
