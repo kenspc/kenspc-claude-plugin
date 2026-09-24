@@ -343,4 +343,9 @@ MEDIUM and LOW issues do not change the verdict but appear in the report.
 
 The Next steps bullets call out: deferred issues, regression failures,
 reviewer recommendations the user should act on, and whether re-running
-the review is suggested.
+the review is suggested. When regression-verifier's test-row Detail names
+files under `.kenspc/` that the test run collected and that passed, one
+bullet names them as the Detail does and asks the user to delete them.
+Why: runs are never deleted and the plugin deletes nothing itself, so a
+collected probe that passes stays in the user's own test run until the user
+removes it.

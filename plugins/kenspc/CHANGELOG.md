@@ -187,7 +187,11 @@ filled at release.
   for a runner without such a list, or when the list command errors, Detail
   says the check was not made, and the Result stays what the test run set.
   Beyond about ten such files, Detail names the directories that hold them,
-  each with a file count. Build and lint are included
+  each with a file count. When the collected files passed, the final
+  report's Next steps (task-review's Next steps rules, task-implement's
+  Schema G) carries one bullet naming them and asking the user to delete
+  them: runs are never deleted and the plugin deletes nothing itself, so a
+  passing probe stays in the user's own test run. Build and lint are included
   because those tools walk the run directory too: ESLint's flat config
   ignores only `node_modules` and `.git` by default. Keeping scratch files
   out of them is still open (`docs/roadmap.md`). Source:

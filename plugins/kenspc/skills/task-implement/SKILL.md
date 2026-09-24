@@ -435,7 +435,12 @@ why. When a Doc-sync task was processed DONE in this run and code-fixer's
 statistics line reports FIXED greater than 0, one bullet names the Doc-sync
 task's listed documents to re-check against the fix commits — the review's
 fixes land after the Doc-sync task, so a document it synced can already
-describe pre-fix behavior.
+describe pre-fix behavior. When regression-verifier's test-row Detail names
+files under `.kenspc/` that the test run collected and that passed, one
+bullet names them as the Detail does and asks the user to delete them —
+runs are never deleted and the plugin deletes nothing itself, so a collected
+probe that passes stays in the user's own test run until the user removes
+it.
 ```
 
 #### Verdict determination

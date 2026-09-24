@@ -264,7 +264,8 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   `regression-verifier` fails that check and names them; when they are the
   only cause, code-fixer's scratch-pollution note names them too. A file
   there that the test runner collects but that passes leaves the test check
-  PASS, and its Detail names the file.
+  PASS, its Detail names the file, and the final report's Next steps asks
+  you to delete it.
 - Runs accumulate: nothing is deleted automatically. Remove old run
   directories when you no longer need them. After upgrading from v3.5.x,
   remove the run directories it left: their probe files can carry
