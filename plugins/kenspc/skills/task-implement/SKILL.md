@@ -414,7 +414,11 @@ DEFERRED issues share one bullet with their count and the path of
 schema-b.md. Each Decisions needing a home entry gets its own bullet with
 the decision and its suggested destination. When the Doc-sync task is
 BLOCKED, one bullet states that its listed documents were not synced, and
-why.
+why. When a Doc-sync task was processed DONE in this run and code-fixer's
+statistics line reports FIXED greater than 0, one bullet names the Doc-sync
+task's listed documents to re-check against the fix commits — the review's
+fixes land after the Doc-sync task, so a document it synced can already
+describe pre-fix behavior.
 ```
 
 #### Verdict determination
