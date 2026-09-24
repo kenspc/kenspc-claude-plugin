@@ -495,6 +495,18 @@ Add three sub-checks:
 - The pre-flight lines still read `guards run: 10` and `self-tests run: 9`.
   No smoke-table row outside the run-directory check changed.
 - `bash scripts/check-all.sh` exits 0.
+- The checklist's pre-flight block, run with bash from the repository root,
+  exits 0:
+  - the effort-override diff (the set of files carrying `effort:` is
+    unchanged);
+  - `claude plugin validate --strict .`;
+  - `claude plugin validate --strict ./plugins/kenspc`;
+  - `bash scripts/check-all.sh --self-test`, whose output includes
+    `guards run: 10` and ends with `self-tests run: 9`.
+
+  Why here: these are the plan's mechanical checks (Testing Strategy).
+  Task 7 runs after Tasks 1–4, when every plugin file is final, and
+  task-implement has no step that runs checks listed outside a task.
 
 ---
 
@@ -609,11 +621,14 @@ modify no document outside the list.
   batch A precedent, its report is filed as
   `docs/dry-runs/scratch-probes-acceptance.md` before this task document is
   deleted at release.
-- After the implement run, the orchestrating session runs the plan's
-  mechanical checks (Testing Strategy):
+- The plan's mechanical checks (Testing Strategy) run in Task 7's last
+  acceptance criterion, through the release checklist's pre-flight block:
   - `bash scripts/check-all.sh --self-test`, expecting `guards run: 10` and
     `self-tests run: 9`;
   - `claude plugin validate --strict .`;
   - `claude plugin validate --strict ./plugins/kenspc`;
   - a check that the set of files carrying an `effort:` override
     (`task-implementer`, `code-fixer`, `generate-plan`) is unchanged.
+
+  Tasks 8 and 9 edit only documents no guard reads: the CHANGELOG, the
+  roadmap, and Task 9's listed documents.
