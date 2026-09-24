@@ -118,10 +118,12 @@ Run-directory check for rows 6 and 7 (v3.5.1):
      agent probed, and this sub-check was not exercised.
   2. After the run, the project's own test command passes unmodified from
      the repository root.
-  3. The working tree gained no runner or ignore configuration from any
-     agent: `git status --short` lists no such file, and no fix commit
-     touches one. The one-time `.gitignore` commit below is the
-     orchestrating skill's, made before dispatch, and does not count.
+  3. No agent changed the project's test-runner config, ignore files,
+     `tsconfig`, or package scripts: `git status --short` lists no such
+     file, and no fix commit touches one. A narrowed `test` script in
+     `package.json` would also turn sub-check 2 green. The one-time
+     `.gitignore` commit below is the orchestrating skill's, made before
+     dispatch, and does not count.
   4. regression-verifier ran each build, test, and lint command the project
      defines as the project configures it, with no path filter or exclude
      added: its Bash calls in the run's trace show the project's own
