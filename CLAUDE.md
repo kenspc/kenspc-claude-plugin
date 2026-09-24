@@ -121,7 +121,10 @@ previous one (cascade dependency). Agent body returns a structured change log.
 coverage), Execution Order, and Consistency with CLAUDE.md. The plan
 reviewer's Completeness angle checks the plan's Documentation impact element.
 Consistency with CLAUDE.md relies on subagents loading the project- and
-user-level CLAUDE.md files themselves (`omitClaudeMd` defaults to false); the
+user-level CLAUDE.md files themselves (`omitClaudeMd` false or absent loads
+the user, project, and local CLAUDE.md files; source: the Claude Code
+sub-agents reference, https://code.claude.com/docs/en/sub-agents, checked
+2026-09-24); the
 reviewer does not read `~/.claude/CLAUDE.md`, so an agent that opts out of
 that loading loses the user-level rules the angle checks against.
 
