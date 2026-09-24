@@ -14,6 +14,8 @@ Express.js and uses PostgreSQL via Prisma ORM.
 
 Related plan: `docs/plans/auth-plan.md`
 
+Dependency note: Task 6 depends on Tasks 1–5 (`Depends on: Task 1-5`) and runs after them.
+
 ## Tasks
 
 ### Task 1: Create User model and migration
@@ -96,6 +98,45 @@ existing test setup (Jest + Supertest).
 - All happy paths tested
 - All error paths tested (duplicate email, wrong password, missing token)
 - Tests run in isolation (database is reset between tests)
+
+---
+
+### Task 6: Doc-sync
+
+**Status:** TODO
+
+Depends on: Task 1-5
+
+Bring the documents below in line with what Tasks 1-5 implemented, as recorded in their
+`**Implementation notes:**` blocks, and promote their decisions.
+
+**Documents** (the plan's Documentation impact; this task creates or modifies no other
+file):
+- `README.md` § Authentication — describe registration, login, and the
+  `Authorization: Bearer <token>` header that protected routes expect (plan Steps 2.1–2.3).
+- `docs/api.md` § Auth endpoints — add `POST /api/auth/register` and
+  `POST /api/auth/login` with their request bodies, responses, and error codes (plan
+  Steps 2.1–2.2).
+
+**Promotion:** read the `Decisions:` sub-bullets in the Implementation notes of Tasks 1-5.
+Write each decision that a future reader would look for in one of the listed documents
+into that document, in the document's own language and structure. List a decision that
+belongs in a durable document but fits none of the listed ones under
+`## Decisions needing a home` in the run report with a suggested destination, and write
+it nowhere. Leave a decision that only explains a local code choice where it is. Create
+or modify no document outside the list.
+
+**Acceptance criteria:**
+- Each listed document describes the behaviour Tasks 1-5 implemented, so that a reader of
+  that document alone learns it
+- Every promoted decision appears in the document named for it, in that document's
+  language
+- No file outside the listed documents was created or modified by this task (this task
+  document's status update aside)
+
+> Task 6 is what `generate-task` appends as the last task when the plan's Documentation
+> impact is not N/A. Its promotion instruction is part of the task text, so a Doc-sync
+> task written by hand from this example works the same way.
 
 ---
 

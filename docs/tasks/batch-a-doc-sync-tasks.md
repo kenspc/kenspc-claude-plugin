@@ -266,7 +266,20 @@ implementation instead of editing it again.
 
 ### Task 5: Show the Doc-sync task in the task example
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the origin note is a new block quote under Task 6 rather than a
+  sentence in Task 1's existing block quote, so Tasks 1–5 stay byte-unchanged
+  and the note sits next to the task it explains. Task 6's text is the
+  generate-task template filled in (Tasks 1-5, two documents), so the example
+  and the skill that produces it cannot disagree on wording.
+- Changes/tradeoffs: the entries cite plan step numbers of the example's
+  hypothetical `docs/plans/auth-plan.md`, which the example never shows. Task
+  6's acceptance criteria drop trailing periods to match the example's other
+  criteria. The existing Task 1 note still says "Tasks 3–5 (TODO)"; it stays
+  accurate without naming Task 6, and editing it was outside this task's
+  "otherwise unchanged" bar.
 
 Depends on: Task 4
 
