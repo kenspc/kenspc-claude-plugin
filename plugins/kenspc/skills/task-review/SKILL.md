@@ -78,11 +78,19 @@ has lost rows on the way to the verifier.
   directory need not exist — the first report written creates it.
 - Scratch space: probe files, copies, and other temporary files go under
   `RUN_DIR/scratch/` — each reviewer in its own `scratch/angle-<n>/`,
-  code-fixer and regression-verifier in `scratch/` itself. It is ignored
-  along with the run directory and needs no cleanup. Why: deleting temporary
-  files with `rm -rf` can be denied by the user's permission rules, and a
-  verifier that could not clean up has fallen back to judging fixes by
-  reading code.
+  code-fixer in `scratch/code-fixer/`, regression-verifier in
+  `scratch/regression-verifier/`, and the orchestrating session itself in
+  `scratch/orchestrator/` when it runs a probe of its own. Every file there
+  is named so the project's test runner does not collect it: for vitest and
+  jest, no `.test.` or `.spec.` segment in a file name, no file named
+  `test.*` or `spec.*`, and no `__tests__` directory; for other runners,
+  their configured pattern. Starting over means a new subdirectory, never a
+  delete. It is ignored along with the run directory and needs no cleanup.
+  Why: deleting temporary files with `rm -rf` can be denied by the user's
+  permission rules, and a verifier that could not clean up has fallen back
+  to judging fixes by reading code. The run directory is git-ignored, not
+  tool-ignored, so a test runner walking the tree collects scratch files
+  that look like tests.
 - Ignore check: run `git -C <root> check-ignore -q .kenspc/runs/probe`. The
   probe path need not exist; a `.kenspc/` rule matches any path under the
   directory. Asking about `.kenspc/` itself is not reliable: a blank line in
@@ -226,9 +234,9 @@ table, the Deferred Issues prose, and a statistics line of this fixed form:
 <!-- canonical:stats-line:end -->
 
 Its reply carries the statistics line, the Per-angle Results table, the HIGH
-and MEDIUM rows with their Deferred Issues paragraphs, and the path of
-schema-b.md. Render that reply verbatim; the LOW rows and their prose stay in
-the file.
+and MEDIUM rows with their Deferred Issues paragraphs, the scratch-pollution
+note when there is one, and the path of schema-b.md. Render that reply
+verbatim; the LOW rows and their prose stay in the file.
 
 ### Step 6: Dispatch regression agent
 
@@ -272,8 +280,9 @@ Render the final consolidated report using Schema F:
 ## Fixes
 
 (code-fixer's reply verbatim: the statistics line, the Per-angle Results
-table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, and the
-full path of schema-b.md, where the LOW rows and their prose remain.)
+table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, the
+scratch-pollution note when there is one, and the full path of schema-b.md,
+where the LOW rows and their prose remain.)
 
 ## Verification
 

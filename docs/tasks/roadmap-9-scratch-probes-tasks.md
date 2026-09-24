@@ -377,7 +377,22 @@ These stay unchanged:
 
 ### Task 4: Rewrite the Scratch space bullet in both review skills and name the scratch-pollution note where they describe code-fixer's reply
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the bullet keeps its existing sentence "It is ignored along
+  with the run directory and needs no cleanup." and the existing `rm -rf`
+  Why verbatim, and adds the tool-ignored Why as the sentence after it. So
+  the two reasons read as one Why, and the old wording stays greppable. The
+  C4 phrase is spelled "the scratch-pollution note when there is one",
+  without the second comma, in all four spots: in these lists the phrase
+  sits between comma-separated items, where an extra comma would read as a
+  list break. It matches code-fixer's OUTPUT FORMAT wording (Task 2).
+- Changes/tradeoffs: applied by hand in the orchestrating session, in
+  accept-edits mode (see Task 2). Each edit was made with the same
+  replacement in both skills, so the `canonical:run-dir` block and the two
+  C4 spots read identically in `task-review/SKILL.md` and
+  `task-implement/SKILL.md`.
 
 Plan Step 2.1 (ruling M1, clarifications C1, C4). This task makes two edits
 in each of the two review skills.
