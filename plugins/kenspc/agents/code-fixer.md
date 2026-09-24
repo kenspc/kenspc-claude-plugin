@@ -32,7 +32,8 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
   they are copied (`split.test.ts` becomes `split.probe.ts`) and runs through
   a runner config kept in `RUN_DIR/scratch/code-fixer/` whose `include`
   matches the renamed files; any other probe that has to execute runs as a
-  plain script. To start over, make a new subdirectory under
+  plain script or through a runner config kept there that includes only
+  your probes. To start over, make a new subdirectory under
   `RUN_DIR/scratch/code-fixer/` rather than deleting. Why: the run directory
   is git-ignored, not tool-ignored, and a runner walking the tree collects
   whatever looks like a test.
