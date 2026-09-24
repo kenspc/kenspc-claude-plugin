@@ -89,7 +89,7 @@ Rulings made by the maintainer on 2026-09-24.
 | Item | Exact form |
 |---|---|
 | Scratch layout | `RUN_DIR/scratch/angle-<n>/` (each reviewer, unchanged), `RUN_DIR/scratch/code-fixer/`, `RUN_DIR/scratch/regression-verifier/`, `RUN_DIR/scratch/orchestrator/` (the main session) |
-| Reset | a new subdirectory under the agent's own scratch directory (for example `scratch/angle-5/2/`); never a delete |
+| Reset | every attempt in a numbered subdirectory of the agent's own scratch directory from the first (`scratch/angle-5/1/`); starting over is the next number (`scratch/angle-5/2/`); never a delete (C16) |
 | Collection markers, vitest and jest | no `.test.` or `.spec.` segment in a file name; no `__tests__` directory |
 | Checklist probe | `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -path '*/__tests__/*' \)` prints nothing |
 
@@ -281,7 +281,7 @@ Rulings made by the maintainer on 2026-09-24.
 
 ## Clarifications during implementation (2026-09-24)
 
-Settled between the implementing session, the spec author, and the maintainer: C1–C3 before the task decomposition, C4–C5 after the task-document review, C6–C12 after the implementation review (the deferred findings in that run's Schema B). Each entry binds like the rulings above.
+Settled between the implementing session, the spec author, and the maintainer: C1–C3 before the task decomposition, C4–C5 after the task-document review, C6–C12 after the implementation review (the deferred findings in that run's Schema B), and C13–C17 after the standalone review of the C6–C12 commits. Each entry binds like the rulings above.
 
 - C1 — jest also collects files named `test.*` and `spec.*`. Its default `testMatch` pattern `**/?(*.)+(spec|test).?([mc])[jt]s?(x)` finds `test.js` and `spec.ts` as well as `*.test.*` (jestjs.io, Configuration, `testMatch`), which ruling M2's markers miss. The vitest and jest markers become: no `.test.` or `.spec.` segment in a file name, no file named `test.*` or `spec.*`, and no `__tests__` directory; other runners: their configured pattern. The checklist probe in [Fixed strings](#fixed-strings) becomes `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' \)` prints nothing. Every step that states the markers or the probe (Steps 1.1, 1.2, 2.1, 3.1–3.4) uses this form. Ruled by the maintainer.
 - C2 — code-fixer's scratch-pollution note (Step 1.2) is part of Schema B's contract, so its place is written in code-fixer's OUTPUT FORMAT, not only in the `RUN_DIR` bullet. The reply list gains an optional item, the scratch-pollution note: when the project's test command fails only because of files under `RUN_DIR/scratch`, it lists those paths and the narrowed command used to verify the fixes. In `schema-b.md` the same paragraph sits after Deferred Issues (prose) and before the statistics line, which stays the file's last line. The Deferred Issues definition and the worked Schema B example are unchanged. Step 1.2's edit location extends to OUTPUT FORMAT. Why: the orchestrator renders the reply and `schema-b.md` as that section specifies, and text outside the contract is either dropped or surprises the renderer.
@@ -312,7 +312,7 @@ Settled between the implementing session, the spec author, and the maintainer: C
   - The README's "as well" in § Run directory is corrected to match code-fixer.
   - The note's path list is bounded: beyond about ten paths it lists directories, each with a file count.
 - C10 — Earlier runs (E2). The diagnosis wording widens from `RUN_DIR/scratch` to files under any run in `.kenspc/`, so probes left by earlier runs are named the same way.
-  - regression-verifier's narrowed-command example `--exclude '**/.kenspc/**'` stays.
+  - code-fixer's narrowed-command example `--exclude '**/.kenspc/**'` stays; regression-verifier's narrowed re-run leaves out `.kenspc/` the same way.
   - The 3.6.0 CHANGELOG entry and the README's Run directory section carry an upgrade note: run directories left by 3.5.x can hold collectable probes, and the user removes them.
 - C11 — Collected scratch files that pass (E4). Row 3 stays PASS, and its Detail names those files; the intentionally-skipped state is the precedent.
   - regression-verifier compares the runner's list of collected files against `.kenspc/`, for example with `vitest list --filesOnly` or `jest --listTests`.
@@ -322,6 +322,18 @@ Settled between the implementing session, the spec author, and the maintainer: C
   - Both decisions promoted by the Doc-sync task stay.
   - Ruling M7's acceptance changes in two ways. The target project carries a small vitest config (a setup file or `globals`), so C8's baseline rule has something to verify. At least one mutation check happens during the run, so C8's rooting can be observed.
   - C6–C11 land as three commits after `b3769ac`, grouped as markers and naming (C6, C7), mutation checks (C8), and code-fixer and verifier scope (C9–C11). One standalone `/kenspc-task-review` reviews them. No new task document is written, since the Doc-sync task must stay last.
+- C13 — Two fixes from that review are ratified: collected `.kenspc/` files are named in the test row whether the run passed or failed (E4, `b1fd554`), and regression-verifier's Detail path list is bounded at about ten paths, like code-fixer's note in C9 (E5, `de7fbd9`).
+- C14 — Naming rules (E3, and the rename condition).
+  - "No `__mocks__` directory" holds for any jest project, outside the default-pattern scope: jest's haste map registers `__mocks__` files under `roots`, whatever `testMatch` says.
+  - A rename is not a delete only onto a path that does not exist yet; renaming over an existing file is a delete. Release checklist sub-check 5 is unchanged.
+- C15 — Mutation-check outcomes (E2/B3, B2), in the five reviewers' ROLE sections and both worker agents.
+  - When the unmutated baseline cannot pass under the scratch config, the mutation check is recorded as not made, with the reason, never as surviving mutants. regression-verifier's check 4 records "not mutation-checked" for it and does not flag the test.
+  - Before survivors are counted, a deliberately broken control mutant has to fail, which proves the run exercises the copy; how imports and aliases are redirected to the copy is left to the agent. Why: a check that cannot fail is indistinguishable from a check that passes.
+- C16 — Numbered attempts (E8/B4). Every attempt lives in a numbered subdirectory from the first: `scratch/angle-<n>/1/`, and starting over is `/2/`; the workers likewise use `scratch/code-fixer/1/` and `scratch/regression-verifier/1/`. A scratch runner config is rooted at that attempt directory. The `canonical:run-dir` block and the Fixed strings reset example follow.
+- C17 — Next steps, the release check, and the stop rule.
+  - E1/B1, option (b): when regression-verifier's row-3 Detail names `.kenspc/` files the test run collected and that passed, the Next steps list one bullet naming those paths and asking the user to delete them. It is added in task-review's "The Next steps bullets call out" paragraph and in task-implement's Schema G Next steps rules, outside every canonical block; `canonical:verdict-shared` is unchanged.
+  - T1, conditional: the release run-directory check's target project carries a vitest config that sets only a setup file or `globals`, keeping the default include. A sub-check reads: if any agent ran a mutation check (a mutant copy exists under scratch), the trace shows the unmutated baseline ran first under a config rooted at that attempt directory, and that a control mutant failed. The CHANGELOG's description of the setup follows.
+  - C13–C17 land as three commits (C14–C16 in the agents, C17's Next steps in the skills, C17's release check in the checklist), each with its CHANGELOG lines, reviewed by one standalone `/kenspc-task-review`. Stop rule: that review fixes HIGH findings only, and every MEDIUM and LOW finding it defers is recorded as one `docs/roadmap.md` item, "scratch convention follow-ups", citing its `schema-b.md` path. No further round follows; the acceptance run is the real test. Its target project follows C12 and this entry's release-check setup.
 
 ## Open Questions
 
