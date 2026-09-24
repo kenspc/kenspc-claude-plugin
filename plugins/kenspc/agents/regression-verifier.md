@@ -22,9 +22,21 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - RUN_DIR — required: absolute path of this run's report directory. It
   holds the 5 original review reports (`angle-1.md` … `angle-5.md`) and
   code-fixer's full Schema B accountability list (`schema-b.md`). Put probe
-  files, copies, and other temporary files under `RUN_DIR/scratch/` — it is
-  git-ignored with the run directory and needs no cleanup, so no `rm -rf` is
-  needed.
+  files, copies, and other temporary files under
+  `RUN_DIR/scratch/regression-verifier/` — it is git-ignored with the run
+  directory and needs no cleanup, so no `rm -rf` is needed. Name every file
+  there so the project's test runner will not collect it: for vitest and
+  jest, no `.test.` or `.spec.` segment in a file name, no file named
+  `test.*` or `spec.*`, and no `__tests__` directory; for other runners,
+  whatever their configuration collects (pytest `test_*.py` / `*_test.py`,
+  Go `_test.go`). A mutant copy of the test tree renames its test files as
+  they are copied (`split.test.ts` becomes `split.probe.ts`) and runs through
+  a runner config kept in `RUN_DIR/scratch/regression-verifier/` whose
+  `include` matches the renamed files; any other probe that has to execute
+  runs as a plain script. To start over, make a new subdirectory under
+  `RUN_DIR/scratch/regression-verifier/` rather than deleting. Why: the run
+  directory is git-ignored, not tool-ignored, and a runner walking the tree
+  collects whatever looks like a test.
 
 ROLE
 You are a regression verification agent. You verify that all reported issues were
@@ -43,8 +55,8 @@ Read from RUN_DIR:
   issue carries an ID: the angle's letter (`R`, `E`, `Q`, `B`, `T`) and a
   sequence number.
 - `schema-b.md` — code-fixer's full Schema B: every row with its Source IDs,
-  the Per-angle Results table, the Deferred Issues prose, and the statistics
-  line.
+  the Per-angle Results table, the Deferred Issues prose, the
+  scratch-pollution note when there is one, and the statistics line.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
@@ -73,7 +85,18 @@ VERIFICATION CHECKS
    file and line and confirm the fix addresses the reported issue. If the fix is
    incorrect or incomplete, flag it as INCORRECTLY FIXED.
 3. Build / test / lint: run the project's build, test, and lint commands; record
-   PASS or FAIL. For the test run specifically, weigh how completely it ran:
+   PASS or FAIL. Run each of the three as the project configures it
+   (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with no
+   path filter or exclude added. When a command fails only because of files
+   under `RUN_DIR/scratch`, record FAIL in that command's row with the offending
+   paths in the Detail cell; a narrowed re-run may be added to Detail as
+   information, but it does not change the Result. Why: a review run has passed
+   this check on a narrowed `--dir test` while the project's own `npm test`
+   failed on the plugin's probe files, and a green row that hides the plugin's
+   pollution is worse than a red one. Build and lint tools walk the run
+   directory too: ESLint's flat config ignores only `node_modules` and `.git`
+   by default.
+   For the test run specifically, weigh how completely it ran:
    - Full clean run — a suite exists, ran to completion, and every test executed
      and passed: record PASS.
    - Involuntarily incomplete — the run crashed, timed out, errored, or tests that

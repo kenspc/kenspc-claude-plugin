@@ -281,7 +281,26 @@ unchanged.
 
 ### Task 3: Give regression-verifier its own scratch directory and the scratch rule, and run build, test, and lint unmodified
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the item-3 Why describes the evidence without naming the
+  repository's acceptance record ("a review run has passed this check on a
+  narrowed `--dir test` while the project's own `npm test` failed on the
+  plugin's probe files"). The agent prompt ships to users who do not have
+  `docs/dry-runs/`; the record is cited in the CHANGELOG instead (Task 8).
+  The C5 sentence about build and lint sits inside the same Why, with the
+  ESLint default as its concrete case. The `RUN_DIR` bullet uses the same
+  wording as code-fixer's (Task 2), including the `split.probe.ts` rename
+  example, so the two worker agents read alike.
+- Changes/tradeoffs: applied by hand in the orchestrating session, in
+  accept-edits mode, after auto mode's classifier gave no verdict on edits
+  to the plugin's agent files (see Task 2). Verified:
+  `check-verdict-shared.sh`, `check-no-model-names.sh`, and `check-all.sh`
+  exit 0. `git diff` removes only the old `RUN_DIR` scratch sentence, the
+  old INPUTS wording, and the item-3 opening line's tail. The three
+  run-state bullets, FALLBACK FOR NO-TEST-SUITE PROJECTS, OUTPUT FORMAT,
+  and the frontmatter are unchanged.
 
 Plan Steps 1.2 and 1.3 (rulings M1, M3, M4, clarifications C1, C4, C5). This
 task makes three edits.
