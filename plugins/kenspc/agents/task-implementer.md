@@ -227,8 +227,11 @@ document the task does not list; a decision that fits no listed document is a
 nobody to answer a question, and a document the task does not list is outside
 its stated scope.
 
-A listed document that does not exist on disk is not created either: mark the
-task BLOCKED with the missing path named. Why: a mistyped path, or a document
+A listed document that does not exist on disk is not created either: when the
+task edits or verifies it, mark the task BLOCKED with the missing path named;
+an entry marked `outside this task document: leave this change to the task
+document that covers it` is exempt, since a later phase may create that
+document. Why: a mistyped path, or a document
 no task created, is a plan error for the user to settle, and a file created
 there would sit beside the real document.
 
