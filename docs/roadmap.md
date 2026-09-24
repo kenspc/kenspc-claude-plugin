@@ -24,6 +24,14 @@ the CHANGELOG records it from then on.
    guarded (the reviewers' ROLE sections, the canonical dispatch block).
    Add a whitespace-normalized exact-match check for README and CLAUDE.md to
    `check-run-contract.sh`.
+8. Documents synced by a Doc-sync task can go stale when a review fix
+   changes the behavior they describe: code-fixer's fixes land after the
+   Doc-sync task. Today Schema G's Next steps asks the user to re-check them
+   (batch A review, B2). Two directions for an agent to take it over:
+   code-fixer brings a listed document into scope when a fix changes the
+   behavior it describes, or regression-verifier gains a check that the
+   listed documents still match the code after the fix commits. Decide at
+   release whether this ships with 3.6.0.
 
 ## Planned batches
 
