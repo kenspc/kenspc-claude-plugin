@@ -704,7 +704,22 @@ the parenthesized list.
 
 ### Task 13: Update the READMEs
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the generate-task Skills row also names the document-language
+  rule (Task 10), since the row describes generate-task and that rule is new
+  user-visible behaviour. The Documentation path paragraph sits after the
+  numbered workflow steps and before "Small fixes …", as a bold-led
+  paragraph like the workflow's other emphasis, and states the M2 basis in
+  user terms (your CLAUDE.md, a documentation table where it has one). The
+  Branches item names `task-document-reviewer` as the reviewer that fixes an
+  unprescribed branch step, because this batch adds that check only there.
+- Changes/tradeoffs: the root README changes only the generate-task row; its
+  generate-plan and task-implement rows stay as they were, since both still
+  agree with the skills. The plugin README's plan-document-reviewer Agents
+  row was left unchanged; the Documentation impact check is described in the
+  generate-plan Skills row instead.
 
 Depends on: Task 1-10
 

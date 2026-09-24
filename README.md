@@ -24,7 +24,7 @@ Opinionated software development workflows — discovery brief, plan before you 
 |-------|-------------|
 | generate-brief | Structured discovery conversation (five dimensions) producing a shareable requirement brief — no review phase |
 | generate-plan | Collaborative discovery (shared framework, brief-aware) + drafting + automated 4-angle review |
-| generate-task | Plan-to-task decomposition via code analysis + 2-angle review |
+| generate-task | Plan-to-task decomposition via code analysis + 3-angle review |
 | task-implement | Automated batch implementation with input validation and auto-review |
 | task-review | Parallel 5-agent code review (MapReduce) with fix consolidation and regression verification |
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |

@@ -11,9 +11,9 @@ Skills activate automatically when Claude Code detects a matching task context.
 | Skill | Description |
 |-------|-------------|
 | generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
-| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). |
-| generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code. Confirms decomposition with user, then self-reviews for completeness and execution order via review agent. |
-| task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete. Automatically runs task-review on completion with a consolidated final report. |
+| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. |
+| generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with CLAUDE.md). |
+| task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review recent changes. Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
 
@@ -70,7 +70,7 @@ where their description marks them safe to invoke standalone.
 | `task-implementer` | Worker | No | Implements tasks from a task document |
 | `plan-document-reviewer` | Doc reviewer | No | Reviews generated plan documents |
 | `guide-document-reviewer` | Doc reviewer | No | Reviews generated guide documents |
-| `task-document-reviewer` | Doc reviewer | No | Reviews generated task documents |
+| `task-document-reviewer` | Doc reviewer | No | Reviews generated task documents (completeness including Doc-sync coverage, execution order, consistency with CLAUDE.md) |
 
 Agents marked "Standalone: No" are orchestration-only — their description starts
 with `INTERNAL:` and their body refuses on missing CONTEXT. Invoke them through
@@ -213,6 +213,8 @@ Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/pl
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
 
+**Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built.
+
 Small fixes can skip all skills and be implemented directly.
 
 ## Run directory
@@ -265,7 +267,11 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   (Claude Code 2.1.281).
 - **Branches.** The plugin does not create branches. Commits follow the
   branching rules in your project's CLAUDE.md and otherwise land on the
-  current branch.
+  current branch. The plugin takes no side on branching: whether to branch is
+  decided at plan time, when you approve the plan. `task-document-reviewer`
+  fixes a branch step the plan did not prescribe, or that your CLAUDE.md
+  contradicts, back to the default and records a Plan-Level Concern;
+  `task-implementer` follows the task document as written and asks nothing.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
