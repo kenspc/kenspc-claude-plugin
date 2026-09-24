@@ -110,8 +110,8 @@ instance B.
 
 ## Documentation impact
 
-Determined from the project's CLAUDE.md, whose documentation table lists `README.md` and
-`docs/architecture.md`.
+Determined from the project's CLAUDE.md, whose documentation table lists `README.md`,
+`docs/architecture.md`, and `docs/auth.md`.
 
 - `README.md` § API — add `GET /api/notifications`, `PATCH /api/notifications/:id/read`,
   and `POST /api/notifications/read-all` with their parameters, responses, and error
@@ -119,6 +119,8 @@ Determined from the project's CLAUDE.md, whose documentation table lists `README
 - `docs/architecture.md` § Runtime components — add the Socket.IO server with the Redis
   adapter, and Redis as a dependency of every API instance behind the load balancer —
   Step 1.2.
+- `docs/auth.md` — N/A for this document: socket connections reuse the existing JWT
+  middleware (Step 1.2), and the authentication flow itself does not change.
 
 ## Testing Strategy
 
