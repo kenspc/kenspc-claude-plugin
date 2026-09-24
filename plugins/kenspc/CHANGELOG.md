@@ -31,7 +31,11 @@ changes.
   and a headless session stopped the agent when it exited. Every dispatch —
   task-implementer, the five reviewers, code-fixer, regression-verifier, and
   the three document reviewers — now sets `run_in_background: false`. The
-  five reviewers still go out in one message and run in parallel.
+  five reviewers still go out in one message and run in parallel. The
+  parameter exists in headless (`claude -p`) and SDK sessions, which is
+  where the failure occurred; the interactive Agent tool (Claude Code
+  2.1.281) has no such parameter and runs subagents asynchronously, handing
+  each result back within the same turn.
 - **Transition lines translated.** `Implementation phase complete.` and
   `Proceeding to code review.` were rendered in the conversation language,
   which broke the release checklist's grep for the Phase 1 → Phase 2
@@ -92,6 +96,9 @@ Documented in the README; not changed in this release:
   own, so the five angles can review slightly different sets. Planned for
   the next minor release: the orchestrator computes the set once and passes
   it to all five.
+- In interactive sessions, subagents run asynchronously and hand their
+  results back; `run_in_background: false` takes effect only in headless and
+  SDK sessions.
 - The plugin does not create branches; commits follow the project's
   CLAUDE.md and otherwise land on the current branch.
 - The SessionEnd telemetry hook can log a false missed-review entry when a

@@ -147,7 +147,10 @@ Every Agent dispatch in the skills sets `run_in_background: false`
 (v3.5.1): each skill reads the agent's result in the same turn, while a
 background call returns at once and is stopped when a headless session
 exits. Foreground calls sent in one message still run in parallel, which is
-how the five reviewers are dispatched.
+how the five reviewers are dispatched. The parameter exists in headless
+(`claude -p`) and SDK sessions; the interactive Agent tool (Claude Code
+2.1.281) has no such parameter and runs subagents asynchronously, handing
+each result back within the same turn.
 
 As of v3.5, effort follows the session by default: a SKILL.md or agent
 .md without an `effort:` field inherits the session's effort level (per

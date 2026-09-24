@@ -69,6 +69,11 @@ In a throwaway directory or a freshly cloned worktree:
 claude --plugin-dir ./plugins/kenspc
 ```
 
+For a headless run on Windows (`claude -p "/kenspc-task-review"`), start it
+from PowerShell, or set `MSYS_NO_PATHCONV=1` in Git Bash. Otherwise MSYS
+rewrites the leading `/kenspc-task-review` into a Windows path before Claude
+Code sees it.
+
 Inside the session:
 
 | # | Check | Pass criterion |
@@ -85,9 +90,13 @@ Inside the session:
 
 Run-directory check for rows 6 and 7 (v3.5.1):
 
-- Every Agent call runs in the foreground: the five reviewer calls go out in
-  one message, no background-task notice appears, and code-fixer and
-  regression-verifier follow in the same turn.
+- Headless run (`claude -p`): every Agent call runs in the foreground — the
+  five reviewer calls go out in one message, no background-task notice
+  appears, and code-fixer and regression-verifier follow in the same turn.
+  Interactive (TUI) run: no user input is needed between the invocation and
+  the Schema F / G report. Foreground dispatch cannot be observed there:
+  the interactive Agent tool (Claude Code 2.1.281) has no `run_in_background`
+  parameter and runs subagents asynchronously, handing each result back.
 - The final report's Fixes section prints the full path of `schema-b.md`.
 - That directory holds `angle-1.md` through `angle-5.md` and `schema-b.md`.
   Any probe or temporary files are under its `scratch/` subdirectory — the

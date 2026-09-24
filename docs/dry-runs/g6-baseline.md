@@ -49,51 +49,26 @@ Without a CONTEXT block, both versions refused and printed the same usage
 block in three samples each; the wording around the block varied from run to
 run in both versions.
 
-## 3. Acceptance run (to fill in)
+## 3. Acceptance runs (v3.5.1, 2026-09-24)
 
-Run `/kenspc-task-implement` or `/kenspc-task-review` on a non-trivial change
-in a real project, from the repository root, in `acceptEdits` or `auto` mode.
+The four runs of the v3.5.1 release acceptance. All four: session model Opus
+5.5, effort `xhigh`, Claude Code 2.1.281.
 
-| Field | Value |
-|---|---|
-| Date | |
-| Project and change | |
-| Command | |
-| Claude Code version | |
-| Session model | |
-| Effort | |
-| Permission mode | |
-| Platform | |
-| Run directory | |
-| Files in the run directory | (expect `angle-1.md` … `angle-5.md`, `schema-b.md`) |
-| `.gitignore` commit | (first run in the repo: one commit touching only `.gitignore`; later runs: none) |
-| `bash scripts/check-run-contract.sh --file <run dir>/schema-b.md` | (exit code) |
-| Schema C row 1 | (result and detail; expect no "unnamed" or "unconfirmed" rows) |
+| Run | Reported | Unique after dedup | FIXED | DEFERRED | NOT APPLICABLE | Notes |
+|---|---|---|---|---|---|---|
+| macOS headless, `/kenspc-task-implement` | 15 (R 2, E 5, Q 1, B 3, T 4) | 11 | 10 | 1 | 0 | 0 HIGH; both MEDIUM fixed |
+| macOS headless, `/kenspc-task-review` | 8 | — | 3 | 3 | 0 | |
+| Windows, `/kenspc-task-review` | 8 (R 0, E 2, Q 1, B 2, T 3) | 6 | 3 | 3 | 0 | The 3 DEFERRED items need tests the target project does not have |
+| TUI, `/kenspc-task-review` | 8 (R 2, E 1, Q 2, B 1, T 2) | 4 | 1 | 3 | 0 | |
 
-Per-angle Results (paste from `schema-b.md`):
-
-| Angle | FIXED | DEFERRED | NOT APPLICABLE | DEDUPED | Reported |
-|---|---|---|---|---|---|
-| R | | | | | |
-| E | | | | | |
-| Q | | | | | |
-| B | | | | | |
-| T | | | | | |
-
-Statistics line (paste):
-
-```
-total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N
-```
+A dash means the figure was not recorded for that run.
 
 Compared with section 1:
 
-| Measure | Pre-G6 | This run |
+| Measure | Pre-G6 | v3.5.1 acceptance runs |
 |---|---|---|
-| HIGH handled | 12 of 12 (100%) | |
-| MEDIUM fix rate | 59% | |
-| LOW share of all findings | 64% | |
-| LOW fix rate | 13% | |
-| NOT APPLICABLE share | about 20% | |
+| NOT APPLICABLE share | about 20% | 0 in all four runs |
+| HIGH handled | 12 of 12 (100%) | 100% |
 
-Notes:
+MEDIUM fix rate, LOW share, and LOW fix rate were not recorded per run, so
+they are not compared here.

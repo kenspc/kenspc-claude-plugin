@@ -257,6 +257,12 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   commits, so the angles can review slightly different sets. A later minor
   release will have the orchestrator compute the set once and pass it to all
   five.
+- **Subagents in interactive sessions.** In an interactive session, Claude
+  Code runs subagents asynchronously and hands each result back; the
+  workflow still finishes within the same turn, with no further input. The
+  skills' `run_in_background: false` takes effect only in headless
+  (`claude -p`) and SDK sessions, where the Agent tool has that parameter
+  (Claude Code 2.1.281).
 - **Branches.** The plugin does not create branches. Commits follow the
   branching rules in your project's CLAUDE.md and otherwise land on the
   current branch.
