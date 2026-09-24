@@ -92,7 +92,9 @@ one).
    - For tasks with a Depends on line: is every hard dependency annotated,
      and is each annotation accurate?
    - Is granularity roughly uniform? Flag if one task touches 10+ files
-     while another touches only 1 — this suggests uneven decomposition.
+     while another touches only 1 — this suggests uneven decomposition. The
+     Doc-sync task is exempt and is not split: it is one task by design,
+     sized by the documents it lists.
    - Trace through the task list in order: could a developer execute each
      task without needing to jump ahead or back?
 

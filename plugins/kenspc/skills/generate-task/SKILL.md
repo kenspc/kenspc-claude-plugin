@@ -68,7 +68,8 @@ config files; the project's source tree.
 - Task sizing is XS, S, or M; L tasks have been broken further; XL is
   rejected (the Doc-sync task is exempt; see Task Sizing Guidelines).
 - Each task touches a manageable scope of files (around 8 or fewer is the
-  default; more requires explicit justification).
+  default; more requires explicit justification; the Doc-sync task is
+  exempt).
 - The Doc-sync task follows the plan's Documentation impact element. When
   the element names documents, the last task is `### Task N: Doc-sync` with
   `Depends on: Task 1-<N-1>`. When it is `N/A — <reason>`, there is no
