@@ -64,7 +64,21 @@ promotes their recorded decisions.
 
 ### Task 1: Add the Documentation impact element to generate-plan
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the M2 determination basis is written once, inside the
+  Documentation impact bullet in Phase 2 Step 1; the Phase 1 Step 2 bullet
+  points to it instead of repeating it, so the two cannot drift. The Why for
+  the always-present exception follows the "include only what applies"
+  sentence as a separate `Why:` sentence rather than inside the parenthesis,
+  matching the skill's rationale-anchored prose.
+- Changes/tradeoffs: the bullet also names the section heading form
+  (`## Documentation impact`) and places `N/A — <reason>` as the section's
+  body. The task text only asked for the element, but the plan's Fixed strings
+  table makes that heading load-bearing for plan documents (the release
+  checklist greps for it and generate-task reads it), and generate-plan is the
+  file that produces plan documents.
 
 Plan Step 1.1 (rulings M1, M2). In Phase 2 Step 1's element list, add
 `**Documentation impact**` directly after the Implementation Steps bullet as

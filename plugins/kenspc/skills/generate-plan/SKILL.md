@@ -107,6 +107,9 @@ Before asking questions, silently gather context:
   app.json, eas.json, or any config files that reveal the stack.
 - Scan the project structure (directory listing).
 - Note the tech stack, existing patterns, and constraints.
+- Note the durable documents CLAUDE.md names (the determination basis is
+  under **Documentation impact** in Phase 2 Step 1). They are the input for
+  that element.
 
 If not in a project directory, skip this step entirely.
 
@@ -168,7 +171,10 @@ Synthesize everything from Phase 1 — the requirements, discussion outcomes,
 project context (if any), and constraints. Then generate a plan document.
 
 The plan format is flexible and must adapt to the type of plan. Always
-consider whether these elements are relevant (include only what applies):
+consider whether these elements are relevant (include only what applies),
+except **Documentation impact**, which is always present. Why: the
+task-document reviewer's Doc-sync check reads that element, and an absent
+element is indistinguishable from a forgotten one.
 
 - **Objective** — what this plan aims to achieve, and explicit scope
   boundaries.
@@ -180,6 +186,14 @@ consider whether these elements are relevant (include only what applies):
   - what to do (concrete, not vague),
   - expected input and output,
   - acceptance criteria (how to know the step is done).
+- **Documentation impact** — always present, as a `## Documentation impact`
+  section. It lists the durable documents the plan's steps make stale; for
+  each: the path, the section where known, what must change, and the step
+  that causes it. When no durable document is affected, the section's body
+  is the single line `N/A — <reason>`. The durable documents are the ones the
+  project's CLAUDE.md names — a documentation table where one exists,
+  otherwise the documents it names in prose; when it names none, README.md
+  and CLAUDE.md themselves.
 - **Data Model / API Design** — if applicable.
 - **Testing Strategy** — if applicable.
 - **Deployment Strategy** — if applicable.
