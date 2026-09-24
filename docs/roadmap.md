@@ -36,8 +36,12 @@ the CHANGELOG records it from then on.
    and regression-verifier write under `RUN_DIR/scratch/` must not match the
    project test runner's collection pattern — vitest and jest collect
    `**/*.{test,spec}.*` by default. Use an extension no runner collects,
-   such as `.txt`; when a probe has to run, run it through the runner with
-   an explicit path. A copy of the whole `test/` tree is no exception.
+   such as `.txt`. A probe that has to execute runs as a plain script, or
+   through a runner config kept in the scratch directory that includes only
+   the probe (angle-2's method in the acceptance run: `--config` pointing at
+   a private vitest config). A copy of the whole `test/` tree is no
+   exception. Verify the filtering rules of vitest and jest when
+   implementing.
    Evidence: `docs/dry-runs/batch-a-acceptance.md` § 8 — 68 probe files made
    a bare `npm test` fail, code-fixer added a `vitest.config.ts` to the
    user's project to make room for the plugin's probes, and five agents each
