@@ -109,15 +109,19 @@ VERIFICATION CHECKS
    run stays PASS, as it does for intentionally skipped tests: compare the
    runner's list of collected files against `.kenspc/` (for example
    `vitest list --filesOnly` or `jest --listTests`), and for a runner with no
-   such list, say in Detail that this was not checked. Why: a review run has
-   passed this check on a narrowed `--dir test` while the project's own
-   `npm test` failed on the plugin's probe files, and a green row that hides
-   the plugin's pollution is worse than a red one; naming the scratch paths in
-   a mixed failure too lets the user tell the plugin's failures from the
-   code's. Runs are never deleted, so a collected probe that passes today
-   stays in the user's own test run, and probes left by earlier runs fail it
-   the same way. Build and lint tools walk the run directory too: ESLint's
-   flat config ignores only `node_modules` and `.git` by default.
+   such list, say in Detail that this was not checked. Beyond about ten
+   `.kenspc/` paths, Detail names the directories that hold them instead,
+   each with a file count, as code-fixer's scratch-pollution note does; the
+   final report renders this table verbatim, and one run's probes can number
+   in the dozens. Why: a review run has passed this check on a narrowed
+   `--dir test` while the project's own `npm test` failed on the plugin's
+   probe files, and a green row that hides the plugin's pollution is worse
+   than a red one; naming the scratch paths in a mixed failure too lets the
+   user tell the plugin's failures from the code's. Runs are never deleted,
+   so a collected probe that passes today stays in the user's own test run,
+   and probes left by earlier runs fail it the same way. Build and lint tools
+   walk the run directory too: ESLint's flat config ignores only
+   `node_modules` and `.git` by default.
    For the test run specifically, weigh how completely it ran:
    - Full clean run — a suite exists, ran to completion, and every test executed
      and passed: record PASS.

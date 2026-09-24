@@ -174,7 +174,8 @@ filled at release.
   stays PASS; they are found by comparing the runner's list of collected
   files (`vitest list --filesOnly`, `jest --listTests`) against `.kenspc/`;
   for a runner without such a list, Detail says the check was not made.
-  Build and lint are included
+  Beyond about ten such files, Detail names the directories that hold them,
+  each with a file count. Build and lint are included
   because those tools walk the run directory too: ESLint's flat config
   ignores only `node_modules` and `.git` by default. Keeping scratch files
   out of them is still open (`docs/roadmap.md`). Source:
