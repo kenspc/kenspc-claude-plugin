@@ -252,12 +252,14 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   patterns, no `.test.` or `.spec.` segment in a file name, no file named
   `test.*` or `spec.*`, no `__tests__` directory, and no `__mocks__`
   directory; where the project configures its own pattern, or for any other
-  runner, whatever that configuration actually collects. An agent that
-  starts over makes a new subdirectory instead of deleting, and renames a
-  file that already carries a collectable name, so none of them needs to
-  delete anything. No agent edits the project's configuration (runner
-  config, linter config, ignore files, `tsconfig`, package scripts) to make
-  room for the plugin's files. If files under `.kenspc/`, from this run or an
+  runner, whatever that configuration actually collects; a jest project
+  keeps the `__mocks__` rule whatever its pattern. Each attempt gets a
+  numbered subdirectory from the first (`angle-5/1/`); an agent that starts
+  over takes the next number instead of deleting, and renames a file that
+  already carries a collectable name onto a path that does not exist yet, so
+  none of them needs to delete anything. No agent edits the project's
+  configuration (runner config, linter config, ignore files, `tsconfig`,
+  package scripts) to make room for the plugin's files. If files under `.kenspc/`, from this run or an
   earlier one, still break the project's build, test, or lint command,
   `regression-verifier` fails that check and names them; when they are the
   only cause, code-fixer's scratch-pollution note names them too. A file

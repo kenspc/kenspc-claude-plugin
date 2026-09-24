@@ -49,28 +49,40 @@ means no `.test.` or `.spec.` segment in a file name, no file named `test.*`
 or `spec.*`, no `__tests__` directory, and no `__mocks__` directory; where
 the project configures its own pattern, or for any other runner, whatever
 that configuration actually collects (pytest `test_*.py` / `*_test.py`, Go
-`_test.go`). `probe.mts`, `probe-2.probe.ts`, and a `.txt` copy are safe;
-`probe.test.ts` and `test.ts` are not, and a copied `test/` tree keeps its
-collectable names unless you rename the files as you copy them. A probe that
-has to execute runs as a plain script, or through a runner config kept in
-your scratch directory that includes only your probes. To start over, make a
-new subdirectory under your scratch directory (for example
-`scratch/angle-<n>/2/`) rather than deleting; a file that already carries a
-collectable name is renamed, and a rename is not a delete. Why: the run
+`_test.go`). A jest project keeps the `__mocks__` rule whatever its pattern:
+jest's haste map registers `__mocks__` files under its `roots`, whatever
+`testMatch` says. `probe.mts`, `probe-2.probe.ts`, and a `.txt` copy are
+safe; `probe.test.ts` and `test.ts` are not, and a copied `test/` tree keeps
+its collectable names unless you rename the files as you copy them. A probe
+that has to execute runs as a plain script, or through a runner config kept
+in your scratch directory that includes only your probes. Every attempt
+lives in a numbered subdirectory of your scratch directory from the first
+(`scratch/angle-<n>/1/`), and starting over means the next number
+(`scratch/angle-<n>/2/`), never a delete. A file that already carries a
+collectable name is renamed onto a path that does not exist yet; that
+rename is not a delete, but renaming over an existing file is. Why: the run
 directory is git-ignored, not tool-ignored. A runner walking the tree
 collects the probes, and the project's own test command fails; a fixer that
 then edits the project's test configuration has changed the user's project
 to make room for the plugin's files.
 
 A runner config in your scratch directory is rooted at the current
-attempt's own directory (vitest `root`, jest `rootDir`), so it collects only
-that attempt's files. In a mutation check, the unmutated copy passes under
-that same config before any failing mutant counts as killed; how you make
-the baseline pass is up to you, for example by extending the project's
-config and replacing only its file selection. Why: without its own root, a
-scratch config's `include` also matches other agents' and earlier attempts'
-files, and when every mutant fails on an import or setup error, every mutant
-looks killed.
+attempt's numbered directory (vitest `root`, jest `rootDir`), so it collects
+only that attempt's files. A mutation check then goes in three steps. First
+the unmutated copy passes under that same config; how you make it pass is
+up to you, for example by extending the project's config and replacing only
+its file selection. If it cannot be made to pass, report the mutation check
+as not made, with the reason, where its result would have gone — never as
+surviving mutants. Next, a deliberately broken control mutant fails, which
+proves the run exercises the copy rather than the original; how you point
+imports and aliases at the copy is up to you. Only then does a failing
+mutant count as killed and a passing one as a survivor. Why: without its own
+root, a scratch config's `include` also matches other agents' and other
+attempts' files, which is also why the first attempt is numbered — no
+attempt's directory contains another's. When every mutant fails on an import
+or setup error, every mutant looks killed; when the tests still import the
+original, every mutant looks like a survivor. A check that cannot fail is
+indistinguishable from a check that passes.
 
 OBJECTIVE
 Review Angle 4: Bug Hunting. Review with a skeptical mindset; do not assume any

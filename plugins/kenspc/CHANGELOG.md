@@ -133,18 +133,29 @@ filled at release.
   manual mock; such a copy also risks standing in for the user's own mock);
   where the project configures its own pattern, or for any other runner,
   whatever that configuration actually collects (pytest `test_*.py` /
-  `*_test.py`, Go `_test.go`). `probe.mts`, `probe-2.probe.ts`, and `.txt`
+  `*_test.py`, Go `_test.go`). A jest project keeps the `__mocks__` rule
+  whatever its `testMatch`: the haste map registers `__mocks__` files under
+  `roots` regardless. `probe.mts`, `probe-2.probe.ts`, and `.txt`
   for anything that need not run are safe. A probe that has to execute runs
   as a plain script or through a runner config kept in the agent's scratch
   directory; a mutant copy of the test tree renames its test files as they
-  are copied (`split.test.ts` becomes `split.probe.ts`). A scratch runner
-  config is rooted at the current attempt's own directory (vitest `root`,
-  jest `rootDir`), so it collects only that attempt's files, and in a
-  mutation check the unmutated copy passes under it before any failing
-  mutant counts as killed: when every mutant fails on an import or setup
-  error, every mutant looks killed. An agent that starts
-  over makes a new subdirectory under its scratch directory, never a delete,
-  and renames a file that already carries a collectable name. The
+  are copied (`split.test.ts` becomes `split.probe.ts`). Every attempt lives
+  in a numbered subdirectory of the agent's scratch directory from the first
+  (`scratch/angle-5/1/`), and an agent that starts over takes the next
+  number (`scratch/angle-5/2/`), never a delete. A scratch runner config is
+  rooted at the current attempt's numbered directory (vitest `root`, jest
+  `rootDir`), so it collects only that attempt's files. A mutation check
+  goes in three steps: the unmutated copy passes under that config, or the
+  check is reported as not made, with the reason, never as surviving
+  mutants (regression-verifier's check 4 records the test as "not
+  mutation-checked" and does not flag it); a deliberately broken control
+  mutant fails, which proves the run exercises the copy rather than the
+  original; only then do failing mutants count as killed and passing ones as
+  survivors. When every mutant fails on an import or setup error, every
+  mutant looks killed, and when the tests still import the original, every
+  mutant looks like a survivor. A file that already carries a collectable
+  name is renamed onto a path that does not exist yet; renaming over an
+  existing file is a delete. The
   rule is in the five reviewers' ROLE section (byte-identical, so
   `check-review-agent-drift.sh` guards it), the two worker agents' `RUN_DIR`
   bullets, and the `canonical:run-dir` block. The release checklist's

@@ -242,9 +242,13 @@ has lost rows on the way to the verifier.
   file name, no file named `test.*` or `spec.*`, no `__tests__` directory,
   and no `__mocks__` directory; where the project configures its own
   pattern, or for any other runner, whatever that configuration actually
-  collects. Starting over means a new subdirectory, never a delete, and a
-  file that already carries a collectable name is renamed, which is not a
-  delete. It is ignored along with the run directory and needs no cleanup.
+  collects; a jest project keeps the `__mocks__` rule whatever its pattern.
+  Every attempt lives in a numbered subdirectory of the writer's own
+  directory from the first (`scratch/angle-5/1/`); starting over is the next
+  number (`scratch/angle-5/2/`), never a delete. A file that already carries
+  a collectable name is renamed onto a path that does not exist yet, which
+  is not a delete; renaming over an existing file is. It is ignored along
+  with the run directory and needs no cleanup.
   Why: deleting temporary files with `rm -rf` can be denied by the user's
   permission rules, and a verifier that could not clean up has fallen back
   to judging fixes by reading code. The run directory is git-ignored, not
