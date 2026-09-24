@@ -140,7 +140,10 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   5. Nothing under `<RUN_DIR>` was deleted: the run's trace shows no `rm`
      or other delete of a path there, and an agent or the orchestrating
      session that started over did so in a new subdirectory of its own
-     scratch directory (such as `scratch/angle-5/2/`).
+     scratch directory (such as `scratch/angle-5/2/`). A rename within the
+     agent's own scratch directory (`mv probe.test.ts probe.probe.ts`),
+     which is how the agents fix a collectable name, is not a delete; a
+     move onto a path that already exists, or out of the run directory, is.
 - From this repository, `bash scripts/check-run-contract.sh --file <that
   path>` exits 0 — the real Schema B's Per-angle Results table and
   statistics line agree with its rows.
