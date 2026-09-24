@@ -112,9 +112,12 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   `.kenspc/`. A clone of this Markdown-only repository gives the agents no
   tests to probe and has no test command to break, so neither sub-check
   can fail there. So for them, run row 6 or 7 in a TypeScript project with
-  vitest, no vitest config, and at least one test of its own (vitest's
-  default include reaches into `.kenspc/`), with `--plugin-dir` pointing at
-  this repository's `plugins/kenspc`. Then:
+  vitest and at least one test of its own, whose vitest config sets only a
+  setup file or `globals` and keeps the default include, with `--plugin-dir`
+  pointing at this repository's `plugins/kenspc`. The default include
+  reaches into `.kenspc/`; the setup file or `globals` is what a scratch
+  runner config that drops the project's config fails on, so a mutation
+  check's baseline (sub-check 6) has something to prove. Then:
   1. With `<RUN_DIR>` the run's directory, `<RUN_DIR>/scratch` exists, and
      `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' -o -path '*/__mocks__/*' \)`
      prints nothing. `find` reports a missing path on stderr only, so empty
@@ -144,6 +147,16 @@ Run-directory check for rows 6 and 7 (v3.5.1):
      agent's own scratch directory (`mv probe.test.ts probe.probe.ts`),
      which is how the agents fix a collectable name, is not a delete; a
      move onto a path that already exists, or out of the run directory, is.
+  6. If any agent ran a mutation check — a mutant copy of the test tree
+     exists under `<RUN_DIR>/scratch` — the run's trace shows, for that
+     attempt, the unmutated baseline running first and passing under a
+     runner config rooted at the attempt's numbered directory (vitest
+     `root`, jest `rootDir`, such as `scratch/angle-5/1/`), and a
+     deliberately broken control mutant failing before any mutant was
+     counted as a survivor. A baseline that could not pass shows up in the
+     agent's report as a mutation check not made, never as surviving
+     mutants. With no mutant copy under `scratch/`, no agent ran a mutation
+     check, and this sub-check was not exercised.
 - From this repository, `bash scripts/check-run-contract.sh --file <that
   path>` exits 0 — the real Schema B's Per-angle Results table and
   statistics line agree with its rows.

@@ -165,9 +165,13 @@ filled at release.
   package scripts,
   and trace checks that regression-verifier ran the project's commands
   unmodified and compared the runner's collected files against `.kenspc/`,
-  and that nothing under the run directory was deleted; the
-  first two run in a vitest project with no vitest config, where they can
-  fail. CLAUDE.md records the lesson: git-ignored is not tool-ignored.
+  that nothing under the run directory was deleted, and, when an agent ran a
+  mutation check, that its unmutated baseline passed first under a config
+  rooted at the attempt's directory and a control mutant failed. The checks
+  run in a vitest project whose vitest config sets only a setup file or
+  `globals` and keeps the default include: the first two can fail there,
+  and a scratch config that drops the setup fails the baseline. CLAUDE.md
+  records the lesson: git-ignored is not tool-ignored.
   Source:
   `docs/dry-runs/batch-a-acceptance.md` § 8, where 68 probe files named
   `*.test.ts`, single probes and whole copies of the `test/` tree, were

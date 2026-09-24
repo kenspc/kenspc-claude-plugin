@@ -299,6 +299,15 @@ claude --plugin-dir ./plugins/kenspc
 
 Use `/reload-plugins` inside a session to pick up changes without restarting.
 
+Edit the plugin's agent and skill files in a session started without
+`--plugin-dir`, and keep `--plugin-dir` sessions for acceptance and smoke
+runs. Why: a `--plugin-dir` session treats those files as the definitions it
+is running. In the roadmap 9 batch (2026-09-24), auto mode's classifier gave
+no verdict on every Edit to `plugins/kenspc/agents/*.md` and
+`plugins/kenspc/skills/*/SKILL.md` in such a session and judged rewriting
+them through Bash as a workaround, while documentation files were edited
+normally; the same edits went through in a session without `--plugin-dir`.
+
 ### Validate plugin structure
 ```bash
 # The plugin loader's own validation (marketplace manifest; plugin manifest,
