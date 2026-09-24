@@ -232,9 +232,10 @@ no task created, is a plan error for the user to settle, and a file created
 there would sit beside the real document.
 
 Record the outcomes in that task's `**Implementation notes:**` block under the
-existing labels, with no new one: under `Decisions:`, what was promoted into
-which document, and what needs a home with its suggested destination; under
-`Changes/tradeoffs:`, as for any task.
+existing labels, with no new one: under `Decisions:`, each decision with the
+ID of the task that made it — what was promoted into which document, and what
+needs a home with its suggested destination; under `Changes/tradeoffs:`, as
+for any task.
 
 OUTPUT FORMAT (Schema D)
 When all tasks are processed, render a per-task table followed by prose sections.
@@ -274,8 +275,10 @@ over Y because ...`). Skip the section if no such decisions were recorded.
 ## Decisions needing a home
 
 One bullet per decision that belongs in a durable document but was written
-into none: task ID, the decision, and a suggested destination — a document
-path, with a section where one fits. For example:
+into none: the ID of the task that made the decision (for an entry read from
+the Doc-sync task's block, the ID recorded there, not the Doc-sync task's
+own), the decision, and a suggested destination — a document path, with a
+section where one fits. For example:
 `- T-003: outbound calls retry three times — docs/architecture.md § Resilience`.
 Source: when a Doc-sync task was processed DONE in this run, the outcomes
 recorded in its `**Implementation notes:**` block; otherwise the DONE
