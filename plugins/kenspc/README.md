@@ -255,14 +255,19 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   runner, whatever that configuration actually collects. An agent that
   starts over makes a new subdirectory instead of deleting, and renames a
   file that already carries a collectable name, so none of them needs to
-  delete anything. No agent edits the project's
-  configuration (runner config, ignore files, `tsconfig`, package scripts) to
-  make room for the plugin's files. If scratch files still break the
-  project's build, test, or lint command, `regression-verifier` fails the run
-  and names them; when they break the test command, code-fixer's
-  scratch-pollution note names them as well.
+  delete anything. No agent edits the project's configuration (runner
+  config, linter config, ignore files, `tsconfig`, package scripts) to make
+  room for the plugin's files. If files under `.kenspc/`, from this run or an
+  earlier one, still break the project's build, test, or lint command,
+  `regression-verifier` fails that check and names them; when they are the
+  only cause, code-fixer's scratch-pollution note names them too. A file
+  there that the test runner collects but that passes leaves the test check
+  PASS, and its Detail names the file.
 - Runs accumulate: nothing is deleted automatically. Remove old run
-  directories when you no longer need them.
+  directories when you no longer need them. After upgrading from v3.5.x,
+  remove the run directories it left: their probe files can carry
+  collectable names (such as `probe.test.ts`), and the unmodified build,
+  test, and lint runs now report them.
 - Permissions: each reviewer writes its report with the Write tool. In the
   default permission mode every write asks for approval, so an unattended
   `/kenspc-task-implement` needs `acceptEdits` or `auto` mode. The directory

@@ -99,17 +99,25 @@ VERIFICATION CHECKS
 3. Build / test / lint: run the project's build, test, and lint commands; record
    PASS or FAIL. Run each of the three as the project configures it
    (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with no
-   path filter or exclude added. When files under `RUN_DIR/scratch` make a
-   command fail, alone or alongside failures in the project's own files, record
-   FAIL in that command's row with those paths in the Detail cell; a re-run
-   narrowed only to leave out the run directory may be added to Detail as
-   information, but it does not change the Result. Why: a review run has
-   passed this check on a narrowed `--dir test` while the project's own
-   `npm test` failed on the plugin's probe files, and a green row that hides
-   the plugin's pollution is worse than a red one; naming the scratch paths in
-   a mixed failure too lets the user tell the plugin's failures from the
-   code's. Build and lint tools walk the run directory too: ESLint's flat
-   config ignores only `node_modules` and `.git` by default.
+   path filter or exclude added. When files under `.kenspc/` — this run's
+   scratch or an earlier run's — make a command fail, alone or alongside
+   failures in the project's own files, record FAIL in that command's row with
+   those paths in the Detail cell; a re-run narrowed only to leave out
+   `.kenspc/` may be added to Detail as information, but it does not change
+   the Result. When the test run passes but the runner collected files under
+   `.kenspc/`, the test row stays PASS and its Detail names them, as it names
+   intentionally skipped tests: compare the runner's list of collected files
+   against `.kenspc/` (for example `vitest list --filesOnly` or
+   `jest --listTests`), and for a runner with no such list, say in Detail
+   that this was not checked. Why: a review run has passed this check on a
+   narrowed `--dir test` while the project's own `npm test` failed on the
+   plugin's probe files, and a green row that hides the plugin's pollution is
+   worse than a red one; naming the scratch paths in a mixed failure too lets
+   the user tell the plugin's failures from the code's. Runs are never
+   deleted, so a collected probe that passes today stays in the user's own
+   test run, and probes left by earlier runs fail it the same way. Build and
+   lint tools walk the run directory too: ESLint's flat config ignores only
+   `node_modules` and `.git` by default.
    For the test run specifically, weigh how completely it ran:
    - Full clean run — a suite exists, ran to completion, and every test executed
      and passed: record PASS.

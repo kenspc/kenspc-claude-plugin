@@ -104,13 +104,15 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   regression-verifier's in `scratch/regression-verifier/`, and the
   orchestrating session's in `scratch/orchestrator/` when it probed; nothing
   outside the run directory (such as `/tmp`) was created or deleted for
-  probing. Sub-checks 1 and 2 below can fail only where a test runner
-  collects stray test files under `.kenspc/`, and a clone of this
-  Markdown-only repository has no test command to break. So for them, run
-  row 6 or 7 in a TypeScript project with vitest, no vitest config, and at
-  least one test of its own (vitest's default include reaches into
-  `.kenspc/`), with `--plugin-dir` pointing at this repository's
-  `plugins/kenspc`. Then:
+  probing. Sub-check 1 below fails on any collectable name the agents wrote,
+  whatever the runner, but only where the agents had tests to probe.
+  Sub-check 2 fails only where a test runner collects such files under
+  `.kenspc/`. A clone of this Markdown-only repository gives the agents no
+  tests to probe and has no test command to break, so neither sub-check
+  can fail there. So for them, run row 6 or 7 in a TypeScript project with
+  vitest, no vitest config, and at least one test of its own (vitest's
+  default include reaches into `.kenspc/`), with `--plugin-dir` pointing at
+  this repository's `plugins/kenspc`. Then:
   1. With `<RUN_DIR>` the run's directory, `<RUN_DIR>/scratch` exists, and
      `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' -o -path '*/__mocks__/*' \)`
      prints nothing. `find` reports a missing path on stderr only, so empty
@@ -118,9 +120,9 @@ Run-directory check for rows 6 and 7 (v3.5.1):
      agent probed, and this sub-check was not exercised.
   2. After the run, the project's own test command passes unmodified from
      the repository root.
-  3. No agent changed the project's test-runner config, ignore files,
-     `tsconfig`, or package scripts: `git status --short` lists no such
-     file, and no fix commit touches one. A narrowed `test` script in
+  3. No agent changed the project's test-runner config, linter config,
+     ignore files, `tsconfig`, or package scripts: `git status --short` lists
+     no such file, and no fix commit touches one. A narrowed `test` script in
      `package.json` would also turn sub-check 2 green. The one-time
      `.gitignore` commit below is the orchestrating skill's, made before
      dispatch, and does not count.

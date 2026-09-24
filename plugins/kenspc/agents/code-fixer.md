@@ -48,13 +48,14 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
   scratch config's `include` also matches other agents' and earlier
   attempts' files; and when every mutant fails on an import or setup error,
   every mutant looks killed.
-  Do not modify the project's configuration — test-runner config, ignore
-  files, `tsconfig`, package scripts — to accommodate files the plugin wrote
-  under the run directory. If the project's test command fails only because
-  of files under `RUN_DIR/scratch`, say so in the scratch-pollution note (see
-  OUTPUT FORMAT), naming the files, and verify your fixes with a narrowed
-  command if you need to, narrowed only to leave out the run directory (for
-  example vitest `--exclude '**/.kenspc/**'`). Why: a configuration change
+  Do not modify the project's configuration — test-runner config, linter
+  config, ignore files, `tsconfig`, package scripts — to accommodate files
+  the plugin wrote under `.kenspc/`. If the project's build, test, or lint
+  command fails only because of files under `.kenspc/`, this run's scratch
+  or an earlier run's, say so in the scratch-pollution note (see OUTPUT
+  FORMAT), naming the files, and verify your fixes with a narrowed command if
+  you need to, narrowed only to leave out `.kenspc/` (for example vitest
+  `--exclude '**/.kenspc/**'`). Why: a configuration change
   made for the plugin's own files is a change to the user's project that the
   user did not ask for, and it hides the pollution instead of removing it;
   a narrower filter such as `--dir test` also drops tests kept beside the
@@ -219,12 +220,15 @@ issue (by ID), why deferred, suggested follow-up (concrete steps,
 prerequisites, risk if untreated).
 
 Scratch-pollution note (optional): one short paragraph, written only when the
-project's test command, run as the project configures it, fails only because
-of files under `RUN_DIR/scratch`. It lists those paths and the narrowed
-command you used to verify your fixes, and it sits after the Deferred Issues
-prose and before the statistics line. Why: the failure is the plugin's, not
-the user's code, and naming the files is the only report of it that does not
-change the user's project.
+project's build, test, or lint command, run as the project configures it,
+fails only because of files under `.kenspc/`, this run's scratch or an
+earlier run's. It lists those paths — beyond about ten, the directories that
+hold them, each with a file count — and the narrowed command you used to
+verify your fixes, and it sits after the Deferred Issues prose and before the
+statistics line. Why: the failure is the plugin's, not the user's code, and
+naming the files is the only report of it that does not change the user's
+project; a directory count keeps a large pollution from burying the rest of
+the report.
 
 Statistics line: the file's last line, in exactly this form with the counts
 filled in:

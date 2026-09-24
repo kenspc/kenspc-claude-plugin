@@ -150,7 +150,8 @@ filled at release.
   bullets, and the `canonical:run-dir` block. The release checklist's
   run-directory check gains a `find` probe for collectable names, an
   unmodified test run from the repository root, a check that no agent
-  changed test-runner config, ignore files, `tsconfig`, or package scripts,
+  changed test-runner config, linter config, ignore files, `tsconfig`, or
+  package scripts,
   and trace checks that regression-verifier ran the project's commands
   unmodified and that nothing under the run directory was deleted; the
   first two run in a vitest project with no vitest config, where they can
@@ -162,11 +163,16 @@ filled at release.
 - **regression-verifier runs build, test, and lint unmodified.**
   VERIFICATION CHECKS item 3 runs each command as the project configures it
   (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with
-  no path filter or exclude added. When files under `RUN_DIR/scratch` make a
-  command fail, alone or alongside failures in the project's own files, that
-  command's row is FAIL with those files named in the Detail cell; a re-run
-  narrowed only to leave out the run directory may be added to Detail as
-  information but does not change the Result. Build and lint are included
+  no path filter or exclude added. When files under `.kenspc/`, this run's
+  scratch or an earlier run's, make a command fail, alone or alongside
+  failures in the project's own files, that command's row is FAIL with those
+  files named in the Detail cell; a re-run narrowed only to leave out
+  `.kenspc/` may be added to Detail as information but does not change the
+  Result. When the test run passes but the runner collected files under
+  `.kenspc/`, the test row stays PASS and its Detail names them, found by
+  comparing the runner's list of collected files (`vitest list --filesOnly`,
+  `jest --listTests`) against `.kenspc/`; for a runner without such a list,
+  Detail says the check was not made. Build and lint are included
   because those tools walk the run directory too: ESLint's flat config
   ignores only `node_modules` and `.git` by default. Keeping scratch files
   out of them is still open (`docs/roadmap.md`). Source:
@@ -175,20 +181,29 @@ filled at release.
   project's own `npm test` failed.
 - **code-fixer changes no project configuration for the plugin's files,
   and reports scratch pollution.** code-fixer does not modify test-runner
-  config, ignore files, `tsconfig`, or package scripts to accommodate files
-  the plugin wrote under the run directory. When the project's test command
-  fails only because of files under `RUN_DIR/scratch`, `schema-b.md` carries
-  an optional scratch-pollution note after the Deferred Issues prose and
-  before the statistics line, which stays the file's last line. The note
-  names those files and the command used to verify the fixes, narrowed only
-  to leave out the run directory: a filter such as `--dir test` would also
-  drop tests kept beside the source.
+  config, linter config, ignore files, `tsconfig`, or package scripts to
+  accommodate files the plugin wrote under `.kenspc/`. When the project's
+  build, test, or lint command fails only because of files under `.kenspc/`,
+  this run's scratch or an earlier run's, `schema-b.md` carries an optional
+  scratch-pollution note after the Deferred Issues prose and before the
+  statistics line, which stays the file's last line. The note names those
+  files (beyond about ten, the directories that hold them, each with a file
+  count) and the command used to verify the fixes, narrowed only to leave
+  out `.kenspc/`: a filter such as `--dir test` would also drop tests kept
+  beside the source.
   code-fixer's reply carries the note, the `## Fixes` section of the Schema F
   and Schema G final reports renders it, and regression-verifier reads it as
   part of `schema-b.md`. Source:
   `docs/dry-runs/batch-a-acceptance.md` § 8, where code-fixer "fixed" the
   collision by adding a `vitest.config.ts` that excludes `.kenspc/**` to the
   user's project.
+
+### Upgrading from 3.5.x
+
+Run directories that 3.5.x left under `.kenspc/runs/` can hold probe files
+with collectable names, such as `probe.test.ts` or whole copies of a `test/`
+tree. The unmodified build, test, and lint runs now report them, so remove
+those run directories after upgrading. The plugin deletes nothing itself.
 
 ### Branching stance
 
