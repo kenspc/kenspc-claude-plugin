@@ -100,9 +100,20 @@ Run-directory check for rows 6 and 7 (v3.5.1):
 - The final report's Fixes section prints the full path of `schema-b.md`.
 - That directory holds `angle-1.md` through `angle-5.md` and `schema-b.md`.
   Any probe or temporary files are under its `scratch/` subdirectory — the
-  reviewers' in `scratch/angle-<n>/`, code-fixer's and regression-verifier's
-  in `scratch/` itself; nothing outside the run directory (such as `/tmp`)
-  was created or deleted for probing.
+  reviewers' in `scratch/angle-<n>/`, code-fixer's in `scratch/code-fixer/`,
+  regression-verifier's in `scratch/regression-verifier/`, and the
+  orchestrating session's in `scratch/orchestrator/` when it probed; nothing
+  outside the run directory (such as `/tmp`) was created or deleted for
+  probing. Then:
+  1. With `<RUN_DIR>` the run's directory,
+     `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' \)`
+     prints nothing.
+  2. After the run, the project's own test command passes unmodified from
+     the repository root.
+  3. The working tree gained no runner or ignore configuration from any
+     agent: `git status --short` lists no such file, and no fix commit
+     touches one. The one-time `.gitignore` commit below is the
+     orchestrating skill's, made before dispatch, and does not count.
 - From this repository, `bash scripts/check-run-contract.sh --file <that
   path>` exits 0 — the real Schema B's Per-angle Results table and
   statistics line agree with its rows.

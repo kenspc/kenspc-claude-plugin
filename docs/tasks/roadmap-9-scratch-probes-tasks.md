@@ -603,7 +603,29 @@ says, in substance:
 
 ### Task 7: Update the release checklist's run-directory check
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the three sub-checks are a numbered list nested under the
+  bullet they extend, introduced by "Then:", so they read as part of the
+  scratch check rather than as three new peer bullets. The probe sits on
+  its own line, verbatim from the Fixed forms, so it can be copied whole.
+  Sub-check 3 adds one sentence: the one-time `.gitignore` commit that the
+  list's last bullet expects is the orchestrating skill's, made before
+  dispatch, and does not count. Why: without it, a tester reading "no
+  ignore configuration from any agent" next to a commit that touches
+  `.gitignore` could fail a correct run.
+- Changes/tradeoffs: the probe was checked against a scratch tree to make
+  sure it can fail. It printed 5 lines for `probe.test.ts`, `test.ts`,
+  `spec.js`, `x.spec.mts`, and a file under `__tests__/`, and none for
+  `probe.mts`, `probe-2.probe.ts`, `split.probe.ts`, and a `.txt` file.
+  Verified: `check-all.sh` exits 0 with `guards run: 10`. The checklist's
+  pre-flight block (lines 13-34, extracted as written and run with bash
+  from the repository root) exits 0. That covers the effort-override diff,
+  both `claude plugin validate --strict` runs ("Validation passed"), and
+  `check-all.sh --self-test`, whose output includes `guards run: 10` and
+  ends with `self-tests run: 9`. `git diff` touches only the run-directory
+  bullet; no smoke-table row changed.
 
 Depends on: Task 1-4
 
