@@ -137,7 +137,12 @@ filled at release.
   for anything that need not run are safe. A probe that has to execute runs
   as a plain script or through a runner config kept in the agent's scratch
   directory; a mutant copy of the test tree renames its test files as they
-  are copied (`split.test.ts` becomes `split.probe.ts`). An agent that starts
+  are copied (`split.test.ts` becomes `split.probe.ts`). A scratch runner
+  config is rooted at the current attempt's own directory (vitest `root`,
+  jest `rootDir`), so it collects only that attempt's files, and in a
+  mutation check the unmutated copy passes under it before any failing
+  mutant counts as killed: when every mutant fails on an import or setup
+  error, every mutant looks killed. An agent that starts
   over makes a new subdirectory under its scratch directory, never a delete,
   and renames a file that already carries a collectable name. The
   rule is in the five reviewers' ROLE section (byte-identical, so

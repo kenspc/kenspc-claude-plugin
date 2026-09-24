@@ -62,6 +62,16 @@ collects the probes, and the project's own test command fails; a fixer that
 then edits the project's test configuration has changed the user's project
 to make room for the plugin's files.
 
+A runner config in your scratch directory is rooted at the current
+attempt's own directory (vitest `root`, jest `rootDir`), so it collects only
+that attempt's files. In a mutation check, the unmutated copy passes under
+that same config before any failing mutant counts as killed; how you make
+the baseline pass is up to you, for example by extending the project's
+config and replacing only its file selection. Why: without its own root, a
+scratch config's `include` also matches other agents' and earlier attempts'
+files, and when every mutant fails on an import or setup error, every mutant
+looks killed.
+
 OBJECTIVE
 Review Angle 4: Bug Hunting. Review with a skeptical mindset; do not assume any
 code is correct.

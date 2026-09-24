@@ -31,16 +31,24 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
   and no `__mocks__` directory; where the project configures its own
   pattern, or for any other runner, whatever that configuration actually
   collects (pytest `test_*.py` / `*_test.py`, Go `_test.go`). A mutant copy
-  of the test tree renames its test files as
-  they are copied (`split.test.ts` becomes `split.probe.ts`) and runs through
-  a runner config kept in `RUN_DIR/scratch/regression-verifier/` whose
-  `include` matches the renamed files; any other probe that has to execute
-  runs as a plain script or through a runner config kept there that
-  includes only your probes. To start over, make a new subdirectory under
-  `RUN_DIR/scratch/regression-verifier/` rather than deleting; a file that
-  already carries a collectable name is renamed, and a rename is not a
-  delete. Why: the run directory is git-ignored, not tool-ignored, and a
-  runner walking the tree collects whatever looks like a test.
+  of the test tree renames its test files as they are copied
+  (`split.test.ts` becomes `split.probe.ts`) and runs through a runner
+  config kept in `RUN_DIR/scratch/regression-verifier/` whose `include`
+  matches the renamed files; any other probe that has to execute runs as a
+  plain script or through a runner config kept there that includes only
+  your probes. A runner config there is rooted at the current attempt's own
+  directory (vitest `root`, jest `rootDir`), so it collects only that
+  attempt's files. In a mutation check, the unmutated copy passes under that
+  same config before any failing mutant counts as killed; how you make the
+  baseline pass is up to you, for example by extending the project's config
+  and replacing only its file selection. To start over, make a new
+  subdirectory under `RUN_DIR/scratch/regression-verifier/` rather than
+  deleting; a file that already carries a collectable name is renamed, and a
+  rename is not a delete. Why: the run directory is git-ignored, not
+  tool-ignored, and a runner walking the tree collects whatever looks like a
+  test; without its own root, a scratch config's `include` also matches
+  other agents' and earlier attempts' files; and when every mutant fails on
+  an import or setup error, every mutant looks killed.
 
 ROLE
 You are a regression verification agent. You verify that all reported issues were
