@@ -169,11 +169,12 @@ filled at release.
   failures in the project's own files, that command's row is FAIL with those
   files named in the Detail cell; a re-run narrowed only to leave out
   `.kenspc/` may be added to Detail as information but does not change the
-  Result. When the test run passes but the runner collected files under
-  `.kenspc/`, the test row stays PASS and its Detail names them, found by
-  comparing the runner's list of collected files (`vitest list --filesOnly`,
-  `jest --listTests`) against `.kenspc/`; for a runner without such a list,
-  Detail says the check was not made. Build and lint are included
+  Result. When the runner collected files under `.kenspc/`, the test row's
+  Detail names them, whether the run passed or failed, and a passing run
+  stays PASS; they are found by comparing the runner's list of collected
+  files (`vitest list --filesOnly`, `jest --listTests`) against `.kenspc/`;
+  for a runner without such a list, Detail says the check was not made.
+  Build and lint are included
   because those tools walk the run directory too: ESLint's flat config
   ignores only `node_modules` and `.git` by default. Keeping scratch files
   out of them is still open (`docs/roadmap.md`). Source:
