@@ -184,7 +184,9 @@ criteria.
   `grep -n 'Cross-phase dependency note' plugins/kenspc/skills/generate-task/SKILL.md`
   returns nothing while `Dependency note` is present.
 - The presentation format contains
-  `N. Task N: Doc-sync — M documents, depends on Task 1-<N-1>`.
+  `N. Task N: Doc-sync — M documents, depends on Task 1-<N-1>`, and the Phase 2
+  DONE list names the Doc-sync task among the items the written document
+  includes.
 - The template contains, in substance, the Step 2.1 promotion instruction
   (read the `Decisions:` sub-bullets of Tasks 1-<N-1>; write a decision a
   future reader would look for in a listed document into it, in that document's
@@ -474,8 +476,10 @@ guard.
 - `bash scripts/check-all.sh --self-test` prints `guards run: 10`, ends with
   `self-tests run: 9`, and every line is PASS (the existing SKIP for
   `check-review-agent-drift.sh` aside).
-- The header comment documents the three groups, the exit codes, and the
-  `--self-test` fixture in the style of the other guards.
+- The header comment states what the script guards and why (a rename of an
+  anchor in one file breaks the documentation chain silently), and documents
+  the three groups, the exit codes, and the `--self-test` fixture in the style
+  of the other guards.
 
 ---
 
