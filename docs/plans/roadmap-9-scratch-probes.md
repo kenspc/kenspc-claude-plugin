@@ -281,7 +281,7 @@ Rulings made by the maintainer on 2026-09-24.
 
 ## Clarifications during implementation (2026-09-24)
 
-Settled between the implementing session, the spec author, and the maintainer: C1–C3 before the task decomposition, C4–C5 after the task-document review. Each entry binds like the rulings above.
+Settled between the implementing session, the spec author, and the maintainer: C1–C3 before the task decomposition, C4–C5 after the task-document review, C6–C12 after the implementation review (the deferred findings in that run's Schema B). Each entry binds like the rulings above.
 
 - C1 — jest also collects files named `test.*` and `spec.*`. Its default `testMatch` pattern `**/?(*.)+(spec|test).?([mc])[jt]s?(x)` finds `test.js` and `spec.ts` as well as `*.test.*` (jestjs.io, Configuration, `testMatch`), which ruling M2's markers miss. The vitest and jest markers become: no `.test.` or `.spec.` segment in a file name, no file named `test.*` or `spec.*`, and no `__tests__` directory; other runners: their configured pattern. The checklist probe in [Fixed strings](#fixed-strings) becomes `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' \)` prints nothing. Every step that states the markers or the probe (Steps 1.1, 1.2, 2.1, 3.1–3.4) uses this form. Ruled by the maintainer.
 - C2 — code-fixer's scratch-pollution note (Step 1.2) is part of Schema B's contract, so its place is written in code-fixer's OUTPUT FORMAT, not only in the `RUN_DIR` bullet. The reply list gains an optional item, the scratch-pollution note: when the project's test command fails only because of files under `RUN_DIR/scratch`, it lists those paths and the narrowed command used to verify the fixes. In `schema-b.md` the same paragraph sits after Deferred Issues (prose) and before the statistics line, which stays the file's last line. The Deferred Issues definition and the worked Schema B example are unchanged. Step 1.2's edit location extends to OUTPUT FORMAT. Why: the orchestrator renders the reply and `schema-b.md` as that section specifies, and text outside the contract is either dropped or surprises the renderer.
@@ -296,6 +296,32 @@ Settled between the implementing session, the spec author, and the maintainer: C
   - The naming rule does not extend to these tools: no name keeps a source file out of a linter's pattern. What extends is the diagnosis.
   - Ruling M4's scope widens from the test command to all three commands that VERIFICATION CHECKS item 3 runs: build, test, and lint. Each runs as the project configures it, with no path filter or exclude added. A failure caused only by files under `RUN_DIR/scratch` is FAIL in that command's row, with the files named in Detail (Step 1.3).
   - The Step 3.2 lesson keeps its wording. The gap is recorded as a Risks row and as a roadmap item (Step 3.4).
+- C6 — Markers (review findings E6, B3). The vitest and jest markers gain "no `__mocks__` directory": jest's haste map crawls `.kenspc/` and reports a copied `__mocks__` file as a duplicate manual mock.
+  - The markers apply to vitest and jest with their default patterns.
+  - Where the project configures its own pattern, or uses another runner, what that configuration actually collects governs.
+  - The checklist probe gains `-o -path '*/__mocks__/*'`.
+  - That a copied mock can stand in for the user's own is recorded as a risk in the CHANGELOG only, not stated as a fact.
+- C7 — A scratch file already given a collectable name is renamed, not deleted (E9). The never-delete rule covers starting over, and a rename is not a delete.
+- C8 — Mutation checks (E1, B4), in the five reviewers' ROLE sections and both worker agents.
+  - A scratch-local runner config is rooted at the current attempt's own directory (vitest `root`, jest `rootDir`), so it collects only that attempt's files.
+  - The unmutated copy passes under the same scratch config before any mutant counts as killed. How the baseline is made to pass is left to the agent; one way is to extend the project's config and replace only the file selection.
+  - Why: when every mutant fails on an import or setup error, every mutant looks killed.
+- C9 — code-fixer's scope (R1, E10). C5 covers code-fixer too.
+  - Its no-configuration-edit rule, its narrowed-verification permission, and its scratch-pollution note refer to the build, test, or lint command.
+  - The configuration kinds include linter config. code-fixer, the README, the CHANGELOG, and checklist sub-check 3 say so alike.
+  - The README's "as well" in § Run directory is corrected to match code-fixer.
+  - The note's path list is bounded: beyond about ten paths it lists directories, each with a file count.
+- C10 — Earlier runs (E2). The diagnosis wording widens from `RUN_DIR/scratch` to files under any run in `.kenspc/`, so probes left by earlier runs are named the same way.
+  - regression-verifier's narrowed-command example `--exclude '**/.kenspc/**'` stays.
+  - The 3.6.0 CHANGELOG entry and the README's Run directory section carry an upgrade note: run directories left by 3.5.x can hold collectable probes, and the user removes them.
+- C11 — Collected scratch files that pass (E4). Row 3 stays PASS, and its Detail names those files; the intentionally-skipped state is the precedent.
+  - regression-verifier compares the runner's list of collected files against `.kenspc/`, for example with `vitest list --filesOnly` or `jest --listTests`.
+  - For a runner without a list feature, Detail says the check was not made.
+- C12 — Remaining points.
+  - The release checklist describes run-directory sub-checks 1 and 2 concretely (the verifier's wording point).
+  - Both decisions promoted by the Doc-sync task stay.
+  - Ruling M7's acceptance changes in two ways. The target project carries a small vitest config (a setup file or `globals`), so C8's baseline rule has something to verify. At least one mutation check happens during the run, so C8's rooting can be observed.
+  - C6–C11 land as three commits after `b3769ac`, grouped as markers and naming (C6, C7), mutation checks (C8), and code-fixer and verifier scope (C9–C11). One standalone `/kenspc-task-review` reviews them. No new task document is written, since the Doc-sync task must stay last.
 
 ## Open Questions
 
