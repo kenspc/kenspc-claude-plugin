@@ -366,8 +366,9 @@ code-fixer reads the 5 reports from RUN_DIR itself. The fix agent
 deduplicates findings, applies fixes, commits, and writes its full Schema B
 to `RUN_DIR/schema-b.md`: a `# / Source / short_label / Severity / File:Line
 / Action / Commit` table in which every issue ID appears in exactly one
-Source cell, a Per-angle Results table, the Deferred Issues prose, and a
-statistics line of this fixed form:
+Source cell, a Per-angle Results table, the Deferred Issues prose, the
+scratch-pollution note when there is one, and a statistics line of this
+fixed form:
 
 <!-- canonical:stats-line:start -->
 `total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
