@@ -370,7 +370,9 @@ This repo dogfoods the plugin's own chain on itself: briefs land in
 These artifacts are transient by convention — completed plan/task
 documents are routinely deleted once shipped, so an empty directory or a
 missing document referenced by an old commit message is normal, not a
-gap. Two documents there are permanent: `docs/release-checklist.md`, and
+gap. Three documents there are permanent: `docs/release-checklist.md`;
+`docs/roadmap.md` (planned work — an item leaves it when it ships, and the
+CHANGELOG records it from then on); and
 `docs/dry-runs/README.md` (the dry-run label-vocabulary convention,
 relocated out of `task-review/SKILL.md` in v3.4.2 because it governs
 repo-internal QA artifacts, not plugin behavior).

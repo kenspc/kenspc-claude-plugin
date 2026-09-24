@@ -57,11 +57,9 @@ The four runs of the v3.5.1 release acceptance. All four: session model Opus
 | Run | Reported | Unique after dedup | FIXED | DEFERRED | NOT APPLICABLE | Notes |
 |---|---|---|---|---|---|---|
 | macOS headless, `/kenspc-task-implement` | 15 (R 2, E 5, Q 1, B 3, T 4) | 11 | 10 | 1 | 0 | 0 HIGH; both MEDIUM fixed |
-| macOS headless, `/kenspc-task-review` | 8 | — | 3 | 3 | 0 | |
+| macOS headless, `/kenspc-task-review` | 8 | 6 | 3 | 3 | 0 | Unique count derived from the identities: 3 + 3 + 0 = 6, so DEDUPED 2 |
 | Windows, `/kenspc-task-review` | 8 (R 0, E 2, Q 1, B 2, T 3) | 6 | 3 | 3 | 0 | The 3 DEFERRED items need tests the target project does not have |
 | TUI, `/kenspc-task-review` | 8 (R 2, E 1, Q 2, B 1, T 2) | 4 | 1 | 3 | 0 | |
-
-A dash means the figure was not recorded for that run.
 
 Compared with section 1:
 
