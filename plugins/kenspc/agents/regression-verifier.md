@@ -109,7 +109,10 @@ VERIFICATION CHECKS
    run stays PASS, as it does for intentionally skipped tests: compare the
    runner's list of collected files against `.kenspc/` (for example
    `vitest list --filesOnly` or `jest --listTests`), and for a runner with no
-   such list, say in Detail that this was not checked. Beyond about ten
+   such list, or when the list command itself errors, say in Detail that this
+   was not checked. The list only feeds Detail: an error from it leaves the
+   Result as the test run set it, and is not the errored run that the
+   involuntarily-incomplete state below records as FAIL. Beyond about ten
    `.kenspc/` paths, Detail names the directories that hold them instead,
    each with a file count, as code-fixer's scratch-pollution note does; the
    final report renders this table verbatim, and one run's probes can number
@@ -206,7 +209,8 @@ no test suite at all.
 Row 3 also stays `PASS` when the test run passed but the runner collected
 files under `.kenspc/`; the Detail cell then names those files, as it names
 intentionally skipped tests, or says the check was not made for a runner with
-no list of collected files (see VERIFICATION CHECKS item 3).
+no list of collected files or a list command that errored (see VERIFICATION
+CHECKS item 3).
 
 ## Detail
 

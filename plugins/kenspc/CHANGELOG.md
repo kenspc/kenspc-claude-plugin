@@ -173,7 +173,8 @@ filled at release.
   Detail names them, whether the run passed or failed, and a passing run
   stays PASS; they are found by comparing the runner's list of collected
   files (`vitest list --filesOnly`, `jest --listTests`) against `.kenspc/`;
-  for a runner without such a list, Detail says the check was not made.
+  for a runner without such a list, or when the list command errors, Detail
+  says the check was not made, and the Result stays what the test run set.
   Beyond about ten such files, Detail names the directories that hold them,
   each with a file count. Build and lint are included
   because those tools walk the run directory too: ESLint's flat config
