@@ -116,6 +116,27 @@ Skill dispatches a single named agent (`plan-document-reviewer`,
 `task-document-reviewer`, or `guide-document-reviewer`) that reviews all
 angles in order in its own context. Each angle builds on fixes from the
 previous one (cascade dependency). Agent body returns a structured change log.
+`plan-document-reviewer` and `guide-document-reviewer` review four angles;
+`task-document-reviewer` reviews three — Completeness (including Doc-sync
+coverage), Execution Order, and Consistency with CLAUDE.md. The plan
+reviewer's Completeness angle checks the plan's Documentation impact element.
+
+The documentation path runs from the plan to the implementation run. Every
+plan carries a Documentation impact element — the durable documents its steps
+make stale, or `N/A — <reason>` — which `plan-document-reviewer` checks.
+`generate-task` turns an element that names documents into a last task,
+`### Task N: Doc-sync` with `Depends on: Task 1-<N-1>`, and
+`task-document-reviewer` checks that the task is there, is last, and lists the
+same documents. `task-implementer` runs it like any other task: it brings the
+listed documents in line with what the earlier tasks built and promotes their
+recorded decisions into them. A decision that belongs in a durable document
+none of the listed ones fits is reported under `## Decisions needing a home`
+in Schema D, and task-implement's Schema G turns each entry into a Next steps
+bullet. The dependency gate holds the chain together: `task-implementer`
+marks a task BLOCKED with `depends on Task N (<status>)` when its
+`Depends on` line names a task that is not DONE, so a Doc-sync task never
+documents behaviour a blocked task did not build. The gate applies to every
+task with a `Depends on` line, not only the Doc-sync task.
 
 **Parallel MapReduce (task-review):**
 - Phase 1: 5 review agents, read-only on the working tree, dispatched in parallel
@@ -315,6 +336,18 @@ Project-level shell scripts live in `scripts/` at the repo root:
   by design (the agent describes the format, the example shows a filled-in
   instance); it catches a rename of either label in one file but not the
   other.
+- `check-doc-sync-anchors.sh` — guards that the three documentation-path
+  anchors stay present in every file that writes, checks, or renders them:
+  `Documentation impact` (`generate-plan/SKILL.md`,
+  `references/plan-document-example.md`, `plan-document-reviewer.md`,
+  `generate-task/SKILL.md`, `task-document-reviewer.md`), `Doc-sync`
+  (`generate-task/SKILL.md`, `references/task-document-example.md`,
+  `task-document-reviewer.md`, `task-implementer.md`), and
+  `Decisions needing a home` (`task-implementer.md`,
+  `task-implement/SKILL.md`). An anchor-presence guard like
+  `check-notes-format-sync.sh`: a rename in one file breaks the chain
+  silently while every other check passes. README.md and CLAUDE.md are
+  deliberately outside it.
 - `check-no-model-names.sh` — guards that no file under `skills/`,
   `agents/`, `commands/`, or `shared/` names or pins a specific Claude
   model. Three rules: frontmatter `model:` values must be `inherit`; no
@@ -342,11 +375,12 @@ Project-level shell scripts live in `scripts/` at the repo root:
   Windows Store `python3` alias — so the same command works on macOS,
   Windows, and WSL2.
 
-Eight of the guards (`check-canonical-dispatch.sh`,
+Nine of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
-`check-notes-format-sync.sh`, `check-no-model-names.sh`,
-`check-run-contract.sh`, `check-json.sh`) also accept a `--self-test` flag
+`check-notes-format-sync.sh`, `check-doc-sync-anchors.sh`,
+`check-no-model-names.sh`, `check-run-contract.sh`, `check-json.sh`) also
+accept a `--self-test` flag
 that runs
 a mutation regression fixture in a temp workdir (positive path, negative
 path on a deliberate mutation, restoration path on revert).
@@ -376,6 +410,25 @@ CHANGELOG records it from then on); and
 `docs/dry-runs/README.md` (the dry-run label-vocabulary convention,
 relocated out of `task-review/SKILL.md` in v3.4.2 because it governs
 repo-internal QA artifacts, not plugin behavior).
+
+### Durable documents
+
+These are the repository's durable documents: the list a plan's
+Documentation impact element is determined from, and the documents a
+Doc-sync task keeps current. Transient artifacts under `docs/` (above) are
+not on it.
+
+| Document | Holds | Changes when |
+|---|---|---|
+| `README.md` | Marketplace overview: installation, the plugin list, one summary row per skill | A skill's summary changes (a new capability, a review-angle count), or a plugin is added |
+| `plugins/kenspc/README.md` | The plugin's user documentation: skills, commands, agents, design principles, recommended workflow, run directory, known behavior | Any user-visible behaviour of a skill, agent, command, or hook changes |
+| `CLAUDE.md` | The maintainer contract for this repository: layout, conventions, review architecture, guard scripts, design lessons | A convention, an orchestration pattern, a guard, or a guard count changes |
+| `plugins/kenspc/CHANGELOG.md` | Per-release record of what was added, changed, fixed, or removed | Every change that ships, under the next version's heading |
+| `docs/release-checklist.md` | Pre-flight mechanical checks and the smoke checklist run before tagging | A guard or self-test count changes, or an entry point gains behaviour the smoke test should exercise |
+| `docs/roadmap.md` | Planned work not yet shipped | An item is planned, or ships (it then leaves the file) |
+| `docs/dry-runs/README.md` | The dry-run report label-vocabulary convention | The dry-run report convention changes |
+| `plugins/kenspc/references/plan-document-example.md` | An example plan document, the reference for `generate-plan`'s output | The plan format `generate-plan` produces changes |
+| `plugins/kenspc/references/task-document-example.md` | An example task document users copy, including the Implementation notes block and the Doc-sync task | The task-document format `generate-task` writes or `task-implementer` reads changes |
 
 ### Release procedure
 

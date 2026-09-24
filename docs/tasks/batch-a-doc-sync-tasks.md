@@ -646,7 +646,25 @@ guard.
 
 ### Task 12: Update the repository CLAUDE.md
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: "Durable documents" is its own `###` subsection directly after
+  "Workflow artifacts under docs/", with a Document / Holds / Changes when
+  table, and its lead-in says it is the list a plan's Documentation impact is
+  determined from, which is what makes the M2 table the dogfooded input. The
+  documentation-path paragraph is plain prose after the serial review
+  paragraph, not a fourth bold pattern label, since the section opens with
+  "Three orchestration patterns". The serial review paragraph names both
+  angle counts (four for the plan and guide reviewers, three for the task
+  reviewer) so neither reads as the default.
+- Changes/tradeoffs: the new scripts bullet sits after
+  `check-notes-format-sync.sh`, the guard it is modeled on, and states why
+  the guard exists (a rename in one file breaks the chain silently) in one
+  clause. The "Nine of the guards" list places the new script after
+  `check-notes-format-sync.sh` too, and the list was rewrapped. The
+  documentation-path paragraph also says the gate applies to every task with
+  a `Depends on` line, since that is the behaviour change.
 
 Depends on: Task 1-11
 
