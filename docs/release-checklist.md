@@ -104,8 +104,10 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   regression-verifier's in `scratch/regression-verifier/`, and the
   orchestrating session's in `scratch/orchestrator/` when it probed; nothing
   outside the run directory (such as `/tmp`) was created or deleted for
-  probing. Sub-check 1 below fails on any collectable name the agents wrote,
-  whatever the runner, but only where the agents had tests to probe.
+  probing. Sub-check 1 below fails on any vitest or jest default test name
+  the agents wrote, whether or not a runner collects it, but only where the
+  agents had tests to probe; other runners' names, such as pytest
+  `test_*.py` or Go `_test.go`, pass it unseen.
   Sub-check 2 fails only where a test runner collects such files under
   `.kenspc/`. A clone of this Markdown-only repository gives the agents no
   tests to probe and has no test command to break, so neither sub-check
