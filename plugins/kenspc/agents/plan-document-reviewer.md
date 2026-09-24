@@ -70,6 +70,19 @@ one):
      indexes considered?
    - Are there missing steps between the stated phases (e.g., database
      migration before seeding, build before deploy)?
+   - Documentation impact. Passing: the element names every durable document
+     whose content the plan's steps make stale, and nothing else, or states
+     N/A with a reason the steps do not contradict. Failure modes:
+     (1) the element is absent; (2) N/A without a reason, or with a reason
+     the steps contradict (a step edits README while the element says N/A);
+     (3) a document the steps themselves modify is missing; (4) a listed
+     document that no step changes anything it describes (padding). These
+     are objective issues under FIXING RULES: derive the list from the steps
+     and the durable documents CLAUDE.md names (README.md and CLAUDE.md
+     themselves when it names none), fix the plan, and commit. When an entry
+     cannot be determined, record the gap under Open Questions and mark it
+     NOTED, per STUCK HANDLING. Why: generate-task builds the Doc-sync task
+     from this element, so a gap here becomes a document nobody syncs.
 
 3. Consistency
    - If PROJECT_PATH is not "N/A": does the plan contradict anything in

@@ -147,7 +147,17 @@ changes, and the causing step.
 
 ### Task 3: Check Documentation impact in plan-document-reviewer Angle 2
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the four failure modes keep the plan's wording verbatim, so the
+  "exactly these four" bar is checkable against Step 1.3 line by line. The
+  bullet names the M2 fallback (README.md and CLAUDE.md when CLAUDE.md names
+  no durable document) so the reviewer judges "missing" and "padding" on the
+  same basis generate-plan used to write the element.
+- Changes/tradeoffs: the bullet closes with a one-sentence Why (generate-task
+  builds the Doc-sync task from this element), per the rationale-anchored
+  rule; it is not a failure mode.
 
 Plan Step 1.3. Add one rubric bullet to Angle 2 Completeness. Passing
 statement: Documentation impact names every durable document whose content the
