@@ -203,6 +203,10 @@ element is indistinguishable from a forgotten one.
 #### Writing rules for the plan
 
 - Default language: English (unless the user explicitly requests otherwise).
+  In a plan in another language, the `## Documentation impact` heading and
+  the `N/A —` prefix of its not-applicable line stay exactly as written. Why:
+  generate-task and `task-document-reviewer` find the element by that heading
+  and tell the N/A form by that prefix.
 - Be specific and actionable. Every step must be concrete enough for a
   developer (or Claude Code) to execute without guessing intent.
 - Avoid vague language: do not use "as appropriate", "if needed", "consider

@@ -236,7 +236,13 @@ artifacts — commit messages, code comments, identifiers — follows
 language. Why: the implementer copies task text into commits, comments, and
 documents, so the task document's language becomes theirs; inheriting the
 plan's language gives `task-document-reviewer`'s Consistency with CLAUDE.md
-angle a plugin-side anchor without the plugin imposing a language.
+angle a plugin-side anchor without the plugin imposing a language. The
+anchors other agents parse stay exactly as written, whatever the document's
+language: the `**Status:**` line and its value, the `Depends on:` line, and
+the `### Task N: Doc-sync` heading. Why: `task-implementer` reads a task's
+state and dependencies from the first two, and `task-document-reviewer`
+recognizes the Doc-sync task by the heading, so a translated anchor breaks
+the chain without an error.
 
 **Filename**: derive the base name from the plan filename by removing the
 `.md` extension and any trailing `-plan` suffix. Examples:
