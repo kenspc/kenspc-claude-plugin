@@ -272,7 +272,19 @@ unchanged.
 
 ### Task 3: Give regression-verifier its own scratch directory and the scratch rule, and run build, test, and lint unmodified
 
-**Status:** TODO
+**Status:** BLOCKED
+
+**Implementation notes:**
+- Blocked: the first edit, rewriting the `RUN_DIR` bullet in
+  `plugins/kenspc/agents/regression-verifier.md` (new scratch directory,
+  naming, execution, and reset rule), was refused the same way as Task 2's:
+  the session's auto-mode safety classifier returned no verdict and reported
+  a hard failure that a retry would repeat. The edit was not routed through
+  another tool. `regression-verifier.md` is unchanged, and the INPUTS and
+  VERIFICATION CHECKS item 3 edits were not attempted. To unblock: set this
+  task back to TODO and re-run `/kenspc-task-implement` in a session whose
+  permission mode can approve edits to the plugin's agent files, or apply
+  Task 3 by hand.
 
 Plan Steps 1.2 and 1.3 (rulings M1, M3, M4, clarifications C1, C4, C5). This
 task makes three edits.
