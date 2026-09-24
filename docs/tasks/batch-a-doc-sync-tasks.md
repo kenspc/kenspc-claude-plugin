@@ -923,8 +923,13 @@ the list.
 
 - The plan's Testing Strategy also calls for a live-chain run in a throwaway
   project and negative cases for the reviewers. Those need an interactive
-  session with the updated plugin loaded and are not part of this batch run;
-  they belong to the 3.6.0 release smoke test.
+  session with the updated plugin loaded and are not part of this batch run.
+  The live-chain checks that recur every release are smoke rows 4–6 in
+  `docs/release-checklist.md`. The live-chain run and the three reviewer
+  negative cases are batch A's one-time acceptance, run on macOS with
+  `--plugin-dir`; its report goes to `docs/dry-runs/batch-a-acceptance.md`,
+  following the `g6-baseline.md` precedent, before this task document is
+  deleted.
 - This document was produced by the pre-batch `generate-task`, which does not
   yet append a Doc-sync task; as the plan's Testing Strategy asks, Task 16 was
   added by hand from the Step 2.1 template, which makes it the template's first

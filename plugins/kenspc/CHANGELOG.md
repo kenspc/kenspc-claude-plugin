@@ -100,8 +100,10 @@ filled at release.
   shows three rows.
 - **Guard counts:** `guards run: 10`, `self-tests run: 9`. The release
   checklist's pre-flight expects them, and smoke rows 4–6 check the
-  `## Documentation impact` section, the last `### Task N: Doc-sync` task,
-  and `## Decisions needing a home` together with a forced-BLOCKED run.
+  `## Documentation impact` section, the last `### Task N: Doc-sync` task
+  and a three-row Schema E table, and `## Decisions needing a home` with
+  its Next steps bullets, together with a forced-BLOCKED run (not-synced
+  bullet, verdict PARTIAL) and the re-check bullet after review fixes.
 - CLAUDE.md gains a Durable documents table, the list this repository's own
   plans determine their Documentation impact from, and describes the
   documentation path and the dependency gate.
