@@ -13,3 +13,4 @@ node_modules/
 
 # Claude Code local state
 .claude/
+.kenspc/
