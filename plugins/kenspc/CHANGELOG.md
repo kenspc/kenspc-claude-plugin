@@ -141,10 +141,11 @@ filled at release.
   run-directory check gains a `find` probe for collectable names, an
   unmodified test run from the repository root, a check that no agent
   changed test-runner config, ignore files, `tsconfig`, or package scripts,
-  and a trace check that regression-verifier ran the project's commands
-  unmodified; the first two run in a vitest project with no vitest config,
-  where they can fail. CLAUDE.md records the lesson: git-ignored is not
-  tool-ignored. Source:
+  and trace checks that regression-verifier ran the project's commands
+  unmodified and that nothing under the run directory was deleted; the
+  first two run in a vitest project with no vitest config, where they can
+  fail. CLAUDE.md records the lesson: git-ignored is not tool-ignored.
+  Source:
   `docs/dry-runs/batch-a-acceptance.md` § 8, where 68 probe files named
   `*.test.ts`, single probes and whole copies of the `test/` tree, were
   collected by vitest's default include and made a bare `npm test` fail.

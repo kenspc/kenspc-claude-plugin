@@ -130,6 +130,10 @@ Run-directory check for rows 6 and 7 (v3.5.1):
      commands (such as `npm test`), and any narrowed re-run comes after the
      unmodified one. Read the trace, not Schema C: a clean PASS row's Detail
      is `—`, so the table cannot show which command ran.
+  5. Nothing under `<RUN_DIR>` was deleted: the run's trace shows no `rm`
+     or other delete of a path there, and an agent or the orchestrating
+     session that started over did so in a new subdirectory of its own
+     scratch directory (such as `scratch/angle-5/2/`).
 - From this repository, `bash scripts/check-run-contract.sh --file <that
   path>` exits 0 — the real Schema B's Per-angle Results table and
   statistics line agree with its rows.
