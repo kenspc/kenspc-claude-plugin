@@ -25,18 +25,21 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
   files under `RUN_DIR/scratch/code-fixer/` — it is git-ignored with the run
   directory and needs no cleanup, so no `rm -rf` is needed. Name every file
   there so the project's test runner will not collect it: for vitest and
-  jest, no `.test.` or `.spec.` segment in a file name, no file named
-  `test.*` or `spec.*`, and no `__tests__` directory; for other runners,
-  whatever their configuration collects (pytest `test_*.py` / `*_test.py`,
-  Go `_test.go`). A mutant copy of the test tree renames its test files as
+  jest with their default patterns, no `.test.` or `.spec.` segment in a
+  file name, no file named `test.*` or `spec.*`, no `__tests__` directory,
+  and no `__mocks__` directory; where the project configures its own
+  pattern, or for any other runner, whatever that configuration actually
+  collects (pytest `test_*.py` / `*_test.py`, Go `_test.go`). A mutant copy
+  of the test tree renames its test files as
   they are copied (`split.test.ts` becomes `split.probe.ts`) and runs through
   a runner config kept in `RUN_DIR/scratch/code-fixer/` whose `include`
   matches the renamed files; any other probe that has to execute runs as a
   plain script or through a runner config kept there that includes only
   your probes. To start over, make a new subdirectory under
-  `RUN_DIR/scratch/code-fixer/` rather than deleting. Why: the run directory
-  is git-ignored, not tool-ignored, and a runner walking the tree collects
-  whatever looks like a test.
+  `RUN_DIR/scratch/code-fixer/` rather than deleting; a file that already
+  carries a collectable name is renamed, and a rename is not a delete. Why:
+  the run directory is git-ignored, not tool-ignored, and a runner walking
+  the tree collects whatever looks like a test.
   Do not modify the project's configuration — test-runner config, ignore
   files, `tsconfig`, package scripts — to accommodate files the plugin wrote
   under the run directory. If the project's test command fails only because

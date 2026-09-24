@@ -238,9 +238,12 @@ has lost rows on the way to the verifier.
   `scratch/regression-verifier/`, and the orchestrating session itself in
   `scratch/orchestrator/` when it runs a probe of its own. Every file there
   is named so the project's test runner does not collect it: for vitest and
-  jest, no `.test.` or `.spec.` segment in a file name, no file named
-  `test.*` or `spec.*`, and no `__tests__` directory; for other runners,
-  their configured pattern. Starting over means a new subdirectory, never a
+  jest with their default patterns, no `.test.` or `.spec.` segment in a
+  file name, no file named `test.*` or `spec.*`, no `__tests__` directory,
+  and no `__mocks__` directory; where the project configures its own
+  pattern, or for any other runner, whatever that configuration actually
+  collects. Starting over means a new subdirectory, never a delete, and a
+  file that already carries a collectable name is renamed, which is not a
   delete. It is ignored along with the run directory and needs no cleanup.
   Why: deleting temporary files with `rm -rf` can be denied by the user's
   permission rules, and a verifier that could not clean up has fallen back

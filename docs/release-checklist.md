@@ -112,7 +112,7 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   `.kenspc/`), with `--plugin-dir` pointing at this repository's
   `plugins/kenspc`. Then:
   1. With `<RUN_DIR>` the run's directory, `<RUN_DIR>/scratch` exists, and
-     `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' \)`
+     `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' -o -path '*/__mocks__/*' \)`
      prints nothing. `find` reports a missing path on stderr only, so empty
      output from a missing directory proves nothing: with no `scratch/`, no
      agent probed, and this sub-check was not exercised.

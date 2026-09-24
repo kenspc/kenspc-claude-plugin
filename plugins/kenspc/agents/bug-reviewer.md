@@ -44,21 +44,23 @@ user's permission rules; the per-angle subdirectory keeps five parallel
 reviewers from writing the same file.
 
 Name every file under your scratch directory so the project's test runner
-will not collect it. For vitest and jest that means no `.test.` or `.spec.`
-segment in a file name, no file named `test.*` or `spec.*`, and no
-`__tests__` directory; for other runners, whatever their configuration
-collects (pytest `test_*.py` / `*_test.py`, Go `_test.go`). `probe.mts`,
-`probe-2.probe.ts`, and a `.txt` copy are safe; `probe.test.ts` and
-`test.ts` are not, and a copied `test/` tree keeps its collectable names
-unless you rename the files as you copy them. A probe that has to execute
-runs as a plain script, or through a runner config kept in your scratch
-directory that includes only your probes. To start over, make a new
-subdirectory under your scratch directory (for example
-`scratch/angle-<n>/2/`) rather than deleting. Why: the run directory is
-git-ignored, not tool-ignored. A runner walking the tree collects the
-probes, and the project's own test command fails; a fixer that then edits
-the project's test configuration has changed the user's project to make
-room for the plugin's files.
+will not collect it. For vitest and jest with their default patterns that
+means no `.test.` or `.spec.` segment in a file name, no file named `test.*`
+or `spec.*`, no `__tests__` directory, and no `__mocks__` directory; where
+the project configures its own pattern, or for any other runner, whatever
+that configuration actually collects (pytest `test_*.py` / `*_test.py`, Go
+`_test.go`). `probe.mts`, `probe-2.probe.ts`, and a `.txt` copy are safe;
+`probe.test.ts` and `test.ts` are not, and a copied `test/` tree keeps its
+collectable names unless you rename the files as you copy them. A probe that
+has to execute runs as a plain script, or through a runner config kept in
+your scratch directory that includes only your probes. To start over, make a
+new subdirectory under your scratch directory (for example
+`scratch/angle-<n>/2/`) rather than deleting; a file that already carries a
+collectable name is renamed, and a rename is not a delete. Why: the run
+directory is git-ignored, not tool-ignored. A runner walking the tree
+collects the probes, and the project's own test command fails; a fixer that
+then edits the project's test configuration has changed the user's project
+to make room for the plugin's files.
 
 OBJECTIVE
 Review Angle 4: Bug Hunting. Review with a skeptical mindset; do not assume any

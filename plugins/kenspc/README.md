@@ -248,11 +248,14 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   the run's `scratch/` (`angle-<n>/` per reviewer, `code-fixer/`,
   `regression-verifier/`), and the orchestrating session keeps its own in
   `orchestrator/` when it probes. Every file there is named so the project's
-  test runner does not collect it: for vitest and jest, no `.test.` or
-  `.spec.` segment in a file name, no file named `test.*` or `spec.*`, and no
-  `__tests__` directory; for other runners, their configured pattern. An
-  agent that starts over makes a new subdirectory instead of deleting, so
-  none of them needs to delete anything. No agent edits the project's
+  test runner does not collect it: for vitest and jest with their default
+  patterns, no `.test.` or `.spec.` segment in a file name, no file named
+  `test.*` or `spec.*`, no `__tests__` directory, and no `__mocks__`
+  directory; where the project configures its own pattern, or for any other
+  runner, whatever that configuration actually collects. An agent that
+  starts over makes a new subdirectory instead of deleting, and renames a
+  file that already carries a collectable name, so none of them needs to
+  delete anything. No agent edits the project's
   configuration (runner config, ignore files, `tsconfig`, package scripts) to
   make room for the plugin's files. If scratch files still break the
   project's build, test, or lint command, `regression-verifier` fails the run

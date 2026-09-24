@@ -172,10 +172,12 @@ temporary files go in one scratch subdirectory per writer —
 `scratch/angle-<n>/` for each reviewer, `scratch/code-fixer/`,
 `scratch/regression-verifier/`, and `scratch/orchestrator/` for the main
 session — and are named so the project's test runner does not collect them
-(vitest and jest: no `.test.` or `.spec.` segment in a file name, no file
-named `test.*` or `spec.*`, and no `__tests__` directory; other runners:
-their configured pattern). So parallel writers never share a file, and the
-main session relays paths rather than
+(vitest and jest with their default patterns: no `.test.` or `.spec.`
+segment in a file name, no file named `test.*` or `spec.*`, no `__tests__`
+directory, and no `__mocks__` directory; a project-configured pattern or
+another runner: what that configuration actually collects; a file that
+already carries a collectable name is renamed, not deleted). So parallel
+writers never share a file, and the main session relays paths rather than
 report text. Issue IDs (`R` / `E` / `Q` / `B` / `T` plus a sequence number)
 and code-fixer's Source column let `regression-verifier` settle completeness
 by comparing ID sets. Subagents cannot spawn other subagents; orchestration

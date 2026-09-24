@@ -125,16 +125,21 @@ filled at release.
   their own `scratch/fixer/` and `scratch/verifier/` directories.
 - **Runner-safe scratch names; starting over means a new subdirectory.**
   Every file under the run's scratch directory is named so the project's
-  test runner does not collect it: for vitest and jest, no `.test.` or
-  `.spec.` segment in a file name, no file named `test.*` or `spec.*` (jest's
-  default `testMatch` collects both), and no `__tests__` directory; for other
-  runners, their configured pattern (pytest `test_*.py` / `*_test.py`, Go
-  `_test.go`). `probe.mts`, `probe-2.probe.ts`, and `.txt` for anything that
-  need not run are safe. A probe that has to execute runs as a plain script
-  or through a runner config kept in the agent's scratch directory; a mutant
-  copy of the test tree renames its test files as they are copied
-  (`split.test.ts` becomes `split.probe.ts`). An agent that starts over
-  makes a new subdirectory under its scratch directory, never a delete. The
+  test runner does not collect it: for vitest and jest with their default
+  patterns, no `.test.` or `.spec.` segment in a file name, no file named
+  `test.*` or `spec.*` (jest's default `testMatch` collects both), no
+  `__tests__` directory, and no `__mocks__` directory (jest's haste map
+  crawls `.kenspc/` and reports a copied `__mocks__` file as a duplicate
+  manual mock; such a copy also risks standing in for the user's own mock);
+  where the project configures its own pattern, or for any other runner,
+  whatever that configuration actually collects (pytest `test_*.py` /
+  `*_test.py`, Go `_test.go`). `probe.mts`, `probe-2.probe.ts`, and `.txt`
+  for anything that need not run are safe. A probe that has to execute runs
+  as a plain script or through a runner config kept in the agent's scratch
+  directory; a mutant copy of the test tree renames its test files as they
+  are copied (`split.test.ts` becomes `split.probe.ts`). An agent that starts
+  over makes a new subdirectory under its scratch directory, never a delete,
+  and renames a file that already carries a collectable name. The
   rule is in the five reviewers' ROLE section (byte-identical, so
   `check-review-agent-drift.sh` guards it), the two worker agents' `RUN_DIR`
   bullets, and the `canonical:run-dir` block. The release checklist's
