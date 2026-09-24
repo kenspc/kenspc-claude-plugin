@@ -104,10 +104,18 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   regression-verifier's in `scratch/regression-verifier/`, and the
   orchestrating session's in `scratch/orchestrator/` when it probed; nothing
   outside the run directory (such as `/tmp`) was created or deleted for
-  probing. Then:
-  1. With `<RUN_DIR>` the run's directory,
+  probing. Sub-checks 1 and 2 below can fail only where a test runner
+  collects stray test files under `.kenspc/`, and a clone of this
+  Markdown-only repository has no test command to break. So for them, run
+  row 6 or 7 in a TypeScript project with vitest, no vitest config, and at
+  least one test of its own (vitest's default include reaches into
+  `.kenspc/`), with `--plugin-dir` pointing at this repository's
+  `plugins/kenspc`. Then:
+  1. With `<RUN_DIR>` the run's directory, `<RUN_DIR>/scratch` exists, and
      `find <RUN_DIR>/scratch \( -name '*.test.*' -o -name '*.spec.*' -o -name 'test.*' -o -name 'spec.*' -o -path '*/__tests__/*' \)`
-     prints nothing.
+     prints nothing. `find` reports a missing path on stderr only, so empty
+     output from a missing directory proves nothing: with no `scratch/`, no
+     agent probed, and this sub-check was not exercised.
   2. After the run, the project's own test command passes unmodified from
      the repository root.
   3. The working tree gained no runner or ignore configuration from any

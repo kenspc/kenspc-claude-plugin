@@ -140,8 +140,9 @@ filled at release.
   bullets, and the `canonical:run-dir` block. The release checklist's
   run-directory check gains a `find` probe for collectable names, an
   unmodified test run from the repository root, and a check that no agent
-  added runner or ignore configuration. CLAUDE.md records the lesson:
-  git-ignored is not tool-ignored. Source:
+  added runner or ignore configuration; the first two run in a vitest
+  project with no vitest config, where they can fail. CLAUDE.md records the
+  lesson: git-ignored is not tool-ignored. Source:
   `docs/dry-runs/batch-a-acceptance.md` § 8, where 68 probe files named
   `*.test.ts`, single probes and whole copies of the `test/` tree, were
   collected by vitest's default include and made a bare `npm test` fail.
