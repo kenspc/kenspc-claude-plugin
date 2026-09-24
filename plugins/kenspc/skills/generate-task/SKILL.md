@@ -187,6 +187,11 @@ modify no document outside the list.
   (this task document's status update aside).
 ```
 
+When Task 1 is the only other task (N is 2), write the single task wherever
+this skill writes the range `1-<N-1>`: `Depends on: Task 1`, not
+`Depends on: Task 1-1`. Why: the dependency rule above gives one task the
+single form, and a one-task range is a degenerate spelling of it.
+
 ## Phase 2: Confirm
 
 **Goal**: get the user's confirmation on the task list, then write the
