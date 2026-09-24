@@ -272,7 +272,6 @@ agent's output — Schema E:
 | 1     | PASSED     | —             | —       |
 | 2     | FIXED (n)  | section X, Y  | def5678 |
 | 3     | NOTED      | open question | ghi9012 |
-| 4     | PASSED     | —             | —       |
 
 Below the table, present:
 - The Changes prose (per FIXED / NOTED row: what changed, why, commit hash).

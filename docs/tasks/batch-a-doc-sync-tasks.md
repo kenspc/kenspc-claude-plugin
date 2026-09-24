@@ -478,7 +478,21 @@ not synced and why. Verdict determination is unchanged.
 
 ### Task 9: Add Angle 3, Consistency with CLAUDE.md, to task-document-reviewer
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the angle-count sentence now matches plan-document-reviewer's
+  form ("Review all three angles in order (each angle builds on fixes from
+  the previous one)"). Angle 3's passing statement notes that project- and
+  user-level CLAUDE.md files are both loaded into the session, so the
+  reviewer does not go looking for `~/.claude/CLAUDE.md` itself (the plan's
+  standing constraint). The dual case is a third ISSUE CLASSIFICATION entry
+  in the existing arrow style; PROCESSING APPROACH needed no change because
+  it already routes each issue by its classification.
+- Changes/tradeoffs: the agent's example table gained a PASSED row 3; the
+  generate-task Phase 3 Step 2 table lost its PASSED row 4 and keeps rows
+  1–3 as they were. The agent's OBJECTIVE ("complete, correctly ordered, and
+  actionable") was left as is, since the task scoped no edit to it.
 
 Plan Step 4.1 (rulings M6, M7). Add Angle 3, "Consistency with CLAUDE.md",
 after Execution Order. Passing statement: every task can be executed as

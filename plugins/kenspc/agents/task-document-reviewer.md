@@ -52,7 +52,8 @@ PREREQUISITES
    review changed.
 
 REVIEW ANGLES
-Review both angles in order (the second angle builds on fixes from the first).
+Review all three angles in order (each angle builds on fixes from the previous
+one).
 
 1. Completeness
    - Cross-reference every Implementation Step in the source plan against the
@@ -94,6 +95,32 @@ Review both angles in order (the second angle builds on fixes from the first).
    - Trace through the task list in order: could a developer execute each
      task without needing to jump ahead or back?
 
+3. Consistency with CLAUDE.md
+   Passing: every task can be executed as written without departing from a
+   rule in a loaded CLAUDE.md (project or user level; both are loaded into
+   this session), and no task text the implementer will carry into a code
+   artifact or a durable document is in a language other than that
+   artifact's own. A preference no loaded CLAUDE.md states is not a finding.
+   Failure modes:
+   (1) Written-rule departure: a task instructs a step, tool, command, commit
+       form, or file placement that a loaded CLAUDE.md forbids or prescribes
+       differently. Fix the task to follow the rule.
+   (2) Language carry-over: acceptance criteria, commit-message text,
+       identifiers, comments, or document content given in a language other
+       than the artifact's own — anchored to `task-implementer`'s CODE
+       ARTIFACTS LANGUAGE rule (code, comments, commit messages, and
+       identifiers in English) and to the target document's own language.
+       Fix by rewriting those fragments.
+   (3) Undecided git workflow step: a branch, pull-request, rebase, or tag
+       step that the plan did not prescribe, or that a loaded CLAUDE.md
+       contradicts. Fix the task back to the default — no branch, commits on
+       the current branch — and record a Plan-Level Concern naming both
+       sources, so the user decides. A step the plan prescribes and no
+       CLAUDE.md contradicts is not a finding.
+   Why: the task document is the last artifact a human reads before an
+   unattended run, so it is the last place a conflict with the project's
+   written rules can be caught cheaply.
+
 ISSUE CLASSIFICATION
 
 Task-level issues (wrong order, missing criteria, uneven granularity,
@@ -109,6 +136,14 @@ step, plan's technical approach conflicts with existing code):
   table in the final output.
 → Record each concern with: what the issue is, which plan step is affected,
   and what the user should consider.
+
+Dual issues (a plan-level cause with a task-level symptom — for example a
+plan instruction that a loaded CLAUDE.md contradicts, carried into a task):
+→ Fix the task document as for a task-level issue, and also record the
+  cause under Plan-Level Concerns as for a plan-level issue.
+→ Why: task-implement runs unattended and cannot ask; the fix keeps the run
+  inside the project's written rules, and the concern hands the decision
+  back to the user.
 
 PROCESSING APPROACH
 For each angle, in order:
@@ -135,6 +170,7 @@ prose section, followed by a Plan-Level Concerns prose section.
 |-------|------------|---------------|---------|
 | 1     | PASSED     | —             | —       |
 | 2     | FIXED (2)  | task ordering | abc1234 |
+| 3     | PASSED     | —             | —       |
 
 ## Changes (prose)
 
