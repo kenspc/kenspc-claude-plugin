@@ -100,7 +100,21 @@ implemented and promotes their recorded decisions.
 
 ### Task 1: Add the scratch naming, execution, and reset rule to the five reviewers' ROLE sections
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the reset example reads `scratch/angle-<n>/2/` rather than the
+  Fixed forms' `scratch/angle-5/2/`, because the paragraph is byte-identical in
+  all five reviewers and `angle-5` is only test-reviewer's directory; the
+  placeholder matches the `angle-<n>` form the ROLE section already uses. The
+  other-runners clause carries the Fixed forms' examples (pytest
+  `test_*.py` / `*_test.py`, Go `_test.go`) so a reviewer on a non-JavaScript
+  project has a concrete pattern to look for.
+- Changes/tradeoffs: the Fixed-forms marker phrase is kept word for word but
+  wraps across lines at the section's 78-column width, so a single-line grep
+  for the whole phrase does not match. The drift guard's coverage was
+  mutation-checked in a scratch copy: changing only the paragraph's last line
+  in one reviewer turns `check-review-agent-drift.sh` red on ROLE.
 
 Plan Step 1.1 (rulings M1–M3, clarification C1). The new paragraph goes in
 each reviewer's ROLE section:
