@@ -95,7 +95,8 @@ For each incomplete task, in document order:
   task. The line's unblock step tells the user to set this task back to TODO
   once Task N is DONE, because a later run skips a task already marked
   BLOCKED, so without the reset it stays blocked after its dependency is
-  fixed. Why: a task's `Depends on` is a hard dependency; implementing on top of
+  fixed; for `not found`, correct the `Depends on` line first, then set this
+  task back to TODO. Why: a task's `Depends on` is a hard dependency; implementing on top of
   a blocked one produces work that cannot be verified, and a Doc-sync task that
   runs would document behavior that does not exist.
 - Plan the implementation approach for this task — files to create or modify,
