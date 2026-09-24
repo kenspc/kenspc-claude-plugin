@@ -56,7 +56,9 @@ from Task 4, and Task 8 renders the Schema D section Task 7 defines. Task 11
 the plan states Phase 5 needs Phases 1–4. Tasks 12–15 (plan Phase 6) document
 the finished behaviour and cannot start until the tasks they describe are DONE
 (Task 13 needs Tasks 1–10; Tasks 12, 14, and 15 also need Task 11, whose guard
-name and counts they record).
+name and counts they record). Task 16, the Doc-sync task, runs last and needs
+Tasks 1–15: it reconciles the documents with what those tasks implemented and
+promotes their recorded decisions.
 
 ## Tasks
 
@@ -624,6 +626,57 @@ forced BLOCKED shows the Doc-sync task BLOCKED with
 
 ---
 
+### Task 16: Doc-sync
+
+**Status:** TODO
+
+Depends on: Task 1-15
+
+Written by hand from the plan's Step 2.1 template (plan Testing Strategy,
+dogfood note). The plan's Documentation impact names the documents below. The
+edits it plans for them are made by Tasks 2, 5, and 12–15; this task brings
+each document in line with what Tasks 1–15 actually implemented, as recorded
+in their `**Implementation notes:**` blocks, and promotes their decisions.
+
+**Documents** (the plan's Documentation impact; this task creates or modifies
+no other file):
+- `CLAUDE.md` — § Subagent Review Architecture, § Repository scripts/, the new
+  Durable documents table (plan Step 6.1, Task 12).
+- `plugins/kenspc/README.md` — § Skills, § Agents, § Recommended Workflow,
+  § Known behavior (plan Step 6.2, Task 13).
+- `README.md` — § Available Plugins, the generate-task row (plan Step 6.2,
+  Task 13).
+- `plugins/kenspc/CHANGELOG.md` — the 3.6.0 entry (plan Step 6.3, Task 14).
+- `docs/roadmap.md` — batch A removed (plan Step 6.3, Task 14).
+- `docs/release-checklist.md` — guard counts, smoke rows 4–6 (plan Step 6.4,
+  Task 15).
+- `plugins/kenspc/references/plan-document-example.md` — the Documentation
+  impact section (plan Step 1.2, Task 2).
+- `plugins/kenspc/references/task-document-example.md` — the Doc-sync task and
+  its note (plan Step 2.2, Task 5).
+
+**Promotion:** read the `Decisions:` sub-bullets in the Implementation notes of
+Tasks 1-15. Write each decision that a future reader would look for in one of
+the listed documents into that document, in the document's own language and
+structure. List a decision that belongs in a durable document but fits none of
+the listed ones under `## Decisions needing a home` in the run report with a
+suggested destination, and write it nowhere. Leave a decision that only
+explains a local code choice where it is. Create or modify no document outside
+the list.
+
+**Acceptance criteria:**
+- Each listed document describes the behaviour Tasks 1-15 implemented, so that
+  a reader of that document alone learns it: no statement in it contradicts
+  the SKILL, agent, or script files as changed by Tasks 1-11, or a deviation
+  recorded under `Changes/tradeoffs:` in Tasks 1-15.
+- Every promoted decision appears in the document named for it, in that
+  document's language.
+- `git show --stat` of this task's commit lists no file other than the listed
+  documents and this task document.
+- `bash scripts/check-all.sh` exits 0.
+
+---
+
 ## Notes
 
 - The plan's Testing Strategy also calls for a live-chain run in a throwaway
@@ -631,5 +684,6 @@ forced BLOCKED shows the Doc-sync task BLOCKED with
   session with the updated plugin loaded and are not part of this batch run;
   they belong to the 3.6.0 release smoke test.
 - This document was produced by the pre-batch `generate-task`, which does not
-  yet append a Doc-sync task; the plan's Testing Strategy asks for one to be
-  added by hand from the Step 2.1 template.
+  yet append a Doc-sync task; as the plan's Testing Strategy asks, Task 16 was
+  added by hand from the Step 2.1 template, which makes it the template's first
+  manual test.
