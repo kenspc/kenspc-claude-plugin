@@ -76,7 +76,8 @@ one).
      there is none. Failure modes: (1) the element names documents but no
      Doc-sync task exists; (2) the Doc-sync task is not last, or its
      dependency range omits a task; (3) its document list differs from the
-     element; (4) the plan has no Documentation impact element at all.
+     element; (4) the plan has no Documentation impact element at all, or
+     one that is neither a document list nor `N/A — <reason>`.
      Modes 1–3 are task-level: fix them in the task document — generate the
      task from the Doc-sync Task template in
      `${CLAUDE_PLUGIN_ROOT}/skills/generate-task/SKILL.md`, move it last,

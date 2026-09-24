@@ -73,8 +73,9 @@ config files; the project's source tree.
   the element names documents, the last task is `### Task N: Doc-sync` with
   `Depends on: Task 1-<N-1>`. When it is `N/A — <reason>`, there is no
   Doc-sync task. When the plan has no Documentation impact element at all (a
-  plan written before the element existed, or by hand), no Doc-sync task is
-  generated and `task-document-reviewer` reports the gap.
+  plan written before the element existed, or by hand), or one that is
+  neither a document list nor `N/A — <reason>` (an empty body, a bare `N/A`),
+  no Doc-sync task is generated and `task-document-reviewer` reports the gap.
 
 **Constraints**:
 - **Why deep code reading matters**: decomposition without reading code
