@@ -55,7 +55,7 @@ At release, delete `docs/plans/batch-a-doc-sync.md` and
 
 ## Planned batches
 
-In this order. The Workbench provides each batch's spec when work starts.
+In this order. A design session — in the KENSPC Workbench or in Claude Code — provides each batch's spec when work starts.
 
 - **B — `diagnose-bug` skill and `/kenspc-diagnose`.** Reproduce, diagnose,
   then write `docs/tasks/{name}.md` for task-implement by default; a fix that
