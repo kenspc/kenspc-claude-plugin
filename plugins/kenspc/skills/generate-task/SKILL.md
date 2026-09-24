@@ -56,7 +56,8 @@ If no arguments are provided, ask the user for the plan document path.
 explicit dependencies and concrete acceptance criteria for each task.
 
 **Inputs**: PLAN_PATH (and optional PHASE / CUSTOM_INSTRUCTIONS); the
-project's CLAUDE.md, README, and config files; the project's source tree.
+plan's Documentation impact element; the project's CLAUDE.md, README, and
+config files; the project's source tree.
 
 **DONE when**:
 - Every plan Implementation Step in scope is covered by at least one task.
@@ -65,20 +66,31 @@ project's CLAUDE.md, README, and config files; the project's source tree.
 - Task dependencies form a valid DAG (no circular dependencies).
 - Files each task creates or modifies are identified up front.
 - Task sizing is XS, S, or M; L tasks have been broken further; XL is
-  rejected.
+  rejected (the Doc-sync task is exempt; see Task Sizing Guidelines).
 - Each task touches a manageable scope of files (around 8 or fewer is the
   default; more requires explicit justification).
+- The Doc-sync task follows the plan's Documentation impact element. When
+  the element names documents, the last task is `### Task N: Doc-sync` with
+  `Depends on: Task 1-<N-1>`. When it is `N/A — <reason>`, there is no
+  Doc-sync task. When the plan has no Documentation impact element at all (a
+  plan written before the element existed, or by hand), no Doc-sync task is
+  generated and `task-document-reviewer` reports the gap.
 
 **Constraints**:
 - **Why deep code reading matters**: decomposition without reading code
   misses hidden dependencies and existing implementations. Read the public
   interfaces of relevant modules — function signatures, exports, API routes,
   data models, type definitions — not every line of implementation.
-- **Cross-phase dependency rule**: for tasks in the earliest in-scope phase,
-  base analysis on existing code. For tasks in later phases that depend on
-  earlier phases' output, base analysis on the plan's description of what
-  those earlier phases will produce, and annotate each such task with
-  `Depends on: Task N`.
+- **Dependency rule**: annotate a task with `Depends on` whenever it has a
+  hard ordering dependency on another task — it cannot start until that
+  task is DONE — within a phase or across phases: `Depends on: Task N` for
+  one task, `Depends on: Task 1-5` (ASCII hyphen) for a range, or a
+  comma-separated list. Why: `task-implementer` blocks a task whose
+  `Depends on` names a task that is not DONE, so the annotation is a gate,
+  not a hint. For tasks in the earliest in-scope phase, base analysis on
+  existing code. For tasks in later phases that depend on earlier phases'
+  output, base analysis on the plan's description of what those earlier
+  phases will produce.
 - If the plan document does not exist, cannot be parsed, or has no
   Implementation Steps section, ask the user for the correct path.
 - If a plan step's technical approach contradicts the existing codebase
@@ -97,6 +109,75 @@ project's CLAUDE.md, README, and config files; the project's source tree.
 
 Target S and M tasks. If a task is L or larger, break it into smaller tasks.
 
+The Doc-sync task is exempt from this table. Why: it is one task by design,
+sized by the documents it lists; a long list is a plan-level signal (a padded
+Documentation impact), not a reason to split it.
+
+### Doc-sync Task
+
+When the plan's Documentation impact names documents, every task document
+gets the Doc-sync task, phase-specific ones included, carrying the element's
+full document list; its acceptance criteria are scoped to what the tasks in
+that document changed. Why: Documentation impact is plan-level while a task
+document may cover one phase; the full list keeps every affected document in
+view, and the scoping keeps a phase from documenting behaviour another phase
+has not built yet.
+
+The heading is fixed: `### Task N: Doc-sync`, where N is the last task
+number. Why: `task-document-reviewer` recognises the task by that heading,
+so a reworded heading is a detectable failure rather than a silent one.
+
+For a document that an earlier task in the same task document already edits
+(the plan has an explicit documentation step for it), the entry says so and
+names that task, and the Doc-sync task verifies the document against the
+implementation instead of editing it again: it does not redo the planned
+edit, though it still corrects a statement the implementation contradicts and
+writes promoted decisions into it. Why: two tasks making the same edit
+collide, and the later one would restate the plan's wording over what was
+actually built.
+
+Write the task from this template, filling in the angle-bracket
+placeholders. Why: the promotion instruction lives in the task's own text,
+not in `task-implementer`, so a hand-written Doc-sync task copied from
+`${CLAUDE_PLUGIN_ROOT}/references/task-document-example.md` works as well,
+and the implementer needs no heading parser.
+
+```
+### Task N: Doc-sync
+
+**Status:** TODO
+
+Depends on: Task 1-<N-1>
+
+Bring the documents below in line with what Tasks 1-<N-1> implemented, as
+recorded in their `**Implementation notes:**` blocks, and promote their
+decisions.
+
+**Documents** (the plan's Documentation impact; this task creates or modifies
+no other file):
+- `<path>` § <section, where known> — <what must change, from the plan>
+  (<causing plan step>).
+- `<path>` § <section> — <what must change> (<causing plan step>); edited by
+  Task <K>: verify it against the implementation instead of editing it again.
+
+**Promotion:** read the `Decisions:` sub-bullets in the Implementation notes
+of Tasks 1-<N-1>. Write each decision that a future reader would look for in
+one of the listed documents into that document, in the document's own
+language and structure. List a decision that belongs in a durable document
+but fits none of the listed ones under `## Decisions needing a home` in the
+run report with a suggested destination, and write it nowhere. Leave a
+decision that only explains a local code choice where it is. Create or
+modify no document outside the list.
+
+**Acceptance criteria:**
+- Each listed document describes the behaviour Tasks 1-<N-1> implemented, so
+  that a reader of that document alone learns it.
+- Every promoted decision appears in the document named for it, in that
+  document's language.
+- No file outside the listed documents was created or modified by this task
+  (this task document's status update aside).
+```
+
 ## Phase 2: Confirm
 
 **Goal**: get the user's confirmation on the task list, then write the
@@ -113,8 +194,11 @@ conventions (CLAUDE.md or `docs/tasks/` default); reference format at
   including: number + title, description with files to create/modify,
   concrete acceptance criteria, `Status: TODO`, and `Depends on: Task N`
   where applicable.
-- Cross-phase dependency note is included at the top of the document if
-  any task has a `Depends on` annotation.
+- When the plan's Documentation impact names documents, the task document
+  ends with the Doc-sync task, written from the Doc-sync Task template
+  (Phase 1).
+- Dependency note is included at the top of the document if any task has a
+  `Depends on` annotation.
 
 **Presentation format** (Phase 2 Step 1):
 
@@ -126,6 +210,8 @@ Found N tasks from [plan name] [phase scope]:
 2. Task 2: [title] — [N] files, depends on Task 1
    Criteria: [one-sentence acceptance criteria summary]
 ...
+N. Task N: Doc-sync — M documents, depends on Task 1-<N-1>
+   Criteria: [one-sentence acceptance criteria summary]
 
 Confirm, or adjust tasks before writing?
 ```

@@ -187,7 +187,27 @@ HANDLING.
 
 ### Task 4: Generate the Doc-sync task in generate-task
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the M3 statement, the fixed-heading rule (D1), the C1 overlap
+  rule, and the template sit in a new `### Doc-sync Task` subsection of
+  Phase 1, next to the sizing table, so Phase 1 DONE and Phase 2 DONE point
+  to one place. The C1 rule reads "verifies instead of editing it again" as
+  "does not redo the planned edit": the Doc-sync task still corrects a
+  statement the implementation contradicts and writes promoted decisions into
+  that document, since otherwise its first acceptance criterion and its
+  promotion instruction could not be met for such a document. The dependency
+  rule names the three `Depends on` forms (single, ASCII-hyphen range,
+  comma-separated list) so the producer and `task-implementer`'s gate
+  (Task 7) read the same syntax.
+- Changes/tradeoffs: the dependency rule carries a Why that cites
+  `task-implementer`'s gate, which Task 7 adds in this batch. The template's
+  third criterion adds "(this task document's status update aside)", since
+  the implementer's status update always touches the task document. The
+  presentation-format Doc-sync line keeps a `Criteria:` line like every other
+  task. Phase 1 DONE's sizing bullet gained a pointer to the exemption, so the
+  DONE bar does not contradict the exemption.
 
 Plan Step 2.1 (rulings M3, M4, D1, D2). Phase 1 Inputs gain the plan's
 Documentation impact element. Phase 1 DONE gains the three cases: the element
