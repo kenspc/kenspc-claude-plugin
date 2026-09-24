@@ -579,7 +579,21 @@ this rule, so `task-document-reviewer.md` is not edited here.
 
 ### Task 11: Add the check-doc-sync-anchors.sh guard
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the three groups are one flat `ANCHOR_CHECKS` array of
+  `label|path` pairs rather than an associative array, because macOS ships
+  bash 3.2, which has none; the self-test copies its eight files from the
+  same array, so the fixture cannot drift from the groups it tests. The
+  missing-file pass runs before any label check, so exit 2 is never masked
+  by an exit 1.
+- Changes/tradeoffs: verified beyond the self-test by hand: renaming
+  `Documentation impact` in `plan-document-reviewer.md` gave exit 1 naming
+  that file, and `git checkout --` restored exit 0 with a clean
+  `git status`; a copy of the script outside the repository gave exit 2 on
+  the first missing input file. The file is mode 100644, like the other
+  guards.
 
 Depends on: Task 1-10
 
