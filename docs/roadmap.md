@@ -32,6 +32,19 @@ the CHANGELOG records it from then on.
    behavior it describes, or regression-verifier gains a check that the
    listed documents still match the code after the fix commits. Decide at
    release whether this ships with 3.6.0.
+9. **Required before tagging.** Probe files that the reviewers, code-fixer,
+   and regression-verifier write under `RUN_DIR/scratch/` must not match the
+   project test runner's collection pattern — vitest and jest collect
+   `**/*.{test,spec}.*` by default. Use an extension no runner collects,
+   such as `.txt`; when a probe has to run, run it through the runner with
+   an explicit path. A copy of the whole `test/` tree is no exception.
+   Evidence: `docs/dry-runs/batch-a-acceptance.md` § 8 — 68 probe files made
+   a bare `npm test` fail, code-fixer added a `vitest.config.ts` to the
+   user's project to make room for the plugin's probes, and five agents each
+   worked around the collision their own way. The change edits the five
+   reviewers' shared sections and the canonical blocks that state the
+   scratch rule (dispatch, run-dir), so it goes through the byte-identity
+   guards and is not folded into batch A.
 
 ## Planned batches
 
