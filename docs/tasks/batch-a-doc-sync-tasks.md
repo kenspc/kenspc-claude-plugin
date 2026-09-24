@@ -253,9 +253,9 @@ task-level: fix in the task document (generate the task from the
 `generate-task` Doc-sync template, referenced with a `${CLAUDE_PLUGIN_ROOT}`
 path; move it; complete the range; align the list) and commit. Also, per
 ruling M4 as settled with the spec author, reword Angle 2's "For cross-phase
-tasks: are dependency annotations present and accurate?" to: "For tasks with a
-Depends on line: is every hard dependency annotated, and is each annotation
-accurate?" — wording only, no mention of cross-phase.
+tasks: are dependency annotations present and accurate?" to:
+"For tasks with a Depends on line: is every hard dependency annotated, and is
+each annotation accurate?" — wording only, no mention of cross-phase.
 
 **Files to modify:**
 - `plugins/kenspc/agents/task-document-reviewer.md`
@@ -417,15 +417,19 @@ Plan Step 4.2 (ruling M6). In Phase 2, add a document-language rule: the task
 document is written in the plan document's language; text that the
 implementer will carry into code artifacts follows `task-implementer`'s CODE
 ARTIFACTS LANGUAGE rule. No default language of the plugin's own. Why: the
-implementer copies task text into commits, comments, and documents, and
-`task-document-reviewer` Angle 3 cites this rule.
+implementer copies task text into commits, comments, and documents; and the
+rule gives `task-document-reviewer` Angle 3 (written in Task 9, whose language
+failure mode checks task text against the same CODE ARTIFACTS LANGUAGE rule and
+the target document's language) a plugin-side anchor without the plugin
+imposing a language. Angle 3 as Task 9 writes it needs no reference back to
+this rule, so `task-document-reviewer.md` is not edited here.
 
 **Files to modify:**
 - `plugins/kenspc/skills/generate-task/SKILL.md`
 
 **Acceptance criteria:**
 - Phase 2 contains the rule with its Why and names no default language.
-- No other part of the file changed in this commit.
+- No other part of the file, and no other file, changed in this commit.
 - `bash scripts/check-all.sh` exits 0.
 
 ---
