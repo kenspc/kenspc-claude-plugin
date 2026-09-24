@@ -118,10 +118,12 @@ Documentation impact), not a reason to split it.
 When the plan's Documentation impact names documents, every task document
 gets the Doc-sync task, phase-specific ones included, carrying the element's
 full document list; its acceptance criteria are scoped to what the tasks in
-that document changed. Why: Documentation impact is plan-level while a task
-document may cover one phase; the full list keeps every affected document in
-view, and the scoping keeps a phase from documenting behaviour another phase
-has not built yet.
+that document changed, and an entry whose causing plan step lies outside the
+document says so in the entry itself. Why: Documentation impact is plan-level
+while a task document may cover one phase; the full list keeps every affected
+document in view, and the scoping keeps a phase from documenting behaviour
+another phase has not built yet — stated in the entry, because the
+implementer reads the task text, not this skill.
 
 The heading is fixed: `### Task N: Doc-sync`, where N is the last task
 number. Why: `task-document-reviewer` recognises the task by that heading,
@@ -159,6 +161,9 @@ no other file):
   (<causing plan step>).
 - `<path>` § <section> — <what must change> (<causing plan step>); edited by
   Task <K>: verify it against the implementation instead of editing it again.
+- `<path>` § <section> — <what must change> (<causing plan step>); that step
+  is outside this task document: leave this change to the task document that
+  covers it.
 
 **Promotion:** read the `Decisions:` sub-bullets in the Implementation notes
 of Tasks 1-<N-1>. Write each decision that a future reader would look for in
