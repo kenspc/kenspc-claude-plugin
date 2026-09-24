@@ -361,7 +361,22 @@ each annotation accurate?" — wording only, no mention of cross-phase.
 
 ### Task 7: Add the dependency gate, decision promotion, and Decisions needing a home to task-implementer
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the new section is named `DECISION PROMOTION` and sits after
+  CODE ARTIFACTS LANGUAGE, next to the other language rule and just before
+  the Schema D section that reads its outcomes. The gate emits one
+  `depends on Task N (<status>)` reason per unmet dependency, so a range with
+  two blocked tasks names both. The gate treats a task BLOCKED in an earlier
+  run the same as one blocked in this run: the status on disk is what counts.
+- Changes/tradeoffs: the Schema D example bullet sits on its own line in
+  backticks rather than wrapping inside an inline code span. The section's
+  Why also says it is the one Schema D prose section never skipped, so a
+  reader sees the deliberate departure from the skip-when-empty rule (D4).
+  The DECISION PROMOTION Why for "no question, no file, no unlisted
+  document" cites the unattended run and the existing stated-scope boundary;
+  AUTONOMY BOUNDARIES itself is unchanged.
 
 Plan Step 3.1 (rulings M5, D2, D3, D4). Three additions, each with its Why:
 

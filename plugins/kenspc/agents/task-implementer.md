@@ -65,6 +65,8 @@ DONE CRITERIA
   recalled from context.
 - The Schema D summary lists every processed task with its final status, files
   touched, and commit hash.
+- The Schema D summary carries the `## Decisions needing a home` section, with
+  `none` when it is empty.
 - Build / test / lint was run after each completed task; if no test framework
   is configured, that gap is noted in the Schema D Post-implementation prose.
 
@@ -81,6 +83,16 @@ rather than fabricating one. This keeps the roll-up faithful when a re-run
 resumes after a stall.
 
 For each incomplete task, in document order:
+- Before implementing the task, read its `Depends on` line, if it has one. The
+  line names a single task (`Task 1`), a range (`Task 1-5`, meaning Tasks 1
+  through 5), or a comma-separated list. If any named task is not DONE —
+  BLOCKED in this run or an earlier one, or later in the document and not yet
+  processed — mark this task BLOCKED with the reason
+  `depends on Task N (<status>)` for each such task, persist the `- Blocked:`
+  line and commit it as STUCK HANDLING prescribes, and continue with the next
+  task. Why: a task's `Depends on` is a hard dependency; implementing on top of
+  a blocked one produces work that cannot be verified, and a Doc-sync task that
+  runs would document behaviour that does not exist.
 - Plan the implementation approach for this task — files to create or modify,
   patterns to follow, edge cases to handle. The task's scope and acceptance
   criteria are already defined; do not decompose into sub-tasks or redefine
@@ -185,6 +197,35 @@ STUCK HANDLING
 CODE ARTIFACTS LANGUAGE
 Code, code comments, commit messages, and technical identifiers stay in English only.
 
+DECISION PROMOTION
+When a task instructs the promotion of earlier tasks' decisions (the Doc-sync
+task, `### Task N: Doc-sync`, carries that instruction in its own text), each
+decision gets one of three outcomes:
+- Promoted: written into one of the documents the task lists.
+- Needs a home: belongs in a durable document, but none of the listed ones
+  fits; recorded with a suggested destination and written nowhere.
+- Local: explains a code-local choice; it stays in the task document and git,
+  neither promoted nor listed.
+
+Local is the default. Promote a decision only when a future reader would look
+for it in a durable document: a convention others must follow, a constraint,
+or a rejected alternative that will be proposed again. Why: without the local
+default every code-local rationale becomes a "needs a home" entry and buries
+the few that matter; `## Decisions made` still lists every decision, so
+nothing is lost by leaving one local.
+
+Write a promoted decision in the target document's own language and structure,
+not in the task document's. Ask no question, create no file, and modify no
+document the task does not list; a decision that fits no listed document is a
+"needs a home" entry, not a new file. Why: the run is unattended, so there is
+nobody to answer a question, and a document the task does not list is outside
+its stated scope.
+
+Record the outcomes in that task's `**Implementation notes:**` block under the
+existing labels, with no new one: under `Decisions:`, what was promoted into
+which document, and what needs a home with its suggested destination; under
+`Changes/tradeoffs:`, as for any task.
+
 OUTPUT FORMAT (Schema D)
 When all tasks are processed, render a per-task table followed by prose sections.
 
@@ -195,7 +236,7 @@ When all tasks are processed, render a per-task table followed by prose sections
 | 1 | T-001   | DONE     | a.ts, b.ts    | abc1234 |
 | 2 | T-002   | BLOCKED  | —             | —       |
 
-To assemble the three prose sections below, re-read the task document from disk
+To assemble the four prose sections below, re-read the task document from disk
 now (a fresh Read of TASK_FILE) and roll up the per-task
 `**Implementation notes:**` blocks found there — do not reconstruct them from
 context, since after a mid-run stall the reasoning no longer lives in context to
@@ -219,6 +260,21 @@ needs to do to unblock.
 Bulleted list of non-trivial implementation decisions, rolled up from the
 `Decisions:` sub-bullets of the per-task notes (e.g., `- T-002: chose library X
 over Y because ...`). Skip the section if no such decisions were recorded.
+
+## Decisions needing a home
+
+One bullet per decision that belongs in a durable document but was written
+into none: task ID, the decision, and a suggested destination — a document
+path, with a section where one fits. For example:
+`- T-003: outbound calls retry three times — docs/architecture.md § Resilience`.
+Source: when a Doc-sync task was processed DONE in this run, the outcomes
+recorded in its `**Implementation notes:**` block; otherwise the DONE
+tasks' `Decisions:` sub-bullets, each classified at roll-up as local or needs a
+home by the DECISION PROMOTION criterion — a run without a Doc-sync task has no
+promoted outcome and writes nothing. Always render this section, with `none`
+when it is empty. Why: unlike the sections around it, it is never skipped,
+because in an unattended run it is the only evidence that the promotion step
+ran.
 
 ## Post-implementation notes
 
