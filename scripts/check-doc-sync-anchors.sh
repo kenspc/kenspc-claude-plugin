@@ -120,9 +120,10 @@ run_main_logic() {
 # Mutation regression fixture. Copies the eight target files into a temp
 # workdir, runs the main check (expect 0), renames `Doc-sync` to `Docsync` in
 # the task example (expect 1 — the label is then absent from that file),
-# reverts (expect 0). Mutating the example models the most likely drift: an
-# editor "tidying" the heading users copy, in isolation from the skill that
-# generates it.
+# reverts (expect 0). The fixture proves that a file with no `Doc-sync` left
+# in it is caught. The check is presence-only by design, so renaming only the
+# example's `### Task 6: Doc-sync` heading is not caught while its closing
+# note still says `Doc-sync`.
 run_self_test() {
     # WORK is global (not local) so the EXIT trap can reference it safely
     # after this function returns. Under `set -u`, an EXIT trap that refers
