@@ -311,7 +311,18 @@ skill that produces it.
 
 ### Task 6: Check Doc-sync coverage in task-document-reviewer Angle 1
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the passing statement names the fixed heading
+  (`### Task N: Doc-sync`) so the reviewer recognises the task by the D1
+  anchor, not by wording. The Angle 2 bullet uses the Q3 wording verbatim,
+  "Depends on" unquoted as the ruling gives it.
+- Changes/tradeoffs: the passing statement's "when the element says N/A
+  there is none" has no matching failure mode (a Doc-sync task present under
+  an N/A element), because the spec fixes exactly four modes; a reviewer
+  would still catch it against the passing statement. The bullet ends with
+  a Why sentence, which is not a failure mode.
 
 Depends on: Task 4
 

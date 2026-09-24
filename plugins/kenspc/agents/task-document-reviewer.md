@@ -68,11 +68,27 @@ Review both angles in order (the second angle builds on fixes from the first).
      split covers the full scope of the original step.
    - If the plan has a Risks section: are relevant risks reflected in task
      acceptance criteria or noted in task descriptions?
+   - Doc-sync coverage. Passing: when the plan's Documentation impact names
+     documents, the task document ends with a Doc-sync task
+     (`### Task N: Doc-sync`) whose `Depends on` covers every other task and
+     whose document list matches the element; when the element says N/A
+     there is none. Failure modes: (1) the element names documents but no
+     Doc-sync task exists; (2) the Doc-sync task is not last, or its
+     dependency range omits a task; (3) its document list differs from the
+     element; (4) the plan has no Documentation impact element at all.
+     Modes 1–3 are task-level: fix them in the task document — generate the
+     task from the Doc-sync Task template in
+     `${CLAUDE_PLUGIN_ROOT}/skills/generate-task/SKILL.md`, move it last,
+     complete the range, align the list — and commit. Mode 4 is plan-level:
+     record it under Plan-Level Concerns; it is not fixed in the task
+     document. Why: the element and the Doc-sync task are the two ends of
+     the documentation path, and this check keeps them attached.
 
 2. Execution Order
    - Are dependencies between tasks correct? Does any task assume output
      from a later task?
-   - For cross-phase tasks: are dependency annotations present and accurate?
+   - For tasks with a Depends on line: is every hard dependency annotated,
+     and is each annotation accurate?
    - Is granularity roughly uniform? Flag if one task touches 10+ files
      while another touches only 1 — this suggests uneven decomposition.
    - Trace through the task list in order: could a developer execute each
