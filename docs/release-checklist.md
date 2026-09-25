@@ -195,8 +195,10 @@ Change-set check for row 7, a run with no task document (v3.7.0):
   any untracked one whole, instead of looking for fix commits, and Schema C
   row 5 is not a FAIL that cites missing fix commits.
 - On a clean tree ahead of its upstream (`Mode: commits`): `Range:` is
-  `<upstream>..<HEAD>`, and the fix commits appear as before, one per FIXED
-  row. On a clean tree with no upstream, `Range:` is `<HEAD~1>..<HEAD>`, or
+  `<merge base>..<HEAD>` — the upstream itself unless the branch has
+  diverged from it, and on a diverged branch the table lists only files
+  this branch's own commits touched — and the fix commits appear as before,
+  one per FIXED row. On a clean tree with no upstream, `Range:` is `<HEAD~1>..<HEAD>`, or
   `<empty tree>..<HEAD> (root commit)` when HEAD is the repository's only
   commit.
 - In a project that does not yet ignore `.kenspc/`, on a clean tree: the

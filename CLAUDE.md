@@ -284,7 +284,8 @@ it there. No key was added, for the reason `RUN_DIR` replaced
 path the orchestrator passes leaves it nothing more to get right. Without
 `RUN_DIR`, a standalone reviewer derives the set from git itself. In
 `uncommitted` mode `code-fixer` commits nothing — no baseline commit, no fix
-commit, no stash — and its FIXED rows carry `—` in Commit.
+commit, no stash, and no checkout, restore, reset, clean, or add — and its
+FIXED rows carry `—` in Commit.
 
 #### Standalone safety classification
 

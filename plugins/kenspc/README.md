@@ -219,7 +219,7 @@ Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement
 
 **Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). Because the review's fixes land after the Doc-sync task, a run where both happened ends with a Next steps bullet naming the listed documents to re-check against the fix commits.
 
-**Bug path.** For a bug you have observed — a wrong result, a crash, an error you can trigger — start with `/kenspc-diagnose`. It reproduces the bug with a test that fails on the current code and commits that test first (`test: reproduce <symptom>`), or records the manual steps when no failing-capable test can be written. It then finds the root cause and writes `docs/tasks/<name>.md`: a `## Diagnosis` record, a fix task that turns the reproduction test green, a regression-test task for the adjacent cases it found, and a Doc-sync task when durable documents are affected. You confirm the task list before it is written; the document is committed (`docs: add task <name>`), and the skill asks whether to run `/kenspc-task-implement` on it now or to implement it yourself. When the fix needs a decision a task cannot make — a new dependency, an API contract change, a database schema change, or a configuration change — it writes `docs/briefs/<name>.md` instead and suggests `/kenspc-plan`. A bug report it cannot reproduce ends in a question about what is missing, with no document and no commit; the skill removes the test files it created for the attempt, or, if you deny the removal, names them in the question.
+**Bug path.** For a bug you have observed — a wrong result, a crash, an error you can trigger — start with `/kenspc-diagnose`. It reproduces the bug with a test that fails on the current code and commits that test first (`test: reproduce <symptom>`), or records the manual steps when no failing-capable test can be written. It then finds the root cause and writes `docs/tasks/<name>.md`: a `## Diagnosis` record, a fix task that turns the reproduction test green, a regression-test task for the adjacent cases it found, and a Doc-sync task when durable documents are affected. You confirm the task list before it is written; the document is committed (`docs: add task <name>`), and the skill asks whether to run `/kenspc-task-implement` on it now or to implement it yourself. When the fix needs a decision a task cannot make — a new dependency, an API contract change, a database schema change, or a configuration change — it writes `docs/briefs/<name>.md` instead and suggests `/kenspc-plan`. A bug report it cannot reproduce ends in a question about what is missing, with no document and no commit other than the one-time `.gitignore` commit; the skill removes the test files it created for the attempt, or, if you deny the removal, names them in the question. If a commit hook rejects one of its commits — a hook that runs your test suite rejects the failing reproduction test — the skill stops and asks you rather than bypass the hook.
 
 Small fixes can skip all skills and be implemented directly: a fix you can already name that touches one file and needs no new test. Anything more — a bug whose cause is not yet known, or a fix that needs a test — goes through `/kenspc-diagnose`.
 
@@ -308,24 +308,32 @@ run's reports in a directory at the root of your repository (since v3.5.0):
     HEAD when the branch has an upstream and is ahead of it, otherwise the
     last commit (`HEAD~1..HEAD`). When a commit these defaults name does not
     exist — HEAD is the root commit, or there is no commit yet — git's empty
-    tree stands in for it, so a fresh repository is reviewable as it is.
+    tree stands in for it, so a fresh repository is reviewable as it is. In
+    a shallow clone the skill asks you for a range instead.
 
-  Name commits, a range, or paths in the custom instructions to review
-  something else. Every commit is pinned by SHA before the run directory is
-  prepared, so its one-time `.gitignore` commit is never part of the set.
+  Name commits or a range in the custom instructions to review something
+  else, or paths to narrow the set to the changed files under them; a set
+  that comes out empty stops the review before any agent runs. Every commit
+  is pinned by SHA before the run directory is prepared, so its one-time
+  `.gitignore` commit is never part of the set.
 - **Uncommitted fixes.** When the change set is `uncommitted`, code-fixer
   applies its fixes to your working tree and commits nothing — no baseline
-  commit of your change, no fix commit, no stash. Schema B's FIXED rows show
-  `—` in the Commit column, and the final report's Next steps names the
-  changed files for you to review and commit. With a committed change set,
-  or with a task document, each fix is still its own commit. Before v3.7.0
+  commit of your change, no fix commit, no stash — and runs no git command
+  that resets or restages a file. Schema B's FIXED rows show `—` in the
+  Commit column, and the final report's Next steps names the changed files
+  for you to review and commit. With a committed change set, or with a task
+  document, each fix is still its own commit; a fix to a file that has
+  uncommitted changes the run did not make is deferred instead of committed
+  with them. Before v3.7.0
   nothing said how to handle an uncommitted change, and a review run has
   committed one as a base for its fix commits.
 - **Red interval after a diagnosis.** `/kenspc-diagnose` commits the
   reproduction test before the fix exists, so the test fails — and a CI that
   gates on the test suite is red — until the fix task lands. That is the
   true state of the code; the fix task turns the test green, and choosing to
-  implement interactively at the skill's exit lets you fix it at once.
+  implement interactively at the skill's exit lets you fix it at once. If the
+  diagnosis ends without a task document or brief, the skill names that
+  commit and offers `git revert`.
 - **Subagents in interactive sessions.** In an interactive session, Claude
   Code runs subagents asynchronously and hands each result back; the
   workflow still finishes within the same turn, with no further input. The
