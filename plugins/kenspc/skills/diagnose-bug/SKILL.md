@@ -90,7 +90,9 @@ $ARGUMENTS format: BUG
   a file path (an issue export, a log, a bug report) that the skill reads.
   When the first token looks like a file path (starts with `./` or `/`, or
   ends with `.md`, `.txt`, or `.log`), read that file and use its contents
-  as the bug report.
+  as the bug report. When no such file exists, treat the whole input as free
+  text: a bug described by its route, such as `/checkout returns 500`, starts
+  with `/` too.
 
 If no arguments are provided, ask the user what they observed and how to
 trigger it.
