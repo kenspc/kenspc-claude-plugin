@@ -141,8 +141,11 @@ a minor release. No new agent and no CONTEXT key changes.
 - **generate-plan.** Phase 1 Step 1 reads a brief in three parts: the exit
   (above); the gap-check, where each `open` entry is a gap for the same
   one-to-two rounds and one they do not settle is carried into the plan (a
-  session that cannot ask carries every `open` entry with no gap round);
-  and `answered` entries, settled input that a plan relying on one cites by
+  session that cannot ask carries every `open` entry with no gap round), and
+  an entry whose status word is none of the three — hand-edited,
+  translated, or missing — is a gap too, named as unrecognized and asked
+  about, or carried in the `open` form with the word in `From:` by a
+  session that cannot ask; and `answered` entries, settled input that a plan relying on one cites by
   its prototype hash. A brief with no `## Open Questions` section, or with
   `none`, has nothing to stop on. The plan's Open Questions element gains
   the carried form — the status word kept, `From: <brief path>, entry <n>`,

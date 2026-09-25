@@ -109,7 +109,11 @@ If it is a brief, take these three parts in order:
    discovery framework (loaded in Step 3). Each of the brief's
    `` `open` `` entries is a gap too, for the same rounds; one the rounds do
    not settle is carried into the plan's Open Questions in the carried
-   form, without `Not prototyped:`.
+   form, without `Not prototyped:`. So is an entry whose status word is
+   none of `` `open` ``, `` `needs prototype` ``, and `` `answered` `` — a
+   hand-edited or translated word, or no word at all: the gap round names
+   it as unrecognized, quoting what it found, and asks which status it has,
+   and the entry is then taken as one with that status.
    - If gaps exist, ask only about the gaps (one to two rounds maximum),
      then proceed to Phase 2.
    - If no gaps, tell the user the brief covers all key dimensions and
@@ -118,8 +122,12 @@ If it is a brief, take these three parts in order:
    In a session that cannot ask (a system reminder to work without
    stopping), no `open` entry enters the gap rounds: each is carried
    straight in, in the same form (`From:` and `Assumed in:`, no
-   `Not prototyped:`). Why: an `open` entry is an explicit gap the brief
-   recorded, and a plan that drops it loses the question without a trace.
+   `Not prototyped:`), and an entry with an unrecognized status word is
+   carried the same way, in the `open` form, its `From:` naming the word
+   found. Why: an `open` entry is an explicit gap the brief recorded, an
+   entry whose status cannot be read is a question the brief recorded all
+   the same, and a plan that drops either loses the question without a
+   trace.
 3. **Answered entries.** An `` `answered` `` entry is settled input; a plan
    that relies on one cites its prototype hash where it does. Why: the
    brief is a discovery artifact and may be deleted; the hash in the plan
@@ -246,6 +254,9 @@ element is indistinguishable from a forgotten one.
      - Assumed in: <the steps that assume an answer, and what they assume>
   ```
 
+  An entry whose status word Phase 1 did not recognize takes the `open`
+  form, its `From:` naming the word it found:
+  `From: <brief path>, entry <n>, status word <the word, or none> not recognized`.
   Why: carrying a question is safe only when the plan says which of its
   steps rest on an assumed answer.
 
