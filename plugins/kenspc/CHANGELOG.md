@@ -9,6 +9,145 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.7.0 — unreleased
+
+Batch B. A `diagnose-bug` skill and its `/kenspc-diagnose` command take an
+observed bug from reproduction to a task document for
+`/kenspc-task-implement`, or to a brief for `/kenspc-plan` when the fix
+needs a decision a task cannot make. `REVIEW_SCOPE=changes` is defined:
+task-review computes the change set once, read-only, and every agent reads
+it from the run directory; in an uncommitted run code-fixer commits
+nothing. A new command, so a minor release. No CONTEXT key changes. The
+date is filled at release.
+
+### Added
+
+- **`diagnose-bug` skill and `/kenspc-diagnose`.** For a bug the user has
+  observed — a wrong result, a crash, an error they can trigger. Three
+  tiers: tier 1, a fix the user can already name that touches one file and
+  needs no new test, is made directly and never reaches the skill (its
+  description excludes it, along with explaining an error message or a
+  stack trace and finding bugs in code); tier 2 gets a task document; tier 3
+  — a fix that needs a new dependency, a change to an existing API
+  contract, a database schema change, or a project configuration change,
+  the stop conditions in task-implementer's AUTONOMY BOUNDARIES — gets a
+  brief instead.
+  - **Reproduction first.** A test in the project's test tree, run and seen
+    to fail for the reported reason, committed alone as
+    `test: reproduce <symptom>` before any diagnosis; or, when no
+    failing-capable test can be written (hardware, a real device, no test
+    framework), the manual steps and the reason. A bug the skill cannot
+    reproduce ends in a question listing each attempt (path, what it
+    exercised, what happened); before asking, the skill removes the
+    reproduction-test files it created in this run — untracked (`??`) files
+    that were not there when it started, never a tracked file, never
+    anything under `.kenspc/` — or, when the removal is denied, names them
+    in the question. It leaves no task document or brief and makes no
+    commit.
+  - **Hypothesis loop.** `none — the root cause was visible on
+    reproduction`, or three to five hypotheses listed at once, each with
+    its verification method, verified in turn and recorded with the
+    evidence; the skill stops and asks when none survives.
+  - **The record and the tasks.** `docs/tasks/<name>.md` (`<name>` a slug of
+    the symptom) holds a `## Diagnosis` section with nine fixed labels —
+    `**Symptom:**`, `**Reproduction:**`, `**Root cause:**`,
+    `**Hypotheses:**`, `**Fix scope:**`, `**Adjacent cases:**`, `**Tier:**`,
+    `**Documentation impact:**`, `**Probes:**` — and no `Phase N` or
+    `Step N` heading, then a fix task (the reproduction test passes, the
+    full suite, build, and lint pass, nothing outside Fix scope changes; a
+    manual reproduction's criterion is left for the user to verify and
+    recorded as not verified), a regression-test task for the adjacent
+    cases (omitted when there are none), and a `### Task N: Doc-sync` task
+    written from generate-task's template by reference when the diagnosis's
+    Documentation impact lists documents. The user confirms the task list
+    before it is written; there is no review phase. The document is
+    committed alone (`docs: add task <name>`), and the skill asks whether to
+    run `/kenspc-task-implement` on it now or implement interactively; a
+    session that cannot ask prints the suggestion and stops.
+  - **The brief exit.** Tier 3 writes `docs/briefs/<name>.md`, starting
+    `# Requirement Brief:`, in generate-brief's template with no
+    `Discovery Mode:` field; it is not committed, and the skill suggests
+    `/kenspc-plan <path>` without invoking it.
+  - **Probe directory.** A probe, copy, or mutant goes in
+    `.kenspc/runs/<YYYYMMDD-HHMMSS>-diagnose-<name>/scratch/orchestrator/<n>/`,
+    a run directory prepared as the `canonical:run-dir` block prescribes,
+    by reference, with no third copy of the block. The diagnosis modifies no
+    tracked file.
+  - **The commits it makes:** the reproduction test, the task document,
+    and — when it prepared a run directory in a project that did not yet
+    ignore `.kenspc/` — the one-time `.gitignore` commit, the single
+    exception to "modifies no tracked file".
+- **`change-set.md`.** A fixed file under `RUN_DIR`, written by task-review
+  in a review without a task document before any agent is dispatched:
+  `# Change set`, `Mode: uncommitted` or `Mode: commits`, `Base:` or
+  `Range:`, the `Diff:` command, and a `Status | Path` table. The five
+  reviewers, code-fixer, and regression-verifier read it there; no CONTEXT
+  key was added, for the reason `RUN_DIR` replaced `REVIEW_REPORTS` and
+  `ACCOUNTABILITY_LIST`.
+- **Reminder hook messages.** `remind-plan-skill.sh`'s messages for
+  `docs/tasks/` and `docs/briefs/` name diagnose-bug (`/kenspc-diagnose`)
+  beside generate-task and generate-brief.
+- **Guard extensions, counts unchanged** (`guards run: 10`,
+  `self-tests run: 9`). `check-doc-sync-anchors.sh` adds
+  `diagnose-bug/SKILL.md` to its `Documentation impact` and `Doc-sync`
+  groups (nine files). `check-run-contract.sh` gains check 5: the literal
+  `change-set.md` is named in `task-review/SKILL.md`, `code-fixer.md`,
+  `regression-verifier.md`, and `requirements-reviewer.md` (the drift guard
+  carries it to the other four reviewers), with a self-test mutation that
+  renames every occurrence in the task-review SKILL.
+
+### Changed
+
+- **`REVIEW_SCOPE=changes` defined.** task-review computes the change set
+  once, with read-only git commands only — no commit, stash, checkout, add,
+  or reset — and pins every SHA before the run-directory preparation, so
+  its one-time `.gitignore` commit is never part of the set. `uncommitted`
+  when `git status --porcelain` lists any path outside `.kenspc/` (staged,
+  unstaged, and untracked, against HEAD); `commits` when the tree is clean
+  (`<upstream>..<HEAD>` when an upstream exists and the range has commits,
+  otherwise `<HEAD~1>..<HEAD>`). When a commit these defaults name does not
+  exist, git's empty tree stands in for it: `Range: <empty tree>..<HEAD>
+  (root commit)`, or `Base: <empty tree> (no commit yet)` on an unborn
+  branch. CUSTOM_INSTRUCTIONS naming commits, a range, or paths override the
+  default, and one line tells the user the mode, the base or range, and the
+  file count. Before, each reviewer worked out its own set from git. Source:
+  the v3.5.1 acceptance's Windows run, observation 2, where code-fixer
+  committed the reviewed, uncommitted `Program.cs` unchanged as `5b4f1d4` to
+  give its three fix commits a base, because nothing said how to handle an
+  uncommitted change; the orchestrator itself committed only `.gitignore`.
+  Recorded in that acceptance session, not under `docs/dry-runs/`.
+- **code-fixer's uncommitted mode.** When `change-set.md` says
+  `Mode: uncommitted`, code-fixer applies every fix to the working tree and
+  commits nothing — no baseline commit of the user's change, no fix commit,
+  no stash; FIXED rows carry `—` in Commit, and its reply names the
+  uncommitted files. In `Mode: commits` and with a task document, each fix
+  is still its own commit. Its PREREQUISITE CHECK also stops when a
+  changes-mode run has no `change-set.md`, and its OBJECTIVE and PROCESSING
+  APPROACH defer to the FIXING RULES mode rule. task-review's Next steps
+  gains a bullet naming the uncommitted files for the user to review and
+  commit, and its verification list and PASS / FAIL bullets read "the fixes
+  (fix commits, or the uncommitted fixes of an `uncommitted` run)".
+- **regression-verifier's check 4.** In an uncommitted run it reads the
+  working-tree diff of the files the FIXED rows name
+  (`git diff <base> -- <files>`, the base from `change-set.md`) instead of
+  fix commits; the user's own hunks in those files are the change under
+  review, not regressions. It reads `change-set.md` for the set's boundary
+  and stops when a changes-mode run has none.
+- **The reviewers' three shared sections.** CONTEXT YOU WILL RECEIVE,
+  PREREQUISITES, and FILE COVERAGE, byte-identical in all five: with
+  `RUN_DIR`, a changes-mode reviewer reviews the files `change-set.md`
+  lists and runs its diff command; standalone, without `RUN_DIR`, it runs
+  `git status`, `git diff`, `git diff --cached`, and `git log` as before.
+
+### Known behavior
+
+- **Red interval after a diagnosis.** The reproduction test is committed
+  before the fix exists, so it fails — and a CI that gates on the suite is
+  red — until the fix task lands.
+- **Fixes left uncommitted.** In an uncommitted review run, the fixes stay
+  in the working tree for the user to review and commit; the final
+  report's Next steps names the files.
+
 ## 3.6.0 — 2026-09-25
 
 Two batches. Batch A: a documentation path from the plan to the

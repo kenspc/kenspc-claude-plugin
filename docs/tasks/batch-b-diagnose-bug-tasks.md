@@ -1085,7 +1085,24 @@ Plan Step 4.2 (rulings M11, M18, D1, D7; clarification C3).
 
 ### Task 12: Add the 3.7.0 CHANGELOG entry and update the roadmap
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the diagnose-bug entry is one Added bullet with sub-bullets
+  (reproduction first, hypothesis loop, the record and the tasks, the brief
+  exit, the probe directory, the commits it makes), so the skill reads as
+  one feature. The observation-2 source line also says the orchestrator
+  committed only `.gitignore` in that run — the fact that moved the rule
+  from the orchestrator to code-fixer — and that code-fixer made three fix
+  commits on top of `5b4f1d4`, as the plan's Background records.
+- Changes/tradeoffs: the Changed bullets for code-fixer and task-review also
+  record the smaller contract edits that ride with the uncommitted mode
+  (PREREQUISITE CHECK stops, OBJECTIVE / PROCESSING APPROACH deferring to
+  FIXING RULES, the Next steps bullet, the "the fixes (fix commits, or …)"
+  wording). The release-checklist changes are Task 13's and are not in the
+  entry yet; the Doc-sync task reconciles the entry with them. Roadmap:
+  "Next minor" item 2 removed and items 3–9 renumbered 2–8; "Planned
+  batches" keeps only C.
 
 Depends on: Task 1-9
 
