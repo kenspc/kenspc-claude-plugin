@@ -448,7 +448,26 @@ normalization, and the file-path extraction stay as they are.
 
 ### Task 4: Define the change set in task-review
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: `git hash-object -t tree /dev/null` joins the read-only command
+  list, and the empty tree is given as "the SHA that command prints",
+  `4b825dc…` in a SHA-1 repository — the literal alone would be wrong in a
+  SHA-256 repository, and the command writes nothing without `-w`. Step 5's
+  "applies fixes, commits" reads "commits each one — except in an
+  `uncommitted` run, below", with the uncommitted-mode note after the reply
+  paragraph, so no sentence outside the canonical blocks tells code-fixer to
+  commit unconditionally. The `change-set.md` shape is shown as a fenced
+  example with an uncommitted set, and the prose after it gives the
+  committed form's `Range:` line and the four ways a range is chosen
+  (upstream, `HEAD~1`, root commit, CUSTOM_INSTRUCTIONS).
+- Changes/tradeoffs: the Step 5 note also says what the fixer's reply adds
+  (one line naming the uncommitted files), matching Task 6's reply edit.
+  The Next steps bullet carries a one-clause reason ("nothing in such a run
+  commits them"). The four canonical blocks were compared before and after
+  by extracting each between its markers: all unchanged.
+  `task-implement/SKILL.md` is not edited.
 
 Plan Step 2.1 (B-8; rulings M7, M8, M19, D7 (i)–(iv); clarifications C3,
 C4, C5).

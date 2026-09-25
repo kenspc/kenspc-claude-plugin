@@ -40,8 +40,8 @@ covered; no file is silently skipped because it "looks routine".
 $ARGUMENTS format: [PATH] [CUSTOM_INSTRUCTIONS]
 
 - PATH (optional): first token, path to a task document. If omitted, the
-  review covers recent changes (uncommitted, staged, or recently committed)
-  without a requirements reference.
+  review covers the change set Step 1 determines, without a requirements
+  reference.
 - CUSTOM_INSTRUCTIONS (optional): everything after the path, free-text that
   narrows the review scope or adds specific requirements (e.g., "only review
   src/api/", "focus on security and SQL injection").
@@ -61,6 +61,43 @@ If $ARGUMENTS contains a file path:
 If $ARGUMENTS is empty or contains no file path:
 - Set REVIEW_SCOPE to "changes".
 - Set TASK_FILE to "N/A".
+- Determine the change set — the files under review — before the
+  run-directory preparation below, with read-only git commands only:
+  `git status --porcelain`, `git diff --name-status`, `git rev-parse`,
+  `git rev-list`, `git log`, and `git hash-object -t tree /dev/null`, which
+  prints the empty tree's SHA and writes nothing. No commit, stash,
+  checkout, add, reset, or any other change to the working tree, the index,
+  or refs. Why: a review run once committed the user's uncommitted change as
+  a baseline for its fixes, because nothing said what to do with it; the
+  change set is the user's work, and the run reads it.
+  - `Mode: uncommitted` when `git status --porcelain` lists any path once
+    paths under `.kenspc/` are dropped (ignored paths never appear). The set
+    is every listed path — staged, unstaged, and untracked; the base is
+    HEAD's SHA; the diff command is `git diff <sha> -- <paths>`, with
+    untracked files read whole.
+  - `Mode: commits` when the tree is clean. The range is
+    `<upstream sha>..<HEAD sha>` when `@{upstream}` resolves and the range
+    has commits, otherwise `<HEAD~1 sha>..<HEAD sha>`; the set is
+    `git diff --name-status <range>`; the diff command is
+    `git diff <a>..<b> -- <paths>`.
+  - When a commit these defaults name does not exist, git's empty tree
+    stands in for it: the SHA `git hash-object -t tree /dev/null` prints,
+    `4b825dc642cb6eb9a060e54bf8d69288fbee4904` in a SHA-1 repository. With
+    no upstream and HEAD the root commit, the set is recorded as
+    `Range: <empty tree>..<HEAD sha> (root commit)`; on an unborn branch,
+    where `git rev-parse --verify HEAD` fails, as
+    `Base: <empty tree> (no commit yet)`. The diff commands keep their form
+    (`git diff <empty tree>..<sha>`, `git diff <empty tree> -- <paths>`),
+    and the pinned base stays the empty tree even when the run-directory
+    preparation's `.gitignore` commit then creates the root commit. Why: a
+    fresh project with one commit, or none, is reviewable without
+    CUSTOM_INSTRUCTIONS.
+  - CUSTOM_INSTRUCTIONS that name commits, a range, or paths override the
+    default: mode `commits` with that range, or the named paths.
+  - Compute and pin every SHA before the run-directory preparation, so its
+    one-time `.gitignore` commit is never part of the set.
+  - Tell the user, in one line, what is under review: the mode and the base
+    or range, with the file count.
 
 <!-- canonical:run-dir:start -->
 Prepare this run's report directory before any review agent is dispatched.
@@ -121,6 +158,34 @@ has lost rows on the way to the verifier.
     would fail the same way.
 <!-- canonical:run-dir:end -->
 
+In "changes" mode, write `RUN_DIR/change-set.md` — the first file in the
+directory — with the change set determined above. A "task" run writes no
+such file. The shape:
+
+```markdown
+# Change set
+
+Mode: uncommitted
+Base: <sha>
+Diff: git diff <sha> -- <paths>
+
+| Status | Path |
+|--------|------|
+| M      | src/api/users.ts |
+| ??     | src/api/roles.ts |
+```
+
+`Mode:` is `uncommitted` or `commits`. An uncommitted set carries
+`Base: <sha>`; a committed one carries
+`Range: <sha>..<sha> (<how it was chosen>)` in its place — upstream,
+`HEAD~1`, root commit, or CUSTOM_INSTRUCTIONS. `Diff:` is the diff command
+from the rule above. The
+table lists every path in the set, its status as git prints it (`M`, `A`,
+`D`, `R`, `??`), paths relative to the repository root. Why: the five
+reviewers, code-fixer, and regression-verifier read the set from that path;
+RUN_DIR is the one value the orchestrator already passes, so no key is
+added.
+
 ### Step 2: Construct CONTEXT block
 
 Build a structured CONTEXT block that will be passed to every dispatched
@@ -133,6 +198,9 @@ CONTEXT
 - CUSTOM_INSTRUCTIONS: <user's custom instructions or "N/A">
 - RUN_DIR: <absolute run directory from Step 1>
 ```
+
+The keys are the same in both scopes; in "changes" mode RUN_DIR also holds
+`change-set.md`, and every dispatched agent reads the change set there.
 
 CUSTOM_INSTRUCTIONS construction:
 - Default: "N/A".
@@ -230,7 +298,8 @@ Dispatch a single subagent:
   same turn. A background call returns at once, and a headless session stops
   the agent when it exits.
 
-The fix agent deduplicates overlapping findings, applies fixes, commits, and
+The fix agent deduplicates overlapping findings, applies fixes, commits each
+one — except in an `uncommitted` run, below — and
 writes its full Schema B accountability list to `RUN_DIR/schema-b.md`: a
 `# / Source / short_label / Severity / File:Line / Action / Commit` table in
 which every issue ID appears in exactly one Source cell, a Per-angle Results
@@ -245,6 +314,12 @@ Its reply carries the statistics line, the Per-angle Results table, the HIGH
 and MEDIUM rows with their Deferred Issues paragraphs, the scratch-pollution
 note when there is one, and the path of schema-b.md. Render that reply
 verbatim; the LOW rows and their prose stay in the file.
+
+When `change-set.md` says `Mode: uncommitted`, code-fixer applies the fixes
+to the working tree without committing — no baseline commit of the user's
+change, no fix commit, no stash — and its FIXED rows show `—` in the Commit
+column; its reply adds one line after the statistics line saying the fixes
+are uncommitted and naming the files.
 
 ### Step 6: Dispatch regression agent
 
@@ -262,7 +337,8 @@ The regression agent verifies:
   statistics line agrees with the rows,
 - fixed issues are actually fixed in the code,
 - build / test / lint passes,
-- fix commits did not introduce new issues.
+- the fixes (fix commits, or the uncommitted fixes of an `uncommitted` run)
+  did not introduce new issues.
 
 Render its Schema C result table verbatim:
 
@@ -314,8 +390,8 @@ Based on the regression verification results, declare a verdict:
 
 - **PASS** when all of: zero HIGH severity issues remain unresolved; zero
   INCORRECTLY FIXED items; build / tests / lint all PASS or `SPOT-CHECK`
-  on row 3 (no-test-suite fallback); no regressions introduced by fix
-  commits.
+  on row 3 (no-test-suite fallback); no regressions introduced by the fixes
+  (fix commits, or the uncommitted fixes of an `uncommitted` run).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -333,8 +409,9 @@ Based on the regression verification results, declare a verdict:
   knowingly, not discover it later.
 <!-- canonical:verdict-shared:end -->
 - **FAIL** when any of: one or more HIGH severity issues remain unresolved;
-  one or more INCORRECTLY FIXED items; build / test / lint fails; fix
-  commits introduced unresolved regressions.
+  one or more INCORRECTLY FIXED items; build / test / lint fails; the fixes
+  (fix commits, or the uncommitted fixes of an `uncommitted` run) introduced
+  unresolved regressions.
 - **PARTIAL** when neither PASS nor FAIL applies cleanly — for example,
   HIGH issues are deferred with explicit rationale and the user must decide
   whether to accept.
@@ -343,7 +420,10 @@ MEDIUM and LOW issues do not change the verdict but appear in the report.
 
 The Next steps bullets call out: deferred issues, regression failures,
 reviewer recommendations the user should act on, and whether re-running
-the review is suggested. When regression-verifier's test-row Detail names
+the review is suggested. When the change set was uncommitted
+(`Mode: uncommitted`), one bullet says the fixes are in the working tree,
+uncommitted, naming the files, for the user to review and commit; nothing
+in such a run commits them. When regression-verifier's test-row Detail names
 files under `.kenspc/` that the test run collected and that passed, one
 bullet names them as the Detail does and asks the user to delete them.
 Why: runs are never deleted and the plugin deletes nothing itself, so a
