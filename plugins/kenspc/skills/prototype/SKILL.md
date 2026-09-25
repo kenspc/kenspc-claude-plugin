@@ -407,6 +407,13 @@ remove commit's body keeps the answer and the hash in history.
 is made; the entry stays `` `needs prototype` `` and gains `Evidence:` with
 the reason, and no `Prototype:`.
 
+**An entry an earlier attempt left unsettled** already carries `Evidence:`,
+and `Prototype:` when that attempt committed one. This run's rewrite
+replaces them rather than adding a second of either, and its `Evidence:`
+names the earlier attempt's commit when there was one. Why: the grammar
+gives each label once, in order, and the earlier prototype stays readable
+through the commit the new `Evidence:` names.
+
 ## Exit
 
 The final message gives:
