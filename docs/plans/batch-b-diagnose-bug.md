@@ -912,6 +912,55 @@ from that section.
   today and hits this plan, so it can fail). Why: skills and agents run as
   prompts in the user's project, where this repository's rulings and
   records mean nothing. Steps 1.1, 2.1–2.4.
+- C6 — Step 1.1, ruling M4: Task 1's boundary admits test files. "No file
+  outside Fix scope is modified" was too strict — `task-implementer` writes
+  tests for each new function and stops on a file outside a task's stated
+  scope, so a fix task with no room for tests would be BLOCKED. Task 1's
+  criterion reads: no file outside Fix scope is modified other than test
+  files (tests for the code the fix adds, in new files or beside the
+  reproduction test) and the task document's status update; the reproduction
+  test's existing assertions are unchanged. The manual-reproduction form
+  carries the same allowance. Source: the batch's own review, fix commit
+  `fdc52d8`; accepted as written. Step 1.1.
+- C7 — Step 2.1, ruling D7 (i): the commits-mode range starts at the merge
+  base. `<upstream sha>..<HEAD sha>` reads `<merge-base sha>..<HEAD sha>`,
+  the merge base of `@{upstream}` and HEAD — the upstream itself unless the
+  branch has diverged — because `git diff a..b` compares two trees and on a
+  diverged branch would list the upstream's own new files with their changes
+  reversed. The release checklist's row-7 criterion reads
+  `<merge base>..<HEAD>`. Refinements from the same review, accepted as
+  written: the uncommitted set is read with `-uall` and
+  `core.quotePath=false`, a rename listed under its new path; CUSTOM
+  INSTRUCTIONS that name a range replace the default while named paths
+  narrow it; an empty set stops the run before any dispatch; in a shallow
+  clone a missing `HEAD~1` stops the run and asks for a range instead of
+  taking the empty tree. Source: fix commits `e8e7f56`, `3f79b90`,
+  `84a6ff7`, `89b5faa`. Steps 2.1, 4.4.
+- C8 — Steps 1.1, 2.3, 2.4: further review fixes accepted as written, each
+  a behavior the CHANGELOG entry names. `code-fixer`, in a committed run
+  (`Mode: commits` or REVIEW_SCOPE "task"), checks each file a fix will
+  touch with `git status --porcelain` and DEFERs the fix when the file
+  carries uncommitted changes, so a fix commit never sweeps the user's hunks
+  in — a change for `/kenspc-task-review <task document>` on a dirty tree
+  too (`7d7b900`); in an uncommitted run it runs no `git checkout`,
+  `restore`, `reset`, `clean`, or `add`, and keeps a scratch copy of each
+  file before its first edit for undoing a fix (`b8ef194`);
+  `regression-verifier` fails row 5 on any commit made in an uncommitted run
+  other than the one-time `.gitignore` commit (`2af8bd9`) and reads
+  untracked fix files whole (`68bfc28`); the reviewers stop when a
+  changes-mode run has no `change-set.md` (`d1ab27d`). `diagnose-bug` runs
+  the reproduction test more than once and records an intermittent bug's
+  observed rate, with Task 1 then requiring a stated number of consecutive
+  passes (`c0112ed`); stops on a rejected commit rather than bypassing the
+  hook, since a hook that runs the suite rejects the red reproduction commit
+  by design (`02914c9`); names the reproduction commit and offers
+  `git revert` when a run ends without a document (`d94893a`); warns at the
+  exit when Fix scope holds uncommitted changes (`4182a79`); and in a
+  session that cannot ask creates the task document alongside on a name
+  conflict (`33bce6b`) and reaches tier-2 DONE (`65b07ef`). Why one entry:
+  none of them reopens a ruling; they are recorded so the README and
+  CHANGELOG re-check after the review (Schema G's re-check bullet) has a
+  list to work from. Steps 1.1, 2.3, 2.4, 4.2, 4.3.
 
 ## Open Questions
 
