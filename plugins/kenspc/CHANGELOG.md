@@ -77,7 +77,9 @@ a minor release. No new agent and no CONTEXT key changes.
     committed. A failed commit stops the run with no retry and no
     `--no-verify`; a run that stops between the two commits names the add
     commit and gives the commands that would remove it, without running
-    them.
+    them. A path that changed after the add commit is left out of those
+    commands and named, so its edit can be saved before it is removed by
+    hand.
   - **Where it lives.** `prototypes/<slug>/` at the repository root unless
     the project's CLAUDE.md names another location; its file names follow
     the naming rule of the `canonical:run-dir` block's Scratch space bullet,

@@ -449,11 +449,18 @@ is what users' permission rules deny.
 
 **Ending with the prototype still in the tree.** When the run stops after
 the add commit and before the remove commit — a rejected remove commit, the
-user stopping at the judgment point — the last message names the add
-commit, says the prototype is still in the tree, and gives the commands that
-would remove it: `git rm -- <each path the add commit added>`, and for an
-in-app prototype `git checkout <add commit>^ -- <each path it modified>`,
-then the remove commit. When the remove commit is the one rejected, those
+user stopping at the judgment point, a teardown that failed, a path that
+changed before the discard — the last message names the add commit, says
+the prototype is still in the tree, and gives the commands that would
+remove it: `git rm -- <each path the add commit added>`, and for an in-app
+prototype `git checkout <add commit>^ -- <each path it modified>`, then the
+remove commit. When the check before the discard stopped the run, the paths
+it listed are left out of those commands and named apart, as holding an
+edit made after the add commit, and the message tells the user to save or
+commit that edit before removing the path by hand. Why: on such a path
+`git rm` refuses the local modification and `git checkout` overwrites it
+without a word, so a command given for it would fail or destroy the edit the
+check stopped for. When the remove commit is the one rejected, those
 commands have already run and the removal is staged: the message says so,
 says a plain `git commit` would carry the removal under another message,
 and gives the `git commit` command the skill ran, which finishes the
