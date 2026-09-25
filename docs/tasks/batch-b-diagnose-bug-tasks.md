@@ -576,7 +576,21 @@ The new text adds no second line containing `- Scratch space:` or
 
 ### Task 5: Read the change set in the five reviewers
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: PREREQUISITES step 3 also says to read an untracked (`??`)
+  file whole — in uncommitted mode the change set's diff command
+  (`git diff <sha> -- <paths>`) prints nothing for an untracked file, so
+  "run its diff command for their content" alone would leave those files
+  unread. The three edits were applied by one script that asserted each old
+  text occurred exactly once per file, so the five files received the same
+  bytes.
+- Changes/tradeoffs: none beyond the task spec. A per-section comparison
+  against HEAD shows only CONTEXT YOU WILL RECEIVE, PREREQUISITES, and FILE
+  COVERAGE changed in each of the five files, with the section headers
+  unchanged; `check-review-agent-drift.sh` reports all six shared sections
+  identical.
 
 Depends on: Task 4
 

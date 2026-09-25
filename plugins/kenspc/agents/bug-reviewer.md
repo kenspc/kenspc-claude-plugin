@@ -27,7 +27,9 @@ The dispatching skill provides a CONTEXT block with these keys:
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — optional: absolute path of this run's report directory. The
   /kenspc-task-review and /kenspc-task-implement skills provide it; a
-  standalone invocation usually omits it. See REPORT DELIVERY.
+  standalone invocation usually omits it. See REPORT DELIVERY. With
+  REVIEW_SCOPE "changes" it also holds `change-set.md`, the change set the
+  orchestrator computed; see PREREQUISITES.
 
 ROLE
 You are one of five code reviewers: analyze the code, produce a structured
@@ -93,8 +95,14 @@ PREREQUISITES
    commands, and project conventions (prioritize CLAUDE.md).
 2. If REVIEW_SCOPE is "task": read the task document at the path given by CONTEXT
    TASK_FILE for context.
-3. If REVIEW_SCOPE is "changes": run "git status", "git diff", "git diff --cached",
-   and "git log --oneline -10" to identify the scope of changes.
+3. If REVIEW_SCOPE is "changes": with RUN_DIR, read `RUN_DIR/change-set.md`.
+   Its mode, base or range, files, and diff command define the change set:
+   review those files and nothing else, run its diff command for their
+   content, and read an untracked (`??`) file whole. Without RUN_DIR
+   (standalone), run "git status", "git diff", "git diff --cached", and
+   "git log --oneline -10" to identify the scope of changes, as before.
+   Why: five reviewers that each derive the set from git have reviewed five
+   slightly different sets; one file written once is the same set for all.
 4. Identify the files and functions that were added or modified.
 
 CUSTOM INSTRUCTIONS
@@ -123,9 +131,9 @@ it with Confidence set to medium or low — the fixer and verifier read the code
 again before acting on it.
 
 FILE COVERAGE
-Before reviewing, list all files that were added or modified (from git diff, git
-status, or the task document). Review each file in this list explicitly. Do not
-skip files.
+Before reviewing, list all files that were added or modified (from
+`RUN_DIR/change-set.md` when it exists, otherwise from git diff, git status, or
+the task document). Review each file in this list explicitly. Do not skip files.
 
 REVIEW CHECKLIST
 A change passes this angle when tracing it with concrete inputs — the happy
