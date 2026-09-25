@@ -68,6 +68,29 @@ work (former items 2 and 9) have shipped.
    sub-check is silent on a retried baseline; the CHANGELOG's "check 4" can
    read as Schema C row 4; the worker agents' runner config sits outside
    the attempt directory.
+   From the acceptance run (`docs/dry-runs/scratch-probes-acceptance.md`
+   § 7):
+   - O2: `schema-b.md` carried a `## Verification` section between the
+     Deferred Issues prose and the statistics line, which code-fixer's
+     OUTPUT FORMAT does not list; the recount guard passes it, and the
+     Schema F rendering dropped it;
+   - O3: angle 1 rooted each mutant's runner config at the mutant's
+     subdirectory while its baseline ran under the attempt-level config, so
+     the baseline and the mutants did not run under the same config file;
+   - O4: regression-verifier copied the `test/` tree with its collectable
+     names and renamed them in the next statement, against ruling M3's "as
+     they are copied"; code-fixer renamed as it copied;
+   - O5: a scratch runner config without `cacheDir` leaves vite's cache at
+     `scratch/<agent>/1/node_modules/.vite/`;
+   - O6: the lint and build paths of the unmodified-command rule are
+     untested by any acceptance run — the target project had neither
+     script, so the build row was a PASS that could not fail.
+   From the same report's § 6 precedent table: task-implementer has no
+   scratch convention at all — it runs before the run directory exists —
+   and in batch A it ran its mutation checks on the project's own `src/`
+   files in place (`sed -i`, `.bak` copies in the session scratchpad, `cp`
+   to restore), so a run that stops between the mutation and the restore
+   leaves the user's source mutated.
 
 ## Planned batches
 

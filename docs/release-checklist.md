@@ -99,12 +99,25 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   parameter and runs subagents asynchronously, handing each result back.
 - The final report's Fixes section prints the full path of `schema-b.md`.
 - That directory holds `angle-1.md` through `angle-5.md` and `schema-b.md`.
-  Any probe or temporary files are under its `scratch/` subdirectory — the
-  reviewers' in `scratch/angle-<n>/`, code-fixer's in `scratch/code-fixer/`,
-  regression-verifier's in `scratch/regression-verifier/`, and the
-  orchestrating session's in `scratch/orchestrator/` when it probed; nothing
-  outside the run directory (such as `/tmp`) was created or deleted for
-  probing. Sub-check 1 below fails on any vitest or jest default test name
+  Every probe, copy of a project file, mutant, and runner config is under
+  its `scratch/` subdirectory — the reviewers' in `scratch/angle-<n>/`,
+  code-fixer's in `scratch/code-fixer/`, regression-verifier's in
+  `scratch/regression-verifier/`, and the orchestrating session's in
+  `scratch/orchestrator/` when it probed; nothing of that kind was created
+  or deleted outside the run directory (such as in `/tmp`). Logs, listings,
+  and helper scripts that an agent writes for its own verification may sit
+  in Claude Code's per-session scratchpad (on macOS
+  `/private/tmp/claude-501/<project>/<session-id>/scratchpad/`): the harness
+  tells every subagent to use it instead of `/tmp`, it is session-scoped and
+  prompt-free, and agents have put their logs there in both acceptance runs
+  so far — task-implementer and code-fixer in batch A, code-fixer and
+  regression-verifier in the scratch-probes run
+  (`docs/dry-runs/scratch-probes-acceptance.md` § 6). List that directory
+  after the run: a source file, a runner config, or a copy of a project file
+  there fails this bullet — batch A's task-implementer kept `.bak` copies of
+  `src/*.ts` there while it mutated the project's own files in place, which
+  this bullet would have caught; a log or a shell script that only runs the
+  project's own commands does not fail it. Sub-check 1 below fails on any vitest or jest default test name
   the agents wrote, whether or not a runner collects it, but only where the
   agents had tests to probe; other runners' names, such as pytest
   `test_*.py` or Go `_test.go`, pass it unseen.

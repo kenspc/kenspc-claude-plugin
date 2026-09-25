@@ -75,6 +75,14 @@ filled at release.
 - `docs/dry-runs/batch-a-acceptance.md`: the batch A acceptance run on
   macOS — smoke rows 4–6 with their batch A additions, a forced-BLOCKED
   round, and the three reviewer negative cases.
+- `docs/dry-runs/scratch-probes-acceptance.md`: the scratch-probes
+  acceptance run on macOS — smoke row 7 with every item of the run-directory
+  check, in a vitest project whose config sets only `globals: true`. The
+  three checks batch A § 8 failed came back clean: no collectable name among
+  791 scratch files, a bare `npm test` passing after the run, no
+  configuration file added by any agent. One FAIL, F1 — logs and a helper
+  script in the session scratchpad — classified as checklist wording (see
+  Changed).
 
 ### Changed
 
@@ -220,6 +228,21 @@ filled at release.
   `docs/dry-runs/batch-a-acceptance.md` § 8, where code-fixer "fixed" the
   collision by adding a `vitest.config.ts` that excludes `.kenspc/**` to the
   user's project.
+- **Run-directory check: logs may sit in the session scratchpad.** The
+  release checklist's bullet that placed every probe or temporary file
+  under the run directory now names what has to be there — probes, copies
+  of project files, mutants, runner configs — and lets the logs, listings,
+  and helper scripts an agent writes for its own verification sit in Claude
+  Code's per-session scratchpad, which the harness tells every subagent to
+  use instead of `/tmp`. The agents' `RUN_DIR` rule is unchanged: the plugin
+  still asks for temporary files under `RUN_DIR/scratch/`; the check fails
+  only on files a runner, linter, or build could pick up, or that copy
+  project files outside the run's record. Source:
+  `docs/dry-runs/scratch-probes-acceptance.md` § 6, where code-fixer and
+  regression-verifier put ten log and helper files in the scratchpad and
+  every probe, copy, and mutant under `scratch/<agent>/1/`; batch A's
+  task-implementer and code-fixer had done the same, unseen by a check that
+  listed only `/private/tmp`'s top level.
 
 ### Upgrading from 3.5.x
 
