@@ -78,15 +78,16 @@ Inside the session:
 
 | # | Check | Pass criterion |
 |---|---|---|
-| 1 | `/help` | Lists all 6 kenspc slash commands without error |
+| 1 | `/help` | Lists all 7 kenspc slash commands without error |
 | 2 | `/reload-plugins` | Reload completes; no YAML/JSON parse errors in console |
 | 3 | `/kenspc-brief` | Discovery starts; first user-facing prompt is a question (not a draft) |
 | 4 | `/kenspc-plan` | Phase 1 begins; after the plan is written, a `plan-document-reviewer` Agent call appears, followed by the Schema E result table; the plan contains a `## Documentation impact` section (a list or `N/A — <reason>`) |
 | 5 | `/kenspc-task <plan-path>` | Decomposition runs; a `task-document-reviewer` Agent call appears, followed by the Schema E result table; when the plan's element names documents, the task document's last task is `### Task N: Doc-sync` with `Depends on: Task 1-<N-1>`; the Schema E table has three rows |
 | 6 | `/kenspc-task-implement <task-path>` | Phase 2 review dispatches even when implementation is all-DONE: five reviewer Agent calls appear, then Schema A → B → C → G; run-directory check passes (see below); Schema G contains `## Decisions needing a home`, and Next steps has one bullet per entry in it; a run with one task forced BLOCKED shows the Doc-sync task BLOCKED with `depends on Task N (BLOCKED)`, a Next steps bullet stating the listed documents were not synced, and verdict PARTIAL; when a Doc-sync task is DONE and code-fixer's statistics line reports FIXED greater than 0, Next steps has one bullet naming the listed documents to re-check against the fix commits |
-| 7 | `/kenspc-task-review` | Five reviewer Agent calls appear, then the Schema A roll-up, B, C, and the Schema F final report; never logs "Code looks correct, skipping review"; run-directory check passes (see below) |
+| 7 | `/kenspc-task-review` | Five reviewer Agent calls appear, then the Schema A roll-up, B, C, and the Schema F final report; never logs "Code looks correct, skipping review"; run-directory check passes (see below); with no task document, the change-set check passes (see below) |
 | 8 | `/kenspc-guide <project-path>` | Guide runs; a `guide-document-reviewer` Agent call appears, followed by the Schema E result table |
-| 9 | End-to-end trace verification on greenfield project (non-DungeonDescent) | All three sub-criteria hold (see row-9 detail below) |
+| 9 | `/kenspc-diagnose <observed bug>` | The trace shows the reproduction test written, run, and failing, then committed (`test: reproduce …`), before the task document is written; `docs/tasks/<name>.md` is committed (`docs: add task …`) and holds `## Diagnosis` with the nine labels in order (`**Symptom:**`, `**Reproduction:**`, `**Root cause:**`, `**Hypotheses:**`, `**Fix scope:**`, `**Adjacent cases:**`, `**Tier:**`, `**Documentation impact:**`, `**Probes:**`), `### Task 1` with `**Status:** TODO`, and `### Task N: Doc-sync` when its Documentation impact lists documents; `/kenspc-task-implement <path>` passes its Step 1 validation on it; the exit asks whether to run `/kenspc-task-implement` now or implement interactively; a run on a bug whose fix changes a function's signature writes `docs/briefs/<name>.md` starting `# Requirement Brief:` and no task document; when the diagnosis probed, its files are under `.kenspc/runs/<time>-diagnose-<name>/scratch/orchestrator/<n>/` and the run-directory check's `find` probe (sub-check 1) over that `scratch/` prints nothing; when the diagnosis probed in a project that did not yet ignore `.kenspc/`, the one commit besides the two above is the one-time `.gitignore` commit, and it passes; a bug report the project cannot reproduce ends in a question, with no task document or brief, no commit, and no untracked test file left by the skill — or, when the removal was denied, that file named in the question; a request to explain a stack trace invokes no skill |
+| 10 | End-to-end trace verification on greenfield project (non-DungeonDescent) | All three sub-criteria hold (see row-10 detail below) |
 
 Run-directory check for rows 6 and 7 (v3.5.1):
 
@@ -178,7 +179,25 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   before dispatch, touching only `.gitignore`, and the appended line keeps
   the file's line endings; a second run adds none.
 
-Row 9 sub-criteria (each is independently mechanically auditable against
+Change-set check for row 7, a run with no task document (v3.7.0):
+
+- `RUN_DIR/change-set.md` exists and has a `Mode:` line, and the FILE
+  COVERAGE lists in `angle-1.md` … `angle-5.md` name the same files as its
+  `Status | Path` table.
+- Between the invocation and the first reviewer dispatch, the trace shows no
+  `git commit`, `stash`, `checkout`, `add`, or `reset` by the orchestrator
+  other than the one-time `.gitignore` commit.
+- On a dirty tree (`Mode: uncommitted`): HEAD is unchanged after the run
+  except for that commit, `git stash list` is unchanged, every FIXED row's
+  Commit in `schema-b.md` is `—`, and Next steps has the bullet naming the
+  uncommitted fixes' files.
+- On a clean tree ahead of its upstream (`Mode: commits`): `Range:` is
+  `<upstream>..<HEAD>`, and the fix commits appear as before, one per FIXED
+  row. On a clean tree with no upstream, `Range:` is `<HEAD~1>..<HEAD>`, or
+  `<empty tree>..<HEAD> (root commit)` when HEAD is the repository's only
+  commit.
+
+Row 10 sub-criteria (each is independently mechanically auditable against
 the captured trace):
 
 - Phase 2 auto-triggers without a user prompt: grep the trace for

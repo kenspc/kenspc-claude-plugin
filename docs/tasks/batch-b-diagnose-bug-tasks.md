@@ -1147,7 +1147,23 @@ Plan Step 4.3 (rulings M8, B-9; clarifications C1–C3).
 
 ### Task 13: Update the release checklist
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: row 7's additions are a separate "Change-set check for row 7"
+  block after the run-directory check, and the row 7 cell points at it,
+  since the additions are too long for a table cell and apply only to a run
+  with no task document. Row 9's `find` criterion points at the
+  run-directory check's sub-check 1 by number, so the probe is written once.
+- Changes/tradeoffs: the change-set check also covers a clean tree with no
+  upstream (`<HEAD~1>..<HEAD>`, or `<empty tree>..<HEAD> (root commit)` when
+  HEAD is the only commit) — the case the plan's Testing Strategy (c) and
+  clarification C3 name as covering the root-commit form, which the task's
+  list of row 7 additions leaves out. Row 9 names the nine labels in order
+  inside the cell. `grep -nE '[Rr]ow[- ]9'` now finds no line: the old
+  end-to-end references became "row-10" and "Row 10", and row 9's own cell
+  states its C1 acceptance directly. The pre-flight block and its prose
+  still say `guards run: 10` and `self-tests run: 9`.
 
 Depends on: Task 1-9
 
