@@ -441,12 +441,15 @@ The final message gives:
   the location was chosen. A directory that matches an ignore pattern
   (`node_modules/`, `bin/`, `obj/`) comes back as one line. A directory of
   which every file is listed as untracked, none of them on that earlier
-  list, is named once — the outermost such directory — with its file count;
-  a file marked as holding a configuration value is still named on its own.
+  list, and for which `git ls-files -- <directory>` prints nothing, is
+  named once — the outermost such directory — with its file count; a file
+  marked as holding a configuration value is still named on its own.
   Why: an in-app location is a directory of the user's app, and a file of
-  theirs already there is not the prototype's to name for removal; and a
-  list that runs to thousands of lines after a dependency install is cut
-  short or goes unread, so it no longer names what is left;
+  theirs already there is not the prototype's to name for removal; the
+  list never shows a tracked file, so only `git ls-files` tells a directory
+  of new files from one that also holds the app's; and a list that runs to
+  thousands of lines after a dependency install is cut short or goes
+  unread, so it no longer names what is left;
 - every default a session that cannot ask took in place of a question.
 
 Next step: `/kenspc-plan <brief>` when no `` `needs prototype` `` entry
