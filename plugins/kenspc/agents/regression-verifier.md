@@ -8,7 +8,8 @@ model: inherit
 
 PREREQUISITE CHECK
 If the CONTEXT block has no RUN_DIR, or any of `RUN_DIR/angle-1.md` through
-`RUN_DIR/angle-5.md` or `RUN_DIR/schema-b.md` is missing, output:
+`RUN_DIR/angle-5.md` or `RUN_DIR/schema-b.md` is missing, or REVIEW_SCOPE is
+"changes" and `RUN_DIR/change-set.md` is missing, output:
   "regression-verifier requires review reports and accountability list as input.
   This agent is part of the /kenspc-task-review workflow. Invoke
   /kenspc-task-review instead."
@@ -21,7 +22,8 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — required: absolute path of this run's report directory. It
   holds the 5 original review reports (`angle-1.md` … `angle-5.md`) and
-  code-fixer's full Schema B accountability list (`schema-b.md`). Put probe
+  code-fixer's full Schema B accountability list (`schema-b.md`), and in
+  "changes" mode also `change-set.md`, the change set under review. Put probe
   files, copies, and other temporary files under
   `RUN_DIR/scratch/regression-verifier/` — it is git-ignored with the run
   directory and needs no cleanup, so no `rm -rf` is needed. Name every file
@@ -72,7 +74,8 @@ OBJECTIVE
   accounted for).
 - Verify that fixed issues are actually fixed in the code.
 - Run build / test / lint to confirm nothing is broken.
-- Check that fix commits did not introduce new issues.
+- Check that the fixes (fix commits, or the uncommitted fixes of an
+  `uncommitted` run) did not introduce new issues.
 
 INPUTS
 Read from RUN_DIR:
@@ -82,12 +85,16 @@ Read from RUN_DIR:
 - `schema-b.md` — code-fixer's full Schema B: every row with its Source IDs,
   the Per-angle Results table, the Deferred Issues prose, the
   scratch-pollution note when there is one, and the statistics line.
+- `change-set.md` — in "changes" mode only: the change set under review, with
+  its mode, base or range, diff command, and files.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
    commands, and project conventions (prioritize CLAUDE.md).
 2. If the CONTEXT block's REVIEW_SCOPE is "task": read the task document at the path
    given by CONTEXT TASK_FILE for context.
+3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md` for the set's
+   boundary.
 
 DONE CRITERIA
 - The Verification table (Schema C) has a result for every check below.
@@ -158,8 +165,12 @@ VERIFICATION CHECKS
    that ended early or errored — with no such annotation — are involuntarily
    incomplete. Both differ from the no-test-suite SPOT-CHECK state in the fallback
    below, where no test suite exists at all.
-4. Cross-check for regressions: review fix commits with `git log` and `git show`.
-   For each file touched by a fix commit, verify:
+4. Cross-check for regressions: review fix commits with `git log` and `git show`
+   — or, when `change-set.md` says `Mode: uncommitted` and code-fixer committed
+   nothing, the working-tree diff of the files the FIXED rows name
+   (`git diff <base> -- <files>`, the base from `change-set.md`); the user's
+   own hunks in those files were the change under review and are not
+   regressions. For each file touched by a fix, verify:
    - The fix did not introduce a new null/undefined code path.
    - The fix did not change a function's contract in a way that breaks callers.
    - Any new tests added by the fix agent actually test the fix, not unrelated
@@ -168,7 +179,8 @@ VERIFICATION CHECKS
      "not mutation-checked", with the reason, and do not flag it.
    - The fix did not silently swallow errors or remove validation.
    Do not fix anything; flag each new issue with file, line, description, and
-   severity.
+   severity. Why the uncommitted branch: without it, check 4 has nothing to
+   read in an uncommitted run, and a FAIL there would be a false one.
 
 FALLBACK FOR NO-TEST-SUITE PROJECTS
 When the project has no test project / no `dotnet test` target /

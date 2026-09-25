@@ -733,7 +733,19 @@ untouched.
 
 ### Task 7: Make regression-verifier read the change set and verify uncommitted fixes
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: item 4's lead-in "For each file touched by a fix commit" reads
+  "For each file touched by a fix", so the four unchanged sub-checks apply
+  to uncommitted fixes too. The Why for the uncommitted branch sits after
+  the item's closing "Do not fix anything" sentence, leaving the sub-check
+  bullets byte-identical.
+- Changes/tradeoffs: INPUTS gains a `change-set.md` bullet (mode, base or
+  range, diff command, files), in the same form as its two existing
+  bullets. The item-4 sub-check bullets and everything from FALLBACK FOR
+  NO-TEST-SUITE PROJECTS to the end of the file (the Schema C table
+  included) were compared before and after: unchanged.
 
 Depends on: Task 4, Task 6
 
