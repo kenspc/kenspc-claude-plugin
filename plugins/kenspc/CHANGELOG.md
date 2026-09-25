@@ -61,9 +61,11 @@ a minor release. No new agent and no CONTEXT key changes.
     database; an answer that is the user's judgment; a failed commit. Each
     gate that asks has a branch for a session that cannot ask — a stop, the
     first entry in document order, the default location, a connection left
-    unused, a throwaway database, or nothing built with the entry left
-    unsettled and the reason in `Evidence:` — and every default so taken is
-    named in the final message.
+    unused, a throwaway database, nothing built with the entry left
+    unsettled and the reason in `Evidence:`, or, for an answer that is the
+    user's judgment, the prototype committed and removed with the entry
+    left unsettled and `Evidence:` saying what to look at and how — and
+    every default so taken is named in the final message.
   - **The two commits.** `chore: add prototype <slug>`, made after the run
     that produced the evidence, staging only the prototype's own paths by
     pathspec; the brief entry rewritten; then `chore: remove prototype
