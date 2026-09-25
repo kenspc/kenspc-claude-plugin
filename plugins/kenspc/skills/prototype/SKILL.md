@@ -472,7 +472,9 @@ changed before the discard — the last message names the add commit, says
 the prototype is still in the tree, and gives the commands that would
 remove it: `git rm -- <each path the add commit added>`, and for an in-app
 prototype `git checkout <add commit>^ -- <each path it modified>`, then the
-remove commit. When the check before the discard stopped the run, the paths
+remove commit. After a teardown that failed, the message says to finish the
+teardown first: `git rm` takes its script, the record of what to drop, out
+of the tree. When the check before the discard stopped the run, the paths
 it listed are left out of those commands and named apart, as holding an
 edit made after the add commit, and the message tells the user to save or
 commit that edit, then take the prototype out of each such path by hand:
@@ -487,9 +489,9 @@ the remove commit is the one rejected, those commands have already run and
 the removal is staged: the message says so, says a plain `git commit`
 would carry the removal under another message, and gives the `git commit`
 command the skill ran, which finishes the removal once the rejection is
-dealt with. The skill does not run them
-unasked. Why: like diagnose-bug's "Ending without a document", the branch
-carries something the user did not plan to keep.
+dealt with. The skill does not run them unasked. Why: like diagnose-bug's
+"Ending without a document", the branch carries something the user did not
+plan to keep.
 
 ## Writing rules
 
