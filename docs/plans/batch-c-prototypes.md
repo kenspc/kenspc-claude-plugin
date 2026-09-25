@@ -1083,6 +1083,26 @@ within the locked design.
   them. Why: each point follows from a CL ruling or from the skill's text,
   and the CL5 sentence as ruled overstated what history keeps. Steps 3.1,
   2.1, 5.2, 5.3, 5.4.
+- CL11 — the re-review of `8c403e8..6abec09` (standalone, fixes
+  `ba075df..f49e4f2`, verdict PASS) left three DEFERRED rows and one
+  residual note: (1) B1 (MEDIUM) — fixed: the caveat's "a rebase that drops
+  it" becomes "a rebase that replays or drops it" in the README's
+  "Prototypes live in history" item and the CHANGELOG's "History keeps every
+  prototype" item, one `docs:` commit made by the release-preparation
+  session before the release commit; a rebase that replays the add commit
+  gives it a new hash too, which the reviewer's probe confirmed. (2) B5/E2
+  (MEDIUM) — the condition under which a leftover directory is named once,
+  when an ignored entry sits under an untracked `node_modules/` (a
+  root-anchored `/node_modules` pattern); (3) E7 (LOW) — a named entry whose
+  status word the prototype skill does not recognize; (4) the residual
+  that a gap-round answer of `answered` makes an entry settled input with no
+  `Answer:` or hash — all three recorded as roadmap items under
+  `## Next minor (3.8.0)` by the release-preparation session, each with the
+  reviewer's suggested rule. Why: each is new behavior with its own gate or
+  condition across up to four files, which needs a ruling and another review
+  round; the batch's remaining budget goes to the acceptance run. The
+  one-phrase caveat change in (1) is a wording correction the reviewer
+  probed, with no behavior attached. Steps 5.2, 5.3.
 
 ## Open Questions
 
