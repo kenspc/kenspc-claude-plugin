@@ -365,6 +365,13 @@ grammar in the Writing rules for the brief in
   in the tree (see the Exit), its teardown script with it. Why: a schema
   change left on the development database changes what other work runs
   against, and the script is the record of what to drop.
+- Before the discard touches a path,
+  `git -c core.quotePath=false status --porcelain -- <every path the add commit touched>`
+  prints nothing. A path it lists changed after the add commit — an edit
+  made while the run waited for a verdict — and the run stops before the
+  discard, naming that path, and ends with the prototype still in the tree
+  (see the Exit). Why: `git checkout` overwrites an uncommitted edit
+  without a word, and that edit has no copy anywhere else.
 - The remove commit exists — `chore: remove prototype <slug>`, adapted to
   the project's commit conventions, its body carrying `Question:`,
   `Answer:` or `Not settled:`, and `Prototype: <hash>` — as one commit:
