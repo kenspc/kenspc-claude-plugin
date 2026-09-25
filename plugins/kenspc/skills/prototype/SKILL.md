@@ -440,7 +440,7 @@ carries something the user did not plan to keep.
 
 ## Writing rules
 
-- The conversation is in the conversation's language.
+- Match the user's language in the conversation.
 - The brief entry is in the brief's language, with its status words and
   labels exactly as written. Why: generate-plan finds an unresolved entry by
   its status word, and a translated one breaks the chain without an error.
