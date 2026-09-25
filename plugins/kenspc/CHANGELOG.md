@@ -59,9 +59,10 @@ a minor release. No new agent and no CONTEXT key changes.
     that cannot run outside the app; a connection the development
     configuration does not name; a new table or column on the development
     database; an answer that is the user's judgment; a failed commit. Each
-    has a branch for a session that cannot ask — the first entry in
-    document order, the default location, a throwaway database, or nothing
-    built with the entry left unsettled and the reason in `Evidence:` —
+    gate that asks has a branch for a session that cannot ask — a stop, the
+    first entry in document order, the default location, a connection left
+    unused, a throwaway database, or nothing built with the entry left
+    unsettled and the reason in `Evidence:` — and every default so taken is
     named in the final message.
   - **The two commits.** `chore: add prototype <slug>`, made after the run
     that produced the evidence, staging only the prototype's own paths by
@@ -147,9 +148,27 @@ a minor release. No new agent and no CONTEXT key changes.
   existing brief, beside generate-brief and diagnose-bug. The hook still
   matches the Write tool only, so the prototype's edit of a brief does not
   reach it.
+- **Release checklist.** Smoke row 1 counts eight commands. Row 3 checks
+  the brief's `## Open Questions` (`open` or `needs prototype` entries,
+  `Settled by:` on each `needs prototype` entry, `none` otherwise) and the
+  `/kenspc-prototype` suggestion; row 4 checks generate-plan's exit
+  question before any gap-check question, both answers, the carried form,
+  `open` entries the gap rounds do not settle, the cannot-ask branch, and
+  no question for a brief without the section. A new row 10 exercises
+  `/kenspc-prototype`: the frame, the add commit holding only the
+  prototype's paths, the answered entry, the remove commit and its body,
+  `git diff <HEAD before the run> HEAD` printing nothing, the uncommitted
+  brief, the leftovers list, the exit suggestion, a question with no
+  brief, the development-database cases, the in-app UI case, the
+  feature-slice case, and two requests that invoke no prototype skill. The
+  end-to-end row becomes row 11. Pre-flight counts are unchanged.
 - CLAUDE.md and both READMEs describe the prototype skill and the
   prototype path, and count eight skills and commands; the plugin and
-  marketplace manifest descriptions gain prototyping.
+  marketplace manifest descriptions gain prototyping. CLAUDE.md's writing
+  rules for skill content gain the cannot-ask wording, and its Non-Goals
+  record that the Open Questions grammar is written once, in
+  generate-brief, with the prototype skill's one byte-identical copy of the
+  Prototype line.
 
 ### Known behavior
 

@@ -1160,7 +1160,48 @@ Plan Step 5.4 (ruling D14). In `docs/release-checklist.md`:
 
 ### Task 11: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promotion of Tasks 1-10's decisions —
+  - Promoted, T3: every question a skill asks carries its cannot-ask
+    branch in prose at that question, in the fixed wording, and a gate
+    table only summarizes — into `CLAUDE.md` § Writing Rules for Skill
+    Content, as a convention for future skills and gates.
+  - Promoted, T1 and T3: the Open Questions grammar is written once, in
+    generate-brief's writing rules, and pointed at by generate-plan and the
+    prototype skill; the prototype skill's one copy is the byte-identical
+    Prototype line, so a change to it updates both files in one commit, and
+    the anchor guard does not cover it — into `CLAUDE.md` § Non-Goals,
+    beside the run-dir pointer paragraph.
+  - Local: T1's placeholder spelling and added Whys; T2's layout of the
+    brief branch; T3's `git checkout <add commit>^ --` restore spelling;
+    T4's generation from `kenspc-diagnose.md`; T5's "written by" verb; T6's
+    header wording; T7's and T8's placements; T9's intro without a smoke
+    sentence (the release commit adds it, as 3.7.0's did); T10's append
+    order and backtick forms.
+  - Needs a home: none.
+- Changes/tradeoffs: verification found four places where a listed
+  document did not match what Tasks 1-10 built, each corrected in that
+  document: (1) `plugins/kenspc/CHANGELOG.md` did not describe the release
+  checklist (Task 9 ran before Task 10) — a Release checklist bullet is
+  added under Changed, and the documentation bullet names the two CLAUDE.md
+  promotions; its gates bullet listed only some cannot-ask outcomes and now
+  names each kind (a stop, the first entry, the default location, a
+  connection left unused, a throwaway database, nothing built);
+  (2) `plugins/kenspc/README.md`'s prototype row said "a database it would
+  change" is asked about, but rows written to existing development tables
+  are not — it now names an unnamed connection and a new table or column,
+  and the in-app location and uncommitted files; (3) the README's
+  development-database name list gains `.env.development.local`, which the
+  skill names; (4) `docs/release-checklist.md` row 10 said the exit
+  suggests `/kenspc-plan <brief>` unconditionally, but the skill suggests
+  it only when no `needs prototype` entry remains, otherwise
+  `/kenspc-prototype <brief> <n>` — a smoke brief seeded with two
+  `needs prototype` entries would have failed the row on correct behavior.
+  `README.md` and `docs/roadmap.md` matched and are unchanged. Files
+  touched: the four above; no file outside the listed documents.
+  `check-all.sh` (`guards run: 10`) exits 0.
 
 Depends on: Task 1-10
 

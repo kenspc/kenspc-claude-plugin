@@ -367,6 +367,8 @@ The run-directory preparation is written once, in the `canonical:run-dir` block 
 
 The prototype skill references the same block the same way: its prototype's file names follow the naming rule of the block's Scratch space bullet, pointed at by the block's markers, and the skill carries no copy. A move of that rule updates the pointer in `prototype/SKILL.md` in the same commit.
 
+The Open Questions entry grammar — the status words, the labels and their order, the answered and unsettled forms — is written once, in generate-brief's Writing rules for the brief, and generate-plan and the prototype skill point at it by path. The one piece the prototype skill repeats is the Prototype line (``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``), byte-identical to generate-brief's, so a change to that line in `generate-brief/SKILL.md` updates `prototype/SKILL.md` in the same commit. `check-doc-sync-anchors.sh` guards only the `needs prototype` status word across the three files, not this line.
+
 ### Writing Rules for Skill Content
 
 - Use rationale-anchored business rules (Rule 2): frame each rule as "Why: ..." prose rather than command-style imperatives, so the model follows the intent of the rule, not just its letter
@@ -375,6 +377,7 @@ The prototype skill references the same block the same way: its prototype's file
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 - No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan
 - Evidence in a skill's or agent's Why is stated in its own words (what failed, and on which command), not cited as a dry-run record: skills and agents run as prompts in the user's project, where this repository's `docs/` does not exist, so the CHANGELOG entry cites the record instead (v3.6.0: regression-verifier's unmodified build, test, and lint rule)
+- Where a skill stops to ask the user, it states in prose, at that question, what a session that cannot ask does instead, opening with "In a session that cannot ask (a system reminder to work without stopping), …" — the wording diagnose-bug, generate-plan's Open Questions exit, and the prototype skill's gates share (generate-brief's Discovery Mode Detection is the older form of the same branch). A table that summarizes a skill's gates may repeat the outcomes but does not replace the sentence, since a table cell cannot open one. Why: one wording is one signal to test for, and a grep over the file with its line breaks joined finds every branch
 
 ## Development Workflow
 
