@@ -32,7 +32,10 @@
 #      carries the reviewers' shared sections to the other four reviewers. The
 #      orchestrator and seven agents meet at this one name, so a rename in one
 #      carrier breaks the exchange while every other check still passes. Each
-#      file that does not name it is reported.
+#      file that does not name it is reported. The pre-fix record's index,
+#      `pre-fix/index.txt`, is checked the same way in agents/code-fixer.md,
+#      which writes it in an uncommitted run, and agents/regression-verifier.md,
+#      which reads it.
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
@@ -57,11 +60,12 @@
 #                  one under .kenspc/runs/<run-id>/ after a review run).
 #   --self-test    Run the mutation regression fixture. Copies the five
 #                  target files into a temp workdir, confirms `change-set.md`
-#                  is present in the four files check 5 reads (exit 2 if
-#                  not), and runs the main check on
+#                  is present in the four files check 5 reads and
+#                  `pre-fix/index.txt` in its two (exit 2 if not), and runs
+#                  the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on nine mutations that must
+#                  prefix classification), then on eleven mutations that must
 #                  each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
@@ -70,12 +74,13 @@
 #                  (an example row's action, one Per-angle Results cell, one
 #                  statistics-line number, the statistics-line wording, and
 #                  an ID repeated across rows with the counts adjusted to
-#                  match), and the change-set file name removed from each
+#                  match), the change-set file name removed from each
 #                  of the four copied files check 5 reads, one file at a
 #                  time (every occurrence, through a replace-all helper,
-#                  since it occurs on several lines), then on the reverted
-#                  copy (must exit 0). Exit 0 on self-test pass, 1 on
-#                  unexpected exit codes, 2 on fixture-stale.
+#                  since it occurs on several lines), and the pre-fix index
+#                  name removed from each of its two carriers in turn, then
+#                  on the reverted copy (must exit 0). Exit 0 on self-test
+#                  pass, 1 on unexpected exit codes, 2 on fixture-stale.
 
 set -euo pipefail
 
@@ -88,6 +93,7 @@ IMPLEMENT_REL="plugins/kenspc/skills/task-implement/SKILL.md"
 VERIFIER_REL="plugins/kenspc/agents/regression-verifier.md"
 REVIEWER_REL="plugins/kenspc/agents/requirements-reviewer.md"
 CHANGE_SET_NAME="change-set.md"
+PRE_FIX_INDEX="pre-fix/index.txt"
 
 # Print the lines strictly between the start and end markers of <name>.
 # Returns 2 unless the file has exactly one start and one end marker.
@@ -330,13 +336,21 @@ run_main_logic() {
             missing=1
         fi
     done
+    for f in "$fixer" "$verifier"; do
+        if ! grep -qF -- "$PRE_FIX_INDEX" "$f"; then
+            echo "MISSING '$PRE_FIX_INDEX' in $f" >&2
+            missing=1
+        fi
+    done
     if [[ "$missing" -ne 0 ]]; then
-        echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME and the" >&2
-        echo "agents read it there. Restore the name, or rename it in every carrier" >&2
-        echo "and in this guard together." >&2
+        echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
+        echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
+        echo "regression-verifier. Restore the name, or rename it in every carrier and in" >&2
+        echo "this guard together." >&2
         return 1
     fi
     echo "OK    $CHANGE_SET_NAME — named in task-review, code-fixer, regression-verifier, requirements-reviewer"
+    echo "OK    $PRE_FIX_INDEX — named in code-fixer, regression-verifier"
     return 0
 }
 
@@ -397,6 +411,12 @@ run_self_test() {
     for rel in "$REVIEW_REL" "$FIXER_REL" "$VERIFIER_REL" "$REVIEWER_REL"; do
         if ! grep -qF -- "$CHANGE_SET_NAME" "$WORK/$rel"; then
             echo "FAIL  self-test fixture stale: '$CHANGE_SET_NAME' not found in $rel" >&2
+            return 2
+        fi
+    done
+    for rel in "$FIXER_REL" "$VERIFIER_REL"; do
+        if ! grep -qF -- "$PRE_FIX_INDEX" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$PRE_FIX_INDEX' not found in $rel" >&2
             return 2
         fi
     done
@@ -501,6 +521,20 @@ run_self_test() {
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
         if [[ "$rc" -ne 1 ]]; then
             echo "FAIL  self-test change-set name mutation in $rel: expected exit 1, got $rc" >&2
+            return 1
+        fi
+    done
+    # The pre-fix index name, renamed in each of its two carriers in turn.
+    for rel in "$FIXER_REL" "$VERIFIER_REL"; do
+        replace_all_literal "$WORK/$rel" "$PRE_FIX_INDEX" "pre-fix/list.txt"
+        if grep -qF -- "$PRE_FIX_INDEX" "$WORK/$rel"; then
+            echo "FAIL  self-test: pre-fix index mutation did not apply ('$PRE_FIX_INDEX' still in $rel)" >&2
+            return 2
+        fi
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        cp "$REPO_ROOT/$rel" "$WORK/$rel"
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test pre-fix index mutation in $rel: expected exit 1, got $rc" >&2
             return 1
         fi
     done
