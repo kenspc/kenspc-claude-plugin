@@ -190,7 +190,10 @@ Change-set check for row 7, a run with no task document (v3.7.0):
 - On a dirty tree (`Mode: uncommitted`): HEAD is unchanged after the run
   except for that commit, `git stash list` is unchanged, every FIXED row's
   Commit in `schema-b.md` is `—`, and Next steps has the bullet naming the
-  uncommitted fixes' files.
+  uncommitted fixes' files. The trace shows regression-verifier running
+  `git diff <Base sha> -- <files>` over the FIXED rows' files, and reading
+  any untracked one whole, instead of looking for fix commits, and Schema C
+  row 5 is not a FAIL that cites missing fix commits.
 - On a clean tree ahead of its upstream (`Mode: commits`): `Range:` is
   `<upstream>..<HEAD>`, and the fix commits appear as before, one per FIXED
   row. On a clean tree with no upstream, `Range:` is `<HEAD~1>..<HEAD>`, or
