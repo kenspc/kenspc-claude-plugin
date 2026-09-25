@@ -164,7 +164,29 @@ decisions.
 
 ### Task 1: Add Open Questions to generate-brief
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: wrote `/kenspc-prototype <path> <n>` with angle brackets, as
+  the task and acceptance criteria spell it, beside the section's existing
+  `/kenspc-plan [path]`, and defined both placeholders in the sentence
+  rather than changing the existing `[path]` form (a surgical edit). Added a
+  short Why to the Phase 1 Constraints bullet and to the `needs prototype` /
+  `open` rule, which the task lists without one, to keep every rule
+  rationale-anchored; the anchors rule also restates the entry shape
+  (status word in backticks, ` — `, then the question; labels as
+  sub-bullets in order) so the grammar other skills point at is complete in
+  the writing rules, not only in the template placeholder.
+- Changes/tradeoffs: the Phase 2 DONE-when bullet now names the
+  `/kenspc-prototype` lines before `/kenspc-plan` and points at the
+  Next-step suggestion section, so the two agree. Verified: pointer-label
+  grep and `MUST|NEVER|CRITICAL` grep print nothing (positive control: 112
+  lines on the batch B spec); `needs prototype` count 10; the Prototype line
+  matches the Fixed form byte for byte; diff hunks stay outside the
+  frontmatter, Trigger Phrases, Discovery Mode Detection, output path
+  resolution, and conflict check; `check-no-model-names.sh`,
+  `check-all.sh` (`guards run: 10`), and `claude plugin validate --strict
+  ./plugins/kenspc` exit 0.
 
 Plan Step 1.1 (C-1; rulings D1, D2, D15, D16, M3, M13). In
 `plugins/kenspc/skills/generate-brief/SKILL.md` — the frontmatter, Trigger

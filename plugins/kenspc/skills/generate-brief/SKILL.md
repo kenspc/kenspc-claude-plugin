@@ -110,6 +110,13 @@ config files), the discovery framework at
   than just laying choices out.
 - Apply the framework's Level 4 handling for too-broad scope: stop, suggest
   decomposition, ask which module to brief first.
+- A question the conversation cannot settle is noted for Open Questions and
+  not argued further. One an experiment would settle is marked
+  `needs prototype`, with what would settle it asked of the user — or, in
+  `rapid-inferred (reminder-driven)` mode, inferred and tagged as that mode
+  tags every inferred field. Why: rounds spent on a question talk cannot
+  settle are taken from the dimensions it can, and the entry keeps the
+  question in front of the plan instead of losing it in the transcript.
 
 ## Phase 2: Produce Brief
 
@@ -123,7 +130,8 @@ documentation conventions (CLAUDE.md or `docs/briefs/` default).
 - The brief is saved at the chosen path and reflects what was actually
   discussed (no invented dimensions).
 - The user is told the path and shown the next-step suggestion
-  (`/kenspc-plan [path]`).
+  (`/kenspc-plan [path]`, preceded by `/kenspc-prototype <path> <n>` for
+  each `needs prototype` entry — see Next-step suggestion).
 
 **Output path resolution** (priority order):
 1. CLAUDE.md-specified brief or documentation directory.
@@ -143,7 +151,8 @@ user: overwrite, create alongside (with a suffix), or cancel.
 
 Skip sections that genuinely don't apply, but add a brief note explaining
 why (e.g., "Hidden Context: none — open-source project, no organizational
-factors").
+factors"). Open Questions is the exception: it is always present, with the
+body `none` when nothing is open.
 
 ```markdown
 # Requirement Brief: [Title]
@@ -175,6 +184,19 @@ review processes), timeline (deadlines, dependencies on other work).]
 norms, historical attempts, team preferences. Skip if everything was already
 in project files.]
 
+## Open Questions
+[Questions the discussion could not settle, numbered; `none` when nothing
+is open. Each entry starts with its status:
+
+1. `open` — <a question neither discussion nor a small experiment settles:
+   a decision someone else makes, information nobody present has>
+2. `needs prototype` — <a question a small experiment settles faster or
+   more reliably than more discussion: feasibility, performance, how a
+   library or an API behaves, how a UI reads>
+   - Settled by: <the result that answers it — a measurement against a
+     threshold, a behavior that does or does not occur, a rendering the
+     user judges>]
+
 ## Discovery Notes
 Discovery Mode: <full | rapid-direct | rapid-inferred (reminder-driven)>
 
@@ -198,6 +220,41 @@ insufficient; the field's presence is the anchor.]
 - Do not include implementation steps or task lists — those belong in plans
   and task documents.
 - Code blocks must specify the language.
+- Open Questions is always present; its body is `none` when nothing is
+  open. Why: a reader — and generate-plan — can then tell "nothing open"
+  from "not considered".
+- The status words `` `open` ``, `` `needs prototype` ``, and
+  `` `answered` ``, and the labels `Settled by:`, `Answer:`, `Evidence:`,
+  and `Prototype:`, stay exactly as written, in English, whatever the
+  brief's language. Each entry starts with its status word in backticks,
+  followed by ` — ` and the question; the labels are sub-bullets, in that
+  order. Why: generate-plan finds an unresolved entry by its status word,
+  and the prototype skill rewrites that word when it settles the question;
+  a translated word breaks the chain without an error.
+- `needs prototype` only for a question an experiment settles; a decision
+  that belongs to a person is `open`. Why: an experiment cannot make a
+  decision someone has to make, and generate-plan stops on every
+  `needs prototype` entry.
+- Every `needs prototype` entry has `Settled by:`, naming a result, not the
+  steps to build the prototype. Why: the prototype's evidence is measured
+  against it, and written before the prototype runs it cannot be bent to
+  fit the result.
+- generate-brief writes only `open` and `needs prototype`. The
+  `/kenspc-prototype` skill rewrites an entry it settles, keeping the
+  question and `Settled by:`:
+
+  ```markdown
+  3. `answered` — <question>
+     - Settled by: <unchanged>
+     - Answer: <the conclusion>
+     - Evidence: <what was run, what it showed, and the case that could
+       have shown the opposite>
+     - Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>`
+  ```
+
+  An attempt that did not settle the question keeps `` `needs prototype` ``
+  and adds `Evidence:` — with `Prototype:` when a prototype was committed —
+  and no `Answer:`.
 
 ### Next-step suggestion
 
@@ -205,6 +262,14 @@ After writing the brief, tell the user the path the brief was saved to and
 the next-step suggestion: "To create a plan from this brief:
 `/kenspc-plan [path]`".
 
-**Constraint**: do not auto-trigger generate-plan. The user decides whether
-to plan now, share the brief for discussion first, or set it aside — the
-brief is a discovery artifact, not a planning trigger.
+When the brief's Open Questions hold a `needs prototype` entry, the
+suggestion names `/kenspc-prototype <path> <n>` for each such entry first —
+`<path>` the brief's path, `<n>` the entry's number — and says that
+`/kenspc-plan` will ask about them otherwise. Why: the suggestion is how the
+user learns the next command, and generate-plan would raise the entry one
+run later anyway.
+
+**Constraint**: do not auto-trigger generate-plan, and do not invoke the
+prototype skill either. The user decides whether to plan now, prototype a
+question first, share the brief for discussion, or set it aside — the brief
+is a discovery artifact, not a planning trigger.
