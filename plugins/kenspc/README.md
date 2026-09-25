@@ -381,8 +381,9 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   diff for one before the add commit. The hash resolves while the add
   commit is reachable: after a rebase that drops it, or a squash merge, it
   resolves only in the clone that made it, until git's garbage collection
-  removes it, and the answer's text survives in the brief and in the remove
-  commit's body.
+  removes it. The answer's text survives in the brief; the remove commit's
+  body survives only while that commit is reachable, and a squash merge
+  keeps it only when the squashed message keeps the body.
 - **Gates between the two commits.** Between the add and the remove commit
   the prototype is in the tree, and a typecheck, linter, or root-level
   project file that walks the repository reaches it — a `tsconfig.json`

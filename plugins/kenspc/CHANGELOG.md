@@ -212,8 +212,10 @@ a minor release. No new agent and no CONTEXT key changes.
   out of the tree, not out of history: `git show <hash>` reads it, and
   anything it committed stays there. The hash resolves while the add commit
   is reachable; after a rebase that drops it, or a squash merge, it
-  resolves only in the clone that made it, until gc, and the answer's text
-  survives in the brief and in the remove commit's body.
+  resolves only in the clone that made it, until gc. The answer's text
+  survives in the brief; the remove commit's body survives only while that
+  commit is reachable, and a squash merge keeps it only when the squashed
+  message keeps the body.
 
 ## 3.7.0 — 2026-09-25
 
