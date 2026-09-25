@@ -1064,6 +1064,25 @@ within the locked design.
   names both things Phase 1 writes: the appended entry and, since `d05d762`,
   a derived `Settled by:` line. Why: each follows a precedent in diagnose-bug
   or the brief template, and none reopens a ruling. Step 3.1.
+- CL10 — Steps 3.1, 2.1, 5.2–5.4, the fix round `211b2fb..6abec09`
+  (CL1–CL9 applied): accepted as implemented — (1) under CL1, only the
+  outermost qualifying directory is named when such directories nest, a
+  file marked as holding a configuration value keeps its own line, and the
+  Phase 1 start snapshot uses the same `--ignored=matching -uall` form so
+  the two snapshots compare; (2) under CL3, an unrecognized entry whose
+  status the user gives in the gap round is then treated as that status,
+  and `needs prototype` returns it to part 1's exit question; (3)
+  release-checklist row 10 names the four new stops conditionally — a run
+  that stops says why in its last message — with no new smoke case (CL6);
+  (4) the further document alignments that round made. One correction, to
+  CL5's wording: the answer's text survives in the brief; the remove
+  commit's body survives only while that commit is reachable, and a squash
+  merge keeps it only when the squashed message keeps the body. The README
+  and CHANGELOG sentences say so. The task document's Task 3 criterion and
+  Steps 3.1 and 5.4 above keep the earlier leftovers command; CL1 supersedes
+  them. Why: each point follows from a CL ruling or from the skill's text,
+  and the CL5 sentence as ruled overstated what history keeps. Steps 3.1,
+  2.1, 5.2, 5.3, 5.4.
 
 ## Open Questions
 
