@@ -97,7 +97,11 @@ PREREQUISITES
 3. If REVIEW_SCOPE is "changes": with RUN_DIR, read `RUN_DIR/change-set.md`.
    Its mode, base or range, files, and diff command define the change set:
    review those files and nothing else, run its diff command for their
-   content, and read an untracked (`??`) file whole. Without RUN_DIR
+   content, and read an untracked (`??`) file whole. If RUN_DIR is given
+   and `change-set.md` is not in it, stop and say so, writing no report,
+   rather than derive the set from git: the orchestrator writes the file
+   before any dispatch, so the run is broken, and code-fixer and
+   regression-verifier refuse to run without it. Without RUN_DIR
    (standalone), run "git status", "git diff", "git diff --cached", and
    "git log --oneline -10" to identify the scope of changes, as before.
    Why: five reviewers that each derive the set from git have reviewed five
