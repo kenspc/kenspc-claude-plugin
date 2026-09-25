@@ -99,8 +99,16 @@ If $ARGUMENTS is empty or contains no file path:
     preparation's `.gitignore` commit then creates the root commit. Why: a
     fresh project with one commit, or none, is reviewable without
     CUSTOM_INSTRUCTIONS.
-  - CUSTOM_INSTRUCTIONS that name commits, a range, or paths override the
-    default: mode `commits` with that range, or the named paths.
+  - CUSTOM_INSTRUCTIONS that name commits or a range replace the default:
+    mode `commits` with that range, pinned by SHA. Named paths narrow the
+    set instead: it keeps the default's mode, base or range, and diff
+    command, and only the paths under the named ones remain. Why: a path
+    says what to look at, not which change it belongs to, and the mode
+    decides whether code-fixer commits.
+  - When the set comes out empty — named paths that hold no change, or a
+    range whose diff lists no file — stop and tell the user what was found,
+    and dispatch nothing. Why: five reviewers over no file each report no
+    issue, and the verdict would pass a change nobody reviewed.
   - Compute and pin every SHA before the run-directory preparation, so its
     one-time `.gitignore` commit is never part of the set.
   - Tell the user, in one line, what is under review: the mode and the base
