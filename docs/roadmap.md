@@ -131,6 +131,10 @@ its number.
      the location holds nothing before the run, so reverting the command or
      dropping the start snapshot still passes row 10 (fix-round review,
      T3).
+   - Row 3: a Level 1 idea holding a question only an experiment settles,
+     run with a reminder to work without stopping — the brief is written
+     without asking what would settle it, and its `needs prototype`
+     entry's `Settled by:` is tagged as inferred (fix-round review, T2).
 10. A guard for the copied Prototype line. The line is written in
     generate-brief's writing rules and copied byte-identically into
     `prototype/SKILL.md`; `check-doc-sync-anchors.sh` guards only the
