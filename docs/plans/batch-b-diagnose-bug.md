@@ -548,7 +548,7 @@ anchors and the file name it guards must exist). Phase 4 comes last.
   lint run after the last fix is unchanged.
 - Reply: in an uncommitted run, one line saying the fixes are uncommitted
   and naming the files, after the statistics line.
-- Done when: the four edits are present with the Why;
+- Done when: the six edits are present with the Why;
   `bash scripts/check-run-contract.sh` and `check-code-craft-canonical.sh`
   exit 0; the CODE-CRAFT PRINCIPLES header and its guard comment are
   untouched.
@@ -879,6 +879,39 @@ from that section.
   be reviewable without CUSTOM_INSTRUCTIONS. Step 2.1; the "no upstream"
   case of Step 4.4's row 7 and of the Testing Strategy covers the
   root-commit form.
+- C4 — Steps 2.1, 2.3, 2.4, ruling D7 (iv): every commit instruction in
+  the three files follows the mode rule. In `code-fixer`, the OBJECTIVE
+  sentence ("deduplicate, apply fixes, commit, and produce …") and the
+  PROCESSING APPROACH sentence ("committed with a focused
+  conventional-commit message") defer to the FIXING RULES mode rule, and
+  Task 6 carries the criterion that no commit instruction outside FIXING
+  RULES is unconditional — as `task-document-reviewer` wrote it. The two
+  "fix commits did not introduce new issues" lines — `regression-verifier`'s
+  OBJECTIVE and task-review Step 6's verification list — read as Step 2.1's
+  PASS / FAIL bullets do: "the fixes (fix commits, or the uncommitted fixes
+  of an `uncommitted` run)", made in Task 7 and Task 4, which already edit
+  those files. The `canonical:run-dir` sentence about fix commits going
+  through the same repository stays: in an uncommitted run it is vacuous,
+  not wrong, and the block is byte-locked. Step 2.3's Done when now counts
+  six edits, not four. Why: the agent whose silent contract produced the
+  baseline commit is the one that must not carry two answers in one
+  prompt. Steps 2.1, 2.3, 2.4.
+- C5 — Step 1.1 and Steps 2.1–2.4: a plugin prompt file states its evidence
+  in its own words and carries no ruling label. The probe rule's Why in the
+  SKILL reads in own-words form — an implementing agent has run its
+  mutation checks on the project's own source in place, editing with
+  `sed -i` and restoring with `cp`, so a run that stops in between leaves
+  the user's source mutated — as `task-document-reviewer` rewrote Task 1;
+  CLAUDE.md § Writing Rules for Skill Content already requires the form.
+  The labels this plan uses as pointers — B-n, M-n, D-n, C-n, "ruling",
+  batch names, dry-run records — stay out of the new SKILL and out of every
+  agent or SKILL file Tasks 4–7 edit; the CHANGELOG cites the records
+  instead. Tasks 1 and 4–7 carry the criterion that
+  `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\((B-[0-9]|[MDC][0-9]+)\b'`
+  prints nothing on the files they edit (it prints nothing on those files
+  today and hits this plan, so it can fail). Why: skills and agents run as
+  prompts in the user's project, where this repository's rulings and
+  records mean nothing. Steps 1.1, 2.1–2.4.
 
 ## Open Questions
 
