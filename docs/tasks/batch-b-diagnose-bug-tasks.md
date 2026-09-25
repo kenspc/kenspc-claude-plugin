@@ -788,7 +788,27 @@ Plan Step 2.4 (rulings M10, D7 (iv); clarifications C4, C5). In
 
 ### Task 8: Add the diagnose-bug skill to check-doc-sync-anchors.sh's groups
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each new entry sits next to generate-task's entry in its group
+  (in `ANCHOR_CHECKS` and in the header lists), since both skills write the
+  same two anchors. The three "eight files" counts (header summary,
+  `--self-test` flag description, self-test section comment) now say nine.
+- Changes/tradeoffs: falsifiability, by hand. The copy was made with
+  `mktemp -d` under the session scratchpad instead of the system temp
+  directory:
+  `T=$(mktemp -d <scratchpad>/anchors.XXXXXX); cp -R scripts plugins "$T"/`,
+  then every `Doc-sync` in `$T/plugins/kenspc/skills/diagnose-bug/SKILL.md`
+  was replaced with `Docsync` (7 lines before, 0 after) and
+  `bash "$T/scripts/check-doc-sync-anchors.sh"` was run. Output:
+  `MISSING label 'Doc-sync' in <scratchpad>/anchors.PV6UXh/plugins/kenspc/skills/diagnose-bug/SKILL.md`,
+  followed by the guard's restore message, exit 1. Discarding the copy with
+  `rm -rf` was denied by the permission rules, so the copy stays in the
+  session scratchpad, which is session-specific and outside the
+  repository. `bash scripts/check-all.sh --self-test` printed
+  `guards run: 10` and `self-tests run: 9`, every line PASS (the drift
+  guard's self-test is SKIP, no fixture, as before).
 
 Depends on: Task 1
 

@@ -4,7 +4,7 @@
 # Anchor-presence guard for the documentation path: a plan's Documentation
 # impact element becomes the task document's Doc-sync task, whose promotion
 # step reports what it could not place under Decisions needing a home. Three
-# load-bearing anchors carry that path across eight files, and every file in
+# load-bearing anchors carry that path across nine files, and every file in
 # an anchor's group must keep it:
 #
 #   `Documentation impact`      (the plan element)
@@ -12,9 +12,11 @@
 #       plugins/kenspc/references/plan-document-example.md
 #       plugins/kenspc/agents/plan-document-reviewer.md
 #       plugins/kenspc/skills/generate-task/SKILL.md
+#       plugins/kenspc/skills/diagnose-bug/SKILL.md
 #       plugins/kenspc/agents/task-document-reviewer.md
 #   `Doc-sync`                  (the task heading `### Task N: Doc-sync`)
 #       plugins/kenspc/skills/generate-task/SKILL.md
+#       plugins/kenspc/skills/diagnose-bug/SKILL.md
 #       plugins/kenspc/references/task-document-example.md
 #       plugins/kenspc/agents/task-document-reviewer.md
 #       plugins/kenspc/agents/task-implementer.md
@@ -42,7 +44,7 @@
 # derivation.
 #
 # Optional flag:
-#   --self-test    Run the mutation regression fixture. Copies the eight
+#   --self-test    Run the mutation regression fixture. Copies the nine
 #                  target files into a temp workdir, confirms `Doc-sync` is
 #                  present in the copied task example (exit 2 if not), runs
 #                  the main check (must exit 0), renames `Doc-sync` to
@@ -64,8 +66,10 @@ ANCHOR_CHECKS=(
     "Documentation impact|plugins/kenspc/references/plan-document-example.md"
     "Documentation impact|plugins/kenspc/agents/plan-document-reviewer.md"
     "Documentation impact|plugins/kenspc/skills/generate-task/SKILL.md"
+    "Documentation impact|plugins/kenspc/skills/diagnose-bug/SKILL.md"
     "Documentation impact|plugins/kenspc/agents/task-document-reviewer.md"
     "Doc-sync|plugins/kenspc/skills/generate-task/SKILL.md"
+    "Doc-sync|plugins/kenspc/skills/diagnose-bug/SKILL.md"
     "Doc-sync|plugins/kenspc/references/task-document-example.md"
     "Doc-sync|plugins/kenspc/agents/task-document-reviewer.md"
     "Doc-sync|plugins/kenspc/agents/task-implementer.md"
@@ -117,7 +121,7 @@ run_main_logic() {
 
 # --- Self-test mode ---------------------------------------------------------
 #
-# Mutation regression fixture. Copies the eight target files into a temp
+# Mutation regression fixture. Copies the nine target files into a temp
 # workdir, runs the main check (expect 0), renames `Doc-sync` to `Docsync` in
 # the task example (expect 1 — the label is then absent from that file),
 # reverts (expect 0). The fixture proves that a file with no `Doc-sync` left
