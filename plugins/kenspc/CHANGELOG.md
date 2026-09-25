@@ -106,8 +106,10 @@ date is filled at release.
   groups (nine files). `check-run-contract.sh` gains check 5: the literal
   `change-set.md` is named in `task-review/SKILL.md`, `code-fixer.md`,
   `regression-verifier.md`, and `requirements-reviewer.md` (the drift guard
-  carries it to the other four reviewers), with a self-test mutation that
-  renames every occurrence in each of the four carriers in turn.
+  carries it to the other four reviewers), and the pre-fix record's
+  `pre-fix/index.txt` in `code-fixer.md` and `regression-verifier.md`, with
+  self-test mutations that rename every occurrence of each name in each of
+  its carriers in turn.
 
 ### Changed
 
@@ -123,7 +125,8 @@ date is filled at release.
   `<HEAD~1>..<HEAD>`). When a commit these defaults name does not exist,
   git's empty tree stands in for it: `Range: <empty tree>..<HEAD>
   (root commit)`, or `Base: <empty tree> (no commit yet)` on an unborn
-  branch; in a shallow clone the run asks for a range instead.
+  branch; in a shallow clone, or when `git merge-base` finds no common
+  ancestor with the upstream, the run asks for a range instead.
   CUSTOM_INSTRUCTIONS naming commits or a range replace the default, named
   paths narrow it, and a set that comes out empty stops the run before any
   dispatch; one line tells the user the mode, the base or range, and the
@@ -137,8 +140,13 @@ date is filled at release.
   `Mode: uncommitted`, code-fixer applies every fix to the working tree and
   commits nothing — no baseline commit of the user's change, no fix commit,
   no stash — and runs no checkout, restore, reset, clean, or add, which
-  would erase or restage the user's uncommitted change; a fix that breaks
-  the build is edited back, or restored from a copy it saved in scratch.
+  would erase or restage the user's uncommitted change. Before a file's
+  first edit it records the file under
+  `RUN_DIR/scratch/code-fixer/pre-fix/` — a `.txt` copy of its content
+  (`pre-fix/<path>.txt`) and a line in `pre-fix/index.txt` (`copied`,
+  `created`, or `deleted <path>`), written once per run — so a fix that
+  breaks the build is edited back or restored from its copy, and
+  regression-verifier can tell the fixes from the user's hunks.
   FIXED rows carry `—` in Commit, and its reply names the uncommitted
   files. In `Mode: commits` and with a task document, each fix is still its
   own commit, and a fix to a file that already carries uncommitted changes
@@ -150,12 +158,14 @@ date is filled at release.
   review and commit, when there are any, and its verification list and
   PASS / FAIL bullets read "the fixes (fix commits, or the uncommitted
   fixes of an `uncommitted` run)".
-- **regression-verifier's check 4.** In an uncommitted run it reads the
-  working-tree diff of the files the FIXED rows name and of every path
-  `git status` newly lists outside the set (`git diff <base> -- <files>`,
-  the base from `change-set.md`) instead of fix commits, and reads an
-  untracked file whole; the user's own hunks in those files are the change
-  under review, not regressions. A commit code-fixer made in such a run
+- **regression-verifier's check 4.** In an uncommitted run it reads
+  code-fixer's pre-fix record instead of fix commits: for each file
+  `pre-fix/index.txt` names, the fixes are the difference between the
+  `.txt` copy and the working file (a created file whole, a deleted file's
+  copy), and a path the index does not name is the user's — so a dirty
+  file outside a narrowed set or a build output is never read as fix
+  output, and a regression a fix made inside a user hunk cannot hide in
+  the user's diff. A commit code-fixer made in such a run
   fails row 5. It reads `change-set.md` for the set's boundary and stops
   when a changes-mode run has none.
 - **The reviewers' three shared sections.** CONTEXT YOU WILL RECEIVE,

@@ -190,10 +190,12 @@ Change-set check for row 7, a run with no task document (v3.7.0):
 - On a dirty tree (`Mode: uncommitted`): HEAD is unchanged after the run
   except for that commit, `git stash list` is unchanged, every FIXED row's
   Commit in `schema-b.md` is `—`, and Next steps has the bullet naming the
-  uncommitted fixes' files. The trace shows regression-verifier running
-  `git diff <Base sha> -- <files>` over the FIXED rows' files, and reading
-  any untracked one whole, instead of looking for fix commits, and Schema C
-  row 5 is not a FAIL that cites missing fix commits.
+  uncommitted fixes' files. With FIXED greater than 0,
+  `<RUN_DIR>/scratch/code-fixer/pre-fix/index.txt` exists and names every
+  file a FIXED row names, each `copied` path has its `.txt` copy beside it,
+  and the trace shows regression-verifier diffing those copies against the
+  working files (`git diff --no-index`) instead of looking for fix commits;
+  Schema C row 5 is not a FAIL that cites missing fix commits.
 - On a clean tree ahead of its upstream (`Mode: commits`): `Range:` is
   `<merge base>..<HEAD>` — the upstream itself unless the branch has
   diverged from it, and on a diverged branch the table lists only files

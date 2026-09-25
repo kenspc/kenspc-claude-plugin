@@ -285,7 +285,12 @@ path the orchestrator passes leaves it nothing more to get right. Without
 `RUN_DIR`, a standalone reviewer derives the set from git itself. In
 `uncommitted` mode `code-fixer` commits nothing — no baseline commit, no fix
 commit, no stash, and no checkout, restore, reset, clean, or add — and its
-FIXED rows carry `—` in Commit.
+FIXED rows carry `—` in Commit. It records each file's state before its
+first edit under `RUN_DIR/scratch/code-fixer/pre-fix/` — a `.txt` copy per
+file and an `index.txt` naming every file the fixes touched — and
+`regression-verifier` reads the fixes from that record, not from the
+working-tree diff, so the user's own hunks in the same file are never read
+as fix output.
 
 #### Standalone safety classification
 
@@ -452,9 +457,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`
   counts as NOT APPLICABLE); and the literal `change-set.md` is named in
   `task-review/SKILL.md`, `code-fixer.md`, `regression-verifier.md`, and
-  `requirements-reviewer.md` (check 5; `check-review-agent-drift.sh`
-  carries it to the other four reviewers). `--file PATH` runs the recount
-  against a real `schema-b.md` from a run directory.
+  `requirements-reviewer.md`, and the pre-fix record's `pre-fix/index.txt`
+  in `code-fixer.md` and `regression-verifier.md` (check 5;
+  `check-review-agent-drift.sh` carries the first name to the other four
+  reviewers). `--file PATH` runs the recount against a real `schema-b.md`
+  from a run directory.
 - `check-json.sh` — guards that `plugin.json`, `hooks.json`, and
   `marketplace.json` parse. It picks the interpreter itself — `python3`,
   `python`, `py`, then `node`, each probed by running it, which skips the

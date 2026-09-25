@@ -236,6 +236,7 @@ run's reports in a directory at the root of your repository (since v3.5.0):
     scratch/                   # probe and temporary files, one subdirectory per agent
         angle-<n>/             # each reviewer
         code-fixer/
+            pre-fix/           # an uncommitted run: each fixed file before its first edit, as .txt, plus index.txt
         regression-verifier/
         orchestrator/          # the orchestrating session, only when it probes
 ```
@@ -309,7 +310,8 @@ run's reports in a directory at the root of your repository (since v3.5.0):
     last commit (`HEAD~1..HEAD`). When a commit these defaults name does not
     exist — HEAD is the root commit, or there is no commit yet — git's empty
     tree stands in for it, so a fresh repository is reviewable as it is. In
-    a shallow clone the skill asks you for a range instead.
+    a shallow clone, or when your branch and its upstream share no history,
+    the skill asks you for a range instead.
 
   Name commits or a range in the custom instructions to review something
   else, or paths to narrow the set to the changed files under them; a set
@@ -319,7 +321,11 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 - **Uncommitted fixes.** When the change set is `uncommitted`, code-fixer
   applies its fixes to your working tree and commits nothing — no baseline
   commit of your change, no fix commit, no stash — and runs no git command
-  that resets or restages a file. Schema B's FIXED rows show `—` in the
+  that resets or restages a file. It records each file's state before its
+  first edit under `scratch/code-fixer/pre-fix/` in the run directory (a
+  `.txt` copy and an `index.txt`), and regression-verifier judges the fixes
+  against that record rather than against your diff. Schema B's FIXED rows
+  show `—` in the
   Commit column, and the final report's Next steps names the changed files
   for you to review and commit. With a committed change set, or with a task
   document, each fix is still its own commit; a fix to a file that has
