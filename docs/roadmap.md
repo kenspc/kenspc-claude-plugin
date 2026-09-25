@@ -116,6 +116,16 @@ its number.
    - Row 4: a brief with an `answered` entry, whose short hash the plan
      cites where it relies on it, and a brief whose section body is `none`,
      which gets no exit question.
+10. A guard for the copied Prototype line. The line is written in
+    generate-brief's writing rules and copied byte-identically into
+    `prototype/SKILL.md`; `check-doc-sync-anchors.sh` guards only the
+    `needs prototype` status word across the three files, so an edit to one
+    copy of the line still passes `check-all.sh` (batch C review, T8). One
+    way: two `ANCHOR_CHECKS` entries whose label is the full line, one per
+    file, with the guard's header, CLAUDE.md's guard description, and its
+    Non-Goals sentence updated in the same commit; the guard counts stay.
+    Left out of 3.8.0 because the line is read by people and the release
+    checklist, not parsed by a skill.
 
 ## Planned batches
 
