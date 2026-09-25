@@ -104,7 +104,8 @@ If it is a brief, take these three parts in order:
    Why: a prototype changes the brief the gap-check reads, and a plan built
    on a question an experiment could settle builds on a guess unless it
    says so. A brief with no `## Open Questions` section, or with the body
-   `none`, has nothing to stop on.
+   `none` (or that word in the brief's language), has nothing to stop on,
+   and no entry for the gap-check either.
 2. **Gap-check.** Gap-check the brief against the five dimensions in the
    discovery framework (loaded in Step 3). Each of the brief's
    `` `open` `` entries is a gap too, for the same rounds; one the rounds do
