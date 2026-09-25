@@ -163,9 +163,14 @@ written once, in the Writing rules for the brief in
   the question, unless the project's CLAUDE.md names another. An existing
   `prototypes/<slug>/` holding only leftovers of an earlier run — files git
   does not track — is not a conflict: the next free `<slug>-<n>/` is used.
-  Why: after a first prototype, `prototypes/` exists in every repository
-  that used the skill, and asking whenever it exists would ask on every
-  later run.
+  One holding the tracked files of an earlier prototype that was never
+  removed — a run that ended between its two commits — is not written into
+  either: the next free `<slug>-<n>/` is used, and the final message names
+  that earlier prototype as still in the tree. Why: after a first
+  prototype, `prototypes/` exists in every repository that used the skill,
+  and asking whenever it exists would ask on every later run; and a run
+  that wrote into an earlier prototype's files would restore them in its
+  own remove commit, leaving that prototype in HEAD unnamed.
 - A location conflict is asked about: `prototypes/` already holds tracked
   files that are not prototypes, or CLAUDE.md's location does not fit the
   kind (an outside-the-app location for a UI prototype that can only render
