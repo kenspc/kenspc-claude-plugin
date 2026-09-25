@@ -842,7 +842,30 @@ array and needs no code change; its mutation target stays the task example.
 
 ### Task 9: Guard the change-set.md name in check-run-contract.sh
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: check 5 runs last, after check 4, and reports every file that
+  does not name `change-set.md` before returning 1, followed by a
+  three-line restore hint in the style of the other guards. The self-test
+  mutation renames the literal to `change-list.md` in every line of the
+  copied `task-review/SKILL.md` through a new awk `replace_all_literal`
+  helper (no `sed -i`), checks the literal is gone (exit 2 if the mutation
+  did not apply), expects exit 1, and restores the file by recopying; it
+  runs as its own block because `mutate_and_expect` refuses a literal that
+  occurs on more than one line. The two new files join the missing-file
+  loop, which runs before the `--file` branch, as the three existing files
+  already did.
+- Changes/tradeoffs: the self-test was itself shown to fail: with check 5's
+  grep disabled in a scratch copy of the guard, `--self-test` printed
+  `FAIL  self-test change-set name mutation: expected exit 1, got 0` and
+  exited 1; with the literal renamed in a scratch copy of the task-review
+  SKILL, the copied guard printed a `MISSING 'change-set.md'` line for that
+  file and exited 1. `--file` on the worked example extracted to a
+  temporary file printed only the recount `OK` line. Under macOS
+  `/bin/bash` 3.2.57 the main check and the self-test both exit 0.
+  `check-all.sh --self-test` prints `guards run: 10` and
+  `self-tests run: 9`.
 
 Depends on: Task 4-7
 

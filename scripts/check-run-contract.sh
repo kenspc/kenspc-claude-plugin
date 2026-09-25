@@ -2,7 +2,7 @@
 # check-run-contract.sh
 #
 # Guards the run-directory contract that task-review and task-implement share
-# with code-fixer (v3.5.0). Four checks:
+# with code-fixer (v3.5.0). Five checks:
 #
 #   1. The run-directory preparation block (bounded by
 #      `<!-- canonical:run-dir:start/end -->`) is byte-identical in
@@ -25,6 +25,14 @@
 #      Applied rows reproduces its Per-angle Results table and its statistics
 #      line, and the statistics line has the template's shape. The model
 #      imitates this example, so an example that miscounts teaches miscounting.
+#   5. The change-set file name: the literal `change-set.md` occurs at least
+#      once in skills/task-review/SKILL.md, which writes the file, and in
+#      agents/code-fixer.md, agents/regression-verifier.md, and
+#      agents/requirements-reviewer.md, which read it; check-review-agent-drift.sh
+#      carries the reviewers' shared sections to the other four reviewers. The
+#      orchestrator and seven agents meet at this one name, so a rename in one
+#      carrier breaks the exchange while every other check still passes. Each
+#      file that does not name it is reported.
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
@@ -35,8 +43,8 @@
 # APPLICABLE. Table cells are split on `|`, so a cell must not contain one.
 #
 # Exit code 0: all checks pass.
-# Exit code 1: a block diverges, the ignore probe answers wrongly, or the
-#              recount disagrees.
+# Exit code 1: a block diverges, the ignore probe answers wrongly, the
+#              recount disagrees, or a file does not name change-set.md.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
 #              command in the run-dir block, or self-test fixture stale.
 #
@@ -47,20 +55,25 @@
 # Optional flags:
 #   --file PATH    Run only check 4, against a real schema-b.md (for example
 #                  one under .kenspc/runs/<run-id>/ after a review run).
-#   --self-test    Run the mutation regression fixture. Copies the three
-#                  target files into a temp workdir and runs the main check on
+#   --self-test    Run the mutation regression fixture. Copies the five
+#                  target files into a temp workdir, confirms `change-set.md`
+#                  is present in the four files check 5 reads (exit 2 if
+#                  not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on eight mutations that must
+#                  prefix classification), then on nine mutations that must
 #                  each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
-#                  case, which only check 3 can catch), and five recount
+#                  case, which only check 3 can catch), five recount
 #                  mutations that each leave exactly one rule to catch them
 #                  (an example row's action, one Per-angle Results cell, one
 #                  statistics-line number, the statistics-line wording, and
 #                  an ID repeated across rows with the counts adjusted to
-#                  match), then on the reverted
+#                  match), and the change-set file name removed from the
+#                  copied task-review SKILL (every occurrence, through a
+#                  replace-all helper, since it occurs on several lines),
+#                  then on the reverted
 #                  copy (must exit 0). Exit 0 on self-test pass, 1 on
 #                  unexpected exit codes, 2 on fixture-stale.
 
@@ -72,6 +85,9 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 FIXER_REL="plugins/kenspc/agents/code-fixer.md"
 REVIEW_REL="plugins/kenspc/skills/task-review/SKILL.md"
 IMPLEMENT_REL="plugins/kenspc/skills/task-implement/SKILL.md"
+VERIFIER_REL="plugins/kenspc/agents/regression-verifier.md"
+REVIEWER_REL="plugins/kenspc/agents/requirements-reviewer.md"
+CHANGE_SET_NAME="change-set.md"
 
 # Print the lines strictly between the start and end markers of <name>.
 # Returns 2 unless the file has exactly one start and one end marker.
@@ -254,9 +270,11 @@ run_main_logic() {
     local fixer="$repo_root/$FIXER_REL"
     local review="$repo_root/$REVIEW_REL"
     local implement="$repo_root/$IMPLEMENT_REL"
+    local verifier="$repo_root/$VERIFIER_REL"
+    local reviewer="$repo_root/$REVIEWER_REL"
     local f rc template shape
 
-    for f in "$fixer" "$review" "$implement"; do
+    for f in "$fixer" "$review" "$implement" "$verifier" "$reviewer"; do
         if [[ ! -f "$f" ]]; then
             echo "ERROR: missing file $f" >&2
             return 2
@@ -304,6 +322,21 @@ run_main_logic() {
     rm -f "$example_file"
     [[ "$rc" -ne 0 ]] && return "$rc"
     echo "OK    example:schema-b — rows, Per-angle Results, and statistics line agree"
+
+    local missing=0
+    for f in "$review" "$fixer" "$verifier" "$reviewer"; do
+        if ! grep -qF -- "$CHANGE_SET_NAME" "$f"; then
+            echo "MISSING '$CHANGE_SET_NAME' in $f" >&2
+            missing=1
+        fi
+    done
+    if [[ "$missing" -ne 0 ]]; then
+        echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME and the" >&2
+        echo "agents read it there. Restore the name, or rename it in every carrier" >&2
+        echo "and in this guard together." >&2
+        return 1
+    fi
+    echo "OK    $CHANGE_SET_NAME — named in task-review, code-fixer, regression-verifier, requirements-reviewer"
     return 0
 }
 
@@ -320,6 +353,21 @@ replace_literal() {
     ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
 }
 
+# Replace every occurrence of a literal string in a file.
+replace_all_literal() {
+    local file="$1" old="$2" new="$3"
+    awk -v old="$old" -v new="$new" '
+        {
+            out = ""; rest = $0
+            while ((i = index(rest, old)) > 0) {
+                out = out substr(rest, 1, i - 1) new
+                rest = substr(rest, i + length(old))
+            }
+            print out rest
+        }
+    ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+}
+
 run_self_test() {
     # WORK is global (not local) so the EXIT trap can reference it safely
     # after this function returns. Under `set -u`, an EXIT trap that refers
@@ -328,7 +376,7 @@ run_self_test() {
     trap 'rm -rf "${WORK:-}"' EXIT
 
     local rel
-    for rel in "$FIXER_REL" "$REVIEW_REL" "$IMPLEMENT_REL"; do
+    for rel in "$FIXER_REL" "$REVIEW_REL" "$IMPLEMENT_REL" "$VERIFIER_REL" "$REVIEWER_REL"; do
         mkdir -p "$WORK/$(dirname "$rel")"
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
     done
@@ -343,6 +391,15 @@ run_self_test() {
         echo "FAIL  self-test fixture stale: no '| NOT APPLICABLE — <reason>' row in $FIXER_REL" >&2
         return 2
     fi
+
+    # Fixture-stale guard for check 5: every file it reads must name the
+    # change-set file, or the positive path would already fail there.
+    for rel in "$REVIEW_REL" "$FIXER_REL" "$VERIFIER_REL" "$REVIEWER_REL"; do
+        if ! grep -qF -- "$CHANGE_SET_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$CHANGE_SET_NAME' not found in $rel" >&2
+            return 2
+        fi
+    done
 
     # mutate_and_expect <label> <file> <old> <new> [<old> <new> ...]: apply
     # one or more literal replacements to one file, expect the main check to
@@ -429,6 +486,20 @@ run_self_test() {
         "| R     | 0     | 1        | 0              | 1       | 2        |" \
         "total reported 6 (R 1," "total reported 7 (R 2," \
         "NOT APPLICABLE 1, DEDUPED 1" "NOT APPLICABLE 1, DEDUPED 2" || return $?
+    # Check 5: the change-set file renamed in the task-review SKILL, every
+    # occurrence, so only the name check can catch it. The name occurs on
+    # several lines there, which mutate_and_expect's one-line rule refuses.
+    replace_all_literal "$WORK/$REVIEW_REL" "$CHANGE_SET_NAME" "change-list.md"
+    if grep -qF -- "$CHANGE_SET_NAME" "$WORK/$REVIEW_REL"; then
+        echo "FAIL  self-test: change-set mutation did not apply ('$CHANGE_SET_NAME' still in $REVIEW_REL)" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$REVIEW_REL" "$WORK/$REVIEW_REL"
+    if [[ "$rc" -ne 1 ]]; then
+        echo "FAIL  self-test change-set name mutation: expected exit 1, got $rc" >&2
+        return 1
+    fi
 
     ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
     if [[ "$rc" -ne 0 ]]; then
