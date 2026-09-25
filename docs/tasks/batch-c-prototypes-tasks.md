@@ -752,7 +752,36 @@ is not changed: the hook matches the Write tool only.
 
 ### Task 6: Guard the needs prototype anchor in check-doc-sync-anchors.sh
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the header now opens on "the planning chain's anchors" and
+  names both paths in prose (the documentation path as before; the
+  open-question path: a `needs prototype` entry generate-plan stops on and
+  the prototype skill settles), and the "breaks silently" paragraph gains
+  "an open question nobody stops on", so the rationale covers the new
+  group; the drift message says "planning-chain anchors" and lists four.
+  The file name and the self-test's mutation target (`Doc-sync` in the
+  task example) are unchanged.
+- Changes/tradeoffs: none beyond the task. Falsifiability, by hand:
+  `mkdir -p ~/Projects/_smoke/batch-c-task6-falsify && cp -R scripts
+  plugins` into it; `sed 's/needs prototype/needs-proto/g'` on the copied
+  `plugins/kenspc/skills/prototype/SKILL.md` (9 occurrences before, 0
+  after); `bash scripts/check-doc-sync-anchors.sh` in the copy exited 1
+  and printed `MISSING label 'needs prototype' in
+  /Users/kenspc/Projects/_smoke/batch-c-task6-falsify/plugins/kenspc/skills/prototype/SKILL.md`,
+  then the drift message "The planning-chain anchors (Documentation
+  impact, Doc-sync, / Decisions needing a home, needs prototype) must stay
+  spelled the same …"; the copy was moved to
+  `~/Projects/_smoke/.trash/batch-c-task6-falsify-20260925-224234/`.
+  Verified: main mode prints "all four anchors" and `--self-test` passes,
+  both under `/bin/bash` 3.2.57; `grep -niw 'nine'` and `grep -ni 'three
+  anchors'` print nothing (they printed four lines at HEAD); no
+  `declare -A` and no bare `sed -i` (the existing `sed -i.bak` stays);
+  `TMPDIR=$HOME/Projects/_smoke/tmp bash scripts/check-all.sh --self-test`
+  prints `guards run: 10` and `self-tests run: 9`, every guard PASS and
+  every fixture PASS except the pre-existing `SKIP` for
+  `check-review-agent-drift.sh`, which has no fixture.
 
 Depends on: Task 1-3
 

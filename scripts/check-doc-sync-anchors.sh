@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # check-doc-sync-anchors.sh
 #
-# Anchor-presence guard for the documentation path: a plan's Documentation
-# impact element becomes the task document's Doc-sync task, whose promotion
-# step reports what it could not place under Decisions needing a home. Three
-# load-bearing anchors carry that path across nine files, and every file in
-# an anchor's group must keep it:
+# Anchor-presence guard for the planning chain's anchors. Two paths run
+# through it. The documentation path: a plan's Documentation impact element
+# becomes the task document's Doc-sync task, whose promotion step reports
+# what it could not place under Decisions needing a home. The open-question
+# path: a brief's Open Questions entry marked `needs prototype` is what
+# generate-plan stops on and what the prototype skill settles. Four
+# load-bearing anchors carry those paths across eleven files, and every file
+# in an anchor's group must keep it:
 #
 #   `Documentation impact`      (the plan element)
 #       plugins/kenspc/skills/generate-plan/SKILL.md
@@ -23,12 +26,16 @@
 #   `Decisions needing a home`  (the Schema D / Schema G section)
 #       plugins/kenspc/agents/task-implementer.md
 #       plugins/kenspc/skills/task-implement/SKILL.md
+#   `needs prototype`           (the Open Questions status word)
+#       plugins/kenspc/skills/generate-brief/SKILL.md
+#       plugins/kenspc/skills/generate-plan/SKILL.md
+#       plugins/kenspc/skills/prototype/SKILL.md
 #
 # One file writes an anchor, another checks it, a third renders or greps it.
 # If a future edit renames an anchor in one file but not the others, the
-# documentation chain breaks silently — a plan element nobody reads, a
-# Doc-sync task nobody recognizes, a section nobody renders — while every
-# other check still passes. A byte-identity guard is wrong here (the prose
+# planning chain breaks silently — a plan element nobody reads, a Doc-sync
+# task nobody recognizes, a section nobody renders, an open question nobody
+# stops on — while every other check still passes. A byte-identity guard is wrong here (the prose
 # around each anchor differs by design), so this guard asserts only that each
 # label substring is present at least once in every file of its group.
 # README.md and CLAUDE.md are deliberately outside the guard: prose
@@ -44,7 +51,7 @@
 # derivation.
 #
 # Optional flag:
-#   --self-test    Run the mutation regression fixture. Copies the nine
+#   --self-test    Run the mutation regression fixture. Copies the eleven
 #                  target files into a temp workdir, confirms `Doc-sync` is
 #                  present in the copied task example (exit 2 if not), runs
 #                  the main check (must exit 0), renames `Doc-sync` to
@@ -75,6 +82,9 @@ ANCHOR_CHECKS=(
     "Doc-sync|plugins/kenspc/agents/task-implementer.md"
     "Decisions needing a home|plugins/kenspc/agents/task-implementer.md"
     "Decisions needing a home|plugins/kenspc/skills/task-implement/SKILL.md"
+    "needs prototype|plugins/kenspc/skills/generate-brief/SKILL.md"
+    "needs prototype|plugins/kenspc/skills/generate-plan/SKILL.md"
+    "needs prototype|plugins/kenspc/skills/prototype/SKILL.md"
 )
 
 # Run the main check against a given repo root. Uses local variables so the
@@ -108,20 +118,20 @@ run_main_logic() {
 
     if [[ "$drift_found" -ne 0 ]]; then
         echo "" >&2
-        echo "The documentation-path anchors (Documentation impact, Doc-sync," >&2
-        echo "Decisions needing a home) must stay spelled the same in every file" >&2
-        echo "that writes, checks, or renders them. Restore the missing label, or" >&2
-        echo "rename it in every file of its group and in this guard together." >&2
+        echo "The planning-chain anchors (Documentation impact, Doc-sync," >&2
+        echo "Decisions needing a home, needs prototype) must stay spelled the same" >&2
+        echo "in every file that writes, checks, or renders them. Restore the missing" >&2
+        echo "label, or rename it in every file of its group and in this guard together." >&2
         return 1
     fi
 
-    echo "OK    doc-sync-anchors — all three anchors present in every file of their groups"
+    echo "OK    doc-sync-anchors — all four anchors present in every file of their groups"
     return 0
 }
 
 # --- Self-test mode ---------------------------------------------------------
 #
-# Mutation regression fixture. Copies the nine target files into a temp
+# Mutation regression fixture. Copies the eleven target files into a temp
 # workdir, runs the main check (expect 0), renames `Doc-sync` to `Docsync` in
 # the task example (expect 1 — the label is then absent from that file),
 # reverts (expect 0). The fixture proves that a file with no `Doc-sync` left
