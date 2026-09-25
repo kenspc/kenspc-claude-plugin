@@ -354,7 +354,11 @@ grammar in the Writing rules for the brief in
   (`git checkout <add commit>^ -- <path>`), every path passed to
   `git commit` as a pathspec.
 - `git diff <add commit>^ HEAD -- <every path the add commit touched>`
-  prints nothing.
+  exits 0 and prints nothing. It fails on a nonzero exit, whose empty
+  output is an error and not an empty diff. When the add commit is the
+  repository's first commit, it has no parent and that command cannot
+  succeed; `git ls-tree -r HEAD -- <every path the add commit touched>`
+  printing nothing is the check instead.
 - The brief is not committed.
 
 Why the discard comes in the same run: each commit the prototype spends in
