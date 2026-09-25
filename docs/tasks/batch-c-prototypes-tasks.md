@@ -653,7 +653,19 @@ The file carries, in substance as plan Step 3.1 gives it:
 
 ### Task 4: Add the /kenspc-prototype command
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: generated the file from `kenspc-diagnose.md` with anchored
+  line substitutions rather than writing it by hand, so every unchanged
+  line (frontmatter delimiters, `disable-model-invocation: true`, the body's
+  sentence wrap) is byte-identical to the template command.
+- Changes/tradeoffs: none — implemented exactly as specified. Verified:
+  `diff kenspc-diagnose.md kenspc-prototype.md` differs only in lines 2-4
+  (name, description, argument-hint) and lines 8 and 10 (the skill name and
+  its path); the pointer-label grep prints nothing; `claude plugin validate
+  --strict ./plugins/kenspc`, `check-no-model-names.sh`, and `check-all.sh`
+  (`guards run: 10`) exit 0.
 
 Depends on: Task 3
 
