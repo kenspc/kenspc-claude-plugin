@@ -439,8 +439,13 @@ The final message gives:
 
 Next step: `/kenspc-plan <brief>` when no `` `needs prototype` `` entry
 remains in the brief, otherwise `/kenspc-prototype <brief> <n>` for the
-next. The skill invokes nothing and deletes nothing. Why: the user decides
-when to plan, and a recursive delete is what users' permission rules deny.
+next. The next is an entry other than the one this run left unsettled; when
+that entry is the only one remaining, the suggestion is
+`/kenspc-plan <brief>`, whose exit asks whether to prototype it again or
+carry it into the plan. The skill invokes nothing and deletes nothing. Why:
+the user decides when to plan, a re-run suggested for the entry this run
+could not settle would most often end the same way, and a recursive delete
+is what users' permission rules deny.
 
 **Ending with the prototype still in the tree.** When the run stops after
 the add commit and before the remove commit — a rejected remove commit, the
