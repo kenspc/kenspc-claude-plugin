@@ -85,8 +85,10 @@ a minor release. No new agent and no CONTEXT key changes.
     leaves a table it created; a path that changed after the add commit —
     names the add commit and gives the commands that would remove it,
     without running them. A path that changed after the add commit is left
-    out of those commands and named, so its edit can be saved before it is
-    removed by hand.
+    out of those commands and named, so its edit can be saved before the
+    prototype is taken out of it by hand — a path the add commit added
+    deleted, one it modified restored to its content in the add commit's
+    parent.
   - **Where it lives.** `prototypes/<slug>/` at the repository root unless
     the project's CLAUDE.md names another location; its file names follow
     the naming rule of the `canonical:run-dir` block's Scratch space bullet,

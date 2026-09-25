@@ -469,14 +469,19 @@ prototype `git checkout <add commit>^ -- <each path it modified>`, then the
 remove commit. When the check before the discard stopped the run, the paths
 it listed are left out of those commands and named apart, as holding an
 edit made after the add commit, and the message tells the user to save or
-commit that edit before removing the path by hand. Why: on such a path
-`git rm` refuses a local modification or deletes a committed edit, and
-`git checkout` overwrites the edit without a word, so a command given for it
-would fail or destroy the edit the check stopped for. When the remove commit is the one rejected, those
-commands have already run and the removal is staged: the message says so,
-says a plain `git commit` would carry the removal under another message,
-and gives the `git commit` command the skill ran, which finishes the
-removal once the rejection is dealt with. The skill does not run them
+commit that edit, then take the prototype out of each such path by hand:
+delete a path the add commit added, and bring a path it modified back to
+its content in the add commit's parent (`git show <add commit>^:<path>`),
+re-applying the edit when it is to stay. Why: on such a path `git rm`
+refuses a local modification or deletes a committed edit, and
+`git checkout` overwrites the edit without a word, so a command given for
+it would fail or destroy the edit the check stopped for; and a path the add
+commit modified is a file of the app, which deleting would remove. When
+the remove commit is the one rejected, those commands have already run and
+the removal is staged: the message says so, says a plain `git commit`
+would carry the removal under another message, and gives the `git commit`
+command the skill ran, which finishes the removal once the rejection is
+dealt with. The skill does not run them
 unasked. Why: like diagnose-bug's "Ending without a document", the branch
 carries something the user did not plan to keep.
 

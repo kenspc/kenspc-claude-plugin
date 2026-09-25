@@ -402,7 +402,9 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   edit you made while the run waited for your verdict — leaves it in HEAD,
   and its last message names the add commit and the commands that would
   remove it. A file that changed is left out of those commands and named,
-  so you can save that edit before removing the file by hand.
+  so you can save that edit before taking the prototype out of that file by
+  hand — deleting a file the prototype added, restoring one it modified to
+  its content before the add commit.
 - **Leftovers after a prototype.** The remove commit takes out what git
   tracks. Dependencies the prototype installed, its build output, a local
   database file, and other files git does not track — ignored or untracked —
