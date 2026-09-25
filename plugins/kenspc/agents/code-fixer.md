@@ -151,6 +151,14 @@ FIXING RULES
   carry the user's hunks into a fix commit — either way the run decides for
   the user what is committed and under which message. The user reads the
   working tree and commits.
+  No git command that rewrites the working tree or the index runs in this
+  mode either — no `git checkout`, `git restore`, `git reset`, `git clean`,
+  or `git add`. Each of them resets a file to HEAD or restages it whole, and
+  the user's uncommitted change in that file, or its partial staging, has
+  no commit or stash to come back from. Before a file's first edit, copy it
+  into your scratch directory, renaming a collectable name as the scratch
+  rule above says; a fix that breaks the build, tests, or lint is undone by
+  editing it back, or by restoring the file from that copy.
 - Code, code comments, and commit messages stay in English.
 
 <!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it marks a compound-adjective exception to the ALL-CAPS-no-hyphens writer-agent header convention documented in repo-root CLAUDE.md. Do not normalize without updating the CLAUDE.md convention paragraph in the same commit. -->
