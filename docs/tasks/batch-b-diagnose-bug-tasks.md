@@ -127,7 +127,36 @@ those tasks implemented and promotes their recorded decisions.
 
 ### Task 1: Write the diagnose-bug skill
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the mutant rule points at the three-step mutation rule where it
+  is written — the RUN_DIR bullet of `agents/regression-verifier.md` (the
+  reviewers and code-fixer carry the same rule) — and summarizes its three
+  steps in one sentence, instead of calling it "the block's" rule: the
+  `canonical:run-dir` block holds the run-id, directory, scratch naming,
+  numbered-attempt, and ignore rules but no mutation rule, so a pointer to it
+  would send the reader to text that is not there. The run-directory
+  preparation itself is still referenced by its markers, with no copy.
+  Phase 1's Inputs note the untracked files `git status --porcelain` lists at
+  the start, so the not-reproduced stop can tell the files this run created
+  from the user's own. In a session that cannot ask, the task-list
+  confirmation presents the list and writes it as presented; without that
+  clause the confirmation would wait for an answer before the exit's
+  cannot-ask branch is reached.
+- Changes/tradeoffs: a short three-tier overview sits under the title (the
+  locked design has the tiers stated in the body as well as the
+  description), and a paragraph after the "Avoid triggering" list says why
+  tier 1 is a trigger-time judgment only. The writing rules are a top-level
+  section after Exit, matching plan Step 1.1's order (Phase 3, Exit, writing
+  rules, phase transitions). The BUG file-path heuristic follows
+  generate-plan's (a `./` or `/` prefix, or a `.md` / `.txt` / `.log`
+  suffix). The task-document title is `# <Symptom> — Task Document`, the form
+  the task-document example uses, and the brief's Scope and Constraints
+  mapping lines, which the plan names without content, are filled in. The
+  commit instructions name the pathspec form (`git commit -- <path>`) the
+  run-directory block uses, so nothing the user has staged joins the
+  skill's two commits.
 
 Plan Step 1.1 (locked design B-1 to B-7; rulings M1–M5, M12–M16, D1, D2,
 D4–D6; clarifications C1, C2, C5). Create
