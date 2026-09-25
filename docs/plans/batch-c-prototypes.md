@@ -973,3 +973,96 @@ rather than resolving it locally: it appends the question under a
 commits nothing else, and waits; the spec author answers under
 [Clarifications during implementation](#clarifications-during-implementation)
 and the session continues from the updated document.
+
+## Questions for the spec author
+
+Raised by the implementing session after the `/kenspc-task-implement` run
+over `docs/tasks/batch-c-prototypes-tasks.md` (implementation 2f52600..9f70db6,
+review fixes up to 48e65d1). No task was BLOCKED; each question below comes
+from a review finding that code-fixer deferred because fixing it would read
+a ruling one way or add scope the rulings do not give. The finding IDs point
+into the run directory
+`.kenspc/runs/20260925-225154-batch-c-prototypes-tasks/` (`angle-<n>.md`,
+`schema-b.md`).
+
+1. **The leftovers list and `node_modules` (M10; E7, B8).** M10 has the exit
+   name every path `git status --porcelain --ignored -uall -- <location>`
+   still lists. With `-uall`, an ignored `node_modules/` under the location
+   is listed file by file, so after an `npm install` the final message runs
+   to thousands of lines. May the exit name a directory whose every file is
+   listed once, with its file count (for example `prototypes/q/node_modules/
+   (2,314 files)`), reading "every path" as "covers every path"? If yes, the
+   skill's Exit, the README's Leftovers item, the CHANGELOG's leftovers
+   bullet, and release-checklist row 10 change together in one commit.
+   Steps 3.1, 5.2, 5.3, 5.4.
+
+2. **The leftovers command's `-c core.quotePath=false` (M10; Q2).** A review
+   fix (2a9a5f2) made the skill's command
+   `git -c core.quotePath=false status --porcelain --ignored -uall -- <location>`
+   so a non-ASCII path is listed unescaped, matching the Phase 1 status
+   command. Step 3.1, the CHANGELOG, and release-checklist row 10 quote the
+   form without the flag. Is the flag accepted — and if so, do the CHANGELOG
+   and row 10 follow it? Steps 3.1, 5.3, 5.4.
+
+3. **A status word that is none of the three (D1, D2; E9).** D2 has
+   generate-plan read only the status word. An entry whose word was
+   hand-edited or translated (for example `` `需要原型` ``) is then neither
+   stopped on nor gap-checked nor carried, and the question leaves the plan
+   without a trace. Options: (a) the gap rounds name such an entry as
+   unreadable and ask which status it has; a session that cannot ask carries
+   it as `open`, with `Assumed in:` and a note that its status word was not
+   recognized; (b) no rule — the reading side stays as written. Step 2.1.
+
+4. **The `Settled by:` question in `rapid-direct` mode (Step 1.1; B10).**
+   Step 1.1 gives the Phase 1 Constraints bullet one no-ask branch, for
+   `rapid-inferred (reminder-driven)`. generate-brief's `rapid-direct` mode
+   asks its one or two rounds regardless of a reminder, so a clearly stated
+   idea run under a work-without-stopping reminder asks what would settle a
+   `needs prototype` question and waits. Should the bullet gain the standard
+   cannot-ask clause (infer the result and tag it), whatever the mode?
+   Step 1.1.
+
+5. **A cited hash after a rebase or squash merge (C-5; E8).** A
+   `git pull --rebase` over unpushed commits, a branch rebase, or a squash
+   merge takes the add commit off every branch; the hash in the brief and
+   the plan then resolves only in the clone that made it, until gc. The
+   skill takes no branch, rebase, or tag step, so the only remedy is a
+   caveat. Should one be added — one sentence in the README's "Prototypes
+   live in history" item and in the CHANGELOG's Known behavior, and
+   optionally in the skill's overview? Steps 3.1, 5.2, 5.3.
+
+6. **Release smoke scope beyond Step 5.4 (T2–T7).** The Testing Strategy
+   puts these cases in the one-time acceptance; the review asked for them in
+   the release checklist, where each costs a headless run every release.
+   Which, if any, join the smoke rows?
+   - Row 10: a run in a session that cannot ask — no entry named on a brief
+     with two `needs prototype` entries takes the first and names it; a
+     table-creating run uses a throwaway database and leaves the development
+     database file unchanged (T2).
+   - Row 10: the judgment point — the run waits after the add commit and
+     says how to see the prototype; a session that cannot ask leaves the
+     entry `needs prototype` with `Evidence:` naming what to look at, and
+     the remove commit's body carries `Not settled:` (T3).
+   - Row 10: a failed commit, with a seed project whose pre-commit hook
+     exits 1 — no retry and no `--no-verify`, no add commit, the staged
+     paths and `git reset -q --` named; a rejected remove commit names the
+     add commit and says the removal is staged (T4).
+   - Row 10: a question given as text for a brief with no section — the
+     section created after `## Context`, the entry `needs prototype` with
+     `Settled by:`, and nothing else in the brief changed (T6).
+   - Row 3: a Chinese run whose heading, status words, and labels stay in
+     English; row 4 then run on that brief asks the exit question (T5).
+   - Row 4: a brief with an `answered` entry — the plan cites its short
+     hash where it relies on it — and a brief whose section body is `none`
+     gets no exit question (T7).
+   Step 5.4.
+
+7. **Guarding the copied Prototype line (D13; T8).** The Prototype line is
+   written in generate-brief's writing rules and copied byte-identically
+   into the prototype skill; CLAUDE.md § Non-Goals records that no guard
+   checks the copy. D13 adds one group, `needs prototype`, to
+   `check-doc-sync-anchors.sh`. Should two more `ANCHOR_CHECKS` entries
+   carry the full line as their label (generate-brief and prototype), with
+   the guard's header, CLAUDE.md's guard description, and the Non-Goals
+   sentence updated in the same commit? The guard counts stay 10 / 9.
+   Steps 4.2, 5.1.
