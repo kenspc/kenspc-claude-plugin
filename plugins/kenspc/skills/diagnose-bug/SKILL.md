@@ -113,8 +113,10 @@ uncommitted changes, so the exit can say when the fix touches one.
 
 - A reproduction test is written in the project's test tree, under the
   project's test framework and naming conventions — a name the runner
-  collects, since it is a test and not a probe; it has been run and failed
-  for the reason the bug describes, not on a setup or import error; its
+  collects, since it is a test and not a probe; it has been run more than
+  once and failed for the reason the bug describes, not on a setup or import
+  error — when it failed on some runs and passed on others, the bug is
+  intermittent, and the record gives the observed rate (3 of 10 runs); its
   failure is summarized for the record; and it is committed alone as
   `test: reproduce <symptom>`, adapted to the project's commit conventions,
   staging only that file and passing its path to `git commit` as a pathspec
@@ -341,7 +343,10 @@ as ambiguous and stops.
 **Task 1 — the fix.** `### Task 1: Fix <root cause>` with
 `**Status:** TODO`: the root cause, the reproduction test's path, and the
 files in Fix scope. Acceptance criteria:
-- the reproduction test passes;
+- the reproduction test passes — for an intermittent bug, on a stated number
+  of consecutive runs, at least three times the runs per observed failure
+  (30 when 1 in 10 failed), since one pass of a test that fails one run in
+  ten shows nothing about the fix;
 - the project's full test suite, its build, and its lint pass;
 - no file outside Fix scope is modified (the task document's status update
   aside).
