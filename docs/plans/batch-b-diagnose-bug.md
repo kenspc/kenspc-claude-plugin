@@ -961,6 +961,52 @@ from that section.
   none of them reopens a ruling; they are recorded so the README and
   CHANGELOG re-check after the review (Schema G's re-check bullet) has a
   list to work from. Steps 1.1, 2.3, 2.4, 4.2, 4.3.
+- C9 — Steps 1.1, 4.1: two departures from this plan's literal wording,
+  accepted. The probe rule's "the block's three-step mutation rule" named a
+  rule the `canonical:run-dir` block does not hold; the SKILL points at the
+  rule where it lives, the RUN_DIR bullet of `regression-verifier.md`, and
+  CLAUDE.md § Non-Goals records that moving or changing that rule updates
+  the SKILL's pointer in the same commit. "The other six skills" reads "the
+  six other skills", since the task's own acceptance grep for `six skills`
+  would match the plan's wording. Steps 1.1, 4.1.
+- C10 — Steps 2.1, 2.3, 2.4, ruling D7 (iv): the pre-fix record. In an
+  uncommitted run, `code-fixer` keeps the copy it already makes before a
+  file's first edit at a fixed place, `RUN_DIR/scratch/code-fixer/pre-fix/`,
+  written once per run and never overwritten: each touched file's original
+  content at `pre-fix/<path relative to the repository root>.txt`, the
+  `.txt` appended so no runner, linter, or compiler collects it, and an
+  index at `pre-fix/index.txt` with one line per touched path — `copied`,
+  `created` (the fix created the file; it has no copy), or `deleted` (the
+  fix removed it; its copy is kept). `pre-fix/` sits beside the numbered
+  attempt directories and is not one: a second attempt records a file only
+  if no entry for it exists, so the copy is always the state before any
+  edit. `regression-verifier`'s check 4 in that mode reads the index and
+  nothing else: for a `copied` path the fixes are the difference between
+  the copy and the working file (`git diff --no-index <copy> <file>`), for a
+  `created` path the whole file, for a `deleted` path the copy; a path the
+  index does not name is the user's, whatever `git status` says; an index
+  entry whose copy is missing, or a FIXED row naming a path the index does
+  not, is a bookkeeping error reported in row 5's Detail. This closes the
+  deferred row 7 (B5, E4, B4) and regression N1 — check 4 no longer infers
+  fix output from `git status`, so a user's dirty file outside a
+  CUSTOM_INSTRUCTIONS-narrowed set, or a build output, is never attributed
+  to the fixes — and N4, since the copies carry `.txt`. Two more rulings
+  from the same review: when `git merge-base <upstream> <HEAD>` prints
+  nothing (unrelated histories, or a shallow clone whose history does not
+  reach the upstream), task-review stops and asks for a range, as the
+  shallow-clone clause does, instead of letting the empty tree stand in
+  (N2); and every `git status --porcelain -uall` read in
+  `regression-verifier.md` and `diagnose-bug/SKILL.md` carries
+  `-c core.quotePath=false`, as task-review's does (N3). The literal
+  `pre-fix/index.txt` joins `check-run-contract.sh`'s check 5 for
+  `code-fixer.md` and `regression-verifier.md`; guard and self-test counts
+  stay 10 and 9. The release checklist's row-7 change-set check gains the
+  record: in an uncommitted run with FIXED greater than 0, `pre-fix/index.txt`
+  exists, names every file a FIXED row names, and the trace shows the
+  verifier diffing against the copies. Why under scratch and not a
+  top-level run file: they are copies of project files, which the
+  run-directory check requires under `scratch/`, and `.txt` keeps them out
+  of every tool that walks the tree. Steps 2.1, 2.3, 2.4, 3.2, 4.2–4.4.
 
 ## Open Questions
 
