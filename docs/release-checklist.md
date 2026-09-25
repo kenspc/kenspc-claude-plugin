@@ -204,6 +204,10 @@ Change-set check for row 7, a run with no task document (v3.7.0):
   one-time `.gitignore` commit, and `.gitignore` is absent from the
   `Status | Path` table. A set computed after the run-directory preparation
   would review only that commit.
+- In a `git init` repository with files and no commit yet:
+  `change-set.md` says `Mode: uncommitted` and
+  `Base: <empty tree> (no commit yet)`, the empty tree being `4b825dc…` in a
+  SHA-1 repository, and the run reaches the Schema F report.
 
 Row 10 sub-criteria (each is independently mechanically auditable against
 the captured trace):
