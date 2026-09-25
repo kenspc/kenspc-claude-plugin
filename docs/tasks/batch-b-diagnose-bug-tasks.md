@@ -258,6 +258,27 @@ Doc-sync template: it points at both.
   rules.
 - The nine record labels appear in the order the Fixed forms give, and the
   file states the tier-2 `**Tier:**` line form.
+- Phases 1 and 2 state the three rules plan Step 1.1's Done when names. The
+  reproduction rule: a test written in the project's test tree, run, and
+  seen to fail before diagnosis starts, or the manual steps and the reason
+  no failing-capable test exists. The hypothesis loop: the skip line
+  `none — the root cause was visible on reproduction`; otherwise three to
+  five hypotheses listed at once, each with its verification method; a stop
+  to ask the user when none survives. The tier rule: the four tier-3
+  categories — a new dependency, a change to an existing API contract
+  (parameters, return type, error codes), a database schema change, a
+  project configuration change — with a Why naming `task-implementer`'s
+  AUTONOMY BOUNDARIES.
+- The tier-2 output rules state: the path `docs/tasks/<name>.md`, `<name>` a
+  kebab-case slug of the symptom, and the overwrite / create alongside /
+  cancel question for an existing file (ruling M13); no `Phase N` or
+  `Step N` heading in the written document (ruling M2); Task 1's acceptance
+  criteria — the reproduction test passes, the project's full test suite and
+  its build and lint pass, no file outside Fix scope is modified — or, for a
+  manual reproduction, ruling M12's form (the user verifies the manual steps
+  after the run, and the implementer records that criterion as not
+  verified); Task 2 omitted when Adjacent cases is empty (ruling M4); and the
+  task-list confirmation before writing.
 - `canonical:run-dir` is referenced by its markers and the run-id suffix
   `diagnose-<name>` and the directory `RUN_DIR/scratch/orchestrator/<n>/`
   are named; `grep -c 'check-ignore' plugins/kenspc/skills/diagnose-bug/SKILL.md`
@@ -269,7 +290,10 @@ Doc-sync template: it points at both.
 - Both commit subjects (`test: reproduce <symptom>`, `docs: add task <name>`),
   the tier-3 brief rules (`# Requirement Brief:`, no `Discovery Mode:`
   field, not committed, `/kenspc-plan` suggested and not invoked), and the
-  exit question are present.
+  exit question with its two other branches (a session that cannot ask
+  writes the document, prints the suggestion, and stops; for a manual
+  reproduction the exit message says Task 1 cannot be verified unattended)
+  are present.
 - C1: the phrase "other than the one-time `.gitignore` commit" appears
   beside the no-tracked-file rule. C2: the not-reproduced stop removes only
   untracked (`??`) reproduction-test files the skill created in this run —
@@ -535,6 +559,14 @@ Plan Step 2.3 (rulings M8, M10, D7 (iv)). In `plugins/kenspc/agents/code-fixer.m
   run after the last fix is unchanged.
 - The reply: in an uncommitted run, one line after the statistics line
   saying the fixes are uncommitted and naming the files.
+- OBJECTIVE and PROCESSING APPROACH: their instructions to commit —
+  OBJECTIVE's "apply fixes, commit", PROCESSING APPROACH's "committed with a
+  focused conventional-commit message" — defer to the FIXING RULES mode rule
+  (for example "commit as FIXING RULES prescribes"), so no sentence in the
+  file tells the agent to commit in an uncommitted run. Plan Step 2.3 does
+  not list this edit; it keeps the edits above from being contradicted
+  inside the same file, since ruling D7 (iv) has code-fixer commit nothing
+  in that mode.
 
 The `canonical:stats-line` block and the `example:schema-b` block stay
 byte-identical (the example is a committed-mode example and keeps its
@@ -552,6 +584,10 @@ untouched.
   step does.
 - The rule names all three forbidden actions in an uncommitted run: a
   baseline commit, a fix commit, a stash.
+- Outside FIXING RULES, no sentence in `code-fixer.md` instructs a commit
+  unconditionally: in `grep -n commit plugins/kenspc/agents/code-fixer.md`,
+  the OBJECTIVE and PROCESSING APPROACH lines that tell the agent to commit
+  defer to the FIXING RULES mode rule.
 - `git diff plugins/kenspc/agents/code-fixer.md` shows no change between the
   `canonical:stats-line`, `example:schema-b`, or `canonical:principle:*`
   markers, and none to the `CODE-CRAFT PRINCIPLES` header or its guard
@@ -670,8 +706,12 @@ Plan Step 3.2 (ruling M17). In `scripts/check-run-contract.sh`:
 - `bash scripts/check-run-contract.sh --file <a Schema B file>` runs the
   recount only: on a copy of the worked example extracted to a temporary
   file it prints only the recount `OK` line.
-- The script runs under macOS's bash 3.2 (no `declare -A`, no bash-4-only
-  syntax) and uses no `sed -i`.
+- The script runs under the bash 3.2 that macOS ships:
+  `/bin/bash scripts/check-run-contract.sh` and
+  `/bin/bash scripts/check-run-contract.sh --self-test` exit 0 on macOS
+  (`/bin/bash --version` reports 3.2), and
+  `grep -nE '^[^#]*(declare -A|sed -i)' scripts/check-run-contract.sh`
+  prints nothing (the header comment that names `sed -i` does not match).
 - `bash scripts/check-all.sh --self-test` prints `guards run: 10` and ends
   with `self-tests run: 9`, every line PASS.
 
