@@ -391,9 +391,13 @@ user stopping at the judgment point — the last message names the add
 commit, says the prototype is still in the tree, and gives the commands that
 would remove it: `git rm -- <each path the add commit added>`, and for an
 in-app prototype `git checkout <add commit>^ -- <each path it modified>`,
-then the remove commit. The skill does not run them unasked. Why: like
-diagnose-bug's "Ending without a document", the branch carries something
-the user did not plan to keep.
+then the remove commit. When the remove commit is the one rejected, those
+commands have already run and the removal is staged: the message says so,
+says a plain `git commit` would carry the removal under another message,
+and gives the `git commit` command the skill ran, which finishes the
+removal once the rejection is dealt with. The skill does not run them
+unasked. Why: like diagnose-bug's "Ending without a document", the branch
+carries something the user did not plan to keep.
 
 ## Writing rules
 
