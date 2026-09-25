@@ -182,8 +182,9 @@ written once, in the Writing rules for the brief in
   app, and anything that can run elsewhere keeps its files out of the
   user's source tree.
 - Once the location is chosen, and before anything is written there, note
-  what `git status --porcelain --ignored -uall -- <location>` lists; the
-  exit leaves those paths out of its leftovers list.
+  what
+  `git -c core.quotePath=false status --porcelain --ignored -uall -- <location>`
+  lists; the exit leaves those paths out of its leftovers list.
 
 ### An in-app UI prototype
 
@@ -409,8 +410,10 @@ The final message gives:
   user's decision; for a judgment the session could not ask for, what to
   look at and how;
 - the add and remove commits, and `git show <hash>` to read the prototype;
-- every path that `git status --porcelain --ignored -uall -- <location>`
-  still lists — ignored and untracked alike — for the user to remove, less
+- every path that
+  `git -c core.quotePath=false status --porcelain --ignored -uall -- <location>`
+  still lists — ignored and untracked alike, a non-ASCII name as it is and
+  not octal-escaped — for the user to remove, less
   the paths it listed when the location was chosen. Why: an in-app
   location is a directory of the user's app, and a file of theirs already
   there is not the prototype's to name for removal;
