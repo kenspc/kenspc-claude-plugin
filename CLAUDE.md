@@ -120,9 +120,10 @@ recognizes briefs and gap-checks against the same five dimensions defined in
 diagnose-bug's task document has no plan to compare against —
 `task-document-reviewer` requires a plan and cross-references its
 Implementation Steps — so the user's confirmation of the task list is its
-gate, and task-implement's batch gate follows. The checks the reviewer's
-Consistency angle would make (vague criteria, language carried into code
-artifacts, a git step nobody decided) are the skill's own writing rules.
+gate, and task-implement's batch gate follows. The checks the reviewer
+would make — vague acceptance criteria (its Completeness angle), language
+carried into code artifacts and a git step nobody decided (its Consistency
+with CLAUDE.md angle) — are the skill's own writing rules.
 
 The diagnosis path runs from an observed bug to the same implementation run.
 `diagnose-bug` reproduces the bug first: a test in the project's test tree
@@ -329,7 +330,7 @@ guard checks is documented once, in "Repository scripts/" below.
 
 `shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at two call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would break the discovery phase's need for raw conversation context (the orchestrator must keep the full transcript to draft the brief or plan in Phase 2).
 
-The run-directory preparation is written once, in the `canonical:run-dir` block of `task-review/SKILL.md` and `task-implement/SKILL.md`. `diagnose-bug` also prepares a run directory for its probes, and references that block — naming its markers, with the `diagnose-<name>` run-id suffix — rather than carrying a third copy; it points at generate-task's Doc-sync Task template the same way. A copy would have to be kept byte-identical by a guard, and a reference cannot drift.
+The run-directory preparation is written once, in the `canonical:run-dir` block of `task-review/SKILL.md` and `task-implement/SKILL.md`. `diagnose-bug` also prepares a run directory for its probes, and references that block — naming its markers, with the `diagnose-<name>` run-id suffix — rather than carrying a third copy; it points at generate-task's Doc-sync Task template the same way. A copy would have to be kept byte-identical by a guard, and a reference cannot drift. The block holds no mutation rule, so for a mutant used as evidence the skill points at the three-step mutation rule where it is written, the RUN_DIR bullet of `regression-verifier.md` (the reviewers and `code-fixer` carry the same rule). A change to that rule, or a move of it, updates the pointer in `diagnose-bug/SKILL.md` in the same commit.
 
 ### Writing Rules for Skill Content
 

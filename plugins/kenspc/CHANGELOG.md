@@ -71,8 +71,11 @@ date is filled at release.
   - **Probe directory.** A probe, copy, or mutant goes in
     `.kenspc/runs/<YYYYMMDD-HHMMSS>-diagnose-<name>/scratch/orchestrator/<n>/`,
     a run directory prepared as the `canonical:run-dir` block prescribes,
-    by reference, with no third copy of the block. The diagnosis modifies no
-    tracked file.
+    by reference, with no third copy of the block. A "does this change
+    remove the symptom" experiment runs on a copy under scratch, and a
+    mutant used as evidence follows the three-step mutation rule the review
+    agents carry (unmutated copy passes, control mutant fails, then mutants
+    count). The diagnosis modifies no tracked file.
   - **The commits it makes:** the reproduction test, the task document,
     and — when it prepared a run directory in a project that did not yet
     ignore `.kenspc/` — the one-time `.gitignore` commit, the single
@@ -138,6 +141,25 @@ date is filled at release.
   `RUN_DIR`, a changes-mode reviewer reviews the files `change-set.md`
   lists and runs its diff command; standalone, without `RUN_DIR`, it runs
   `git status`, `git diff`, `git diff --cached`, and `git log` as before.
+- **Release checklist.** Smoke row 1 counts seven commands. A new row 9
+  exercises `/kenspc-diagnose`: the reproduction test written, run,
+  failing, and committed before the task document; the committed task
+  document with the nine `## Diagnosis` labels in order, `### Task 1` at
+  `**Status:** TODO`, and a Doc-sync task when documents are affected;
+  task-implement's Step 1 validation passing on it; the exit question; a
+  signature-changing fix producing a brief and no task document; the probe
+  directory and its `find` probe; the one-time `.gitignore` commit as the
+  only other commit; the not-reproduced stop; and a stack-trace question
+  invoking no skill. The end-to-end row becomes row 10. Row 7 gains a
+  change-set check for a run with no task document: `change-set.md` with
+  `Mode:`, the five FILE COVERAGE lists matching it, no commit, stash,
+  checkout, add, or reset by the orchestrator besides the `.gitignore`
+  commit, and the expected `Base:` / `Range:`, Commit cells, and Next steps
+  bullet per mode. Pre-flight counts are unchanged.
+- CLAUDE.md and both READMEs describe the diagnosis path, seven skills and
+  commands, and `change-set.md`; the plugin and marketplace manifest
+  descriptions gain bug diagnosis (`plugin.json` says what the skills cover
+  and what the eleven subagents do).
 
 ### Known behavior
 

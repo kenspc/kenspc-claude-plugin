@@ -1223,7 +1223,31 @@ Plan Step 4.4 (rulings M14, M16, D1, D4, D5, D7; clarifications C1, C2). In
 
 ### Task 14: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promoted — T-1's pointer for the mutant rule (the
+  `canonical:run-dir` block holds no mutation rule, so diagnose-bug points
+  at the three-step rule in `regression-verifier.md`'s RUN_DIR bullet) into
+  `CLAUDE.md` § Non-Goals, with the maintenance consequence that moving or
+  changing that rule updates the pointer in `diagnose-bug/SKILL.md` in the
+  same commit; the behavior it gives the skill (experiments on a copy,
+  mutants under the three-step rule) into the `plugins/kenspc/CHANGELOG.md`
+  3.7.0 probe-directory sub-bullet. Needs a home: none. Every other
+  decision in Tasks 1–13 explains a local choice (wording, placement, a
+  helper's form) and stays in its task's notes.
+- Changes/tradeoffs: two documents changed. `CLAUDE.md` § Subagent Review
+  Architecture said the vague-criteria check is the task-document
+  reviewer's Consistency angle; `task-document-reviewer.md` puts it in
+  Completeness, so the sentence now names both angles. The CHANGELOG entry
+  gained a Release checklist bullet (Task 13's rows 1, 7, 9, 10) and a
+  documentation bullet (CLAUDE.md, the READMEs, the manifests). Verified
+  against the implementation with no edit needed: `README.md` (skills row,
+  Commands line), `plugins/kenspc/README.md` (Skills, Commands, Recommended
+  Workflow, Run directory, Known behavior), `docs/roadmap.md` (item and
+  batch B removed, items renumbered 1–8, C kept), and
+  `docs/release-checklist.md` (rows 1, 7, 9, 10, pre-flight counts); the
+  release checklist's effort-override diff passes with the new skill.
 
 Depends on: Task 1-13
 
