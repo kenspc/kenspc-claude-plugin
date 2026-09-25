@@ -9,15 +9,36 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 3.8.0 — unreleased
+## 3.8.0 — 2026-09-26
 
 Batch C. A brief records what its discussion could not settle in a
-`## Open Questions` section; generate-plan stops on an entry marked
-`needs prototype` and asks whether to prototype it first or carry it into
-the plan; a `prototype` skill and its `/kenspc-prototype` command answer one
-such question with a throwaway prototype, committed and removed in the next
-commit, its answer and commit hash written into the brief. A new command, so
-a minor release. No new agent and no CONTEXT key changes.
+`## Open Questions` section, marking an entry a small experiment would
+settle `needs prototype` with the result that would settle it. A
+`prototype` skill and its `/kenspc-prototype` command answer one such
+question with a throwaway prototype — logic, UI, or a feature slice —
+committed alone and removed in the next commit, its answer, evidence, and
+commit hash written into the brief; it has no review phase, stops only at
+its gates, and gives each gate that asks a branch for a session that cannot
+ask. generate-plan stops on a `needs prototype` entry to ask whether to
+prototype it first or carry it into the plan, and takes `open` entries into
+its gap-check; a plan that relies on an answered entry cites its hash. The
+reminder hook names the new skill beside the other brief writers. Known
+behavior covers what surrounds a prototype: the project's gates between its
+two commits, the files left on disk, and its place in history. A new
+command, so a minor release. No new agent, no CONTEXT key changes, and the
+guard counts are unchanged. Release smoke: the batch's acceptance run,
+`docs/dry-runs/batch-c-acceptance.md`, headless on macOS — smoke row 3;
+row 4's exit, its cannot-ask case, and a run after the prototypes; row 10
+with the default location, a CLAUDE.md location, an in-app UI prototype,
+the development database insisted on, and a question with no brief; the
+counter-case on whether the project's vitest and tsc collect prototype
+files (eslint not exercised); and the pre-flight block. Of its two
+findings, the prototype skill's frame, not shown when no gate stopped the
+run, was fixed before this release and its two cases re-run to PASS on the
+released skill text; generate-plan writing the plan without approval in a
+session that cannot ask, a behavior deviation at a stop this release did
+not change, is recorded in the roadmap. No separate smoke run was made for
+the other rows.
 
 ### Added
 

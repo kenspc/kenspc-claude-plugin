@@ -191,7 +191,7 @@ model's default effort — which is re-tuned with each generation — and raise
 it only where the work under-executes or is hard to validate
 ([Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code);
 [Choosing the right effort level in Claude Code](https://academy.claude.com/tutorials/choosing-the-right-effort-level-in-claude-code);
-last reviewed 2026-09-25).
+last reviewed 2026-09-26).
 
 Three files override the session at `xhigh`:
 

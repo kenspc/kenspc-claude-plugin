@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (3.8.0)
+## Next minor (3.9.0)
 
 1. Render Schema A / B / C once, in the final Schema G report, instead of
    again between dispatches in Step 3 (Mac O1).
@@ -215,11 +215,3 @@ its number.
     a saved render to the session scratchpad instead of the location, so
     `git show <add commit>` does not hold the checks its `Evidence:` cites,
     where the skill says "Everything is written under the location".
-
-## Planned batches
-
-In this order. A design session — in the KENSPC Workbench or in Claude Code — provides each batch's spec when work starts.
-
-- **C — prototypes.** Briefs gain Open Questions; generate-plan gets an exit
-  for an unresolved `needs prototype`; a `prototype` skill and
-  `/kenspc-prototype`.

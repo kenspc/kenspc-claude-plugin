@@ -264,7 +264,7 @@ default is re-tuned with each model generation, so the plugin does not
 pin per-generation values (sources: "Choosing a Claude model and effort
 level in Claude Code", claude.com blog, 2026-07-07; "Choosing the right
 effort level in Claude Code", Claude Academy). Guidance last reviewed
-against the Claude 5 generation 2026-09-25 — at each release, confirm
+against the Claude 5 generation 2026-09-26 — at each release, confirm
 the override rationale below still holds (see the release checklist).
 
 The `effort:` frontmatter in each file is authoritative — this prose
