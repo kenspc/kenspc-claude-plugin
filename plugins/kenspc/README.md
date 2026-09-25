@@ -388,7 +388,9 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   the run directory's naming rule, so your test runner does not collect
   them. A pre-commit hook that runs one of those gates can reject the add
   commit; the skill then stops and asks rather than bypass the hook. HEAD
-  after the run holds no prototype.
+  after a run that makes its remove commit holds no prototype; a run that
+  stops between the two commits leaves it in HEAD, and its last message
+  names the add commit and the commands that would remove it.
 - **Leftovers after a prototype.** The remove commit takes out what git
   tracks. Dependencies the prototype installed, its build output, a local
   database file, and other files git does not track — ignored or untracked —
