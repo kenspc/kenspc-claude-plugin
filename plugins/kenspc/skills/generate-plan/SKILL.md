@@ -113,7 +113,11 @@ If it is a brief, take these three parts in order:
    none of `` `open` ``, `` `needs prototype` ``, and `` `answered` `` — a
    hand-edited or translated word, or no word at all: the gap round names
    it as unrecognized, quoting what it found, and asks which status it has,
-   and the entry is then taken as one with that status.
+   and the entry is then taken as one with that status. One the user marks
+   `` `needs prototype` `` gets part 1's question — prototype it first, or
+   carry it into the plan — answered as there. Why: prototyping first or
+   carrying is the user's choice for every `needs prototype` entry, and it
+   is the same choice when the entry's status is learned in the gap round.
    - If gaps exist, ask only about the gaps (one to two rounds maximum),
      then proceed to Phase 2.
    - If no gaps, tell the user the brief covers all key dimensions and
@@ -254,9 +258,11 @@ element is indistinguishable from a forgotten one.
      - Assumed in: <the steps that assume an answer, and what they assume>
   ```
 
-  An entry whose status word Phase 1 did not recognize takes the `open`
-  form, its `From:` naming the word it found:
+  An entry whose status word Phase 1 did not recognize, and to which no
+  status was given in the gap round — as in a session that cannot ask —
+  takes the `open` form, its `From:` naming the word it found:
   `From: <brief path>, entry <n>, status word <the word, or none> not recognized`.
+  One given a status there takes that status's form.
   Why: carrying a question is safe only when the plan says which of its
   steps rest on an assumed answer.
 
