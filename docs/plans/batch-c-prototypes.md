@@ -1103,6 +1103,30 @@ within the locked design.
   round; the batch's remaining budget goes to the acceptance run. The
   one-phrase caveat change in (1) is a wording correction the reviewer
   probed, with no behavior attached. Steps 5.2, 5.3.
+- CL12 — Steps 3.1, 5.2, 5.3, 5.4, refining D17; from the acceptance run's
+  F2 (`docs/dry-runs/batch-c-acceptance.md` § 3), which the main session
+  classified as a plugin defect in this batch's new skill: Phase 1 is done
+  when the frame has gone to the user as a message of its own, sent before
+  the prototype's first file is written whether or not a gate stops the
+  run, naming in this order the question, `Settled by:`, the kind, the
+  location, and the resources — the tracked files an in-app prototype
+  modifies among them — with a gate's question after the frame in the same
+  message when one asks; the frame stays no confirmation (D17 (a)), and
+  Phase 2's input and the Phase 1 → 2 transition rest on that sent message
+  where Step 3.1 and the Standing constraints say "the shown frame". Why:
+  with no conflicting instruction, the two prototype runs no gate stopped
+  (`c-acc-proto-devdb`, `c-acc-proto-ui`) wrote no frame in any text before
+  the first prototype Write, and the in-app run first named the tracked
+  file it modified, `src/routes.ts`, in its final message; the two that
+  stopped at a gate showed the frame with the gate's question. "Shown" did
+  not hold the Phase 1 → 2 transition on the path with no stop, and the
+  frame is the one place the user sees the location and the files before
+  anything is built. Fixed in `2798c6f`: the skill's Phase 1 DONE when,
+  Phase 2 Inputs, and Phase transitions; the plugin README's prototype row
+  (Step 5.2); the CHANGELOG's gates item (Step 5.3); and release-checklist
+  row 10's first criterion (Step 5.4), which names the frame's contents, so
+  a message that only announces the frame fails it. Steps 3.1, 5.2, 5.3,
+  5.4.
 
 ## Open Questions
 
