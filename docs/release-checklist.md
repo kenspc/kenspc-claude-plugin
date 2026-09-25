@@ -199,6 +199,11 @@ Change-set check for row 7, a run with no task document (v3.7.0):
   row. On a clean tree with no upstream, `Range:` is `<HEAD~1>..<HEAD>`, or
   `<empty tree>..<HEAD> (root commit)` when HEAD is the repository's only
   commit.
+- In a project that does not yet ignore `.kenspc/`, on a clean tree: the
+  right end of `Range:` is the HEAD recorded before the invocation, not the
+  one-time `.gitignore` commit, and `.gitignore` is absent from the
+  `Status | Path` table. A set computed after the run-directory preparation
+  would review only that commit.
 
 Row 10 sub-criteria (each is independently mechanically auditable against
 the captured trace):
