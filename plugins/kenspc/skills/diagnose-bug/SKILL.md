@@ -104,8 +104,9 @@ reproduction steps and the reason.
 **Inputs**: BUG; the project's CLAUDE.md, README, and config files, read
 silently first — they name the test framework, its file conventions, and the
 commit conventions; the code the bug runs through. Before writing anything,
-note the untracked files `git status --porcelain` lists (`??`), so the files
-this run creates can be told apart from the user's.
+note the untracked files `git status --porcelain -uall` lists (`??`) — with
+`-uall`, each file rather than its directory — so the files this run
+creates can be told apart from the user's.
 
 **DONE when** either holds:
 
@@ -148,9 +149,13 @@ steps. It is evidence, not the test.
 
 **Not reproduced.** When the bug does not reproduce after trying what BUG
 describes, stop and ask the user for what is missing. First remove the
-reproduction-test files this run created — files git reports as untracked
-(`??`) that were not in the list noted at the start — and nothing else:
-never a tracked file, never anything under `.kenspc/`. Then ask, listing each
+reproduction-test files this run wrote — each path the skill itself created
+as a test, and only while `git status --porcelain -uall -- <path>` still
+reports it untracked (`??`) and the list noted at the start does not hold
+it — and nothing else: never a tracked file, never a file the user added
+during the session, never anything under `.kenspc/`. Why only the paths the
+skill wrote: an untracked file has no copy in git, so removing one the user
+saved while the diagnosis ran would lose it for good. Then ask, listing each
 attempt: the test's path, what it exercised, and what happened. If the
 removal is denied, the question names those files as left in place for the
 user to remove. The run ends with no task document or brief, no commit, and
