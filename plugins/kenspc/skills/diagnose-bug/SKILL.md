@@ -440,6 +440,15 @@ Why a question rather than a suggestion: the handover is the default path,
 and task-implement runs only on an explicit request, which the answer
 "run" is.
 
+**Ending without a document.** When the run ends after the reproduction
+commit but writes no task document or brief — the conflict check's
+"cancel", the user stopping at the task-list confirmation, or a
+hypothesis-loop stop the user does not resume — the last message names that
+commit, says its test fails until a fix lands, and offers
+`git revert <hash>`; the skill does not revert it unasked. Why: the branch
+now carries a failing test with no document that would fix it, and a CI that
+gates on the suite stays red until someone acts.
+
 ## Writing rules for the document
 
 These apply to the task document and to the brief.
