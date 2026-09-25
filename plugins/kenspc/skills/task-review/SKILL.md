@@ -103,7 +103,11 @@ If $ARGUMENTS is empty or contains no file path:
     and the pinned base stays the empty tree even when the run-directory
     preparation's `.gitignore` commit then creates the root commit. Why: a
     fresh project with one commit, or none, is reviewable without
-    CUSTOM_INSTRUCTIONS.
+    CUSTOM_INSTRUCTIONS. In a shallow clone
+    (`git rev-parse --is-shallow-repository` prints `true`), a missing
+    `HEAD~1` is history the clone did not fetch, not a root commit: the empty
+    tree does not stand in, and the run stops and asks the user for a range.
+    Why: there the empty tree would make the whole repository the change set.
   - CUSTOM_INSTRUCTIONS that name commits or a range replace the default:
     mode `commits` with that range, pinned by SHA. Named paths narrow the
     set instead: it keeps the default's mode, base or range, and diff
