@@ -291,7 +291,11 @@ same `<name>` names the tier-3 brief and the run directory's
 `diagnose-<name>` suffix.
 
 **Conflict check**: if a file already exists at the target path, ask the
-user: overwrite, create alongside (with a suffix), or cancel.
+user: overwrite, create alongside (with a suffix), or cancel. In a session
+that cannot ask (a system reminder to work without stopping), create
+alongside with a numeric suffix (`<name>-2.md`) and say so in the final
+message. Why: an overwrite nobody chose can destroy a document the user
+still needs, and a brief is never committed, so an overwritten one is gone.
 
 **Content**, in this order:
 
