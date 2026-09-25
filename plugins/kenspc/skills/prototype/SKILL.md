@@ -382,11 +382,17 @@ grammar in the Writing rules for the brief in
   against, and the script is the record of what to drop.
 - Before the discard touches a path,
   `git -c core.quotePath=false status --porcelain -- <every path the add commit touched>`
-  prints nothing. A path it lists changed after the add commit — an edit
-  made while the run waited for a verdict — and the run stops before the
-  discard, naming that path, and ends with the prototype still in the tree
-  (see the Exit). Why: `git checkout` overwrites an uncommitted edit
-  without a word, and that edit has no copy anywhere else.
+  and
+  `git -c core.quotePath=false diff --name-only <add commit> HEAD -- <every path the add commit touched>`
+  each exit 0 and print nothing. A path either lists changed after the add
+  commit — an edit made while the run waited for a verdict, committed or
+  not — and the run stops before the discard, naming that path, and ends
+  with the prototype still in the tree (see the Exit). A nonzero exit is an
+  error, not an empty list, and stops the run the same way. Why:
+  `git checkout` overwrites an uncommitted edit without a word, and that
+  edit has no copy anywhere else; an edit committed after the add commit
+  shows in no status, and the remove commit would revert it under the
+  prototype's message while the check after it still passes.
 - The remove commit exists — `chore: remove prototype <slug>`, adapted to
   the project's commit conventions, its body carrying `Question:`,
   `Answer:` or `Not settled:`, and `Prototype: <hash>` — as one commit:
@@ -464,9 +470,9 @@ remove commit. When the check before the discard stopped the run, the paths
 it listed are left out of those commands and named apart, as holding an
 edit made after the add commit, and the message tells the user to save or
 commit that edit before removing the path by hand. Why: on such a path
-`git rm` refuses the local modification and `git checkout` overwrites it
-without a word, so a command given for it would fail or destroy the edit the
-check stopped for. When the remove commit is the one rejected, those
+`git rm` refuses a local modification or deletes a committed edit, and
+`git checkout` overwrites the edit without a word, so a command given for it
+would fail or destroy the edit the check stopped for. When the remove commit is the one rejected, those
 commands have already run and the removal is staged: the message says so,
 says a plain `git commit` would carry the removal under another message,
 and gives the `git commit` command the skill ran, which finishes the
