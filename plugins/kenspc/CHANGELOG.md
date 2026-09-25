@@ -37,10 +37,10 @@ a minor release. No new agent and no CONTEXT key changes.
   an attempt that did not settle the question keeps `needs prototype` and
   adds `Evidence:`, with `Prototype:` when a prototype was committed. The
   `## Open Questions` heading, the status words, and the labels stay in
-  English whatever the brief's language. The
-  grammar is written once, in generate-brief's writing rules, and
-  generate-plan and the prototype skill point at it. The status is not a
-  `**Status:**` line, which marks a task document.
+  English whatever the brief's language. The grammar is written once, in
+  generate-brief's writing rules, and generate-plan and the prototype
+  skill point at it. The status is not a `**Status:**` line, which marks a
+  task document.
 - **`prototype` skill and `/kenspc-prototype`.** Answers one question from a
   brief — a `needs prototype` entry named by number, the brief's only one,
   or a question given as text and appended to the brief first — with a
@@ -161,14 +161,15 @@ a minor release. No new agent and no CONTEXT key changes.
   translated, or missing — is a gap too, named as unrecognized and asked
   about (one then marked `needs prototype` gets the exit question), or
   carried in the `open` form with the word in `From:` by a session that
-  cannot ask; and `answered` entries, settled input that a plan relying on one cites by
-  its prototype hash. A brief with no `## Open Questions` section, or with
-  `none`, has nothing to stop on. The plan's Open Questions element gains
-  the carried form — the status word kept, `From: <brief path>, entry <n>`,
-  `Not prototyped:` on a `needs prototype` entry, and `Assumed in:` naming
-  the steps that assume an answer — whose status word and labels stay in
-  English in a plan in another language. The approval gate is unchanged: a
-  session that cannot ask still writes the plan only on approval.
+  cannot ask; and `answered` entries, settled input that a plan relying on
+  one cites by its prototype hash. A brief with no `## Open Questions`
+  section, or with `none`, has nothing to stop on. The plan's Open Questions
+  element gains the carried form — the status word kept,
+  `From: <brief path>, entry <n>`, `Not prototyped:` on a `needs prototype`
+  entry, and `Assumed in:` naming the steps that assume an answer — whose
+  status word and labels stay in English in a plan in another language.
+  The approval gate is unchanged: a session that cannot ask still writes
+  the plan only on approval.
 - **Reminder hook.** `remind-plan-skill.sh`'s brief message names
   prototype (`/kenspc-prototype`), which records a prototype's answer in an
   existing brief, beside generate-brief and diagnose-bug. The hook still
@@ -205,8 +206,8 @@ a minor release. No new agent and no CONTEXT key changes.
   add commit, which stops the run. HEAD after a run that makes its remove
   commit holds no prototype; a run that stops between the two commits
   leaves it in HEAD, and its last message names the add commit and the
-  commands that would remove it. The roadmap item on linters and build tools that walk into `.kenspc/`
-  now names `prototypes/` too.
+  commands that would remove it. The roadmap item on linters and build
+  tools that walk into `.kenspc/` now names `prototypes/` too.
 - **Leftovers after a prototype.** Files git does not track under the
   prototype's location — installed dependencies, build output, a local
   database file — stay after the remove commit, and the final message
