@@ -35,9 +35,10 @@
 # If a future edit renames an anchor in one file but not the others, the
 # planning chain breaks silently — a plan element nobody reads, a Doc-sync
 # task nobody recognizes, a section nobody renders, an open question nobody
-# stops on — while every other check still passes. A byte-identity guard is wrong here (the prose
-# around each anchor differs by design), so this guard asserts only that each
-# label substring is present at least once in every file of its group.
+# stops on — while every other check still passes. A byte-identity guard is
+# wrong here (the prose around each anchor differs by design), so this guard
+# asserts only that each label substring is present at least once in every
+# file of its group.
 # README.md and CLAUDE.md are deliberately outside the guard: prose
 # invariants there are tracked as a separate roadmap item.
 #
