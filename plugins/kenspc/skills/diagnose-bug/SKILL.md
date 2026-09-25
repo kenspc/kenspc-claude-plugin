@@ -158,8 +158,10 @@ skill wrote: an untracked file has no copy in git, so removing one the user
 saved while the diagnosis ran would lose it for good. Then ask, listing each
 attempt: the test's path, what it exercised, and what happened. If the
 removal is denied, the question names those files as left in place for the
-user to remove. The run ends with no task document or brief, no commit, and
-no untracked test file left by the skill. Why: a test that did not reproduce
+user to remove. The run ends with no task document or brief, no commit other
+than the one-time `.gitignore` commit when a reproduction script prepared
+the run directory (Constraints below), and no untracked test file left by
+the skill. Why: a test that did not reproduce
 the bug is not a test; left in the test tree under a collectable name, it
 passes silently in the user's own suite and asserts that the bug is absent.
 
