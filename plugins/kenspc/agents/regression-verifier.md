@@ -167,10 +167,13 @@ VERIFICATION CHECKS
    below, where no test suite exists at all.
 4. Cross-check for regressions: review fix commits with `git log` and `git show`
    — or, when `change-set.md` says `Mode: uncommitted` and code-fixer committed
-   nothing, the working-tree diff of the files the FIXED rows name
-   (`git diff <base> -- <files>`, the base from `change-set.md`); the user's
-   own hunks in those files were the change under review and are not
-   regressions. For each file touched by a fix, verify:
+   nothing, the working-tree diff of the files the FIXED rows name and of
+   every path `git status --porcelain -uall` now lists that `change-set.md`
+   does not, a file the fixes created or changed outside the set
+   (`git diff <base> -- <files>`, the base from `change-set.md`). That diff
+   prints nothing for an untracked (`??`) file, so read an untracked file
+   whole. The user's own hunks in those files were the change under review
+   and are not regressions. For each file touched by a fix, verify:
    - The fix did not introduce a new null/undefined code path.
    - The fix did not change a function's contract in a way that breaks callers.
    - Any new tests added by the fix agent actually test the fix, not unrelated
