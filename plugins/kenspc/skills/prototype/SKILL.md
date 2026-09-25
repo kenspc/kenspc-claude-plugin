@@ -66,18 +66,22 @@ is feature work.
 
 - A project in a git repository. Why: the skill commits the prototype and
   its removal, and the brief records the commit that holds the prototype.
-- A requirement brief (its first line `# Requirement Brief:`). Why: the
-  answer is written where generate-plan reads it, and a brief written only
-  to hold one question would reach generate-plan with every discovery
-  dimension a gap — more than its one-to-two-round gap-check is for.
+- A requirement brief, recognized as generate-plan recognizes one — the
+  test in Phase 1 Step 1 of
+  `${CLAUDE_PLUGIN_ROOT}/skills/generate-plan/SKILL.md`. Why: the answer is
+  written where generate-plan reads it, a file generate-plan read as a
+  brief is where its exit sends the user, and a brief written only to hold
+  one question would reach generate-plan with every discovery dimension a
+  gap — more than its one-to-two-round gap-check is for.
 
 ## Arguments
 
 $ARGUMENTS format: BRIEF [ENTRY]
 
 - BRIEF: the path to a requirement brief. When the first token looks like a
-  file path (starts with `./` or `/`, or ends with `.md`), it is BRIEF and
-  the rest is ENTRY; otherwise the whole input is a question with no brief.
+  file path (starts with `./` or `/`, or ends with `.md` or `.txt`, as
+  generate-plan decides), it is BRIEF and the rest is ENTRY; otherwise the
+  whole input is a question with no brief.
 - ENTRY: optional — a number in the brief's `## Open Questions`, or a
   question's text.
 
