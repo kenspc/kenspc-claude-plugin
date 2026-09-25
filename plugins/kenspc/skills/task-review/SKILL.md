@@ -73,9 +73,14 @@ If $ARGUMENTS is empty or contains no file path:
   change set is the user's work, and the run reads it.
   - `Mode: uncommitted` when `git status --porcelain` lists any path once
     paths under `.kenspc/` are dropped (ignored paths never appear). The set
-    is every listed path — staged, unstaged, and untracked; the base is
-    HEAD's SHA; the diff command is `git diff <sha> -- <paths>`, with
-    untracked files read whole.
+    is every listed path — staged, unstaged, and untracked — read from
+    `git -c core.quotePath=false status --porcelain -uall`: a path git
+    prints in double quotes is recorded without them, and a rename
+    (`R  old -> new`) as its new path. The base is HEAD's SHA; the diff
+    command is `git diff <sha> -- <paths>`, with untracked files read whole.
+    Why the flags: by default an untracked directory is one `?? dir/` row,
+    and a non-ASCII path comes octal-escaped; neither names a file a
+    reviewer can open or a pathspec can match.
   - `Mode: commits` when the tree is clean. The range is
     `<merge-base sha>..<HEAD sha>` when `@{upstream}` resolves and
     `git rev-list <upstream sha>..<HEAD sha>` lists commits, the merge base
@@ -196,7 +201,8 @@ Diff: git diff <sha> -- <paths>
 `HEAD~1`, root commit, or CUSTOM_INSTRUCTIONS. `Diff:` is the diff command
 from the rule above. The
 table lists every path in the set, its status as git prints it (`M`, `A`,
-`D`, `R`, `??`), paths relative to the repository root. Why: the five
+`D`, `R`, `??`), paths relative to the repository root, a rename under its
+new path. Why: the five
 reviewers, code-fixer, and regression-verifier read the set from that path;
 RUN_DIR is the one value the orchestrator already passes, so no key is
 added.
