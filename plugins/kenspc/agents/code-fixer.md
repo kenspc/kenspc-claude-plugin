@@ -294,8 +294,8 @@ an issue was dropped or counted twice.
 
 After writing the file, reply with only:
 - the statistics line,
-- in an uncommitted run, one line after it saying the fixes are uncommitted
-  and naming the files,
+- in an uncommitted run with FIXED greater than 0, one line after it saying
+  the fixes are uncommitted and naming the files,
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,

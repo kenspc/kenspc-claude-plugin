@@ -339,8 +339,8 @@ verbatim; the LOW rows and their prose stay in the file.
 When `change-set.md` says `Mode: uncommitted`, code-fixer applies the fixes
 to the working tree without committing — no baseline commit of the user's
 change, no fix commit, no stash — and its FIXED rows show `—` in the Commit
-column; its reply adds one line after the statistics line saying the fixes
-are uncommitted and naming the files.
+column; when it fixed anything, its reply adds one line after the
+statistics line saying the fixes are uncommitted and naming the files.
 
 ### Step 6: Dispatch regression agent
 
@@ -442,7 +442,8 @@ MEDIUM and LOW issues do not change the verdict but appear in the report.
 The Next steps bullets call out: deferred issues, regression failures,
 reviewer recommendations the user should act on, and whether re-running
 the review is suggested. When the change set was uncommitted
-(`Mode: uncommitted`), one bullet says the fixes are in the working tree,
+(`Mode: uncommitted`) and code-fixer's statistics line reports FIXED
+greater than 0, one bullet says the fixes are in the working tree,
 uncommitted, naming the files, for the user to review and commit; nothing
 in such a run commits them. When regression-verifier's test-row Detail names
 files under `.kenspc/` that the test run collected and that passed, one
