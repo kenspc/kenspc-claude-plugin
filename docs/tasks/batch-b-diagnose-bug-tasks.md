@@ -994,7 +994,29 @@ root:
 
 ### Task 11: Update the READMEs and the manifests
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the replaced "Review scope without a task document" item keeps
+  its title and now carries the change-set definition (read-only
+  computation, the printed mode line, both modes and their defaults, the
+  empty-tree stand-in, the custom-instructions override, SHA pinning); the
+  uncommitted-mode behavior and the red interval are two new items of their
+  own, so each reads alone. The Recommended Workflow diagram gains the bug
+  path as a second line with a tier-3 branch, and a "Bug path." paragraph
+  sits beside the existing "Documentation path." one. The tier-1 criterion
+  replaces the bare "Small fixes can skip all skills" sentence: a fix you
+  can already name that touches one file and needs no new test.
+- Changes/tradeoffs: two sentences outside the task's list were brought in
+  line because they describe the review scope, which the acceptance
+  criteria cover: the plugin README's task-review Skills row ("standalone to
+  review recent changes" now names the change set it computes) and the
+  Agents section's standalone sentence (reviewers without a run directory
+  work out the change set from git themselves). The root README's plugin
+  tagline ("discovery brief, plan before you code, …") and the Design
+  Philosophy's SOP line were left as they are: neither counts skills nor
+  describes the review scope. `plugin.json` keeps `"version": "3.6.0"`, and
+  both manifest diffs change only a description string.
 
 Depends on: Task 1-7
 

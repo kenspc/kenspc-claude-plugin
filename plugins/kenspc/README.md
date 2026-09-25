@@ -13,8 +13,9 @@ Skills activate automatically when Claude Code detects a matching task context.
 | generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
 | generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. |
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with CLAUDE.md). |
+| diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. |
-| task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review recent changes. Accepts custom instructions to narrow scope. |
+| task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
 
 ## Commands
@@ -30,13 +31,14 @@ duplicate them as a competing routing surface.
 | `/kenspc-brief` | `/kenspc-brief <rough idea or topic>` |
 | `/kenspc-plan` | `/kenspc-plan <requirement or path> [custom instructions]` |
 | `/kenspc-task` | `/kenspc-task <plan-document-path> [phase] [custom instructions]` |
+| `/kenspc-diagnose` | `/kenspc-diagnose <observed bug or path to a bug report>` |
 | `/kenspc-task-implement` | `/kenspc-task-implement <path-to-task-file>` |
 | `/kenspc-task-review` | `/kenspc-task-review [path-to-task-file] [custom instructions]` |
 | `/kenspc-guide` | `/kenspc-guide <project-path> [custom instructions]` |
 
 Skills can also be invoked via `/kenspc:generate-brief`, `/kenspc:generate-plan`,
-`/kenspc:generate-task`, `/kenspc:task-implement`, `/kenspc:task-review`, and
-`/kenspc:generate-guide`.
+`/kenspc:generate-task`, `/kenspc:diagnose-bug`, `/kenspc:task-implement`,
+`/kenspc:task-review`, and `/kenspc:generate-guide`.
 
 ## Plugin Structure
 
@@ -79,8 +81,8 @@ the parent slash command instead.
 Each reviewer is read-only on the working tree and writes only under
 `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
 files under `RUN_DIR/scratch/angle-<n>/`.
-Invoked standalone, without a run directory, they reply inline and write
-nothing. Dispatched by `/kenspc-task-review` or `/kenspc-task-implement`,
+Invoked standalone, without a run directory, they reply inline, write
+nothing, and work out the change set from git themselves. Dispatched by `/kenspc-task-review` or `/kenspc-task-implement`,
 which pass `RUN_DIR`, they write only there. The Write tool they carry is for
 those files; they already had Bash. Standalone output keeps the
 v3.4.3 shape (Findings table, Issues table, closing line); the one format
@@ -205,6 +207,8 @@ so the model has room to think and act across its subagents and tool calls
 
 ```
 Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/plans/*.md → /kenspc-task → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
+Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
+                                → docs/briefs/*.md → /kenspc-plan → …   (the fix needs a plan)
 ```
 
 0. **Brief (optional)**: Use `/kenspc-brief` when the idea is too vague to plan directly, or when you need a shareable discovery document before planning. Skip this step if you already have a clear, structured requirement.
@@ -215,7 +219,9 @@ Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/pl
 
 **Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). Because the review's fixes land after the Doc-sync task, a run where both happened ends with a Next steps bullet naming the listed documents to re-check against the fix commits.
 
-Small fixes can skip all skills and be implemented directly.
+**Bug path.** For a bug you have observed — a wrong result, a crash, an error you can trigger — start with `/kenspc-diagnose`. It reproduces the bug with a test that fails on the current code and commits that test first (`test: reproduce <symptom>`), or records the manual steps when no failing-capable test can be written. It then finds the root cause and writes `docs/tasks/<name>.md`: a `## Diagnosis` record, a fix task that turns the reproduction test green, a regression-test task for the adjacent cases it found, and a Doc-sync task when durable documents are affected. You confirm the task list before it is written; the document is committed (`docs: add task <name>`), and the skill asks whether to run `/kenspc-task-implement` on it now or to implement it yourself. When the fix needs a decision a task cannot make — a new dependency, an API contract change, a database schema change, or a configuration change — it writes `docs/briefs/<name>.md` instead and suggests `/kenspc-plan`. A bug report it cannot reproduce ends in a question about what is missing, with no document and no commit; the skill removes the test files it created for the attempt, or, if you deny the removal, names them in the question.
+
+Small fixes can skip all skills and be implemented directly: a fix you can already name that touches one file and needs no new test. Anything more — a bug whose cause is not yet known, or a fix that needs a test — goes through `/kenspc-diagnose`.
 
 ## Run directory
 
@@ -224,6 +230,7 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 
 ```
 .kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
+    change-set.md              # the change set under review (a review without a task document)
     angle-1.md … angle-5.md    # full report from each review angle
     schema-b.md                # code-fixer's full accountability list
     scratch/                   # probe and temporary files, one subdirectory per agent
@@ -266,6 +273,12 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   there that the test runner collects but that passes leaves the test check
   PASS, its Detail names the file, and the final report's Next steps asks
   you to delete it.
+- `/kenspc-diagnose` prepares a run directory of its own,
+  `.kenspc/runs/<YYYYMMDD-HHMMSS>-diagnose-<name>/`, when a hypothesis needs
+  a probe, a copy, or a mutant (with the same one-time `.gitignore` commit).
+  Its probes live in `scratch/orchestrator/`, one numbered subdirectory per
+  attempt, under the naming rules above; the diagnosis never edits your
+  source to test a hypothesis.
 - Runs accumulate: nothing is deleted automatically. Remove old run
   directories when you no longer need them. After upgrading from v3.5.x,
   remove the run directories it left: their probe files can carry
@@ -281,11 +294,38 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 ## Known behavior
 
 - **Review scope without a task document.** With `/kenspc-task-review` and no
-  task document (`REVIEW_SCOPE=changes`), each of the five reviewers works
-  out the change set on its own from `git status`, `git diff`, and recent
-  commits, so the angles can review slightly different sets. A later minor
-  release will have the orchestrator compute the set once and pass it to all
-  five.
+  task document (`REVIEW_SCOPE=changes`), the skill works out the change set
+  once, before anything else runs, using read-only git commands only — no
+  commit, stash, checkout, add, or reset — writes it to `change-set.md` in
+  the run directory, and prints one line with the mode, the base or range,
+  and the file count. The five reviewers, code-fixer, and
+  regression-verifier all work from that one set (new in v3.7.0; before, each
+  reviewer worked out its own). Two modes:
+  - `uncommitted` — the working tree has changes (staged, unstaged, or
+    untracked; paths under `.kenspc/` and ignored paths are left out): the
+    set is those files, against the current HEAD.
+  - `commits` — the tree is clean: the commits between your upstream and
+    HEAD when the branch has an upstream and is ahead of it, otherwise the
+    last commit (`HEAD~1..HEAD`). When a commit these defaults name does not
+    exist — HEAD is the root commit, or there is no commit yet — git's empty
+    tree stands in for it, so a fresh repository is reviewable as it is.
+
+  Name commits, a range, or paths in the custom instructions to review
+  something else. Every commit is pinned by SHA before the run directory is
+  prepared, so its one-time `.gitignore` commit is never part of the set.
+- **Uncommitted fixes.** When the change set is `uncommitted`, code-fixer
+  applies its fixes to your working tree and commits nothing — no baseline
+  commit of your change, no fix commit, no stash. Schema B's FIXED rows show
+  `—` in the Commit column, and the final report's Next steps names the
+  changed files for you to review and commit. With a committed change set,
+  or with a task document, each fix is still its own commit. Before v3.7.0
+  nothing said how to handle an uncommitted change, and a review run has
+  committed one as a base for its fix commits.
+- **Red interval after a diagnosis.** `/kenspc-diagnose` commits the
+  reproduction test before the fix exists, so the test fails — and a CI that
+  gates on the test suite is red — until the fix task lands. That is the
+  true state of the code; the fix task turns the test green, and choosing to
+  implement interactively at the skill's exit lets you fix it at once.
 - **Subagents in interactive sessions.** In an interactive session, Claude
   Code runs subagents asynchronously and hands each result back; the
   workflow still finishes within the same turn, with no further input. The

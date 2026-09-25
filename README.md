@@ -25,11 +25,12 @@ Opinionated software development workflows — discovery brief, plan before you 
 | generate-brief | Structured discovery conversation (five dimensions) producing a shareable requirement brief — no review phase |
 | generate-plan | Collaborative discovery (shared framework, brief-aware) + drafting + automated 4-angle review |
 | generate-task | Plan-to-task decomposition via code analysis + 3-angle review |
+| diagnose-bug | Reproduce-first bug diagnosis with a hypothesis loop, producing a task document for task-implement or a brief for planning — no review phase |
 | task-implement | Automated batch implementation with input validation and auto-review |
 | task-review | Parallel 5-agent code review (MapReduce) with fix consolidation and regression verification |
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |
 
-**Commands:** `/kenspc-brief`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`
+**Commands:** `/kenspc-brief`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-diagnose`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`
 
 See the [plugin README](./plugins/kenspc/README.md) for full documentation, usage examples, and design principles.
 
