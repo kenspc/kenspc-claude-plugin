@@ -277,8 +277,9 @@ document, for tier 3 a brief.
 `${CLAUDE_PLUGIN_ROOT}/skills/generate-brief/SKILL.md`.
 
 **DONE when**:
-- Tier 2: the user has confirmed the task list, and the task document is
-  written and committed alone.
+- Tier 2: the user has confirmed the task list — in a session that cannot
+  ask, the list has been presented and written as presented — and the task
+  document is written and committed alone.
 - Tier 3: the brief is written, and the user has been told its path and the
   `/kenspc-plan <path>` suggestion.
 
