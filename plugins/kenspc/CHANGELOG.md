@@ -218,8 +218,8 @@ a minor release. No new agent and no CONTEXT key changes.
 - **History keeps every prototype.** The remove commit takes the prototype
   out of the tree, not out of history: `git show <hash>` reads it, and
   anything it committed stays there. The hash resolves while the add commit
-  is reachable; after a rebase that drops it, or a squash merge, it
-  resolves only in the clone that made it, until gc. The answer's text
+  is reachable; after a rebase that replays or drops it, or a squash merge,
+  it resolves only in the clone that made it, until gc. The answer's text
   survives in the brief; the remove commit's body survives only while that
   commit is reachable, and a squash merge keeps it only when the squashed
   message keeps the body.
