@@ -219,7 +219,7 @@ Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
 
-**Prototype path.** A brief's `## Open Questions` lists what the discovery conversation could not settle, one numbered entry each, starting with its status: `open` (a decision or information nobody present has), `needs prototype` (a question a small experiment settles, with `Settled by:` naming the result that would settle it), or `answered` (settled by a prototype). On a brief with a `needs prototype` entry, `/kenspc-plan` first asks whether to prototype it or carry it into the plan's Open Questions, where the plan says which of its steps assume an answer; "prototype first" ends the run with a `/kenspc-prototype <brief path> <n>` line and writes no file. `/kenspc-prototype` builds the smallest thing that settles the question — by default under `prototypes/<slug>/` at the repository root — runs it, and commits it (`chore: add prototype <slug>`); it rewrites the entry `answered` with the answer, the evidence, and that commit's hash, then removes the prototype in the next commit (`chore: remove prototype <slug>`, with the question, the answer, and the hash in its body). Read the prototype later with `git show <hash>`. The brief is left uncommitted, as `/kenspc-brief` leaves it. A prototype may use your development database, recognized by name only (`appsettings.Development.json`, `.env.development`, `.env.development.local`, user-secrets, or one your CLAUDE.md or README names): before it adds a table or column there, the skill warns that the development database may be the wrong place and recommends a throwaway database, and it names in the evidence every existing table it wrote rows to. It adds and applies no migration.
+**Prototype path.** A brief's `## Open Questions` lists what the discovery conversation could not settle, one numbered entry each, starting with its status: `open` (a decision or information nobody present has), `needs prototype` (a question a small experiment settles, with `Settled by:` naming the result that would settle it), or `answered` (settled by a prototype). On a brief with a `needs prototype` entry, `/kenspc-plan` first asks whether to prototype it or carry it into the plan's Open Questions, where the plan says which of its steps assume an answer; "prototype first" ends the run with a `/kenspc-prototype <brief path> <n>` line and writes no file. `/kenspc-prototype` builds the smallest thing that settles the question — by default under `prototypes/<slug>/` at the repository root — runs it, and commits it (`chore: add prototype <slug>`); it rewrites the entry `answered` with the answer, the evidence, and that commit's hash, then removes the prototype in the next commit (`chore: remove prototype <slug>`, with the question, the answer, and the hash in its body). Read the prototype later with `git show <hash>`. An entry number that names no entry stops the run, building nothing and leaving the brief unchanged. The brief is left uncommitted, as `/kenspc-brief` leaves it. A prototype may use your development database, recognized by name only (`appsettings.Development.json`, `.env.development`, `.env.development.local`, user-secrets, or one your CLAUDE.md or README names): before it adds a table or column there, the skill warns that the development database may be the wrong place and recommends a throwaway database, and it names in the evidence every existing table it wrote rows to. It adds and applies no migration.
 
 **Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). Because the review's fixes land after the Doc-sync task, a run where both happened ends with a Next steps bullet naming the listed documents to re-check against the fix commits.
 
@@ -391,10 +391,17 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   and edits none of your configuration to exclude it; its file names follow
   the run directory's naming rule, so your test runner does not collect
   them. A pre-commit hook that runs one of those gates can reject the add
-  commit; the skill then stops and asks rather than bypass the hook. HEAD
-  after a run that makes its remove commit holds no prototype; a run that
-  stops between the two commits leaves it in HEAD, and its last message
-  names the add commit and the commands that would remove it.
+  commit; the skill then stops and asks rather than bypass the hook, and
+  names the prototype's paths still staged with `git reset -q -- <paths>`,
+  which unstages them so your next commit does not carry them. HEAD after a
+  run that makes its remove commit holds no prototype; a run that stops
+  between the two commits — a rejected remove commit, whose removal is left
+  staged; a teardown that fails or leaves a table the prototype created; a
+  file the prototype touched that changed after the add commit, such as an
+  edit you made while the run waited for your verdict — leaves it in HEAD,
+  and its last message names the add commit and the commands that would
+  remove it. A file that changed is left out of those commands and named,
+  so you can save that edit before removing the file by hand.
 - **Leftovers after a prototype.** The remove commit takes out what git
   tracks. Dependencies the prototype installed, its build output, a local
   database file, and other files git does not track — ignored or untracked —
@@ -410,12 +417,19 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 - **In-app UI prototypes.** Only a UI prototype that can only render inside
   the app goes into the app. Its location comes from your CLAUDE.md or from
   you; the project's typecheck runs before building as a baseline and again
-  before the add commit, green against that baseline; and the remove commit
-  restores every tracked file the prototype changed. A feature prototype
-  that needs the app's runtime runs from its own location, importing the
-  app's modules, when that lets it run; otherwise it is not built, its
-  entry stays `needs prototype` with the reason, and widening the in-app
-  exception to features is your decision.
+  before the add commit, green against that baseline — a typecheck that
+  cannot run (a missing command, dependencies not installed) is no
+  baseline, and nothing is built; and the remove commit restores every
+  tracked file the prototype changed. A tracked file the prototype must
+  change that holds uncommitted edits of yours is asked about first — go
+  on, commit first, or stop. Going on puts your edits into the add commit,
+  mixed with the prototype's, and the remove commit takes both out of the
+  tree, so your edits then live only in the add commit; the final message
+  names each such file and `git show <add commit>:<path>` to read it. A
+  feature prototype that needs the app's runtime runs from its own
+  location, importing the app's modules, when that lets it run; otherwise
+  it is not built, its entry stays `needs prototype` with the reason, and
+  widening the in-app exception to features is your decision.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

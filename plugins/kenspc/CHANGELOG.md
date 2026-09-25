@@ -35,8 +35,9 @@ a minor release. No new agent and no CONTEXT key changes.
   could have shown the opposite), and
   ``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``;
   an attempt that did not settle the question keeps `needs prototype` and
-  adds `Evidence:`, with `Prototype:` when a prototype was committed. Status
-  words and labels stay in English whatever the brief's language. The
+  adds `Evidence:`, with `Prototype:` when a prototype was committed. The
+  `## Open Questions` heading, the status words, and the labels stay in
+  English whatever the brief's language. The
   grammar is written once, in generate-brief's writing rules, and
   generate-plan and the prototype skill point at it. The status is not a
   `**Status:**` line, which marks a task document.
@@ -48,8 +49,10 @@ a minor release. No new agent and no CONTEXT key changes.
   discarded, and its answer is reviewed where a plan uses it. The command
   carries `disable-model-invocation: true`; the skill routes by its
   description, which names what it is not for (a feature to keep, running a
-  snippet, fixing a bug). A question with no brief stops with a
-  `/kenspc-brief` suggestion and builds nothing.
+  snippet, fixing a bug). A question with no brief — or a path that names
+  no file, or a file that is not a brief — stops with a `/kenspc-brief`
+  suggestion and builds nothing; an entry number that names no entry stops
+  with the brief unchanged.
   - **The gates.** No general confirmation: the skill shows its frame (the
     question, `Settled by:`, the kind, the location, the resources) and
     goes on, stopping only at a gate — no arguments; several
@@ -75,11 +78,15 @@ a minor release. No new agent and no CONTEXT key changes.
     `git diff <add commit>^ HEAD` over those paths printing nothing. Both
     subjects follow the project's commit conventions. The brief is not
     committed. A failed commit stops the run with no retry and no
-    `--no-verify`; a run that stops between the two commits names the add
-    commit and gives the commands that would remove it, without running
-    them. A path that changed after the add commit is left out of those
-    commands and named, so its edit can be saved before it is removed by
-    hand.
+    `--no-verify`; a rejected add commit leaves the prototype's paths
+    staged, and the report names them with `git reset -q --`, which
+    unstages them. A run that stops between the two commits — a rejected
+    remove commit, whose removal is left staged; a teardown that fails or
+    leaves a table it created; a path that changed after the add commit —
+    names the add commit and gives the commands that would remove it,
+    without running them. A path that changed after the add commit is left
+    out of those commands and named, so its edit can be saved before it is
+    removed by hand.
   - **Where it lives.** `prototypes/<slug>/` at the repository root unless
     the project's CLAUDE.md names another location; its file names follow
     the naming rule of the `canonical:run-dir` block's Scratch space bullet,
@@ -88,9 +95,13 @@ a minor release. No new agent and no CONTEXT key changes.
     Dependencies go into the prototype's own manifest.
   - **The in-app exception, UI only.** A UI prototype that can only render
     inside the app goes into it, at a location from CLAUDE.md or the user;
-    the project's typecheck runs before building as a baseline and is
-    green against it before the add commit, and the remove commit restores
-    every tracked file the add commit modified. A feature prototype that
+    the project's typecheck runs before building as a baseline — one that
+    cannot run is no baseline, and nothing is built — and is green against
+    it before the add commit, and the remove commit restores every tracked
+    file the add commit modified. Going on with a tracked file that holds
+    uncommitted changes carries them into the add commit, and after the
+    remove commit they live only there; the final message names each such
+    file with `git show <add commit>:<path>`. A feature prototype that
     needs the app's runtime runs from its location, importing the app's
     modules, or is not built, its entry left `needs prototype` with the
     reason; widening the exception to features is the user's decision.
@@ -106,7 +117,8 @@ a minor release. No new agent and no CONTEXT key changes.
     no warning and no teardown, and `Evidence:` names each such table. No
     migration is added or applied, with any tool. Credentials and
     connection strings are read by name at run time and never committed;
-    the staged diff is read for one before the add commit.
+    the staged diff is read for one before the add commit, and a file kept
+    out for holding one stays on disk, marked in the leftovers list.
   - **What is left on disk.** The final message lists what
     `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
     still shows — installed dependencies, build output, a local database
@@ -169,10 +181,11 @@ a minor release. No new agent and no CONTEXT key changes.
   `/kenspc-prototype`: the frame, the add commit holding only the
   prototype's paths, the answered entry, the remove commit and its body,
   `git diff <HEAD before the run> HEAD` printing nothing, the uncommitted
-  brief, the leftovers list, the exit suggestion, a question with no
-  brief, the development-database cases, the in-app UI case, the
-  feature-slice case, and two requests that invoke no prototype skill. The
-  end-to-end row becomes row 11. Pre-flight counts are unchanged.
+  brief, the leftovers list, the exit suggestion, what a run that stops
+  says, a question with no brief, the development-database cases, the
+  in-app UI case, the feature-slice case, and two requests that invoke no
+  prototype skill. The end-to-end row becomes row 11. Pre-flight counts are
+  unchanged.
 - CLAUDE.md and both READMEs describe the prototype skill and the
   prototype path, and count eight skills and commands; the plugin and
   marketplace manifest descriptions gain prototyping. CLAUDE.md's writing
