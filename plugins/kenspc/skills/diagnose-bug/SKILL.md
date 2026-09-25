@@ -104,9 +104,10 @@ reproduction steps and the reason.
 **Inputs**: BUG; the project's CLAUDE.md, README, and config files, read
 silently first — they name the test framework, its file conventions, and the
 commit conventions; the code the bug runs through. Before writing anything,
-note the untracked files `git status --porcelain -uall` lists (`??`) — with
-`-uall`, each file rather than its directory — so the files this run
-creates can be told apart from the user's.
+note what `git status --porcelain -uall` lists: the untracked files (`??`) —
+with `-uall`, each file rather than its directory — so the files this run
+creates can be told apart from the user's, and the tracked files with
+uncommitted changes, so the exit can say when the fix touches one.
 
 **DONE when** either holds:
 
@@ -435,6 +436,12 @@ implement interactively.
 For a manual reproduction, the exit message says Task 1 cannot be verified
 unattended: the implementer records the manual-steps criterion as not
 verified, and the user runs the steps after the run.
+
+When Fix scope includes a file that had uncommitted changes at the start,
+the exit says so before the question and recommends committing or stashing
+those changes first, or implementing interactively. Why: `task-implementer`
+commits the files a task changes, so the user's uncommitted changes in such
+a file would land in Task 1's commit under its message.
 
 Why a question rather than a suggestion: the handover is the default path,
 and task-implement runs only on an explicit request, which the answer
