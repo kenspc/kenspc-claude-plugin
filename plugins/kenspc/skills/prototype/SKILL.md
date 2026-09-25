@@ -305,8 +305,12 @@ user has staged out of the commit.
   Passing: no staged file holds a value read from configuration. It fails
   on a `.env` file, a copied `appsettings.*.json`, or a connection string or
   key written into the prototype's source; such a file or line is taken out
-  before the commit. Why: history keeps every prototype, so the look at the
-  diff the skill staged itself is the last point a secret can be kept out.
+  before the commit. A file taken out stays on disk under the location, so
+  the exit's leftovers list marks it as holding a configuration value.
+  Why: history keeps every prototype, so the look at the diff the skill
+  staged itself is the last point a secret can be kept out, and a file left
+  behind unmarked looks like any other leftover until a later `git add -A`
+  commits it.
 - A commit that fails — a commit hook rejects it, or git refuses the
   pathspec — stops the run: report the error and ask the user how to go on.
   Do not retry, and do not bypass the hook with `--no-verify`. In a session
