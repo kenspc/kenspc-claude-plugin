@@ -270,7 +270,26 @@ check stay as they are:
 
 ### Task 2: Add the Open Questions exit to generate-plan
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: kept the existing gap-check bullets verbatim, re-indented as
+  sub-bullets of part 2, so the five-dimension gap-check and its
+  one-to-two-round limit read unchanged; the `open`-entry rule sits in the
+  part's lead-in and its cannot-ask branch after the bullets, so the branch
+  covers both the gaps-exist and no-gaps paths. The writing-rules Why for
+  the carried entry's anchors names what reads them (a later
+  `/kenspc-prototype` run finds the entry by its status word; `From:` names
+  the brief it writes to), since the task gave the rule without a Why.
+- Changes/tradeoffs: the carried-form Why is written as a plain `Why:`
+  after the Markdown block rather than "Why `Assumed in:`:". Verified: the
+  joined-line cannot-ask count is 2 (0 on HEAD before the edit, so the
+  check can fail); pointer-label and `MUST|NEVER|CRITICAL` greps print
+  nothing; `needs prototype` count 4; diff hunks are only the brief branch,
+  the Open Questions element, and the writing rules (`effort: xhigh`,
+  Phase 2 Step 3, and Phase 3 untouched); `check-no-model-names.sh`,
+  `check-all.sh` (`guards run: 10`), and `claude plugin validate --strict
+  ./plugins/kenspc` exit 0.
 
 Depends on: Task 1
 

@@ -88,13 +88,42 @@ a Discovery brief produced by the generate-brief skill:
 - The file contains the structured sections Outcome, Scope, Failure Modes,
   The Hard Part, Context.
 
-If it is a brief:
-- Gap-check the brief against the five dimensions in the discovery framework
-  (loaded in Step 3).
-- If gaps exist, ask only about the gaps (one to two rounds maximum), then
-  proceed to Phase 2.
-- If no gaps, tell the user the brief covers all key dimensions and proceed
-  directly to Phase 2 — Step 4 is skipped.
+If it is a brief, take these three parts in order:
+
+1. **Open questions to prototype.** Read the brief's `## Open Questions`
+   (its grammar is in `${CLAUDE_PLUGIN_ROOT}/skills/generate-brief/SKILL.md`,
+   Writing rules for the brief). When it lists an entry whose status is
+   `` `needs prototype` ``, stop before any gap-check question and ask one
+   question listing each such entry: prototype it first, or carry it into
+   the plan. An entry the user sends to prototyping ends the run with one
+   line per entry, `/kenspc-prototype <brief path> <n>`; the skill invokes
+   nothing and writes no file. Carried entries go into the plan's Open
+   Questions element in the carried form (Phase 2 Step 1). In a session
+   that cannot ask (a system reminder to work without stopping), every such
+   entry is carried, with `Not prototyped: the session could not ask`.
+   Why: a prototype changes the brief the gap-check reads, and a plan built
+   on a question an experiment could settle builds on a guess unless it
+   says so. A brief with no `## Open Questions` section, or with the body
+   `none`, has nothing to stop on.
+2. **Gap-check.** Gap-check the brief against the five dimensions in the
+   discovery framework (loaded in Step 3). Each of the brief's
+   `` `open` `` entries is a gap too, for the same rounds; one the rounds do
+   not settle is carried into the plan's Open Questions in the carried
+   form, without `Not prototyped:`.
+   - If gaps exist, ask only about the gaps (one to two rounds maximum),
+     then proceed to Phase 2.
+   - If no gaps, tell the user the brief covers all key dimensions and
+     proceed directly to Phase 2 — Step 4 is skipped.
+
+   In a session that cannot ask (a system reminder to work without
+   stopping), no `open` entry enters the gap rounds: each is carried
+   straight in, in the same form (`From:` and `Assumed in:`, no
+   `Not prototyped:`). Why: an `open` entry is an explicit gap the brief
+   recorded, and a plan that drops it loses the question without a trace.
+3. **Answered entries.** An `` `answered` `` entry is settled input; a plan
+   that relies on one cites its prototype hash where it does. Why: the
+   brief is a discovery artifact and may be deleted; the hash in the plan
+   keeps the evidence reachable.
 
 If it is not a brief, continue with the normal Discovery flow.
 
@@ -202,7 +231,23 @@ element is indistinguishable from a forgotten one.
 - **Testing Strategy** — if applicable.
 - **Deployment Strategy** — if applicable.
 - **Risks and Mitigations** — known risks with concrete mitigation plans.
-- **Open Questions** — anything unresolved that needs future decision.
+- **Open Questions** — anything unresolved that needs future decision. An
+  entry carried from a brief (Phase 1 Step 1) takes this form — a
+  `` `needs prototype` `` entry with `From:`, `Not prototyped:`, and
+  `Assumed in:`; an `` `open` `` entry with `From:` and `Assumed in:` only:
+
+  ```markdown
+  1. `needs prototype` — <question>
+     - From: <brief path>, entry <n>
+     - Not prototyped: <the user chose to carry it | the session could not ask>
+     - Assumed in: <the steps that assume an answer, and what they assume>
+  2. `open` — <question>
+     - From: <brief path>, entry <n>
+     - Assumed in: <the steps that assume an answer, and what they assume>
+  ```
+
+  Why: carrying a question is safe only when the plan says which of its
+  steps rest on an assumed answer.
 
 #### Writing rules for the plan
 
@@ -211,6 +256,12 @@ element is indistinguishable from a forgotten one.
   the `N/A —` prefix of its not-applicable line stay exactly as written. Why:
   generate-task and `task-document-reviewer` find the element by that heading
   and tell the N/A form by that prefix.
+- A carried Open Questions entry's status word (`` `open` ``,
+  `` `needs prototype` ``) and its labels (`From:`, `Not prototyped:`,
+  `Assumed in:`) stay as written in a plan in another language, as the
+  `## Documentation impact` heading does. Why: the status word keeps the
+  question findable for a later `/kenspc-prototype` run, and `From:` names
+  the brief where that run writes its answer.
 - Be specific and actionable. Every step must be concrete enough for a
   developer (or Claude Code) to execute without guessing intent.
 - Avoid vague language: do not use "as appropriate", "if needed", "consider
