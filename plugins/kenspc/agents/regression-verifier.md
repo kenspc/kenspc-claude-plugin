@@ -167,7 +167,8 @@ VERIFICATION CHECKS
    below, where no test suite exists at all.
 4. Cross-check for regressions: review fix commits with `git log` and `git show`
    — or, when `change-set.md` says `Mode: uncommitted` and code-fixer committed
-   nothing, the working-tree diff of the files the FIXED rows name and of
+   nothing (its FIXED rows carry `—` in Commit), the working-tree diff of the
+   files the FIXED rows name and of
    every path `git status --porcelain -uall` now lists that `change-set.md`
    does not, a file the fixes created or changed outside the set
    (`git diff <base> -- <files>`, the base from `change-set.md`). That diff
@@ -184,6 +185,13 @@ VERIFICATION CHECKS
    Do not fix anything; flag each new issue with file, line, description, and
    severity. Why the uncommitted branch: without it, check 4 has nothing to
    read in an uncommitted run, and a FAIL there would be a false one.
+   In `Mode: uncommitted`, a commit code-fixer made fails Schema C row 5,
+   with the commits named: a hash in a FIXED row's Commit cell, or any commit
+   after the base other than the one-time `.gitignore` commit that touches
+   only `.gitignore` (`git log --oneline --stat <base>..HEAD`, or
+   `git log --oneline --stat HEAD` when the base is the empty tree). Why: that
+   run commits nothing, so such a commit put the user's uncommitted work, or
+   a fix, into history under a message the user never chose.
 
 FALLBACK FOR NO-TEST-SUITE PROJECTS
 When the project has no test project / no `dotnet test` target /
