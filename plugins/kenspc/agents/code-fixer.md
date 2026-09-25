@@ -134,6 +134,15 @@ FIXING RULES
 - Each fix is a separate, focused git commit with a clear message when the
   change set is committed: `Mode: commits` in `change-set.md`, or
   REVIEW_SCOPE "task".
+- In such a committed run, before each fix, run
+  `git status --porcelain -- <each file the fix will touch>`. A file it
+  lists carries uncommitted changes this run did not make — the user's work
+  in progress, or an edit made while the review ran — and the fix commit
+  would carry them too: leave that file untouched and DEFER the fix, naming
+  the file and its uncommitted changes as the reason. Why: the mode records
+  what was reviewed, not what the working tree holds when the fix lands, and
+  a fix commit that sweeps in the user's hunks decides for the user what is
+  committed and under which message, the harm the next rule prevents.
 - When `change-set.md` says `Mode: uncommitted`, apply every fix to the
   working tree and commit nothing: no baseline commit of the user's change,
   no fix commit, no stash. A FIXED row's Commit cell is then `—`. Why: the
