@@ -125,6 +125,12 @@ a location or a question to answer.
   final message. With none, ask for the question, as with no arguments. In
   a session that cannot ask (a system reminder to work without stopping),
   stop; nothing is built.
+- An ENTRY that is a bare number is an entry number, never question text.
+  One that names no entry — past the last, or in a brief whose section is
+  `none` or missing — stops the run: say so, list the brief's entries, and
+  leave the brief unchanged. Why: a number appended as a question would add
+  an entry nobody asked for, and taking another entry would answer a
+  question the user did not name.
 - A named `` `answered` `` entry: ask whether to prototype it again. In a
   session that cannot ask (a system reminder to work without stopping),
   stop and leave the entry unchanged: the rewrite in Phase 3 for a run in
