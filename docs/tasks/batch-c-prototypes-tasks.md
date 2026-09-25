@@ -368,7 +368,43 @@ approval gate, and Phase 3 stay as they are:
 
 ### Task 3: Write the prototype skill
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each gate that asks states its cannot-ask branch in prose with
+  the full "In a session that cannot ask (a system reminder to work without
+  stopping)" phrase (11 occurrences once line breaks are joined), and the
+  gate table repeats the outcomes as a summary, because a table cell cannot
+  carry the phrase as a sentence opening. The entry grammar and the
+  run-dir naming rule are pointed at by path and markers; the only piece of
+  the grammar written into the skill is the Prototype line, which the
+  acceptance criteria require byte-identical. The discard's restore step is
+  spelled `git checkout <add commit>^ -- <path>` (stages and writes the
+  parent's content in one command, available in every git version) rather
+  than `git restore --source`.
+- Changes/tradeoffs: elaborations beyond the task text, each closing a case
+  the task leaves undefined: (1) Arguments say how BRIEF is told from
+  question text (first token looks like a path: starts with `./` or `/`,
+  or ends with `.md`, as diagnose-bug decides), and a path that names no
+  file or a file that is not a brief takes the no-brief stop; (2) a brief
+  with no `needs prototype` entry and no ENTRY asks for the question, as
+  with no arguments, with its own cannot-ask stop; (3) a question appended
+  to a brief replaces a body of `none` and a missing section is created
+  after `## Context`, where the template places it; (4) Phase 1 carries a
+  one-line Constraints (it writes nothing but that appended entry); (5) the
+  staged-diff read is written in rubric form (passing, then the named
+  failures: a `.env`, a copied `appsettings.*.json`, an inlined connection
+  string or key); (6) the still-in-the-tree ending names concrete commands
+  (`git rm -- <paths added>`, `git checkout <add commit>^ -- <paths
+  modified>`). Several Whys the task does not give were added so every rule
+  is rationale-anchored. Verified: pointer-label and `MUST|NEVER|CRITICAL`
+  greps print nothing; `__tests__|__mocks__|check-ignore` count 0 (4 on
+  `task-review/SKILL.md`, so the grep can hit); `needs prototype` count 9;
+  the Prototype line matches byte for byte; `check-no-model-names.sh`,
+  `check-all.sh` (`guards run: 10`), and `claude plugin validate --strict
+  ./plugins/kenspc` exit 0 — and the validator, run on a scratch copy with
+  the new skill's frontmatter broken, fails with a YAML parse error, so its
+  pass here is meaningful.
 
 Depends on: Task 1
 
