@@ -348,16 +348,24 @@ files in Fix scope. Acceptance criteria:
   (30 when 1 in 10 failed), since one pass of a test that fails one run in
   ten shows nothing about the fix;
 - the project's full test suite, its build, and its lint pass;
-- no file outside Fix scope is modified (the task document's status update
-  aside).
+- no file outside Fix scope is modified, other than test files — tests for
+  the code the fix adds, in new files or beside the reproduction test — and
+  the task document's status update; the reproduction test's existing
+  assertions are unchanged.
+
+Why the test-file allowance: `task-implementer` writes tests for each new
+function and stops on a file outside a task's stated scope, so a scope with
+no room for tests would block a correct fix; keeping the reproduction
+test's assertions as they are stops that room from weakening the test the
+fix has to pass.
 
 For a manual reproduction, the criteria read instead: the build and lint
 pass; the manual reproduction steps in `## Diagnosis` no longer show the
 symptom — verified by the user after the run, and recorded by the
 implementer as not verified in the task's `**Implementation notes:**`
-block; no file outside Fix scope is modified. Why: `task-implementer` cannot
-run manual steps, and a DONE that claimed them would be partial completion
-marked done.
+block; no file outside Fix scope is modified, other than test files for the
+code the fix adds. Why: `task-implementer` cannot run manual steps, and a
+DONE that claimed them would be partial completion marked done.
 
 **Task 2 — regression tests.** `### Task 2: Regression tests for <adjacent
 cases>` with `**Status:** TODO` and `Depends on: Task 1`: one test per
