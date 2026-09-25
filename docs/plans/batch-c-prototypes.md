@@ -961,7 +961,109 @@ and the answered question is removed from that section. The prefix is `CL`,
 not `C`, so a clarification cannot be read as one of the locked points C-1
 to C-8.
 
-None yet.
+Rulings of 2026-09-25, after the `/kenspc-task-implement` run over
+`docs/tasks/batch-c-prototypes-tasks.md` (implementation `2f52600..9f70db6`,
+review fixes `2a3f5d8..48e65d1`, verdict FAIL on two LOW rows). CL1–CL7
+answer the seven questions the implementing session raised in `17ef8e9`;
+CL8 and CL9 settle the rest of its Schema G. All decided by the main session
+within the locked design.
+
+- CL1 — Step 3.1, amending M10 (question 1; E7, B8): the leftovers command
+  is `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`.
+  With `--ignored=matching`, a directory that itself matches an ignore
+  pattern (`node_modules/`, `bin/`, `obj/`) is reported once, while
+  untracked files stay listed one by one, so the start-of-run comparison
+  that keeps the user's own files out of the list (the B9 fix) still works
+  per file. A directory of which every file is listed as untracked, none of
+  them on the start-of-run list, is named once with its file count. M10's
+  "every path" reads "covers every path". The skill's Exit, the README's
+  leftovers item, the CHANGELOG's leftovers bullet, and release-checklist
+  row 10 change together, in one commit. Why: a list that runs to thousands
+  of lines after an `npm install` is cut short or unread, so it no longer
+  names what is left. Checked on a scratch repository: `--ignored -uall`
+  listed every file under an ignored `node_modules/`, `--ignored=matching
+  -uall` listed it as one line and kept untracked files individual. Steps
+  3.1, 5.2, 5.3, 5.4.
+- CL2 — Step 3.1 (question 2): the flag `-c core.quotePath=false` is
+  accepted; the CHANGELOG and release-checklist row 10 quote the command as
+  CL1 gives it. Why: the Phase 1 status command already carries the flag, and
+  an octal-escaped non-ASCII path in the leftovers list cannot be pasted
+  back into a command. Steps 3.1, 5.3, 5.4.
+- CL3 — Step 2.1, adding to D1 and D2 (question 3; E9): option (a). An entry
+  whose status word is none of `` `open` ``, `` `needs prototype` ``, and
+  `` `answered` `` — a hand-edited or translated word, or no word at all —
+  is a gap: the gap round names it as unrecognized, quoting what it found,
+  and asks which status it has. In a session that cannot ask (a system
+  reminder to work without stopping), it is carried in the `open` carried
+  form (`From:` and `Assumed in:`), with `From:` naming the unrecognized
+  word. Why: C-2's purpose is that no question a brief records leaves the
+  plan without a trace, and D1's rejection of "an unmarked entry means
+  `open`" concerned the brief's grammar, not a reader that asks about an
+  entry it cannot read. Step 2.1, and the CHANGELOG line that describes the
+  gap-check.
+- CL4 — Step 1.1 (question 4; B10): yes. The Phase 1 Constraints bullet that
+  asks what would settle a `needs prototype` question gains the standard
+  cannot-ask clause, whatever the Discovery Mode: in a session that cannot
+  ask (a system reminder to work without stopping), `Settled by:` is inferred
+  and tagged as `rapid-inferred (reminder-driven)` tags every inferred field.
+  The mode table itself is unchanged. Why: every question the batch adds has
+  a cannot-ask branch (Standing constraints), and `rapid-direct`'s "one or
+  two rounds regardless of reminder" predates this question. Step 1.1.
+- CL5 — Steps 5.2, 5.3 (question 5; E8): yes, as a caveat in the documents
+  only. One sentence in the README's "Prototypes live in history" item and
+  one in the CHANGELOG's Known behavior: the hash resolves while the add
+  commit is reachable; after a rebase that drops it or a squash merge, it
+  resolves only in the clone that made it, until gc, and the answer's text
+  survives in the brief and in the remove commit's body. The skill's
+  overview is unchanged. Why: the skill takes no branch, rebase, or tag
+  step, so the risk is in what the user does afterwards, and the README is
+  where the user reads what a prototype leaves in history. Steps 5.2, 5.3.
+- CL6 — Step 5.4 (question 6; T2–T7): none of the six joins a smoke row in
+  this batch. The one-time acceptance exercises the cases the Testing
+  Strategy lists; the six proposals are recorded as one new item under
+  `## Next minor (3.8.0)` in `docs/roadmap.md` (the heading is retitled by
+  the release commit, M11), each case in one line with its row, for the
+  maintainer to decide. Why: each case costs a headless run at every
+  release, a release-scope decision the rulings do not make. Step 5.3
+  (roadmap), no change to Step 5.4.
+- CL7 — Step 4.2 (question 7; T8): not in this batch. A guard for the copied
+  Prototype line is recorded as one roadmap item beside CL6's. CLAUDE.md's
+  Non-Goals sentence that no guard checks the copy stays true and stays. Why:
+  the line is read by people and by the release checklist, not parsed by a
+  skill, and D13 settled the guard's scope for this batch. Step 5.3
+  (roadmap).
+- CL8 — Steps 3.1, 5.2–5.4, the two FAIL rows and the documents after the
+  fixes: (i) B13 — `plugins/kenspc/CHANGELOG.md`'s 3.8.0 Known behavior item
+  "Gates between the two commits" takes the README's conditional wording
+  from `48e65d1`. (ii) The `f809cee` regression — when the pre-discard check
+  stops the run because a path the add commit touched changed afterwards,
+  the "Ending with the prototype still in the tree" commands leave those
+  paths out of `git rm` and `git checkout <add commit>^ --` and name them,
+  telling the user to save or commit those edits before removing them by
+  hand. (iii) The six Doc-sync documents are re-checked against the fix
+  commits `2a3f5d8..48e65d1` and brought in line: the CHANGELOG says the
+  `## Open Questions` heading stays in English too; the README's in-app UI
+  item says what going on with a dirty tracked file does to the user's
+  uncommitted edits, as the skill states it since `ff07cc8`; release-checklist row 10 states
+  the conditional next-step rule and CL1's command; the README, the
+  CHANGELOG, and row 10, where each describes the skill's stops or its
+  leftovers list, name the four stops the fixes added (an entry number that
+  names no entry, a typecheck baseline that did not run, a failed teardown,
+  a path changed before the discard) and the exclusion of the user's own
+  files. Steps 3.1, 5.2, 5.3, 5.4.
+- CL9 — Step 3.1, the six places the prototype skill goes beyond the
+  spec's text (Schema G, Post-implementation notes): all six are accepted —
+  a first token that looks like a path is read as BRIEF, as diagnose-bug
+  reads its argument; a path that names no file, or a file that is not a
+  brief, takes the no-brief stop; a brief with no `needs prototype` entry
+  and no named question asks for the question, and a session that cannot
+  ask stops; an appended question replaces a body of `none`, and a missing
+  section is created after `## Context`, the template's order; Phase 1's
+  Constraints bullet; the staged-diff check in rubric form, with the
+  concrete `git rm` / `git checkout` commands. Phase 1's Constraints bullet
+  names both things Phase 1 writes: the appended entry and, since `d05d762`,
+  a derived `Settled by:` line. Why: each follows a precedent in diagnose-bug
+  or the brief template, and none reopens a ruling. Step 3.1.
 
 ## Open Questions
 
@@ -973,96 +1075,3 @@ rather than resolving it locally: it appends the question under a
 commits nothing else, and waits; the spec author answers under
 [Clarifications during implementation](#clarifications-during-implementation)
 and the session continues from the updated document.
-
-## Questions for the spec author
-
-Raised by the implementing session after the `/kenspc-task-implement` run
-over `docs/tasks/batch-c-prototypes-tasks.md` (implementation 2f52600..9f70db6,
-review fixes up to 48e65d1). No task was BLOCKED; each question below comes
-from a review finding that code-fixer deferred because fixing it would read
-a ruling one way or add scope the rulings do not give. The finding IDs point
-into the run directory
-`.kenspc/runs/20260925-225154-batch-c-prototypes-tasks/` (`angle-<n>.md`,
-`schema-b.md`).
-
-1. **The leftovers list and `node_modules` (M10; E7, B8).** M10 has the exit
-   name every path `git status --porcelain --ignored -uall -- <location>`
-   still lists. With `-uall`, an ignored `node_modules/` under the location
-   is listed file by file, so after an `npm install` the final message runs
-   to thousands of lines. May the exit name a directory whose every file is
-   listed once, with its file count (for example `prototypes/q/node_modules/
-   (2,314 files)`), reading "every path" as "covers every path"? If yes, the
-   skill's Exit, the README's Leftovers item, the CHANGELOG's leftovers
-   bullet, and release-checklist row 10 change together in one commit.
-   Steps 3.1, 5.2, 5.3, 5.4.
-
-2. **The leftovers command's `-c core.quotePath=false` (M10; Q2).** A review
-   fix (2a9a5f2) made the skill's command
-   `git -c core.quotePath=false status --porcelain --ignored -uall -- <location>`
-   so a non-ASCII path is listed unescaped, matching the Phase 1 status
-   command. Step 3.1, the CHANGELOG, and release-checklist row 10 quote the
-   form without the flag. Is the flag accepted — and if so, do the CHANGELOG
-   and row 10 follow it? Steps 3.1, 5.3, 5.4.
-
-3. **A status word that is none of the three (D1, D2; E9).** D2 has
-   generate-plan read only the status word. An entry whose word was
-   hand-edited or translated (for example `` `需要原型` ``) is then neither
-   stopped on nor gap-checked nor carried, and the question leaves the plan
-   without a trace. Options: (a) the gap rounds name such an entry as
-   unreadable and ask which status it has; a session that cannot ask carries
-   it as `open`, with `Assumed in:` and a note that its status word was not
-   recognized; (b) no rule — the reading side stays as written. Step 2.1.
-
-4. **The `Settled by:` question in `rapid-direct` mode (Step 1.1; B10).**
-   Step 1.1 gives the Phase 1 Constraints bullet one no-ask branch, for
-   `rapid-inferred (reminder-driven)`. generate-brief's `rapid-direct` mode
-   asks its one or two rounds regardless of a reminder, so a clearly stated
-   idea run under a work-without-stopping reminder asks what would settle a
-   `needs prototype` question and waits. Should the bullet gain the standard
-   cannot-ask clause (infer the result and tag it), whatever the mode?
-   Step 1.1.
-
-5. **A cited hash after a rebase or squash merge (C-5; E8).** A
-   `git pull --rebase` over unpushed commits, a branch rebase, or a squash
-   merge takes the add commit off every branch; the hash in the brief and
-   the plan then resolves only in the clone that made it, until gc. The
-   skill takes no branch, rebase, or tag step, so the only remedy is a
-   caveat. Should one be added — one sentence in the README's "Prototypes
-   live in history" item and in the CHANGELOG's Known behavior, and
-   optionally in the skill's overview? Steps 3.1, 5.2, 5.3.
-
-6. **Release smoke scope beyond Step 5.4 (T2–T7).** The Testing Strategy
-   puts these cases in the one-time acceptance; the review asked for them in
-   the release checklist, where each costs a headless run every release.
-   Which, if any, join the smoke rows?
-   - Row 10: a run in a session that cannot ask — no entry named on a brief
-     with two `needs prototype` entries takes the first and names it; a
-     table-creating run uses a throwaway database and leaves the development
-     database file unchanged (T2).
-   - Row 10: the judgment point — the run waits after the add commit and
-     says how to see the prototype; a session that cannot ask leaves the
-     entry `needs prototype` with `Evidence:` naming what to look at, and
-     the remove commit's body carries `Not settled:` (T3).
-   - Row 10: a failed commit, with a seed project whose pre-commit hook
-     exits 1 — no retry and no `--no-verify`, no add commit, the staged
-     paths and `git reset -q --` named; a rejected remove commit names the
-     add commit and says the removal is staged (T4).
-   - Row 10: a question given as text for a brief with no section — the
-     section created after `## Context`, the entry `needs prototype` with
-     `Settled by:`, and nothing else in the brief changed (T6).
-   - Row 3: a Chinese run whose heading, status words, and labels stay in
-     English; row 4 then run on that brief asks the exit question (T5).
-   - Row 4: a brief with an `answered` entry — the plan cites its short
-     hash where it relies on it — and a brief whose section body is `none`
-     gets no exit question (T7).
-   Step 5.4.
-
-7. **Guarding the copied Prototype line (D13; T8).** The Prototype line is
-   written in generate-brief's writing rules and copied byte-identically
-   into the prototype skill; CLAUDE.md § Non-Goals records that no guard
-   checks the copy. D13 adds one group, `needs prototype`, to
-   `check-doc-sync-anchors.sh`. Should two more `ANCHOR_CHECKS` entries
-   carry the full line as their label (generate-brief and prototype), with
-   the guard's header, CLAUDE.md's guard description, and the Non-Goals
-   sentence updated in the same commit? The guard counts stay 10 / 9.
-   Steps 4.2, 5.1.
