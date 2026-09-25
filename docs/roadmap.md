@@ -89,6 +89,33 @@ its number.
    attempt, which the release checklist's name probe flags although vitest
    collected nothing; the RUN_DIR bullet already forbids `test.*`, so this
    is a behavior slip to watch, not a rule gap.
+9. Smoke candidates for the prototype chain. The batch C review (T2–T7)
+   proposed six release-checklist cases that the one-time acceptance
+   covers but no smoke row does. Each costs a headless run at every
+   release, so whether any joins its row is the maintainer's call:
+   - Row 10: a session that cannot ask — with no entry named on a brief
+     holding two `needs prototype` entries, the run takes the first and
+     names it; a table-creating run uses a throwaway database, names it,
+     and leaves the development database file unchanged.
+   - Row 10: the judgment point — the run waits after the add commit, says
+     how to see the prototype, and `Evidence:` says the user judged it; a
+     session that cannot ask leaves the entry `needs prototype` with
+     `Evidence:` naming what to look at, and the remove commit's body
+     carries `Not settled:`.
+   - Row 10: a failed commit, on a seed project whose pre-commit hook exits
+     1 — no retry and no `--no-verify`, no add commit, the staged paths and
+     `git reset -q --` named; a rejected remove commit names the add commit
+     and says the removal is staged.
+   - Row 10: a question given as text for a brief with no
+     `## Open Questions` — the section created after `## Context`, the
+     entry `needs prototype` with `Settled by:`, nothing else in the brief
+     changed.
+   - Row 3: a Chinese run whose `## Open Questions` heading, status words,
+     and labels stay in English; row 4 on that brief then asks the exit
+     question.
+   - Row 4: a brief with an `answered` entry, whose short hash the plan
+     cites where it relies on it, and a brief whose section body is `none`,
+     which gets no exit question.
 
 ## Planned batches
 
