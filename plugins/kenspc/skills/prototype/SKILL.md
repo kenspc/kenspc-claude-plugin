@@ -296,6 +296,11 @@ user has staged out of the commit.
   baseline lacked. Why: the prototype is not held to the project's gate, a
   configuration change made for the plugin's own files is the user's
   decision, and a run cannot turn green a typecheck that was red before it.
+  A red baseline is a typecheck that ran and reported errors. One that did
+  not run — the command is missing, the dependencies are not installed, the
+  tool stopped before checking — is no baseline: nothing is built, and the
+  entry stays unsettled with the reason. Why: a check that cannot run fails
+  the same way after the build, so comparing the two would pass any edit.
 - Before the add commit, read the staged file list and the staged diff.
   Passing: no staged file holds a value read from configuration. It fails
   on a `.env` file, a copied `appsettings.*.json`, or a connection string or
