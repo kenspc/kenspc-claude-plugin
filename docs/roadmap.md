@@ -154,6 +154,67 @@ its number.
     directory, or its files, for removal, and every guard still passes
     (fix-round review, T4). One way: a check that the literal appears
     exactly twice in the file, beside the Prototype-line guard above.
+12. When the prototype skill names a leftover directory once. Today a
+    directory is named once, with its file count, only when every file
+    under it is listed as untracked. In a project whose dependency ignore
+    rule is root-anchored (`/node_modules`, the create-next-app and Create
+    React App default), a prototype's own `node_modules/` is untracked, not
+    ignored, and any unanchored pattern that matches inside a package
+    (`dist/`, `*.log`, `*.tsbuildinfo`, `.DS_Store`) adds a `!!` line under
+    it. That line blocks the collapse of `node_modules/` and of every
+    directory above it, so after a dependency install the list runs to one
+    line per package (fix-round review, B5/E2). The reviewer's suggested
+    condition: every entry listed under the directory, untracked or
+    ignored, is absent from the start-of-run list, and
+    `git ls-files -- <directory>` prints nothing. The skill's Exit, the
+    plugin README's leftovers item, release-checklist row 10, and a
+    CHANGELOG entry change in one commit; a probe on a scratch repository
+    with `/node_modules`, `dist/`, and `*.log` patterns settles the wording.
+    The row and its follow-up are in
+    `.kenspc/runs/20260925-234058-changes/schema-b.md` (git-ignored; only
+    in the maintainer's macOS checkout). The acceptance run's O5
+    (`docs/dry-runs/batch-c-acceptance.md`) already named a directory
+    holding untracked and ignored files once, as that condition would.
+13. The prototype skill has no gate for an entry named by number whose
+    status word it does not recognize — hand-edited, translated, or
+    missing. An `answered` entry whose word was changed skips the gate that
+    asks whether to prototype it again, and its cannot-ask stop, and Phase
+    3 replaces its `Answer:`, `Evidence:`, and `Prototype:` in a brief that
+    has no committed copy. The earlier answer then survives only in the
+    earlier remove commit's body (fix-round review, E7). The reviewer's
+    suggestion: ask about such an entry, and give one that holds `Answer:`
+    or `Prototype:` the `answered` gate; in a session that cannot ask, stop
+    and leave the entry unchanged. The gate then needs its row in the
+    skill's gates table, a place in the README's gate list, and a CHANGELOG
+    entry, in the same commit. The row is in the same `schema-b.md` as the
+    leftover-directory item above.
+14. generate-plan's gap round takes an entry whose status word it does not
+    recognize as whatever status the user gives it, so an answer of
+    `answered` makes the entry settled input with no `Answer:` and no
+    prototype hash for a plan to cite (fix-round review, the last sentence
+    of B4, whose `needs prototype` case was fixed; in
+    `.kenspc/runs/20260925-234058-changes/angle-4.md`). The review named no
+    rule; whether such an entry must hold `Answer:` and a hash before it
+    counts as settled is the maintainer's call.
+15. generate-plan's approval stop has no branch for a session that cannot
+    ask. Phase 2 Step 3 says "Write only when the user explicitly approves
+    the plan", and the approval point carries no "In a session that cannot
+    ask …" sentence, where Phase 1's exit and gap-check do. Under a
+    reminder to work without stopping, the acceptance run wrote the plan
+    without approval, ran plan-document-reviewer, and committed four times
+    on `main` (`docs/dry-runs/batch-c-acceptance.md`, F1, classified a
+    behavior deviation). The stop predates 3.8.0, which left it unchanged.
+    Open direction: in a session that cannot ask, write the plan and say it
+    was not approved, stop at the draft, or another way.
+16. Two prototype runs went outside rules the skill already states; to
+    watch, not a rule gap (`docs/dry-runs/batch-c-acceptance.md`, O11 and
+    O12, classified behavior deviations). One asked a question outside the
+    gate table — the brief's Scope excluded any UI, and the run asked
+    whether to go on or stop — where the skill says "Every question the
+    skill asks is one of these gates". The other wrote its check script and
+    a saved render to the session scratchpad instead of the location, so
+    `git show <add commit>` does not hold the checks its `Evidence:` cites,
+    where the skill says "Everything is written under the location".
 
 ## Planned batches
 
