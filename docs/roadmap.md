@@ -145,6 +145,15 @@ its number.
     Non-Goals sentence updated in the same commit; the guard counts stay.
     Left out of 3.8.0 because the line is read by people and the release
     checklist, not parsed by a skill.
+11. A guard for the prototype skill's leftovers command. `prototype/SKILL.md`
+    carries
+    `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
+    twice, in the start snapshot and in the Exit, and the Exit leaves out
+    what the snapshot listed by comparing the two lists path by path. An
+    edit to one copy alone makes the Exit name the user's own ignored
+    directory, or its files, for removal, and every guard still passes
+    (fix-round review, T4). One way: a check that the literal appears
+    exactly twice in the file, beside the Prototype-line guard above.
 
 ## Planned batches
 
