@@ -824,13 +824,61 @@ Determined from this repository's CLAUDE.md, § Durable documents.
 | The task document's acceptance criteria are vague with no reviewer pass | Medium | The Quality bar, the writing rules in Step 1.1, and the user's confirmation before writing; task-implement's batch gate is a second look. |
 | Five reviewers still list different files | Low | PREREQUISITES and FILE COVERAGE both point at `change-set.md`; row 7 compares the five lists. |
 
-## Clarifications during implementation
+## Clarifications during implementation (2026-09-25)
 
-None recorded yet. Questions from the implementing session arrive under a
-`## Questions for the spec author` section appended to the end of this
-document (see Open Questions); each answer is recorded here as `C<n>` — a
-statement and the Step it affects — and binds like the rulings above. An
-answered question is removed from that section.
+Settled between the implementing session and the spec author; each entry
+binds like the rulings above. Questions from the implementing session arrive
+under a `## Questions for the spec author` section appended to the end of
+this document (see Open Questions); each answer is recorded here as `C<n>` —
+a statement and the Step it affects — and the answered question is removed
+from that section.
+
+- C1 — Step 1.1, ruling D4: the one-time `.gitignore` commit is the single
+  exception to "the diagnosis modifies no tracked file". When the probe rule
+  prepares the run directory in a project that does not yet ignore
+  `.kenspc/`, the Ignore check's exit-1 branch appends `.kenspc/` to
+  `.gitignore` and commits that file alone, as the block prescribes. The
+  SKILL states the exception beside the no-tracked-file rule, worded as the
+  review skills' criterion words it ("other than the one-time `.gitignore`
+  commit"), and Step 4.4's row 9 accepts that commit when the diagnosis
+  probed. Why: the block's own reason holds here — the change is one-time
+  and visible in history, and the pathspec keeps everything else out of it.
+  Steps 1.1, 4.4.
+- C2 — Step 1.1, ruling M16: option (a). When the bug is not reproduced and
+  the skill stops to ask, it first removes the reproduction-test files it
+  created in this run — files git reports as untracked (`??`) that did not
+  exist when the skill started; never a tracked file, never anything under
+  `.kenspc/` — and the question lists each attempt: the path, what the test
+  exercised, and what happened. If the removal is denied, the question names
+  the files as left in place for the user to remove. "Writes no file and
+  commits nothing" describes the end state. Why: a test that did not
+  reproduce the bug is not a test; left in the test tree under a collectable
+  name it passes silently in the user's own suite and asserts that the bug
+  is absent — the suite pollution the scratch convention exists to prevent,
+  one level closer to the user's code. The plugin's "deletes nothing itself"
+  stance concerns run directories and the user's files; the skill's own
+  uncommitted draft, never handed to the user, is neither, and a diagnosis
+  session is interactive, so a permission prompt for the removal costs
+  nothing. The Testing Strategy's not-reproduced case reads: a question, no
+  task document or brief, no commit, and no untracked test file left by the
+  skill — or, when removal was denied, that file named in the question.
+  Step 1.1; Testing Strategy.
+- C3 — Step 2.1, ruling D7 (i): when a commit the defaults name does not
+  exist, git's empty tree (`git hash-object -t tree /dev/null`,
+  `4b825dc642cb6eb9a060e54bf8d69288fbee4904`) stands in for it.
+  `Mode: commits` with no upstream and HEAD the root commit:
+  `Range: <empty tree>..<HEAD sha> (root commit)`. `Mode: uncommitted` on an
+  unborn branch (no commit yet; `git rev-parse --verify HEAD` fails):
+  `Base: <empty tree> (no commit yet)`. The file's shape, the diff commands
+  (`git diff <empty tree>..<sha>`, `git diff <empty tree> -- <paths>`), and
+  regression-verifier's `git diff <base> -- <files>` are unchanged; the
+  run-directory preparation's `.gitignore` commit may then create the root
+  commit, and the pinned base stays the empty tree. The SKILL states the
+  substitution where it states the defaults. Why: a fresh project with one
+  commit, or none, is the acceptance run's normal starting state and has to
+  be reviewable without CUSTOM_INSTRUCTIONS. Step 2.1; the "no upstream"
+  case of Step 4.4's row 7 and of the Testing Strategy covers the
+  root-commit form.
 
 ## Open Questions
 
