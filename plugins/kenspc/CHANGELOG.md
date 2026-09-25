@@ -177,8 +177,10 @@ a minor release. No new agent and no CONTEXT key changes.
 - **Gates between the two commits.** Between the add and the remove commit,
   a typecheck, linter, or root-level project file that walks the repository
   reaches the prototype, and a pre-commit hook that runs one can reject the
-  add commit, which stops the run. HEAD after the run holds no prototype.
-  The roadmap item on linters and build tools that walk into `.kenspc/`
+  add commit, which stops the run. HEAD after a run that makes its remove
+  commit holds no prototype; a run that stops between the two commits
+  leaves it in HEAD, and its last message names the add commit and the
+  commands that would remove it. The roadmap item on linters and build tools that walk into `.kenspc/`
   now names `prototypes/` too.
 - **Leftovers after a prototype.** Files git does not track under the
   prototype's location — installed dependencies, build output, a local
