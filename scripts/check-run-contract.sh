@@ -70,10 +70,10 @@
 #                  (an example row's action, one Per-angle Results cell, one
 #                  statistics-line number, the statistics-line wording, and
 #                  an ID repeated across rows with the counts adjusted to
-#                  match), and the change-set file name removed from the
-#                  copied task-review SKILL (every occurrence, through a
-#                  replace-all helper, since it occurs on several lines),
-#                  then on the reverted
+#                  match), and the change-set file name removed from each
+#                  of the four copied files check 5 reads, one file at a
+#                  time (every occurrence, through a replace-all helper,
+#                  since it occurs on several lines), then on the reverted
 #                  copy (must exit 0). Exit 0 on self-test pass, 1 on
 #                  unexpected exit codes, 2 on fixture-stale.
 
@@ -486,20 +486,24 @@ run_self_test() {
         "| R     | 0     | 1        | 0              | 1       | 2        |" \
         "total reported 6 (R 1," "total reported 7 (R 2," \
         "NOT APPLICABLE 1, DEDUPED 1" "NOT APPLICABLE 1, DEDUPED 2" || return $?
-    # Check 5: the change-set file renamed in the task-review SKILL, every
-    # occurrence, so only the name check can catch it. The name occurs on
-    # several lines there, which mutate_and_expect's one-line rule refuses.
-    replace_all_literal "$WORK/$REVIEW_REL" "$CHANGE_SET_NAME" "change-list.md"
-    if grep -qF -- "$CHANGE_SET_NAME" "$WORK/$REVIEW_REL"; then
-        echo "FAIL  self-test: change-set mutation did not apply ('$CHANGE_SET_NAME' still in $REVIEW_REL)" >&2
-        return 2
-    fi
-    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
-    cp "$REPO_ROOT/$REVIEW_REL" "$WORK/$REVIEW_REL"
-    if [[ "$rc" -ne 1 ]]; then
-        echo "FAIL  self-test change-set name mutation: expected exit 1, got $rc" >&2
-        return 1
-    fi
+    # Check 5: the change-set file renamed in one carrier at a time, every
+    # occurrence, so only the name check can catch it. Each of the four
+    # files check 5 reads is mutated in turn, so a carrier dropped from its
+    # loop is caught too. The name occurs on several lines in a carrier,
+    # which mutate_and_expect's one-line rule refuses.
+    for rel in "$REVIEW_REL" "$FIXER_REL" "$VERIFIER_REL" "$REVIEWER_REL"; do
+        replace_all_literal "$WORK/$rel" "$CHANGE_SET_NAME" "change-list.md"
+        if grep -qF -- "$CHANGE_SET_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test: change-set mutation did not apply ('$CHANGE_SET_NAME' still in $rel)" >&2
+            return 2
+        fi
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        cp "$REPO_ROOT/$rel" "$WORK/$rel"
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test change-set name mutation in $rel: expected exit 1, got $rc" >&2
+            return 1
+        fi
+    done
 
     ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
     if [[ "$rc" -ne 0 ]]; then
