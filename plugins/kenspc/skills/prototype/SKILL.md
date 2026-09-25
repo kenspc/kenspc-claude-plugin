@@ -104,12 +104,20 @@ note what `git -c core.quotePath=false status --porcelain -uall` lists, so
 the run can tell its own files from the user's and knows which tracked files
 have uncommitted changes.
 
-**DONE when** the frame is shown to the user — the question, its
-`Settled by:`, the kind, the location, and the resources (a database, a
-dependency, the tracked files an in-app prototype modifies) — and no gate is
-open. There is no general confirmation: the skill shows the frame and goes
-on. Why: each risky choice has its own gate with its own question, and a
-blanket confirmation adds a stop to the path that needs none.
+**DONE when** the frame has gone to the user as a message of its own, sent
+before the prototype's first file is written, and no gate is open. The frame
+names, in this order, the question, its `Settled by:`, the kind, the
+location, and the resources (a database, a dependency, the tracked files an
+in-app prototype modifies). It is sent whether or not a gate stops the run: a
+gate that asks once the question is chosen puts its question in the same
+message, after the frame. The frame is not a confirmation, and there is no
+general one: once it is sent, the skill goes on. Why a message of its own:
+with no gate to stop the run, a frame that is only to be shown gets folded
+into the work of building, and no message names where the prototype will
+write or which tracked files it will change before the writing starts; the
+frame is the one place the user sees them before anything is built. Why no
+confirmation: each risky choice has its own gate with its own question, and
+a blanket confirmation adds a stop to the path that needs none.
 
 **Constraints**: this phase writes nothing but the brief entry appended for
 a question given as text and a `Settled by:` derived for an entry that
@@ -278,7 +286,7 @@ what a session that cannot ask does in place of asking.
 
 **Goal**: the prototype, run, its evidence gathered, and committed.
 
-**Inputs**: the frame shown in Phase 1.
+**Inputs**: the frame message Phase 1 sent.
 
 **DONE when** the add commit exists and the evidence either settles the
 question against `Settled by:` or shows why it cannot be settled here; for a
@@ -509,8 +517,9 @@ plan to keep.
 Each phase starts from the artifact the previous one produced, not from the
 wording that closed it:
 
-- Phase 1 → Phase 2: the shown frame. A gate that ended in "nothing is
-  built" goes straight to the entry's rewrite in Phase 3, with no commit.
+- Phase 1 → Phase 2: the frame message, sent before any prototype file is
+  written. A gate that ended in "nothing is built" goes straight to the
+  entry's rewrite in Phase 3, with no commit.
 - Phase 2 → Phase 3: the add commit's hash.
 - The exit: the rewritten entry and the remove commit.
 

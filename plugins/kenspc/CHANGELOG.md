@@ -53,9 +53,12 @@ a minor release. No new agent and no CONTEXT key changes.
   no file, or a file that is not a brief — stops with a `/kenspc-brief`
   suggestion and builds nothing; an entry number that names no entry stops
   with the brief unchanged.
-  - **The gates.** No general confirmation: the skill shows its frame (the
-    question, `Settled by:`, the kind, the location, the resources) and
-    goes on, stopping only at a gate — no arguments; several
+  - **The gates.** No general confirmation: before the prototype's first
+    file is written, the skill sends its frame (the question,
+    `Settled by:`, the kind, the location, and the resources, among them
+    the tracked files an in-app prototype modifies) as a message of its
+    own, with a gate's question after it when one asks, and goes on,
+    stopping only at a gate — no arguments; several
     `needs prototype` entries, none named; a named `answered` entry; a
     location conflict; an in-app UI prototype with no CLAUDE.md location,
     or with a dirty tracked file or a manifest change; a feature prototype
