@@ -377,7 +377,9 @@ DONE that claimed them would be partial completion marked done.
 cases>` with `**Status:** TODO` and `Depends on: Task 1`: one test per
 adjacent case the record lists, in the project's test framework and
 conventions, each able to fail if the behavior it covers broke. Omit this
-task when Adjacent cases is empty; the record then says so. Why: the
+task when Adjacent cases is empty, or when no failing-capable test can be
+written (no test framework configured, a real device); the record then says
+so under Adjacent cases. Why: the
 reproduction test already covers the symptom, and `task-implementer` already
 writes tests for the code a fix adds, so this task has content only when the
 diagnosis found cases beyond the symptom.

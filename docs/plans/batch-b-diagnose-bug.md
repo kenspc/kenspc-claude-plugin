@@ -1017,6 +1017,13 @@ from that section.
   file, but the scratch naming rule and the probe both forbid the segment.
   A FAIL of C10's own making, fixed before release and the row re-run.
   Steps 2.3, 2.4, 4.4.
+- C12 — Step 1.1, amending M4: Task 2 is also omitted when no
+  failing-capable test can be written (no test framework configured, a real
+  device), and the record says so under Adjacent cases; the release
+  checklist's row 9 reads accordingly. Source: the acceptance's
+  no-framework run, where the skill listed two adjacent cases, wrote no
+  Task 2, and said why — a sensible reading the rule had not stated
+  (observation O1). Steps 1.1, 4.4.
 
 ## Open Questions
 
