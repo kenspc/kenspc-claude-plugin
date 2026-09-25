@@ -914,7 +914,26 @@ Plan Step 3.2 (ruling M17). In `scripts/check-run-contract.sh`:
 
 ### Task 10: Update the repository CLAUDE.md
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the effort paragraph's "the other five skills" became "the six
+  other skills", not "the other six skills": the task's own acceptance grep
+  (`\bsix skills`) matches "other six skills", so the word order that states
+  the same count without the matched phrase satisfies both the plan and the
+  criterion. `kenspc-diagnose.md` and `diagnose-bug/` sit before
+  `task-implement` in the layout tree, since the diagnosis feeds
+  task-implement. The diagnosis-path paragraph sits in the "No review"
+  pattern, after diagnose-bug's no-review reason, in the form of the
+  existing documentation-path paragraph.
+- Changes/tradeoffs: the Non-Goals paragraph also says why a reference
+  beats a copy (a copy would need a byte-identity guard; a reference cannot
+  drift) and that diagnose-bug points at generate-task's Doc-sync template
+  the same way. Counts checked against the repository: seven skill
+  directories, seven commands, eleven agents; the guard counts in the file
+  are unchanged (`guards run: N` / `self-tests run: N` are templates here,
+  and the "Nine of the guards" self-test sentence still holds). The
+  Durable documents table was compared before and after: unchanged.
 
 Depends on: Task 1-9
 

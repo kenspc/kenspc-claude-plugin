@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured software development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, plan-to-task decomposition, task implementation with automatic code review, and project guide generation. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief skill has no review phase (it produces a discovery artifact, not a verifiable spec).
+A Claude Code plugin marketplace containing structured software development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, plan-to-task decomposition, bug diagnosis, task implementation with automatic code review, and project guide generation. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief and diagnose-bug skills have no review phase (the brief is a discovery artifact, not a verifiable spec; a diagnosis has no plan to review its task document against, so the user confirms the task list instead).
 
 ## Marketplace Structure
 
@@ -23,6 +23,7 @@ plugins/kenspc/
 │   ├── kenspc-plan.md
 │   ├── kenspc-task.md
 │   ├── kenspc-guide.md
+│   ├── kenspc-diagnose.md
 │   ├── kenspc-task-implement.md
 │   └── kenspc-task-review.md
 ├── hooks/
@@ -41,6 +42,8 @@ plugins/kenspc/
 │   │   └── SKILL.md
 │   ├── generate-guide/
 │   │   └── SKILL.md
+│   ├── diagnose-bug/
+│   │   └── SKILL.md             # No review phase — the user confirms the task list
 │   ├── task-implement/
 │   │   └── SKILL.md
 │   └── task-review/
@@ -63,7 +66,10 @@ Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `desc
 Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
 Two hooks are registered: `PreToolUse` on `Write` → `remind-plan-skill.sh`
 (plan-skill reminder — note it fires on every Write call, not only
-plugin-related ones), and `SessionEnd` → `session-end-telemetry.sh`
+plugin-related ones; its task and brief messages name every skill that
+writes those directories: generate-task or diagnose-bug for `docs/tasks/`,
+generate-brief or diagnose-bug for `docs/briefs/`), and `SessionEnd` →
+`session-end-telemetry.sh`
 (post-hoc telemetry; background in Plugin Design Lessons). A former
 `SessionStart` → `check-deps.sh` hook was removed in v3.4.2: its
 ralph-loop dependency check was gutted by the v2 subagent refactor and
@@ -90,14 +96,14 @@ Writer-agent files (`task-implementer.md`, `code-fixer.md`) use ALL-CAPS section
 | `version` | Yes | Semver (e.g., `1.0.0`) |
 | `argument-hint` | Recommended | Shown in UI as placeholder (e.g., `<project-path>`) |
 
-The per-skill `version` field is uniformly `3.0.0` across all six skills and
+The per-skill `version` field is uniformly `3.0.0` across all seven skills and
 denotes the v3 architecture generation, not a per-skill change counter. It is
 deliberately decoupled from the plugin version in
 `plugins/kenspc/.claude-plugin/plugin.json`, which is the authoritative version
 and the only one bumped each release. It was set during the v3.0.0 rewrite and
-is intentionally left unchanged on subsequent releases — syncing six files
+is intentionally left unchanged on subsequent releases — syncing seven files
 every release is churn that has historically drifted anyway. Bump it only on a
-future architecture-generation change (a v4 rewrite), and bump all six together
+future architecture-generation change (a v4 rewrite), and bump all seven together
 so the uniformity holds.
 
 ### Subagent Review Architecture
@@ -105,11 +111,37 @@ so the uniformity holds.
 Skills use plugin agents (defined in `agents/`) as workers, dispatched via the
 Agent tool. Three orchestration patterns:
 
-**No review (generate-brief):**
+**No review (generate-brief, diagnose-bug):**
 Brief is a discovery artifact, not a verifiable spec. Review happens downstream
 when generate-plan consumes the brief. Phase 1 detection in generate-plan
 recognizes briefs and gap-checks against the same five dimensions defined in
 `shared/discovery-framework.md`.
+
+diagnose-bug's task document has no plan to compare against —
+`task-document-reviewer` requires a plan and cross-references its
+Implementation Steps — so the user's confirmation of the task list is its
+gate, and task-implement's batch gate follows. The checks the reviewer's
+Consistency angle would make (vague criteria, language carried into code
+artifacts, a git step nobody decided) are the skill's own writing rules.
+
+The diagnosis path runs from an observed bug to the same implementation run.
+`diagnose-bug` reproduces the bug first: a test in the project's test tree
+that fails for the reported reason, committed alone
+(`test: reproduce <symptom>`) before any diagnosis — or, when no
+failing-capable test can be written, the manual steps and the reason. The
+diagnosis lands in the task document's `## Diagnosis` record (nine fixed
+labels, `**Symptom:**` through `**Probes:**`), followed by a fix task, a
+regression-test task for the adjacent cases the diagnosis found (omitted
+when there are none), and a `### Task N: Doc-sync` task written from
+generate-task's template when the diagnosis's Documentation impact lists
+documents; the document is committed alone (`docs: add task <name>`). A fix
+that needs a new dependency, an API contract change, a database schema
+change, or a configuration change — the stop conditions in
+`task-implementer`'s AUTONOMY BOUNDARIES — is tier 3: a brief for
+`/kenspc-plan` instead, and no task document. Probes, copies, and mutants go
+in a run directory prepared as the `canonical:run-dir` block prescribes, by
+reference, with the run-id suffix `diagnose-<name>`, under
+`scratch/orchestrator/<n>/`.
 
 **Serial review (generate-plan, generate-task, generate-guide):**
 Skill dispatches a single named agent (`plan-document-reviewer`,
@@ -166,7 +198,9 @@ blocked task did not build. The gate applies to every task with a
 Since v3.5 the agents exchange reports through a per-run directory,
 `<repo root>/.kenspc/runs/<run-id>/`, passed as the `RUN_DIR` CONTEXT key.
 The orchestrating skill prepares it and, when `.kenspc/` is not yet
-git-ignored, makes a one-time `.gitignore` commit. Each reviewer writes only
+git-ignored, makes a one-time `.gitignore` commit. In a review without a
+task document it then writes `change-set.md` (v3.7), the change set every
+agent reads (see CONTEXT block contract). Each reviewer writes only
 its own `angle-<n>.md`, and `code-fixer` only `schema-b.md`. Probe and
 temporary files go in one scratch subdirectory per writer —
 `scratch/angle-<n>/` for each reviewer, `scratch/code-fixer/`,
@@ -219,7 +253,7 @@ override the session, each at `xhigh`:
   plan cost amortizes over downstream tasks (`max` through v3.4.x).
 
 Everything else — the 5 review-angle agents, `regression-verifier`, the
-3 document reviewers, and the other five skills — runs at the session's
+3 document reviewers, and the six other skills — runs at the session's
 effort. When a session runs at `xhigh`/`max`, set a large
 max-output-token budget so the model has room to think and act across
 subagents and tool calls (this is a session/API-config concern, not a
@@ -238,6 +272,19 @@ their inputs from it. It replaces the earlier `REVIEW_REPORTS` and
 `ACCOUNTABILITY_LIST` keys: the file names inside the run directory are
 fixed, so one path is the only value the orchestrator has to get right.
 
+`change-set.md` (v3.7) follows the same reasoning. With REVIEW_SCOPE
+"changes", the orchestrating skill computes the change set once, with
+read-only git commands — its mode (`uncommitted` or `commits`), a base or
+range pinned by SHA before the run-directory preparation, the diff command,
+and the file list — and writes it to `RUN_DIR/change-set.md` before
+dispatch. The five reviewers, `code-fixer`, and `regression-verifier` read
+it there. No key was added, for the reason `RUN_DIR` replaced
+`REVIEW_REPORTS` and `ACCOUNTABILITY_LIST`: a fixed file name inside the one
+path the orchestrator passes leaves it nothing more to get right. Without
+`RUN_DIR`, a standalone reviewer derives the set from git itself. In
+`uncommitted` mode `code-fixer` commits nothing — no baseline commit, no fix
+commit, no stash — and its FIXED rows carry `—` in Commit.
+
 #### Standalone safety classification
 
 - **Standalone-safe**: 5 review-angle agents (requirements, edge-case, quality,
@@ -246,7 +293,8 @@ fixed, so one path is the only value the orchestrator has to get right.
   Each reviewer is read-only on the working tree and writes only under
   `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
   files under `RUN_DIR/scratch/angle-<n>/`.
-  Without `RUN_DIR` (standalone) they write no file.
+  Without `RUN_DIR` (standalone) they write no file and derive the change
+  set from git themselves.
 - **Orchestration-only**: 6 worker/document-reviewer agents (code-fixer,
   regression-verifier, task-implementer, plan-document-reviewer,
   guide-document-reviewer, task-document-reviewer) require structured
@@ -280,6 +328,8 @@ guard checks is documented once, in "Repository scripts/" below.
 ### Non-Goals
 
 `shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at two call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would break the discovery phase's need for raw conversation context (the orchestrator must keep the full transcript to draft the brief or plan in Phase 2).
+
+The run-directory preparation is written once, in the `canonical:run-dir` block of `task-review/SKILL.md` and `task-implement/SKILL.md`. `diagnose-bug` also prepares a run directory for its probes, and references that block — naming its markers, with the `diagnose-<name>` run-id suffix — rather than carrying a third copy; it points at generate-task's Doc-sync Task template the same way. A copy would have to be kept byte-identical by a guard, and a reference cannot drift.
 
 ### Writing Rules for Skill Content
 
@@ -370,8 +420,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   anchors stay present in every file that writes, checks, or renders them:
   `Documentation impact` (`generate-plan/SKILL.md`,
   `references/plan-document-example.md`, `plan-document-reviewer.md`,
-  `generate-task/SKILL.md`, `task-document-reviewer.md`), `Doc-sync`
-  (`generate-task/SKILL.md`, `references/task-document-example.md`,
+  `generate-task/SKILL.md`, `diagnose-bug/SKILL.md`,
+  `task-document-reviewer.md`), `Doc-sync` (`generate-task/SKILL.md`,
+  `diagnose-bug/SKILL.md`, `references/task-document-example.md`,
   `task-document-reviewer.md`, `task-implementer.md`), and
   `Decisions needing a home` (`task-implementer.md`,
   `task-implement/SKILL.md`). An anchor-presence guard like
@@ -397,8 +448,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   recounts — its Per-angle Results table and statistics line agree with its
   rows (primary Source ID counts under the row's action, the rest as
   DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`
-  counts as NOT APPLICABLE). `--file PATH` runs the recount against a real
-  `schema-b.md` from a run directory.
+  counts as NOT APPLICABLE); and the literal `change-set.md` is named in
+  `task-review/SKILL.md`, `code-fixer.md`, `regression-verifier.md`, and
+  `requirements-reviewer.md` (check 5; `check-review-agent-drift.sh`
+  carries it to the other four reviewers). `--file PATH` runs the recount
+  against a real `schema-b.md` from a run directory.
 - `check-json.sh` — guards that `plugin.json`, `hooks.json`, and
   `marketplace.json` parse. It picks the interpreter itself — `python3`,
   `python`, `py`, then `node`, each probed by running it, which skips the
