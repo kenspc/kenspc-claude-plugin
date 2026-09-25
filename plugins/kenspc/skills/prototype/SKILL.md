@@ -181,6 +181,9 @@ written once, in the Writing rules for the brief in
   Why: the in-app exception exists for what can only render inside the
   app, and anything that can run elsewhere keeps its files out of the
   user's source tree.
+- Once the location is chosen, and before anything is written there, note
+  what `git status --porcelain --ignored -uall -- <location>` lists; the
+  exit leaves those paths out of its leftovers list.
 
 ### An in-app UI prototype
 
@@ -407,7 +410,10 @@ The final message gives:
   look at and how;
 - the add and remove commits, and `git show <hash>` to read the prototype;
 - every path that `git status --porcelain --ignored -uall -- <location>`
-  still lists — ignored and untracked alike — for the user to remove;
+  still lists — ignored and untracked alike — for the user to remove, less
+  the paths it listed when the location was chosen. Why: an in-app
+  location is a directory of the user's app, and a file of theirs already
+  there is not the prototype's to name for removal;
 - every default a session that cannot ask took in place of a question.
 
 Next step: `/kenspc-plan <brief>` when no `` `needs prototype` `` entry
