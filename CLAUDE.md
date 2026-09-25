@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured software development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, plan-to-task decomposition, bug diagnosis, task implementation with automatic code review, and project guide generation. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief and diagnose-bug skills have no review phase (the brief is a discovery artifact, not a verifiable spec; a diagnosis has no plan to review its task document against, so the user confirms the task list instead).
+A Claude Code plugin marketplace containing structured software development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, answering a brief's open questions with throwaway prototypes, plan-to-task decomposition, bug diagnosis, task implementation with automatic code review, and project guide generation. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief, diagnose-bug, and prototype skills have no review phase (the brief is a discovery artifact, not a verifiable spec; a diagnosis has no plan to review its task document against, so the user confirms the task list instead; a prototype is discarded, and its answer is reviewed where a plan uses it).
 
 ## Marketplace Structure
 
@@ -24,6 +24,7 @@ plugins/kenspc/
 │   ├── kenspc-task.md
 │   ├── kenspc-guide.md
 │   ├── kenspc-diagnose.md
+│   ├── kenspc-prototype.md
 │   ├── kenspc-task-implement.md
 │   └── kenspc-task-review.md
 ├── hooks/
@@ -44,6 +45,8 @@ plugins/kenspc/
 │   │   └── SKILL.md
 │   ├── diagnose-bug/
 │   │   └── SKILL.md             # No review phase — the user confirms the task list
+│   ├── prototype/
+│   │   └── SKILL.md             # No review phase — the prototype is discarded; the plan that uses its answer is reviewed
 │   ├── task-implement/
 │   │   └── SKILL.md
 │   └── task-review/
@@ -68,7 +71,8 @@ Two hooks are registered: `PreToolUse` on `Write` → `remind-plan-skill.sh`
 (plan-skill reminder — note it fires on every Write call, not only
 plugin-related ones; its task and brief messages name every skill that
 writes those directories: generate-task or diagnose-bug for `docs/tasks/`,
-generate-brief or diagnose-bug for `docs/briefs/`), and `SessionEnd` →
+generate-brief, diagnose-bug, or prototype (which records an answer in an
+existing brief) for `docs/briefs/`), and `SessionEnd` →
 `session-end-telemetry.sh`
 (post-hoc telemetry; background in Plugin Design Lessons). A former
 `SessionStart` → `check-deps.sh` hook was removed in v3.4.2: its
@@ -96,14 +100,14 @@ Writer-agent files (`task-implementer.md`, `code-fixer.md`) use ALL-CAPS section
 | `version` | Yes | Semver (e.g., `1.0.0`) |
 | `argument-hint` | Recommended | Shown in UI as placeholder (e.g., `<project-path>`) |
 
-The per-skill `version` field is uniformly `3.0.0` across all seven skills and
+The per-skill `version` field is uniformly `3.0.0` across all eight skills and
 denotes the v3 architecture generation, not a per-skill change counter. It is
 deliberately decoupled from the plugin version in
 `plugins/kenspc/.claude-plugin/plugin.json`, which is the authoritative version
 and the only one bumped each release. It was set during the v3.0.0 rewrite and
-is intentionally left unchanged on subsequent releases — syncing seven files
+is intentionally left unchanged on subsequent releases — syncing eight files
 every release is churn that has historically drifted anyway. Bump it only on a
-future architecture-generation change (a v4 rewrite), and bump all seven together
+future architecture-generation change (a v4 rewrite), and bump all eight together
 so the uniformity holds.
 
 ### Subagent Review Architecture
@@ -111,11 +115,16 @@ so the uniformity holds.
 Skills use plugin agents (defined in `agents/`) as workers, dispatched via the
 Agent tool. Three orchestration patterns:
 
-**No review (generate-brief, diagnose-bug):**
+**No review (generate-brief, diagnose-bug, prototype):**
 Brief is a discovery artifact, not a verifiable spec. Review happens downstream
 when generate-plan consumes the brief. Phase 1 detection in generate-plan
 recognizes briefs and gap-checks against the same five dimensions defined in
 `shared/discovery-framework.md`.
+
+The prototype skill's prototype is discarded in the run that built it, so
+there is nothing left for a reviewer to hold; its answer is reviewed where a
+plan uses it — generate-plan reads the answered entry, and
+`plan-document-reviewer` reviews the plan that cites it.
 
 diagnose-bug's task document has no plan to compare against —
 `task-document-reviewer` requires a plan and cross-references its
@@ -143,6 +152,24 @@ change, or a configuration change — the stop conditions in
 in a run directory prepared as the `canonical:run-dir` block prescribes, by
 reference, with the run-id suffix `diagnose-<name>`, under
 `scratch/orchestrator/<n>/`.
+
+The prototype path runs from a brief's open question to the plan. A brief's
+`## Open Questions` entry marked `needs prototype`, with the `Settled by:`
+result that would answer it, stops generate-plan's Phase 1 before any
+gap-check question: the user sends it to prototyping — the run ends with a
+`/kenspc-prototype <brief path> <n>` line and writes nothing — or carries it
+into the plan's Open Questions (`From:`, `Not prototyped:`, `Assumed in:`);
+a session that cannot ask carries it. `/kenspc-prototype` builds the
+smallest thing that settles the question, commits it
+(`chore: add prototype <slug>`, under `prototypes/<slug>/` by default),
+rewrites the entry `answered` with `Answer:`, `Evidence:`, and a
+`Prototype:` line naming that commit, and removes the prototype in the next
+commit (`chore: remove prototype <slug>`); the brief is not committed. The
+next generate-plan run reads the answered entry as settled input, and a plan
+that relies on it cites the hash. A prototype runs outside the app; the one
+in-app exception is a UI prototype that can only render inside the app,
+located by the project's CLAUDE.md or by the user, with the typecheck green
+against its baseline.
 
 **Serial review (generate-plan, generate-task, generate-guide):**
 Skill dispatches a single named agent (`plan-document-reviewer`,
@@ -254,7 +281,7 @@ override the session, each at `xhigh`:
   plan cost amortizes over downstream tasks (`max` through v3.4.x).
 
 Everything else — the 5 review-angle agents, `regression-verifier`, the
-3 document reviewers, and the six other skills — runs at the session's
+3 document reviewers, and the seven other skills — runs at the session's
 effort. When a session runs at `xhigh`/`max`, set a large
 max-output-token budget so the model has room to think and act across
 subagents and tool calls (this is a session/API-config concern, not a
@@ -337,6 +364,8 @@ guard checks is documented once, in "Repository scripts/" below.
 `shared/discovery-framework.md` stays in `shared/` and is NOT converted into a plugin agent. It is consumed by the main session at two call sites (generate-brief Phase 1, generate-plan Phase 1) as a structural guide for free-form discovery dialogue with the user — not as bounded delegated work. Subagent isolation would break the discovery phase's need for raw conversation context (the orchestrator must keep the full transcript to draft the brief or plan in Phase 2).
 
 The run-directory preparation is written once, in the `canonical:run-dir` block of `task-review/SKILL.md` and `task-implement/SKILL.md`. `diagnose-bug` also prepares a run directory for its probes, and references that block — naming its markers, with the `diagnose-<name>` run-id suffix — rather than carrying a third copy; it points at generate-task's Doc-sync Task template the same way. A copy would have to be kept byte-identical by a guard, and a reference cannot drift. The block holds no mutation rule, so for a mutant used as evidence the skill points at the three-step mutation rule where it is written, the RUN_DIR bullet of `regression-verifier.md` (the reviewers and `code-fixer` carry the same rule). A change to that rule, or a move of it, updates the pointer in `diagnose-bug/SKILL.md` in the same commit.
+
+The prototype skill references the same block the same way: its prototype's file names follow the naming rule of the block's Scratch space bullet, pointed at by the block's markers, and the skill carries no copy. A move of that rule updates the pointer in `prototype/SKILL.md` in the same commit.
 
 ### Writing Rules for Skill Content
 
@@ -423,19 +452,21 @@ Project-level shell scripts live in `scripts/` at the repo root:
   by design (the agent describes the format, the example shows a filled-in
   instance); it catches a rename of either label in one file but not the
   other.
-- `check-doc-sync-anchors.sh` — guards that the three documentation-path
-  anchors stay present in every file that writes, checks, or renders them:
-  `Documentation impact` (`generate-plan/SKILL.md`,
-  `references/plan-document-example.md`, `plan-document-reviewer.md`,
-  `generate-task/SKILL.md`, `diagnose-bug/SKILL.md`,
-  `task-document-reviewer.md`), `Doc-sync` (`generate-task/SKILL.md`,
-  `diagnose-bug/SKILL.md`, `references/task-document-example.md`,
-  `task-document-reviewer.md`, `task-implementer.md`), and
-  `Decisions needing a home` (`task-implementer.md`,
-  `task-implement/SKILL.md`). An anchor-presence guard like
-  `check-notes-format-sync.sh`: a rename in one file breaks the chain
-  silently while every other check passes. README.md and CLAUDE.md are
-  deliberately outside it.
+- `check-doc-sync-anchors.sh` — guards that the four planning-chain
+  anchors stay present in every file that writes, checks, or renders them.
+  Three carry the documentation path: `Documentation impact`
+  (`generate-plan/SKILL.md`, `references/plan-document-example.md`,
+  `plan-document-reviewer.md`, `generate-task/SKILL.md`,
+  `diagnose-bug/SKILL.md`, `task-document-reviewer.md`), `Doc-sync`
+  (`generate-task/SKILL.md`, `diagnose-bug/SKILL.md`,
+  `references/task-document-example.md`, `task-document-reviewer.md`,
+  `task-implementer.md`), and `Decisions needing a home`
+  (`task-implementer.md`, `task-implement/SKILL.md`). One carries the
+  open-question path: `needs prototype` (`generate-brief/SKILL.md`,
+  `generate-plan/SKILL.md`, `prototype/SKILL.md`). An anchor-presence
+  guard like `check-notes-format-sync.sh`: a rename in one file breaks the
+  chain silently while every other check passes. README.md and CLAUDE.md
+  are deliberately outside it.
 - `check-no-model-names.sh` — guards that no file under `skills/`,
   `agents/`, `commands/`, or `shared/` names or pins a specific Claude
   model. Three rules: frontmatter `model:` values must be `inherit`; no

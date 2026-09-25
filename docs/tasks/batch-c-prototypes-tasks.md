@@ -834,7 +834,30 @@ for its own element. No new guard script, so the counts stay
 
 ### Task 7: Update the repository CLAUDE.md
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: under "No review", the prototype's reason is its own short
+  paragraph after the brief paragraph (discarded in the run that built
+  it; the answer is reviewed where generate-plan reads it and
+  `plan-document-reviewer` reviews the plan that cites it), and the
+  "prototype path" paragraph follows the diagnosis path paragraph, the
+  pattern's existing path description. The guard description is
+  restructured as "four planning-chain anchors", three on the
+  documentation path and one on the open-question path, so the removed
+  phrase "three documentation-path" does not survive in another form. The
+  Non-Goals pointer is a new paragraph after diagnose-bug's, mirroring its
+  "a move of that rule updates the pointer … in the same commit" sentence.
+- Changes/tradeoffs: the Project Overview's first sentence lists the new
+  capability as "answering a brief's open questions with throwaway
+  prototypes", placed after requirement brief generation. The Durable
+  documents table is untouched. Verified: the stale-count grep and
+  `grep -n 'three documentation-path'` print nothing; the eight / seven
+  forms are present; `ls` shows 8 skills, 8 commands, 11 agents, matching
+  the tree and the "11 reusable subagents" line; the "Nine of the guards"
+  self-test sentence is unchanged and still true (`self-tests run: 9`);
+  `git diff CLAUDE.md` has no table-row change; `check-all.sh`
+  (`guards run: 10`) exits 0.
 
 Depends on: Task 1-6
 
