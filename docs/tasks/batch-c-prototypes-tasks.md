@@ -276,7 +276,8 @@ approval gate, and Phase 3 stay as they are:
      a gap for the same one-to-two rounds; one the rounds do not settle is
      carried in the carried form without `Not prototyped:`. In a session
      that cannot ask (a system reminder to work without stopping), no
-     `open` entry enters the gap rounds: each is carried straight in. Why:
+     `open` entry enters the gap rounds: each is carried straight in, in
+     the same form (`From:` and `Assumed in:`, no `Not prototyped:`). Why:
      an `open` entry is an explicit gap the brief recorded, and a plan that
      drops it loses the question without a trace.
   3. **Answered entries** are settled input; a plan that relies on one
@@ -367,8 +368,10 @@ The file carries, in substance as plan Step 3.1 gives it:
   Questions, or a question's text. A question with no brief path: stop,
   build nothing, and suggest `/kenspc-brief`. No arguments: ask for the
   brief and the question; in a session that cannot ask, stop.
-- Phase 1, Frame. Inputs: the brief; the project's CLAUDE.md, README, and
-  config files, read silently first;
+- Phase 1, Frame. Goal: one question, the result that settles it, the kind
+  (logic, UI, feature), the location, and the resources — every gate below
+  passed. Inputs: the brief; the project's CLAUDE.md, README, and config
+  files, read silently first;
   `git -c core.quotePath=false status --porcelain -uall`, noted at the
   start. Rules:
   - Question selection (D18): by number or text; none named → the only
@@ -395,7 +398,9 @@ The file carries, in substance as plan Step 3.1 gives it:
     the app's modules, when that lets it run; otherwise it is not built, in
     either kind of session, the entry stays `` `needs prototype` `` with the
     reason in `Evidence:`, and the exit says that widening the in-app
-    exception to features is the user's decision.
+    exception to features is the user's decision. Why: the in-app exception
+    exists for what can only render inside the app, and anything that can
+    run elsewhere keeps its files out of the user's source tree.
   - In-app UI (D9): a tracked file the prototype must modify that has
     uncommitted changes, and any change to the project's manifest, are
     asked about — go on, commit first, or stop (cannot ask: nothing is
@@ -434,7 +439,9 @@ The file carries, in substance as plan Step 3.1 gives it:
   column on the development database, a judgment answer, a failed commit —
   with its cannot-ask outcome as the table gives it. Each gate that asks
   states its cannot-ask branch in the Fixed-forms wording.
-- Phase 2, Build and run. DONE when the add commit exists —
+- Phase 2, Build and run. Goal: the prototype, run, its evidence gathered,
+  committed. Inputs: the frame shown in Phase 1. DONE when the add commit
+  exists —
   `chore: add prototype <slug>` adapted to the project's commit
   conventions, made after the run that produced the evidence, staging only
   the prototype's own paths (its source, its manifest and lockfile,
@@ -460,7 +467,9 @@ The file carries, in substance as plan Step 3.1 gives it:
     it; for a UI prototype in the app, only the project's typecheck runs,
     unmodified: once before building as a baseline, and before the add
     commit, green — or, when the baseline was already red, with no error
-    the baseline lacked.
+    the baseline lacked. Why: the prototype is not held to the project's
+    gate, and a configuration change made for the plugin's own files is the
+    user's decision.
   - Before the add commit, the staged file list and diff are read for a
     file holding a value read from configuration.
   - A commit that fails stops the run: report the error and ask how to go
@@ -473,12 +482,15 @@ The file carries, in substance as plan Step 3.1 gives it:
   prototype is committed and discarded, the entry stays
   `` `needs prototype` `` with `Evidence:` naming what to look at and how,
   and the exit says so.
-- Phase 3, Record and discard. DONE when:
+- Phase 3, Record and discard. Goal: the answer in the brief and the
+  prototype out of the tree. Inputs: the add commit's hash and the evidence
+  from Phase 2. DONE when:
   - the entry is rewritten per the grammar in generate-brief's writing
     rules, pointed at, not copied — `` `answered` `` with `Answer:`,
     `Evidence:`, and the Prototype line, or, unsettled,
     `` `needs prototype` `` with `Evidence:` and `Prototype:` — and nothing
-    else in the brief changed;
+    else in the brief changed (Why: the rest of the brief is the user's
+    discovery record);
   - at the judgment point the user's verdict came first;
   - the teardown ran, when there was one, and the tables it created are
     gone;
@@ -505,7 +517,8 @@ The file carries, in substance as plan Step 3.1 gives it:
   add commit and before the remove commit, the last message names the add
   commit, says the prototype is still in the tree, and gives the `git rm`
   (and restore) command that would remove it; the skill does not run it
-  unasked.
+  unasked. Why: like diagnose-bug's "Ending without a document", the
+  branch carries something the user did not plan to keep.
 - Writing rules: the conversation's language; the brief entry in the
   brief's language with its anchors as written; commit messages and
   identifiers in English; no branch, pull-request, rebase, or tag step —
@@ -671,9 +684,11 @@ for its own element. No new guard script, so the counts stay
 - Falsifiability, by hand: in a copy of `scripts/` and `plugins/` made under
   `~/Projects/_smoke/`, replacing every `needs prototype` in the copied
   `plugins/kenspc/skills/prototype/SKILL.md` makes the copied guard exit 1
-  with a `MISSING label 'needs prototype'` line naming that file; the copy
-  is then moved to `~/Projects/_smoke/.trash/<name>-<YYYYMMDD-HHMMSS>/`. The
-  command and its output are recorded in the task's Implementation notes.
+  with a `MISSING label 'needs prototype'` line naming that file, and the
+  drift message that follows lists `needs prototype` among the anchors; the
+  copy is then moved to
+  `~/Projects/_smoke/.trash/<name>-<YYYYMMDD-HHMMSS>/`. The command and its
+  output are recorded in the task's Implementation notes.
 - The script runs under macOS's bash 3.2 (no `declare -A`, no
   bash-4-only syntax) and uses no bare `sed -i`.
 - `TMPDIR=$HOME/Projects/_smoke/tmp bash scripts/check-all.sh --self-test`
@@ -727,6 +742,9 @@ root:
 - The layout tree lists `kenspc-prototype.md` and `prototype/SKILL.md`; the
   Project Overview, hooks paragraph, "No review" pattern, "prototype path"
   paragraph, scripts/ description, and Non-Goals edits are present.
+- `grep -n 'three documentation-path' CLAUDE.md` prints nothing, and the
+  `check-doc-sync-anchors.sh` description names four anchors, with
+  `needs prototype` in generate-brief, generate-plan, and prototype.
 - Every count and list in the file agrees with the repository:
   `ls plugins/kenspc/skills` shows eight skill directories,
   `ls plugins/kenspc/commands` eight commands, `ls plugins/kenspc/agents`
