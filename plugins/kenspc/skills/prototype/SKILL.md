@@ -126,8 +126,10 @@ might build has a location or a question to answer.
   stop; nothing is built.
 - A named `` `answered` `` entry: ask whether to prototype it again. In a
   session that cannot ask (a system reminder to work without stopping),
-  stop; nothing is built. Why: the entry already holds an answer and the
-  commit behind it, and replacing them is the user's decision.
+  stop and leave the entry unchanged: the rewrite in Phase 3 for a run in
+  which nothing was built does not apply to it. Why: the entry already
+  holds an answer and the commit behind it, and replacing them is the
+  user's decision.
 - A named `` `open` `` entry is prototyped like any other. Why: naming it is
   the user's decision that an experiment can settle it.
 - A question given as text that the brief lacks is appended to its
