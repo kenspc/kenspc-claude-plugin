@@ -112,11 +112,15 @@ config files), the discovery framework at
   decomposition, ask which module to brief first.
 - A question the conversation cannot settle is noted for Open Questions and
   not argued further. One an experiment would settle is marked
-  `needs prototype`, with what would settle it asked of the user — or, in
-  `rapid-inferred (reminder-driven)` mode, inferred and tagged as that mode
-  tags every inferred field. Why: rounds spent on a question talk cannot
-  settle are taken from the dimensions it can, and the entry keeps the
-  question in front of the plan instead of losing it in the transcript.
+  `needs prototype`, with what would settle it asked of the user. In a
+  session that cannot ask (a system reminder to work without stopping),
+  whatever the Discovery Mode, what would settle it is inferred and tagged
+  as `rapid-inferred (reminder-driven)` tags every inferred field. Why:
+  rounds spent on a question talk cannot settle are taken from the
+  dimensions it can, and the entry keeps the question in front of the plan
+  instead of losing it in the transcript; `rapid-direct` still asks its one
+  or two rounds under such a reminder, and this question would wait there
+  for an answer nobody gives.
 
 ## Phase 2: Produce Brief
 

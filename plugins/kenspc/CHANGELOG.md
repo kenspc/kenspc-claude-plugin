@@ -134,8 +134,9 @@ a minor release. No new agent and no CONTEXT key changes.
   rules its grammar (above). Phase 1 notes a question the conversation
   cannot settle for Open Questions instead of arguing it further, and marks
   one an experiment would settle `needs prototype`, asking the user what
-  would settle it (inferred and tagged in `rapid-inferred
-  (reminder-driven)` mode). The next-step suggestion lists
+  would settle it (inferred and tagged, as `rapid-inferred
+  (reminder-driven)` tags its fields, in a session that cannot ask,
+  whatever the Discovery Mode). The next-step suggestion lists
   `/kenspc-prototype <path> <n>` for each `needs prototype` entry before
   `/kenspc-plan`, and the skill invokes neither.
 - **generate-plan.** Phase 1 Step 1 reads a brief in three parts: the exit
