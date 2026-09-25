@@ -131,6 +131,17 @@ implementer's `git log` sees. The branch is red from this commit until the
 fix task lands, which is the true state of the code, and it stays true when
 the fix task is BLOCKED.
 
+**A commit that fails.** When this commit, or the task document's commit in
+Phase 3, fails — a commit hook rejects it, or git refuses a pathspec commit
+during an unfinished merge — stop, report the error, and ask the user how to
+go on. Do not retry, and do not bypass the hook with `--no-verify`. A hook
+that runs the test suite rejects the reproduction commit every time, since
+the test fails by design, and then rejects the task document's commit while
+that test is in the tree; committing past such a hook is the user's
+decision, and the run continues from the commit once the user has made it.
+Why: the hook encodes the project's rules, and a bypass the user did not
+choose changes how their repository is guarded.
+
 With no test framework configured, a plain reproduction script under the
 diagnosis run directory's scratch (Phase 2, Probes) may support the manual
 steps. It is evidence, not the test.
@@ -363,9 +374,10 @@ runs on this document, so the user's confirmation is its gate.
 
 **Commit after writing.** Commit the document alone:
 `docs: add task <name>`, adapted to the project's commit conventions,
-staging only that file and passing its path as a pathspec. Why:
-`task-implementer` commits each task's status into this file, and without a
-baseline commit its first commit would carry the whole document.
+staging only that file and passing its path as a pathspec. A commit that
+fails stops the run as Phase 1 describes. Why: `task-implementer` commits
+each task's status into this file, and without a baseline commit its first
+commit would carry the whole document.
 
 ### Tier 3: the brief
 
