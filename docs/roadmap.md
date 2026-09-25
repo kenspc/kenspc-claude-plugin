@@ -82,6 +82,11 @@ its number.
    files in place (`sed -i`, `.bak` copies in the session scratchpad, `cp`
    to restore), so a run that stops between the mutation and the restore
    leaves the user's source mutated.
+   From the batch B acceptance (`docs/dry-runs/batch-b-acceptance.md`,
+   F2): regression-verifier named a log `test.out` under its scratch
+   attempt, which the release checklist's name probe flags although vitest
+   collected nothing; the RUN_DIR bullet already forbids `test.*`, so this
+   is a behavior slip to watch, not a rule gap.
 
 ## Planned batches
 
