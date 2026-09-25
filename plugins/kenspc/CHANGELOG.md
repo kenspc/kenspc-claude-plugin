@@ -107,11 +107,14 @@ a minor release. No new agent and no CONTEXT key changes.
     migration is added or applied, with any tool. Credentials and
     connection strings are read by name at run time and never committed;
     the staged diff is read for one before the add commit.
-  - **What is left on disk.** The final message lists every path
-    `git status --porcelain --ignored -uall -- <location>` still shows —
-    installed dependencies, build output, a local database file, ignored
-    and untracked alike — for the user to remove. The skill deletes
-    nothing.
+  - **What is left on disk.** The final message lists what
+    `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
+    still shows — installed dependencies, build output, a local database
+    file, ignored and untracked alike, non-ASCII names unescaped — for the
+    user to remove: an ignored directory such as `node_modules/` as one
+    line, a directory holding only untracked files the run left named once
+    with its file count, and the paths the location already held when the
+    run chose it left out. The skill deletes nothing.
 - **generate-plan's exit.** On a brief with a `needs prototype` entry,
   Phase 1 asks before any gap-check question whether to prototype each such
   entry first — ending the run with one `/kenspc-prototype <brief path> <n>`

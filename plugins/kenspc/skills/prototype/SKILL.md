@@ -194,7 +194,7 @@ written once, in the Writing rules for the brief in
   user's source tree.
 - Once the location is chosen, and before anything is written there, note
   what
-  `git -c core.quotePath=false status --porcelain --ignored -uall -- <location>`
+  `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
   lists; the exit leaves those paths out of its leftovers list.
 
 ### An in-app UI prototype
@@ -428,13 +428,19 @@ The final message gives:
   user's decision; for a judgment the session could not ask for, what to
   look at and how;
 - the add and remove commits, and `git show <hash>` to read the prototype;
-- every path that
-  `git -c core.quotePath=false status --porcelain --ignored -uall -- <location>`
+- what
+  `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
   still lists — ignored and untracked alike, a non-ASCII name as it is and
-  not octal-escaped — for the user to remove, less
-  the paths it listed when the location was chosen. Why: an in-app
-  location is a directory of the user's app, and a file of theirs already
-  there is not the prototype's to name for removal;
+  not octal-escaped — for the user to remove, less the paths it listed when
+  the location was chosen. A directory that matches an ignore pattern
+  (`node_modules/`, `bin/`, `obj/`) comes back as one line. A directory of
+  which every file is listed as untracked, none of them on that earlier
+  list, is named once — the outermost such directory — with its file count;
+  a file marked as holding a configuration value is still named on its own.
+  Why: an in-app location is a directory of the user's app, and a file of
+  theirs already there is not the prototype's to name for removal; and a
+  list that runs to thousands of lines after a dependency install is cut
+  short or goes unread, so it no longer names what is left;
 - every default a session that cannot ask took in place of a question.
 
 Next step: `/kenspc-plan <brief>` when no `` `needs prototype` `` entry

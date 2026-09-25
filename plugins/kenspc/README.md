@@ -394,8 +394,15 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 - **Leftovers after a prototype.** The remove commit takes out what git
   tracks. Dependencies the prototype installed, its build output, a local
   database file, and other files git does not track — ignored or untracked —
-  stay under the prototype's location, and the final message names every
-  such path for you to remove. The skill deletes nothing.
+  stay under the prototype's location, and the final message names them
+  for you to remove, as
+  `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
+  lists them: an ignored directory such as `node_modules/` as one line, a
+  directory holding only untracked files the run left as one line with its
+  file count, and a file kept out of the add commit for holding a
+  configuration value marked as such. Files of yours that were under the
+  location before the run — an in-app location is a directory of your app —
+  are left out of the list. The skill deletes nothing.
 - **In-app UI prototypes.** Only a UI prototype that can only render inside
   the app goes into the app. Its location comes from your CLAUDE.md or from
   you; the project's typecheck runs before building as a baseline and again
