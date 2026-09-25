@@ -91,7 +91,8 @@ its number.
    is a behavior slip to watch, not a rule gap.
 9. Smoke candidates for the prototype chain. The batch C review (T2–T7)
    proposed six release-checklist cases that the one-time acceptance
-   covers but no smoke row does. Each costs a headless run at every
+   covers but no smoke row does, and the review of its fix round proposed
+   more, each marked with its ID. Each costs a headless run at every
    release, so whether any joins its row is the maintainer's call:
    - Row 10: a session that cannot ask — with no entry named on a brief
      holding two `needs prototype` entries, the run takes the first and
@@ -116,6 +117,11 @@ its number.
    - Row 4: a brief with an `answered` entry, whose short hash the plan
      cites where it relies on it, and a brief whose section body is `none`,
      which gets no exit question.
+   - Row 4: a brief entry whose status word is not recognized — a
+     translated word such as `需要原型`, or no word — which the gap round
+     quotes and asks about; with a reminder to work without stopping, the
+     draft's Open Questions carries it in the `open` form, its `From:`
+     ending `status word <the word> not recognized` (fix-round review, T1).
 10. A guard for the copied Prototype line. The line is written in
     generate-brief's writing rules and copied byte-identically into
     `prototype/SKILL.md`; `check-doc-sync-anchors.sh` guards only the
