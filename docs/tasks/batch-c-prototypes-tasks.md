@@ -151,9 +151,11 @@ that Tasks 2 and 3 point at, so both depend on it; Tasks 2 and 3 (plan
 Phases 2 and 3) are independent of each other. Task 4 adds the command for
 the skill Task 3 writes. Task 5's message names the skill and the command
 (`Depends on: Task 3-4`). Task 6 guards the `needs prototype` anchor in the
-three files Tasks 1–3 write (`Depends on: Task 1-3`). Tasks 7, 9, and 10
+three files Tasks 1–3 write (`Depends on: Task 1-3`). Tasks 7 and 9
 document the finished skills, hook, and guard (`Depends on: Task 1-6`);
-Task 8 documents the skills and the command only (`Depends on: Task 1-4`).
+Tasks 8 and 10 document the skills and the command only — neither the
+READMEs nor the release checklist describe the hook message or the anchor
+guard, and the guard counts do not change (`Depends on: Task 1-4`).
 Task 11, the Doc-sync task, runs last and needs Tasks 1–10. It reconciles
 the documents with what those tasks implemented and promotes their recorded
 decisions.
@@ -873,7 +875,7 @@ Plan Step 5.3 (C-8; ruling M11).
 
 **Status:** TODO
 
-Depends on: Task 1-6
+Depends on: Task 1-4
 
 Plan Step 5.4 (ruling D14). In `docs/release-checklist.md`:
 
