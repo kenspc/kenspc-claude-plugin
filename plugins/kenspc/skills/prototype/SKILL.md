@@ -298,7 +298,13 @@ user has staged out of the commit.
   Do not retry, and do not bypass the hook with `--no-verify`. In a session
   that cannot ask (a system reminder to work without stopping), stop and
   report. Why: the hook encodes the project's rules, and a bypass the user
-  did not choose changes how their repository is guarded.
+  did not choose changes how their repository is guarded. When the add
+  commit is the one that failed, the prototype's paths are still staged,
+  and a plain `git commit` would carry them: the report names those paths,
+  gives the evidence the run gathered, and gives
+  `git reset -q -- <those paths>`, which unstages them and leaves the files
+  in place. Why: a prototype swept into the user's next commit lands under
+  their message, and no remove commit ever follows it.
 
 ### The judgment point
 
