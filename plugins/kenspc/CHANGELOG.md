@@ -9,6 +9,164 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.8.0 — unreleased
+
+Batch C. A brief records what its discussion could not settle in a
+`## Open Questions` section; generate-plan stops on an entry marked
+`needs prototype` and asks whether to prototype it first or carry it into
+the plan; a `prototype` skill and its `/kenspc-prototype` command answer one
+such question with a throwaway prototype, committed and removed in the next
+commit, its answer and commit hash written into the brief. A new command, so
+a minor release. No new agent and no CONTEXT key changes.
+
+### Added
+
+- **Open Questions in briefs.** generate-brief's template gains an
+  always-present `## Open Questions` section between `## Context` and
+  `## Discovery Notes`, its body `none` when nothing is open. Each numbered
+  entry starts with its status word in backticks — `open` (a question
+  neither discussion nor a small experiment settles), `needs prototype` (one
+  a small experiment settles), or `answered` (written only by the prototype
+  skill) — then ` — ` and the question. A `needs prototype` entry carries
+  `Settled by:`, the result that answers it, named before any prototype
+  runs so the evidence is measured against it and cannot be bent to fit.
+  An answered entry keeps the question and `Settled by:` and adds
+  `Answer:`, `Evidence:` (what was run, what it showed, and the case that
+  could have shown the opposite), and
+  ``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``;
+  an attempt that did not settle the question keeps `needs prototype` and
+  adds `Evidence:`, with `Prototype:` when a prototype was committed. Status
+  words and labels stay in English whatever the brief's language. The
+  grammar is written once, in generate-brief's writing rules, and
+  generate-plan and the prototype skill point at it. The status is not a
+  `**Status:**` line, which marks a task document.
+- **`prototype` skill and `/kenspc-prototype`.** Answers one question from a
+  brief — a `needs prototype` entry named by number, the brief's only one,
+  or a question given as text and appended to the brief first — with a
+  throwaway prototype: logic, UI, or a feature slice. Three phases (Frame,
+  Build and run, Record and discard) and no review phase: the prototype is
+  discarded, and its answer is reviewed where a plan uses it. The command
+  carries `disable-model-invocation: true`; the skill routes by its
+  description, which names what it is not for (a feature to keep, running a
+  snippet, fixing a bug). A question with no brief stops with a
+  `/kenspc-brief` suggestion and builds nothing.
+  - **The gates.** No general confirmation: the skill shows its frame (the
+    question, `Settled by:`, the kind, the location, the resources) and
+    goes on, stopping only at a gate — no arguments; several
+    `needs prototype` entries, none named; a named `answered` entry; a
+    location conflict; an in-app UI prototype with no CLAUDE.md location,
+    or with a dirty tracked file or a manifest change; a feature prototype
+    that cannot run outside the app; a connection the development
+    configuration does not name; a new table or column on the development
+    database; an answer that is the user's judgment; a failed commit. Each
+    has a branch for a session that cannot ask — the first entry in
+    document order, the default location, a throwaway database, or nothing
+    built with the entry left unsettled and the reason in `Evidence:` —
+    named in the final message.
+  - **The two commits.** `chore: add prototype <slug>`, made after the run
+    that produced the evidence, staging only the prototype's own paths by
+    pathspec; the brief entry rewritten; then `chore: remove prototype
+    <slug>`, its body carrying `Question:`, `Answer:` or `Not settled:`,
+    and `Prototype: <hash>` — `git rm` for the paths the add commit added
+    and the parent's content for the ones it modified, checked by
+    `git diff <add commit>^ HEAD` over those paths printing nothing. Both
+    subjects follow the project's commit conventions. The brief is not
+    committed. A failed commit stops the run with no retry and no
+    `--no-verify`; a run that stops between the two commits names the add
+    commit and gives the commands that would remove it, without running
+    them.
+  - **Where it lives.** `prototypes/<slug>/` at the repository root unless
+    the project's CLAUDE.md names another location; its file names follow
+    the naming rule of the `canonical:run-dir` block's Scratch space bullet,
+    by reference. None of the project's build, test, or lint commands runs
+    on the prototype, and no configuration is edited to exclude it.
+    Dependencies go into the prototype's own manifest.
+  - **The in-app exception, UI only.** A UI prototype that can only render
+    inside the app goes into it, at a location from CLAUDE.md or the user;
+    the project's typecheck runs before building as a baseline and is
+    green against it before the add commit, and the remove commit restores
+    every tracked file the add commit modified. A feature prototype that
+    needs the app's runtime runs from its location, importing the app's
+    modules, or is not built, its entry left `needs prototype` with the
+    reason; widening the exception to features is the user's decision.
+  - **The development database.** Recognized by name only — a
+    development-named configuration file (`appsettings.Development.json`,
+    `.env.development`, `.env.development.local`), the project's
+    user-secrets, or one the project's CLAUDE.md or README names; any other
+    connection is asked about, and production resources are never touched.
+    A new table or column gets a warning that the development database may
+    be the wrong place, and a throwaway-database recommendation, before any
+    code; a user who insists is recorded in `Evidence:`, and a teardown
+    drops what the prototype created. Rows written to existing tables get
+    no warning and no teardown, and `Evidence:` names each such table. No
+    migration is added or applied, with any tool. Credentials and
+    connection strings are read by name at run time and never committed;
+    the staged diff is read for one before the add commit.
+  - **What is left on disk.** The final message lists every path
+    `git status --porcelain --ignored -uall -- <location>` still shows —
+    installed dependencies, build output, a local database file, ignored
+    and untracked alike — for the user to remove. The skill deletes
+    nothing.
+- **generate-plan's exit.** On a brief with a `needs prototype` entry,
+  Phase 1 asks before any gap-check question whether to prototype each such
+  entry first — ending the run with one `/kenspc-prototype <brief path> <n>`
+  line per entry, invoking nothing and writing no file — or carry it into
+  the plan. A session that cannot ask carries every such entry with
+  `Not prototyped: the session could not ask`.
+- **Guard group, counts unchanged** (`guards run: 10`,
+  `self-tests run: 9`). `check-doc-sync-anchors.sh` adds a
+  `needs prototype` group — `generate-brief/SKILL.md`,
+  `generate-plan/SKILL.md`, `prototype/SKILL.md` — and now describes four
+  planning-chain anchors across eleven files, on the documentation path and
+  the open-question path.
+
+### Changed
+
+- **generate-brief.** The template gains Open Questions and the writing
+  rules its grammar (above). Phase 1 notes a question the conversation
+  cannot settle for Open Questions instead of arguing it further, and marks
+  one an experiment would settle `needs prototype`, asking the user what
+  would settle it (inferred and tagged in `rapid-inferred
+  (reminder-driven)` mode). The next-step suggestion lists
+  `/kenspc-prototype <path> <n>` for each `needs prototype` entry before
+  `/kenspc-plan`, and the skill invokes neither.
+- **generate-plan.** Phase 1 Step 1 reads a brief in three parts: the exit
+  (above); the gap-check, where each `open` entry is a gap for the same
+  one-to-two rounds and one they do not settle is carried into the plan (a
+  session that cannot ask carries every `open` entry with no gap round);
+  and `answered` entries, settled input that a plan relying on one cites by
+  its prototype hash. A brief with no `## Open Questions` section, or with
+  `none`, has nothing to stop on. The plan's Open Questions element gains
+  the carried form — the status word kept, `From: <brief path>, entry <n>`,
+  `Not prototyped:` on a `needs prototype` entry, and `Assumed in:` naming
+  the steps that assume an answer — whose status word and labels stay in
+  English in a plan in another language. The approval gate is unchanged: a
+  session that cannot ask still writes the plan only on approval.
+- **Reminder hook.** `remind-plan-skill.sh`'s brief message names
+  prototype (`/kenspc-prototype`), which records a prototype's answer in an
+  existing brief, beside generate-brief and diagnose-bug. The hook still
+  matches the Write tool only, so the prototype's edit of a brief does not
+  reach it.
+- CLAUDE.md and both READMEs describe the prototype skill and the
+  prototype path, and count eight skills and commands; the plugin and
+  marketplace manifest descriptions gain prototyping.
+
+### Known behavior
+
+- **Gates between the two commits.** Between the add and the remove commit,
+  a typecheck, linter, or root-level project file that walks the repository
+  reaches the prototype, and a pre-commit hook that runs one can reject the
+  add commit, which stops the run. HEAD after the run holds no prototype.
+  The roadmap item on linters and build tools that walk into `.kenspc/`
+  now names `prototypes/` too.
+- **Leftovers after a prototype.** Files git does not track under the
+  prototype's location — installed dependencies, build output, a local
+  database file — stay after the remove commit, and the final message
+  names them.
+- **History keeps every prototype.** The remove commit takes the prototype
+  out of the tree, not out of history: `git show <hash>` reads it, and
+  anything it committed stays there.
+
 ## 3.7.0 — 2026-09-25
 
 Batch B. A `diagnose-bug` skill and its `/kenspc-diagnose` command take an

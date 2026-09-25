@@ -1014,7 +1014,29 @@ Plan Step 5.2 (rulings M6, M8, M10, M12, D8).
 
 ### Task 9: Add the 3.8.0 CHANGELOG entry and roadmap item 7's sentence
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the entry's intro follows 3.7.0's shape ("Batch C." then a
+  summary, the minor-release reason, and "No new agent and no CONTEXT key
+  changes") but carries no release-smoke sentence, which the release
+  commit adds with the date. The CHANGELOG names the roadmap item by its
+  subject ("linters and build tools that walk into `.kenspc/`"), not its
+  number, as the roadmap's own header asks of text outside it. A closing
+  Changed bullet covers CLAUDE.md, both READMEs, and the manifests (Tasks 7
+  and 8, both DONE), as 3.7.0's entry does; the release checklist is not
+  mentioned here because Task 10 had not run when this entry was written —
+  the Doc-sync task reconciles it.
+- Changes/tradeoffs: the Added section splits the prototype skill into
+  sub-bullets (the gates, the two commits, where it lives, the in-app
+  exception, the development database, what is left on disk), mirroring
+  3.7.0's diagnose-bug sub-bullets; Known behavior uses the README's item
+  names for the gates and the leftovers. Verified: the CHANGELOG's first
+  version heading is `## 3.8.0 — unreleased`; `git diff docs/roadmap.md`
+  shows only the added sentence at the end of item 7 (the `## Next minor
+  (3.8.0)` heading and `## Planned batches`, batch C's line included,
+  untouched); `plugin.json` still has `"version": "3.7.0"`;
+  `check-all.sh` (`guards run: 10`) exits 0.
 
 Depends on: Task 1-6
 

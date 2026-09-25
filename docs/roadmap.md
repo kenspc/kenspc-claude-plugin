@@ -35,7 +35,9 @@ its number.
    as `probe.mts` can therefore still fail `eslint .`, and no name keeps a
    source probe out of a linter's pattern. Today `regression-verifier` runs
    build and lint unmodified and names the scratch files in the FAIL;
-   keeping them out of those tools is open.
+   keeping them out of those tools is open. A prototype's files under
+   `prototypes/` are in the same position between its add and remove
+   commits, and a gate that walks the repository reaches them there.
 8. Scratch convention follow-ups. The standalone review of the last
    scratch-probe commits (`f42bd21`, `99574bb`, `979688e`) found no HIGH
    issue and, under that plan's stop rule, deferred 14 findings, 9 MEDIUM
