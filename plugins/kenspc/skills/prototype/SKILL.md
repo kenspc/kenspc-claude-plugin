@@ -346,6 +346,12 @@ grammar in the Writing rules for the brief in
   Why: the rest of the brief is the user's discovery record.
 - At the judgment point, the user's verdict came first.
 - The teardown ran, when there was one, and the tables it created are gone.
+  A teardown that fails, or leaves a table or column the prototype created,
+  stops the run before the remove commit: the last message gives the error
+  and names what is still there, and the run ends with the prototype still
+  in the tree (see the Exit), its teardown script with it. Why: a schema
+  change left on the development database changes what other work runs
+  against, and the script is the record of what to drop.
 - The remove commit exists — `chore: remove prototype <slug>`, adapted to
   the project's commit conventions, its body carrying `Question:`,
   `Answer:` or `Not settled:`, and `Prototype: <hash>` — as one commit:
