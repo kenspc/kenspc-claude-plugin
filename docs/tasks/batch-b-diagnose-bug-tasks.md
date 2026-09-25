@@ -642,7 +642,26 @@ and spaces.
 
 ### Task 6: Make code-fixer read the change set and commit nothing in an uncommitted run
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the committed-mode rule keeps its existing bullet ("Each fix is
+  a separate, focused git commit with a clear message") and gains the
+  condition "when the change set is committed: `Mode: commits` in
+  `change-set.md`, or REVIEW_SCOPE "task"", with the uncommitted-mode rule
+  as the next bullet — the two modes sit side by side in FIXING RULES, and
+  OBJECTIVE ("commit as FIXING RULES prescribes") and PROCESSING APPROACH
+  ("committed as FIXING RULES prescribes: one focused conventional commit
+  per fix, or no commit at all in an uncommitted run") defer to them. The
+  PER-ISSUE OUTPUT CONTRACT's `commit` field names the uncommitted FIXED
+  row's `—` explicitly rather than folding it into "otherwise", so a FIXED
+  row with `—` reads as intended, not as a missing hash.
+- Changes/tradeoffs: the CONTEXT note calls `change-set.md` "the change set
+  under review", and PREREQUISITES step 3 points at FIXING RULES for how
+  fixes land. The `canonical:stats-line`, `example:schema-b`, and
+  `canonical:principle:*` blocks and the CODE-CRAFT PRINCIPLES header with
+  its guard comment were compared before and after between their markers:
+  all unchanged.
 
 Depends on: Task 4
 

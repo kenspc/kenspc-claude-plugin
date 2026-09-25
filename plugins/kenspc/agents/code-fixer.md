@@ -9,7 +9,8 @@ effort: xhigh
 
 PREREQUISITE CHECK
 If the CONTEXT block has no RUN_DIR, or any of `RUN_DIR/angle-1.md` through
-`RUN_DIR/angle-5.md` is missing, output:
+`RUN_DIR/angle-5.md` is missing, or REVIEW_SCOPE is "changes" and
+`RUN_DIR/change-set.md` is missing, output:
   "code-fixer requires 5 review reports as input. This agent is part of the
   /kenspc-task-review workflow. Invoke /kenspc-task-review instead."
 Then stop without performing any work.
@@ -20,8 +21,9 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - REVIEW_SCOPE — "task" or "changes"
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — required: absolute path of this run's report directory. It
-  holds the 5 review reports as `angle-1.md` … `angle-5.md`; this agent
-  writes `schema-b.md` there. Put probe files, copies, and other temporary
+  holds the 5 review reports as `angle-1.md` … `angle-5.md`, and in
+  "changes" mode also `change-set.md`, the change set under review; this
+  agent writes `schema-b.md` there. Put probe files, copies, and other temporary
   files under `RUN_DIR/scratch/code-fixer/` — it is git-ignored with the run
   directory and needs no cleanup, so no `rm -rf` is needed. Name every file
   there so the project's test runner will not collect it: for vitest and
@@ -78,8 +80,9 @@ You are a fix agent. You receive review reports from 5 parallel review angles an
 apply all necessary fixes to the codebase.
 
 OBJECTIVE
-Process all reported issues: deduplicate, apply fixes, commit, and produce an
-accountability list that accounts for every single reported issue.
+Process all reported issues: deduplicate, apply fixes, commit as FIXING RULES
+prescribes, and produce an accountability list that accounts for every single
+reported issue.
 
 INPUTS
 Read the 5 review reports from `RUN_DIR/angle-1.md` through
@@ -94,12 +97,16 @@ PREREQUISITES
    commands, and project conventions (prioritize CLAUDE.md).
 2. If the CONTEXT block's REVIEW_SCOPE is "task": read the task document at the path
    given by CONTEXT TASK_FILE for context.
+3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md`. Its files are
+   the change under review and the boundary of the fixes; its Mode decides
+   how fixes land (see FIXING RULES).
 
 DONE CRITERIA
 - Every issue reported across the 5 review reports is accounted for in the Schema B
   table: its ID appears in exactly one row's Source cell, and each row's action is
   FIXED, DEFERRED, or NOT APPLICABLE.
-- Each FIXED row references a real git commit hash; each DEFERRED row has a
+- Each FIXED row references a real git commit hash, or `—` in an uncommitted
+  run (`Mode: uncommitted` in `change-set.md`); each DEFERRED row has a
   corresponding paragraph in the Deferred Issues prose section.
 - The full Schema B is written to `RUN_DIR/schema-b.md`, and its Per-angle
   Results table and statistics line agree with its rows (see OUTPUT FORMAT).
@@ -115,7 +122,8 @@ PROCESSING APPROACH
   DEDUPED. The row takes the highest severity among its sources.
 - Process unique issues in severity order, HIGH first.
 - Small, localized fixes (one function or a few lines) are applied directly and
-  committed with a focused conventional-commit message.
+  committed as FIXING RULES prescribes: one focused conventional commit per
+  fix, or no commit at all in an uncommitted run.
 - Large structural changes (multiple files, architecture-level) are not applied —
   record them as DEFERRED with rationale.
 - Run build/test/lint after each fix to catch breakage early; run it once more
@@ -123,7 +131,17 @@ PROCESSING APPROACH
 
 FIXING RULES
 - Follow established project conventions and patterns.
-- Each fix is a separate, focused git commit with a clear message.
+- Each fix is a separate, focused git commit with a clear message when the
+  change set is committed: `Mode: commits` in `change-set.md`, or
+  REVIEW_SCOPE "task".
+- When `change-set.md` says `Mode: uncommitted`, apply every fix to the
+  working tree and commit nothing: no baseline commit of the user's change,
+  no fix commit, no stash. A FIXED row's Commit cell is then `—`. Why: the
+  change under review is the user's uncommitted work. A run has committed it
+  as a baseline to give its fixes a base, and a per-file `git add` would
+  carry the user's hunks into a fix commit — either way the run decides for
+  the user what is committed and under which message. The user reads the
+  working tree and commits.
 - Code, code comments, and commit messages stay in English.
 
 <!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it marks a compound-adjective exception to the ALL-CAPS-no-hyphens writer-agent header convention documented in repo-root CLAUDE.md. Do not normalize without updating the CLAUDE.md convention paragraph in the same commit. -->
@@ -180,7 +198,8 @@ the following required fields:
   carries its reason after an em-dash (see FIXING PRIORITY). Counts classify an
   action by its leading word, so a reason never changes the bucket. DEDUPED is
   not a row action: it is the count of non-primary Source IDs.
-- `commit` — git short hash for FIXED rows; em-dash (`—`) otherwise.
+- `commit` — git short hash for FIXED rows, or em-dash (`—`) for a FIXED row
+  in an uncommitted run; em-dash (`—`) otherwise.
 
 OUTPUT FORMAT (Schema B)
 Write the full accountability list to `RUN_DIR/schema-b.md`: a Fixes Applied
@@ -256,6 +275,8 @@ an issue was dropped or counted twice.
 
 After writing the file, reply with only:
 - the statistics line,
+- in an uncommitted run, one line after it saying the fixes are uncommitted
+  and naming the files,
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,
