@@ -91,7 +91,8 @@ Read from RUN_DIR:
 - `scratch/code-fixer/pre-fix/index.txt` — in an uncommitted run only: the
   pre-fix record, one line per file the fixes touched (`copied <path>`,
   `created <path>`, `deleted <path>`), with each copied file's content
-  before its first edit at `scratch/code-fixer/pre-fix/<path>.txt`.
+  before its first edit at `scratch/code-fixer/pre-fix/<path>.txt`, a
+  `.test.` or `.spec.` segment of the file name renamed `.probe.`.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
@@ -175,8 +176,10 @@ VERIFICATION CHECKS
    nothing (its FIXED rows carry `—` in Commit), the pre-fix record at
    `RUN_DIR/scratch/code-fixer/pre-fix/`. Its `index.txt` names every file
    the fixes touched, one line each: for a `copied <path>` line the fixes
-   are the difference between `pre-fix/<path>.txt` and the working file
-   (`git diff --no-index pre-fix/<path>.txt <path>`); for `created <path>`,
+   are the difference between the copy and the working file — the copy is
+   `pre-fix/<path>.txt` with any `.test.` or `.spec.` segment of the file
+   name replaced by `.probe.` (`git diff --no-index <copy> <path>`); for
+   `created <path>`,
    the whole file; for `deleted <path>`, the copy. A path the index does not
    name is the user's, whatever `git status` shows, and is not read as fix
    output. An index line whose copy is missing, or a FIXED row naming a

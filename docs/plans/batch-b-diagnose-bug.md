@@ -1007,6 +1007,16 @@ from that section.
   top-level run file: they are copies of project files, which the
   run-directory check requires under `scratch/`, and `.txt` keeps them out
   of every tool that walks the tree. Steps 2.1, 2.3, 2.4, 3.2, 4.2–4.4.
+- C11 — Steps 2.3, 2.4, 4.4, amending C10: a pre-fix copy renames any
+  `.test.` or `.spec.` segment of the file name to `.probe.` before `.txt`
+  is appended (`test/refund.test.ts` → `pre-fix/test/refund.probe.ts.txt`),
+  and `regression-verifier` derives the copy's path by the same rule.
+  Source: the batch B acceptance's dirty-tree review run, where the copy
+  `pre-fix/test/refund.test.ts.txt` matched the release checklist's
+  sub-check 1 `find` probe (`*.test.*`) — vitest does not collect a `.txt`
+  file, but the scratch naming rule and the probe both forbid the segment.
+  A FAIL of C10's own making, fixed before release and the row re-run.
+  Steps 2.3, 2.4, 4.4.
 
 ## Open Questions
 

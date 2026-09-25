@@ -143,7 +143,9 @@ date is filled at release.
   would erase or restage the user's uncommitted change. Before a file's
   first edit it records the file under
   `RUN_DIR/scratch/code-fixer/pre-fix/` — a `.txt` copy of its content
-  (`pre-fix/<path>.txt`) and a line in `pre-fix/index.txt` (`copied`,
+  (`pre-fix/<path>.txt`, a `.test.` or `.spec.` segment of the name renamed
+  `.probe.`, so the copy clears a runner's pattern and the release
+  checklist's name probe alike) and a line in `pre-fix/index.txt` (`copied`,
   `created`, or `deleted <path>`), written once per run — so a fix that
   breaks the build is edited back or restored from its copy, and
   regression-verifier can tell the fixes from the user's hunks.

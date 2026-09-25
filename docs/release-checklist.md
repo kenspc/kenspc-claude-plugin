@@ -181,9 +181,11 @@ Run-directory check for rows 6 and 7 (v3.5.1):
 
 Change-set check for row 7, a run with no task document (v3.7.0):
 
-- `RUN_DIR/change-set.md` exists and has a `Mode:` line, and the FILE
-  COVERAGE lists in `angle-1.md` … `angle-5.md` name the same files as its
-  `Status | Path` table.
+- `RUN_DIR/change-set.md` exists and has a `Mode:` line, and every
+  `File:Line` path in the Issues tables of `angle-1.md` … `angle-5.md` lies
+  within its `Status | Path` table (the reports carry no separate file
+  list; a path outside the set in a finding's location is a reviewer that
+  derived its own scope).
 - Between the invocation and the first reviewer dispatch, the trace shows no
   `git commit`, `stash`, `checkout`, `add`, or `reset` by the orchestrator
   other than the one-time `.gitignore` commit.
@@ -192,7 +194,9 @@ Change-set check for row 7, a run with no task document (v3.7.0):
   Commit in `schema-b.md` is `—`, and Next steps has the bullet naming the
   uncommitted fixes' files. With FIXED greater than 0,
   `<RUN_DIR>/scratch/code-fixer/pre-fix/index.txt` exists and names every
-  file a FIXED row names, each `copied` path has its `.txt` copy beside it,
+  file a FIXED row names, each `copied` path has its `.txt` copy beside it
+  (a `.test.` or `.spec.` segment renamed `.probe.`, so sub-check 1's
+  `find` probe stays clean),
   and the trace shows regression-verifier diffing those copies against the
   working files (`git diff --no-index`) instead of looking for fix commits;
   Schema C row 5 is not a FAIL that cites missing fix commits.

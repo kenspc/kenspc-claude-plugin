@@ -159,8 +159,11 @@ FIXING RULES
   the user's uncommitted change in that file, or its partial staging, has
   no commit or stash to come back from. Before a file's first edit in this
   mode, record its state under `RUN_DIR/scratch/code-fixer/pre-fix/`: copy
-  it to `pre-fix/<path relative to the repository root>.txt` — the `.txt`
-  appended so no runner, linter, or compiler collects the copy — and add
+  it to `pre-fix/<path relative to the repository root>.txt`, with `.txt`
+  appended and any `.test.` or `.spec.` segment of the file name replaced
+  by `.probe.` (`test/refund.test.ts` is kept as
+  `pre-fix/test/refund.probe.ts.txt`), so that neither a runner's pattern
+  nor a linter or compiler picks the copy up — and add
   the line `copied <path>` to `pre-fix/index.txt`; a file a fix creates gets
   the line `created <path>` and no copy; a file a fix deletes gets
   `deleted <path>` and keeps its copy. `pre-fix/` sits beside your numbered
