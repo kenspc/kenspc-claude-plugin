@@ -64,8 +64,9 @@ If $ARGUMENTS is empty or contains no file path:
 - Determine the change set — the files under review — before the
   run-directory preparation below, with read-only git commands only:
   `git status --porcelain`, `git diff --name-status`, `git rev-parse`,
-  `git rev-list`, `git log`, and `git hash-object -t tree /dev/null`, which
-  prints the empty tree's SHA and writes nothing. No commit, stash,
+  `git rev-list`, `git log`, `git merge-base`, and
+  `git hash-object -t tree /dev/null`, which prints the empty tree's SHA and
+  writes nothing. No commit, stash,
   checkout, add, reset, or any other change to the working tree, the index,
   or refs. Why: a review run once committed the user's uncommitted change as
   a baseline for its fixes, because nothing said what to do with it; the
@@ -76,10 +77,16 @@ If $ARGUMENTS is empty or contains no file path:
     HEAD's SHA; the diff command is `git diff <sha> -- <paths>`, with
     untracked files read whole.
   - `Mode: commits` when the tree is clean. The range is
-    `<upstream sha>..<HEAD sha>` when `@{upstream}` resolves and the range
-    has commits, otherwise `<HEAD~1 sha>..<HEAD sha>`; the set is
-    `git diff --name-status <range>`; the diff command is
-    `git diff <a>..<b> -- <paths>`.
+    `<merge-base sha>..<HEAD sha>` when `@{upstream}` resolves and
+    `git rev-list <upstream sha>..<HEAD sha>` lists commits, the merge base
+    being what `git merge-base <upstream sha> <HEAD sha>` prints — the
+    upstream itself unless the branch has diverged from it; otherwise
+    `<HEAD~1 sha>..<HEAD sha>`. The set is `git diff --name-status <range>`;
+    the diff command is `git diff <a>..<b> -- <paths>`. Why the merge base:
+    `git diff` with two dots compares two trees, so on a branch that has
+    diverged from its upstream, `<upstream sha>..<HEAD sha>` would also list
+    the files only the upstream's new commits touched, with their changes
+    shown reversed, as if this branch had undone them.
   - When a commit these defaults name does not exist, git's empty tree
     stands in for it: the SHA `git hash-object -t tree /dev/null` prints,
     `4b825dc642cb6eb9a060e54bf8d69288fbee4904` in a SHA-1 repository. With
