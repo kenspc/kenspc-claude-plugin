@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 3.7.0 — unreleased
+## 3.7.0 — 2026-09-25
 
 Batch B. A `diagnose-bug` skill and its `/kenspc-diagnose` command take an
 observed bug from reproduction to a task document for
@@ -17,8 +17,17 @@ observed bug from reproduction to a task document for
 needs a decision a task cannot make. `REVIEW_SCOPE=changes` is defined:
 task-review computes the change set once, read-only, and every agent reads
 it from the run directory; in an uncommitted run code-fixer commits
-nothing. A new command, so a minor release. No CONTEXT key changes. The
-date is filled at release.
+nothing and keeps a pre-fix record that regression-verifier judges the
+fixes against. A new command, so a minor release. No CONTEXT key changes.
+Release smoke: the batch's acceptance run,
+`docs/dry-runs/batch-b-acceptance.md` — smoke row 9 in every case it names
+and row 7 with the change-set check in four repository states, run
+headless on macOS; its two findings on the checklist's name probe are
+recorded there, one fixed and re-run before this tag and one a behavior
+slip recorded in the roadmap. The batch's own task document was decomposed
+and implemented by `/kenspc-task` and `/kenspc-task-implement` in this
+repository, the first Doc-sync task generated from a plan's Documentation
+impact; no separate smoke run was made for rows 1–6 and 8.
 
 ### Added
 

@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (3.7.0)
+## Next minor (3.8.0)
 
 1. Render Schema A / B / C once, in the final Schema G report, instead of
    again between dispatches in Step 3 (Mac O1).
