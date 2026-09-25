@@ -223,14 +223,15 @@ insufficient; the field's presence is the anchor.]
 - Open Questions is always present; its body is `none` when nothing is
   open. Why: a reader — and generate-plan — can then tell "nothing open"
   from "not considered".
-- The status words `` `open` ``, `` `needs prototype` ``, and
-  `` `answered` ``, and the labels `Settled by:`, `Answer:`, `Evidence:`,
-  and `Prototype:`, stay exactly as written, in English, whatever the
-  brief's language. Each entry starts with its status word in backticks,
-  followed by ` — ` and the question; the labels are sub-bullets, in that
-  order. Why: generate-plan finds an unresolved entry by its status word,
-  and the prototype skill rewrites that word when it settles the question;
-  a translated word breaks the chain without an error.
+- The `## Open Questions` heading, the status words `` `open` ``,
+  `` `needs prototype` ``, and `` `answered` ``, and the labels
+  `Settled by:`, `Answer:`, `Evidence:`, and `Prototype:`, stay exactly as
+  written, in English, whatever the brief's language. Each entry starts
+  with its status word in backticks, followed by ` — ` and the question;
+  the labels are sub-bullets, in that order. Why: generate-plan finds the
+  section by its heading and an unresolved entry by its status word, and
+  the prototype skill rewrites that word when it settles the question; a
+  translated heading or word breaks the chain without an error.
 - `needs prototype` only for a question an experiment settles; a decision
   that belongs to a person is `open`. Why: an experiment cannot make a
   decision someone has to make, and generate-plan stops on every
