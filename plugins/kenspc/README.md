@@ -10,8 +10,9 @@ Skills activate automatically when Claude Code detects a matching task context.
 
 | Skill | Description |
 |-------|-------------|
-| generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
-| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. |
+| generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. The brief always carries an Open Questions section: each question the discussion could not settle, marked `open` or `needs prototype` (with `Settled by:`, the result that would settle it), or `none` when nothing is open; the next-step suggestion names `/kenspc-prototype` for each `needs prototype` entry before `/kenspc-plan`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
+| prototype | Answers one open question from a brief with a throwaway prototype — logic, UI, or a feature slice. Frames the question and the result that settles it, builds the smallest thing that settles it (under `prototypes/<slug>/` by default), runs it, and commits it (`chore: add prototype <slug>`); writes the answer, the evidence, and the commit hash into the brief's entry; then removes the prototype in the next commit (`chore: remove prototype <slug>`). A location conflict, a database it would change, and an in-app UI prototype are each asked about. No review phase: the prototype is discarded, and its answer is reviewed where a plan uses it. |
+| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. |
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with CLAUDE.md). |
 | diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. |
@@ -29,6 +30,7 @@ duplicate them as a competing routing surface.
 | Command | Usage |
 |---------|-------|
 | `/kenspc-brief` | `/kenspc-brief <rough idea or topic>` |
+| `/kenspc-prototype` | `/kenspc-prototype <brief path> [entry number or question]` |
 | `/kenspc-plan` | `/kenspc-plan <requirement or path> [custom instructions]` |
 | `/kenspc-task` | `/kenspc-task <plan-document-path> [phase] [custom instructions]` |
 | `/kenspc-diagnose` | `/kenspc-diagnose <observed bug or path to a bug report>` |
@@ -36,9 +38,9 @@ duplicate them as a competing routing surface.
 | `/kenspc-task-review` | `/kenspc-task-review [path-to-task-file] [custom instructions]` |
 | `/kenspc-guide` | `/kenspc-guide <project-path> [custom instructions]` |
 
-Skills can also be invoked via `/kenspc:generate-brief`, `/kenspc:generate-plan`,
-`/kenspc:generate-task`, `/kenspc:diagnose-bug`, `/kenspc:task-implement`,
-`/kenspc:task-review`, and `/kenspc:generate-guide`.
+Skills can also be invoked via `/kenspc:generate-brief`, `/kenspc:prototype`,
+`/kenspc:generate-plan`, `/kenspc:generate-task`, `/kenspc:diagnose-bug`,
+`/kenspc:task-implement`, `/kenspc:task-review`, and `/kenspc:generate-guide`.
 
 ## Plugin Structure
 
@@ -206,7 +208,7 @@ so the model has room to think and act across its subagents and tool calls
 ## Recommended Workflow
 
 ```
-Rough idea → [/kenspc-brief → docs/briefs/*.md →] /kenspc-plan → docs/plans/*.md → /kenspc-task → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
+Rough idea → [/kenspc-brief → docs/briefs/*.md → [/kenspc-prototype →]] /kenspc-plan → docs/plans/*.md → /kenspc-task → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
 Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement → /kenspc-task-review
                                 → docs/briefs/*.md → /kenspc-plan → …   (the fix needs a plan)
 ```
@@ -216,6 +218,8 @@ Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement
 2. **Decompose**: Use `/kenspc-task` to break the plan into fine-grained executable tasks
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
+
+**Prototype path.** A brief's `## Open Questions` lists what the discovery conversation could not settle, one numbered entry each, starting with its status: `open` (a decision or information nobody present has), `needs prototype` (a question a small experiment settles, with `Settled by:` naming the result that would settle it), or `answered` (settled by a prototype). On a brief with a `needs prototype` entry, `/kenspc-plan` first asks whether to prototype it or carry it into the plan's Open Questions, where the plan says which of its steps assume an answer; "prototype first" ends the run with a `/kenspc-prototype <brief path> <n>` line and writes no file. `/kenspc-prototype` builds the smallest thing that settles the question — by default under `prototypes/<slug>/` at the repository root — runs it, and commits it (`chore: add prototype <slug>`); it rewrites the entry `answered` with the answer, the evidence, and that commit's hash, then removes the prototype in the next commit (`chore: remove prototype <slug>`, with the question, the answer, and the hash in its body). Read the prototype later with `git show <hash>`. The brief is left uncommitted, as `/kenspc-brief` leaves it. A prototype may use your development database, recognized by name only (`appsettings.Development.json`, `.env.development`, user-secrets, or one your CLAUDE.md or README names): before it adds a table or column there, the skill warns that the development database may be the wrong place and recommends a throwaway database, and it names in the evidence every existing table it wrote rows to. It adds and applies no migration.
 
 **Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). Because the review's fixes land after the Doc-sync task, a run where both happened ends with a Next steps bullet naming the listed documents to re-check against the fix commits.
 
@@ -367,6 +371,38 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   DONE, set the task back to TODO yourself (for `not found`, correct the
   `Depends on` line first). New in v3.6.0: a task that used to be attempted
   after a blocked dependency is now blocked.
+- **Prototypes live in history.** `/kenspc-prototype` commits each
+  prototype and removes it in the next commit, so the prototype stays in
+  your history — which is how `git show <hash>` reads it later. Anything a
+  prototype commits stays in history too, so the skill reads credentials
+  and connection strings by name at run time (configuration keys,
+  environment variables, a secret store), commits no file holding a value
+  it read (a `.env`, a copied `appsettings.*.json`), and reads the staged
+  diff for one before the add commit.
+- **Gates between the two commits.** Between the add and the remove commit
+  the prototype is in the tree, and a typecheck, linter, or root-level
+  project file that walks the repository reaches it — a `tsconfig.json`
+  whose include reaches the root, ESLint's flat config, an SDK-style
+  `.csproj` at the root. The skill runs none of your gates on the prototype
+  and edits none of your configuration to exclude it; its file names follow
+  the run directory's naming rule, so your test runner does not collect
+  them. A pre-commit hook that runs one of those gates can reject the add
+  commit; the skill then stops and asks rather than bypass the hook. HEAD
+  after the run holds no prototype.
+- **Leftovers after a prototype.** The remove commit takes out what git
+  tracks. Dependencies the prototype installed, its build output, a local
+  database file, and other files git does not track — ignored or untracked —
+  stay under the prototype's location, and the final message names every
+  such path for you to remove. The skill deletes nothing.
+- **In-app UI prototypes.** Only a UI prototype that can only render inside
+  the app goes into the app. Its location comes from your CLAUDE.md or from
+  you; the project's typecheck runs before building as a baseline and again
+  before the add commit, green against that baseline; and the remove commit
+  restores every tracked file the prototype changed. A feature prototype
+  that needs the app's runtime runs from its own location, importing the
+  app's modules, when that lets it run; otherwise it is not built, its
+  entry stays `needs prototype` with the reason, and widening the in-app
+  exception to features is your decision.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

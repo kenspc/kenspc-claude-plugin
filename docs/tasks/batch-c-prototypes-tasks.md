@@ -915,7 +915,34 @@ root:
 
 ### Task 8: Update the READMEs and the manifests
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: `prototype` is placed right after `generate-brief` in both
+  skills tables, `/kenspc-prototype` right after `/kenspc-brief` in the
+  root Commands line and the plugin Commands table, and `/kenspc:prototype`
+  second in the skill-invocation sentence — the chain order brief →
+  prototype → plan, which the workflow diagram also shows. The "Prototype
+  path" paragraph sits right after the numbered workflow steps, before the
+  Documentation path, since the prototype falls between the brief and the
+  plan. The four Known behavior items go before "Missed-review telemetry",
+  after the existing workflow items.
+- Changes/tradeoffs: the plugin README's generate-brief row also names the
+  next-step suggestion's `/kenspc-prototype` lines, and the prototype row
+  names which choices are asked about (a location conflict, a database it
+  would change, an in-app UI prototype); the Gates item names concrete
+  gates (a root-reaching `tsconfig.json` include, ESLint's flat config, a
+  root SDK-style `.csproj`) and says file names follow the run directory's
+  naming rule. The one-line plugin blurbs at the top of both READMEs
+  ("discovery brief, plan before you code, …") were not in the task and
+  are unchanged; they already omitted bug diagnosis. Verified: both
+  READMEs list `prototype` and `/kenspc-prototype`; eight unique
+  `/kenspc:` forms in the plugin README; no skill or command count
+  sentence disagrees (grep for six/seven/eight/nine/7/8 finds only
+  unrelated numbers); `plugin.json` keeps `"version": "3.7.0"` and
+  "last reviewed 2026-09-25", and the two manifests' diffs change only the
+  description strings; `check-json.sh`, `check-all.sh` (`guards run: 10`),
+  and both `claude plugin validate --strict` runs exit 0.
 
 Depends on: Task 1-4
 
