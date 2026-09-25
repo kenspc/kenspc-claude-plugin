@@ -186,12 +186,16 @@ written once, in the Writing rules for the brief in
 
 A tracked file the prototype must modify that has uncommitted changes (the
 status noted at the start shows them), and any change to the project's
-manifest, are asked about: go on, commit first, or stop. In a session that
-cannot ask (a system reminder to work without stopping), nothing is built,
-and the entry stays unsettled with the reason. Why: the add commit would
-carry the user's uncommitted changes in that file and the remove commit
-would take them out of the tree, and a manifest change alters what the
-project builds.
+manifest, are asked about: go on, commit first, or stop. The question says
+what going on does to such a file: the add commit carries its uncommitted
+changes, mixed with the prototype's, and the remove commit takes both out
+of the tree, so those changes then live only in the add commit. When the
+user goes on, the final message names each such file and
+`git show <add commit>:<path>` to read it. In a session that cannot ask (a
+system reminder to work without stopping), nothing is built, and the entry
+stays unsettled with the reason. Why: the add commit would carry the user's
+uncommitted changes in that file and the remove commit would take them out
+of the tree, and a manifest change alters what the project builds.
 
 ### Database
 
