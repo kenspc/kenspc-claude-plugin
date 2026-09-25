@@ -189,9 +189,13 @@ The file carries, in substance as plan Step 1.1 gives it:
   "other than the one-time `.gitignore` commit" the Ignore check makes in a
   project that does not yet ignore `.kenspc/` — and C1's Why (the change is
   one-time and visible in history, and the pathspec keeps everything else
-  out of it); and the probe Why (batch A's implementer mutated the
-  project's own source in place, and a run that stops between the mutation
-  and the restore leaves the user's code mutated); the tier rule (ruling M1:
+  out of it); and the probe Why, stated in the skill's own words — what
+  failed, and on which command — rather than by the run it was seen in
+  (CLAUDE.md § Writing Rules for Skill Content), for example: an
+  implementing agent has run its mutation checks on the project's own
+  source files in place, editing them with `sed -i` and restoring them with
+  `cp`, and a run that stops between the mutation and the restore leaves
+  the user's code mutated; the tier rule (ruling M1:
   tier 3 when the fix requires a new dependency, a change to an existing API
   contract — parameters, return type, error codes —, a database schema
   change, or a project configuration change — tsconfig, eslint, prettier, and
@@ -302,6 +306,9 @@ Doc-sync template: it points at both.
   removal is denied.
 - `grep -nwE 'MUST|NEVER|CRITICAL' plugins/kenspc/skills/diagnose-bug/SKILL.md`
   prints nothing.
+- `grep -nE 'batch [A-Z]\b|dry-run' plugins/kenspc/skills/diagnose-bug/SKILL.md`
+  prints nothing: every Why states its evidence in its own words, not by
+  the run or record it comes from.
 - `bash scripts/check-no-model-names.sh`, `bash scripts/check-all.sh`, and
   `claude plugin validate --strict ./plugins/kenspc` exit 0.
 
