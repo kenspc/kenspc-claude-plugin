@@ -15,7 +15,7 @@ read-only, writes it to `RUN_DIR/change-set.md`, and the five reviewers,
 
 Related plan: `docs/plans/batch-b-diagnose-bug.md`. The plan is the complete
 specification. Its Design decisions (M1–M19; D1, D2, D4–D7) and its
-Clarifications during implementation (C1–C3) are binding rulings:
+Clarifications during implementation (C1–C5) are binding rulings:
 
 - C1 makes the run-directory preparation's one-time `.gitignore` commit the
   single exception to "the diagnosis modifies no tracked file" (Tasks 1
@@ -24,6 +24,19 @@ Clarifications during implementation (C1–C3) are binding rulings:
   reproduction-test files it created in this run, then asks (Task 1).
 - C3 substitutes git's empty tree for a commit the change-set defaults name
   that does not exist — a root commit or an unborn branch (Task 4).
+- C4 has every commit instruction in task-review, code-fixer, and
+  regression-verifier follow the mode rule: code-fixer's OBJECTIVE and
+  PROCESSING APPROACH defer to FIXING RULES (Task 6), and the two "fix
+  commits did not introduce new issues" lines read "the fixes (fix commits,
+  or the uncommitted fixes of an `uncommitted` run)" (Tasks 4 and 7).
+- C5 keeps run names and ruling labels out of the plugin's prompt files:
+  every Why states its evidence in its own words, and the new SKILL and the
+  files Tasks 4–7 edit carry no B-n, M-n, D-n, or C-n label, no "ruling", no
+  batch name, and no dry-run record (Tasks 1 and 4–7).
+
+The labels this document cites (B-n, M-n, D-n, C-n, "ruling") are pointers
+into the plan for the implementer. Per C5, none of them is copied into a
+skill, agent, or command file.
 
 Each task below cites its plan Step, which is the canonical source for what
 to write. The criteria listed here are the local DONE bar.
@@ -117,7 +130,7 @@ those tasks implemented and promotes their recorded decisions.
 **Status:** TODO
 
 Plan Step 1.1 (locked design B-1 to B-7; rulings M1–M5, M12–M16, D1, D2,
-D4–D6; clarifications C1, C2). Create
+D4–D6; clarifications C1, C2, C5). Create
 `plugins/kenspc/skills/diagnose-bug/SKILL.md` in the structure and tone of
 the existing skills — frontmatter, Trigger Phrases, Quality bar,
 Prerequisites, Arguments, then phases with Goal / Inputs / DONE when /
@@ -306,9 +319,10 @@ Doc-sync template: it points at both.
   removal is denied.
 - `grep -nwE 'MUST|NEVER|CRITICAL' plugins/kenspc/skills/diagnose-bug/SKILL.md`
   prints nothing.
-- `grep -nE 'batch [A-Z]\b|dry-run' plugins/kenspc/skills/diagnose-bug/SKILL.md`
+- C5: `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\((B-[0-9]|[MDC][0-9]+)\b' plugins/kenspc/skills/diagnose-bug/SKILL.md`
   prints nothing: every Why states its evidence in its own words, not by
-  the run or record it comes from.
+  the run or record it comes from, and no ruling label is carried over from
+  the plan.
 - `bash scripts/check-no-model-names.sh`, `bash scripts/check-all.sh`, and
   `claude plugin validate --strict ./plugins/kenspc` exit 0.
 
@@ -391,7 +405,8 @@ normalization, and the file-path extraction stay as they are.
 
 **Status:** TODO
 
-Plan Step 2.1 (B-8; rulings M7, M8, M19, D7 (i)–(iv); clarification C3).
+Plan Step 2.1 (B-8; rulings M7, M8, M19, D7 (i)–(iv); clarifications C3,
+C4, C5).
 In `plugins/kenspc/skills/task-review/SKILL.md`, every canonical block stays
 byte-identical to `task-implement`'s; `task-implement/SKILL.md` is not
 edited. The edits:
@@ -448,6 +463,11 @@ edited. The edits:
   "changes" mode RUN_DIR holds `change-set.md`.
 - Step 5: in `Mode: uncommitted`, code-fixer applies fixes without committing
   and its FIXED rows show `—` in Commit (ruling D7 (iv)).
+- Step 6 (C4): the verification list's "fix commits did not introduce new
+  issues" reads "the fixes (fix commits, or the uncommitted fixes of an
+  `uncommitted` run) did not introduce new issues". The `canonical:run-dir`
+  sentence about fix commits going through the same repository stays as it
+  is.
 - Step 7: in the Next steps guidance, when the change set was uncommitted,
   one bullet says the fixes are in the working tree, uncommitted, naming the
   files, for the user to review and commit. In the PASS and FAIL bullets
@@ -471,8 +491,12 @@ The new text adds no second line containing `- Scratch space:` or
 - The `change-set.md` paragraph sits after the `canonical:run-dir` end marker
   and states the file's shape with `# Change set`, `Mode: uncommitted` /
   `Mode: commits`, `Base:` / `Range:`, `Diff:`, and a `Status | Path` table.
-- The Arguments pointer, the Step 2 sentence, the Step 5 note, the Step 7
-  Next steps bullet, and the PASS / FAIL wording are present.
+- The Arguments pointer, the Step 2 sentence, the Step 5 note, the Step 6
+  wording (C4), the Step 7 Next steps bullet, and the PASS / FAIL wording are
+  present; outside the canonical blocks, no line of the file names fix
+  commits without the uncommitted-run alternative.
+- C5: `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\((B-[0-9]|[MDC][0-9]+)\b' plugins/kenspc/skills/task-review/SKILL.md`
+  prints nothing.
 - `git diff plugins/kenspc/skills/task-review/SKILL.md` shows no change
   between any pair of canonical markers.
 - `grep -c -- '- Scratch space:' plugins/kenspc/skills/task-review/SKILL.md`
@@ -492,7 +516,7 @@ The new text adds no second line containing `- Scratch space:` or
 
 Depends on: Task 4
 
-Plan Step 2.2 (ruling M9). The same three edits, byte-identical, in each of
+Plan Step 2.2 (ruling M9; clarification C5). The same three edits, byte-identical, in each of
 the five reviewers; no other section changes:
 
 - CONTEXT YOU WILL RECEIVE, the RUN_DIR bullet: add that with REVIEW_SCOPE
@@ -531,6 +555,8 @@ and spaces.
   OUTPUT FORMAT, and REPORT DELIVERY are unchanged.
 - `bash scripts/check-review-agent-drift.sh` exits 0 and reports all six
   shared sections identical across the 5 reviewers.
+- C5: `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\((B-[0-9]|[MDC][0-9]+)\b' plugins/kenspc/agents/*-reviewer.md`
+  prints nothing.
 - `bash scripts/check-no-model-names.sh`, `bash scripts/check-all.sh`, and
   `claude plugin validate --strict ./plugins/kenspc` exit 0.
 
@@ -542,7 +568,9 @@ and spaces.
 
 Depends on: Task 4
 
-Plan Step 2.3 (rulings M8, M10, D7 (iv)). In `plugins/kenspc/agents/code-fixer.md`:
+Plan Step 2.3 (rulings M8, M10, D7 (iv); clarifications C4, C5). In
+`plugins/kenspc/agents/code-fixer.md` — six edits, as C4 counts them, plus
+C4's OBJECTIVE and PROCESSING APPROACH edit:
 
 - PREREQUISITE CHECK: also stop, with the same message form, when
   REVIEW_SCOPE is "changes" and `RUN_DIR/change-set.md` is missing.
@@ -570,10 +598,9 @@ Plan Step 2.3 (rulings M8, M10, D7 (iv)). In `plugins/kenspc/agents/code-fixer.m
   OBJECTIVE's "apply fixes, commit", PROCESSING APPROACH's "committed with a
   focused conventional-commit message" — defer to the FIXING RULES mode rule
   (for example "commit as FIXING RULES prescribes"), so no sentence in the
-  file tells the agent to commit in an uncommitted run. Plan Step 2.3 does
-  not list this edit; it keeps the edits above from being contradicted
-  inside the same file, since ruling D7 (iv) has code-fixer commit nothing
-  in that mode.
+  file tells the agent to commit in an uncommitted run. C4 adds this edit:
+  it keeps the edits above from being contradicted inside the same file,
+  since ruling D7 (iv) has code-fixer commit nothing in that mode.
 
 The `canonical:stats-line` block and the `example:schema-b` block stay
 byte-identical (the example is a committed-mode example and keeps its
@@ -599,6 +626,8 @@ untouched.
   `canonical:stats-line`, `example:schema-b`, or `canonical:principle:*`
   markers, and none to the `CODE-CRAFT PRINCIPLES` header or its guard
   comment.
+- C5: `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\((B-[0-9]|[MDC][0-9]+)\b' plugins/kenspc/agents/code-fixer.md`
+  prints nothing.
 - `bash scripts/check-run-contract.sh`, `bash scripts/check-run-contract.sh --self-test`,
   `bash scripts/check-code-craft-canonical.sh`, `bash scripts/check-all.sh`,
   and `claude plugin validate --strict ./plugins/kenspc` exit 0.
@@ -611,8 +640,12 @@ untouched.
 
 Depends on: Task 4, Task 6
 
-Plan Step 2.4 (rulings M10, D7 (iv)). In `plugins/kenspc/agents/regression-verifier.md`:
+Plan Step 2.4 (rulings M10, D7 (iv); clarifications C4, C5). In
+`plugins/kenspc/agents/regression-verifier.md`:
 
+- OBJECTIVE (C4): "Check that fix commits did not introduce new issues"
+  reads "Check that the fixes (fix commits, or the uncommitted fixes of an
+  `uncommitted` run) did not introduce new issues".
 - PREREQUISITE CHECK: also stop when REVIEW_SCOPE is "changes" and
   `RUN_DIR/change-set.md` is missing.
 - CONTEXT YOU WILL RECEIVE and INPUTS: `change-set.md` in "changes" mode.
@@ -631,9 +664,12 @@ Plan Step 2.4 (rulings M10, D7 (iv)). In `plugins/kenspc/agents/regression-verif
 - `plugins/kenspc/agents/regression-verifier.md`
 
 **Acceptance criteria:**
-- The PREREQUISITE CHECK stop condition, the CONTEXT and INPUTS entries,
-  PREREQUISITES step 3, and the item-4 uncommitted branch (with
-  `git diff <base> -- <files>` and the user's-hunks sentence) are present.
+- The OBJECTIVE wording (C4), the PREREQUISITE CHECK stop condition, the
+  CONTEXT and INPUTS entries, PREREQUISITES step 3, and the item-4
+  uncommitted branch (with `git diff <base> -- <files>` and the user's-hunks
+  sentence) are present.
+- C5: `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\((B-[0-9]|[MDC][0-9]+)\b' plugins/kenspc/agents/regression-verifier.md`
+  prints nothing.
 - `git diff` of the file shows the four item-4 sub-check bullets, the
   Schema C table, and FALLBACK FOR NO-TEST-SUITE PROJECTS unchanged.
 - `bash scripts/check-run-contract.sh`, `bash scripts/check-all.sh`, and
