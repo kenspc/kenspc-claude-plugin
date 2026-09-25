@@ -112,8 +112,9 @@ on. Why: each risky choice has its own gate with its own question, and a
 blanket confirmation adds a stop to the path that needs none.
 
 **Constraints**: this phase writes nothing but the brief entry appended for
-a question given as text. Why: until the frame is settled, nothing the run
-might build has a location or a question to answer.
+a question given as text and a `Settled by:` derived for an entry that
+lacks one. Why: until the frame is settled, nothing the run might build has
+a location or a question to answer.
 
 ### The question
 
@@ -139,9 +140,11 @@ might build has a location or a question to answer.
   the brief template places it. Why: the answer needs an entry to be written
   into, and generate-plan reads entries, not prose.
 - An entry with no `Settled by:` gets one derived from the question, shown
-  in the frame and written with the entry in Phase 3. Why: the evidence is
+  in the frame and written into the entry before anything is built — with
+  the entry, for a question appended as text. Why: the evidence is
   measured against a result named before the prototype runs, which cannot
-  be bent to fit what the run showed.
+  be bent to fit what the run showed, and a brief's `` `needs prototype` ``
+  entry carries `Settled by:` even when the run stops before Phase 3.
 
 The entry grammar — the status words, the labels, and their order — is
 written once, in the Writing rules for the brief in
