@@ -122,6 +122,15 @@ its number.
      quotes and asks about; with a reminder to work without stopping, the
      draft's Open Questions carries it in the `open` form, its `From:`
      ending `status word <the word> not recognized` (fix-round review, T1).
+   - Row 10: a setup under which the leftovers criteria can fail — a
+     prototype that installs one package into its own manifest, under an
+     unanchored `node_modules` ignore pattern, and an in-app location that
+     holds an untracked file of the user's before the run; `node_modules/`
+     then appears as one line and the user's file not at all. Without it,
+     the old `--ignored -uall` form and the new one print the same list and
+     the location holds nothing before the run, so reverting the command or
+     dropping the start snapshot still passes row 10 (fix-round review,
+     T3).
 10. A guard for the copied Prototype line. The line is written in
     generate-brief's writing rules and copied byte-identically into
     `prototype/SKILL.md`; `check-doc-sync-anchors.sh` guards only the
