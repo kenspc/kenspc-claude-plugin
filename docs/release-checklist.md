@@ -183,9 +183,10 @@ Change-set check for row 7, a run with no task document (v3.7.0):
 
 - `RUN_DIR/change-set.md` exists and has a `Mode:` line, and every
   `File:Line` path in the Issues tables of `angle-1.md` … `angle-5.md` lies
-  within its `Status | Path` table (the reports carry no separate file
-  list; a path outside the set in a finding's location is a reviewer that
-  derived its own scope).
+  within its `Status | Path` table, or names a document the finding says
+  the change left stale (a README the change did not update); the reports
+  carry no separate file list, and any other path outside the set is a
+  reviewer that derived its own scope.
 - Between the invocation and the first reviewer dispatch, the trace shows no
   `git commit`, `stash`, `checkout`, `add`, or `reset` by the orchestrator
   other than the one-time `.gitignore` commit.
