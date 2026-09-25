@@ -359,7 +359,13 @@ Doc-sync template: it points at both.
 
 ### Task 2: Add the /kenspc-diagnose command
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none — the file is `kenspc-brief.md` with the name, description,
+  argument hint, and the two skill-naming body lines substituted, so the
+  diff against it shows exactly those five lines.
+- Changes/tradeoffs: none.
 
 Depends on: Task 1
 
