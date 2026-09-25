@@ -9,16 +9,23 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 3.6.0 — unreleased
+## 3.6.0 — 2026-09-25
 
-Batch A: a documentation path from the plan to the implementation run. Plans
-state which durable documents they make stale, the task document ends with a
-Doc-sync task that brings those documents up to date, and decisions made
-during implementation are promoted into them or reported for the user to
-place. The task-document reviewer gains a third angle, Consistency with
-CLAUDE.md. No CONTEXT key changes and no command-surface changes. The other
-3.6.0 items in `docs/roadmap.md` extend this entry as they land; the date is
-filled at release.
+Two batches. Batch A: a documentation path from the plan to the
+implementation run. Plans state which durable documents they make stale,
+the task document ends with a Doc-sync task that brings those documents up
+to date, and decisions made during implementation are promoted into them or
+reported for the user to place. The task-document reviewer gains a third
+angle, Consistency with CLAUDE.md. Roadmap items 9 and 2: the run
+directory's scratch space is safe to leave behind — every probe carries a
+name the project's test runner does not collect, each writer has its own
+numbered attempt directory, regression-verifier runs the project's build,
+test, and lint commands unmodified, and code-fixer changes no project
+configuration for the plugin's files. No CONTEXT key changes and no
+command-surface changes. Release smoke: the two acceptance runs,
+`docs/dry-runs/batch-a-acceptance.md` (rows 4–6) and
+`docs/dry-runs/scratch-probes-acceptance.md` (row 7 with the run-directory
+check); no separate smoke run was made for this tag.
 
 ### Added
 

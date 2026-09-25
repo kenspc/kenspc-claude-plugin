@@ -5,13 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (3.6.0)
-
-At release, delete `docs/plans/batch-a-doc-sync.md`,
-`docs/tasks/batch-a-doc-sync-tasks.md`,
-`docs/plans/roadmap-9-scratch-probes.md`, and
-`docs/tasks/roadmap-9-scratch-probes-tasks.md`; batch A and the scratch-probe
-work (former items 2 and 9) have shipped.
+## Next minor (3.7.0)
 
 1. Render Schema A / B / C once, in the final Schema G report, instead of
    again between dispatches in Step 3 (Mac O1).
@@ -35,8 +29,8 @@ work (former items 2 and 9) have shipped.
    (batch A review, B2). Two directions for an agent to take it over:
    code-fixer brings a listed document into scope when a fix changes the
    behavior it describes, or regression-verifier gains a check that the
-   listed documents still match the code after the fix commits. Decide at
-   release whether this ships with 3.6.0.
+   listed documents still match the code after the fix commits. Not
+   shipped with 3.6.0; decide at the next release.
 8. Linters and build tools still walk into `.kenspc/`. ESLint's flat config
    ignores only `node_modules` and `.git` by default; the ESLint
    configuration migration guide: "In flat config, dotfiles (e.g.
