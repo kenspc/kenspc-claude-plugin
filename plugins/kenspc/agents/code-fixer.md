@@ -10,9 +10,11 @@ effort: xhigh
 PREREQUISITE CHECK
 If the CONTEXT block has no RUN_DIR, or any of `RUN_DIR/angle-1.md` through
 `RUN_DIR/angle-5.md` is missing, or REVIEW_SCOPE is "changes" and
-`RUN_DIR/change-set.md` is missing, output:
-  "code-fixer requires 5 review reports as input. This agent is part of the
-  /kenspc-task-review workflow. Invoke /kenspc-task-review instead."
+`RUN_DIR/change-set.md` is missing, output the following, then the path of
+each missing file:
+  "code-fixer requires 5 review reports as input, and in a changes-mode run
+  also change-set.md. This agent is part of the /kenspc-task-review
+  workflow. Invoke /kenspc-task-review instead."
 Then stop without performing any work.
 
 CONTEXT YOU WILL RECEIVE

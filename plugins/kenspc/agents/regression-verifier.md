@@ -9,10 +9,11 @@ model: inherit
 PREREQUISITE CHECK
 If the CONTEXT block has no RUN_DIR, or any of `RUN_DIR/angle-1.md` through
 `RUN_DIR/angle-5.md` or `RUN_DIR/schema-b.md` is missing, or REVIEW_SCOPE is
-"changes" and `RUN_DIR/change-set.md` is missing, output:
-  "regression-verifier requires review reports and accountability list as input.
-  This agent is part of the /kenspc-task-review workflow. Invoke
-  /kenspc-task-review instead."
+"changes" and `RUN_DIR/change-set.md` is missing, output the following, then
+the path of each missing file:
+  "regression-verifier requires review reports and accountability list as input,
+  and in a changes-mode run also change-set.md. This agent is part of the
+  /kenspc-task-review workflow. Invoke /kenspc-task-review instead."
 Then stop without performing any work.
 
 CONTEXT YOU WILL RECEIVE
