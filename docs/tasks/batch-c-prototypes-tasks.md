@@ -1078,7 +1078,23 @@ Plan Step 5.3 (C-8; ruling M11).
 
 ### Task 10: Update the release checklist
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the row 3 and row 4 additions are appended to the existing
+  pass criteria after a semicolon, keeping each row's existing text
+  first; row 10's criterion is written in the order plan Step 5.4 lists
+  its items, so the row can be read against the plan item by item. Status
+  words that the brief carries in backticks are written as
+  `` `open` `` / `` `needs prototype` `` / `` `answered` `` where the task
+  shows them that way, and as plain code elsewhere.
+- Changes/tradeoffs: none beyond the task. Verified: row 1 says 8
+  commands; the smoke table runs 1–11 with row 10 `/kenspc-prototype
+  <brief path>` and row 11 the end-to-end row;
+  `grep -nE '[Rr]ow[- ]1[01]'` finds only "row-11 detail" and "Row 11
+  sub-criteria" (at HEAD it found the row-10 forms, so the grep can hit);
+  the pre-flight block and its prose still say `guards run: 10` and
+  `self-tests run: 9`; `check-all.sh` (`guards run: 10`) exits 0.
 
 Depends on: Task 1-4
 
