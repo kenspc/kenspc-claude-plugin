@@ -106,10 +106,12 @@ reproduction steps and the reason.
 **Inputs**: BUG; the project's CLAUDE.md, README, and config files, read
 silently first — they name the test framework, its file conventions, and the
 commit conventions; the code the bug runs through. Before writing anything,
-note what `git status --porcelain -uall` lists: the untracked files (`??`) —
-with `-uall`, each file rather than its directory — so the files this run
-creates can be told apart from the user's, and the tracked files with
-uncommitted changes, so the exit can say when the fix touches one.
+note what `git -c core.quotePath=false status --porcelain -uall` lists: the
+untracked files (`??`) — with `-uall`, each file rather than its directory,
+and with `core.quotePath=false` a non-ASCII name as it is, not
+octal-escaped — so the files this run creates can be told apart from the
+user's, and the tracked files with uncommitted changes, so the exit can say
+when the fix touches one.
 
 **DONE when** either holds:
 
@@ -155,7 +157,8 @@ steps. It is evidence, not the test.
 **Not reproduced.** When the bug does not reproduce after trying what BUG
 describes, stop and ask the user for what is missing. First remove the
 reproduction-test files this run wrote — each path the skill itself created
-as a test, and only while `git status --porcelain -uall -- <path>` still
+as a test, and only while
+`git -c core.quotePath=false status --porcelain -uall -- <path>` still
 reports it untracked (`??`) and the list noted at the start does not hold
 it — and nothing else: never a tracked file, never a file the user added
 during the session, never anything under `.kenspc/`. Why only the paths the

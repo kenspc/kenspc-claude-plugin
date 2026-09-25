@@ -157,10 +157,22 @@ FIXING RULES
   mode either — no `git checkout`, `git restore`, `git reset`, `git clean`,
   or `git add`. Each of them resets a file to HEAD or restages it whole, and
   the user's uncommitted change in that file, or its partial staging, has
-  no commit or stash to come back from. Before a file's first edit, copy it
-  into your scratch directory, renaming a collectable name as the scratch
-  rule above says; a fix that breaks the build, tests, or lint is undone by
-  editing it back, or by restoring the file from that copy.
+  no commit or stash to come back from. Before a file's first edit in this
+  mode, record its state under `RUN_DIR/scratch/code-fixer/pre-fix/`: copy
+  it to `pre-fix/<path relative to the repository root>.txt` — the `.txt`
+  appended so no runner, linter, or compiler collects the copy — and add
+  the line `copied <path>` to `pre-fix/index.txt`; a file a fix creates gets
+  the line `created <path>` and no copy; a file a fix deletes gets
+  `deleted <path>` and keeps its copy. `pre-fix/` sits beside your numbered
+  attempt directories and is not one: it is written once per run, and a
+  path that already has an index line is never recorded again, so each
+  copy is the state before any edit. A fix that breaks the build, tests, or
+  lint is undone by editing it back, or by restoring the file from its
+  copy. Why: regression-verifier reads only this record to tell the fixes
+  from the user's uncommitted hunks in the same file — without it a
+  regression a fix makes inside a user hunk passes and a user's own change
+  reads as a regression — and a copy that kept its own extension is a
+  source file to every linter and compiler that walks the run directory.
 - Code, code comments, and commit messages stay in English.
 
 <!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it marks a compound-adjective exception to the ALL-CAPS-no-hyphens writer-agent header convention documented in repo-root CLAUDE.md. Do not normalize without updating the CLAUDE.md convention paragraph in the same commit. -->

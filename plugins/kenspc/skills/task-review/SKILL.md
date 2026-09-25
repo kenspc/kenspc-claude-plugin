@@ -107,7 +107,10 @@ If $ARGUMENTS is empty or contains no file path:
     (`git rev-parse --is-shallow-repository` prints `true`), a missing
     `HEAD~1` is history the clone did not fetch, not a root commit: the empty
     tree does not stand in, and the run stops and asks the user for a range.
-    Why: there the empty tree would make the whole repository the change set.
+    The same stop applies when `git merge-base <upstream sha> <HEAD sha>`
+    prints nothing — unrelated histories, or a shallow clone whose fetched
+    history does not reach the upstream. Why: there the empty tree would
+    make the whole repository the change set.
   - CUSTOM_INSTRUCTIONS that name commits or a range replace the default:
     mode `commits` with that range, pinned by SHA. Named paths narrow the
     set instead: it keeps the default's mode, base or range, and diff
@@ -344,7 +347,11 @@ When `change-set.md` says `Mode: uncommitted`, code-fixer applies the fixes
 to the working tree without committing — no baseline commit of the user's
 change, no fix commit, no stash — and its FIXED rows show `—` in the Commit
 column; when it fixed anything, its reply adds one line after the
-statistics line saying the fixes are uncommitted and naming the files.
+statistics line saying the fixes are uncommitted and naming the files. It
+records each file's state before its first edit under
+`RUN_DIR/scratch/code-fixer/pre-fix/` — a `.txt` copy per file and an
+`index.txt` naming every file the fixes touched — which regression-verifier
+reads to tell the fixes from the user's own hunks.
 
 ### Step 6: Dispatch regression agent
 

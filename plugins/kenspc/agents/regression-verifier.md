@@ -88,6 +88,10 @@ Read from RUN_DIR:
   scratch-pollution note when there is one, and the statistics line.
 - `change-set.md` — in "changes" mode only: the change set under review, with
   its mode, base or range, diff command, and files.
+- `scratch/code-fixer/pre-fix/index.txt` — in an uncommitted run only: the
+  pre-fix record, one line per file the fixes touched (`copied <path>`,
+  `created <path>`, `deleted <path>`), with each copied file's content
+  before its first edit at `scratch/code-fixer/pre-fix/<path>.txt`.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
@@ -168,14 +172,21 @@ VERIFICATION CHECKS
    below, where no test suite exists at all.
 4. Cross-check for regressions: review fix commits with `git log` and `git show`
    — or, when `change-set.md` says `Mode: uncommitted` and code-fixer committed
-   nothing (its FIXED rows carry `—` in Commit), the working-tree diff of the
-   files the FIXED rows name and of
-   every path `git status --porcelain -uall` now lists that `change-set.md`
-   does not, a file the fixes created or changed outside the set
-   (`git diff <base> -- <files>`, the base from `change-set.md`). That diff
-   prints nothing for an untracked (`??`) file, so read an untracked file
-   whole. The user's own hunks in those files were the change under review
-   and are not regressions. For each file touched by a fix, verify:
+   nothing (its FIXED rows carry `—` in Commit), the pre-fix record at
+   `RUN_DIR/scratch/code-fixer/pre-fix/`. Its `index.txt` names every file
+   the fixes touched, one line each: for a `copied <path>` line the fixes
+   are the difference between `pre-fix/<path>.txt` and the working file
+   (`git diff --no-index pre-fix/<path>.txt <path>`); for `created <path>`,
+   the whole file; for `deleted <path>`, the copy. A path the index does not
+   name is the user's, whatever `git status` shows, and is not read as fix
+   output. An index line whose copy is missing, or a FIXED row naming a
+   path the index does not, is a bookkeeping error: record it in row 5's
+   Detail. Why the record and not `git diff <base>`: that diff returns the
+   user's hunks and the fixes as one, so a regression a fix made inside a
+   user hunk would pass and a user's own change would read as a regression,
+   and `git status` also lists the user's other dirty files and build
+   outputs, which are not the fixes' either. For each file touched by a
+   fix, verify:
    - The fix did not introduce a new null/undefined code path.
    - The fix did not change a function's contract in a way that breaks callers.
    - Any new tests added by the fix agent actually test the fix, not unrelated
