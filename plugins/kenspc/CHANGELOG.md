@@ -147,7 +147,9 @@ the batch's acceptance record, named at release.
   the Schema A roll-up, B, C, and the Schema F final report" with the three
   progress lines in order, each after its agent returns and before the next
   step and in its full form, its counts and result matching the final
-  report's roll-up **Total** row, the statistics line, and Schema C, the
+  report's roll-up **Total** row (the sum of its angle rows, each equal to
+  the Findings table of its `angle-<n>.md`), the statistics line, and
+  Schema C, the
   `— HAS ISSUES:` form recorded as not exercised when Schema C is CLEAN, no
   text line beginning with `|` from the first reviewer call until
   the final report's first heading, and the roll-up header, a line holding
