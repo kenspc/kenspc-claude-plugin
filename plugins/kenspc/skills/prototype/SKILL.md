@@ -156,14 +156,16 @@ command restores it.
   `` `needs prototype` ``, and `` `answered` `` — hand-edited, translated,
   or missing: one that holds `Answer:` or `Prototype:` takes the question
   above; otherwise ask, quoting the word found (or saying there is none),
-  whether to prototype it or stop. In a session that cannot ask (a system
-  reminder to work without stopping), stop and leave the entry unchanged, as
-  above. On "prototype it", the entry is prototyped as a named `` `open` `` entry
-  is, and Phase 3 writes a status word the grammar knows. Why: the skill
-  tells an answered entry from an unsettled one by its status word, so an
-  entry whose word it cannot read may hold an answer that Phase 3 would
-  replace; the brief is not committed, so the earlier answer would then
-  survive only in an earlier remove commit's body.
+  whether to prototype it or stop. A "stop" here, or a "no" to the question
+  above, ends the run with the entry unchanged: the rewrite in Phase 3 for a
+  run in which nothing was built does not apply to it. In a session that
+  cannot ask (a system reminder to work without stopping), stop and leave the
+  entry unchanged, as above. On "prototype it", the entry is prototyped as
+  a named `` `open` `` entry is, and Phase 3 writes a status word the
+  grammar knows. Why: the skill tells an answered entry from an unsettled
+  one by its status word, so an entry whose word it cannot read may hold an
+  answer that Phase 3 would replace; the brief is not committed, so the
+  earlier answer would then survive only in an earlier remove commit's body.
 - A named `` `open` `` entry is prototyped like any other. Why: naming it is
   the user's decision that an experiment can settle it.
 - A question given as text that the brief lacks is appended to its
