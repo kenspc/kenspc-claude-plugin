@@ -61,11 +61,14 @@
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
 # of theirs that is meant to pass echoes its arguments and
 # "cwd=<its working directory, physical path>" to stderr, since the
-# self-test reads the flags and the cwd there, and stays alive for at least
-# one second: the second launch under the tag, refused only while the first
-# worker still runs, and the liveness check on <tag>.pid follow the launch
-# within that second, so a stub that exits at once fails the earlier of the
-# two.
+# self-test reads the flags and the cwd there; prints to stdout a JSON
+# object holding "result" and the --session-id value as "session_id", the
+# two keys the self-test reads from <tag>.json; exits 0; and stays alive for
+# at least one second: the second launch under the tag, refused only while
+# the first worker still runs, and the liveness check on <tag>.pid follow
+# the launch within that second, so a stub that exits at once usually fails
+# the earlier of the two — usually, since on a loaded machine both checks
+# can run before its exit lands; the sleep makes the outcome certain.
 #
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
 # or environment error, or when <tag>.pid names a live process and <tag>.exit
