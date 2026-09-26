@@ -303,17 +303,21 @@ silently.
 
 ### Step 4: Aggregate review findings (Schema A roll-up)
 
-Render the consolidated review findings table by aggregating the Schema A
-Findings tables in the 5 replies:
+Add the Schema A Findings tables in the 5 replies into the roll-up — HIGH,
+MEDIUM, and LOW per angle and in total. The roll-up table is rendered once,
+in the Schema F report (Step 7). Here, print only this line, with the totals
+and the run directory filled in:
 
-| Angle | HIGH | MEDIUM | LOW |
-|-------|------|--------|-----|
-| requirements | <n> | <n> | <n> |
-| edge-case    | <n> | <n> | <n> |
-| quality      | <n> | <n> | <n> |
-| bug          | <n> | <n> | <n> |
-| test         | <n> | <n> | <n> |
-| **Total**    | <n> | <n> | <n> |
+`Reviewers returned — HIGH <h>, MEDIUM <m>, LOW <l> — <RUN_DIR>/angle-1.md … angle-5.md`
+
+This line and the lines Steps 5 and 6 print stay in English, exactly as
+written, whatever the conversation language. Why: everything the
+orchestrator prints stays in its context for the rest of the run, and the
+agents' replies are already there as their results, so a table printed
+between dispatches is paid for again when the final report prints it. The
+user following the run needs to know which agent returned, its counts, and
+where its report is; the fixed form, opening with the agent's name, is what
+the release checklist finds in the trace.
 
 ### Step 5: Dispatch fix agent
 
@@ -340,8 +344,12 @@ one, and a statistics line of this fixed form:
 
 Its reply carries the statistics line, the Per-angle Results table, the HIGH
 and MEDIUM rows with their Deferred Issues paragraphs, the scratch-pollution
-note when there is one, and the path of schema-b.md. Render that reply
-verbatim; the LOW rows and their prose stay in the file.
+note when there is one, and the path of schema-b.md. The Schema F report
+renders that reply verbatim, and the LOW rows and their prose stay in the
+file. When code-fixer returns, print only this line, the counts taken from
+its statistics line:
+
+`code-fixer returned — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md`
 
 When `change-set.md` says `Mode: uncommitted`, code-fixer applies the fixes
 to the working tree without committing — no baseline commit of the user's
@@ -372,26 +380,32 @@ The regression agent verifies:
 - the fixes (fix commits, or the uncommitted fixes of an `uncommitted` run)
   did not introduce new issues.
 
-Render its Schema C result table verbatim:
+It returns Schema C — the five-check table, a Detail paragraph for each
+non-PASS row, and a closing CLEAN or HAS ISSUES line. The Schema F report
+renders it verbatim. When it returns, print only
+`regression-verifier returned — CLEAN` when its closing line is CLEAN, or,
+when it is HAS ISSUES, this line naming each non-PASS row with its Result:
 
-| # | Check                            | Result | Detail                  |
-|---|----------------------------------|--------|-------------------------|
-| 1 | All accountability rows fixed    | PASS   | —                       |
-| 2 | Build succeeds                   | PASS   | —                       |
-| 3 | Tests pass                       | FAIL   | 2 failures (see below)  |
-| 4 | Lint passes                      | PASS   | —                       |
-| 5 | No regressions in non-fix files  | PASS   | —                       |
+`regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
 
-Below the table, render the Detail prose verbatim for each non-PASS row.
+The line names no path: regression-verifier writes no report file.
 
 ### Step 7: Final consolidated report (Schema F)
 
-Render the final consolidated report using Schema F:
+Render the final consolidated report using Schema F. It is the one place the
+Schema A roll-up, code-fixer's reply, and Schema C are rendered in the run:
 
 ```
 ## Review summary
 
-(Schema A roll-up across 5 agents — total HIGH / MEDIUM / LOW counts.)
+| Angle | HIGH | MEDIUM | LOW |
+|-------|------|--------|-----|
+| requirements | <n> | <n> | <n> |
+| edge-case    | <n> | <n> | <n> |
+| quality      | <n> | <n> | <n> |
+| bug          | <n> | <n> | <n> |
+| test         | <n> | <n> | <n> |
+| **Total**    | <n> | <n> | <n> |
 
 ## Fixes
 
@@ -402,7 +416,7 @@ where the LOW rows and their prose remain.)
 
 ## Verification
 
-(Schema C verbatim.)
+(Schema C verbatim: the table and the Detail prose for each non-PASS row.)
 
 ## Verdict
 

@@ -225,6 +225,12 @@ blocked task did not build. The gate applies to every task with a
 - Phase 3: `regression-verifier` cross-checks the reports' issue IDs against
   the accountability list, verifies fixes, runs build/test/lint.
 
+Between the dispatches the orchestrating skill prints one fixed progress
+line per step — which agent returned, its counts or result, and the path of
+its report when it writes one — and the Schema A roll-up, code-fixer's
+reply, and Schema C are rendered once, in the final report (Schema F in
+`task-review`, Schema G in `task-implement`).
+
 Since v3.5 the agents exchange reports through a per-run directory,
 `<repo root>/.kenspc/runs/<run-id>/`, passed as the `RUN_DIR` CONTEXT key.
 The orchestrating skill prepares it and, when `.kenspc/` is not yet

@@ -274,7 +274,24 @@ decisions.
 
 ### Task 1: Render the review once in task-review
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each progress line sits alone on its own line in a code span,
+  unwrapped, so `grep -F` finds it and the model prints it as a unit; the
+  English-only rule is stated once, in Step 4, for all three lines ("This
+  line and the lines Steps 5 and 6 print"), rather than repeated in Steps 5
+  and 6. Step 6 keys the two regression-verifier forms on Schema C's own
+  closing CLEAN / HAS ISSUES line, so a row-3 `SPOT-CHECK` with every other
+  check PASS prints the CLEAN form, as regression-verifier's OUTPUT FORMAT
+  defines. The CLAUDE.md sentence went in as its own paragraph directly
+  after the Parallel MapReduce list (one of the two places the task allows),
+  so no existing line of CLAUDE.md changed.
+- Changes/tradeoffs: the Step 4 Why says the fixed form "is what the release
+  checklist finds in the trace", following the precedent in task-implement's
+  Phase 1 boundary Why. The CLAUDE.md sentence names what a progress line
+  carries ("the path of its report when it writes one") because
+  regression-verifier's line has no path.
 
 Plan Step 1.1 (E-1; rulings M1, M3, D1–D4, M9). In
 `plugins/kenspc/skills/task-review/SKILL.md`, Steps 4, 5, 6, and 7, outside
