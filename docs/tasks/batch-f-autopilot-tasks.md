@@ -960,7 +960,16 @@ skills by path and quotes the driver's interface from Task 1's header.
 
 ### Task 3: Add the /kenspc-autopilot command
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none — the file is `commands/kenspc-diagnose.md` with the
+  name, description, argument hint, skill name, and skill path replaced,
+  and `diff` shows those five lines and nothing else.
+- Changes/tradeoffs: none. No test framework; verification was the diff
+  against the model command, the command count (9), the pointer-label and
+  imperative greps, `check-no-model-names.sh`, the guard suite, and the
+  plugin validator.
 
 Depends on: Task 2
 
