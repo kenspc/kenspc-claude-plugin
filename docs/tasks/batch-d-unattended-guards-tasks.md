@@ -86,8 +86,14 @@ names, then `bash scripts/check-all.sh`, which must exit 0 with
 `guards run: 10` — capture its exit status on its own line, never through a
 pipe (`bash scripts/check-all.sh > <file> 2>&1; rc=$?`), since a pipe
 reports the last command's status, not the guard's. Tasks that edit a skill
-file also run `claude plugin validate --strict ./plugins/kenspc`. Tasks 5
-and 6 also run `bash scripts/check-all.sh --self-test`, which must print
+file also run `claude plugin validate --strict ./plugins/kenspc`. From
+Task 5 on, the plugin README and CLAUDE.md are fixture files of
+`check-run-contract.sh`'s self-test, whose mutations need
+`writes only under` on exactly one line of each and
+`read-only on the working tree` on exactly one line of the README, and main
+mode runs no self-test. So every task from Task 5 on that edits a guard,
+the README, or CLAUDE.md — Tasks 5, 6, 7, 8, and 11 — also runs
+`bash scripts/check-all.sh --self-test`, which must print
 `guards run: 10` and end with `self-tests run: 9`.
 
 Constraints that apply to every task (plan § Standing constraints):
@@ -161,10 +167,14 @@ Dependency note: Tasks 1–4 (plan Phases 1–3) are independent of one
 another; Tasks 1 and 2 both edit `generate-plan/SKILL.md` and `CLAUDE.md`,
 in different sections, and are ordered only by the document. Task 5
 (check 6) reads no sentence an earlier task changes, so it carries no
-`Depends on`. Task 6 checks the prototype skill's final text
-(`Depends on: Task 3`). Task 7 reads CLAUDE.md through after the four tasks
-that edit it (`Depends on: Task 1, Task 2, Task 5, Task 6`). Tasks 8 and 9
-document the behavior Tasks 1–4 build (`Depends on: Task 1-4`). Task 10,
+`Depends on`. Task 6 checks the prototype skill's final text, and its
+header names `check-run-contract.sh`'s check 6 — which Task 5 adds — as the
+guard for the README and CLAUDE.md copies of the reviewer invariant
+sentence, a statement that is false while Task 5 is not DONE
+(`Depends on: Task 3, Task 5`). Task 7 reads CLAUDE.md through after the
+four tasks that edit it (`Depends on: Task 1, Task 2, Task 5, Task 6`).
+Tasks 8 and 9 document the behavior Tasks 1–4 build
+(`Depends on: Task 1-4`). Task 10,
 the CHANGELOG, names every change the batch makes, the release checklist's
 rows included, so it follows Task 9 (`Depends on: Task 1-9`); the plan lists
 the CHANGELOG (Step 5.3) before the checklist (Step 5.4), and the order is
@@ -546,7 +556,7 @@ or CLAUDE.md, or the reviewers' ROLE, runs `check-run-contract.sh`.
 
 **Status:** TODO
 
-Depends on: Task 3
+Depends on: Task 3, Task 5
 
 Plan Step 4.2 (D-4(b), D-4(c); rulings M9, M10, D8, D11, D12). In
 `scripts/check-doc-sync-anchors.sh`:
@@ -673,7 +683,10 @@ and Implementation notes.
   without a contradiction about guard or anchor counts.
 - The Implementation notes list each sentence checked, and either the
   missed sentence fixed (also named in the commit message) or "none found".
-- `bash scripts/check-all.sh` exits 0 with `guards run: 10`.
+- `bash scripts/check-all.sh` exits 0 with `guards run: 10`, and
+  `bash scripts/check-all.sh --self-test` prints `guards run: 10` and ends
+  with `self-tests run: 9` (CLAUDE.md is a fixture file of
+  `check-run-contract.sh`'s self-test).
 
 ---
 
@@ -740,7 +753,10 @@ Plan Step 5.2 (D-5, D-6; rulings M2, M11, D14). In
 - Every sentence about the three changed behaviors agrees with the skill
   text Tasks 1–4 wrote (generate-plan Phase 2 Step 3 and Phase 1 Step 1
   parts 2–3, prototype § The question, diagnose-bug § Exit).
-- `bash scripts/check-all.sh` exits 0 with `guards run: 10`.
+- `bash scripts/check-all.sh` exits 0 with `guards run: 10`, and
+  `bash scripts/check-all.sh --self-test` prints `guards run: 10` and ends
+  with `self-tests run: 9` (the README is a fixture file of
+  `check-run-contract.sh`'s self-test).
 
 ---
 
