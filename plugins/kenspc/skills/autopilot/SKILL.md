@@ -963,7 +963,9 @@ Constraints section gives, commit the spec alone as
   mode is `plugin`. The cases and their PASS criteria are the field's
   sub-bullets, `(optional)` carried over; `<HEAD sha>` is HEAD at the
   launch, the state file's `head:`; `<tag>` is S4's own tag; `<remaining>`
-  is the budget left at S4's launch. The first run lists every case and
+  is the budget left at S4's launch; `<nested tag>`, `<seed directory>`,
+  `<prompt file>`, and `<cap>` are S4's to fill per nested launch and stay
+  as they are in the launched prompt. The first run lists every case and
   gets the bracketed trial-run words and the first bracketed record
   paragraph; an `-s4b` re-run after an S5 fix (Phase 3) lists the one case
   it re-runs and gets the second record paragraph instead. Why the nested
