@@ -1259,7 +1259,21 @@ clarification CL1). In `plugins/kenspc/README.md`, six places:
 
 ### Task 6: Update the root README and the two manifests
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The root README's intro paragraph and Structure tree are left as they
+    are: the task names the skills table row and the Commands line only,
+    and the tree lists directories, not skills.
+  - In `plugin.json` the new phrase joins the skills sentence as its last
+    item ("…, project guide generation, and unattended batch runs to a
+    release preparation"), so the sentence keeps its list shape and the
+    subagents clause after the semicolon is untouched.
+- Changes/tradeoffs: none. No test framework; verification was the
+  criteria's counts and greps, the manifest diff against `5c33c4a` (the two
+  description strings only), `check-json.sh`, the guard suite, and both
+  `claude plugin validate --strict` runs.
 
 Depends on: Task 1-3
 
