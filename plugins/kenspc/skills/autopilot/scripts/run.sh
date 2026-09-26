@@ -202,8 +202,9 @@ launch() {
 # whatever AUTOPILOT_LOGS says, so a self-test writes nothing under the
 # workspace. Passing: every file is present with the expected content and the
 # timeline holds both lines. It fails, in this order, on a launch naming a
-# missing executable, or a whitespace-only prompt file, that is not refused
-# with status 2 naming it and writing no .session; on a second launch
+# missing executable, or an empty or whitespace-only prompt file, that is
+# not refused with status 2 naming it and writing no .session; on a logs
+# directory the launch did not create; on a second launch
 # under the tag, made while the stub still runs, that is not refused with
 # status 2 naming the pid and leaving .session and .pid as they were; a
 # .pid that does not name a live process other than the self-test's own;
@@ -233,15 +234,15 @@ launch() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG n exit_status session flag
-  local first_session first_pid refusal rc self FTAG saved_exe
+  local first_session first_pid refusal rc self FTAG saved_exe bad
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
   # changes the working directory: the resume launch below runs it as the
   # skill does, through its command line.
   self=$(cd "$(dirname "$0")" && pwd) || die "cannot resolve the directory of $0"
   self=$self/$(basename "$0")
+  # Not created here: the first launch's mkdir -p is what creates it.
   LOGS=$base/logs
-  mkdir -p "$LOGS" || die "cannot create $LOGS"
 
   if [ -z "${AUTOPILOT_CLAUDE:-}" ]; then
     mkdir -p "$base/stub" || die "cannot create $base/stub"
@@ -291,17 +292,23 @@ STUB
     || { echo "self-test failed: a launch with a missing executable returned $rc ($([ -f "$LOGS/$TAG.session" ] && echo ".session written" || echo "no .session")), expected 2 and no .session" >&2; return 1; }
   printf '%s\n' "$refusal" | grep -qF -- "no executable $base/no-such-claude" \
     || { echo "self-test failed: the refusal of a missing executable does not name $base/no-such-claude" >&2; return 1; }
-  # A prompt file of only whitespace is refused like an empty one: cat
-  # strips the trailing newlines, so the worker would start with a blank
-  # prompt, the paid empty session the guard exists to prevent.
+  # An empty prompt file, and one of only whitespace (cat strips the
+  # trailing newlines, so the worker would start with a blank prompt), are
+  # refused the same way: the paid empty session the guard exists to
+  # prevent.
+  : > "$base/empty.md" || die "cannot write the empty prompt file"
   printf '\n  \n' > "$base/blank.md" || die "cannot write the blank prompt file"
-  refusal=$( (launch "$TAG" "$base" "$base/blank.md" "") 2>&1 ); rc=$?
-  [ "$rc" -eq 2 ] && [ ! -f "$LOGS/$TAG.session" ] \
-    || { echo "self-test failed: a launch with a whitespace-only prompt file returned $rc, expected 2 and no .session" >&2; return 1; }
-  printf '%s\n' "$refusal" | grep -qF -- "empty prompt file $base/blank.md" \
-    || { echo "self-test failed: the refusal of a whitespace-only prompt file does not name $base/blank.md" >&2; return 1; }
+  for bad in empty blank; do
+    refusal=$( (launch "$TAG" "$base" "$base/$bad.md" "") 2>&1 ); rc=$?
+    [ "$rc" -eq 2 ] && [ ! -f "$LOGS/$TAG.session" ] \
+      || { echo "self-test failed: a launch with the $bad prompt file returned $rc, expected 2 and no .session" >&2; return 1; }
+    printf '%s\n' "$refusal" | grep -qF -- "empty prompt file $base/$bad.md" \
+      || { echo "self-test failed: the refusal of the $bad prompt file does not name $base/$bad.md" >&2; return 1; }
+  done
 
   launch "$TAG" "$base" "$base/prompt.md" ""
+  [ -d "$LOGS" ] \
+    || { echo "self-test failed: the driver did not create the logs directory $LOGS" >&2; return 1; }
 
   # A second launch under the same tag while the stub still runs (its one
   # second of sleep) is refused before anything is written: status 2, the
