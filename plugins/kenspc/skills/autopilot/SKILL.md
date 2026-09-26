@@ -578,7 +578,8 @@ Before each launch:
 
 - Spent = the sum over sessions of each session's last cumulative
   `total_cost_usd`, from `<batch>-costs.txt`, plus, once S4 has returned
-  in plugin mode, the acceptance cases' costs from the record — the nested
+  in plugin mode, the trial run's and the acceptance cases' costs from the
+  record — the nested
   sessions S4 launched are in no worker's JSON and on no costs line. A
   case whose record line carries no parseable cost — S4 died mid-record,
   or its resume wrote none — counts as `unknown`, named on the report's
@@ -670,7 +671,8 @@ trial's included — before the next, since
 S4's own cap bounds none of them and a cap the cases shared would let each
 case spend it once — and the record path; each
 case's line in the record carries its cost, the sum of its nested sessions'
-last cumulative `total_cost_usd`; S4 is itself headless and waits for its
+last cumulative `total_cost_usd`, and the trial run's line under Setup its
+own; S4 is itself headless and waits for its
 nested sessions with the driver form of the wait snippet. Why the trial
 run: a seed that cannot reach the step under test hides that step behind
 its own failure.
@@ -769,7 +771,8 @@ release preparation was right.
 - `## Reviewer report` — English, the fixed fields in this order (Templates
   § The reviewer report). The total-cost line reports the measured sum of
   the workers' last cumulative `total_cost_usd`, plus, in plugin mode, the
-  acceptance cases' costs from the record as a second measured term (the
+  trial run's and the acceptance cases' costs from the record as a second
+  measured term (the
   nested sessions S4 launched), plus the main session's own cost as an
   estimate labeled "estimated": its turn count (launches + wakes + answers
   + the final turn) × the mean cost per turn across this batch's workers
@@ -1011,7 +1014,8 @@ total_cost_usd in <nested tag>.json.
 sections in this order: Setup, Independence, Cases, Findings, Observations,
 Not exercised, Summary. Every driver reply is named in it under the case it
 belongs to; each case's line carries PASS or FAIL against its criterion and
-its cost, the sum of its nested sessions' last cumulative total_cost_usd.
+its cost, the sum of its nested sessions' last cumulative total_cost_usd,
+and the trial run's line under Setup its cost the same way.
 Commit the record alone, `docs: add batch <batch> acceptance record`; the
 repository changes in no other way.]
 [Rewrite case <n>'s lines in the record at docs/dry-runs/<batch>-acceptance.md
@@ -1238,7 +1242,7 @@ the user has yet to see.
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
-- Total cost: USD <workers' sum> measured + USD <acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
+- Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
