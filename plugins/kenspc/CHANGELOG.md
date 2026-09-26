@@ -9,6 +9,243 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.9.0 — unreleased
+
+Batch F. An `autopilot` skill and its `/kenspc-autopilot <path to a spec or
+a brief>` command run one batch of this plugin's own chain unattended, from
+a spec or a brief to a local release preparation, between two human gates:
+the decisions on a brief's design table, and the tag, push, and release
+after the reports. Two entries — a spec (a plan document) runs unattended
+from task decomposition on; a brief first gets a design session whose
+decision table the user rules on, after which the spec is committed and
+the rest runs unattended — and two modes: `repo` (the default; the workers
+use the installed plugin, acceptance is the commands the brief names or
+nothing, and release preparation is one commit that removes the batch's
+plan and task documents) and `plugin` (declared, or detected from a
+marketplace layout; the workers load the worktree's plugin with
+`--plugin-dir`, acceptance runs on a seed project and files
+`docs/dry-runs/<batch>-acceptance.md`, and release preparation is the
+repository's). One headless `claude -p` session per role — design at brief
+entry, task decomposition, implementation, standalone review, acceptance,
+fix on demand, release preparation — each started through a driver script
+that ships with the skill and is copied per batch, and talking to the main
+session by cross-session messages. Two reports end the run: a one-page
+user report in the conversation's language and a reviewer report of fixed
+shape with a total-cost line. A new command and a new skill, so a minor
+release. No new agent and no new CONTEXT key; `scripts/` is untouched, so
+the guard counts are unchanged (`guards run: 10`, `self-tests run: 9`).
+Release smoke: named at release — the batch's acceptance record does not
+exist yet.
+
+### Added
+
+- **The autopilot skill and `/kenspc-autopilot`.** `skills/autopilot/SKILL.md`
+  and `commands/kenspc-autopilot.md` (`disable-model-invocation: true`; the
+  skill's description owns the routing, and it excludes any prompt that
+  opens with the workers' fixed first sentence, so a worker cannot start a
+  nested autopilot). Two entries: a spec runs unattended from S2 on; a
+  brief gets S1, a design session that drafts the spec with a decision
+  table of numbered questions, options, and leans, sends the compact table
+  to the main session, and, once the user has ruled on every row (or
+  delegated the rest to the leans), fills the decisions in and commits the
+  spec alone (`docs(plans): add batch <name> spec`). Two modes, `repo` and
+  `plugin`; `plugin` is detected when the repository root holds
+  `.claude-plugin/marketplace.json` and a `plugins/*/.claude-plugin/plugin.json`,
+  and the `Mode:` field wins over the detection. The topology is fixed —
+  S1 design (brief entry only), S2 `/kenspc-task`, S3
+  `/kenspc-task-implement`, S3b a standalone `/kenspc-task-review` over the
+  batch's range `<baseline>..<HEAD at S3's end>`, S4 acceptance, S5 a fix
+  for a defect the main session classified, S6 release preparation — one
+  role per session, never reused, so the implementer is not the acceptor
+  and a session that edited the plugin is not the one that reviews it. A
+  worker's question at a skill's gate (generate-task's confirmation,
+  task-implement's batch gate) is answered from the spec: `yes` only when
+  the task list matches the spec's steps; a mismatch is a question to the
+  user, and a question the spec does not answer is a stop, never an answer
+  on the user's behalf.
+- **The driver `run.sh`** (`skills/autopilot/scripts/run.sh`), bash 3.2,
+  copied per batch to `_prompts/<batch>-run.sh` and run through the copy.
+  Interface `run.sh <tag> <cwd> <prompt-file> [--resume <session-id>]`; the
+  prompt is read from the file, never typed on a command line. Every worker
+  starts with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
+  `--permission-mode bypassPermissions`, `--output-format json`, stdin from
+  `/dev/null`, and a `--session-id` the driver generates and writes to
+  `<tag>.session` before the process starts, so the transcript path and the
+  resume id are known even when the worker dies before its JSON lands.
+  `AUTOPILOT_PLUGIN_DIR` adds `--plugin-dir` (plugin mode),
+  `AUTOPILOT_BUDGET_USD` adds `--max-budget-usd`, `APPEND_SP` adds
+  `--append-system-prompt`; `AUTOPILOT_LOGS`, `AUTOPILOT_CLAUDE`, and
+  `AUTOPILOT_BATCH` set the logs directory, the executable, and the batch
+  name. It writes `<tag>.json`, `<tag>.err`, `<tag>.pid`, `<tag>.exit`
+  (the worker's exit status, the completion artifact), and appends
+  `start <tag> pid <pid> …` / `end   <tag> exit <status>` to
+  `<batch>-timeline.log`; the worker runs in a subshell under `trap '' HUP`,
+  wrapped in `caffeinate -i` when that command exists, so a macOS machine
+  does not sleep under a running worker. `run.sh --self-test` writes a stub
+  executable under `$TMPDIR`, launches it through the same path, checks the
+  five files and the two timeline lines, and prints `self-test passed`; a
+  caller-supplied stub (`AUTOPILOT_CLAUDE`) exercises the failure path. The
+  skill runs the copy's self-test at every batch start. No `--model`, no
+  `--continue`.
+- **The messaging protocol.** A worker asks with one message whose first
+  line is `question <tag>: <one line>` and whose body gives the context,
+  the options, and its suggested answer, then waits in a bounded `until`
+  loop (`sleep 2`, thirty times, one Bash call of about a minute) for at
+  most thirty minutes; the main session answers with `answer <tag>: <one line>`.
+  A worker that got no answer puts the question under
+  `## Question for the main session` in its final message and stops, and
+  the main session resumes it with the answer under `<tag>-r1`. The
+  interactive main session subscribes to each worker with
+  `notify_when_idle` and ends its turn; the idle notice is the wake, and
+  `<tag>.exit` the completion artifact, re-read with the state file
+  (`_logs/<batch>-state.md`) on every wake; a headless main session never
+  subscribes and polls `<tag>.exit` instead (its settings line ends
+  `wait headless`). `ListAgents` runs before every send, and the `[ref]`
+  addresses a row when two share a name. `--resume` is the fallback for a
+  worker that has died — its pid gone with no `<tag>.exit` ten seconds
+  later, or a JSON subtype other than `success` — once, under `<tag>-r1`,
+  with the fixed continue prompt; a second death of the same step is a
+  stop. No `--continue`.
+- **Budget and caps.** `USD 200` by default, from the `Budget:` field,
+  never hard-coded; `16 sessions, 8 resumes` from `Caps:`. Before each
+  launch, spent (the sum of each session's last cumulative
+  `total_cost_usd`, upserted into `<batch>-costs.txt` after every
+  `<tag>.exit`) plus projected (the largest session so far, or budget ÷ 6
+  before the first) is checked against the budget; exceeding it asks
+  "raise the budget to how much?" with the numbers, and the answer is
+  recorded in the state file and the reports. Every worker is started with
+  `--max-budget-usd` at the remaining amount; a worker its cap ended is
+  the budget stop and is resumed once the budget is raised. Acceptance
+  cases marked `(optional)` may be cut when the check fails; implementation
+  is never narrowed.
+- **Stops.** Reopening a locked design point; a forbidden section or file;
+  guards red twice in a row; the same FAIL still failing after two fixes;
+  the session cap, the resume cap, or the budget exceeded (a question); a
+  safety-rail breach (the rails in every worker's preamble: write only to
+  the repository, the workspace, and `$TMPDIR`; no `git push`, `git tag`,
+  or release; no resource the brief does not name; no secrets; no `rm -rf`
+  — discard by `mv` into `.trash/`; deletions inside the repository only
+  through `git rm`); a question neither the spec nor the locked design
+  answers; a nested `claude -p` refused; the same step's session dead
+  twice. Each ends the final message with `Autopilot stopped: <reason>`.
+- **The two gates and the two reports.** The run stops for the user at the
+  decisions on a brief's design table (a supplied spec counts as approved)
+  and at the tag, push, and release after the reports; the final message
+  ends with `Autopilot finished — <baseline sha>..<last sha>`. It carries
+  `## User report` (the conversation's language, one page: what the batch
+  built, the release commit, what needs the user, the cost) and
+  `## Reviewer report` (English, fixed fields: batch and mode, baseline →
+  release hash, the spec's `git show` command, design rulings and
+  clarifications with the decisions beyond the letter, files changed and
+  the zero-diff result, byte-identity / guards / counts, acceptance one line
+  per case with its cost, total cost, Not exercised, release-preparation
+  state, sessions / messages / resumes / stops). The total-cost line is the
+  measured sum of the workers' last cumulative `total_cost_usd` plus the
+  main session's own cost as an estimate labeled so — its turn count × the
+  mean cost per turn across the batch's workers (`total_cost_usd` ÷
+  `num_turns`), the basis on the line; `/cost` may replace it. The reviewer
+  report is also written to `_logs/<batch>-report.md`.
+- **The `## Autopilot` section.** The batch's settings, the last section of
+  a brief (after `## Discovery Notes`) or of a spec: `- <Label>: <value>`
+  bullets in any order, every field defaulted, none required — `Baseline:`,
+  `Mode:`, `Plugin:`, `Version:`, `Budget:`, `Caps:`, `Allowed files:`,
+  `Zero diff:`, `Byte-identity exceptions:`, `Acceptance:` (`none`, or one
+  sub-bullet per case with its PASS criterion after ` — PASS: ` and
+  `(optional)` on a case that may be cut), `Acceptance record:`,
+  `Release preparation:` (`default`, `keep`, or instructions), `Must read:`,
+  `Challenge seeds:`, `Prior specs:` (`<hash>^:<path>` for `git show`), and
+  `Workspace:` (`~/Projects/_smoke/` by default, the tree of `_prompts/`,
+  `_logs/`, seeds, and `.trash/`). The effective settings are printed in one
+  fixed line before the first launch. In `repo` mode acceptance is the
+  `Acceptance:` commands run by an S4 worker at the S3b HEAD (results in the
+  reviewer report; no file in the repository unless `Acceptance record:`
+  names one) or, with `none`, no S4 and the line
+  `none named; S3b is the last check`; release preparation is the removal
+  commit `docs: remove batch <name> plan and tasks` (`keep` leaves the
+  documents; instructions run after the removal). In `plugin` mode S4 runs a
+  seed-project acceptance — a trial run of the seed first, one case per run
+  — and files the record with the sections Setup, Independence, Cases,
+  Findings, Observations, Not exercised, Summary; S6 makes the repository's
+  release preparation from its release checklist and CLAUDE.md, no tag and
+  no push. Every classification of an S4 FAIL and every deferral is a
+  clarification committed into the spec by the main session
+  (`docs(plans): record clarifications settled after <step>`).
+- **Documentation.** CLAUDE.md gains a fourth orchestration pattern,
+  "Sessions, not agents (autopilot)", the layout-tree entries, the count
+  sentences (nine skills), the bypass-permissions sentence beside the
+  Development Workflow rule, three Non-Goals paragraphs (no agent teams; no
+  driver completion message on the messaging socket; the workspace outside
+  the repository), and the autopilot's gates in the cannot-ask wording
+  bullet. The plugin README gains a Skills row, a Commands row and the
+  `/kenspc:autopilot` form, a Recommended Workflow line, a new Autopilot
+  section (the launch line
+  `claude --name <batch>-main --permission-mode bypassPermissions --settings '{"crossSessionInbound":"accept"}'`,
+  the sixteen labels with an example, the workspace, what a run writes and
+  commits, the gates, the stops, the budget rule, the reports, the
+  drivers), the seven Known behavior items below, and the version line
+  `Claude Code v2.1.271 or later` under Requirements (the plugin's
+  `v2.1.0+` minimum is unchanged: every other skill runs on it). The root
+  README gains a skills-table row and `/kenspc-autopilot` on its Commands
+  line; the two manifests' descriptions gain "unattended batch runs to a
+  release preparation". Release-checklist row 1 counts 9 commands, and a
+  new row 11, `/kenspc-autopilot <spec>`, runs one headless `repo`-mode
+  batch on a one-task seed (about USD 10–20 at the batch E per-session
+  figures; `plugin` mode is exercised once, in the batch's acceptance
+  record, not per release); the end-to-end row becomes 12.
+- **The PowerShell driver `run.ps1` follows** in a later release: the same
+  interface and files, written after the bash driver has passed acceptance
+  and checked with `pwsh` on macOS (a parse and one `--self-test` launch);
+  Windows acceptance is a roadmap line. Until then the plugin README's
+  Autopilot section, CLAUDE.md's layout tree, and this entry name it as
+  following.
+
+### Known behavior
+
+- **A headless subscriber gets the idle notice as an extra turn.** In the
+  probe that settled the wait path, a `claude -p` session subscribed to its
+  worker with `notify_when_idle`; the worker exited, nothing arrived during
+  twenty-six minutes of the session's tool calls, and the notice started a
+  new turn after the session's final reply, twenty-six minutes after the
+  worker exited, whose JSON `result` then became that turn's last message.
+  So a headless autopilot never subscribes and polls `<tag>.exit`, and only
+  an interactive main session — whose probe did receive the notice between
+  turns — subscribes and ends its turn.
+- **One tool call per wait iteration.** The Bash tool blocks a bare `sleep`
+  of thirty seconds or more, with a message that recommends an `until`
+  loop, and refuses chained shorter sleeps; a bounded
+  `until … sleep 2` loop passes. So every wait is one Bash call of about a
+  minute, a thirty-minute wait is about thirty calls, and the interactive
+  main session avoids them by subscribing and ending its turn.
+- **Sessions that share a name.** The rename Claude Code applies to a
+  duplicate session name does not check the `--name` of a `-p` session at
+  startup, so two headless sessions can share a name; the skill lists agents
+  before each send and addresses the row whose start time matches the
+  launch by its `[ref]` when two rows share the name.
+- **Hook sessions and hook files in seeds.** In the same probe a user-level
+  hook's session (a SessionEnd hook that starts its own `claude -p`)
+  appeared in `ListAgents` and in the trace directory, and the hook wrote a
+  directory into the probe's working directory. Such sessions are recorded
+  as observations, counted neither as cost nor as the run's change, and a
+  hook's files in a seed are listed under the record's Observations.
+- **The twelve-hour subscription expiry.** A `notify_when_idle` subscription
+  that gets no notice within twelve hours is dropped and reported; the
+  report is a wake like any other, so the skill re-checks `<tag>.exit` and
+  subscribes again while the pid lives. A live pid is never killed and never
+  judged hung: a test suite or a long implementation is silent for longer
+  than any timeout a prompt would pick.
+- **Message limits.** A message over 1,048,576 characters is refused, a
+  burst of about thirty sends to one session is refused, a receiver queues
+  at most fifty messages and drops identical repeats, and a `-p` receiver
+  drops a held message after about five minutes. Messages carry summaries
+  and paths, never a report's text; every worker and the main session run
+  with `crossSessionInbound: accept`, and a project or local `hold` or
+  `refuse` that is stricter applies over it, so a held or refused first
+  message is a stop naming the settings precedence.
+- **The caps' default.** The three earlier batches ran 7 + 11, 10 + 14, and
+  6 + 7 sessions and runs, with 5, 9, and 7 resumes; `16 sessions, 8 resumes`
+  is one and a half times the largest, with the `Caps:` field to override
+  it.
+
 ## 3.8.2 — 2026-09-26
 
 Batch E. A review run renders its reports once: between the dispatches,

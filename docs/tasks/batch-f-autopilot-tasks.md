@@ -1405,7 +1405,34 @@ keeps its three cells.
 
 ### Task 8: Write the 3.9.0 CHANGELOG entry
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - `## Autopilot`, `## User report`, `## Reviewer report`, and
+    `## Question for the main session` appear in the entry only inline, in
+    code spans, so the heading walk from the 3.9.0 heading to the 3.8.2
+    heading sees `### Added` and `### Known behavior` and nothing else.
+  - The Known behavior items carry their evidence in the entry's own words
+    — the probe's timing (the notice as a new turn twenty-six minutes after
+    the worker exited), the Bash tool's message, the duplicate-name rule,
+    the hook's session and directory, the message limits, the three earlier
+    batches' numbers — since the CHANGELOG is where this repository cites
+    its records, and the skill and README state the same facts without the
+    numbers.
+  - The PowerShell driver is one `### Added` bullet, "follows in a later
+    release", naming what checks it when it lands; the intro says the
+    release smoke is named at release because the acceptance record does
+    not exist yet.
+- Changes/tradeoffs:
+  - The entry is long: it names every fixed string the checklist and the
+    acceptance grep for, so a reader of the CHANGELOG alone learns what
+    the run does; the 3.8.2 entry is the precedent for that length.
+  - No test framework; verification was the heading walk, the joined-text
+    strings, the diff against `5c33c4a` (one insertion above the 3.8.2
+    heading, no removed line), the manifest version,
+    `bash scripts/check-all.sh --self-test` (exit 0, `guards run: 10`,
+    ending `self-tests run: 9`), and the zero-diff command.
 
 Depends on: Task 1-7
 
