@@ -205,7 +205,11 @@ FIXING RULES
   with the reason (see PER-ISSUE OUTPUT CONTRACT). For a document with
   uncommitted changes the dirty-file rule of the `git status --porcelain`
   bullet applies to the document alone: it is left untouched, while the code
-  fix still lands and is not deferred for it. A fix withdrawn because its
+  fix still lands and is not deferred for it. The correction does not count
+  toward the fix's size: a fix localized to one file stays localized under
+  FIXING PRIORITY and PROCESSING APPROACH when its commit also corrects a
+  listed document, since deferring it for the document would leave both the
+  defect and the stale sentence. A fix withdrawn because its
   build / test / lint run failed takes its correction back with it, so the
   document is left as it was and describes no fix that did not land.
   Passing: every statement in a
