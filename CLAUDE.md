@@ -357,7 +357,10 @@ is byte-identical across those two SKILLs and `code-fixer.md`.
 After editing any reviewer agent, `code-fixer.md`, or either of those two
 SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
 `check-canonical-dispatch.sh`, `check-verdict-shared.sh`, or
-`check-run-contract.sh`. What each
+`check-run-contract.sh`. After editing the reviewer invariant sentence in
+the plugin README or this file, or the reviewers' ROLE, run
+`check-run-contract.sh`: its check 6 holds those copies to the ROLE
+sentence. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -495,6 +498,12 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `requirements-reviewer.md`, and the pre-fix record's `pre-fix/index.txt`
   in `code-fixer.md` and `regression-verifier.md` (check 5;
   `check-review-agent-drift.sh` carries the first name to the other four
+  reviewers); and the reviewer invariant sentence, extracted at run time
+  from the ROLE section of `requirements-reviewer.md` and compared
+  whitespace-normalized, is contained in its three copies — the plugin
+  README, this file, and `task-review/SKILL.md`'s dispatch block (check 6;
+  `check-canonical-dispatch.sh` carries the last to `task-implement`, and
+  `check-review-agent-drift.sh` the reference to the other four
   reviewers). `--file PATH` runs the recount against a real `schema-b.md`
   from a run directory.
 - `check-json.sh` — guards that `plugin.json`, `hooks.json`, and

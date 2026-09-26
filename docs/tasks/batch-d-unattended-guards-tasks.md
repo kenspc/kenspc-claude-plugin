@@ -541,7 +541,49 @@ and tier 3 are unchanged (ruling M7).
 
 ### Task 5: Add check 6 to check-run-contract.sh for the reviewer invariant sentence
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the README and CLAUDE.md existence checks sit inside check 6,
+  after the `--file` branch has returned, rather than in the top
+  missing-file loop, so `--file PATH` keeps requiring only the five files it
+  required before. The start line is matched after leading indentation is
+  stripped (the reference is unindented; CLAUDE.md's copy is indented), and
+  the fixture-stale guard counts `^[[:space:]]*<start>` lines to match.
+  The substring test is bash's `[[ "$copy" != *"$invariant"* ]]` with the
+  pattern quoted (literal), not `printf | grep -qF`, which under
+  `set -o pipefail` can report a SIGPIPE from printf as a miss. Every copy
+  that fails is reported before exit 1, as check 5 reports every carrier.
+  The four exit-1 mutations reuse `mutate_and_expect` (one-line rule,
+  restore after); the whitespace-only mutation is inline because the helper
+  expects exit 1.
+- Changes/tradeoffs: CLAUDE.md's check-run-contract description also says
+  `check-review-agent-drift.sh` carries the reference to the other four
+  reviewers, beside `check-canonical-dispatch.sh` carrying task-review's
+  copy to task-implement, so the chain from all four places to one reference
+  reads in one sentence. Probe (scratchpad copy): each of the four
+  `writes only below` mutations is caught by check 6 alone (its DRIFT line;
+  checks 1–5 all OK), and the reference mutation names all three copies.
+  Falsifiability by hand, copy left at
+  `$TMPDIR/batch-d-task5-falsify` (`$TMPDIR` =
+  `/var/folders/28/hztldwfs1ls4stzfgvj2qm900000gn/T/`):
+  `cp -R scripts plugins CLAUDE.md "$C"/`; README line 84
+  `and probe and temporary` → `and probe and scratch` (awk literal
+  replace); `bash "$C/scripts/check-run-contract.sh"` → exit 1,
+  `DRIFT reviewer invariant sentence — …/batch-d-task5-falsify/plugins/kenspc/README.md does not contain it`;
+  README restored from its saved copy → exit 0, last line
+  `OK    reviewer invariant sentence — plugins/kenspc/README.md, CLAUDE.md, and task-review contain the reviewers' ROLE sentence`.
+  Verified: main mode and `--self-test` exit 0 under bash 5 and
+  `/bin/bash` 3.2.57; `--file` on the extracted Schema B example prints one
+  OK line (check 4 only); `Five checks|eleven` grep empty; the header states
+  eighteen, and the script runs 7 named `mutate_and_expect` + 1
+  `mutate_files_and_expect` + 4 change-set + 2 pre-fix + 4 check-6 = 18
+  must-exit-1 mutations; no `declare -A`, no `sed -i` added; zero-diff
+  command empty; `writes only under` on one line each of CLAUDE.md and the
+  README, `read-only on the working tree` on one line of the README;
+  check-all 0 with `guards run: 10`; `check-all.sh --self-test` 0 with
+  `self-tests run: 9`, all PASS except the pre-existing SKIP for
+  check-review-agent-drift.sh.
 
 Plan Step 4.1 (D-4(a); rulings M3, M13, D8, D9, D10, M10). In
 `scripts/check-run-contract.sh`:

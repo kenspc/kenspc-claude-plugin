@@ -2,7 +2,7 @@
 # check-run-contract.sh
 #
 # Guards the run-directory contract that task-review and task-implement share
-# with code-fixer (v3.5.0). Five checks:
+# with code-fixer (v3.5.0). Six checks:
 #
 #   1. The run-directory preparation block (bounded by
 #      `<!-- canonical:run-dir:start/end -->`) is byte-identical in
@@ -36,6 +36,25 @@
 #      `pre-fix/index.txt`, is checked the same way in agents/code-fixer.md,
 #      which writes it in an uncommitted run, and agents/regression-verifier.md,
 #      which reads it.
+#   6. The reviewer invariant sentence ("Each reviewer is read-only on the
+#      working tree and writes only under `RUN_DIR`: …"). It lives in four
+#      places: the five reviewers' ROLE, the canonical dispatch block of
+#      task-review and task-implement, the plugin README, and CLAUDE.md.
+#      check-review-agent-drift.sh holds the five ROLE sections identical and
+#      check-canonical-dispatch.sh the two dispatch blocks, but nothing tied
+#      one family to the other, and nothing held the README or CLAUDE.md
+#      copy. The reference is extracted from agents/requirements-reviewer.md
+#      at run time — the lines from the one that begins with the sentence's
+#      opening words through the first line that ends in a period — and
+#      whitespace-normalized: every run of spaces, tabs, CR, and LF becomes
+#      one space, leading and trailing space dropped. plugins/kenspc/README.md,
+#      CLAUDE.md, and skills/task-review/SKILL.md, normalized the same way,
+#      must each contain it (check-canonical-dispatch.sh carries task-review's
+#      copy to task-implement). The reference is extracted rather than copied
+#      into this guard: a literal here would be one more copy to keep in
+#      step, and with an extracted reference, rewording the ROLE sentence
+#      fails every copy not yet updated. Normalizing makes re-wrapping and
+#      CLAUDE.md's list indentation irrelevant.
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
@@ -47,9 +66,13 @@
 #
 # Exit code 0: all checks pass.
 # Exit code 1: a block diverges, the ignore probe answers wrongly, the
-#              recount disagrees, or a file does not name change-set.md.
+#              recount disagrees, a file does not name change-set.md, or a
+#              copy of the reviewer invariant sentence does not contain the
+#              reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
-#              command in the run-dir block, or self-test fixture stale.
+#              command in the run-dir block, no start line of the reviewer
+#              invariant sentence in agents/requirements-reviewer.md (the
+#              reference moved), or self-test fixture stale.
 #
 # Same set -euo pipefail discipline and SCRIPT_DIR / REPO_ROOT derivation as
 # the other guards. Mutations use a literal awk replacement rather than
@@ -58,15 +81,17 @@
 # Optional flags:
 #   --file PATH    Run only check 4, against a real schema-b.md (for example
 #                  one under .kenspc/runs/<run-id>/ after a review run).
-#   --self-test    Run the mutation regression fixture. Copies the five
-#                  target files into a temp workdir, confirms `change-set.md`
-#                  is present in the four files check 5 reads and
-#                  `pre-fix/index.txt` in its two (exit 2 if not), and runs
-#                  the main check on
+#   --self-test    Run the mutation regression fixture. Copies the seven
+#                  target files (the five above, plugins/kenspc/README.md,
+#                  and CLAUDE.md) into a temp workdir, confirms
+#                  `change-set.md` is present in the four files check 5
+#                  reads, `pre-fix/index.txt` in its two, and the reviewer
+#                  invariant sentence's start line once in the copied
+#                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on eleven mutations that must
-#                  each exit 1: stats-line template changed in one SKILL,
+#                  prefix classification), then on eighteen mutations that
+#                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
 #                  case, which only check 3 can catch), five recount
@@ -77,10 +102,17 @@
 #                  match), the change-set file name removed from each
 #                  of the four copied files check 5 reads, one file at a
 #                  time (every occurrence, through a replace-all helper,
-#                  since it occurs on several lines), and the pre-fix index
-#                  name removed from each of its two carriers in turn, then
-#                  on the reverted copy (must exit 0). Exit 0 on self-test
-#                  pass, 1 on unexpected exit codes, 2 on fixture-stale.
+#                  since it occurs on several lines), the pre-fix index
+#                  name removed from each of its two carriers in turn, and
+#                  `writes only under` changed to `writes only below` in the
+#                  README's copy of the reviewer invariant sentence, in
+#                  CLAUDE.md's, in task-review's, and in the reference
+#                  itself, one file at a time. One more mutation must exit 0:
+#                  `read-only on the working tree` given a second space in
+#                  the README's copy, a whitespace-only change check 6
+#                  ignores. Then the main check runs on the reverted copy
+#                  (must exit 0). Exit 0 on self-test pass, 1 on unexpected
+#                  exit codes, 2 on fixture-stale.
 
 set -euo pipefail
 
@@ -92,8 +124,11 @@ REVIEW_REL="plugins/kenspc/skills/task-review/SKILL.md"
 IMPLEMENT_REL="plugins/kenspc/skills/task-implement/SKILL.md"
 VERIFIER_REL="plugins/kenspc/agents/regression-verifier.md"
 REVIEWER_REL="plugins/kenspc/agents/requirements-reviewer.md"
+README_REL="plugins/kenspc/README.md"
+CLAUDE_REL="CLAUDE.md"
 CHANGE_SET_NAME="change-set.md"
 PRE_FIX_INDEX="pre-fix/index.txt"
+INVARIANT_START="Each reviewer is read-only on the working tree"
 
 # Print the lines strictly between the start and end markers of <name>.
 # Returns 2 unless the file has exactly one start and one end marker.
@@ -269,6 +304,37 @@ probe_behaves() {
     return 0
 }
 
+# Print a file whitespace-normalized: every run of spaces, tabs, CR, and LF
+# becomes one space, and leading and trailing space is dropped.
+normalize_ws() {
+    awk '
+        { buf = buf " " $0 }
+        END {
+            gsub(/[ \t\r]+/, " ", buf)
+            sub(/^ /, "", buf); sub(/ $/, "", buf)
+            printf "%s", buf
+        }' "$1"
+}
+
+# Check 6: print the reviewer invariant sentence from the reference file —
+# the lines from the first that begins (after indentation) with
+# INVARIANT_START through the first line that ends in a period —
+# whitespace-normalized. Prints nothing when no line begins that way.
+extract_invariant() {
+    awk -v start="$INVARIANT_START" '
+        { sub(/\r$/, ""); line = $0; sub(/^[ \t]+/, "", line) }
+        !found && index(line, start) == 1 { found = 1 }
+        found {
+            buf = buf " " $0
+            if ($0 ~ /\.[ \t]*$/) exit
+        }
+        END {
+            gsub(/[ \t]+/, " ", buf)
+            sub(/^ /, "", buf); sub(/ $/, "", buf)
+            printf "%s", buf
+        }' "$1"
+}
+
 # Run all checks (or only check 4 on an external file) against a repo root.
 # Returns 0/1/2 via `return` (no `exit`).
 run_main_logic() {
@@ -351,6 +417,38 @@ run_main_logic() {
     fi
     echo "OK    $CHANGE_SET_NAME — named in task-review, code-fixer, regression-verifier, requirements-reviewer"
     echo "OK    $PRE_FIX_INDEX — named in code-fixer, regression-verifier"
+
+    # Check 6: the reviewer invariant sentence in its three copies.
+    local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
+    local invariant copy
+    for f in "$readme" "$claude_md"; do
+        if [[ ! -f "$f" ]]; then
+            echo "ERROR: missing file $f" >&2
+            return 2
+        fi
+    done
+    invariant=$(extract_invariant "$reviewer")
+    if [[ -z "$invariant" ]]; then
+        echo "ERROR: no line beginning '$INVARIANT_START' in $reviewer; the reference for check 6 moved" >&2
+        return 2
+    fi
+    missing=0
+    for f in "$readme" "$claude_md" "$review"; do
+        copy=$(normalize_ws "$f")
+        if [[ "$copy" != *"$invariant"* ]]; then
+            echo "DRIFT reviewer invariant sentence — $f does not contain it" >&2
+            missing=1
+        fi
+    done
+    if [[ "$missing" -ne 0 ]]; then
+        echo "The copies follow the reviewers' ROLE sentence, taken from $reviewer" >&2
+        echo "and compared whitespace-normalized:" >&2
+        echo "  $invariant" >&2
+        echo "Bring each copy named above back to it, or reword the ROLE sentence in every" >&2
+        echo "reviewer and every copy together." >&2
+        return 1
+    fi
+    echo "OK    reviewer invariant sentence — plugins/kenspc/README.md, CLAUDE.md, and task-review contain the reviewers' ROLE sentence"
     return 0
 }
 
@@ -390,7 +488,8 @@ run_self_test() {
     trap 'rm -rf "${WORK:-}"' EXIT
 
     local rel
-    for rel in "$FIXER_REL" "$REVIEW_REL" "$IMPLEMENT_REL" "$VERIFIER_REL" "$REVIEWER_REL"; do
+    for rel in "$FIXER_REL" "$REVIEW_REL" "$IMPLEMENT_REL" "$VERIFIER_REL" "$REVIEWER_REL" \
+               "$README_REL" "$CLAUDE_REL"; do
         mkdir -p "$WORK/$(dirname "$rel")"
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
     done
@@ -420,6 +519,16 @@ run_self_test() {
             return 2
         fi
     done
+
+    # Fixture-stale guard for check 6: the reference sentence's start line
+    # occurs once in the copied reference, so check 6 extracts the sentence
+    # the mutations below change.
+    local starts
+    starts=$(grep -cE "^[[:space:]]*$INVARIANT_START" "$WORK/$REVIEWER_REL" || true)
+    if [[ "$starts" -ne 1 ]]; then
+        echo "FAIL  self-test fixture stale: '$INVARIANT_START' begins $starts lines of $REVIEWER_REL, expected 1" >&2
+        return 2
+    fi
 
     # mutate_and_expect <label> <file> <old> <new> [<old> <new> ...]: apply
     # one or more literal replacements to one file, expect the main check to
@@ -538,6 +647,28 @@ run_self_test() {
             return 1
         fi
     done
+    # Check 6: one word of the reviewer invariant sentence changed in each
+    # copy in turn, and in the reference itself, which every copy then
+    # fails to contain.
+    for rel in "$README_REL" "$CLAUDE_REL" "$REVIEW_REL" "$REVIEWER_REL"; do
+        mutate_and_expect "invariant sentence in $rel" "$rel" \
+            "writes only under" "writes only below" || return $?
+    done
+    # A whitespace-only change to a copy must pass: check 6 compares
+    # normalized text. The literal must occur on exactly one line.
+    local hits
+    hits=$(grep -cF -- "read-only on the working tree" "$WORK/$README_REL" || true)
+    if [[ "$hits" -ne 1 ]]; then
+        echo "FAIL  self-test fixture stale: \"read-only on the working tree\" found on $hits lines of $README_REL, expected 1 (whitespace-only)" >&2
+        return 2
+    fi
+    replace_literal "$WORK/$README_REL" "read-only on the working tree" "read-only  on the working tree"
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$README_REL" "$WORK/$README_REL"
+    if [[ "$rc" -ne 0 ]]; then
+        echo "FAIL  self-test whitespace-only mutation in $README_REL: expected exit 0, got $rc" >&2
+        return 1
+    fi
 
     ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
     if [[ "$rc" -ne 0 ]]; then
