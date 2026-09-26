@@ -360,9 +360,10 @@ On approval:
    c. If a file already exists at the target path, ask the user whether to
       overwrite or create a new file. In a session that cannot ask (a
       system reminder to work without stopping), create the file alongside
-      with a numeric suffix (`<name>-2.md`) and say so in the final message,
-      naming the file. Why: an overwrite nobody chose can destroy a plan the
-      user kept.
+      with the first numeric suffix no file has (`<name>-2.md`, then
+      `<name>-3.md`, …) and say so in the final message, naming the file.
+      Why: an overwrite nobody chose can destroy a plan the user kept, and
+      an earlier run of this branch may have left `<name>-2.md` already.
 2. Determine the document language:
    a. If the user specified a language, use it.
    b. Otherwise, default to English.

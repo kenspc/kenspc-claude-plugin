@@ -49,8 +49,9 @@ the batch's acceptance record, named in the release commit.
   ask still writes the plan only on approval" described the skill's text,
   which that run did not follow; the stop had no cannot-ask branch. The
   existing-file question on the approved path gains one too: in a session
-  that cannot ask, the plan is created alongside as `<name>-2.md` and named
-  in the final message, not overwritten.
+  that cannot ask, the plan is created alongside as `<name>-2.md` (or the
+  first higher number no file has) and named in the final message, not
+  overwritten.
 - **generate-plan, answered entries.** An `answered` brief entry is settled
   input only when it holds `Answer:` — not by its status word alone, and not
   by a `Prototype:` line alone; a plan relying on one cites its prototype
