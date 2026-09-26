@@ -443,7 +443,9 @@ backstop under F-9's budget). The main session lists them in its report.
   dry-run records. The criterion for every plugin file this batch adds
   (`skills/autopilot/SKILL.md`, `scripts/run.sh`, `scripts/run.ps1`,
   `commands/kenspc-autopilot.md`):
-  `grep -nE 'batch [A-Z]\b|dry-run|\bruling\b|\b[BCDEF]-[0-9]+\b|\bCL[0-9]+\b|\([MDC][0-9]+\b|\b[MD][0-9]+\b' <file>`
+  `grep -nE 'batch [A-Z]\b|dry-run\b|\bruling\b|\b[BCDEF]-[0-9]+\b|\bCL[0-9]+\b|\([MDC][0-9]+\b|\b[MD][0-9]+\b' <file>`
+  (the `dry-run\b` alternative by CL2, so the record path
+  `docs/dry-runs/…` passes)
   prints nothing. It prints nothing on the eight existing skills at
   `5c33c4a` and many lines on this document, so it can fail. Two words
   the skill needs are outside the pattern by construction: the skill
@@ -483,7 +485,7 @@ reads them. Spell them exactly as given, in every file that carries them.
 | Return line | `S<n> returned — exit <code>, cost USD <c>, <success\|subtype> — <json path>` | the same |
 | Question | first line `question <tag>: <one line>`; the worker's final-message section `## Question for the main session` | `autopilot/SKILL.md` (the preamble template) |
 | Answer | first line `answer <tag>: <one line>` | `autopilot/SKILL.md` |
-| Rulings | first line `rulings <batch>: <n> rulings`; per row `M<n>: <ruling>` / `D<n>: <ruling>`; `lean adopted (the session could not ask)` | `autopilot/SKILL.md` |
+| Rulings | first line `rulings <batch>: <n> rulings`; per row `M<n>: <decision>` / `D<n>: <decision>` (the placeholder by CL3; the parsed part is the `M<n>: ` / `D<n>: ` prefix); `lean adopted (the session could not ask)` | `autopilot/SKILL.md` |
 | Continue prompt | `Continue the task in your prompt from where you stopped; your last message was cut short.` | `autopilot/SKILL.md` |
 | Stop line | `Autopilot stopped: <reason>` — the last line of the final message on any stop | `autopilot/SKILL.md`, `docs/release-checklist.md` (row 11) |
 | Finish line | `Autopilot finished — <baseline sha>..<last sha>` | the same |
@@ -1017,6 +1019,20 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   `wait <interactive|headless>` after `workspace <path>`; Known behavior
   (Step 2.2) and the CHANGELOG (Step 2.3) state the extra-turn effect.
   Background item 2 amended in the same commit.
+- **CL2** — The pointer-label grep's `dry-run` alternative reads
+  `dry-run\b` for this batch's four plugin files: the skill's S4 task
+  block names the record path `docs/dry-runs/<batch>-acceptance.md`
+  (F-3, D18), whose `dry-runs` matched the bare alternative as a
+  substring, while the pointer word `dry-run` is still caught; the skill
+  words F-10's seed check as a trial run of the seed. Standing
+  constraints amended; the task document's criteria use the amended
+  pattern. Steps 1.1–1.3, 3.1.
+- **CL3** — The rulings message's per-row form is `M<n>: <decision>` /
+  `D<n>: <decision>`: the placeholder `<ruling>` matched `\bruling\b`,
+  and nothing parses the placeholder — the parsed part is the `M<n>: ` /
+  `D<n>: ` prefix. The singular word "ruling" does not appear in the
+  skill (plural "rulings", or "decision" / "answer"). Fixed strings
+  amended. Step 1.1.
 
 ## Open Questions
 
