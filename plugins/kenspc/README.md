@@ -18,6 +18,7 @@ Skills activate automatically when Claude Code detects a matching task context.
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
+| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review, acceptance, fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
 
 ## Commands
 
@@ -37,10 +38,12 @@ duplicate them as a competing routing surface.
 | `/kenspc-task-implement` | `/kenspc-task-implement <path-to-task-file>` |
 | `/kenspc-task-review` | `/kenspc-task-review [path-to-task-file] [custom instructions]` |
 | `/kenspc-guide` | `/kenspc-guide <project-path> [custom instructions]` |
+| `/kenspc-autopilot` | `/kenspc-autopilot <path to a spec or a brief>` |
 
 Skills can also be invoked via `/kenspc:generate-brief`, `/kenspc:prototype`,
 `/kenspc:generate-plan`, `/kenspc:generate-task`, `/kenspc:diagnose-bug`,
-`/kenspc:task-implement`, `/kenspc:task-review`, and `/kenspc:generate-guide`.
+`/kenspc:task-implement`, `/kenspc:task-review`, `/kenspc:generate-guide`,
+and `/kenspc:autopilot`.
 
 ## Plugin Structure
 
@@ -218,6 +221,7 @@ Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement
 2. **Decompose**: Use `/kenspc-task` to break the plan into fine-grained executable tasks
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
+5. **Autopilot (optional)**: or hand a spec or a brief to `/kenspc-autopilot`, which runs the chain from step 2 — or from a design session, at brief entry — to a release preparation unattended, stopping only at its two human gates (see [Autopilot](#autopilot))
 
 **Prototype path.** A brief's `## Open Questions` lists what the discovery conversation could not settle, one numbered entry each, starting with its status: `open` (a decision or information nobody present has), `needs prototype` (a question a small experiment settles, with `Settled by:` naming the result that would settle it), or `answered` (settled by a prototype). On a brief with a `needs prototype` entry, `/kenspc-plan` first asks whether to prototype it or carry it into the plan's Open Questions, where the plan says which of its steps assume an answer; "prototype first" ends the run with a `/kenspc-prototype <brief path> <n>` line and writes no file. An `answered` entry is settled input for `/kenspc-plan` only when it holds `Answer:` with text after the label; one without, or with nothing after the label, is asked about in the gap round, or carried into the plan as `open`. `/kenspc-prototype` builds the smallest thing that settles the question — by default under `prototypes/<slug>/` at the repository root — runs it, and commits it (`chore: add prototype <slug>`); it rewrites the entry `answered` with the answer, the evidence, and that commit's hash, then removes the prototype in the next commit (`chore: remove prototype <slug>`, with the question, the answer, and the hash in its body). Read the prototype later with `git show <hash>`. An entry number that names no entry stops the run, building nothing and leaving the brief unchanged. `/kenspc-prototype` asks before it rewrites an entry that already holds an answer, named or taken when none is named, or an entry whose status word it does not recognize. When you answer yes to prototyping an entry with an answer again, the entry is rewritten only if the new attempt settles the question; when nothing is built, or the prototype's evidence does not settle it, the entry keeps its earlier answer, evidence, and Prototype line, and the final message names the new attempt's commits, when it made any, and why the question was not settled. The brief is left uncommitted, as `/kenspc-brief` leaves it. A prototype may use your development database, recognized by name only (`appsettings.Development.json`, `.env.development`, `.env.development.local`, user-secrets, or one your CLAUDE.md or README names): before it adds a table or column there, the skill warns that the development database may be the wrong place and recommends a throwaway database, and it names in the evidence every existing table it wrote rows to. It adds and applies no migration.
 
@@ -298,6 +302,166 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   sits at the repository root, so start the session there: when the
   session's working directory is a subdirectory, the run directory lies
   outside it and even `acceptEdits` asks.
+
+## Autopilot
+
+`/kenspc-autopilot <path to a spec or a brief>` runs one batch of the chain
+unattended, one headless `claude -p` session per role: S2 `/kenspc-task`, S3
+`/kenspc-task-implement`, S3b a standalone `/kenspc-task-review` over the
+batch's range, S4 acceptance, S5 a fix on demand, S6 the release
+preparation — and S1, a design session, at brief entry. Each is started
+through a driver script while your session (the main session) waits for
+it, answers the workers' questions from the spec, and classifies what they
+produce; the workers use the installed plugin in `repo` mode and the
+worktree's plugin (`--plugin-dir`) in `plugin` mode. One role per session,
+never reused: a session that edited the plugin still runs the text it
+started with, so the review, the acceptance, and a fix are each a session
+of their own.
+
+Start the main session with the name the workers will address:
+
+```
+claude --name <batch>-main --permission-mode bypassPermissions --settings '{"crossSessionInbound":"accept"}'
+```
+
+The batch name is the argument file's base name without its extension.
+When the session was started otherwise, the run uses the name `ListAgents`
+prints on its first line and records it. Bypass permissions and accepted
+inbound messages are what let a worker's question reach the main session
+without a prompt to approve it.
+
+**The `## Autopilot` section.** The batch's settings are the last section
+of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
+`- <Label>: <value>` fields, in any order, labels in English whatever the
+document's language. Every field has a default and none is required; the
+run prints its effective settings in one line before the first launch, and
+names any label it does not know. The sixteen labels and their defaults:
+
+- `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
+- `Mode:` `repo` or `plugin` — detected from the layout (a
+  `.claude-plugin/marketplace.json` plus a `plugins/*/.claude-plugin/plugin.json`
+  means `plugin`), else `repo`; the field wins over the detection
+- `Plugin:` a plugin directory name under `plugins/`, for a marketplace
+  with several — unset
+- `Version:` `none`, or a version string — `none`
+- `Budget:` `USD <n>` — `USD 200`
+- `Caps:` `<n> sessions, <m> resumes` — `16 sessions, 8 resumes`
+- `Allowed files:` paths, one per line or comma-separated — empty
+- `Zero diff:` paths the batch promises not to touch — empty, no check
+- `Byte-identity exceptions:` free text — empty
+- `Acceptance:` `none`, or one sub-bullet per case: a command or a case
+  description, its PASS criterion after ` — PASS: `, and `(optional)` at the
+  end of a case that may be cut — `none`
+- `Acceptance record:` a path the S4 results are written to (repo mode) —
+  unset, nothing written into the repository
+- `Release preparation:` `default`, `keep`, or sub-bullets of instructions
+  — `default`
+- `Must read:` paths every worker reads first — empty
+- `Challenge seeds:` sub-bullets the design session argues against — empty
+- `Prior specs:` `<hash>^:<path>` entries, read with `git show` — empty
+- `Workspace:` a directory — `~/Projects/_smoke/`
+
+  For example, at the end of a brief:
+
+  ```
+  ## Autopilot
+  - Baseline: HEAD
+  - Mode: repo
+  - Budget: USD 60
+  - Acceptance:
+    - npm test — PASS: exit 0
+    - npm run typecheck — PASS: exit 0 (optional)
+  - Release preparation: default
+  ```
+
+**The workspace.** Everything the run keeps outside the repository lives
+under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
+
+```
+<workspace>/
+    _prompts/      the copied driver <batch>-run.sh, the preamble, the task blocks, the assembled prompts
+    _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
+                   <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
+    <batch>-*      seed projects (plugin mode)
+    .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing is rm -rf'd
+```
+
+`<tag>.exit`, written by the driver when a worker returns, is the
+completion artifact: the idle notice only wakes the main session, which
+then reads the file. `<batch>-state.md` is rewritten at every transition
+and re-read on every wake, so a long batch continues from what is on disk.
+`<batch>-costs.txt` holds one line per session with its last cumulative
+`total_cost_usd`.
+
+**What a run writes and commits.** In `repo` mode: the workers' commits
+(the task document, the implementation, the review's fixes) and, with
+`Release preparation: default`, one removal commit,
+`docs: remove batch <name> plan and tasks`, that `git rm`s the batch's plan
+and task documents and touches no version and no CHANGELOG (`keep` leaves
+them; a list of instructions runs after the removal). In `plugin` mode: the
+same, plus the acceptance record `docs/dry-runs/<batch>-acceptance.md` and
+the repository's release commit — the CHANGELOG heading dated, the manifest
+at `Version:`, the checklist and roadmap updated, the batch's documents
+removed, the pre-flight run — with no tag and no push. At brief entry the
+design session commits the spec alone, `docs(plans): add batch <name> spec`,
+and the main session commits each decision it makes during the run into the
+spec's clarifications section (`docs(plans): record clarifications settled
+after <step>`). Nothing is pushed, tagged, or released.
+
+**The two gates.** The run stops for you at the decisions on a brief's
+design table (a supplied spec counts as approved) and at the tag, push, and
+release after the reports. Everything between is answered from the spec: a
+worker's confirmation is `yes` only when its task list matches the spec's
+steps, and a question the spec does not answer is a stop, never an answer
+on your behalf.
+
+**Stops.** Reopening a locked design point; a forbidden section or file
+touched; guards red twice in a row; the same acceptance FAIL still failing
+after two fixes; the session cap, the resume cap, or the budget exceeded
+(a question with the numbers); a safety-rail breach (no `git push`,
+`git tag`, or release; no `rm -rf`; no resource the brief does not name; no
+secrets); a question neither the spec nor the locked design answers; a
+nested `claude -p` refused; the same step's session dead twice. Every stop
+ends the final message with `Autopilot stopped: <reason>`; the state file
+holds the next action.
+
+**Budget.** `USD 200` by default, `16 sessions, 8 resumes` as caps. Before
+each launch the run checks spent (the sum of the sessions' last cumulative
+costs) plus projected (the largest session so far, or budget ÷ 6 before the
+first) against the budget and asks "raise the budget to how much?" when it
+would be exceeded; every worker is started with `--max-budget-usd` set to
+the remaining amount, so a runaway session cannot spend past the batch. A
+worker ended by its cap is resumed once you raise the budget. Acceptance
+cases marked `(optional)` may be cut when the budget check fails;
+implementation is never narrowed.
+
+**The reports.** The final message carries `## User report` — your
+language, at most one page: what the batch built, the release commit, what
+needs you, the cost — and `## Reviewer report` — English, fixed fields:
+batch and mode; baseline → release hash; the spec's `git show` command;
+design rulings and clarifications with the decisions that read the locked
+design beyond its letter; files changed and the zero-diff result;
+byte-identity / guards / counts; acceptance, one line per case with its
+cost and result; total cost; Not exercised; release-preparation state;
+sessions / messages / resumes / stops. The total-cost line is the measured
+sum of the workers' last cumulative `total_cost_usd` plus the main
+session's own cost as an estimate, labeled so: its turn count × the mean
+cost per turn across the batch's workers, the basis stated on the line
+(`/cost` in your session replaces it). The reviewer report is also written
+to `_logs/<batch>-report.md`, and the final message ends with
+`Autopilot finished — <baseline sha>..<last sha>`.
+
+**The drivers.** `run.sh` (`skills/autopilot/scripts/run.sh`) ships with the
+skill and is copied per batch to `_prompts/<batch>-run.sh`; it starts each
+worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
+`--permission-mode bypassPermissions`, `--output-format json`, a session id
+written to `<tag>.session` before the process starts, and — when the
+command exists — wrapped in `caffeinate -i`, so a macOS machine does not
+sleep under a running worker while the main session waits with no Bash
+call running. `run.sh --self-test` launches a stub through the same path
+and prints `self-test passed`; the run executes the copy's self-test at
+every batch start. The PowerShell mirror, `run.ps1`, follows in a later
+release, once the bash driver has passed acceptance.
 
 ## Known behavior
 
@@ -470,6 +634,52 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   entry that already held an answer, which you chose to prototype again,
   is left as it was, gaining at most a `Settled by:` line), and widening
   the in-app exception to features is your decision.
+- **One tool call per wait iteration.** A headless autopilot, and any
+  worker waiting for an answer, waits in a bounded `until` loop of about a
+  minute per Bash call (`sleep 2`, thirty times), because the Bash tool
+  blocks a bare `sleep` of thirty seconds or more and refuses chained short
+  sleeps; the loop is the form the tool's own message recommends. A
+  thirty-minute wait is therefore about thirty tool calls. The interactive
+  main session avoids them by subscribing to the worker's idle notice and
+  ending its turn.
+- **A headless subscriber gets the idle notice as an extra turn.** A
+  `claude -p` session that subscribes to a worker with `notify_when_idle`
+  does not receive the notice between its tool calls: it arrives as a new
+  turn after the session's final reply, and the session's JSON `result`
+  then becomes that turn's last message. So a headless autopilot never
+  subscribes and polls `<tag>.exit` instead — its settings line ends with
+  `wait headless` — and only an interactive main session subscribes.
+- **Sessions that share a name.** The rename Claude Code applies to a
+  duplicate session name does not check the `--name` of a `-p` session at
+  startup, so an earlier batch's worker still running, or a resumed session,
+  can share a tag's name. The skill runs `ListAgents` before each send and,
+  when two rows carry the name, addresses the one whose start time matches
+  the launch by its `[ref]`.
+- **Hook sessions and hook files in seeds.** A user-level hook that starts
+  its own `claude -p` (a SessionEnd hook, for example) shares the trace
+  directory with the batch's sessions and may write files into a seed
+  project. The skill records such a session as an observation, counts it
+  neither as cost nor as the run's change, and lists a hook's files in a
+  seed under the acceptance record's Observations.
+- **The twelve-hour subscription expiry.** An idle-notice subscription that
+  gets no notice within twelve hours is dropped, and the notice that reports
+  it is a wake like any other: the skill re-checks `<tag>.exit` and, with
+  the pid still live, subscribes again. A worker that runs longer than that
+  is not judged hung; a live pid is never killed.
+- **Message limits.** A message over about a million characters is refused,
+  a burst of about thirty sends to one session is refused, and a receiver
+  queues at most fifty messages and drops identical repeats. Messages
+  between the main session and the workers carry summaries and paths, never
+  a report's text; a worker with a table to show writes it to a file and
+  sends the path.
+- **Stricter inbound settings.** `crossSessionInbound` is read from managed
+  settings, then the `--settings` flag, then user settings, and a project or
+  local setting of `hold` or `refuse` applies over the workers' `--settings`
+  accept when it is stricter. No probe message is sent at the start, so a
+  held or refused first message shows as a delivery notice on that message;
+  the skill stops there, naming the precedence. A worker whose question is
+  held runs into its thirty-minute wait and stops with the question in its
+  final message, and the skill resumes it with the answer.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
@@ -482,6 +692,10 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 - Claude Code v2.1.0+ (the version line that supports the `effort:`
   frontmatter on SKILL.md and agent .md files; required for the three
   `xhigh` overrides listed under [Effort levels](#effort-levels)).
+- `/kenspc-autopilot` needs `Claude Code v2.1.271 or later`: cross-session
+  messaging, the idle-notice subscription (`notify_when_idle`), the own-name
+  line of `ListAgents`, and notices to headless senders. The plugin's
+  minimum above is unchanged — every other skill runs on it.
 
 **Recommended:**
 - A session that allows a generous max-output-token budget — the three

@@ -1121,7 +1121,31 @@ are unchanged.
 
 ### Task 5: Document the autopilot in the plugin README
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The example `## Autopilot` section is a fenced block indented by two
+    spaces under the labels list, so the file has exactly one line equal to
+    `## Autopilot` (the criterion counts `^## Autopilot$`) while the example
+    still shows the heading as a brief carries it.
+  - The Skills row says "Needs v2.1.271 or later (see Requirements)", so
+    the fixed string `Claude Code v2.1.271 or later` occurs once, in
+    § Requirements, as the task asks.
+  - The Recommended Workflow line is a numbered item 5 after item 4, so the
+    list stays a list and the line sits outside the diagram.
+  - Each Known behavior item states its evidence as what the harness did
+    (the notice arriving as a new turn, the rename not checking a `-p`
+    session's name), never as a probe or a batch.
+- Changes/tradeoffs:
+  - The new section restates the stop list, the budget rule, and the
+    reports' fields in shorter form than the skill; the skill stays the
+    source, and a reader of the README alone still learns what a run does,
+    writes, commits, and asks.
+  - No test framework; verification was the criteria's greps and counts,
+    the hunk map against `5c33c4a`, the guard suite (check-run-contract's
+    check 6 reads the reviewer invariant sentence in this file), and the
+    zero-diff command.
 
 Depends on: Task 1-3
 
