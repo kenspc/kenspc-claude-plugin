@@ -1103,6 +1103,57 @@ standalone re-review and the acceptance, not by that run.
   "not graded by severity" would each be false. The 3.8.2 CHANGELOG's Known
   behavior bullet follows the README.
 
+Rulings of 2026-09-26, after the standalone `/kenspc-task-review` of
+`6575540..6c462a9` (run `20260926-160144-changes`, fixes
+`57bad4e..28c706f`, regression-verifier HAS ISSUES with row 1 and row 5
+FAIL at LOW, verdict FAIL). That run printed only the fixed progress lines
+between its dispatches and rendered the roll-up, code-fixer's reply, and
+Schema C once, in Schema F — E-1's first live evidence. CL10 and CL11 settle
+its two FAIL items; CL12 and CL13 dispose of its four DEFERRED rows. All
+decided by the main session within the locked design.
+
+- CL10 — Step 1.1, amending its Verification placeholder (row 1, R2 / B3):
+  Schema F's Verification placeholder in `task-review/SKILL.md` goes back to
+  the base's `(Schema C verbatim.)`. Why: Step 6 now says what Schema C
+  carries — the table, the Detail prose, and the result line with the
+  problems that follow it — so a placeholder that lists only part of it
+  contradicts the step above; the base's form lists nothing to fall out of
+  date and matches Schema G's `(Schema C verbatim; rendered here only.)` in
+  substance.
+- CL11 — Step 4.3 (row 5, regression from `71015e9`): the 3.8.2 entry's
+  "without its closing CLEAN or HAS ISSUES line" becomes "without its CLEAN
+  or HAS ISSUES result line", the wording both skills now use. Why: the
+  CHANGELOG describes what ships; the fix removed "closing" because it reads
+  as "last line".
+- CL12 — Step 2.1 and Fixed strings, the Reply line (B1, MEDIUM, fixed in
+  this batch): the reply line's grammar becomes
+  `Doc-sync documents: <part>[; <part>…]`, each part either
+  `updated <path> (row <n>, <commit>)` or
+  `not updated <path> (row <n>) — <reason>`, in any order; or
+  `Doc-sync documents: none affected by the fixes`. The line is otherwise
+  unchanged: always present in scope, reply only, not in `schema-b.md`.
+  Why: M6 and D9 design the not-updated outcome, and a run whose only
+  affected document was left not updated could not write it under the old
+  grammar, which had to open with `updated` — the choice was a line outside
+  the grammar or the false `none affected by the fixes`, which tells the
+  user no document is stale when one is. This corrects the Fixed string
+  within D8, unlike CL8's case, which is a hand edit outside the chain. The
+  Fixed strings row, `code-fixer.md`'s reply-list bullet, the grammar quoted
+  in the 3.8.2 CHANGELOG entry, and any skill or checklist text that quotes
+  the full grammar change in one commit; row 6's
+  `Doc-sync documents: updated README.md (row <n>, H)` check stands, since
+  that is one valid form.
+- CL13 — T1, T3, and E3 (DEFERRED): roadmap candidates, not changed in this
+  batch. T1 (release-checklist row 6 names no seed that forces a Doc-sync
+  correction) and T3 (no smoke check of the section boundary or of a
+  document outside the list) are smoke scope, like CL7's: a planted defect
+  that a reviewer has to catch makes a per-release criterion depend on the
+  reviewers, and that cost is the maintainer's call. E3 (a committed run in
+  which code-fixer is cut short can leave a half-applied fix uncommitted,
+  with no Next steps bullet for it) predates this batch's change in kind and
+  touches the missing-statistics-line branch CL4 settled. The main
+  session's report lists all three.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
