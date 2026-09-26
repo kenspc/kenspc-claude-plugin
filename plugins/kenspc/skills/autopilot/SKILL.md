@@ -568,7 +568,12 @@ Before each launch:
 - Spent = the sum over sessions of each session's last cumulative
   `total_cost_usd`, from `<batch>-costs.txt`, plus, once S4 has returned
   in plugin mode, the acceptance cases' costs from the record — the nested
-  sessions S4 launched are in no worker's JSON and on no costs line.
+  sessions S4 launched are in no worker's JSON and on no costs line. A
+  case whose record line carries no parseable cost — S4 died mid-record,
+  or its resume wrote none — counts as `unknown`, named on the report's
+  acceptance line and its total-cost line, and adds nothing to spent, as
+  an unreadable JSON does (The return); a `0` there would read as a free
+  case.
   Projected = the largest
   single-session cost of this batch so far, or the budget divided by six
   before the first session. When spent + projected > budget, stop and ask
