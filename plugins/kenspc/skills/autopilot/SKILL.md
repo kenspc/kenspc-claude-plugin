@@ -1065,7 +1065,8 @@ changes in no other way.]
   name the finding — the row's issue ID and the review's run directory, or
   the case's number and the record's path (plugin mode) or S4's reply (repo
   mode); `<one line>` is the finding in one sentence. The first line is the
-  block's own heading, as the verdict loop names it.
+  block's own heading, as the verdict loop names it; the bracketed words
+  are written when `Allowed files:` is set, as the preamble's line is.
 
 ````
 Fix issue <ID> from run <run dir>: <one line>
@@ -1076,7 +1077,7 @@ The finding, as the reviewer or the acceptance recorded it:
 The case to make pass: <the check that failed, with its PASS criterion — a
 review check, a self-test, a command, an acceptance case>.
 
-Make the fix inside the allowed files, run the checks the repository's
+Make the fix[ inside the allowed files], run the checks the repository's
 CLAUDE.md names for a change of this kind, and commit the fix alone — one
 commit in the repository's convention, touching nothing the finding does
 not need. Reply with the commit hash and one line on what changed.
