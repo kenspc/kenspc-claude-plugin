@@ -11,8 +11,57 @@
 
 ## 3.8.1 — unreleased
 
+Batch D. Three stops an unattended run got wrong get a defined answer:
+generate-plan's approval stop, in a session that cannot ask, ends at the
+draft printed in full, with nothing written, reviewed, or committed, until
+a later reply approves it; generate-plan takes an `answered` brief entry as
+settled input only when it holds `Answer:`, and asks about or carries one
+without; and the prototype skill asks before it touches a named entry
+whose status word it does not recognize or that already holds an answer,
+stopping with the brief unchanged in a session that cannot ask.
+diagnose-bug's interactive exit names the reproduction commit and
+`git revert <hash>`. Three copied strings gain a guard — the reviewer
+invariant sentence's README, CLAUDE.md, and task-review copies, the
+Prototype line in generate-brief and the prototype skill, and the
+prototype skill's two leftovers commands — inside two existing guards, so
+the guard counts are unchanged (`guards run: 10`, `self-tests run: 9`).
+Known behavior gains what a red reproduction test does to later review
+runs and what the one-time `.gitignore` commit takes with it. No new
+command, skill, agent, or CONTEXT key, so a patch release. Release smoke:
+the batch's acceptance record, named in the release commit.
+
 ### Changed
 
+- **generate-plan, approval stop.** Phase 2 Step 3's approval stop gains a
+  branch for a session that cannot ask: the run still stops there, and its
+  last message holds the complete draft after self-challenge — every
+  section, none elided or summarized — then the line
+  `Plan not written: awaiting approval.`, in English in any conversation
+  language, and how to go on: reply approving the draft or asking for
+  changes (a headless run resumes with
+  `claude -p --resume <session id> "<reply>"`), or run `/kenspc-plan` again
+  in a session that can ask. No file is written, `plan-document-reviewer` is
+  not dispatched, and nothing is committed; a later reply that approves the
+  draft is the approval, and the step then runs as written. Source: the
+  batch C acceptance (`docs/dry-runs/batch-c-acceptance.md`, F1), where a
+  run under a reminder to work without stopping wrote, reviewed, and
+  committed an unapproved plan. The 3.8.0 entry's "a session that cannot
+  ask still writes the plan only on approval" described the skill's text,
+  which that run did not follow; the stop had no cannot-ask branch. The
+  existing-file question on the approved path gains one too: in a session
+  that cannot ask, the plan is created alongside as `<name>-2.md` and named
+  in the final message, not overwritten.
+- **generate-plan, answered entries.** An `answered` brief entry is settled
+  input only when it holds `Answer:` — not by its status word alone, and not
+  by a `Prototype:` line alone; a plan relying on one cites its prototype
+  hash, or the entry itself (`<brief path>, entry <n>`) when it has no
+  Prototype line. One without `Answer:` — as the brief has it, or as the
+  user marks an unrecognized entry in the gap round — is a gap: the gap
+  round quotes it and asks for its answer, in the same question that asks an
+  unrecognized entry's status, so the one-to-two-round limit holds. An entry
+  the rounds leave without an answer, and every such entry in a session
+  that cannot ask, is carried into the plan's Open Questions in the `open`
+  form with `From: <brief path>, entry <n>, status word answered, Answer: missing`.
 - **prototype.** A named entry whose status word the skill does not
   recognize — hand-edited, translated, or missing — and that holds neither
   `Answer:` nor `Prototype:` is asked about before anything is written,
@@ -25,6 +74,66 @@
   before Phase 1 writes to the brief — the entry appended for a question
   given as text, or a derived `Settled by:` — since the brief is not
   committed and a write there cannot be undone.
+- **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
+  reproduction test, the last message names that commit, says its test
+  fails — and every review run in the repository reports the test run
+  FAIL — until the fix lands, and gives `git revert <hash>` for backing it
+  out if the fix is not made; the skill does not revert it unasked. Before,
+  only "Ending without a document" named the commit.
+- **Guards.** `check-run-contract.sh` gains check 6: the reviewer invariant
+  sentence, extracted at run time from `requirements-reviewer.md`'s ROLE
+  and compared whitespace-normalized, must be contained in the plugin
+  README, CLAUDE.md, and task-review's canonical dispatch block. Before,
+  `check-review-agent-drift.sh` held the five ROLE sections and
+  `check-canonical-dispatch.sh` the two dispatch blocks, but nothing tied
+  one family to the other or held the README and CLAUDE.md copies. Its
+  self-test copies the README and CLAUDE.md too and gains four mutations
+  that must exit 1 (one word changed in each copy and in the reference) and
+  one whitespace-only change that must exit 0. Its header now states the
+  number of must-exit-1 mutations the self-test runs, eighteen; it said
+  eleven where the script ran fourteen. `check-doc-sync-anchors.sh` gains a
+  fifth anchor group, the Prototype line in generate-brief and the prototype
+  skill, and one exact-count check: the prototype skill's leftovers command
+  (`git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`)
+  occurs exactly twice, counted by occurrence, since the start snapshot and
+  the Exit compare their two lists path by path. Its self-test gains three
+  mutations that must exit 1 (the Prototype line changed, one leftovers
+  command changed, a third appended). Guard counts are unchanged.
+- **Release checklist.** Row 4 gains the cannot-ask stop at the draft (the
+  complete draft and `Plan not written: awaiting approval.`; no Write, no
+  Agent call, no commit), the resumed approval that writes, reviews, and
+  commits, and an `answered` entry with no `Answer:` (asked about in the gap
+  round; carried with `status word answered, Answer: missing` in a session
+  that cannot ask). Row 9 gains the interactive exit's commit and
+  `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
+  before anything is written, and their cannot-ask stop with no commit and
+  the brief's sha256 unchanged. No new row; pre-flight counts unchanged.
+- CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
+  existing-file question; its prototype path paragraph names `Answer:` as
+  what makes an answered entry settled input; its guard descriptions,
+  Non-Goals, and Maintenance note follow the two guards' new checks. The
+  plugin README's `generate-plan` row gains the cannot-ask stop at the
+  draft, its `prototype` row the two new questions and their cannot-ask
+  outcome, and its Prototype path paragraph the `Answer:` rule and the
+  status-word question.
+
+### Known behavior
+
+- **Red interval and review runs.** While diagnose-bug's reproduction test
+  is red, every review run in the repository — `/kenspc-task-review`, and
+  the review phase of a `/kenspc-task-implement` run in which the fix task
+  did not land — records the test run FAIL and the verdict FAIL:
+  regression-verifier runs the project's commands as configured, with no
+  filter added, and has no notion of a failure that predates the run. A
+  mutation check whose copy runs the reproduction test cannot make its
+  unmutated copy pass first, so it is reported as not made. Behavior
+  unchanged; the plugin README's "Red interval after a diagnosis" now says
+  so.
+- **Uncommitted `.gitignore` edits.** The one-time commit that adds
+  `.kenspc/` to `.gitignore` stages and commits the whole file, so an edit
+  to `.gitignore` not yet committed, staged or not, goes into
+  `chore: ignore kenspc run directory`. Behavior unchanged; the plugin
+  README's Known behavior now says so.
 
 ## 3.8.0 — 2026-09-26
 

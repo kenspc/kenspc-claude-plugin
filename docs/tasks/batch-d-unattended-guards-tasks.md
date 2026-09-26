@@ -1042,7 +1042,31 @@ three rows — no new row, no renumbering, and the pre-flight counts stay
 
 ### Task 10: Write the 3.8.1 CHANGELOG entry
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the generate-plan changes are two bullets ("approval stop" and
+  "answered entries") rather than one, since they are separate behaviors
+  with separate checklist cases; they go before Task 3's prototype bullet,
+  and diagnose-bug, Guards, Release checklist, and the CLAUDE.md/README
+  bullet follow it, the order the 3.8.0 entry uses (skills, then
+  infrastructure, then documents). The F1 source cites the record path
+  (`docs/dry-runs/batch-c-acceptance.md`, F1), as CLAUDE.md's writing rules
+  send dry-run evidence to the CHANGELOG. The intro says the acceptance
+  record is "named in the release commit", since it does not exist yet.
+- Changes/tradeoffs: the Guards bullet also records the check-6 self-test's
+  whitespace-only mutation (must exit 0) and the check-doc-sync-anchors
+  self-test's three new mutations, beyond the task's item list, because
+  both are what the scripts now run. `Plan not written: awaiting approval.`
+  appears twice in the entry (the approval-stop bullet and the release
+  checklist bullet). Verified: `## 3.8.1 — unreleased` directly before
+  `## 3.8.0 — 2026-09-26`, holding the intro, `### Changed` (Task 3's
+  prototype bullet kept), and `### Known behavior` with both bullets, in
+  that order; each behavior named matches the committed skill text
+  (generate-plan Phase 2 Step 3 and Phase 1 Step 1, prototype § The
+  question and § The gates, diagnose-bug § Exit), script headers, and
+  checklist rows 4, 9, 10; `plugin.json` still `3.8.0`; check-all 0 with
+  `guards run: 10`.
 
 Depends on: Task 1-9
 
