@@ -16,11 +16,7 @@ its number.
    Code 2.1.281 the tool_result no longer carries the report text (Mac O7).
 4. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
-5. The reviewer invariant sentence appears in four places, but only two are
-   guarded (the reviewers' ROLE sections, the canonical dispatch block).
-   Add a whitespace-normalized exact-match check for README and CLAUDE.md to
-   `check-run-contract.sh`.
-6. Documents synced by a Doc-sync task can go stale when a review fix
+5. Documents synced by a Doc-sync task can go stale when a review fix
    changes the behavior they describe: code-fixer's fixes land after the
    Doc-sync task. Today Schema G's Next steps asks the user to re-check them
    (batch A review, B2). Two directions for an agent to take it over:
@@ -28,7 +24,7 @@ its number.
    behavior it describes, or regression-verifier gains a check that the
    listed documents still match the code after the fix commits. Not
    shipped with 3.6.0; decide at the next release.
-7. Linters and build tools still walk into `.kenspc/`. ESLint's flat config
+6. Linters and build tools still walk into `.kenspc/`. ESLint's flat config
    ignores only `node_modules` and `.git` by default; the ESLint
    configuration migration guide: "In flat config, dotfiles (e.g.
    `.dotfile.js`) are no longer ignored by default." A runner-safe probe such
@@ -38,7 +34,7 @@ its number.
    keeping them out of those tools is open. A prototype's files under
    `prototypes/` are in the same position between its add and remove
    commits, and a gate that walks the repository reaches them there.
-8. Scratch convention follow-ups. The standalone review of the last
+7. Scratch convention follow-ups. The standalone review of the last
    scratch-probe commits (`f42bd21`, `99574bb`, `979688e`) found no HIGH
    issue and, under that plan's stop rule, deferred 14 findings, 9 MEDIUM
    and 5 LOW, with no further round. The rows and each one's suggested
@@ -89,7 +85,7 @@ its number.
    attempt, which the release checklist's name probe flags although vitest
    collected nothing; the RUN_DIR bullet already forbids `test.*`, so this
    is a behavior slip to watch, not a rule gap.
-9. Smoke candidates for the prototype chain. The batch C review (T2–T7)
+8. Smoke candidates for the prototype chain. The batch C review (T2–T7)
    proposed six release-checklist cases that the one-time acceptance
    covers but no smoke row does, and the review of its fix round proposed
    more, each marked with its ID. Each costs a headless run at every
@@ -135,78 +131,28 @@ its number.
      run with a reminder to work without stopping — the brief is written
      without asking what would settle it, and its `needs prototype`
      entry's `Settled by:` is tagged as inferred (fix-round review, T2).
-10. A guard for the copied Prototype line. The line is written in
-    generate-brief's writing rules and copied byte-identically into
-    `prototype/SKILL.md`; `check-doc-sync-anchors.sh` guards only the
-    `needs prototype` status word across the three files, so an edit to one
-    copy of the line still passes `check-all.sh` (batch C review, T8). One
-    way: two `ANCHOR_CHECKS` entries whose label is the full line, one per
-    file, with the guard's header, CLAUDE.md's guard description, and its
-    Non-Goals sentence updated in the same commit; the guard counts stay.
-    Left out of 3.8.0 because the line is read by people and the release
-    checklist, not parsed by a skill.
-11. A guard for the prototype skill's leftovers command. `prototype/SKILL.md`
-    carries
-    `git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`
-    twice, in the start snapshot and in the Exit, and the Exit leaves out
-    what the snapshot listed by comparing the two lists path by path. An
-    edit to one copy alone makes the Exit name the user's own ignored
-    directory, or its files, for removal, and every guard still passes
-    (fix-round review, T4). One way: a check that the literal appears
-    exactly twice in the file, beside the Prototype-line guard above.
-12. When the prototype skill names a leftover directory once. Today a
-    directory is named once, with its file count, only when every file
-    under it is listed as untracked. In a project whose dependency ignore
-    rule is root-anchored (`/node_modules`, the create-next-app and Create
-    React App default), a prototype's own `node_modules/` is untracked, not
-    ignored, and any unanchored pattern that matches inside a package
-    (`dist/`, `*.log`, `*.tsbuildinfo`, `.DS_Store`) adds a `!!` line under
-    it. That line blocks the collapse of `node_modules/` and of every
-    directory above it, so after a dependency install the list runs to one
-    line per package (fix-round review, B5/E2). The reviewer's suggested
-    condition: every entry listed under the directory, untracked or
-    ignored, is absent from the start-of-run list, and
-    `git ls-files -- <directory>` prints nothing. The skill's Exit, the
-    plugin README's leftovers item, release-checklist row 10, and a
-    CHANGELOG entry change in one commit; a probe on a scratch repository
-    with `/node_modules`, `dist/`, and `*.log` patterns settles the wording.
-    The row and its follow-up are in
-    `.kenspc/runs/20260925-234058-changes/schema-b.md` (git-ignored; only
-    in the maintainer's macOS checkout). The acceptance run's O5
-    (`docs/dry-runs/batch-c-acceptance.md`) already named a directory
-    holding untracked and ignored files once, as that condition would.
-13. The prototype skill has no gate for an entry named by number whose
-    status word it does not recognize — hand-edited, translated, or
-    missing. An `answered` entry whose word was changed skips the gate that
-    asks whether to prototype it again, and its cannot-ask stop, and Phase
-    3 replaces its `Answer:`, `Evidence:`, and `Prototype:` in a brief that
-    has no committed copy. The earlier answer then survives only in the
-    earlier remove commit's body (fix-round review, E7). The reviewer's
-    suggestion: ask about such an entry, and give one that holds `Answer:`
-    or `Prototype:` the `answered` gate; in a session that cannot ask, stop
-    and leave the entry unchanged. The gate then needs its row in the
-    skill's gates table, a place in the README's gate list, and a CHANGELOG
-    entry, in the same commit. The row is in the same `schema-b.md` as the
-    leftover-directory item above.
-14. generate-plan's gap round takes an entry whose status word it does not
-    recognize as whatever status the user gives it, so an answer of
-    `answered` makes the entry settled input with no `Answer:` and no
-    prototype hash for a plan to cite (fix-round review, the last sentence
-    of B4, whose `needs prototype` case was fixed; in
-    `.kenspc/runs/20260925-234058-changes/angle-4.md`). The review named no
-    rule; whether such an entry must hold `Answer:` and a hash before it
-    counts as settled is the maintainer's call.
-15. generate-plan's approval stop has no branch for a session that cannot
-    ask. Phase 2 Step 3 says "Write only when the user explicitly approves
-    the plan", and the approval point carries no "In a session that cannot
-    ask …" sentence, where Phase 1's exit and gap-check do. Under a
-    reminder to work without stopping, the acceptance run wrote the plan
-    without approval, ran plan-document-reviewer, and committed four times
-    on `main` (`docs/dry-runs/batch-c-acceptance.md`, F1, classified a
-    behavior deviation). The stop predates 3.8.0, which left it unchanged.
-    Open direction: in a session that cannot ask, write the plan and say it
-    was not approved, stop at the draft, or another way.
-16. Two prototype runs went outside rules the skill already states; to
+9. When the prototype skill names a leftover directory once. Today a
+   directory is named once, with its file count, only when every file
+   under it is listed as untracked. In a project whose dependency ignore
+   rule is root-anchored (`/node_modules`, the create-next-app and Create
+   React App default), a prototype's own `node_modules/` is untracked, not
+   ignored, and any unanchored pattern that matches inside a package
+   (`dist/`, `*.log`, `*.tsbuildinfo`, `.DS_Store`) adds a `!!` line under
+   it. That line blocks the collapse of `node_modules/` and of every
+   directory above it, so after a dependency install the list runs to one
+   line per package (fix-round review, B5/E2). The reviewer's suggested
+   condition: every entry listed under the directory, untracked or
+   ignored, is absent from the start-of-run list, and
+   `git ls-files -- <directory>` prints nothing. The skill's Exit, the
+   plugin README's leftovers item, release-checklist row 10, and a
+   CHANGELOG entry change in one commit; a probe on a scratch repository
+   with `/node_modules`, `dist/`, and `*.log` patterns settles the wording.
+   The row and its follow-up are in
+   `.kenspc/runs/20260925-234058-changes/schema-b.md` (git-ignored; only
+   in the maintainer's macOS checkout). The acceptance run's O5
+   (`docs/dry-runs/batch-c-acceptance.md`) already named a directory
+   holding untracked and ignored files once, as that condition would.
+10. Two prototype runs went outside rules the skill already states; to
     watch, not a rule gap (`docs/dry-runs/batch-c-acceptance.md`, O11 and
     O12, classified behavior deviations). One asked a question outside the
     gate table — the brief's Scope excluded any UI, and the run asked
@@ -215,3 +161,13 @@ its number.
     a saved render to the session scratchpad instead of the location, so
     `git show <add commit>` does not hold the checks its `Evidence:` cites,
     where the skill says "Everything is written under the location".
+11. A generate-plan gap round went outside a rule the skill already states;
+    to watch, not a rule gap (`docs/dry-runs/batch-d-acceptance.md`, F2,
+    classified a behavior deviation). Asking the status of two entries
+    whose status words it did not recognize, the gap round asked only for
+    the status, where the skill says "the question that asks an
+    unrecognized entry's status also asks, for `answered`, the answer — one
+    question, one round". The user replied `answered` for one of them with
+    no answer text, and that entry was still carried as the rule says, into
+    the plan's Open Questions in the `open` form with `Answer: missing`, so
+    the plan's content was not affected.

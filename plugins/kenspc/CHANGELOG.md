@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 3.8.1 — unreleased
+## 3.8.1 — 2026-09-26
 
 Batch D. Three stops an unattended run got wrong get a defined answer:
 generate-plan's approval stop, in a session that cannot ask, ends at the
@@ -18,18 +18,32 @@ a later reply approves it; generate-plan takes an `answered` brief entry as
 settled input only when it holds `Answer:` with text after the label, and
 asks about or carries one without; and the prototype skill asks before it
 touches an entry that already holds an answer, named or not, or a named
-entry whose status word it does not recognize, stopping with the brief
-unchanged in a session that cannot ask. diagnose-bug's interactive exit
-names the reproduction commit and `git revert <hash>`. Three copied
-strings gain a guard — the reviewer invariant sentence's README,
-CLAUDE.md, and task-review copies, the Prototype line in generate-brief
-and the prototype skill, and the prototype skill's two leftovers
-commands — inside two existing guards, so the guard counts are unchanged
-(`guards run: 10`, `self-tests run: 9`).
+entry whose status word it does not recognize — in a session that cannot
+ask it stops with the brief unchanged, its last message opening with the
+frame. diagnose-bug's interactive exit names the reproduction commit and
+`git revert <hash>`. Three copied strings gain a guard — the reviewer
+invariant sentence's README, CLAUDE.md, and task-review copies, the
+Prototype line in generate-brief and the prototype skill, and the
+prototype skill's two leftovers commands — inside two existing guards.
 Known behavior gains what a red reproduction test does to later review
-runs and what the one-time `.gitignore` commit takes with it. No new
-command, skill, agent, or CONTEXT key, so a patch release. Release smoke:
-the batch's acceptance record, named in the release commit.
+runs and what the one-time `.gitignore` commit takes with it, and
+release-checklist rows 4, 9, and 10 gain the new cases. No new command,
+skill, or agent, no CONTEXT key changes, and the guard counts are
+unchanged (`guards run: 10`, `self-tests run: 9`), so a patch release.
+Release smoke: the batch's acceptance run,
+`docs/dry-runs/batch-d-acceptance.md`, headless on macOS — row 4's
+cannot-ask stop at the draft, its approval on resume beside two existing
+plans, and an `answered` entry with no `Answer:`, in the gap round and
+carried; row 9's interactive exit; row 10's two entry gates, interactive
+and in a session that cannot ask; and the pre-flight block. Of its two
+findings, the prototype skill's frame, not sent when a session that cannot
+ask stopped at an entry gate, was fixed before this release — the stop's
+last message now opens with the frame — and its three cases re-run to PASS
+on the released skill text; generate-plan's gap round asking an
+unrecognized entry's status without asking, for `answered`, the answer in
+the same question, a behavior deviation with no effect on the plan's
+content, is recorded in the roadmap. No separate smoke run was made for
+the other rows.
 
 ### Changed
 
@@ -97,9 +111,7 @@ the batch's acceptance record, named in the release commit.
   as an interactive run puts the gate's question after the frame — a
   `Settled by:` derived in the frame is shown there and not written; in the
   batch D acceptance (`docs/dry-runs/batch-d-acceptance.md`, F1), such
-  stops sent only the stop, which referred to a frame never sent, and
-  still did when the frame was asked for as a message apart from the stop,
-  with nothing done between the two.
+  stops sent only the stop, which referred to a frame never sent.
 - **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
   reproduction test, the last message names that commit, says its test
   fails — and every review run in the repository reports the test run
