@@ -54,8 +54,9 @@ the batch's acceptance record, named at release.
   holds the same table below its placeholder, task-review's Step 6
   drops its example Schema C table (regression-verifier's OUTPUT FORMAT
   defines it), and Schema G's Code Review, Fixes, and Verification
-  sections say they are rendered there only. code-fixer's reply contract is
-  unchanged. Source: the roll-up and the agents' replies were printed twice
+  sections say they are rendered there only. The render change does not
+  trim code-fixer's reply: the final report renders all of it. Source: the
+  roll-up and the agents' replies were printed twice
   in one run, between the dispatches and again in the final report, and
   both copies stayed in the orchestrator's context.
 - **code-fixer, Doc-sync documents.** With REVIEW_SCOPE "task", code-fixer
