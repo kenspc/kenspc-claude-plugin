@@ -671,7 +671,46 @@ or CLAUDE.md, or the reviewers' ROLE, runs `check-run-contract.sh`.
 
 ### Task 6: Guard the Prototype line and the leftovers command's count in check-doc-sync-anchors.sh
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the presence check and the count check both run on every
+  invocation and both report before a single exit 1, so one run names every
+  problem. The leftovers literal, its file, and the wanted count are
+  top-level constants beside `ANCHOR_CHECKS`; the file is one already in the
+  array, so the self-test copies it without a second copy list. The
+  self-test reads the Prototype line's label back from its `ANCHOR_CHECKS`
+  entry rather than holding a third copy of the literal, and restores after
+  each mutation by recopying (the original fixture reverted once at the
+  end). The first-occurrence mutation replaces the whole leftovers literal
+  with its `--ignored` form through a `replace_literal` awk helper (the same
+  shape as check-run-contract.sh's), and each count mutation checks its own
+  resulting count (1, then 3) as a mutation-applied guard, exit 2 if not.
+- Changes/tradeoffs: the header keeps the existing note that the presence
+  check does not see a rename of the example's Doc-sync heading alone, and
+  adds D11's accepted limit (text added around the Prototype line in one
+  file is not seen). CLAUDE.md's Non-Goals sentence now reads
+  "`check-doc-sync-anchors.sh` holds this line in both files, beside the
+  `needs prototype` status word across the three"; the Maintenance note
+  names the two files that carry the Prototype line. Falsifiability by
+  hand, copy left at `$TMPDIR/batch-d-task6-falsify` (`$TMPDIR` =
+  `/var/folders/28/hztldwfs1ls4stzfgvj2qm900000gn/T/`), made with
+  `cp -R scripts plugins "$C"/`: (A) prototype/SKILL.md line 404
+  `removed in the next commit` → `removed in a later commit` (awk literal
+  replace) → exit 1,
+  `MISSING label 'Prototype: … removed in the next commit; …' in …/batch-d-task6-falsify/plugins/kenspc/skills/prototype/SKILL.md`;
+  restored from the saved copy → exit 0 with both OK lines. (B) line 224
+  `--ignored=matching` → `--ignored` → exit 1,
+  `COUNT leftovers command — 1 occurrence(s) in …/prototype/SKILL.md, expected 2:`;
+  restored → exit 0 with both OK lines. Verified: main mode prints both OK
+  lines ("all five anchors", "exactly 2 occurrences"); `--self-test` 0;
+  both under `/bin/bash` 3.2.57 too; `all four anchors|separate roadmap
+  item` grep empty; no `declare -A`; the only `sed -i` is the pre-existing
+  `sed -i.bak`; the `guards only the needs prototype status word` grep on
+  CLAUDE.md empty; `writes only under` still on one CLAUDE.md line;
+  zero-diff command empty; check-all 0 with `guards run: 10`;
+  `check-all.sh --self-test` 0 with `self-tests run: 9`, all PASS except the
+  pre-existing SKIP.
 
 Depends on: Task 3, Task 5
 

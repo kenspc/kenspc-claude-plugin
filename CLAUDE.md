@@ -360,7 +360,9 @@ SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
 `check-run-contract.sh`. After editing the reviewer invariant sentence in
 the plugin README or this file, or the reviewers' ROLE, run
 `check-run-contract.sh`: its check 6 holds those copies to the ROLE
-sentence. What each
+sentence. After editing the Prototype line (in `generate-brief/SKILL.md`
+or `prototype/SKILL.md`) or the prototype skill's leftovers command, run
+`check-doc-sync-anchors.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -371,7 +373,7 @@ The run-directory preparation is written once, in the `canonical:run-dir` block 
 
 The prototype skill references the same block the same way: its prototype's file names follow the naming rule of the block's Scratch space bullet, pointed at by the block's markers, and the skill carries no copy. A move of that rule updates the pointer in `prototype/SKILL.md` in the same commit.
 
-The Open Questions entry grammar — the status words, the labels and their order, the answered and unsettled forms — is written once, in generate-brief's Writing rules for the brief, and generate-plan and the prototype skill point at it by path. The one piece the prototype skill repeats is the Prototype line (``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``), byte-identical to generate-brief's, so a change to that line in `generate-brief/SKILL.md` updates `prototype/SKILL.md` in the same commit. `check-doc-sync-anchors.sh` guards only the `needs prototype` status word across the three files, not this line.
+The Open Questions entry grammar — the status words, the labels and their order, the answered and unsettled forms — is written once, in generate-brief's Writing rules for the brief, and generate-plan and the prototype skill point at it by path. The one piece the prototype skill repeats is the Prototype line (``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``), byte-identical to generate-brief's, so a change to that line in `generate-brief/SKILL.md` updates `prototype/SKILL.md` in the same commit. `check-doc-sync-anchors.sh` holds this line in both files, beside the `needs prototype` status word across the three.
 
 ### Writing Rules for Skill Content
 
@@ -459,7 +461,7 @@ Project-level shell scripts live in `scripts/` at the repo root:
   by design (the agent describes the format, the example shows a filled-in
   instance); it catches a rename of either label in one file but not the
   other.
-- `check-doc-sync-anchors.sh` — guards that the four planning-chain
+- `check-doc-sync-anchors.sh` — guards that the five planning-chain
   anchors stay present in every file that writes, checks, or renders them.
   Three carry the documentation path: `Documentation impact`
   (`generate-plan/SKILL.md`, `references/plan-document-example.md`,
@@ -468,12 +470,19 @@ Project-level shell scripts live in `scripts/` at the repo root:
   (`generate-task/SKILL.md`, `diagnose-bug/SKILL.md`,
   `references/task-document-example.md`, `task-document-reviewer.md`,
   `task-implementer.md`), and `Decisions needing a home`
-  (`task-implementer.md`, `task-implement/SKILL.md`). One carries the
+  (`task-implementer.md`, `task-implement/SKILL.md`). Two carry the
   open-question path: `needs prototype` (`generate-brief/SKILL.md`,
-  `generate-plan/SKILL.md`, `prototype/SKILL.md`). An anchor-presence
-  guard like `check-notes-format-sync.sh`: a rename in one file breaks the
-  chain silently while every other check passes. README.md and CLAUDE.md
-  are deliberately outside it.
+  `generate-plan/SKILL.md`, `prototype/SKILL.md`), and the Prototype line,
+  its whole literal the label, in `generate-brief/SKILL.md` and
+  `prototype/SKILL.md`. An anchor-presence guard like
+  `check-notes-format-sync.sh`: a rename in one file breaks the chain
+  silently while every other check passes. It also holds one exact count:
+  the prototype skill's leftovers command
+  (`git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`)
+  occurs exactly twice in `prototype/SKILL.md`, counted by occurrence —
+  the start snapshot and the Exit compare their two lists path by path, so
+  presence alone would miss one copy changed while the other stays.
+  README.md and CLAUDE.md are deliberately outside it.
 - `check-no-model-names.sh` — guards that no file under `skills/`,
   `agents/`, `commands/`, or `shared/` names or pins a specific Claude
   model. Three rules: frontmatter `model:` values must be `inherit`; no
