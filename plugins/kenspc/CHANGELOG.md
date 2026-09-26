@@ -79,14 +79,17 @@ the batch's acceptance record, named in the release commit.
   first in document order in a session that cannot ask) — and a named
   unrecognized one that holds `Prototype:`; a `needs prototype` entry with
   `Prototype:` and no `Answer:`, the form an unsettled attempt leaves, is
-  still prototyped again. After a "yes" to that question, a later gate
-  that ends in "nothing is built" leaves an entry that held `Answer:` as it
-  was — its `Answer:`, `Evidence:`, and Prototype line stay — and the final
-  message gives the reason; before, Phase 3's rewrite for a run that built
-  nothing replaced them. Both gates come before Phase 1 writes to the
-  brief — the entry appended for a question given as text, or a derived
-  `Settled by:` — since the brief is not committed and a write there cannot
-  be undone.
+  still prototyped again. After a "yes" to that question, an entry that
+  held `Answer:` when the run began is rewritten only when the new attempt
+  settles the question; nothing built, a built prototype whose evidence
+  does not settle it, or a verdict not given leaves its `Answer:`,
+  `Evidence:`, and Prototype line in place — the one line it can gain is a
+  `Settled by:` derived for it — and the final message names the new
+  attempt's commits and why the question was not settled; before, Phase 3's
+  rewrite for an unsettled run replaced them. Both gates come before
+  Phase 1 writes to the brief — the entry appended for a question given as
+  text, or a derived `Settled by:` — since the brief is not committed and a
+  write there cannot be undone.
 - **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
   reproduction test, the last message names that commit, says its test
   fails — and every review run in the repository reports the test run
@@ -131,10 +134,11 @@ the batch's acceptance record, named in the release commit.
   where a "stop" or a "no", and a cannot-ask stop, end with no commit and
   the brief's sha256 unchanged; the prototype-again question for an entry
   taken with no entry named that holds `Answer:`, an entry whose answer is
-  kept when a "yes" to that question ends with nothing built, and the two
-  branches that turn on `Prototype:` with no `Answer:` — a `needs prototype`
-  entry built with no question, and an unrecognized-word entry given the
-  prototype-again question. No new row; pre-flight counts unchanged.
+  kept when a "yes" to that question ends with nothing built or with a
+  built prototype that does not settle it, and the two branches that turn
+  on `Prototype:` with no `Answer:` — a `needs prototype` entry built with
+  no question, and an unrecognized-word entry given the prototype-again
+  question. No new row; pre-flight counts unchanged.
 - CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
   existing-file question; its prototype path paragraph names `Answer:`,
   with text after the label, as what makes an answered entry settled
@@ -143,7 +147,8 @@ the batch's acceptance record, named in the release commit.
   cannot-ask stop at the draft, its `prototype` row the two new questions
   and the unchanged brief a stop, a no, or a cannot-ask stop leaves, and its
   Prototype path paragraph the `Answer:` rule, both questions, and the
-  answer kept when a "yes" ends with nothing built.
+  answer kept when a "yes" does not settle the question, which its
+  feature-prototype Known behavior item also notes.
 
 ### Known behavior
 

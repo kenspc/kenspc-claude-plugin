@@ -151,14 +151,20 @@ command restores it.
   commit behind it when it has a Prototype line; Phase 3 would replace them
   whatever the status word says, and replacing them is the user's decision.
   An entry taken without being named is the one the user looked at least,
-  so its answer is the easiest to lose unasked. On "yes", a later gate that
-  ends in "nothing is built" leaves an entry that held `Answer:` as it was
-  — its `Answer:`, `Evidence:`, and Prototype line stay — and the final
-  message gives the reason nothing was built. Why: a "yes" consents to
-  replacing the answer with a new result, not with the absence of one, and
-  the brief has no committed copy to restore it from. A `Prototype:` line
-  with no `Answer:` under `` `needs prototype` `` is the form an unsettled
-  attempt leaves, and such an entry is prototyped again like any other.
+  so its answer is the easiest to lose unasked. On "yes", an entry that
+  held `Answer:` when the run began is rewritten only when the new attempt
+  settles the question. Every other ending — nothing built, a built
+  prototype whose evidence does not settle it, a verdict the user does not
+  give — leaves its `Answer:`, `Evidence:`, and Prototype line as they
+  were, and the final message names the new attempt's commits, when it
+  made any, and why the question was not settled. The one change such an
+  entry can carry out of the run is the `Settled by:` derived for it below
+  when it had none. Why: a "yes" consents to replacing the answer with a
+  new answer, and an unsettled attempt yields evidence, not an answer; the
+  brief has no committed copy to restore the old one from. A `Prototype:`
+  line with no `Answer:` under `` `needs prototype` `` is the form an
+  unsettled attempt leaves, and such an entry is prototyped again like any
+  other.
 - A named entry whose status word is none of `` `open` ``,
   `` `needs prototype` ``, and `` `answered` `` — hand-edited, translated,
   or missing: one that holds `Answer:` or `Prototype:` takes the question
@@ -225,8 +231,10 @@ written once, in the Writing rules for the brief in
 - A feature prototype that needs the app's runtime runs outside the app,
   from the location, importing the app's modules, when that lets it run.
   Otherwise it is not built, in either kind of session: the entry stays
-  `` `needs prototype` `` with the reason in `Evidence:`, and the exit says
-  that widening the in-app exception to features is the user's decision.
+  `` `needs prototype` `` with the reason in `Evidence:` (an entry that held
+  `Answer:` when the run began keeps it, as § The question says), and the
+  exit says that widening the in-app exception to features is the user's
+  decision.
   Why: the in-app exception exists for what can only render inside the
   app, and anything that can run elsewhere keeps its files out of the
   user's source tree.
@@ -307,7 +315,7 @@ what a session that cannot ask does in place of asking.
 | A location conflict | Where | The default location, named in the final message |
 | A UI prototype that can only render in the app, and CLAUDE.md names no location | Where in the app | Nothing is built; the entry stays unsettled with the reason |
 | A UI prototype in the app: a tracked file with uncommitted changes, or the project's manifest | Go on, commit first, or stop | Nothing is built; the entry stays unsettled with the reason |
-| A feature prototype that needs the app's runtime and cannot run outside it | — | Nothing is built, in either kind of session; the entry stays unsettled with the reason, and the exit says widening the exception is the user's decision |
+| A feature prototype that needs the app's runtime and cannot run outside it | — | Nothing is built, in either kind of session; the entry stays unsettled with the reason (one that held `Answer:` keeps it, as § The question says), and the exit says widening the exception is the user's decision |
 | A connection the development configuration does not name | May it be used | It is not used |
 | A new table or column on the development database | The warning and the throwaway recommendation; the user decides | The throwaway database, named in the final message |
 | The answer is the user's judgment | Look at the prototype and give a verdict | Unsettled; `Evidence:` says what to look at and how |
@@ -357,8 +365,10 @@ user has staged out of the commit.
   A red baseline is a typecheck that ran and reported errors. One that did
   not run — the command is missing, the dependencies are not installed, the
   tool stopped before checking — is no baseline: nothing is built, and the
-  entry stays unsettled with the reason. Why: a check that cannot run fails
-  the same way after the build, so comparing the two would pass any edit.
+  entry stays unsettled with the reason (an entry that held `Answer:` when
+  the run began keeps it, as § The question says). Why: a check that
+  cannot run fails the same way after the build, so comparing the two would
+  pass any edit.
 - Before the add commit, read the staged file list and the staged diff.
   Passing: no staged file holds a value read from configuration. It fails
   on a `.env` file, a copied `appsettings.*.json`, or a connection string or
@@ -413,7 +423,12 @@ grammar in the Writing rules for the brief in
   else in the brief changed. The Prototype line names the add commit and the
   location:
   ``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``.
-  Why: the rest of the brief is the user's discovery record.
+  Why: the rest of the brief is the user's discovery record. The unsettled
+  rewrite has one exception: an entry that held `Answer:` when the run
+  began, and that this run did not settle, keeps its `Answer:`,
+  `Evidence:`, and Prototype line — gaining at most the `Settled by:`
+  Phase 1 derived for it — and the final message names this run's commits
+  and why the question was not settled, as § The question says.
 - At the judgment point, the user's verdict came first.
 - The teardown ran, when there was one, and the tables it created are gone.
   A teardown that fails, or leaves a table or column the prototype created,
@@ -460,8 +475,9 @@ remove commit's body keeps the answer and the hash in history.
 is made; the entry stays `` `needs prototype` `` and gains `Evidence:` with
 the reason, and no `Prototype:`. An entry that held `Answer:` when the run
 began — one a "yes" to the prototype-again question sent on — is the
-exception: it is left as it was, and the final message gives the reason
-nothing was built, for the reason § The question gives.
+exception: it keeps its `Answer:`, `Evidence:`, and Prototype line,
+gaining at most the `Settled by:` Phase 1 derived for it, and the final
+message gives the reason nothing was built, as § The question says.
 
 **An entry an earlier attempt left unsettled** already carries `Evidence:`,
 and `Prototype:` when that attempt committed one. This run's rewrite
