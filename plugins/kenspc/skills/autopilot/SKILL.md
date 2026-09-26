@@ -398,7 +398,14 @@ Every worker is one launch, one wait, one return.
   directory>` in plugin mode — with the repository root as the worker's
   cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   (the pid and the session id from the driver's `started` line, or from
-  `<tag>.pid` and `<tag>.session`); rewrite the state file.
+  `<tag>.pid` and `<tag>.session`); rewrite the state file. A driver that
+  exits non-zero has started nothing: its message on stderr is the stop's
+  reason — or, when it names an earlier worker under the tag still
+  running, that worker is the one to wait for, by its `<tag>.exit` — and
+  reading `<tag>.pid` and `<tag>.session` applies only once the `started`
+  line has been printed. Why: the two files can hold an earlier launch's
+  values or none, so a run that read them after a refused launch would
+  wait on a worker that does not exist, or resume beside one that does.
 - **The wait, interactive.** Subscribe to the worker with `SendMessage`
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
