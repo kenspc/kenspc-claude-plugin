@@ -433,8 +433,10 @@ the environment variables, and the files it writes.
   `bash <absolute path>/run.sh --self-test > "$TMPDIR/selftest.out" 2>&1; rc=$?`
   gives `rc` 0, and the output holds the line `self-test passed`.
 - With `AUTOPILOT_CLAUDE` pointed at an executable under `$TMPDIR` that
-  writes nothing and exits 3, the same command gives `rc` 1 and the output
-  names `.exit`.
+  prints the same JSON object as the built-in stub and exits 3, the same
+  command gives `rc` 1 and the output names `.exit` (a stub that printed
+  nothing would fail the earlier `<tag>.json` check first, and the item
+  named would be `.json`).
 - After a passing self-test, the logs directory it names is under `$TMPDIR`
   and holds `<tag>.session`, `<tag>.pid`, `<tag>.json`, `<tag>.err`,
   `<tag>.exit` reading `0`, and a `<batch>-timeline.log` with one line
@@ -492,10 +494,13 @@ The file carries, in substance as plan Step 1.1 gives it:
   entries, the six roles, the driver and the messages, the two gates, the
   "use only when the user hands over a whole batch" sentence, the four
   exclusions (one task or a task document → task-implement; a review →
-  task-review; planning → generate-plan; a prompt that says you are a
-  headless sub-session of a batch's main session — one of this skill's own
-  workers), and the triggers "put this spec on autopilot", "run this batch
-  unattended", "take this batch to release", "无值守跑这批",
+  task-review; planning → generate-plan; a prompt that opens with the
+  preamble's first sentence, quoted in the description so the exclusion
+  has one shape to match — `You are a headless sub-session of the batch
+  <batch> main session <main name>, unattended.` (Fixed forms) — one of
+  this skill's own workers), and the triggers "put this spec on
+  autopilot", "run this batch unattended", "take this batch to release",
+  "无值守跑这批",
   "这批交给你跑到发布", "自动跑完这批", and `/kenspc-autopilot`;
   `version: 3.0.0`; `argument-hint: <path to a spec or a brief>`; no
   `effort:`.
@@ -1004,7 +1009,10 @@ clarification CL1). In `plugins/kenspc/README.md`, six places:
   topology (one headless session per role: task decomposition,
   implementation, standalone review, acceptance, fix on demand, release
   preparation), the driver script and cross-session messages, the two
-  human gates, the two reports, and `Claude Code v2.1.271 or later`.
+  human gates, the two reports, and the version requirement — stated in
+  the row as `v2.1.271 or later` with a pointer to § Requirements, not as
+  the fixed string, so that `Claude Code v2.1.271 or later` appears in the
+  file once, in § Requirements (the line the plan's text check greps for).
 - § Commands: a row `` `/kenspc-autopilot` `` |
   `` `/kenspc-autopilot <path to a spec or a brief>` `` after the
   `/kenspc-guide` row, and `/kenspc:autopilot` in the skill-invocation
@@ -1131,8 +1139,9 @@ Plan Step 2.2 (rulings D23, M15).
   prints 9 (8 at `5c33c4a`), and
   `grep '^\*\*Commands:\*\*' README.md | grep -o '/kenspc-[a-z-]*' | wc -l`
   prints 9 (8), the last being `/kenspc-autopilot`.
-- `grep -c 'autopilot' plugins/kenspc/.claude-plugin/plugin.json` and
-  `grep -c 'autopilot' .claude-plugin/marketplace.json` each print 1;
+- `grep -c 'unattended batch runs to a release preparation' plugins/kenspc/.claude-plugin/plugin.json`
+  and `grep -c 'unattended batch runs to a release preparation' .claude-plugin/marketplace.json`
+  each print 1 (the phrase the two descriptions gain);
   `grep '"version"' plugins/kenspc/.claude-plugin/plugin.json` still shows
   `3.8.2`; `grep -c 'eleven reusable subagents' plugins/kenspc/.claude-plugin/plugin.json`
   prints 1; `git diff 5c33c4a -- plugins/kenspc/.claude-plugin/plugin.json .claude-plugin/marketplace.json`
