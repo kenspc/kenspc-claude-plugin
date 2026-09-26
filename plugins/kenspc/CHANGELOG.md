@@ -84,10 +84,22 @@ exist yet.
   does not sleep under a running worker. `run.sh --self-test` writes a stub
   executable under `$TMPDIR`, launches it through the same path, checks the
   five files, the two timeline lines, and the flags the stub echoes to
-  `<tag>.err`, and prints `self-test passed`; a
+  `<tag>.err` — and beyond those the `started <tag> pid <pid> session <id>`
+  line, a live pid, the stub's cwd, the optional flags absent with their
+  variables unset and present on a resume launch made through the command
+  line with them set, the refusals below, a failing stub's status reaching
+  `<tag>.exit` and the timeline, the stale-`.exit` removal, and the
+  batch-name default with `AUTOPILOT_BATCH` unset — and prints
+  `self-test passed`; a
   caller-supplied stub (`AUTOPILOT_CLAUDE`) exercises the failure path. The
-  skill runs the copy's self-test at every batch start. No `--model`, no
-  `--continue`.
+  skill runs the copy's self-test at every batch start, with that variable
+  empty on the command. A launch is refused with status 2 and nothing
+  started for an empty tag, a missing cwd, a missing, empty, or
+  whitespace-only prompt file, an executable that cannot be found, a
+  `--resume` without an id, an unknown argument, and a tag whose earlier
+  worker still runs (its pid live and its `<tag>.exit` absent); a stale
+  `<tag>.exit` from an earlier launch under the tag is removed before the
+  worker starts. No `--model`, no `--continue`.
 - **The messaging protocol.** A worker asks with one message whose first
   line is `question <tag>: <one line>` and whose body gives the context,
   the options, and its suggested answer, then waits in a bounded `until`
