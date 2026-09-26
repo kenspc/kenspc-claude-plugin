@@ -43,7 +43,10 @@ the batch's acceptance record, named at release.
   `code-fixer returned — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md`;
   and `regression-verifier returned — CLEAN`, or
   `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
-  (no path: regression-verifier writes no report file). The Schema A
+  (no path: regression-verifier writes no report file). A code-fixer reply
+  without its statistics line, or a regression-verifier reply without its
+  closing CLEAN or HAS ISSUES line, gets one line saying so instead, and the
+  final report renders that reply verbatim. The Schema A
   roll-up, code-fixer's reply, and Schema C are rendered once, in the final
   report: Schema F's Review summary now holds the per-angle roll-up table
   (`| Angle | HIGH | MEDIUM | LOW |`, the five angle rows, and a

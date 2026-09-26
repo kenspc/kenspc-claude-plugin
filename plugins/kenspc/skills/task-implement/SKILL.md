@@ -406,6 +406,14 @@ when it is HAS ISSUES, this line naming each non-PASS row with its Result:
 
 `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
 
+When code-fixer's reply has no statistics line, or regression-verifier's
+reply no closing CLEAN or HAS ISSUES line — an error, a refusal such as
+regression-verifier's when schema-b.md is missing, or a reply cut short —
+print instead one line saying which agent returned without it, and
+Schema G's Fixes or Verification section renders that reply verbatim, as
+it came back. Why: counts or a result filled in without that line are made
+up, and they read as a step that finished.
+
 The three lines stay in English, exactly as written, whatever the
 conversation language. Why: this run carries the implementation phase
 before the review, and everything the orchestrator prints stays in its
