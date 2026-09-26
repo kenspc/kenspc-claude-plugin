@@ -1049,20 +1049,23 @@ not need. Reply with the commit hash and one line on what changed.
 - **S6, the removal commit** — Phase 4: repo mode with
   `Release preparation: default` or a list of instructions, and plugin mode
   with `Version: none`. The removal paragraph is written unless the list
-  says `keep`; the Version line is written when `Version:` is set in repo
-  mode, the instructions when `Release preparation:` is a list. With the
-  bare `keep`, no S6 starts; a list that says `keep` starts S6 for its
-  instructions alone, with no removal (Phase 4).
+  says `keep`, its `and touches no version and no CHANGELOG` words when
+  `Version:` is `none`; the Version line is written instead when
+  `Version:` is set in repo mode, the instructions when
+  `Release preparation:` is a list. With the bare `keep`, no S6 starts; a
+  list that says `keep` starts S6 for its instructions alone, with no
+  removal (Phase 4).
 
 ````
 ## Task: release preparation for batch <batch>
 
 The batch's commits are <baseline sha>..<HEAD sha>.
 [Make one commit, `docs: remove batch <batch> plan and tasks`, that `git rm`s
-<spec path> and <task document path> and touches no version and no
-CHANGELOG.]
+<spec path> and <task document path>[ and touches no version and no
+CHANGELOG].]
 [Version <Version:>: bump it where the repository's CLAUDE.md says versions
-live, in the same commit.]
+live, in the removal commit — in a commit of its own when this task makes
+none — and change nothing else.]
 [Then carry out these instructions, each committed in the repository's
 convention:
 <the Release preparation: sub-bullets>]
