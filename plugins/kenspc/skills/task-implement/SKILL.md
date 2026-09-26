@@ -491,10 +491,10 @@ with its reason, for the user to correct. When that line says
 reply has no such line, the bullet states the defect,
 `code-fixer's reply has no Doc-sync documents line`, and names the Doc-sync
 task's listed documents to check against the fix commits. When
-code-fixer's reply has no statistics line and the Doc-sync task is DONE,
-the FIXED count is unknown, and the bullet is written as for FIXED greater
-than 0: from the `Doc-sync documents:` line when the reply carries one,
-otherwise in the missing-line form above. Why: the fixes
+code-fixer ran and its reply has no statistics line, and the Doc-sync
+task is DONE, the FIXED count is unknown, and the bullet is written as for
+FIXED greater than 0: from the `Doc-sync documents:` line when the reply
+carries one, otherwise in the missing-line form above. Why: the fixes
 land after the Doc-sync task, and code-fixer corrects the listed documents
 in the fix commits; this bullet is where the user sees which ones changed,
 or that none needed to, and a missing line means code-fixer did not meet
