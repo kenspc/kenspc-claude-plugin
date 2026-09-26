@@ -365,6 +365,23 @@ since the spec is written by design outside that skill. Why not dodge the
 reminder: it is a note, not a gate, and a write made through a shell to
 avoid it would hide the write from the trace the acceptance reads.
 
+The shape of a decided spec, which the block spells out since a brief-entry
+batch with `Prior specs:` empty has no earlier spec to copy: the plan
+document `${CLAUDE_PLUGIN_ROOT}/references/plan-document-example.md` shows
+— `## Objective`, `## Background`, `## Implementation Steps` with Phase /
+Step headings, `## Documentation impact` (the durable documents the steps
+make stale, or `N/A — <reason>`), `## Testing Strategy`, `## Risks and
+Mitigations`, `## Open Questions` — plus the sections this batch reads: the
+locked design as numbered points, the design table, out of scope,
+constraints, a `## Clarifications during implementation` section left
+empty, and `## Autopilot` copied from the brief. Why these: the entry kind
+is judged by the plan shape; task decomposition asks for a correct path
+when `## Implementation Steps` is missing — a question the spec cannot
+answer, so a stop after a paid session — and writes a Doc-sync task only
+from a Documentation impact section; the preamble reads the locked design,
+out of scope, and constraints by section; and the main session commits its
+clarifications into the spec.
+
 In a session that cannot ask (a system reminder to work without stopping),
 every row takes its lean, the rulings message says
 `lean adopted (the session could not ask)` per row, and both reports say so
@@ -794,8 +811,8 @@ these two fields bound what it may.
 `_prompts/<batch>-<tag>-task.md` per launch; the launched prompt
 `_prompts/<batch>-<tag>.md` is the preamble followed by the task block.
 
-- S1: the draft-spec task (Phase 1), ending "send the compact table to
-  <main name> and wait".
+- S1: the draft-spec task, with the shape of a decided spec as Phase 1
+  gives it, ending "send the compact table to <main name> and wait".
 - S2: `/kenspc-task <spec path>`.
 - S3: `/kenspc-task-implement <task document path>`.
 - S3b: `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>`.
