@@ -1112,7 +1112,9 @@ Reply with each commit's hash and subject.
   bracketed brief words are written when git tracks the brief; an untracked
   brief is left where it is and named in the reports as the user's to
   commit or discard. The bracketed roadmap lines are written when Phase 3
-  classified a FAIL as a behavior deviation and drafted a line for it.
+  classified a FAIL as a behavior deviation and drafted a line for it; the
+  bracketed checklist items when `docs/release-checklist.md` exists —
+  without it, the reviewer report's counts field reads `none: no checklist`.
 
 ````
 ## Task: release preparation for batch <batch>, version <Version:>
@@ -1125,7 +1127,7 @@ one release commit in the repository's convention:
 - the CHANGELOG's `— unreleased` heading gets today's date;
 - the plugin manifest's version becomes <Version:>;
 - the manifests' descriptions name the new capability;
-- the checklist's counting rows follow what the guards now print;
+[- the checklist's counting rows follow what the guards now print;]
 - the roadmap's shipped items leave it, and its heading names the next
   minor[, and these lines, one per behavior deviation the acceptance found,
   are added to it:
@@ -1133,9 +1135,9 @@ one release commit in the repository's convention:
 - `git rm` <spec path> and <task document path>[ and the brief
   <brief path>].
 
-Run the checklist's pre-flight block; its two count lines go in your reply.
+[Run the checklist's pre-flight block; its two count lines go in your reply.]
 No tag, no push, no release: those are the user's. Reply with the commit
-hash and the two count lines.
+hash[ and the two count lines].
 ````
 
 ### The driver
@@ -1248,7 +1250,7 @@ the user has yet to see.
 - Spec: git show <hash>:<path>
 - Design rulings and clarifications: <n> / <m> / <k>; beyond the letter: <list, or none>
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
-- Byte-identity / guards / counts: <the pre-flight lines in plugin mode>
+- Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
