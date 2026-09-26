@@ -47,7 +47,8 @@ the batch's acceptance record, named at release.
   roll-up, code-fixer's reply, and Schema C are rendered once, in the final
   report: Schema F's Review summary now holds the per-angle roll-up table
   (`| Angle | HIGH | MEDIUM | LOW |`, the five angle rows, and a
-  `**Total**` row) where it asked for total counts, task-review's Step 6
+  `**Total**` row) where it asked for total counts, Schema G's Code Review
+  holds the same table below its placeholder, task-review's Step 6
   drops its example Schema C table (regression-verifier's OUTPUT FORMAT
   defines it), and Schema G's Code Review, Fixes, and Verification
   sections say they are rendered there only. code-fixer's reply contract is

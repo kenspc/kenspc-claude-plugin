@@ -430,6 +430,15 @@ Render the final consolidated report using Schema G:
 (Schema A roll-up — the per-angle table, HIGH / MEDIUM / LOW per angle and
 in total; rendered here only.)
 
+| Angle | HIGH | MEDIUM | LOW |
+|-------|------|--------|-----|
+| requirements | <n> | <n> | <n> |
+| edge-case    | <n> | <n> | <n> |
+| quality      | <n> | <n> | <n> |
+| bug          | <n> | <n> | <n> |
+| test         | <n> | <n> | <n> |
+| **Total**    | <n> | <n> | <n> |
+
 ## Fixes
 
 (code-fixer's reply verbatim, rendered here only: the statistics line, the
