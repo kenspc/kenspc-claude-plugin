@@ -138,7 +138,8 @@ the batch's acceptance record, named in the release commit.
   "stop" or a "no", and a cannot-ask stop, end with no commit and the
   brief's sha256 unchanged — for the unrecognized-word gate on an entry
   with no `Settled by:`, so the unchanged hash also shows the gate came
-  before the derived write; the prototype-again question for an entry
+  before the derived write, and with that gate's cannot-ask stop naming
+  the entry and quoting the word; the prototype-again question for an entry
   taken with no entry named that holds `Answer:`, an entry whose answer is
   kept when a "yes" to that question ends with nothing built or with a
   built prototype that does not settle it, and the two branches that turn
