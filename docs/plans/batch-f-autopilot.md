@@ -282,10 +282,14 @@ All file references are at `5c33c4a` unless a probe is named.
      from-mode="bypass">` between two tool calls; this session replied;
      the worker received the reply on its second `caffeinate -t 60` call
      (its final message quotes it), exited 0, USD 0.59, 7 turns. No idle
-     or exit notice reached this session in the 92 s after the worker's
-     exit (23:10:27 → 23:11:59, two tool rounds), so a `-p` subscriber
-     cannot rely on the notice; the interactive main session's probe did
-     receive it. Both transcripts are under
+     or exit notice reached this session between tool calls in the 26
+     minutes after the worker's exit (23:10:27); the notice arrived at
+     23:36, after this session's final reply had ended its turn, and
+     started a new turn in the `-p` process — so a `-p` subscriber cannot
+     rely on the notice, and a headless session that subscribes gets an
+     extra turn after it thinks it is done, its JSON `result` then being
+     that turn's last message (CL1); the interactive main session's probe
+     did receive it between turns. Both transcripts are under
      `~/.claude/projects/-Users-kenspc-Projects--smoke-batch-f-probe/`
      (77 and 39 lines), and the hook wrote a `.remember/` directory into
      the probe's cwd.
@@ -473,7 +477,7 @@ reads them. Spell them exactly as given, in every file that carries them.
 | Anchor | Exact form | Carried by |
 |---|---|---|
 | Autopilot section | `## Autopilot`, then `- <Label>: <value>` bullets; labels `Baseline:`, `Mode:`, `Plugin:`, `Version:`, `Budget:`, `Caps:`, `Allowed files:`, `Zero diff:`, `Byte-identity exceptions:`, `Acceptance:`, `Acceptance record:`, `Release preparation:`, `Must read:`, `Challenge seeds:`, `Prior specs:`, `Workspace:`; values `repo` / `plugin`, `none`, `USD <n>`, `<n> sessions, <m> resumes`, `default` / `keep`, ` — PASS: `, `(optional)` | `autopilot/SKILL.md`, `plugins/kenspc/README.md`, briefs and specs |
-| Settings line | `Autopilot settings — batch <batch>, mode <repo\|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v\|none>, acceptance <k> cases\|none, release preparation <default\|keep\|custom>, workspace <path>` — in English whatever the conversation language | `autopilot/SKILL.md`, `docs/release-checklist.md` (row 11) |
+| Settings line | `Autopilot settings — batch <batch>, mode <repo\|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v\|none>, acceptance <k> cases\|none, release preparation <default\|keep\|custom>, workspace <path>, wait <interactive\|headless>` (the last field by CL1) — in English whatever the conversation language | `autopilot/SKILL.md`, `docs/release-checklist.md` (row 11) |
 | Preamble first sentence | `You are a headless sub-session of the batch <batch> main session <main name>, unattended.` | `autopilot/SKILL.md` (the preamble template and the description's exclusion) |
 | Launch line | `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>` | `autopilot/SKILL.md`, `docs/release-checklist.md` (row 11) |
 | Return line | `S<n> returned — exit <code>, cost USD <c>, <success\|subtype> — <json path>` | the same |
@@ -516,7 +520,8 @@ task as a second task document, which `/kenspc-task-implement`,
   phases with Goal / Inputs / DONE when / Constraints, a gate table, Exit,
   Writing rules, Phase transitions; rules carry their Why in the skill's
   own words (M4's probe evidence as "a subscription made after the worker
-  exited was refused, and a headless subscriber received no notice";
+  exited was refused, and a headless subscriber received the notice
+  only as a new turn after its final reply";
   M5's as "the Bash tool blocks a bare sleep of thirty seconds or more").
   File references use `${CLAUDE_PLUGIN_ROOT}`.
 - Frontmatter: `name: autopilot`; `version: 3.0.0`;
@@ -839,8 +844,8 @@ Determined from this repository's CLAUDE.md, § Durable documents.
   --output-format json`), cwd the seed. The acceptance session (S4) is
   itself headless and waits with M5's snippet; the autopilot under test
   runs inside a `-p` session in these cases, so its own wait is the
-  headless path (the notice arrives as a message between its tool calls,
-  or never — M4's `.exit` re-read covers both), and its interactive path
+  headless path (it never subscribes and polls `<tag>.exit` with the
+  wait snippet — M5, CL1), and its interactive path
   (subscribe, end the turn, wake on the notice) is exercised by this
   batch's own run only, which the main session drives by hand. Every
   answer the driver gives is quoted in the record. Cost is each session's
@@ -997,7 +1002,21 @@ Step it affects — and the answered question is removed from that section.
 The prefix is `CL`, so a clarification cannot be read as one of the locked
 points F-1 to F-14 or the design rows M1–M16 and D1–D24.
 
-None yet.
+- **CL1** — A `-p` session that subscribes with `notify_when_idle`
+  receives the notice not between tool calls but as a new turn after its
+  final reply: in the nesting probe, `f-s1` subscribed to `f-s1-w`, the
+  worker exited at 23:10:27, nothing arrived during 26 minutes of tool
+  calls, and the notice started a new turn at 23:36 after `f-s1`'s final
+  message, whose JSON `result` then became that turn's last message.
+  Consequences (Step 1.1): a headless autopilot never subscribes — it
+  polls `<tag>.exit` with the wait snippet's driver form; the skill decides
+  its wait path once, in Phase 0, by whether the process that runs it is
+  headless (`ps -o args= -p $PPID` from the Bash tool shows `-p` or
+  `--print`; the implementing session verifies the probe and records the
+  command it used), and the settings line (Fixed strings) gains the field
+  `wait <interactive|headless>` after `workspace <path>`; Known behavior
+  (Step 2.2) and the CHANGELOG (Step 2.3) state the extra-turn effect.
+  Background item 2 amended in the same commit.
 
 ## Open Questions
 
