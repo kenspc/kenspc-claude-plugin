@@ -124,8 +124,11 @@ the batch's acceptance record, named in the release commit.
   `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
   before anything is written, and their cannot-ask stop with no commit and
   the brief's sha256 unchanged, the prototype-again question for an entry
-  taken with no entry named that holds `Answer:`, and an entry whose answer
-  is kept when a "yes" to that question ends with nothing built. No new row; pre-flight counts unchanged.
+  taken with no entry named that holds `Answer:`, an entry whose answer is
+  kept when a "yes" to that question ends with nothing built, and the two
+  branches that turn on `Prototype:` with no `Answer:` — a `needs prototype`
+  entry built with no question, and an unrecognized-word entry given the
+  prototype-again question. No new row; pre-flight counts unchanged.
 - CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
   existing-file question; its prototype path paragraph names `Answer:` as
   what makes an answered entry settled input; its guard descriptions,
