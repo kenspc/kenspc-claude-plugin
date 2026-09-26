@@ -881,7 +881,9 @@ these two fields bound what it may.
 block below is copied as it stands, its placeholders filled the way the
 preamble's are; text in `[square brackets]` — a line, or words inside one —
 is written when the field it names is set and omitted when the field is
-empty. Why one fixed template per role: the task block is the only part of
+empty; the brackets of an indented command line, the wait snippet's
+`[ -f … ]`, are the shell's and are copied as they stand. Why one fixed
+template per role: the task block is the only part of
 a prompt that varies between launches, so a template keeps the variation to
 the placeholders, and a reader of the record who knows the template reads a
 launched prompt by its filled values alone.
