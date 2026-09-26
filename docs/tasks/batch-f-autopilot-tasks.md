@@ -914,7 +914,7 @@ skill's description owns the routing.
 
 Depends on: Task 1-3
 
-Plan Step 2.1 (F-14; rulings D23, M14). In `CLAUDE.md`, six places:
+Plan Step 2.1 (F-14; rulings D23, M14; CL6). In `CLAUDE.md`, seven places:
 
 - § Project Overview: one sentence in the first paragraph — the plugin
   also runs one batch of its own chain unattended (the autopilot skill),
@@ -956,6 +956,10 @@ Plan Step 2.1 (F-14; rulings D23, M14). In `CLAUDE.md`, six places:
   (`~/Projects/_smoke/` by default, relocated by `Workspace:`) — a
   plugin-mode seed is a clone that cannot live inside the repository it
   clones.
+- § Writing Rules for Skill Content, the bullet that lists the skills
+  sharing the cannot-ask wording ("the wording diagnose-bug,
+  generate-plan's … and the prototype skill's gates share"): one clause
+  adds the autopilot skill's gates to that list (CL6).
 
 § Durable documents, § Repository scripts/, and every stated guard count
 are unchanged.
@@ -986,7 +990,11 @@ are unchanged.
   § Subagent Review Architecture before "#### CONTEXT block contract" (the
   new pattern and the effort paragraph's count; nothing from that heading
   to § Non-Goals changes), § Development Workflow, or § Non-Goals (hunk
-  ranges), and the reviewer invariant sentence is
+  ranges), or the one bullet of § Writing Rules for Skill Content that
+  lists the skills sharing the cannot-ask wording, which after the edit
+  contains `autopilot` (`grep -c 'the wording diagnose-bug' CLAUDE.md`
+  prints 1 and that line, with its line breaks joined, contains
+  `autopilot`), and the reviewer invariant sentence is
   unchanged (`check-run-contract.sh` check 6 reports PASS in
   `bash scripts/check-all.sh`, which exits 0 with `guards run: 10`).
 - The file reads top to bottom without a contradiction about skill,
