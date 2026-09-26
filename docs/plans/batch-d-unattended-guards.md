@@ -1091,6 +1091,47 @@ unsettled attempt) is recorded as not exercised in the acceptance; the
 acceptance's `open` entry holding `Answer:` carries no `Settled by:`, so its
 "no" case shows the gate-before-write order T3 names.
 
+Ruling of 2026-09-26, after the batch's acceptance run
+(`docs/dry-runs/batch-d-acceptance.md`, repository tree `c19d60f`). The
+main session classified its F1 as a plugin defect in this batch's gates,
+settled by CL9, and its F2 — the gap round's status question for an
+unrecognized entry did not ask, for `answered`, the answer — as a behavior
+deviation against an explicit sentence of generate-plan, with no effect on
+the plan's content, which the main session lists as a roadmap candidate
+and this batch does not fix.
+Decided by the main session within the locked design; CL9 edits the
+prototype skill's Phase 1 DONE when, beyond the sections Step 2.1 opened, in
+a file this batch may change.
+
+- CL9 — Step 2.1 and Step 5.4 (acceptance F1): in a session that cannot
+  ask, a gate on the entry the run takes — named, or taken with no ENTRY —
+  that stops the run in place of asking still sends the frame first, as a
+  message of its own, and the stop follows as the last message: it names
+  the entry and the status word found, or says there is none, and says why
+  the run stopped. Nothing is written to the brief and nothing is
+  committed; a `Settled by:` derived for the entry is shown in the frame
+  and not written, since the gate still comes before that write (D7). A
+  stop before any entry is known — no arguments, no brief, an entry number
+  that names no entry, no `` `needs prototype` `` entry to take — has no
+  question to frame and sends none. Why: in `d-acc-proto-word-c`,
+  `d-acc-proto-unrec-c`, and `d-acc-proto-noentry-c` the final message was
+  the run's only text and referred to a frame the user never saw ("the
+  `Settled by:` I worked out in the frame was not written in", "What I
+  found while framing"), while the interactive runs at the same gates sent
+  the frame with the question after it in one message. Phase 1's "whether
+  or not a gate stops the run" went on to describe only a gate that asks
+  once the question is chosen, and the entry gates, which sit where the
+  question is still being chosen, spoke in their cannot-ask branches only
+  of the last message. The outcome those gates protect — no write, no
+  commit, the brief's sha256 unchanged — held in all three runs and is
+  unchanged. Fixed in `d02a64f`: the skill's Phase 1 DONE when gains the
+  cannot-ask paragraph, and both entry gates' cannot-ask branches and their
+  gates-table cells say "after the frame" (Step 2.1); release-checklist
+  row 10's frame criterion covers a cannot-ask stop at a gate on the entry
+  the run takes (Step 5.4); the 3.8.1 CHANGELOG's prototype and Release
+  checklist bullets (Step 5.3) and the plugin README's `prototype` row
+  (Step 5.2) follow.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
