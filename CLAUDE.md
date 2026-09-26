@@ -276,8 +276,10 @@ the worker's idle notice is the main session's wake, and `<tag>.exit`,
 written by the driver when the worker returns, is the completion artifact
 — a transition never rests on a notice's wording. The main session
 re-reads its state file (`_logs/<batch>-state.md` under the workspace) on
-every wake, and `--resume` is used only for a worker that has died; no
-agent, no CONTEXT key, no agent teams. The roles are sessions rather than
+every wake, and `--resume` only continues a worker that has ended — dead,
+ended by its cap, or stopped on a question it got no answer to within
+thirty minutes — never a live one; no agent, no CONTEXT key, no agent
+teams. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix each need a session
 of their own; the workers run the installed plugin, or in plugin mode the
