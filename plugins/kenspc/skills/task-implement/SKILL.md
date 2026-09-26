@@ -365,7 +365,11 @@ missing.
 ### Step 3: Aggregate and dispatch fix + regression agents
 
 Aggregate the Schema A Findings tables in the 5 replies into a Schema A
-roll-up table (HIGH / MEDIUM / LOW per angle and total).
+roll-up table (HIGH / MEDIUM / LOW per angle and total). The Schema G
+report's Code Review section renders the roll-up table; here, print only
+this line, with the totals and the run directory filled in:
+
+`Reviewers returned — HIGH <h>, MEDIUM <m>, LOW <l> — <RUN_DIR>/angle-1.md … angle-5.md`
 
 Dispatch `code-fixer` in the foreground (`run_in_background: false`, as
 with the reviewers) with the CONTEXT block from Step 1, unchanged —
@@ -383,15 +387,34 @@ fixed form:
 
 Its reply carries the statistics line, the Per-angle Results table, the HIGH
 and MEDIUM rows with their Deferred Issues paragraphs, the scratch-pollution
-note when there is one, and the path of schema-b.md. Render that reply
-verbatim; the LOW rows and their prose stay in the file.
+note when there is one, and the path of schema-b.md. Schema G's Fixes
+section renders that reply verbatim, and the LOW rows and their prose stay
+in the file. When code-fixer returns, print only this line, the counts
+taken from its statistics line:
+
+`code-fixer returned — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md`
 
 Then dispatch `regression-verifier`, also in the foreground, with the same
 CONTEXT block — it reads
 the 5 reports and schema-b.md from RUN_DIR itself. The agent verifies that
 every issue ID is accounted for, that fixes are real, and that build / test /
 lint pass. It returns Schema C (`# / Check / Result / Detail` table plus per-
-non-PASS detail prose). Render Schema C verbatim.
+non-PASS detail prose, closing on a CLEAN or HAS ISSUES line). Schema G's
+Verification section renders it verbatim. When it returns, print only
+`regression-verifier returned — CLEAN` when its closing line is CLEAN, or,
+when it is HAS ISSUES, this line naming each non-PASS row with its Result:
+
+`regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
+
+The three lines stay in English, exactly as written, whatever the
+conversation language. Why: this run carries the implementation phase
+before the review, and everything the orchestrator prints stays in its
+context until the final report, where the agents' replies already are as
+their results — a table printed between dispatches is paid for a second
+time when Schema G prints it. The user following the run needs to know
+which agent returned, its counts, and where its report is; the fixed form,
+opening with the agent's name, is what the release checklist finds in the
+trace, as it finds the Phase 1 boundary lines.
 
 ### Step 4: Render the consolidated final report (Schema G)
 
@@ -404,18 +427,19 @@ Render the final consolidated report using Schema G:
 
 ## Code Review
 
-(Schema A roll-up.)
+(Schema A roll-up — the per-angle table, HIGH / MEDIUM / LOW per angle and
+in total; rendered here only.)
 
 ## Fixes
 
-(code-fixer's reply verbatim: the statistics line, the Per-angle Results
-table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, the
-scratch-pollution note when there is one, and the full path of schema-b.md,
-where the LOW rows and their prose remain.)
+(code-fixer's reply verbatim, rendered here only: the statistics line, the
+Per-angle Results table, the HIGH and MEDIUM rows with their Deferred Issues
+paragraphs, the scratch-pollution note when there is one, and the full path
+of schema-b.md, where the LOW rows and their prose remain.)
 
 ## Verification
 
-(Schema C verbatim.)
+(Schema C verbatim; rendered here only.)
 
 ## Verdict
 

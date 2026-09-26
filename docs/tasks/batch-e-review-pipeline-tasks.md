@@ -388,7 +388,22 @@ and Schema C are rendered once, in Schema F or G.
 
 ### Task 2: Render the review once in task-implement
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the three progress lines are copied from Task 1's committed
+  text and placed the same way (each alone on a line in a code span, the
+  CLEAN form inline); a `diff` of the whole-line forms between the two
+  skills is empty. The regression-verifier sentence names Schema C's
+  closing CLEAN / HAS ISSUES line in the existing parenthetical, since the
+  line choice keys on it. The Why is written for this skill: the run carries
+  the implementation phase first, so a table printed between dispatches is
+  paid for again in a longer context, and the release checklist finds these
+  lines as it finds the Phase 1 boundary lines.
+- Changes/tradeoffs: Schema G's Fixes placeholder was reflowed to fit
+  "rendered here only" after "verbatim"; its wording is otherwise unchanged.
+  Phase 1 Step 5 (Schema D's render) is byte-identical to the base, as the
+  task requires; its double render stays out of scope.
 
 Depends on: Task 1
 
