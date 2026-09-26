@@ -113,7 +113,10 @@
 #                  sentence's period is caught. One more mutation must exit 0:
 #                  `read-only on the working tree` given a second space in
 #                  the README's copy, a whitespace-only change check 6
-#                  ignores. Then the main check runs on the reverted copy
+#                  ignores. And one must exit 2: `Each reviewer` reworded to
+#                  `Every reviewer` in the reference, which leaves check 6 no
+#                  start line; an empty reference would be contained in every
+#                  copy. Then the main check runs on the reverted copy
 #                  (must exit 0). Exit 0 on self-test pass, 1 on unexpected
 #                  exit codes, 2 on fixture-stale.
 
@@ -675,6 +678,22 @@ run_self_test() {
     cp "$REPO_ROOT/$README_REL" "$WORK/$README_REL"
     if [[ "$rc" -ne 0 ]]; then
         echo "FAIL  self-test whitespace-only mutation in $README_REL: expected exit 0, got $rc" >&2
+        return 1
+    fi
+    # A reference that moved: its opening words reworded, so check 6 finds
+    # no start line. The extract is then empty, and an empty reference is
+    # contained in every copy, so only the exit-2 branch keeps this from
+    # passing silently.
+    hits=$(grep -cF -- "$INVARIANT_START" "$WORK/$REVIEWER_REL" || true)
+    if [[ "$hits" -ne 1 ]]; then
+        echo "FAIL  self-test fixture stale: \"$INVARIANT_START\" found on $hits lines of $REVIEWER_REL, expected 1 (moved reference)" >&2
+        return 2
+    fi
+    replace_literal "$WORK/$REVIEWER_REL" "Each reviewer is read-only" "Every reviewer is read-only"
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$REVIEWER_REL" "$WORK/$REVIEWER_REL"
+    if [[ "$rc" -ne 2 ]]; then
+        echo "FAIL  self-test moved-reference mutation in $REVIEWER_REL: expected exit 2, got $rc" >&2
         return 1
     fi
 
