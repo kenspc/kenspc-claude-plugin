@@ -711,7 +711,19 @@ Plan Step 2.2 (E-2; rulings M4, D12, M9).
 
 ### Task 5: Write the approved plan verbatim in generate-plan
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the paragraph sits directly under "On approval:", before
+  item 1, as one paragraph with its Why, so the verbatim rule is read before
+  any of the numbered steps; the language request is named among the
+  changes after the last full print, pointing at item 2, and item 2 points
+  back ("handled as above"), so the two cannot be read apart. The
+  `Plan not written: awaiting approval.` line is spelled unwrapped, and the
+  cannot-ask sentence opens with the shared wording.
+- Changes/tradeoffs: none beyond the task text — item 1 and the approval
+  stop's cannot-ask paragraph are untouched (the hunks against the base
+  insert after line 362 and replace lines 373–376 only).
 
 Plan Step 3.1 (E-5; rulings M10, M13, D15). In
 `plugins/kenspc/skills/generate-plan/SKILL.md`, Phase 2 Step 3 only —

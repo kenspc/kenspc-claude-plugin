@@ -360,6 +360,25 @@ English in any conversation language, so a driving session can test for it.
 
 On approval:
 
+The approval covers the draft last printed in full — every section, none
+elided or summarized — and the file is that draft, character for character:
+no rewording, a pronoun included, no reformatting, and no change to an
+escape or a special character (an escape stays the characters that spell
+it). A change after that print — one the self-challenge finds, one shown
+only as a revised section, one the approving reply itself asks for, or a
+request for another language (item 2) — is made to the draft, which is
+printed again in full and approved again before anything is written. In a
+session that cannot ask (a system reminder to work without stopping), that
+print ends with `Plan not written: awaiting approval.` and the run stops
+again, and an approval given on resume writes the draft that run's last
+message printed. Why: the written plan is the approved plan — Phase 3's
+reviewer commits it unchanged before its first fix, and generate-task
+decomposes it — so an edit made after approval, however small, reaches the
+repository as approved when the user never saw it. A plan written after an
+approval has differed from the draft approved in the same session in seven
+of 355 lines: pronouns reworded, a Documentation impact line reformatted,
+and an escape written as the character it stands for.
+
 1. Determine the output location:
    a. If CLAUDE.md specifies a documentation or plans directory, use it.
    b. Otherwise, use `docs/plans/` (create if it does not exist).
@@ -370,10 +389,10 @@ On approval:
       `<name>-3.md`, …) and say so in the final message, naming the file.
       Why: an overwrite nobody chose can destroy a plan the user kept, and
       an earlier run of this branch may have left `<name>-2.md` already.
-2. Determine the document language:
-   a. If the user specified a language, use it.
-   b. Otherwise, default to English.
-3. Write the plan to the file.
+2. The document language is the draft's, set by Step 1's writing rules when
+   it was drafted; a request for another language at approval is a change,
+   handled as above.
+3. Write the plan to the file: the approved draft, as printed.
 
 After writing, proceed to Phase 3.
 
