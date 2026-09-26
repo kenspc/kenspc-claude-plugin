@@ -493,9 +493,10 @@ in such a run commits them. When code-fixer's reply in such a run has no
 statistics line, that bullet is still written: code-fixer may have edited
 files before it stopped, so the bullet names
 `<RUN_DIR>/scratch/code-fixer/pre-fix/index.txt` (the run directory filled
-in), which lists each file code-fixer edited, with a copy of each as it
-stood before the first edit beside it. When that file does not exist, the
-bullet says instead that code-fixer left no pre-fix record, so it recorded
+in), which names each file code-fixer edited, created, or deleted;
+`pre-fix/` holds a `.txt` copy of each one that existed before its first
+edit, as it stood then. When that file does not exist, the bullet says
+instead that code-fixer left no pre-fix record, so it recorded
 no edit before it stopped. Why: those edits sit in the working tree
 beside the user's own change, and that record is the only one that tells
 them apart; a bullet that points at a record that is not there reads as
