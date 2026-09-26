@@ -1109,9 +1109,10 @@ Reply with each commit's hash and subject.
 ````
 
 - **S6, the release commit** — Phase 4, plugin mode with a `Version:`. The
-  bracketed words are written when git tracks the brief; an untracked brief
-  is left where it is and named in the reports as the user's to commit or
-  discard.
+  bracketed brief words are written when git tracks the brief; an untracked
+  brief is left where it is and named in the reports as the user's to
+  commit or discard. The bracketed roadmap lines are written when Phase 3
+  classified a FAIL as a behavior deviation and drafted a line for it.
 
 ````
 ## Task: release preparation for batch <batch>, version <Version:>
@@ -1126,7 +1127,9 @@ one release commit in the repository's convention:
 - the manifests' descriptions name the new capability;
 - the checklist's counting rows follow what the guards now print;
 - the roadmap's shipped items leave it, and its heading names the next
-  minor;
+  minor[, and these lines, one per behavior deviation the acceptance found,
+  are added to it:
+  <the roadmap lines drafted in Phase 3>];
 - `git rm` <spec path> and <task document path>[ and the brief
   <brief path>].
 
