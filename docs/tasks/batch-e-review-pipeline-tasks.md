@@ -799,7 +799,31 @@ as they are.
 
 ### Task 6: Read CLAUDE.md through against the rendering and Doc-sync changes
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none found — no sentence Tasks 1 and 4 missed is false or
+  silent about where the reports are rendered or what code-fixer does with
+  the Doc-sync documents, so CLAUDE.md is not edited here. Sentences
+  checked: § Project Overview's review-phase summary; § Subagent Review
+  Architecture's documentation path paragraph (now closing on Task 4's
+  sentence), the Parallel MapReduce list (its Phase 2 bullet describes
+  code-fixer's report work, not its commits, and is not false), Task 1's
+  rendering paragraph after the list, the run-directory paragraph ("the
+  main session relays paths rather than report text" — consistent with
+  progress lines that name report paths), the `run_in_background`
+  paragraph, the effort-override bullet for `code-fixer`, the CONTEXT block
+  contract (no key added; the uncommitted-mode sentence is untouched by the
+  Doc-sync rule, which applies to task-scope runs only), the standalone
+  safety classification, and the maintenance note (the statistics-line
+  template is still byte-identical in the three files); § Repository
+  scripts/ (`check-run-contract.sh`'s leading-word recount, which the new
+  Action suffix passes; guard counts unchanged); § Durable documents; and
+  § Plugin Design Lessons.
+- Changes/tradeoffs: none. `git diff 6575540 -- CLAUDE.md` holds only the
+  two sentences of Tasks 1 and 4, both inside § Subagent Review
+  Architecture (lines 113–368 at the base), and `check-run-contract.sh`
+  check 6 (the reviewer invariant sentence) reports OK.
 
 Depends on: Task 1-4
 
