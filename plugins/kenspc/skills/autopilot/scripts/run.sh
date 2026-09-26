@@ -61,7 +61,11 @@
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
 # of theirs that is meant to pass echoes its arguments and
 # "cwd=<its working directory, physical path>" to stderr, since the
-# self-test reads the flags and the cwd there.
+# self-test reads the flags and the cwd there, and stays alive for at least
+# one second: the second launch under the tag, refused only while the first
+# worker still runs, and the liveness check on <tag>.pid follow the launch
+# within that second, so a stub that exits at once fails the earlier of the
+# two.
 #
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
 # or environment error, or when <tag>.pid names a live process and <tag>.exit
