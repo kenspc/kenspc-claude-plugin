@@ -803,7 +803,11 @@ has arrived after thirty calls, put the question under a section
 `## Question for the main session` in your final message and stop; the
 main session resumes you with the answer. Do not approve anything on the
 user's behalf because the run is unattended: an answer you invent is the
-one failure this batch cannot detect.
+one failure this batch cannot detect. Messages carry summaries and paths,
+never a report's text: a report or a full table goes to a file — under
+<workspace>/_prompts, or in the repository when it belongs there — and the
+message names its path, since a message over about a million characters
+is refused and so is a burst of about thirty sends.
 
 ## 2. Read first
 
