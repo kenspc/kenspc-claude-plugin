@@ -48,7 +48,13 @@ the batch's acceptance record, named at release.
   closing CLEAN or HAS ISSUES line, prints instead
   `code-fixer returned — no statistics line` or
   `regression-verifier returned — no result line`, the same in both skills,
-  the final report renders that reply verbatim, and the run goes on. The
+  the final report renders that reply verbatim, and the run goes on. In a
+  `Mode: uncommitted` review, a code-fixer reply without its statistics
+  line still gets Schema F's Next steps bullet on the uncommitted fixes,
+  which then names code-fixer's pre-fix record
+  (`scratch/code-fixer/pre-fix/index.txt` in the run directory), since the
+  fixes it made before it stopped sit in the working tree beside the user's
+  own change. The
   Schema A
   roll-up, code-fixer's reply, and Schema C are rendered once, in the final
   report: Schema F's Review summary now holds the per-angle roll-up table
