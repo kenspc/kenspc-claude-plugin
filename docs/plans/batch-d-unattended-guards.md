@@ -1010,6 +1010,67 @@ not open, in a file this batch may change.
   conflict branch, outside the section this batch may edit, keeps naming
   only `<name>-2.md`; the main session lists it as a roadmap candidate.
 
+Rulings of 2026-09-26, after the standalone `/kenspc-task-review` of the
+batch (range `0128a2f..738fa22`, run
+`.kenspc/runs/20260926-113521-changes/`, fixes `1155550..a278985`, verdict
+PASS with nine DEFERRED rows). CL7 and CL8 settle six of them; the other
+three are left unchanged, as recorded after CL8. All decided by the main
+session within the locked design; CL7 widens CL2 by CL2's own reason and
+edits sections of `prototype/SKILL.md` beyond those Step 2.1 opened.
+
+- CL7 — Step 2.1, § Kind and location, Phase 2's Constraints, and Phase 3,
+  amending CL2 (E1, B1, E2, R2, E3): the kept-answer rule is general, not
+  tied to "nothing is built". An entry that held `Answer:` when the run
+  began, taken for a new attempt after a "yes" to the prototype-again
+  question, is rewritten only when the new attempt settles the question.
+  Every other ending — nothing built, a built prototype whose evidence does
+  not settle the question, a verdict the user does not give — leaves its
+  `Answer:`, `Evidence:`, and Prototype line as they were, and the final
+  message names the new attempt's commits, when it made any, and why the
+  question was not settled. The one change such an entry can carry out of
+  that run is a `Settled by:` derived in Phase 1 for an entry that had none,
+  and the sentences that say it is left as it was say so. The
+  prototype-again bullet states the rule once; Phase 3's unsettled rewrite
+  and its "When nothing was built" paragraph each carry the exception; the
+  gate sentences an interactive run can reach after a "yes" that say an
+  entry "stays `needs prototype`" or "stays unsettled" (the feature
+  prototype that needs the app's runtime, the in-app typecheck with no
+  baseline, and the matching gates-table row) gain a short qualifier that
+  points at the rule. The plugin README (the Prototype path clause and the
+  feature-prototype Known behavior item) and the 3.8.1 CHANGELOG say it in
+  one sentence each; the CHANGELOG's prototype bullet also says that a stop
+  on an unrecognized status word in a session that cannot ask names the
+  entry and quotes the word (`1155550`). Release-checklist row 10 gains the
+  criterion for a built but unsettled attempt after a "yes". Why: CL2's
+  reason — a "yes" consents to replacing the answer with a new answer, and
+  an unsettled attempt yields evidence, not an answer — and one rule stated
+  once cannot contradict the gate sentences that describe other entries.
+- CL8 — Step 5.4 and Testing Strategy (T2, T3, T4): row 10's stop and
+  cannot-ask-stop criteria for the unrecognized-word gate use an entry that
+  holds no `Settled by:`, so the brief's unchanged sha256 also shows the
+  gate came before the derived write; the acceptance seed's
+  unrecognized-word entry carries no `Settled by:`. Row 4's existing-file
+  criterion has both `<name>.md` and `<name>-2.md` in place and expects
+  `<name>-3.md`, both existing files' sha256 unchanged; the acceptance
+  places both before case 1's approval resume. Row 4 gains: when the user
+  replies `answered` to the gap round's status question for an unrecognized
+  entry and gives no answer text, the entry is not taken as settled input —
+  it is asked for its answer again or carried in the `open` form with the
+  `Answer: missing` line; the acceptance's interactive gap-round case gives
+  that reply for the unrecognized entry, or records it as not exercised.
+
+Left unchanged from the same review: E4 — check 6 and the Prototype-line
+group test containment, so a file holding a drifted copy beside an intact
+one passes; D10 and D11 chose containment, every file holds one copy
+today, and the main session lists "exactly one copy" as a roadmap
+candidate. B2 — the interactive exit states without condition that the
+reproduction test fails; D13's wording stands, an intermittent
+reproduction is rare, and the main session lists the qualifier as a roadmap
+candidate. B3 — an unrecognized entry the gap round marks
+`needs prototype` keeps its word in the brief; both skills' behavior is
+ruled, and after `1155550` the prototype skill's unattended stop names the
+entry and its word.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
@@ -1029,3 +1090,10 @@ answers each under
 as `CL<n>` — a statement and the Step it affects — and removes the answered
 question from that section; the session continues from the updated
 document.
+
+## Questions for the spec author
+
+No open question. The spec author's instruction to the implementing
+session: apply CL7 and CL8, keeping the plugin README, the 3.8.1 CHANGELOG
+entry, and release-checklist rows 4 and 10 in line in the same commits.
+Remove this section in the commit that applies the last of them.
