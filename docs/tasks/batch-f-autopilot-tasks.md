@@ -1004,7 +1004,30 @@ skill's description owns the routing.
 
 ### Task 4: Update the repository CLAUDE.md
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The fourth orchestration pattern sits directly after the Parallel
+    MapReduce block's closing paragraph ("Subagents cannot spawn other
+    subagents…") and before the general `run_in_background` and effort
+    paragraphs, so the four patterns read as one list; both placements the
+    task allowed are before `#### CONTEXT block contract`, and this one
+    keeps the pattern beside its peers.
+  - The layout tree's driver line carries the `scripts/` note as a trailing
+    comment on the `run.sh` line, and names the PowerShell mirror as
+    following without writing its file name, so `run.ps1` occurs 0 times.
+  - The bypass-permissions sentence is appended to the existing rule's
+    paragraph rather than made a paragraph of its own, so the rule and its
+    qualification are read together.
+- Changes/tradeoffs:
+  - The Non-Goals paragraphs and the new pattern restate the reasons in
+    CLAUDE.md's voice (a session runs the text it started with; the socket
+    documents only its auth line) rather than pointing at the skill, since
+    CLAUDE.md is the loaded contract and is read without the skill.
+  - No test framework; verification was the criteria's greps, the hunk map
+    against `5c33c4a` (every hunk in an allowed section), the guard suite
+    with check-run-contract's check 6, and the zero-diff command.
 
 Depends on: Task 1-3
 

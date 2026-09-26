@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Claude Code plugin marketplace containing structured software development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, answering a brief's open questions with throwaway prototypes, plan-to-task decomposition, bug diagnosis, task implementation with automatic code review, and project guide generation. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief, diagnose-bug, and prototype skills have no review phase (the brief is a discovery artifact, not a verifiable spec; a diagnosis has no plan to review its task document against, so the user confirms the task list instead; a prototype is discarded, and its answer is reviewed where a plan uses it).
+A Claude Code plugin marketplace containing structured software development workflow plugins. The primary plugin (`kenspc`) provides skills for plan-before-code workflows, requirement brief generation, answering a brief's open questions with throwaway prototypes, plan-to-task decomposition, bug diagnosis, task implementation with automatic code review, and project guide generation. The plugin also runs one batch of its own chain unattended (the autopilot skill), from a spec or a brief to a local release preparation, through headless sessions rather than agents. Review phases use plugin agents (defined in `agents/`) — serial review agents for plan/guide/task documents, parallel MapReduce review agents for code. The brief, diagnose-bug, and prototype skills have no review phase (the brief is a discovery artifact, not a verifiable spec; a diagnosis has no plan to review its task document against, so the user confirms the task list instead; a prototype is discarded, and its answer is reviewed where a plan uses it).
 
 ## Marketplace Structure
 
@@ -26,7 +26,8 @@ plugins/kenspc/
 │   ├── kenspc-diagnose.md
 │   ├── kenspc-prototype.md
 │   ├── kenspc-task-implement.md
-│   └── kenspc-task-review.md
+│   ├── kenspc-task-review.md
+│   └── kenspc-autopilot.md
 ├── hooks/
 │   ├── hooks.json               # Hook event configuration
 │   └── scripts/                 # Hook scripts (use ${CLAUDE_PLUGIN_ROOT})
@@ -49,8 +50,12 @@ plugins/kenspc/
 │   │   └── SKILL.md             # No review phase — the prototype is discarded; the plan that uses its answer is reviewed
 │   ├── task-implement/
 │   │   └── SKILL.md
-│   └── task-review/
-│       └── SKILL.md
+│   ├── task-review/
+│   │   └── SKILL.md
+│   └── autopilot/
+│       ├── SKILL.md
+│       └── scripts/
+│           └── run.sh           # Bash driver for the autopilot's headless sessions; the first scripts/ under a skill, and check-no-model-names.sh scans it (the PowerShell mirror follows)
 ├── README.md
 └── LICENSE
 ```
@@ -100,14 +105,14 @@ Writer-agent files (`task-implementer.md`, `code-fixer.md`) use ALL-CAPS section
 | `version` | Yes | Semver (e.g., `1.0.0`) |
 | `argument-hint` | Recommended | Shown in UI as placeholder (e.g., `<project-path>`) |
 
-The per-skill `version` field is uniformly `3.0.0` across all eight skills and
+The per-skill `version` field is uniformly `3.0.0` across all nine skills and
 denotes the v3 architecture generation, not a per-skill change counter. It is
 deliberately decoupled from the plugin version in
 `plugins/kenspc/.claude-plugin/plugin.json`, which is the authoritative version
 and the only one bumped each release. It was set during the v3.0.0 rewrite and
-is intentionally left unchanged on subsequent releases — syncing eight files
+is intentionally left unchanged on subsequent releases — syncing nine files
 every release is churn that has historically drifted anyway. Bump it only on a
-future architecture-generation change (a v4 rewrite), and bump all eight together
+future architecture-generation change (a v4 rewrite), and bump all nine together
 so the uniformity holds.
 
 ### Subagent Review Architecture
@@ -257,6 +262,27 @@ and code-fixer's Source column let `regression-verifier` settle completeness
 by comparing ID sets. Subagents cannot spawn other subagents; orchestration
 stays at the skill (main session) level.
 
+**Sessions, not agents (autopilot):**
+The autopilot skill runs one batch of this plugin's own chain unattended
+through one headless `claude -p` session per role — S1 design (brief entry
+only), S2 task decomposition (`/kenspc-task`), S3 implementation
+(`/kenspc-task-implement`), S3b standalone review (`/kenspc-task-review`
+over the batch's range), S4 acceptance, S5 fix on demand, S6 release
+preparation — each started through the driver script that ships with the
+skill (`skills/autopilot/scripts/run.sh`) and is copied per batch, with
+`--name <tag>` and `crossSessionInbound: accept`. Questions and answers
+travel as cross-session messages (`question <tag>:` / `answer <tag>:`);
+the worker's idle notice is the main session's wake, and `<tag>.exit`,
+written by the driver when the worker returns, is the completion artifact
+— a transition never rests on a notice's wording. The main session
+re-reads its state file (`_logs/<batch>-state.md` under the workspace) on
+every wake, and `--resume` is used only for a worker that has died; no
+agent, no CONTEXT key, no agent teams. The roles are sessions rather than
+agents because a session that edited the plugin still runs the text it
+started with, so the review, the acceptance, and a fix each need a session
+of their own; the workers run the installed plugin, or in plugin mode the
+worktree's copy with `--plugin-dir`.
+
 Every Agent dispatch in the skills sets `run_in_background: false`
 (v3.5.1): each skill reads the agent's result in the same turn, while a
 background call returns at once and is stopped when a headless session
@@ -293,7 +319,7 @@ override the session, each at `xhigh`:
   plan cost amortizes over downstream tasks (`max` through v3.4.x).
 
 Everything else — the 5 review-angle agents, `regression-verifier`, the
-3 document reviewers, and the seven other skills — runs at the session's
+3 document reviewers, and the eight other skills — runs at the session's
 effort. When a session runs at `xhigh`/`max`, set a large
 max-output-token budget so the model has room to think and act across
 subagents and tool calls (this is a session/API-config concern, not a
@@ -386,6 +412,12 @@ The prototype skill references the same block the same way: its prototype's file
 
 The Open Questions entry grammar — the status words, the labels and their order, the answered and unsettled forms — is written once, in generate-brief's Writing rules for the brief, and generate-plan and the prototype skill point at it by path. The one piece the prototype skill repeats is the Prototype line (``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``), byte-identical to generate-brief's, so a change to that line in `generate-brief/SKILL.md` updates `prototype/SKILL.md` in the same commit. `check-doc-sync-anchors.sh` holds this line in both files, beside the `needs prototype` status word across the three.
 
+The autopilot skill uses no agent teams: one role per headless session, and a session is never reused across roles. A session that reviews its own work reads its own intent into the code, and a session that edited the plugin still runs the text it started with — skills and agents load at session start — so the implementer, the reviewer, and the acceptor are three sessions, and a fix is a fourth.
+
+The autopilot's driver posts no completion message on the cross-session messaging socket. The socket documents only its auth line, and its message line format is undocumented; a driver that guessed the format would break silently on a release. `<tag>.exit`, written by the driver when the worker returns, is the completion artifact, and the idle notice is only the wake that tells the main session to read it.
+
+The autopilot's workspace lives outside the repository — `~/Projects/_smoke/` by default, relocated by the `Workspace:` field of a brief's or spec's `## Autopilot` section — not under `.kenspc/`. A plugin-mode seed is a clone that cannot live inside the repository it clones, and the workers' logs and prompts are not the repository's to track.
+
 ### Writing Rules for Skill Content
 
 - Use rationale-anchored business rules (Rule 2): frame each rule as "Why: ..." prose rather than command-style imperatives, so the model follows the intent of the rule, not just its letter
@@ -394,7 +426,7 @@ The Open Questions entry grammar — the status words, the labels and their orde
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 - No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan
 - Evidence in a skill's or agent's Why is stated in its own words (what failed, and on which command), not cited as a dry-run record: skills and agents run as prompts in the user's project, where this repository's `docs/` does not exist, so the CHANGELOG entry cites the record instead (v3.6.0: regression-verifier's unmodified build, test, and lint rule)
-- Where a skill stops to ask the user, it states in prose, at that question, what a session that cannot ask does instead, opening with "In a session that cannot ask (a system reminder to work without stopping), …" — the wording diagnose-bug, generate-plan's Open Questions exit, gap-check, approval stop, and existing-file question, generate-brief's question about what would settle a `needs prototype` entry, and the prototype skill's gates share (generate-brief's Discovery Mode Detection is the older form of the same branch). A table that summarizes a skill's gates may repeat the outcomes but does not replace the sentence, since a table cell cannot open one. Why: one wording is one signal to test for, and a grep over the file with its line breaks joined finds every branch
+- Where a skill stops to ask the user, it states in prose, at that question, what a session that cannot ask does instead, opening with "In a session that cannot ask (a system reminder to work without stopping), …" — the wording diagnose-bug, generate-plan's Open Questions exit, gap-check, approval stop, and existing-file question, generate-brief's question about what would settle a `needs prototype` entry, the prototype skill's gates, and the autopilot skill's gates share (generate-brief's Discovery Mode Detection is the older form of the same branch). A table that summarizes a skill's gates may repeat the outcomes but does not replace the sentence, since a table cell cannot open one. Why: one wording is one signal to test for, and a grep over the file with its line breaks joined finds every branch
 
 ## Development Workflow
 
@@ -413,6 +445,12 @@ no verdict on every Edit to `plugins/kenspc/agents/*.md` and
 `plugins/kenspc/skills/*/SKILL.md` in such a session and judged rewriting
 them through Bash as a workaround, while documentation files were edited
 normally; the same edits went through in a session without `--plugin-dir`.
+That block is auto mode's classifier inside a `--plugin-dir` session; under
+`--permission-mode bypassPermissions` there is no classifier, and the
+autopilot's headless workers run that way — with `--plugin-dir` in plugin
+mode — so a worker edits the plugin's files as it edits any other. A worker
+sees a plugin edit only in the next session, which is why the autopilot's
+review, acceptance, and fix are separate sessions.
 
 ### Validate plugin structure
 ```bash
