@@ -984,7 +984,7 @@ Determined from this repository's CLAUDE.md, § Durable documents.
 | A worker breaches a rail (a `push`, an `rm -rf`) before the main session sees its trace | Low | The rails are in every preamble with their Why; the acceptance greps every session's Bash commands; a breach found is a stop and a plugin defect. |
 | `--max-budget-usd` ends a worker mid-task and leaves a half-applied step | Low, by design (D9) | The step is dead once, resumed under the cap that remains after the user raises the budget; the stop asks first. |
 | The autopilot skill is triggered inside a worker that reads its preamble | Low | M15: the description's exclusion on the fixed first sentence; case 8. |
-| A project or local settings file sets `crossSessionInbound: hold` or `refuse`, which is stricter than the `--settings` accept | Low | The start check sends the first worker a probe message and expects a delivery, not a hold notice — a hold or refusal is a stop naming the settings precedence; Known behavior says so. |
+| A project or local settings file sets `crossSessionInbound: hold` or `refuse`, which is stricter than the `--settings` accept | Low | No probe message (D21, CL4): a hold or refusal surfaces as a `[Cross-session delivery notice]` on the first real message, which is a stop naming the settings precedence; a worker whose question is held times out after 30 minutes and stops with the question in its final message, and `--resume` is the fallback the lock names; Known behavior says so. |
 | Machine sleep on macOS during a long wait with no Bash call running in the main session | Medium | D7: the driver wraps each worker in `caffeinate -i`, so the machine stays awake while any worker runs; the README says so. |
 | A hook's session shares the trace directory and a hook's file lands in a seed | Certain, on this machine | Observed, not counted (F-5); the record lists them under Observations; the source gate counts them. |
 | `run.ps1` is wrong on Windows | Medium | F-13: syntax and one launch on macOS; the Windows acceptance is a roadmap line, and the interface mirrors the bash driver that acceptance exercised. |
@@ -1033,6 +1033,23 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   `D<n>: ` prefix. The singular word "ruling" does not appear in the
   skill (plural "rulings", or "decision" / "answer"). Fixed strings
   amended. Step 1.1.
+- **CL4** — The start checks (D21, Step 1.1 Phase 0) send no probe
+  message: a `crossSessionInbound` hold or refusal surfaces as a delivery
+  notice on the first real message and is a stop naming the settings
+  precedence; a worker whose question is held runs into its 30-minute
+  timeout and the `--resume` fallback. The Risks row that named a probe is
+  reworded in the same commit. Step 1.1.
+- **CL5** — In round 1 (Phases 1–2, the first task document) CLAUDE.md's
+  layout tree lists `scripts/run.sh` only; `run.ps1` joins the tree in
+  round 2, through that round's Doc-sync task, once the file exists (M10).
+  D23's and Step 2.1's "`scripts/run.sh`, `run.ps1`" read as the state
+  after both rounds. Step 2.1.
+- **CL6** — Step 2.1 also edits CLAUDE.md § Writing Rules for Skill
+  Content: the bullet that lists the skills sharing the cannot-ask wording
+  ("the wording diagnose-bug, generate-plan's …, and the prototype skill's
+  gates share") names the autopilot's gates too, one clause; the task
+  document's Task 4 allows that section in its hunk-range criterion.
+  Step 2.1.
 
 ## Open Questions
 
