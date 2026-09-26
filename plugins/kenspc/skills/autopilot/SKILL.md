@@ -629,7 +629,11 @@ of `<tag>.err`, the mtime of the transcript named by `<tag>.session`, and
 implementation is silent for longer than any timeout a prompt would pick,
 and a killed worker leaves a half-applied task.
 
-A worker ended by its cap is the budget stop. After the user raises the
+A worker ended by its cap — a JSON subtype other than `success` that
+names the budget — is the budget stop, and counts as the step's first
+death too: its resume after the raise is the one resume the death rule
+allows, and a later death of the resumed session is the "dead twice"
+stop. After the user raises the
 budget it is resumed under the step's next `<tag>-r<k>` with the continue
 prompt and the new remaining amount as its cap — the raised budget minus
 spent, in which the ended session's last cumulative total already counts
