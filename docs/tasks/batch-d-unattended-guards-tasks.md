@@ -368,7 +368,32 @@ input" names `Answer:` as what makes it settled.
 
 ### Task 3: Gate the prototype skill on an entry it cannot read or that already holds an answer
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: in the widened `answered` bullet the carve-out for
+  `needs prototype` with `Prototype:` and no `Answer:` comes after the Why,
+  not before the cannot-ask sentence, so "stop and leave the entry
+  unchanged" cannot be read as applying to it. The bullet's Why was reworded
+  from "holds an answer and the commit behind it" to "holds an answer, and
+  the commit behind it when it has a Prototype line; Phase 3 would replace
+  them whatever the status word says", because the widened gate now takes a
+  hand-written `Answer:` with no commit. The Constraints sentence gets its
+  own Why (a write before a stop changes an uncommitted brief that no git
+  command restores), per the rationale-anchored rule. In the README the
+  `prototype` row names both questions with their choices in parentheses
+  and one cannot-ask clause for both; the Prototype path paragraph gets the
+  unrecognized-word clause as its own sentence after the "entry number that
+  names no entry" sentence, leaving room for Task 8's `Answer:` clause.
+- Changes/tradeoffs: the CHANGELOG bullet also names where the gates sit
+  (before Phase 1's two writes), since that ordering is part of what makes a
+  stop leave the brief unchanged. Verified: cannot-ask count 12 (11 at
+  `0128a2f`); Prototype line count 1; leftovers occurrences 2; hunks only in
+  Phase 1's Constraints (source line 125), § The question (142–147), and
+  § The gates (275); pointer-label and MUST/NEVER/CRITICAL greps empty;
+  check-no-model-names 0; check-all 0 with `guards run: 10`; validate
+  passed; `## 3.8.1 — unreleased` is the heading before
+  `## 3.8.0 — 2026-09-26`.
 
 Plan Step 2.1 (D-3; rulings M1, D6, D7), with the README and CHANGELOG
 items D-3 ties to the same commit (plan Steps 5.2 and 5.3). In

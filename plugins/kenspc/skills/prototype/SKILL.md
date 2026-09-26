@@ -122,7 +122,10 @@ a blanket confirmation adds a stop to the path that needs none.
 **Constraints**: this phase writes nothing but the brief entry appended for
 a question given as text and a `Settled by:` derived for an entry that
 lacks one. Why: until the frame is settled, nothing the run might build has
-a location or a question to answer.
+a location or a question to answer. The gates on the named entry come
+before either of those writes. Why: a stop after a write has changed the
+brief it stopped to protect, and the brief is not committed, so no git
+command restores it.
 
 ### The question
 
@@ -139,12 +142,28 @@ a location or a question to answer.
   leave the brief unchanged. Why: a number appended as a question would add
   an entry nobody asked for, and taking another entry would answer a
   question the user did not name.
-- A named `` `answered` `` entry: ask whether to prototype it again. In a
-  session that cannot ask (a system reminder to work without stopping),
-  stop and leave the entry unchanged: the rewrite in Phase 3 for a run in
-  which nothing was built does not apply to it. Why: the entry already
-  holds an answer and the commit behind it, and replacing them is the
-  user's decision.
+- A named entry that is `` `answered` ``, or that holds `Answer:` whatever
+  its status word: ask whether to prototype it again. In a session that
+  cannot ask (a system reminder to work without stopping), stop and leave
+  the entry unchanged: the rewrite in Phase 3 for a run in which nothing was
+  built does not apply to it. Why: the entry already holds an answer, and
+  the commit behind it when it has a Prototype line; Phase 3 would replace
+  them whatever the status word says, and replacing them is the user's
+  decision. A `Prototype:` line with no `Answer:` under
+  `` `needs prototype` `` is the form an unsettled attempt leaves, and such
+  an entry is prototyped again like any other.
+- A named entry whose status word is none of `` `open` ``,
+  `` `needs prototype` ``, and `` `answered` `` — hand-edited, translated,
+  or missing: one that holds `Prototype:` takes the question above;
+  otherwise ask, quoting the word found (or saying there is none), whether
+  to prototype it or stop. In a session that cannot ask (a system reminder
+  to work without stopping), stop and leave the entry unchanged, as above.
+  On "prototype it", the entry is prototyped as a named `` `open` `` entry
+  is, and Phase 3 writes a status word the grammar knows. Why: the skill
+  tells an answered entry from an unsettled one by its status word, so an
+  entry whose word it cannot read may hold an answer that Phase 3 would
+  replace; the brief is not committed, so the earlier answer would then
+  survive only in an earlier remove commit's body.
 - A named `` `open` `` entry is prototyped like any other. Why: naming it is
   the user's decision that an experiment can settle it.
 - A question given as text that the brief lacks is appended to its
@@ -272,7 +291,8 @@ what a session that cannot ask does in place of asking.
 | No arguments | Which brief and which question | Stop; nothing is built |
 | No brief | — | Stop; suggest `/kenspc-brief`; nothing is built |
 | Several `needs prototype` entries, none named | Which one | The first in document order, named in the final message |
-| The named entry is `answered` | Prototype it again? | Stop |
+| The named entry is `answered`, holds `Answer:`, or has an unrecognized status word and holds `Prototype:` | Prototype it again? | Stop; the entry unchanged |
+| The named entry's status word is not recognized, and it holds neither `Answer:` nor `Prototype:` | Prototype it, or stop | Stop; the entry unchanged |
 | A location conflict | Where | The default location, named in the final message |
 | A UI prototype that can only render in the app, and CLAUDE.md names no location | Where in the app | Nothing is built; the entry stays unsettled with the reason |
 | A UI prototype in the app: a tracked file with uncommitted changes, or the project's manifest | Go on, commit first, or stop | Nothing is built; the entry stays unsettled with the reason |

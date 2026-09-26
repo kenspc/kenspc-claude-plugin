@@ -9,6 +9,23 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.8.1 — unreleased
+
+### Changed
+
+- **prototype.** A named entry whose status word the skill does not
+  recognize — hand-edited, translated, or missing — and that holds neither
+  `Answer:` nor `Prototype:` is asked about before anything is written,
+  quoting the word found: prototype it, or stop. A session that cannot ask
+  stops with the entry unchanged. The `answered` gate (prototype it again?)
+  now also takes any named entry that holds `Answer:`, whatever its status
+  word, and an unrecognized one that holds `Prototype:`; a
+  `needs prototype` entry with `Prototype:` and no `Answer:`, the form an
+  unsettled attempt leaves, is still prototyped again. Both gates come
+  before Phase 1 writes to the brief — the entry appended for a question
+  given as text, or a derived `Settled by:` — since the brief is not
+  committed and a write there cannot be undone.
+
 ## 3.8.0 — 2026-09-26
 
 Batch C. A brief records what its discussion could not settle in a
