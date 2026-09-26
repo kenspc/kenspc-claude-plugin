@@ -204,7 +204,9 @@ launch() {
 # timeline holds both lines. It fails, in this order, on a launch naming a
 # missing executable, or an empty or whitespace-only prompt file, that is
 # not refused with status 2 naming it and writing no .session; on a logs
-# directory the launch did not create; on a second launch
+# directory the launch did not create; on a stdout line other than
+# "started <tag> pid <pid> session <id>" with the pid and the id that .pid
+# and .session hold; on a second launch
 # under the tag, made while the stub still runs, that is not refused with
 # status 2 naming the pid and leaving .session and .pid as they were; a
 # .pid that does not name a live process other than the self-test's own;
@@ -234,7 +236,7 @@ launch() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG n exit_status session flag
-  local first_session first_pid refusal rc self FTAG saved_exe bad
+  local first_session first_pid refusal rc self FTAG saved_exe bad started
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
   # changes the working directory: the resume launch below runs it as the
@@ -306,16 +308,21 @@ STUB
       || { echo "self-test failed: the refusal of the $bad prompt file does not name $base/$bad.md" >&2; return 1; }
   done
 
-  launch "$TAG" "$base" "$base/prompt.md" ""
+  # The launch's stdout is captured: the skill reads the pid and the
+  # session id from that one line.
+  started=$(launch "$TAG" "$base" "$base/prompt.md" "")
+  printf '%s\n' "$started"
   [ -d "$LOGS" ] \
     || { echo "self-test failed: the driver did not create the logs directory $LOGS" >&2; return 1; }
+  first_session=$(cat "$LOGS/$TAG.session" 2>/dev/null); first_pid=$(cat "$LOGS/$TAG.pid" 2>/dev/null)
+  [ "$started" = "started $TAG pid $first_pid session $first_session" ] \
+    || { echo "self-test failed: the driver printed \"$started\", expected \"started $TAG pid $first_pid session $first_session\" from .pid and .session" >&2; return 1; }
 
   # A second launch under the same tag while the stub still runs (its one
   # second of sleep) is refused before anything is written: status 2, the
   # pid named, .session and .pid as they were. In a subshell, since die
   # exits the calling shell. Without the refusal two workers would share
   # one repository and the second would overwrite the first's files.
-  first_session=$(cat "$LOGS/$TAG.session"); first_pid=$(cat "$LOGS/$TAG.pid")
   refusal=$( (launch "$TAG" "$base" "$base/prompt.md" "") 2>&1 ); rc=$?
   [ "$rc" -eq 2 ] || { echo "self-test failed: a second launch under the running tag $TAG returned $rc, expected 2 (refused)" >&2; return 1; }
   printf '%s\n' "$refusal" | grep -qF -- "still running (pid $first_pid," \
