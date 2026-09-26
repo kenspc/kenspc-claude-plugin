@@ -409,12 +409,20 @@ when it is HAS ISSUES, this line naming each non-PASS row with its Result:
 When code-fixer's reply has no statistics line, or regression-verifier's
 reply no closing CLEAN or HAS ISSUES line — an error, a refusal such as
 regression-verifier's when schema-b.md is missing, or a reply cut short —
-print instead one line saying which agent returned without it, and
-Schema G's Fixes or Verification section renders that reply verbatim, as
-it came back. Why: counts or a result filled in without that line are made
-up, and they read as a step that finished.
+print instead the line for that agent,
 
-The three lines stay in English, exactly as written, whatever the
+`code-fixer returned — no statistics line`
+
+or
+
+`regression-verifier returned — no result line`
+
+and Schema G's Fixes or Verification section renders that reply verbatim,
+as it came back; the run goes on to the next dispatch or to Step 4. Why:
+counts or a result filled in without that line are made up, and they read
+as a step that finished.
+
+The lines above stay in English, exactly as written, whatever the
 conversation language. Why: this run carries the implementation phase
 before the review, and everything the orchestrator prints stays in its
 context until the final report, where the agents' replies already are as
@@ -481,11 +489,16 @@ with its reason, for the user to correct. When that line says
 `No Doc-sync document describes behavior the fixes changed.` When the
 reply has no such line, the bullet states the defect,
 `code-fixer's reply has no Doc-sync documents line`, and names the Doc-sync
-task's listed documents to check against the fix commits. Why: the fixes
+task's listed documents to check against the fix commits. When
+code-fixer's reply has no statistics line and the Doc-sync task is DONE,
+the FIXED count is unknown, and the bullet is written as for FIXED greater
+than 0: from the `Doc-sync documents:` line when the reply carries one,
+otherwise in the missing-line form above. Why: the fixes
 land after the Doc-sync task, and code-fixer corrects the listed documents
 in the fix commits; this bullet is where the user sees which ones changed,
 or that none needed to, and a missing line means code-fixer did not meet
-its contract, so the correction may not have run. When
+its contract, so the correction may not have run — a missing statistics
+line is no reason to silence the one bullet that reports it. When
 regression-verifier's test-row Detail names
 files under `.kenspc/` that the test run collected and that passed, one
 bullet names them as the Detail does and asks the user to delete them —

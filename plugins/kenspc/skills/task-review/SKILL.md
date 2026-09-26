@@ -352,10 +352,13 @@ its statistics line:
 `code-fixer returned — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md`
 
 When the reply has no statistics line — an error, a refusal, or a reply cut
-short — there are no counts to take: print instead one line saying that
-code-fixer returned no statistics line, and the Schema F report renders the
-reply verbatim, as it came back. Why: counts filled in without that line
-are made up, and they read as a fix run that finished.
+short — there are no counts to take: print instead
+
+`code-fixer returned — no statistics line`
+
+and the Schema F report renders the reply verbatim, as it came back; the
+run goes on to Step 6. Why: counts filled in without that line are made up,
+and they read as a fix run that finished.
 
 When `change-set.md` says `Mode: uncommitted`, code-fixer applies the fixes
 to the working tree without committing — no baseline commit of the user's
@@ -396,9 +399,12 @@ when it is HAS ISSUES, this line naming each non-PASS row with its Result:
 
 The line names no path: regression-verifier writes no report file. When
 the reply has no closing CLEAN or HAS ISSUES line — the refusal it returns
-when schema-b.md is missing is one — print instead one line saying that
-regression-verifier returned no result line, and the Schema F report
-renders the reply verbatim, as it came back. Why: a CLEAN or HAS ISSUES
+when schema-b.md is missing is one — print instead
+
+`regression-verifier returned — no result line`
+
+and the Schema F report renders the reply verbatim, as it came back; the
+run goes on to Step 7. Why: a CLEAN or HAS ISSUES
 line chosen without that closing line is made up, and a made-up CLEAN reads
 as a verified run.
 
