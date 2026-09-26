@@ -656,7 +656,11 @@ every driver reply named in the record; the record is
 `docs/dry-runs/<batch>-acceptance.md` with the fixed sections Setup,
 Independence, Cases, Findings, Observations, Not exercised, Summary. S4's
 task block carries the cases with their PASS criteria, the driver line —
-with the batch's remaining amount as `AUTOPILOT_BUDGET_USD` for the first
+under the nested tags `<tag>-trial` for the trial run and `<tag>-case<n>`
+for case n, `<tag>` being S4's own, since a nested launch under a worker's
+or a resume's tag is accepted once that worker has ended and overwrites
+its `.json`, `.session`, and `.pid`, which Phase 4 reads; with the
+batch's remaining amount as `AUTOPILOT_BUDGET_USD` for the first
 nested launch, lowered by each finished case's cost before the next, since
 S4's own cap bounds none of them and a cap the cases shared would let each
 case spend it once — and the record path; each
@@ -879,8 +883,8 @@ these two fields bound what it may.
   Why the range: the batch's change set is that range by definition,
   whatever the branch tracks, and task-review pins a range named in its
   instructions.
-- S4: the cases with their PASS criteria; the driver line, with its cap per
-  nested launch (Phase 3); plugin mode the
+- S4: the cases with their PASS criteria; the driver line, with the nested
+  tag form and its cap per nested launch (Phase 3); plugin mode the
   record path `docs/dry-runs/<batch>-acceptance.md` and its seven sections;
   repo mode the reply shape (each command, its exit code, the last twenty
   lines) and, with `Acceptance record:` set, the path to write them to and
