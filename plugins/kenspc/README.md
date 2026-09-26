@@ -460,8 +460,13 @@ command exists — wrapped in `caffeinate -i`, so a macOS machine does not
 sleep under a running worker while the main session waits with no Bash
 call running. `run.sh --self-test` launches a stub through the same path
 and prints `self-test passed`; the run executes the copy's self-test at
-every batch start. The PowerShell mirror, `run.ps1`, follows in a later
-release, once the bash driver has passed acceptance.
+every batch start. The timeline's two lines, `start <tag> pid <pid> …` and
+`end   <tag> exit <status>`, begin at column 0 with no timestamp: the launch
+time is in the start line's tail, and a worker's end time is the mtime of
+its `<tag>.exit`. A driver that mirrors `run.sh` keeps that shape, since the
+release checklist greps for the lines as they stand. The PowerShell mirror,
+`run.ps1`, follows in a later release, once the bash driver has passed
+acceptance.
 
 ## Known behavior
 

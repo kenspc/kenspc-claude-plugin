@@ -1502,7 +1502,44 @@ a new entry directly above `## 3.8.2 — 2026-09-26`, under the heading
 
 ### Task 9: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Promoted — Task 1: the timeline's `start` and `end` lines carry no
+    timestamp (the launch time in the start line's tail, a worker's end
+    time the mtime of its `<tag>.exit`) → `plugins/kenspc/README.md`
+    § Autopilot, the drivers paragraph. A mirror driver has to keep that
+    shape, and the timestamped form of the earlier hand-driven drivers is
+    the alternative that will be proposed again when `run.ps1` is written.
+  - Needs a home — Task 2: the wait-path probe verified only the headless
+    half (`ps -o args= -p $PPID` from the Bash tool showing `-p`); the
+    interactive half — the same command printing a line without `-p` or
+    `--print` — was not verified by this run → the acceptance record,
+    `docs/dry-runs/batch-f-acceptance.md` § Not exercised, which the
+    acceptance run files and which no listed document is.
+  - Already durable, nothing written — Task 2: a worker whose question
+    timed out is resumed with a prompt opening `answer <tag>:`; the plugin
+    README's Known behavior ("Stricter inbound settings") and the
+    CHANGELOG's messaging-protocol bullet both say so.
+  - Local — Task 1 (the batch-name default, the `caffeinate -i` status
+    check, the stale-`.exit` removal, `$0` in the usage line, the `started`
+    line, the self-test's layout); Task 2 (the session-id-keyed costs
+    upsert, the headings kept inside fenced blocks, the settings-line note
+    on the next line, the state-file template, the one capitalized
+    "Ruling"); Tasks 4, 5, 6, 7, and 8 (placement, wording, and formatting
+    choices): each explains a code- or text-local choice and stays in this
+    document and in git.
+- Changes/tradeoffs:
+  - The five documents Tasks 4–8 edited were verified against the files
+    rather than edited again: the counts (9 skills, 9 commands, 11 agents),
+    the six environment variables in `run.sh`, the skill, and the
+    CHANGELOG, the fixed lines the checklist's row 11 greps for as the skill
+    carries them, the three effort overrides, `version: 3.0.0` in all nine
+    skills, and each document's claims about the driver against `run.sh`'s
+    header — no contradiction found. The one edit is the promotion above.
+  - `docs/roadmap.md` is left to the release commit, as the entry says: its
+    heading and the Windows-acceptance line are the release commit's.
 
 Depends on: Task 1-8
 
