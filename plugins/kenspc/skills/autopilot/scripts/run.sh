@@ -87,9 +87,11 @@ new_uuid() {
   local id
   if command -v uuidgen >/dev/null 2>&1; then
     # The status of a pipeline is tr's, so uuidgen's failure would pass as
-    # an empty id; its status is taken on its own line.
-    id=$(uuidgen) || return 1
-    [ -n "$id" ] || return 1
+    # an empty id; its status is taken on its own line. Each failure names
+    # itself: a silent exit 2 here would leave the caller with no session
+    # id and no reason.
+    id=$(uuidgen) || die "uuidgen failed to make a session id"
+    [ -n "$id" ] || die "uuidgen returned no id"
     printf '%s\n' "$id" | tr 'A-Z' 'a-z'
   elif command -v python3 >/dev/null 2>&1; then
     python3 -c 'import uuid;print(uuid.uuid4())'
@@ -134,7 +136,10 @@ launch() {
   if [ -n "$resume" ]; then
     session=$resume
   else
-    session=$(new_uuid) || exit 2
+    # new_uuid runs in a subshell, so its die ends only that subshell; the
+    # launch itself ends here, and an empty id is caught whichever branch
+    # made it.
+    session=$(new_uuid) && [ -n "$session" ] || die "no session id was made; nothing started"
   fi
   printf '%s\n' "$session" > "$logs/$tag.session" || die "cannot write $logs/$tag.session"
 
