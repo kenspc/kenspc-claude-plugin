@@ -1050,6 +1050,24 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   gates share") names the autopilot's gates too, one clause; the task
   document's Task 4 allows that section in its hunk-range criterion.
   Step 2.1.
+- **CL7** — `--max-budget-usd` counts the invocation's own spend, not a
+  resumed session's earlier total: the main session's probe ran
+  `claude -p "say ok" --max-budget-usd 2 --session-id <id>` (USD 0.37),
+  then `claude -p --resume <id> "say ok again" --max-budget-usd 0.5`,
+  which completed with subtype `success` and a cumulative
+  `total_cost_usd` of 0.68 — above the cap, so the cap did not see the
+  earlier spend. A resume therefore passes the batch's remaining amount
+  (budget minus the spent sum, in which the ended session's last
+  cumulative value already counts), and the JSON of the resumed session
+  replaces that session's line in the costs file (D10). Written into the
+  skill's death-and-resume and budget sections (the deferred review row on
+  the resume cap). Step 1.1.
+- **CL8** — The rail against `rm -rf` (F-7) covers a recursive `rm` in any
+  spelling — `rm -r`, `rm -rf`, `rm -fr`, `rm -R` — which is what smoke
+  row 11's `rm -r` grep already judges; the skill's rails paragraph and
+  the preamble template name the recursive flag in any spelling, so the
+  rail and the check agree (the deferred review row on the two texts).
+  Steps 1.1, 2.4.
 
 ## Open Questions
 
