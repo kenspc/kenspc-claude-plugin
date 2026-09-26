@@ -117,6 +117,11 @@ launch() {
   # An empty prompt would start a paid session with no instructions, which
   # dies and is resumed into an empty transcript before the stop.
   [ -s "$prompt_file" ] || die "empty prompt file $prompt_file"
+  # A missing executable is a refusal here, not a worker that dies at once:
+  # without the check the driver printed "started", .exit read 127 with an
+  # empty .json, and the skill resumed a dead worker instead of reading the
+  # reason.
+  command -v "$exe" >/dev/null 2>&1 || die "no executable $exe; set AUTOPILOT_CLAUDE or put claude on PATH"
   mkdir -p "$logs" || die "cannot create the logs directory $logs"
   logs=$(cd "$logs" && pwd) || die "cannot enter the logs directory $logs"
   prompt=$(cat "$prompt_file") || die "cannot read $prompt_file"
@@ -193,7 +198,9 @@ launch() {
 # header names. The logs directory is always a fresh directory under $TMPDIR,
 # whatever AUTOPILOT_LOGS says, so a self-test writes nothing under the
 # workspace. Passing: every file is present with the expected content and the
-# timeline holds both lines. It fails, in this order, on a second launch
+# timeline holds both lines. It fails, in this order, on a launch naming a
+# missing executable that is not refused with status 2 naming it and
+# writing no .session; on a second launch
 # under the tag, made while the stub still runs, that is not refused with
 # status 2 naming the pid and leaving .session and .pid as they were; a
 # .pid that does not name a live process other than the self-test's own;
@@ -264,6 +271,16 @@ STUB
   printf 'Reply ok and stop.\n' > "$base/prompt.md" || die "cannot write the prompt file"
   echo "self-test: logs directory $LOGS"
   echo "self-test: executable $AUTOPILOT_CLAUDE"
+
+  # A launch naming a missing executable is refused before anything is
+  # written: status 2, the path named, no .session. In a subshell, since
+  # die exits the calling shell.
+  refusal=$( (AUTOPILOT_CLAUDE=$base/no-such-claude launch "$TAG" "$base" "$base/prompt.md" "") 2>&1 ); rc=$?
+  [ "$rc" -eq 2 ] && [ ! -f "$LOGS/$TAG.session" ] \
+    || { echo "self-test failed: a launch with a missing executable returned $rc ($([ -f "$LOGS/$TAG.session" ] && echo ".session written" || echo "no .session")), expected 2 and no .session" >&2; return 1; }
+  printf '%s\n' "$refusal" | grep -qF -- "no executable $base/no-such-claude" \
+    || { echo "self-test failed: the refusal of a missing executable does not name $base/no-such-claude" >&2; return 1; }
+
   launch "$TAG" "$base" "$base/prompt.md" ""
 
   # A second launch under the same tag while the stub still runs (its one
