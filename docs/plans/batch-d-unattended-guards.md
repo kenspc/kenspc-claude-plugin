@@ -1029,14 +1029,3 @@ answers each under
 as `CL<n>` — a statement and the Step it affects — and removes the answered
 question from that section; the session continues from the updated
 document.
-
-## Questions for the spec author
-
-No open question: questions 1–6 are answered as CL1–CL6. The spec author's
-instruction to the implementing session: apply CL1, CL2, CL3, CL4, and CL5
-(CL6 needs no change), keeping the plugin README, the 3.8.1 CHANGELOG
-entry, CLAUDE.md where it describes these rules, and release-checklist rows
-4 and 10 in line in the same commits; as part of this, re-check the task
-document's Doc-sync documents against the review fix commits
-`fc4d1e0..a1f2ee8`. Remove this section in the commit that applies the last
-of them.

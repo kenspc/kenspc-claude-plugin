@@ -16,16 +16,16 @@ generate-plan's approval stop, in a session that cannot ask, ends at the
 draft printed in full, with nothing written, reviewed, or committed, until
 a later reply approves it; generate-plan takes an `answered` brief entry as
 settled input only when it holds `Answer:` with text after the label, and
-asks about or carries one without; and the prototype skill asks before it touches an entry that
-already holds an answer, named or not, or a named entry whose status word
-it does not recognize, stopping with the brief unchanged in a session that
-cannot ask.
-diagnose-bug's interactive exit names the reproduction commit and
-`git revert <hash>`. Three copied strings gain a guard — the reviewer
-invariant sentence's README, CLAUDE.md, and task-review copies, the
-Prototype line in generate-brief and the prototype skill, and the
-prototype skill's two leftovers commands — inside two existing guards, so
-the guard counts are unchanged (`guards run: 10`, `self-tests run: 9`).
+asks about or carries one without; and the prototype skill asks before it
+touches an entry that already holds an answer, named or not, or a named
+entry whose status word it does not recognize, stopping with the brief
+unchanged in a session that cannot ask. diagnose-bug's interactive exit
+names the reproduction commit and `git revert <hash>`. Three copied
+strings gain a guard — the reviewer invariant sentence's README,
+CLAUDE.md, and task-review copies, the Prototype line in generate-brief
+and the prototype skill, and the prototype skill's two leftovers
+commands — inside two existing guards, so the guard counts are unchanged
+(`guards run: 10`, `self-tests run: 9`).
 Known behavior gains what a red reproduction test does to later review
 runs and what the one-time `.gitignore` commit takes with it. No new
 command, skill, agent, or CONTEXT key, so a patch release. Release smoke:
@@ -59,31 +59,34 @@ the batch's acceptance record, named in the release commit.
   empty `Answer:` is no answer, and text after the label is taken as the
   answer, with no attempt to recognize a placeholder. A plan relying on one
   cites its prototype hash, or the entry itself (`<brief path>, entry <n>`)
-  when it has no Prototype line. One without `Answer:` — as the brief has it, or as the
-  user marks an unrecognized entry in the gap round — is a gap: the gap
-  round quotes it and asks for its answer, in the same question that asks an
-  unrecognized entry's status, so the one-to-two-round limit holds. An entry
-  the rounds leave without an answer, and every such entry in a session
-  that cannot ask, is carried into the plan's Open Questions in the `open`
-  form with `From: <brief path>, entry <n>, status word answered, Answer: missing`.
+  when it has no Prototype line. One without `Answer:` — as the brief has
+  it, or as the user marks an unrecognized entry in the gap round — is a
+  gap: the gap round quotes it and asks for its answer, in the same
+  question that asks an unrecognized entry's status, so the
+  one-to-two-round limit holds. An entry the rounds leave without an
+  answer, and every such entry in a session that cannot ask, is carried
+  into the plan's Open Questions in the `open` form with
+  `From: <brief path>, entry <n>, status word answered, Answer: missing`.
 - **prototype.** A named entry whose status word the skill does not
   recognize — hand-edited, translated, or missing — and that holds neither
   `Answer:` nor `Prototype:` is asked about before anything is written,
-  quoting the word found: prototype it, or stop. A session that cannot ask
-  stops with the entry unchanged. The `answered` gate (prototype it again?)
-  now also takes any entry the run takes that holds `Answer:`, whatever its
-  status word — named, or taken with no entry named (the brief's only
-  `needs prototype` entry, or the first in document order in a session that
-  cannot ask) — and a named unrecognized one that holds `Prototype:`; a
-  `needs prototype` entry with `Prototype:` and no `Answer:`, the form an
-  unsettled attempt leaves, is still prototyped again. After a "yes" to
-  that question, a later gate that ends in "nothing is built" leaves an
-  entry that held `Answer:` as it was — its `Answer:`, `Evidence:`, and
-  Prototype line stay — and the final message gives the reason; before,
-  Phase 3's rewrite for a run that built nothing replaced them. Both gates
-  come before Phase 1 writes to the brief — the entry appended for a
-  question given as text, or a derived `Settled by:` — since the brief is
-  not committed and a write there cannot be undone.
+  quoting the word found: prototype it, or stop. A "stop" there, or a "no"
+  to the prototype-again question below, ends the run with the entry
+  unchanged, and a session that cannot ask stops the same way. The
+  `answered` gate (prototype it again?) now also takes any entry the run
+  takes that holds `Answer:`, whatever its status word — named, or taken
+  with no entry named (the brief's only `needs prototype` entry, or the
+  first in document order in a session that cannot ask) — and a named
+  unrecognized one that holds `Prototype:`; a `needs prototype` entry with
+  `Prototype:` and no `Answer:`, the form an unsettled attempt leaves, is
+  still prototyped again. After a "yes" to that question, a later gate
+  that ends in "nothing is built" leaves an entry that held `Answer:` as it
+  was — its `Answer:`, `Evidence:`, and Prototype line stay — and the final
+  message gives the reason; before, Phase 3's rewrite for a run that built
+  nothing replaced them. Both gates come before Phase 1 writes to the
+  brief — the entry appended for a question given as text, or a derived
+  `Settled by:` — since the brief is not committed and a write there cannot
+  be undone.
 - **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
   reproduction test, the last message names that commit, says its test
   fails — and every review run in the repository reports the test run
@@ -118,25 +121,27 @@ the batch's acceptance record, named in the release commit.
   Agent call, no commit), the resumed approval that writes, reviews, and
   commits, the existing-file branch under that approval (the first free
   numeric suffix, the existing file's sha256 unchanged, the new file named
-  in the final message), and an `answered` entry with no `Answer:` or an empty one (asked
-  about in the gap round; carried with `status word answered, Answer: missing` in a session
-  that cannot ask). Row 9 gains the interactive exit's commit and
-  `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
-  before anything is written, and their cannot-ask stop with no commit and
-  the brief's sha256 unchanged, the prototype-again question for an entry
+  in the final message), and an `answered` entry with no `Answer:` or an
+  empty one (asked about in the gap round; carried with
+  `status word answered, Answer: missing` in a session that cannot ask).
+  Row 9 gains the interactive exit's commit and `git revert <hash>`, with no
+  revert made. Row 10 gains both gates, asked before anything is written,
+  where a "stop" or a "no", and a cannot-ask stop, end with no commit and
+  the brief's sha256 unchanged; the prototype-again question for an entry
   taken with no entry named that holds `Answer:`, an entry whose answer is
   kept when a "yes" to that question ends with nothing built, and the two
   branches that turn on `Prototype:` with no `Answer:` — a `needs prototype`
   entry built with no question, and an unrecognized-word entry given the
   prototype-again question. No new row; pre-flight counts unchanged.
 - CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
-  existing-file question; its prototype path paragraph names `Answer:` as
-  what makes an answered entry settled input; its guard descriptions,
-  Non-Goals, and Maintenance note follow the two guards' new checks. The
-  plugin README's `generate-plan` row gains the cannot-ask stop at the
-  draft, its `prototype` row the two new questions and their cannot-ask
-  outcome, and its Prototype path paragraph the `Answer:` rule and both
-  questions.
+  existing-file question; its prototype path paragraph names `Answer:`,
+  with text after the label, as what makes an answered entry settled
+  input; its guard descriptions, Non-Goals, and Maintenance note follow the
+  two guards' new checks. The plugin README's `generate-plan` row gains the
+  cannot-ask stop at the draft, its `prototype` row the two new questions
+  and the unchanged brief a stop, a no, or a cannot-ask stop leaves, and its
+  Prototype path paragraph the `Answer:` rule, both questions, and the
+  answer kept when a "yes" ends with nothing built.
 
 ### Known behavior
 
