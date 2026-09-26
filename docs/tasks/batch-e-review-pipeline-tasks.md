@@ -954,7 +954,23 @@ places only:
 
 ### Task 8: Add the batch's criteria to release-checklist rows 4, 6, and 7
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: in rows 6 and 7 the E-1 criterion replaces the old "then
+  Schema A → B → C → G" / "then the Schema A roll-up, B, C, and the Schema F
+  final report" clause in place, naming the row's own final report
+  (Schema G, Schema F) at "the final report", "its first heading", and
+  "inside"; row 6's re-check criterion is replaced at the end of the row,
+  where it stood. Row 7's no-task-document criterion is joined to the
+  existing change-set clause, and spells the document suffix it must not
+  find (`— updated` or `— not updated`). Row 4's addition is appended as
+  one more `;`-separated clause, the order of the task text kept.
+- Changes/tradeoffs: every literal pipe in the new text is `\|`, inside
+  code spans too; each of rows 4, 6, and 7 still splits into 5 fields after
+  the escapes are removed, and the table still has 11 rows. The pre-flight
+  block and its counts are untouched (the only hunks against the base are
+  lines 84, 86, and 87).
 
 Depends on: Task 1-5
 
