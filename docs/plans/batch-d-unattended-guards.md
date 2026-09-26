@@ -935,7 +935,80 @@ and the answered question is removed from that section. The prefix is `CL`,
 so a clarification cannot be read as one of the locked points D-1 to D-7 or
 the architecture rows D1 to D16.
 
-None yet.
+Rulings of 2026-09-26, after the `/kenspc-task-implement` run over
+`docs/tasks/batch-d-unattended-guards-tasks.md` (implementation
+`3a9344c..afc3deb`, review fixes `fc4d1e0..a1f2ee8`, verdict PASS with five
+DEFERRED rows). CL1–CL6 answer the six questions the implementing session
+raised in `69d8082`. All decided by the main session within the locked
+design. CL1 and CL2 read D-3 past its words ("an entry named by number") by
+its reason — an answer already in a brief that has no committed copy is not
+replaced unasked — and CL2 edits a paragraph of Phase 3 that Step 2.1 did
+not open, in a file this batch may change.
+
+- CL1 — Step 2.1, amending M1 (question 1; E1, B2): the prototype-again
+  question follows whichever entry the run takes — named by ENTRY, or taken
+  with no ENTRY (the brief's only `` `needs prototype` `` entry, or, in a
+  session that cannot ask, the first in document order). Such an entry that
+  is `` `answered` `` or holds `Answer:` gets the question, and in a session
+  that cannot ask the run stops with the entry unchanged, as for a named
+  one. The bullet, the gates-table row, the plugin README's `prototype` row
+  and Prototype path clause, the 3.8.1 CHANGELOG line, and release-checklist
+  row 10 change together in one commit; row 10 gains the case "no ENTRY, the
+  brief's only `needs prototype` entry holds `Answer:`: the question is
+  asked; in a session that cannot ask the run stops and the brief's sha256
+  is unchanged". Why: the entry a run takes without being named is the one
+  the user looked at least, and its answer is the easiest to lose unasked.
+- CL2 — Step 2.1 and Phase 3's "When nothing was built" paragraph, amending
+  M1 (question 2; E2): option (b). After a "yes" to the prototype-again
+  question, a later gate that ends in "nothing is built" leaves the entry
+  unchanged — its `Answer:`, `Evidence:`, and Prototype line stay — and the
+  final message gives the reason nothing was built. The prototype-again
+  bullet gains that sentence; the "When nothing was built" paragraph exempts
+  an entry that held `Answer:` when the run began; the plugin README and the
+  3.8.1 CHANGELOG gain one sentence; release-checklist row 10 gains the
+  criterion. No acceptance case is required for it: the gates that end in
+  "nothing is built" after a "yes" need an in-app or feature-prototype
+  setup, and the acceptance may record it as not exercised. Why: "yes"
+  consents to replacing the answer with a new result, not with the absence
+  of one, and the brief has no committed copy to restore it from.
+- CL3 — Step 1.2, amending the test as D-2 and M6 word it (question 3; E4):
+  in generate-plan, "holds `Answer:`" means an `Answer:` label with text
+  after it. A label with nothing after it counts as no `Answer:`: the entry
+  is a gap in the gap round and, in a session that cannot ask, is carried in
+  the `open` form with the existing
+  `From: <brief path>, entry <n>, status word answered, Answer: missing`
+  line. No attempt is made to recognize placeholder text. The prototype
+  skill's gate is unchanged — it asks whenever the label is present, since
+  asking loses nothing. The plugin README, the 3.8.1 CHANGELOG, and
+  release-checklist row 4 follow where they describe generate-plan's test.
+  Why: an empty label gives a plan nothing to rest on, which is D-2's
+  reason; whether some text is a placeholder is a guess the skill cannot
+  check.
+- CL4 — Step 5.4 and Testing Strategy (question 4; T5): yes. Row 4 gains:
+  with a plan already at the target path, an approval given to a session
+  that cannot ask writes the plan at the first free numeric suffix
+  (`<name>-2.md`), the existing file's sha256 unchanged, and the final
+  message names the new file. The acceptance folds it into case 1's approval
+  resume, which carries the same reminder: before the resume the driver
+  places a file at `docs/plans/<the brief's file name>` and records its
+  sha256; when the run's target path turns out to be another name, the
+  branch is recorded as not exercised, naming the path the run chose.
+- CL5 — Step 5.4 and Testing Strategy (question 5; T6): yes to both. Row 10
+  gains (a) a `` `needs prototype` `` entry holding `Prototype:` and no
+  `Answer:` is built with no prototype-again question, in a session that
+  cannot ask too; and (b) an entry with an unrecognized status word holding
+  `Prototype:` and no `Answer:` gets the prototype-again question, and in a
+  session that cannot ask the run stops with the brief's sha256 unchanged.
+  The seed brief gains both entries. The acceptance runs (b); (a) builds a
+  prototype and runs when the acceptance budget allows, otherwise it is
+  recorded as not exercised.
+- CL6 — Step 1.1, M4 (question 6; B4, applied in `f8aae69`): accepted. The
+  existing-file branch in a session that cannot ask takes the first numeric
+  suffix no file has (`<name>-2.md`, then `<name>-3.md`, …). Why: an earlier
+  cannot-ask run for the same target leaves `<name>-2.md` behind, and the
+  branch exists so that no file is overwritten unasked. diagnose-bug's
+  conflict branch, outside the section this batch may edit, keeps naming
+  only `<name>-2.md`; the main session lists it as a roadmap candidate.
 
 ## Open Questions
 
@@ -959,86 +1032,11 @@ document.
 
 ## Questions for the spec author
 
-Raised by the implementing session after the `/kenspc-task-implement` run
-over `docs/tasks/batch-d-unattended-guards-tasks.md` (implementation
-3a9344c..afc3deb, review fixes fc4d1e0..a1f2ee8; verification CLEAN). No
-task was BLOCKED and no ruling was found contradicted by the code. Each
-question below comes from a review finding that code-fixer deferred because
-fixing it would read a ruling past its words or add scope the rulings do not
-give, or (question 6) from a review fix that already reads one. The finding
-IDs point into the run directory
-`.kenspc/runs/20260926-105142-batch-d-unattended-guards-tasks/`
-(`angle-<n>.md`, `schema-b.md`).
-
-1. **The `Answer:` gate for an entry the run takes with no ENTRY (M1; E1,
-   B2).** Step 2.1 and M1 give the prototype-again question to a *named*
-   entry that is `answered` or holds `Answer:`. With no ENTRY,
-   `prototype/SKILL.md` § The question takes the brief's only
-   `` `needs prototype` `` entry (the first in document order in a session
-   that cannot ask), and neither the widened bullet nor its gates-table row
-   covers it: a `needs prototype` entry that holds a hand-written `Answer:`
-   reaches Phase 3, whose rewrite replaces that answer in a brief with no
-   committed copy. Should the gate follow whichever entry the run takes
-   ("named, or taken with no ENTRY as above")? If yes, the bullet, the
-   gates-table row, the README `prototype` row ("a named entry that already
-   holds an answer"), the 3.8.1 CHANGELOG line ("any named entry that holds
-   `Answer:`"), and a row-10 case (no ENTRY, the only `needs prototype`
-   entry holds `Answer:`, the brief's sha256 unchanged after a cannot-ask
-   run) change together in one commit. Steps 2.1, 5.2, 5.3, 5.4.
-
-2. **"Yes" to prototyping again, then nothing built (M1; E2).** After a
-   "yes" to the prototype-again question, a later gate can still end in
-   "nothing is built" (a feature prototype that needs the app's runtime,
-   "stop" at the in-app tracked-files question, an in-app typecheck with no
-   baseline). Phase 3's "When nothing was built" paragraph then sets the
-   entry `` `needs prototype` `` with `Evidence:` and no `Prototype:`,
-   replacing the earlier `Answer:`, `Evidence:`, and Prototype line. The
-   path existed at `0128a2f` for `answered` entries; M1 sends more entries
-   onto it. Does the user's "yes" consent to losing the answer when the new
-   attempt builds nothing? Options: (a) yes — no change; (b) no — the
-   prototype-again bullet gains "on yes, a gate that later ends in 'nothing
-   is built' leaves the entry unchanged", and Phase 3's "When nothing was
-   built" paragraph (outside the sections Step 2.1 opened) exempts such an
-   entry, with a README / CHANGELOG sentence and a row-10 case. Steps 2.1,
-   5.2, 5.3, 5.4.
-
-3. **An empty `Answer:` label (D-2, M6; E4).** generate-plan part 3 tests
-   whether an `answered` entry holds the `Answer:` label, as D-2 ("holds
-   `Answer:`") and M6 ("`Answer:` the only test") word it; an entry whose
-   `Answer:` is empty, or still a placeholder, is settled input and skips
-   the gap round. Does "holds `Answer:`" mean the label, or an answer after
-   it? If the latter, part 3 reads "holds `Answer:` with an answer after
-   it", part 2 treats an empty label as no `Answer:` (the carried
-   `Answer: missing` form already fits), and the README, the CHANGELOG, and
-   release-checklist row 4, which all say "holds `Answer:`", follow.
-   Steps 1.2, 5.2, 5.3, 5.4.
-
-4. **Row 4 and the existing-file cannot-ask branch (D16; T5).** Step 5.4
-   lists what row 4 gains, and the cannot-ask branch of Step 3's item 1.c
-   (M4) is not among it; the Testing Strategy's case 2 seeds no plan at the
-   target path, so the branch is not exercised. Should row 4 (and the
-   acceptance) gain "with a plan already at the target path, the resumed
-   approval under the reminder writes the first free numeric suffix
-   (`<name>-2.md`), the existing file's sha256 unchanged, and the final
-   message names the new file" — in case 2 or in a separate case? Step 5.4;
-   Testing Strategy.
-
-5. **Row 10 and the two branches that turn on `Prototype:` (D16; T6).** Row
-   10 gains the unrecognized-word gate and the `Answer:` gate, but not
-   (a) a `` `needs prototype` `` entry that holds `Prototype:` and no
-   `Answer:`, built with no prototype-again question, in a cannot-ask
-   session too, and (b) an unrecognized-word entry that holds `Prototype:`
-   and no `Answer:`, which gets the prototype-again question. The Testing
-   Strategy's brief has neither entry. Should row 10 and the seed brief gain
-   both? Step 5.4; Testing Strategy.
-
-6. **The existing-file branch's suffix after `<name>-2.md` (M4; B4, applied
-   in f8aae69).** M4 and Step 1.1 give the branch as "a numeric suffix
-   (`<name>-2.md`)". A review fix made generate-plan's item 1.c "the first
-   numeric suffix no file has (`<name>-2.md`, then `<name>-3.md`, …)",
-   because an earlier cannot-ask run for the same target leaves
-   `<name>-2.md` behind, which the branch would then overwrite; the 3.8.1
-   CHANGELOG line follows it. Is the reading accepted? diagnose-bug's
-   conflict branch, which M4 cites as the precedent, still names only
-   `<name>-2.md`; that sentence is outside the `## Exit` section this batch
-   may edit, so it is left as it is either way. Step 1.1.
+No open question: questions 1–6 are answered as CL1–CL6. The spec author's
+instruction to the implementing session: apply CL1, CL2, CL3, CL4, and CL5
+(CL6 needs no change), keeping the plugin README, the 3.8.1 CHANGELOG
+entry, CLAUDE.md where it describes these rules, and release-checklist rows
+4 and 10 in line in the same commits; as part of this, re-check the task
+document's Doc-sync documents against the review fix commits
+`fc4d1e0..a1f2ee8`. Remove this section in the commit that applies the last
+of them.
