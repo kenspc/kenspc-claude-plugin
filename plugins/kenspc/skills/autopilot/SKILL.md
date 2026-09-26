@@ -293,6 +293,18 @@ reminder to work without stopping), the run ends with the same message.
 - HEAD equals `Baseline:`; otherwise the stop names both.
 - `ListAgents` names this session on its first line; otherwise the stop
   gives the version requirement.
+- The command line `ps -o args= -p $PPID` prints (The wait path) carries
+  `crossSessionInbound` with `accept` — the launch line's `--settings`
+  argument. When it does not, ask whether a settings file accepts inbound
+  messages for this session: `yes` continues, `no` is a stop naming the
+  launch line. In a session that cannot ask (a system reminder to work
+  without stopping), the run ends naming the launch line. Why a question
+  and not a stop: managed or user settings can set the value where the
+  command line does not show it. Why checked before the first launch: a
+  main session that holds inbound messages never sees a worker's question
+  — the worker waits its thirty minutes, stops with the question in its
+  final message, and is resumed with the answer — thirty minutes and a
+  resume per question, with no stop naming the cause.
 - The workspace is writable.
 - An existing `_logs/<batch>-state.md` names this repository on its
   `repository:` line; one that names another is a stop naming both. Why:
@@ -987,6 +999,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | The argument is neither a brief nor a spec | Which it is | The run ends with the reason |
 | Several plugins and no `Plugin:` | Which plugin | The run ends with the reason |
 | A start check fails, or a settings stop | — (a stop with its reason) | The run ends with the same message |
+| The launch line shows no `crossSessionInbound` accept | Whether a settings file accepts inbound messages | The run ends naming the launch line |
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |
