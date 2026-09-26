@@ -200,8 +200,10 @@ launch() {
 # a missing .pid, a .json that is missing, unparseable, or without "result",
 # a missing .err, a .exit that is missing or does not read 0, a timeline
 # without its start or end line, an .err that does not show every
-# always-passed flag with the id .session holds, and a .json whose
-# session_id is not that id; then, for a resume launch of the same stub
+# always-passed flag with the id .session holds, a .json whose
+# session_id is not that id, and an .err that shows --plugin-dir,
+# --max-budget-usd, or --append-system-prompt with their variables unset;
+# then, for a resume launch of the same stub
 # under <tag>-r1 with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD,
 # and APPEND_SP set, a .exit missing or not 0, a .session not holding that
 # id, an .err without --resume <id>, with --session-id, or without the three
@@ -238,6 +240,9 @@ STUB
     AUTOPILOT_CLAUDE=$base/stub/claude
   fi
 
+  # The three optional variables are unset for the first launch, whatever
+  # the caller's environment holds, so their flags can be asserted absent.
+  unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP
   AUTOPILOT_LOGS=$LOGS
   AUTOPILOT_BATCH=selftest
   TAG=selftest-s1
@@ -299,6 +304,13 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   done
   grep -qF -- "\"session_id\":\"$session\"" "$LOGS/$TAG.json" \
     || { echo "self-test failed: $LOGS/$TAG.json does not carry the session_id that $LOGS/$TAG.session holds" >&2; return 1; }
+  # With the three optional variables unset their flags are absent: a
+  # driver that passed --plugin-dir "" on every launch would start every
+  # repo-mode worker with an empty plugin directory.
+  for flag in --plugin-dir --max-budget-usd --append-system-prompt; do
+    ! grep -qF -- "$flag" "$LOGS/$TAG.err" \
+      || { echo "self-test failed: $LOGS/$TAG.err shows $flag on a launch with its variable unset" >&2; return 1; }
+  done
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
