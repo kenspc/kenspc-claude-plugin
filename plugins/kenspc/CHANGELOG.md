@@ -142,7 +142,9 @@ the batch's acceptance record, named at release.
   no commit. Rows 6 and 7 replace "then Schema A → B → C → G" and "then
   the Schema A roll-up, B, C, and the Schema F final report" with the three
   progress lines in order, each after its agent returns and before the next
-  step, no text line beginning with `|` from the first reviewer call until
+  step and in its full form, its counts and result matching the final
+  report's roll-up **Total** row, the statistics line, and Schema C, no
+  text line beginning with `|` from the first reviewer call until
   the final report's first heading, and the roll-up header, a line holding
   `total reported `, and the Schema C header each exactly once, inside the
   final report. Row 6's re-check criterion becomes the fix-commit
