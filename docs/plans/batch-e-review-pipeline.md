@@ -1189,6 +1189,66 @@ and `task-review/SKILL.md`, and the acceptance exercises that text live.
   per file" wording predates this batch. Q2 (CL13 named no Step) is fixed
   in this commit.
 
+Rulings of 2026-09-26, after the headless acceptance on the plugin tree
+`a94fdb3` (seven runs, record `docs/dry-runs/batch-e-acceptance.md`, four
+FAILs recorded unclassified). The classes are those of the batch D
+record's § 3. All decided by the main session within the locked design.
+
+- CL16 — Testing Strategy and Step 4.4, classifying the acceptance's four
+  FAILs; no plugin file changes.
+  - F1 (a progress line not printed: case 1's `Reviewers returned —`, case
+    7's `regression-verifier returned —`; 10 of 12 printed across the four
+    review runs) — behavior deviation, recorded on the roadmap in the
+    release commit. The steps carry each line where it is printed, and the
+    same text printed it in the other runs; E-1's substance — no table
+    between dispatches, each table once in the final report — held in all
+    four runs. The follow-up to weigh is tying each line to the next
+    dispatch (printed in the message that makes it), so its absence cannot
+    pass unnoticed by the next step.
+  - F2 (case 2's Doc-sync task BLOCKED, so no review ran) — observation on
+    the seed. D18's premise, a README that states the defect first, is what
+    task-implementer's Doc-sync refuses to confirm against the task's
+    criterion, and the BLOCKED follows its own rules. code-fixer's rule was
+    exercised live by the T1 run, with Schema F's bullet in its `updated`
+    form; Schema G's bullet in its `updated` form, on row 6's
+    `/kenspc-task-implement` path, is recorded as not exercised, since a
+    re-run with a new seed does not fit the batch's budget. Schema G's
+    `none` form was exercised by case 3.
+  - F3 (case 5's first invocation wrote two probe files into the session's
+    own scratchpad, outside the project) — observation; row 4's wording.
+    Nothing reached the project before approval, which is what the
+    criterion guards.
+  - F4 (case 4 wrote the plan by copying its printed draft file with `cp`,
+    not with a Write call) — observation; row 4's and D14's wording. The
+    first committed blob equals the printed draft character for character,
+    which is what E-5 asks.
+  The release-preparation session brings row 4 in line, with CL14: before
+  approval, no Write or Edit into the project, no Agent call, and no commit
+  (a probe written outside the project is not a write of the plan); after
+  approval, the plan as first written — the Write call's `content` when it
+  was written with Write, and in every case its blob in
+  `plan-document-reviewer`'s first commit — equals the draft last printed
+  in full, under the normalization row 4 states. The 3.8.2 CHANGELOG entry's
+  release-checklist bullet follows.
+- CL17 — the release commit (E-6) and the roadmap: besides removing items
+  1, 2, 3, and 5 and renumbering, the release commit appends three items at
+  the end of `## Next minor (3.9.0)`, each in the roadmap's own style (what
+  is open, where it was seen, the choice left): (1) the review's progress
+  lines, F1 of CL16; (2) Schema D rendered twice by `/kenspc-task-implement`
+  (Phase 1 Step 5 and Schema G), M2; (3) Doc-sync follow-ups — the guards
+  (`code-fixer.md` outside `check-doc-sync-anchors.sh`'s `Doc-sync` group,
+  M8; the run-contract guard's check 5 not looking in
+  `task-review/SKILL.md`, CL15), the smoke candidates (CL7: row 7 with a
+  task document, the not-updated branch, a translated label; CL13: a row-6
+  seed that forces a correction, the section boundary; CL15: rows 6 and 7
+  checking the whole render), and the reply and report gaps (CL8: no
+  backticked path; CL13: a cut-short committed run; CL15: Schema F's
+  Doc-sync bullet without a statistics line, and the Fixes placeholders not
+  listing the `Doc-sync documents:` line). Why: the roadmap is where
+  planned work waits, and each of these was left out of this patch by a
+  ruling that named it; whether each stays is the maintainer's call, which
+  the main session's report asks for.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
