@@ -313,13 +313,36 @@ on each round of feedback and self-critique.
 
 ### Step 3: Write to file
 
-Write only when the user explicitly approves the plan. On approval:
+Write only when the user explicitly approves the plan.
+
+In a session that cannot ask (a system reminder to work without stopping),
+the run still stops here. Its last message holds the complete draft — every
+section of the draft after self-challenge, none elided or summarized — then
+the line `Plan not written: awaiting approval.`, and says how to go on:
+reply in this session approving the draft or asking for changes (a headless
+run resumes it with `claude -p --resume <session id> "<reply>"`), or run
+`/kenspc-plan` again in a session that can ask. Nothing is written,
+`plan-document-reviewer` is not dispatched, and nothing is committed. A
+later reply that approves the draft is the approval — in a headless run, the
+reply of the session that resumes this one — and this step then runs as
+written. Why: the written plan is the approved plan — Phase 3's reviewer
+commits it and generate-task decomposes it as agreed — so a run that writes
+it without approval makes the user's decision; and under a reminder to work
+without stopping, with no branch at this stop, an unapproved plan has been
+written, reviewed, and committed on the current branch. The line stays in
+English in any conversation language, so a driving session can test for it.
+
+On approval:
 
 1. Determine the output location:
    a. If CLAUDE.md specifies a documentation or plans directory, use it.
    b. Otherwise, use `docs/plans/` (create if it does not exist).
    c. If a file already exists at the target path, ask the user whether to
-      overwrite or create a new file.
+      overwrite or create a new file. In a session that cannot ask (a
+      system reminder to work without stopping), create the file alongside
+      with a numeric suffix (`<name>-2.md`) and say so in the final message,
+      naming the file. Why: an overwrite nobody chose can destroy a plan the
+      user kept.
 2. Determine the document language:
    a. If the user specified a language, use it.
    b. Otherwise, default to English.

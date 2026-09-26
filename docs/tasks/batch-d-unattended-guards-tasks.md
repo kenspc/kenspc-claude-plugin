@@ -186,7 +186,24 @@ with what those tasks implemented and promotes their recorded decisions.
 
 ### Task 1: Add the cannot-ask branch to generate-plan's approval stop and existing-file question
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the original line "Write only when the user explicitly approves
+  the plan. On approval:" was split so the cannot-ask paragraph sits between
+  the approval sentence and "On approval:", keeping the numbered list under
+  "On approval:" and the branch next to the stop it answers. The paragraph
+  takes plan Step 1.1's in-substance text nearly verbatim, with the fixed
+  line kept on one source line so `grep -cF` finds it. Item 1.c's branch
+  says "say so in the final message, naming the file" so the final message
+  names the suffixed file explicitly.
+- Changes/tradeoffs: none beyond the spec. Verified: cannot-ask count 4
+  (was 2), not-approved line 1, hunks only in Phase 2 Step 3 (source lines
+  316 and 322), `effort: xhigh` unchanged, pointer-label and
+  MUST/NEVER/CRITICAL greps empty (positive control: the pointer grep hits
+  145 lines of the batch D plan), check-no-model-names 0, check-all 0 with
+  `guards run: 10`, `claude plugin validate --strict ./plugins/kenspc`
+  passed. CLAUDE.md: only the cannot-ask bullet changed (1 line).
 
 Plan Step 1.1 (D-1; rulings D1, D2, D3, M4, M10). In
 `plugins/kenspc/skills/generate-plan/SKILL.md`, Phase 2 Step 3 only —
