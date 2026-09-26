@@ -83,7 +83,8 @@ exist yet.
   wrapped in `caffeinate -i` when that command exists, so a macOS machine
   does not sleep under a running worker. `run.sh --self-test` writes a stub
   executable under `$TMPDIR`, launches it through the same path, checks the
-  five files and the two timeline lines, and prints `self-test passed`; a
+  five files, the two timeline lines, and the flags the stub echoes to
+  `<tag>.err`, and prints `self-test passed`; a
   caller-supplied stub (`AUTOPILOT_CLAUDE`) exercises the failure path. The
   skill runs the copy's self-test at every batch start. No `--model`, no
   `--continue`.

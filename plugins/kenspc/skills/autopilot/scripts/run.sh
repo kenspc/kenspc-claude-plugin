@@ -56,7 +56,9 @@
 # Why --self-test: it proves the launch path on a machine without spending a
 # session — a stub stands in for the executable — and the skill runs the
 # copied driver's self-test at every batch start. A caller who sets
-# AUTOPILOT_CLAUDE to a stub of their own exercises the failure path.
+# AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
+# of theirs that is meant to pass echoes its arguments to stderr, since the
+# self-test reads the flags there.
 #
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
 # or environment error, or when <tag>.pid names a live process and <tag>.exit
@@ -179,10 +181,12 @@ launch() {
 # workspace. Passing: every file is present with the expected content and the
 # timeline holds both lines. It fails, in this order, on a missing .session,
 # a missing .pid, a .json that is missing, unparseable, or without "result",
-# a missing .err, a .exit that is missing or does not read 0, and a timeline
-# without its start or end line — naming the first item that fails.
+# a missing .err, a .exit that is missing or does not read 0, a timeline
+# without its start or end line, an .err that does not show every
+# always-passed flag with the id .session holds, and a .json whose
+# session_id is not that id — naming the first item that fails.
 self_test() {
-  local base LOGS TAG n exit_status
+  local base LOGS TAG n exit_status session flag
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   LOGS=$base/logs
   mkdir -p "$LOGS" || die "cannot create $LOGS"
@@ -239,6 +243,19 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no start line for $TAG" >&2; return 1; }
   grep -q "^end   $TAG exit 0\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no end line for $TAG" >&2; return 1; }
+
+  # The stub echoes its arguments to .err, so the flags the header promises
+  # are read there: a driver whose flag passing broke would otherwise pass
+  # this gate and fail only inside a paid session.
+  session=$(cat "$LOGS/$TAG.session")
+  for flag in "--session-id $session" "--name $TAG" \
+              '--settings {"crossSessionInbound":"accept"}' \
+              '--permission-mode bypassPermissions' '--output-format json'; do
+    grep -qF -- "$flag" "$LOGS/$TAG.err" \
+      || { echo "self-test failed: $LOGS/$TAG.err does not show $flag" >&2; return 1; }
+  done
+  grep -qF -- "\"session_id\":\"$session\"" "$LOGS/$TAG.json" \
+    || { echo "self-test failed: $LOGS/$TAG.json does not carry the session_id that $LOGS/$TAG.session holds" >&2; return 1; }
 
   echo "self-test passed"
   return 0
