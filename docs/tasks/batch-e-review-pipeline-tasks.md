@@ -415,6 +415,13 @@ block stay as they are.
   `rendered here only` occurs 3 times (0 at `6575540`), and
   `(Schema A roll-up — the per-angle table, HIGH / MEDIUM / LOW per angle and in total; rendered here only.)`
   occurs once.
+- Step 3 says that the Schema G report's Code Review section renders the
+  roll-up table, its Fixes section code-fixer's reply, and its Verification
+  section Schema C; says the three lines stay in English whatever the
+  conversation language; carries the Why of Task 1's Step 4 in this skill's
+  words; and still describes the reply's contents ("Its reply carries the
+  statistics line, …") and what regression-verifier verifies ("The agent
+  verifies that every issue ID is accounted for, …").
 - ``grep -cF '(Schema D verbatim, including its `## Decisions needing a home` section.)'``
   on the file still prints 1, and Step 5 of Phase 1 is unchanged.
 - Every hunk of `git diff -U0 -- plugins/kenspc/skills/task-implement/SKILL.md`
@@ -448,21 +455,27 @@ are (ruling M1).
   translated task document can carry a translated label). When the status
   is DONE, those documents are in the fix scope as FIXING RULES says;
   otherwise, and in a "changes" run, no document enters it this way.
-- FIXING RULES, a new bullet directly after the `git status --porcelain`
-  bullet, in substance (rulings D9, D10, D11, M6): in a "task" run whose
-  Doc-sync task is DONE, after each fix, read the parts of each listed
-  document that describe the changed code — the sections naming the changed
-  function, option, command, message, or file. A sentence, list item, or
-  table row there that states the behavior the fix changed is now false:
-  correct it, in the document's own language, in the fix's own commit,
-  whose body names the document (`Updates <path> to match the fix.`).
-  Change nothing else: no new section or paragraph, no text the fix did not
-  make false, no behavior the document never described, no document outside
-  the list; a listed path with no file is skipped. When the correction
-  needs more than that, or the document has uncommitted changes — the
-  dirty-file rule of the bullet above then applies to the document, which is
-  left untouched, while the code fix still lands — record the document as
-  not updated, with the reason. Passing: every statement in a listed
+- FIXING RULES, a new bullet directly after the uncommitted-mode bullet
+  (the one opening ``When `change-set.md` says `Mode: uncommitted` ``) and
+  before `- Code, code comments, and commit messages stay in English.` —
+  not between the `git status --porcelain` bullet and the uncommitted-mode
+  bullet, since the former closes on "the harm the next rule prevents",
+  which names the uncommitted-mode bullet, and a bullet inserted between
+  them would redirect that reference to the new one. In substance (rulings
+  D9, D10, D11, M6): in a "task" run whose Doc-sync task is DONE, after
+  each fix, read the parts of each listed document that describe the
+  changed code — the sections naming the changed function, option,
+  command, message, or file. A sentence, list item, or table row there
+  that states the behavior the fix changed is now false: correct it, in the
+  document's own language, in the fix's own commit, whose body names the
+  document (`Updates <path> to match the fix.`). Change nothing else: no
+  new section or paragraph, no text the fix did not make false, no
+  behavior the document never described, no document outside the list; a
+  listed path with no file is skipped. When the correction needs more than
+  that, or the document has uncommitted changes — the dirty-file rule of
+  the `git status --porcelain` bullet then applies to the document, which
+  is left untouched, while the code fix still lands — record the document
+  as not updated, with the reason. Passing: every statement in a listed
   document that a fix made false is corrected in that fix's commit, and the
   document is otherwise unchanged. Named failure modes: a statement the fix
   contradicts left as it was; a correction in a commit of its own; a
@@ -511,13 +524,17 @@ are (ruling M1).
   `**Status:**` value, and the backticked path opening each bullet of the
   document list; `grep -c '\*\*Documents\*\*' plugins/kenspc/agents/code-fixer.md`
   prints 0, as at `6575540`.
-- The FIXING RULES bullet sits directly after the `git status --porcelain`
-  bullet and holds: the parts of the document to read; the correction in
-  the document's own language in the fix's own commit; the five limits;
-  the skipped missing path; the not-updated branch for a correction that
-  needs more and for a document with uncommitted changes, where the code
-  fix still lands; the passing statement; the five named failure modes; and
-  its Why.
+- The FIXING RULES bullet sits directly after the uncommitted-mode bullet
+  and before `- Code, code comments, and commit messages stay in English.`;
+  the `git status --porcelain` bullet is still directly followed by the
+  uncommitted-mode bullet, so its closing "the harm the next rule prevents"
+  still names that bullet; the new bullet names the dirty-file rule by the
+  `git status --porcelain` bullet, not by position; and it holds: the parts
+  of the document to read; the correction in the document's own language
+  in the fix's own commit; the five limits; the skipped missing path; the
+  not-updated branch for a correction that needs more and for a document
+  with uncommitted changes, where the code fix still lands; the passing
+  statement; the five named failure modes; and its Why.
 - The OUTPUT FORMAT reply list has the `Doc-sync documents:` item after the
   statistics line and the uncommitted line, says it is always present in
   such a run with FIXED 0 included and is not written to `schema-b.md`, and
