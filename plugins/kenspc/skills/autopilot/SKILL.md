@@ -665,7 +665,8 @@ for case n, `<tag>` being S4's own, since a nested launch under a worker's
 or a resume's tag is accepted once that worker has ended and overwrites
 its `.json`, `.session`, and `.pid`, which Phase 4 reads; with the
 batch's remaining amount as `AUTOPILOT_BUDGET_USD` for the first
-nested launch, lowered by each finished case's cost before the next, since
+nested launch, lowered by each finished nested session's cost — the
+trial's included — before the next, since
 S4's own cap bounds none of them and a cap the cases shared would let each
 case spend it once — and the record path; each
 case's line in the record carries its cost, the sum of its nested sessions'
@@ -996,8 +997,9 @@ seed as its cwd and its prompt in a file:
 
 The nested tag is <tag>-case<n> for case n[, and <tag>-trial for the trial
 run] — a tag no other session has used. The cap is <remaining> for the first
-nested launch and, for each later one, the previous cap less the finished
-cases' costs. Wait for each nested session with
+nested launch and, for each later one, <remaining> less the costs of every
+nested session finished so far, the trial's included. Wait for each nested
+session with
 
     n=0; until [ -f "$LOGS/$TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
 
