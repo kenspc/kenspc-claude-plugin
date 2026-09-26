@@ -129,8 +129,10 @@ Constraints that apply to every task (plan § Standing constraints):
   literal awk replacement, not `sed -i`; the `set -euo pipefail` and
   `SCRIPT_DIR` / `REPO_ROOT` pattern stays.
 - Code, comments, commit messages, and documents are in English.
-- No task runs `rm -r` or `rm -rf`; the one exception is the guards' own EXIT
-  traps, which remove the `mktemp -d` directories their self-tests create.
+- No task runs `rm -r` or `rm -rf`; the one exception is the guards' own
+  cleanup of the `mktemp -d` directories they create — the self-tests' EXIT
+  traps, and the ignore probe (check 3) that `check-run-contract.sh` runs in
+  main mode, which every `bash scripts/check-all.sh` run executes.
   A copy of the repository tree made by hand for a falsifiability check
   (Tasks 5 and 6) goes under `$TMPDIR` and is left there (plan § Testing
   Strategy). Anything else to be discarded is moved to
