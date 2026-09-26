@@ -160,7 +160,8 @@ the brief or the user writes it there. It is a bullet list of
 `- <Label>: <value>` fields under the heading, labels in English whatever
 the document's language, in any order. Every field has a default and none
 is required; an unknown label is ignored and named on the line after the
-settings line. Why no required field: the default budget was chosen when
+settings line; a known label whose value is outside its grammar is the
+settings stop (The start checks). Why no required field: the default budget was chosen when
 the method was fixed, a supplied spec counts as approved, and a required
 field would turn every spec-entry run into a question; the printed
 settings line puts the defaults in front of the user before any session
@@ -269,6 +270,11 @@ the failure is a stop whose final message ends with
 reminder to work without stopping), the run ends with the same message.
 
 - The argument file exists and is a brief or a spec.
+- Every `## Autopilot` value is in its grammar (the table above); a value
+  outside it — `Budget: 60` without `USD`, `Caps: 10`, `Mode: Plugin` — is
+  the settings stop, naming the field and the value. Why a stop and not
+  the default: the field is one the user wrote, and a run that read it as
+  absent would spend the default budget the user meant to lower.
 - The working tree is clean except the argument file when it is untracked
   (`git -c core.quotePath=false status --porcelain -uall`). Why: an
   untracked brief is how generate-brief leaves one; anything else in the
