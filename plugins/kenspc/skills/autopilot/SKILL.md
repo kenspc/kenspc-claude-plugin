@@ -290,6 +290,13 @@ reminder to work without stopping), the run ends with the same message.
   its message — a supplied spec included, since it skips Phase 1 and no
   step commits it, while the state file and the reviewer report name its
   hash and repo-mode S6's default `git rm` fails on an untracked path.
+- In brief entry, nothing is at `docs/plans/<batch>.md`, the path S1 writes
+  the spec to, at the baseline —
+  `git cat-file -e <baseline>:docs/plans/<batch>.md` fails; otherwise the
+  stop names the path. Why: S1 writes the spec there and commits it as an
+  addition, so a plan of the same name from an earlier `/kenspc-plan` run
+  would be overwritten by the draft after a paid session, while the
+  clean-tree and baseline checks pass on the way.
 - HEAD equals `Baseline:`; otherwise the stop names both.
 - `ListAgents` names this session on its first line; otherwise the stop
   gives the version requirement.
