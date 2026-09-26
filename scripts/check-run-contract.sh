@@ -90,7 +90,7 @@
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on eighteen mutations that
+#                  prefix classification), then on nineteen mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
@@ -107,7 +107,10 @@
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
-#                  itself, one file at a time. One more mutation must exit 0:
+#                  itself, one file at a time, and `RUN_DIR/scratch/angle-<n>/`
+#                  changed to `RUN_DIR/tmp/angle-<n>/` on the last line of the
+#                  README's copy, so an extraction that stops short of the
+#                  sentence's period is caught. One more mutation must exit 0:
 #                  `read-only on the working tree` given a second space in
 #                  the README's copy, a whitespace-only change check 6
 #                  ignores. Then the main check runs on the reverted copy
@@ -654,6 +657,11 @@ run_self_test() {
         mutate_and_expect "invariant sentence in $rel" "$rel" \
             "writes only under" "writes only below" || return $?
     done
+    # The same drift on the sentence's last line: the mutations above all
+    # fall on its first line, so an extraction that stopped short of the
+    # period would still pass them.
+    mutate_and_expect "invariant sentence's last line in $README_REL" "$README_REL" \
+        "RUN_DIR/scratch/angle-<n>/" "RUN_DIR/tmp/angle-<n>/" || return $?
     # A whitespace-only change to a copy must pass: check 6 compares
     # normalized text. The literal must occur on exactly one line.
     local hits

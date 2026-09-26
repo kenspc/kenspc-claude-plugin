@@ -87,10 +87,12 @@ the batch's acceptance record, named in the release commit.
   `check-review-agent-drift.sh` held the five ROLE sections and
   `check-canonical-dispatch.sh` the two dispatch blocks, but nothing tied
   one family to the other or held the README and CLAUDE.md copies. Its
-  self-test copies the README and CLAUDE.md too and gains four mutations
-  that must exit 1 (one word changed in each copy and in the reference) and
-  one whitespace-only change that must exit 0. Its header now states the
-  number of must-exit-1 mutations the self-test runs, eighteen; it said
+  self-test copies the README and CLAUDE.md too and gains five mutations
+  that must exit 1 (one word changed in each copy and in the reference, and
+  one on the README copy's last line, so an extraction that stops short of
+  the sentence's period is caught) and one whitespace-only change that must
+  exit 0. Its header now states the
+  number of must-exit-1 mutations the self-test runs, nineteen; it said
   eleven where the script ran fourteen. `check-doc-sync-anchors.sh` gains a
   fifth anchor group, the Prototype line in generate-brief and the prototype
   skill, and one exact-count check: the prototype skill's leftovers command
