@@ -511,9 +511,9 @@ Before each launch:
   spent a large share of a batch before.
 - `Caps:` (`16 sessions, 8 resumes` by default) exceeded is a stop that asks
   for a new cap. In a session that cannot ask (a system reminder to work
-  without stopping), the run ends with the counts. Why: the default is one
-  and a half times the largest batch run so far, with the field to override
-  it.
+  without stopping), the run ends with the counts. Why: the session cap is
+  one and a half times the largest batch run so far, and the field
+  overrides both counts.
 
 ### Death and resume
 

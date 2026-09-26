@@ -248,9 +248,9 @@ exist yet.
   `refuse` that is stricter applies over it, so a held or refused first
   message is a stop naming the settings precedence.
 - **The caps' default.** The three earlier batches ran 7 + 11, 10 + 14, and
-  6 + 7 sessions and runs, with 5, 9, and 7 resumes; `16 sessions, 8 resumes`
-  is one and a half times the largest, with the `Caps:` field to override
-  it.
+  6 + 7 sessions and runs, with 5, 9, and 7 resumes; `16 sessions` is one
+  and a half times the largest session count, and the `Caps:` field
+  overrides both counts.
 
 ## 3.8.2 — 2026-09-26
 
