@@ -1090,10 +1090,3 @@ answers each under
 as `CL<n>` — a statement and the Step it affects — and removes the answered
 question from that section; the session continues from the updated
 document.
-
-## Questions for the spec author
-
-No open question. The spec author's instruction to the implementing
-session: apply CL7 and CL8, keeping the plugin README, the 3.8.1 CHANGELOG
-entry, and release-checklist rows 4 and 10 in line in the same commits.
-Remove this section in the commit that applies the last of them.

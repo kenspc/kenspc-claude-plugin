@@ -126,15 +126,19 @@ the batch's acceptance record, named in the release commit.
 - **Release checklist.** Row 4 gains the cannot-ask stop at the draft (the
   complete draft and `Plan not written: awaiting approval.`; no Write, no
   Agent call, no commit), the resumed approval that writes, reviews, and
-  commits, the existing-file branch under that approval (the first free
-  numeric suffix, the existing file's sha256 unchanged, the new file named
-  in the final message), and an `answered` entry with no `Answer:` or an
-  empty one (asked about in the gap round; carried with
-  `status word answered, Answer: missing` in a session that cannot ask).
-  Row 9 gains the interactive exit's commit and `git revert <hash>`, with no
-  revert made. Row 10 gains both gates, asked before anything is written,
-  where a "stop" or a "no", and a cannot-ask stop, end with no commit and
-  the brief's sha256 unchanged; the prototype-again question for an entry
+  commits, the existing-file branch under that approval (with `<name>.md`
+  and `<name>-2.md` in place, the plan written at `<name>-3.md`, both
+  files' sha256 unchanged, the new file named in the final message), an
+  `answered` entry with no `Answer:` or an empty one (asked about in the
+  gap round; carried with `status word answered, Answer: missing` in a
+  session that cannot ask), and a gap-round reply of `answered` with no
+  answer text, which is not taken as settled input. Row 9 gains the
+  interactive exit's commit and `git revert <hash>`, with no revert made.
+  Row 10 gains both gates, asked before anything is written, where a
+  "stop" or a "no", and a cannot-ask stop, end with no commit and the
+  brief's sha256 unchanged — for the unrecognized-word gate on an entry
+  with no `Settled by:`, so the unchanged hash also shows the gate came
+  before the derived write; the prototype-again question for an entry
   taken with no entry named that holds `Answer:`, an entry whose answer is
   kept when a "yes" to that question ends with nothing built or with a
   built prototype that does not settle it, and the two branches that turn
