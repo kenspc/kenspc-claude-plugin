@@ -184,9 +184,13 @@ launch() {
 # a missing .err, a .exit that is missing or does not read 0, a timeline
 # without its start or end line, an .err that does not show every
 # always-passed flag with the id .session holds, and a .json whose
-# session_id is not that id — naming the first item that fails.
+# session_id is not that id; then, for a resume launch of the same stub
+# under <tag>-r1 with that id, a .exit missing or not 0, a .session not
+# holding that id, an .err without --resume <id> or with --session-id, and
+# a timeline start line not ending in "resume" — naming the first item that
+# fails.
 self_test() {
-  local base LOGS TAG n exit_status session flag
+  local base LOGS TAG RTAG n exit_status session flag
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   LOGS=$base/logs
   mkdir -p "$LOGS" || die "cannot create $LOGS"
@@ -256,6 +260,24 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   done
   grep -qF -- "\"session_id\":\"$session\"" "$LOGS/$TAG.json" \
     || { echo "self-test failed: $LOGS/$TAG.json does not carry the session_id that $LOGS/$TAG.session holds" >&2; return 1; }
+
+  # A resume launch through the same path, with the first launch's id: it
+  # is the recovery for a dead or cap-ended worker, reached after a paid
+  # session has ended, so a regression there would otherwise show only then.
+  RTAG=$TAG-r1
+  launch "$RTAG" "$base" "$base/prompt.md" "$session"
+  n=0; until [ -f "$LOGS/$RTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$RTAG.exit" ] || { echo "self-test failed: $LOGS/$RTAG.exit is missing after the wait" >&2; return 1; }
+  exit_status=$(cat "$LOGS/$RTAG.exit")
+  [ "$exit_status" = "0" ] || { echo "self-test failed: $LOGS/$RTAG.exit reads $exit_status, expected 0" >&2; return 1; }
+  [ "$(cat "$LOGS/$RTAG.session")" = "$session" ] \
+    || { echo "self-test failed: $LOGS/$RTAG.session does not hold the resumed id $session" >&2; return 1; }
+  grep -qF -- "--resume $session" "$LOGS/$RTAG.err" \
+    || { echo "self-test failed: $LOGS/$RTAG.err does not show --resume $session" >&2; return 1; }
+  ! grep -qF -- '--session-id' "$LOGS/$RTAG.err" \
+    || { echo "self-test failed: $LOGS/$RTAG.err shows --session-id on a resume" >&2; return 1; }
+  grep -q "^start $RTAG pid [0-9][0-9]* .* resume\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
+    || { echo "self-test failed: $LOGS/selftest-timeline.log has no start line ending in resume for $RTAG" >&2; return 1; }
 
   echo "self-test passed"
   return 0
