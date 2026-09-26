@@ -455,11 +455,21 @@ DEFERRED issues share one bullet with their count and the path of
 schema-b.md. Each Decisions needing a home entry gets its own bullet with
 the decision and its suggested destination. When the Doc-sync task is
 BLOCKED, one bullet states that its listed documents were not synced, and
-why. When a Doc-sync task was processed DONE in this run and code-fixer's
-statistics line reports FIXED greater than 0, one bullet names the Doc-sync
-task's listed documents to re-check against the fix commits — the review's
-fixes land after the Doc-sync task, so a document it synced can already
-describe pre-fix behavior. When regression-verifier's test-row Detail names
+why. When the task document's Doc-sync task is DONE (in this run or before
+it) and code-fixer's statistics line reports FIXED greater than 0, one
+bullet carries code-fixer's `Doc-sync documents:` line — each document the
+fix commits updated, with its row and commit, and each left not updated,
+with its reason, for the user to correct. When that line says
+`none affected by the fixes`, the bullet reads
+`No Doc-sync document describes behavior the fixes changed.` When the
+reply has no such line, the bullet states the defect,
+`code-fixer's reply has no Doc-sync documents line`, and names the Doc-sync
+task's listed documents to check against the fix commits. Why: the fixes
+land after the Doc-sync task, and code-fixer corrects the listed documents
+in the fix commits; this bullet is where the user sees which ones changed,
+or that none needed to, and a missing line means code-fixer did not meet
+its contract, so the correction may not have run. When
+regression-verifier's test-row Detail names
 files under `.kenspc/` that the test run collected and that passed, one
 bullet names them as the Detail does and asks the user to delete them —
 runs are never deleted and the plugin deletes nothing itself, so a collected

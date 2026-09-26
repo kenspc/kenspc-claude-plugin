@@ -470,7 +470,16 @@ the review is suggested. When the change set was uncommitted
 (`Mode: uncommitted`) and code-fixer's statistics line reports FIXED
 greater than 0, one bullet says the fixes are in the working tree,
 uncommitted, naming the files, for the user to review and commit; nothing
-in such a run commits them. When regression-verifier's test-row Detail names
+in such a run commits them. When code-fixer's reply carries a
+`Doc-sync documents:` line and its statistics line reports FIXED greater
+than 0, one bullet carries that line — each document the fix commits
+updated, with its row and commit, and each left not updated, with its
+reason, for the user to correct — or, when the line says
+`none affected by the fixes`, reads
+`No Doc-sync document describes behavior the fixes changed.` Why: this
+skill never reads the Doc-sync task's status, so it keys on the line, which
+code-fixer writes in every review against a task document whose Doc-sync
+task is DONE. When regression-verifier's test-row Detail names
 files under `.kenspc/` that the test run collected and that passed, one
 bullet names them as the Detail does and asks the user to delete them.
 Why: runs are never deleted and the plugin deletes nothing itself, so a

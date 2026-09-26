@@ -620,7 +620,22 @@ are (ruling M1).
 
 ### Task 4: Report the fixes' Doc-sync documents in Schema G and Schema F
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: Schema G's bullet keys on the task document's Doc-sync task
+  being DONE "in this run or before it", since code-fixer applies its rule
+  to any DONE Doc-sync task and the orchestrator has read the task document
+  in Phase 1; the previous sentence keyed only on a task processed DONE in
+  this run. The task-review sentence carries a short Why (this skill never
+  reads the Doc-sync task's status, so it keys on the line code-fixer
+  writes), keeping the rule rationale-anchored; it sits before the
+  `.kenspc/` bullet so that bullet's own Why stays next to it. The CLAUDE.md
+  sentence closes the documentation path paragraph, after the dependency
+  gate, so no existing line changed.
+- Changes/tradeoffs: the Schema G text is several short sentences rather
+  than one long one (the line, the none-affected form, the missing-line
+  defect, then the Why), each fixed string on one line where it fits.
 
 Depends on: Task 3
 

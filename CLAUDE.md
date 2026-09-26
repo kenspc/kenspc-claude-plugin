@@ -210,6 +210,10 @@ BLOCKED with `depends on Task N (<status>)` when its `Depends on` line names
 a task that is not DONE, so a Doc-sync task never documents behavior a
 blocked task did not build. The gate applies to every task with a
 `Depends on` line, not only the Doc-sync task.
+When a review runs against a task document whose Doc-sync task is DONE,
+`code-fixer` corrects, in the fix's own commit, the sentences of the listed
+documents a fix makes false, and the final report names each document it
+changed.
 
 **Parallel MapReduce (task-review):**
 - Phase 1: 5 review agents, read-only on the working tree, dispatched in parallel
