@@ -110,8 +110,10 @@ exist yet.
   never hard-coded; `16 sessions, 8 resumes` from `Caps:`. Before each
   launch, spent (the sum of each session's last cumulative
   `total_cost_usd`, upserted into `<batch>-costs.txt` after every
-  `<tag>.exit`) plus projected (the largest session so far, or budget ÷ 6
-  before the first) is checked against the budget; exceeding it asks
+  `<tag>.exit`, and in `plugin` mode the acceptance cases' costs from the
+  record once S4 has returned) plus projected (the largest session so far,
+  or budget ÷ 6 before the first) is checked against the budget; exceeding
+  it asks
   "raise the budget to how much?" with the numbers, and the answer is
   recorded in the state file and the reports. Every worker is started with
   `--max-budget-usd` at the remaining amount; a worker its cap ended is
@@ -140,8 +142,10 @@ exist yet.
   the zero-diff result, byte-identity / guards / counts, acceptance one line
   per case with its cost, total cost, Not exercised, release-preparation
   state, sessions / messages / resumes / stops). The total-cost line is the
-  measured sum of the workers' last cumulative `total_cost_usd` plus the
-  main session's own cost as an estimate labeled so — its turn count × the
+  measured sum of the workers' last cumulative `total_cost_usd`, plus in
+  `plugin` mode the acceptance cases' costs from the record (S4's nested
+  sessions), plus the main session's own cost as an estimate labeled so —
+  its turn count × the
   mean cost per turn across the batch's workers (`total_cost_usd` ÷
   `num_turns`), the basis on the line; `/cost` may replace it. The reviewer
   report is also written to `_logs/<batch>-report.md`.

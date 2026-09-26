@@ -480,7 +480,10 @@ the one promise a review does not verify.
 Before each launch:
 
 - Spent = the sum over sessions of each session's last cumulative
-  `total_cost_usd`, from `<batch>-costs.txt`. Projected = the largest
+  `total_cost_usd`, from `<batch>-costs.txt`, plus, once S4 has returned
+  in plugin mode, the acceptance cases' costs from the record — the nested
+  sessions S4 launched are in no worker's JSON and on no costs line.
+  Projected = the largest
   single-session cost of this batch so far, or the budget divided by six
   before the first session. When spent + projected > budget, stop and ask
   "raise the budget to how much?" with spent, projected, and the remaining
@@ -534,10 +537,14 @@ first, to confirm the path under test is reachable, then one case per run,
 every driver reply named in the record; the record is
 `docs/dry-runs/<batch>-acceptance.md` with the fixed sections Setup,
 Independence, Cases, Findings, Observations, Not exercised, Summary. S4's
-task block carries the cases with their PASS criteria, the driver line, and
-the record path; S4 is itself headless and waits for its nested sessions
-with the driver form of the wait snippet. Why the trial run: a seed that
-cannot reach the step under test hides that step behind its own failure.
+task block carries the cases with their PASS criteria, the driver line —
+with the remaining amount as `AUTOPILOT_BUDGET_USD` for every nested
+launch, since S4's own cap bounds none of them — and the record path; each
+case's line in the record carries its cost, the sum of its nested sessions'
+last cumulative `total_cost_usd`; S4 is itself headless and waits for its
+nested sessions with the driver form of the wait snippet. Why the trial
+run: a seed that cannot reach the step under test hides that step behind
+its own failure.
 
 **Repo mode.** An S4 worker runs each `Acceptance:` command at the S3b HEAD
 in the repository, one command per Bash call, and replies with each
@@ -621,14 +628,17 @@ release preparation was right.
   release; any stop or deferred item), and the cost.
 - `## Reviewer report` — English, the fixed fields in this order (Templates
   § The reviewer report). The total-cost line reports the measured sum of
-  the workers' last cumulative `total_cost_usd` plus the main session's own
-  cost as an estimate labeled "estimated": its turn count (launches + wakes
-  + answers + the final turn) × the mean cost per turn across this batch's
-  workers (each worker's `total_cost_usd` ÷ `num_turns` from its JSON),
-  with the basis stated on the line; `/cost` in this session may replace
-  it. Why: an interactive session has no JSON result, so its cost is a
-  number with a stated basis or nothing, and a total without it would be
-  short by one session.
+  the workers' last cumulative `total_cost_usd`, plus, in plugin mode, the
+  acceptance cases' costs from the record as a second measured term (the
+  nested sessions S4 launched), plus the main session's own cost as an
+  estimate labeled "estimated": its turn count (launches + wakes + answers
+  + the final turn) × the mean cost per turn across this batch's workers
+  (each worker's `total_cost_usd` ÷ `num_turns` from its JSON), with the
+  basis stated on the line; `/cost` in this session may replace it. Why:
+  an interactive session has no JSON result, so its cost is a number with
+  a stated basis or nothing, and a total without it would be short by one
+  session — and without the record's costs, short by the whole acceptance
+  whose cases the same report lists with their costs.
 
 The reviewer report is built from the state file, not from memory, and also
 written to `_logs/<batch>-report.md`; the state file records its last
@@ -842,7 +852,7 @@ the user has yet to see.
 - Files changed: <list>; zero diff: <nothing printed | the paths>
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
-- Total cost: USD <workers' sum> measured + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
+- Total cost: USD <workers' sum> measured + USD <acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)

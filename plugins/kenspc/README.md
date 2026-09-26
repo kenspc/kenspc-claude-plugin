@@ -427,7 +427,8 @@ holds the next action.
 
 **Budget.** `USD 200` by default, `16 sessions, 8 resumes` as caps. Before
 each launch the run checks spent (the sum of the sessions' last cumulative
-costs) plus projected (the largest session so far, or budget ÷ 6 before the
+costs and, in `plugin` mode, the acceptance cases' costs from the record)
+plus projected (the largest session so far, or budget ÷ 6 before the
 first) against the budget and asks "raise the budget to how much?" when it
 would be exceeded; every worker is started with `--max-budget-usd` set to
 the remaining amount, so a runaway session cannot spend past the batch. A
@@ -444,8 +445,9 @@ design beyond its letter; files changed and the zero-diff result;
 byte-identity / guards / counts; acceptance, one line per case with its
 cost and result; total cost; Not exercised; release-preparation state;
 sessions / messages / resumes / stops. The total-cost line is the measured
-sum of the workers' last cumulative `total_cost_usd` plus the main
-session's own cost as an estimate, labeled so: its turn count × the mean
+sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode
+the acceptance cases' costs from the record (S4's nested sessions), plus
+the main session's own cost as an estimate, labeled so: its turn count × the mean
 cost per turn across the batch's workers, the basis stated on the line
 (`/cost` in your session replaces it). The reviewer report is also written
 to `_logs/<batch>-report.md`, and the final message ends with
