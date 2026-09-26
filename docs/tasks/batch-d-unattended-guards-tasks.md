@@ -1121,7 +1121,51 @@ Task 3 created, keeping Task 3's `### Changed` bullet:
 
 ### Task 11: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promotion outcomes for Tasks 1-10 — none promoted, none needs
+  a home; every recorded decision is local. Task 1 (paragraph placement
+  before "On approval:", the fixed line on one source line, "naming the
+  file"), Task 2 (gap-list sentence placement, the widened cannot-ask Why,
+  the element's layout), Task 3 (carve-out after the Why, the reworded Why,
+  the Constraints Why, the README placements), Task 4 (the condition's
+  wording), Task 5 (README/CLAUDE.md existence checks after the `--file`
+  return, indentation-tolerant start line, bash pattern match instead of
+  `printf | grep -q` under pipefail, every failing copy reported), Task 6
+  (both checks report before one exit 1, constants beside `ANCHOR_CHECKS`,
+  the self-test reading the Prototype line from the array, restore after
+  each mutation), Task 8 (sentence placements, the reordered verifier
+  sentence), Task 9 (clause placements; the sha256 method, already in
+  row 10 itself), and Task 10 (bullet split and order, the record cited)
+  each explain a choice inside the file it was made in, and the scripts'
+  fixture-stale guards catch the one maintenance hazard among them (a
+  self-test literal that no longer matches exits 2). Task 7 recorded none.
+- Changes/tradeoffs: no listed document needed an edit; this commit holds
+  only the status update and these notes. Checked against the
+  implementation: CLAUDE.md (cannot-ask list, prototype path paragraph,
+  Maintenance note, check-run-contract.sh and check-doc-sync-anchors.sh
+  descriptions, Non-Goals' Prototype line sentence) against the three
+  skills and both script headers; the plugin README (the `generate-plan`
+  and `prototype` rows, the Prototype path paragraph's two clauses, "Red
+  interval after a diagnosis", "Uncommitted `.gitignore` edits", and the
+  unchanged Run directory `.gitignore` bullet and "Branches" item) against
+  generate-plan Phase 1 Step 1 and Phase 2 Step 3, prototype § The question
+  and § The gates, diagnose-bug § Exit, and the `canonical:run-dir` block's
+  `git add .gitignore` / `commit -- .gitignore`; the CHANGELOG's 3.8.1
+  entry against the scripts' self-tests (eighteen must-exit-1 mutations
+  plus one must-exit-0 in check-run-contract.sh; three new mutations in
+  check-doc-sync-anchors.sh) and checklist rows 4, 9, 10; the release
+  checklist's rows and its unchanged `--file` sub-check (still check 4
+  only). `docs/roadmap.md` is left to the release commit (zero diff since
+  `0128a2f`). Batch-end mechanical check: the pre-flight block's effort
+  diff 0, both `claude plugin validate --strict` runs 0,
+  `check-all.sh --self-test` 0 with `guards run: 10` and
+  `self-tests run: 9` (only the pre-existing SKIP); the zero-diff command
+  empty; the pointer-label grep 0 on all three skills (positive control:
+  145 on the plan); all eight skills `version: 3.0.0`; `plugin.json`
+  `3.8.0`; no diff to the root README, either manifest, `check-all.sh`, or
+  the roadmap.
 
 Depends on: Task 1-10
 
