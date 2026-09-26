@@ -399,15 +399,16 @@ CONTEXT block — it reads
 the 5 reports and schema-b.md from RUN_DIR itself. The agent verifies that
 every issue ID is accounted for, that fixes are real, and that build / test /
 lint pass. It returns Schema C (`# / Check / Result / Detail` table plus per-
-non-PASS detail prose, closing on a CLEAN or HAS ISSUES line). Schema G's
-Verification section renders it verbatim. When it returns, print only
-`regression-verifier returned — CLEAN` when its closing line is CLEAN, or,
+non-PASS detail prose and a CLEAN or HAS ISSUES result line, which HAS
+ISSUES follows with the remaining problems). Schema G's Verification
+section renders it verbatim. When it returns, print only
+`regression-verifier returned — CLEAN` when its result line is CLEAN, or,
 when it is HAS ISSUES, this line naming each non-PASS row with its Result:
 
 `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
 
 When code-fixer's reply has no statistics line, or regression-verifier's
-reply no closing CLEAN or HAS ISSUES line — an error, a refusal such as
+reply no CLEAN or HAS ISSUES result line — an error, a refusal such as
 regression-verifier's when schema-b.md is missing, or a reply cut short —
 print instead the line for that agent,
 

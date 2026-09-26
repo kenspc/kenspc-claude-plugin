@@ -390,22 +390,23 @@ The regression agent verifies:
   did not introduce new issues.
 
 It returns Schema C — the five-check table, a Detail paragraph for each
-non-PASS row, and a closing CLEAN or HAS ISSUES line. The Schema F report
-renders it verbatim. When it returns, print only
-`regression-verifier returned — CLEAN` when its closing line is CLEAN, or,
+non-PASS row, and a CLEAN or HAS ISSUES result line, which HAS ISSUES
+follows with the remaining problems. The Schema F report renders it
+verbatim. When it returns, print only
+`regression-verifier returned — CLEAN` when its result line is CLEAN, or,
 when it is HAS ISSUES, this line naming each non-PASS row with its Result:
 
 `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
 
 The line names no path: regression-verifier writes no report file. When
-the reply has no closing CLEAN or HAS ISSUES line — the refusal it returns
+the reply has no CLEAN or HAS ISSUES result line — the refusal it returns
 when schema-b.md is missing is one — print instead
 
 `regression-verifier returned — no result line`
 
 and the Schema F report renders the reply verbatim, as it came back; the
 run goes on to Step 7. Why: a CLEAN or HAS ISSUES
-line chosen without that closing line is made up, and a made-up CLEAN reads
+line chosen without that result line is made up, and a made-up CLEAN reads
 as a verified run.
 
 ### Step 7: Final consolidated report (Schema F)
