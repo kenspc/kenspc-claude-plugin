@@ -379,13 +379,19 @@ Every worker is one launch, one wait, one return.
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
   subscribe again and end the turn. A refused subscription means the worker
-  is not reachable, so read `.exit`: present, the worker finished; absent
-  with the pid gone, it died. A notice that reports the subscription
-  expired (twelve hours) runs the same check. The notice is the wake and
-  `.exit` the evidence. Why: a subscription made after the worker exited
-  was refused, a notice can be lost, early, or expired, and a transition
-  that rests on the notice's wording rests on nothing on disk; reading the
-  artifact on every wake turns each of those into a delay.
+  is not listed, so read `.exit`: present, the worker finished; absent
+  with the pid gone, it died; absent with the pid live, the worker is still
+  starting — the driver returns as soon as it has forked, and the worker
+  is listed only once `claude` has booted, seconds later — so wait one
+  driver-form iteration of the wait snippet and subscribe again, for as
+  long as the pid lives. A notice that reports the subscription expired
+  (twelve hours) runs the same check. The notice is the wake and `.exit`
+  the evidence. Why: a subscription made after the worker exited was
+  refused, a notice can be lost, early, or expired, and a transition that
+  rests on the notice's wording rests on nothing on disk; reading the
+  artifact on every wake turns each of those into a delay, and the retry
+  keeps a worker that is still booting from being read as dead and
+  resumed beside itself.
 - **The wait, headless.** Never subscribe. Poll with the driver form of the
   wait snippet, one tool call of about a minute per iteration, until
   `<tag>.exit` exists or the pid is gone.
