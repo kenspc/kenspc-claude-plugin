@@ -620,11 +620,17 @@ its own failure.
 in the repository, one command per Bash call, and replies with each
 command, its exit code, and the last twenty lines of its output; the
 results go into the reviewer report's acceptance lines. No file is written
-into the repository unless `Acceptance record:` names a path. With
+into the repository unless `Acceptance record:` names a path; then S4's
+task block also tells it to write the same lines — each command, its exit
+code, the last twenty lines — to that path and commit the file alone,
+`docs: add batch <name> acceptance record`, and an `-s4b` re-run rewrites
+its case's lines there in a commit of its own. With
 `Acceptance: none`, no S4 session starts and the report's acceptance line
 reads `none named; S3b is the last check`. Why: a product repository has no
 place for a record the plugin invented, and the report is where the user
-reads the run.
+reads the run; where the user names a path, S4 is the session that ran the
+commands, a worker may write into the repository, and a file left
+uncommitted would be swept into a later commit under its message.
 
 **Classification.** The main session classifies each FAIL: a plugin defect
 (an implementation defect, in repo mode) → S5 fixes it, then the case is
@@ -822,7 +828,8 @@ these two fields bound what it may.
 - S4: the cases with their PASS criteria; the driver line; plugin mode the
   record path `docs/dry-runs/<batch>-acceptance.md` and its seven sections;
   repo mode the reply shape (each command, its exit code, the last twenty
-  lines).
+  lines) and, with `Acceptance record:` set, the path to write them to and
+  commit alone.
 - S5: `Fix issue <ID> from run <run dir>: <one line>`; the case to make
   pass; "commit the fix alone".
 - S6: the release preparation for the mode (Phase 4).
