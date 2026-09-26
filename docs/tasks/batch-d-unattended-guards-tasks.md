@@ -491,7 +491,20 @@ the CHANGELOG together):
 
 ### Task 4: Name the reproduction commit when diagnose-bug's user implements interactively
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the condition is written as "When Phase 1 committed a
+  reproduction test — a manual reproduction commits none —" so the reader
+  of the bullet sees why a manual reproduction gets no revert line. The
+  review-run consequence is set off by commas inside "says its test fails
+  … until the fix lands", so "until the fix lands" governs both the failing
+  test and the FAIL test run, as plan Step 3.1 phrases it with dashes.
+- Changes/tradeoffs: none. Verified: `git diff 0128a2f` on the skill has one
+  hunk (source line 452, the "interactively" bullet); "Ending without a
+  document" through the next heading is byte-identical to `0128a2f`;
+  pointer-label and MUST/NEVER/CRITICAL greps empty; check-no-model-names 0;
+  check-all 0 with `guards run: 10`; validate passed.
 
 Plan Step 3.1 (D-5; rulings D13, M7). In
 `plugins/kenspc/skills/diagnose-bug/SKILL.md`, the "interactively" bullet of

@@ -449,7 +449,13 @@ implement interactively.
   path as its argument. Its own batch gate confirms once more; that gate is
   task-implement's, not this skill's.
 - On "interactively": stop. The task document stands, committed, for the
-  user to work from.
+  user to work from. When Phase 1 committed a reproduction test — a manual
+  reproduction commits none — the last message names that commit, says its
+  test fails, and every review run in the repository reports the test run
+  FAIL, until the fix lands, and gives `git revert <hash>` for backing the
+  test out if the fix is not made; the skill does not revert it unasked.
+  Why: the fix is now the user's to make, and until it lands the branch
+  carries a failing test that nothing scheduled will turn green.
 - In a session that cannot ask (a system reminder to work without
   stopping): the document is written; print the suggestion
   `/kenspc-task-implement <path>` and stop.
