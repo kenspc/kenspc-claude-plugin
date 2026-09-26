@@ -682,7 +682,8 @@ into the repository unless `Acceptance record:` names a path; then S4's
 task block also tells it to write the same lines — each command, its exit
 code, the last twenty lines — to that path and commit the file alone,
 `docs: add batch <name> acceptance record`, and an `-s4b` re-run rewrites
-its case's lines there in a commit of its own. With
+its case's lines there in a commit of its own,
+`docs: update batch <name> acceptance record`. With
 `Acceptance: none`, no S4 session starts and the report's acceptance line
 reads `none named; S3b is the last check`. Why: a product repository has no
 place for a record the plugin invented, and the report is where the user
@@ -881,8 +882,10 @@ these two fields bound what it may.
 block below is copied as it stands, its placeholders filled the way the
 preamble's are; text in `[square brackets]` — a line, or words inside one —
 is written when the field it names is set and omitted when the field is
-empty; the brackets of an indented command line, the wait snippet's
-`[ -f … ]`, are the shell's and are copied as they stand. Why one fixed
+empty; a bracket the bullet above a block ties to a launch instead — the
+first S4 run, or its `-s4b` re-run — is written for that launch alone; the
+brackets of an indented command line, the wait snippet's `[ -f … ]`, are
+the shell's and are copied as they stand. Why one fixed
 template per role: the task block is the only part of
 a prompt that varies between launches, so a template keeps the variation to
 the placeholders, and a reader of the record who knows the template reads a
@@ -958,9 +961,13 @@ Constraints section gives, commit the spec alone as
   instructions.
 - **S4, plugin mode** — Phase 3, when `Acceptance:` names cases and the
   mode is `plugin`. The cases and their PASS criteria are the field's
-  sub-bullets, `(optional)` carried over; `<S3b HEAD sha>` is HEAD at S3b's
-  return; `<tag>` is S4's own tag; `<remaining>` is the budget left at S4's
-  launch. Why the nested tags and the cap are spelled out: a nested launch
+  sub-bullets, `(optional)` carried over; `<HEAD sha>` is HEAD at the
+  launch, the state file's `head:`; `<tag>` is S4's own tag; `<remaining>`
+  is the budget left at S4's launch. The first run lists every case and
+  gets the bracketed trial-run words and the first bracketed record
+  paragraph; an `-s4b` re-run after an S5 fix (Phase 3) lists the one case
+  it re-runs and gets the second record paragraph instead. Why the nested
+  tags and the cap are spelled out: a nested launch
   under a worker's or a resume's tag is accepted once that worker has ended
   and overwrites its `.json`, `.session`, and `.pid`, which Phase 4 reads;
   and S4's own cap bounds none of its nested sessions, so a cap they shared
@@ -969,12 +976,12 @@ Constraints section gives, commit the spec alone as
 ````
 ## Task: acceptance for batch <batch>
 
-The batch's commits are <baseline sha>..<S3b HEAD sha>; run the acceptance
-at that HEAD with the plugin at <plugin directory>. Seed projects live
-under <workspace>/<batch>-<seed>/, one per run, made as the case needs.
+The batch's commits are <baseline sha>..<HEAD sha>; run the acceptance at
+that HEAD with the plugin at <plugin directory>. Seed projects live under
+<workspace>/<batch>-<seed>/, one per run, made as the case needs.
 
-First a trial run of a seed, to confirm the path under test is reachable;
-then one case per run, in the order listed:
+One case per run, in the order listed[, after a trial run of a seed to
+confirm the path under test is reachable]:
 
 <n>. <case> — PASS: <criterion>[ (optional)]
 
@@ -985,8 +992,8 @@ seed as its cwd and its prompt in a file:
     AUTOPILOT_PLUGIN_DIR=<plugin directory> AUTOPILOT_BUDGET_USD=<cap> \
     <workspace>/_prompts/<batch>-run.sh <nested tag> <seed directory> <prompt file>
 
-The nested tag is <tag>-trial for the trial run and <tag>-case<n> for case
-n — a tag no other session has used. The cap is <remaining> for the first
+The nested tag is <tag>-case<n> for case n[, and <tag>-trial for the trial
+run] — a tag no other session has used. The cap is <remaining> for the first
 nested launch and, for each later one, the previous cap less the finished
 cases' costs. Wait for each nested session with
 
@@ -996,26 +1003,36 @@ one Bash call per iteration, LOGS being <workspace>/_logs and TAG the
 nested tag, until <nested tag>.exit exists; the session's cost is
 total_cost_usd in <nested tag>.json.
 
-Write the record to docs/dry-runs/<batch>-acceptance.md with these
+[Write the record to docs/dry-runs/<batch>-acceptance.md with these
 sections in this order: Setup, Independence, Cases, Findings, Observations,
 Not exercised, Summary. Every driver reply is named in it under the case it
 belongs to; each case's line carries PASS or FAIL against its criterion and
 its cost, the sum of its nested sessions' last cumulative total_cost_usd.
 Commit the record alone, `docs: add batch <batch> acceptance record`; the
-repository changes in no other way. Reply with the record's path and one
-line per case — its number, PASS or FAIL, its cost.
+repository changes in no other way.]
+[Rewrite case <n>'s lines in the record at docs/dry-runs/<batch>-acceptance.md
+from this run — the driver replies named under it, PASS or FAIL against its
+criterion, its cost, the sum of its nested sessions' last cumulative
+total_cost_usd — leaving the other cases' lines as they are, and commit the
+record alone, `docs: update batch <batch> acceptance record`; the
+repository changes in no other way.]
+Reply with the record's path and one line per case — its number, PASS or
+FAIL, its cost.
 ````
 
 - **S4, repo mode** — Phase 3, when `Acceptance:` names commands and the
-  mode is `repo`; the bracketed lines are written when `Acceptance record:`
-  names a path. With `Acceptance: none`, no S4 starts.
+  mode is `repo`; `<HEAD sha>` is HEAD at the launch, the state file's
+  `head:`. The bracketed paragraphs are written when `Acceptance record:`
+  names a path — the first on the first run, the second on an `-s4b`
+  re-run after an S5 fix (Phase 3), which lists the one command it re-runs.
+  With `Acceptance: none`, no S4 starts.
 
 ````
 ## Task: acceptance for batch <batch>
 
-The batch's commits are <baseline sha>..<S3b HEAD sha>; run the acceptance
-at that HEAD, in the repository. Run each of these, one per Bash call, in
-the order listed:
+The batch's commits are <baseline sha>..<HEAD sha>; run the acceptance at
+that HEAD, in the repository. Run each of these, one per Bash call, in the
+order listed:
 
 <n>. <command> — PASS: <criterion>[ (optional)]
 
@@ -1024,6 +1041,10 @@ twenty lines of its output.
 [Write the same lines to <Acceptance record: path> and commit that file
 alone, `docs: add batch <batch> acceptance record`; the repository changes
 in no other way.]
+[Replace command <n>'s lines in <Acceptance record: path> with the same
+lines from this run, leaving the others as they are, and commit that file
+alone, `docs: update batch <batch> acceptance record`; the repository
+changes in no other way.]
 ````
 
 - **S5** — a fix, launched from a classified defect: a Schema F row after
