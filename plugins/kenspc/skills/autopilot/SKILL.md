@@ -401,6 +401,11 @@ Every worker is one launch, one wait, one return.
   into `<batch>-costs.txt` — replace the line that carries the same session
   id, else append; a resume's line replaces its predecessor's, since a
   resumed session's JSON carries the whole total; rewrite the state file.
+  Before the next step, read the JSON's `result` for
+  `## Question for the main session`: a return that carries it is the
+  timed-out question (The message protocol), not a finished step. Why: a
+  worker that waited out its thirty minutes exits like one that finished,
+  and its missing artifact would otherwise be found one step later.
 
 ### A worker's question at a gate
 
@@ -907,6 +912,12 @@ wording that closed it:
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit and the reports.
 
+An artifact absent after a return — no task document after S2, HEAD still
+at the baseline after S3 (every task blocked, or the batch gate not
+passed), no Schema F verdict after S3b (a review over an empty range
+dispatches nothing) — is a stop naming it, not a transition.
+
 Why: a phase's closing sentence has been read as the end of a whole skill
 run; the next phase reads an artifact, so the artifact is what moves the
-run forward.
+run forward, and its absence is what stops the run: a return without its
+artifact is a finished session, not a finished step.
