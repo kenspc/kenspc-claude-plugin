@@ -455,8 +455,8 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   location, importing the app's modules, when that lets it run; otherwise
   it is not built, its entry stays `needs prototype` with the reason (an
   entry that already held an answer, which you chose to prototype again,
-  keeps that answer), and widening the in-app exception to features is
-  your decision.
+  is left as it was, gaining at most a `Settled by:` line), and widening
+  the in-app exception to features is your decision.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

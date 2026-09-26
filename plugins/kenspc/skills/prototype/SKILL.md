@@ -232,9 +232,9 @@ written once, in the Writing rules for the brief in
   from the location, importing the app's modules, when that lets it run.
   Otherwise it is not built, in either kind of session: the entry stays
   `` `needs prototype` `` with the reason in `Evidence:` (an entry that held
-  `Answer:` when the run began keeps it, as § The question says), and the
-  exit says that widening the in-app exception to features is the user's
-  decision.
+  `Answer:` when the run began is left as it was, gaining at most a derived
+  `Settled by:`, as § The question says), and the exit says that widening
+  the in-app exception to features is the user's decision.
   Why: the in-app exception exists for what can only render inside the
   app, and anything that can run elsewhere keeps its files out of the
   user's source tree.
@@ -315,7 +315,7 @@ what a session that cannot ask does in place of asking.
 | A location conflict | Where | The default location, named in the final message |
 | A UI prototype that can only render in the app, and CLAUDE.md names no location | Where in the app | Nothing is built; the entry stays unsettled with the reason |
 | A UI prototype in the app: a tracked file with uncommitted changes, or the project's manifest | Go on, commit first, or stop | Nothing is built; the entry stays unsettled with the reason |
-| A feature prototype that needs the app's runtime and cannot run outside it | — | Nothing is built, in either kind of session; the entry stays unsettled with the reason (one that held `Answer:` keeps it, as § The question says), and the exit says widening the exception is the user's decision |
+| A feature prototype that needs the app's runtime and cannot run outside it | — | Nothing is built, in either kind of session; the entry stays unsettled with the reason (one that held `Answer:` is left as it was, gaining at most a derived `Settled by:`, as § The question says), and the exit says widening the exception is the user's decision |
 | A connection the development configuration does not name | May it be used | It is not used |
 | A new table or column on the development database | The warning and the throwaway recommendation; the user decides | The throwaway database, named in the final message |
 | The answer is the user's judgment | Look at the prototype and give a verdict | Unsettled; `Evidence:` says what to look at and how |
@@ -366,7 +366,8 @@ user has staged out of the commit.
   not run — the command is missing, the dependencies are not installed, the
   tool stopped before checking — is no baseline: nothing is built, and the
   entry stays unsettled with the reason (an entry that held `Answer:` when
-  the run began keeps it, as § The question says). Why: a check that
+  the run began is left as it was, gaining at most a derived
+  `Settled by:`, as § The question says). Why: a check that
   cannot run fails the same way after the build, so comparing the two would
   pass any edit.
 - Before the add commit, read the staged file list and the staged diff.
