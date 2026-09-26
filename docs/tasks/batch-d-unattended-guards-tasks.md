@@ -881,7 +881,34 @@ and Implementation notes.
 
 ### Task 8: Document the batch's behavior in the plugin README
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the Prototype path paragraph's `Answer:` sentence sits right
+  after the `/kenspc-plan` sentence it qualifies ("… writes no file."),
+  rather than beside Task 3's `/kenspc-prototype` clause, so each
+  sentence stays with the command it describes; Task 3's clause is
+  untouched. The red-interval paragraph is a continuation paragraph of the
+  same list item (blank line, two-space indent), as "Review scope without a
+  task document" continues its item. Its verifier sentence was reordered to
+  open with "regression-verifier has no notion of a failure that predates
+  the run: it runs …" so the fixed phrase sits on one source line (the
+  `grep -c` criterion reads lines) without an odd short line. The item's
+  last sentence reads "When you implement interactively, and when the
+  diagnosis ends without a task document or brief, the skill names that
+  commit and offers `git revert`."
+- Changes/tradeoffs: the mutation sentence is the conditional form ("A
+  mutation check whose copy runs the reproduction test …"). The generate-plan
+  row's sentence covers only the approval stop, as the task specifies; the
+  existing-file question's cannot-ask branch (`<name>-2.md`) is not
+  mentioned in the README. Verified: both fixed-phrase greps 1 (0 at
+  `0128a2f`); the new item is at line 340, between "Uncommitted fixes"
+  (325) and "Red interval" (349), naming the three entry points and
+  `chore: ignore kenspc run directory`; `writes only under` and
+  `read-only on the working tree` each still on one README line; Task 3's
+  clause present; check-all 0 with `guards run: 10`;
+  `check-all.sh --self-test` 0 with `self-tests run: 9` (only the
+  pre-existing SKIP).
 
 Depends on: Task 1-4
 
