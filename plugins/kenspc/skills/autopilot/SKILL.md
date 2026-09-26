@@ -595,7 +595,13 @@ reports say the release was not prepared. Why: stack-agnostic in form — the
 checklist and CLAUDE.md are read — and the repository's own procedure in
 substance.
 
-The zero-diff check runs again after S6's commit.
+The zero-diff check runs again before S6 is launched, over
+`<baseline>..HEAD` as it then stands, and not after S6's commit. Why
+before: S4 and S5 commit after the check that follows S3b, so their commits
+need one of their own; and in plugin mode the release commit edits, by
+design, paths a zero-diff list may name — a plugin repository's roadmap or
+manifest — so a check run over the release commit would stop a run whose
+release preparation was right.
 
 **The reports**, both in the final message:
 
