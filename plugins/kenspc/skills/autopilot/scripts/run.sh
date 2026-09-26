@@ -206,10 +206,14 @@ launch() {
 # --max-budget-usd, or --append-system-prompt with their variables unset,
 # or without cwd=<the launch's cwd, physical path>;
 # then, for a resume launch of the same stub
-# under <tag>-r1 with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD,
-# and APPEND_SP set, a .exit missing or not 0, a .session not holding that
-# id, an .err without --resume <id>, with --session-id, or without the three
-# variables' flags, and a timeline start line not ending in "resume"; then,
+# under <tag>-r1 through the command line (the parser the skill calls)
+# with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, and
+# APPEND_SP set, a command line not returning 0, a .exit missing or not 0,
+# a .session not holding that id, an .err without --resume <id>, with
+# --session-id, or without the three variables' flags, a timeline start
+# line not ending in "resume", and a command line with --resume and no id,
+# or with an unknown argument, that does not return 2 or writes
+# <tag>-r1-x.session; then,
 # for a launch under self-s-test-s1 with AUTOPILOT_BATCH unset and a stale
 # self-s-test-s1.exit in place, that file still present right after the
 # launch, a .exit not reading 0 after the wait, and a
@@ -217,8 +221,13 @@ launch() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG n exit_status session flag
-  local first_session first_pid refusal rc
+  local first_session first_pid refusal rc self
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
+  # This script's own absolute path, resolved before the first launch
+  # changes the working directory: the resume launch below runs it as the
+  # skill does, through its command line.
+  self=$(cd "$(dirname "$0")" && pwd) || die "cannot resolve the directory of $0"
+  self=$self/$(basename "$0")
   LOGS=$base/logs
   mkdir -p "$LOGS" || die "cannot create $LOGS"
 
@@ -329,11 +338,15 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   # The three optional variables are set for this launch only, so their
   # flags are read from .err too: a plugin-mode worker launched without
   # --plugin-dir would load the installed plugin and review code other than
-  # the batch's, and one without --max-budget-usd would run unbounded.
+  # the batch's, and one without --max-budget-usd would run unbounded. This
+  # launch goes through the command line, the parser the skill calls, so a
+  # driver that dropped the --resume value is caught here rather than
+  # starting a fresh session under the resume tag.
   RTAG=$TAG-r1
-  AUTOPILOT_PLUGIN_DIR=$base/plugin; AUTOPILOT_BUDGET_USD=1; APPEND_SP=x
-  launch "$RTAG" "$base" "$base/prompt.md" "$session"
-  unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP
+  AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
+  AUTOPILOT_PLUGIN_DIR=$base/plugin AUTOPILOT_BUDGET_USD=1 APPEND_SP=x \
+    bash "$self" "$RTAG" "$base" "$base/prompt.md" --resume "$session" \
+    || { echo "self-test failed: the resume launch of $RTAG through the command line did not return 0" >&2; return 1; }
   n=0; until [ -f "$LOGS/$RTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
   [ -f "$LOGS/$RTAG.exit" ] || { echo "self-test failed: $LOGS/$RTAG.exit is missing after the wait" >&2; return 1; }
   exit_status=$(cat "$LOGS/$RTAG.exit")
@@ -350,6 +363,17 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     grep -qF -- "$flag" "$LOGS/$RTAG.err" \
       || { echo "self-test failed: $LOGS/$RTAG.err does not show $flag" >&2; return 1; }
   done
+  # The parser's refusals, status 2 and nothing started: --resume without
+  # an id would otherwise launch a fresh session under the resume tag, and
+  # an unknown argument would pass unnoticed.
+  AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
+    bash "$self" "$RTAG-x" "$base" "$base/prompt.md" --resume 2>/dev/null; rc=$?
+  [ "$rc" -eq 2 ] || { echo "self-test failed: a command line with --resume and no id returned $rc, expected 2" >&2; return 1; }
+  AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
+    bash "$self" "$RTAG-x" "$base" "$base/prompt.md" --bogus 2>/dev/null; rc=$?
+  [ "$rc" -eq 2 ] || { echo "self-test failed: a command line with an unknown argument returned $rc, expected 2" >&2; return 1; }
+  [ ! -f "$LOGS/$RTAG-x.session" ] \
+    || { echo "self-test failed: a refused command line wrote $LOGS/$RTAG-x.session" >&2; return 1; }
 
   # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
   # before its last "-s", so a batch name that itself holds "-s" keeps its
