@@ -192,7 +192,10 @@ launch() {
 # header names. The logs directory is always a fresh directory under $TMPDIR,
 # whatever AUTOPILOT_LOGS says, so a self-test writes nothing under the
 # workspace. Passing: every file is present with the expected content and the
-# timeline holds both lines. It fails, in this order, on a missing .session,
+# timeline holds both lines. It fails, in this order, on a second launch
+# under the tag, made while the stub still runs, that is not refused with
+# status 2 naming the pid and leaving .session and .pid as they were; then
+# on a missing .session,
 # a missing .pid, a .json that is missing, unparseable, or without "result",
 # a missing .err, a .exit that is missing or does not read 0, a timeline
 # without its start or end line, an .err that does not show every
@@ -207,6 +210,7 @@ launch() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG n exit_status session flag
+  local first_session first_pid refusal rc
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   LOGS=$base/logs
   mkdir -p "$LOGS" || die "cannot create $LOGS"
@@ -240,6 +244,19 @@ STUB
   echo "self-test: logs directory $LOGS"
   echo "self-test: executable $AUTOPILOT_CLAUDE"
   launch "$TAG" "$base" "$base/prompt.md" ""
+
+  # A second launch under the same tag while the stub still runs (its one
+  # second of sleep) is refused before anything is written: status 2, the
+  # pid named, .session and .pid as they were. In a subshell, since die
+  # exits the calling shell. Without the refusal two workers would share
+  # one repository and the second would overwrite the first's files.
+  first_session=$(cat "$LOGS/$TAG.session"); first_pid=$(cat "$LOGS/$TAG.pid")
+  refusal=$( (launch "$TAG" "$base" "$base/prompt.md" "") 2>&1 ); rc=$?
+  [ "$rc" -eq 2 ] || { echo "self-test failed: a second launch under the running tag $TAG returned $rc, expected 2 (refused)" >&2; return 1; }
+  printf '%s\n' "$refusal" | grep -qF -- "still running (pid $first_pid," \
+    || { echo "self-test failed: the refusal of a second launch under $TAG does not name pid $first_pid" >&2; return 1; }
+  [ "$(cat "$LOGS/$TAG.session")" = "$first_session" ] && [ "$(cat "$LOGS/$TAG.pid")" = "$first_pid" ] \
+    || { echo "self-test failed: a refused launch under $TAG changed $LOGS/$TAG.session or $LOGS/$TAG.pid" >&2; return 1; }
 
   n=0; until [ -f "$LOGS/$TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
 
