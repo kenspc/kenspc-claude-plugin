@@ -154,11 +154,11 @@ command restores it.
   an entry is prototyped again like any other.
 - A named entry whose status word is none of `` `open` ``,
   `` `needs prototype` ``, and `` `answered` `` — hand-edited, translated,
-  or missing: one that holds `Prototype:` takes the question above;
-  otherwise ask, quoting the word found (or saying there is none), whether
-  to prototype it or stop. In a session that cannot ask (a system reminder
-  to work without stopping), stop and leave the entry unchanged, as above.
-  On "prototype it", the entry is prototyped as a named `` `open` `` entry
+  or missing: one that holds `Answer:` or `Prototype:` takes the question
+  above; otherwise ask, quoting the word found (or saying there is none),
+  whether to prototype it or stop. In a session that cannot ask (a system
+  reminder to work without stopping), stop and leave the entry unchanged, as
+  above. On "prototype it", the entry is prototyped as a named `` `open` `` entry
   is, and Phase 3 writes a status word the grammar knows. Why: the skill
   tells an answered entry from an unsettled one by its status word, so an
   entry whose word it cannot read may hold an answer that Phase 3 would
