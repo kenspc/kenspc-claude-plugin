@@ -779,7 +779,15 @@ is refused.
 ## 6. Constraints
 
 <the spec's constraint sections by name>, and the repository's CLAUDE.md.
+Allowed files: <the Allowed files: paths — the files this batch may change; a file outside them is a forbidden file>.
+Byte-identity exceptions: <the Byte-identity exceptions: text — the only byte-identity sections this batch may edit>.
 ````
+
+The last two lines of § 6 are written when their fields are set and
+omitted when empty. Why in the preamble: it is the only text a worker
+reads, so a field that reaches no preamble binds no worker and trips no
+stop; the zero-diff check verifies the paths a batch must not touch, and
+these two fields bound what it may.
 
 ### The task blocks
 
