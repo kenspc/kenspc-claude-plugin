@@ -362,7 +362,45 @@ acceptance, and its `run.ps1` mirrors the `run.sh` Task 1 writes.
 
 ### Task 1: Write the bash driver run.sh
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The timeline lines carry no timestamp prefix: the acceptance anchors
+    them at column 0 (`^start <tag> pid …`, `^end   <tag> exit 0$`), so the
+    launch time goes into the start line's free tail (`at <YYYY-MM-DD HH:MM:SS>`)
+    and the end time is the mtime of `<tag>.exit`, which the subshell writes
+    in the same breath as the `end` line. The earlier batch drivers put a
+    timestamp first; that form cannot match the anchored patterns.
+  - `AUTOPILOT_BATCH` defaults to the tag before its last `-s`
+    (`${tag%-s*}`), not the first, so a batch name that itself contains
+    `-s` (`docs-sync-s2`) keeps its name in the timeline's file name.
+  - `caffeinate -i` wraps the whole worker command; verified before writing
+    that it propagates the utility's exit status (`caffeinate -i sh -c 'exit 3'`
+    returns 3), so `<tag>.exit` still holds claude's own status.
+  - A stale `<tag>.exit` is removed (`rm -f`, one file) right before the
+    launch: the wait snippet polls that file, and one left by an earlier
+    launch under the same tag would read as this worker's completion.
+  - The usage message prints `$0`, not `run.sh`, so the interface line
+    occurs once in the file (Task 2 compares the skill's copy with it).
+  - A launch prints `started <tag> pid <pid> session <id>` to stdout, the
+    three values the skill's launch line needs.
+  - The self-test uses one fresh `mktemp -d` directory under `$TMPDIR` with
+    `logs/`, `stub/`, and the prompt file inside it, batch `selftest`, tag
+    `selftest-s1`; the stub reads its `--session-id` argument back into the
+    JSON's `session_id`, as the real executable would.
+- Changes/tradeoffs:
+  - Only `--resume <id>` is accepted, no positional fourth argument as the
+    earlier batch drivers took; the interface line is the spec's.
+  - The header prose avoids the substrings `--model`, `--continue`, and
+    `mapfile` even in negation, because the acceptance's negative grep is a
+    substring grep that would count a "no `--model`" sentence.
+  - The header also names the driver's own exit codes (0 started, 2 usage
+    or environment error; self-test 1 on failure), which the spec left open.
+  - No test framework exists in this repository; verification was the
+    self-test (built-in stub, a caller-supplied stub exiting 3 → exit 1
+    naming `.exit`, a stub printing nothing → exit 1 naming `.json`), the
+    guard suite, `check-no-model-names.sh`, and the plugin validator.
 
 Plan Step 1.2 (F-5, F-7; rulings D7, D9, M5, M6). Create
 `plugins/kenspc/skills/autopilot/scripts/run.sh`, executable, for the bash
