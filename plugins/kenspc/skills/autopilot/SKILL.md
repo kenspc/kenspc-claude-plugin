@@ -877,25 +877,221 @@ these two fields bound what it may.
 ### The task blocks
 
 `_prompts/<batch>-<tag>-task.md` per launch; the launched prompt
-`_prompts/<batch>-<tag>.md` is the preamble followed by the task block.
+`_prompts/<batch>-<tag>.md` is the preamble followed by the task block. Each
+block below is copied as it stands, its placeholders filled the way the
+preamble's are; text in `[square brackets]` — a line, or words inside one —
+is written when the field it names is set and omitted when the field is
+empty. Why one fixed template per role: the task block is the only part of
+a prompt that varies between launches, so a template keeps the variation to
+the placeholders, and a reader of the record who knows the template reads a
+launched prompt by its filled values alone.
 
-- S1: the draft-spec task, with the shape of a decided spec as Phase 1
-  gives it, ending "send the compact table to <main name> and wait".
+- **S1** — the brief entry only (Phase 1). `<brief path>` is the argument;
+  `<spec path>` is where S1 writes the spec, `docs/plans/<batch>.md`; the
+  seeds are the brief's `Challenge seeds:` sub-bullets, the bracketed lines
+  omitted when the field is empty. The block spells out the shape of a
+  decided spec, since with `Prior specs:` empty the worker has no earlier
+  spec to copy; the decisions arrive later as the `rulings` message, not in
+  this block.
+
+````
+## Task: draft the specification for batch <batch>
+
+Read the brief at <brief path> and write the specification at <spec path>
+with the Write tool — a decided spec whose Ruling column is still empty.
+The reminder printed on a write under docs/plans/ concerns plan generation
+and does not apply here: the spec is written by design outside that skill,
+so read the note and go on.
+
+The shape, section by section:
+
+- `## Objective`, `## Background`, `## Implementation Steps` with Phase /
+  Step headings, `## Documentation impact` (the durable documents the steps
+  make stale, or `N/A — <reason>`), `## Testing Strategy`, `## Risks and
+  Mitigations`, `## Open Questions` — the sections of a plan document. The
+  Open Questions section says that a question during implementation goes
+  to <main name> by message.
+- `## Locked design`: the brief's numbered points, copied as they stand.
+  They are immutable; the spec reopens none of them.
+- `## Design decisions`, opening with the status line `Status: draft`, then
+  two tables with the columns Question, Options (each with its
+  consequence), Lean, Ruling — the last empty. `### Mismatches between the
+  locked design and the repository`: one row per point the repository or
+  the harness cannot carry as written, numbered M<n>. `### Architecture
+  choices`: one row per choice the locked design leaves open, numbered
+  D<n>. A lean is your recommendation in one sentence, with its reason.
+- `## Out of scope` and `## Constraints`: the brief's, carried over and
+  made precise for this repository. Constraints also carries the pointer
+  rule: the spec's numbered labels — the points' numbers, M<n>, D<n>, the
+  clarification numbers — are pointers for the implementer and appear in
+  no file the batch produces, checked by a grep you write into the
+  section, whose pattern matches those label forms and which prints
+  nothing over the files the batch may change, at the baseline, and many
+  lines over the spec itself, so it can fail.
+- `## Clarifications during implementation`: present and empty.
+- `## Autopilot`: copied from the brief as it stands.
+
+[Before you send the draft, argue against it with each of these seeds and
+change what does not survive:
+<one line per Challenge seeds: sub-bullet>]
+
+When the draft is written, send <main name> one message whose first line is
+
+    question <tag>: <n> decisions needed on <spec path>
+
+and whose body is the compact table — number, one-line question, options,
+lean — and the draft's path. Then wait as § 1 says. The answer is a message
+whose first line is `rulings <batch>: <n> rulings`, one row per decision
+(`M<n>: <decision>`, `D<n>: <decision>`), ending with what to do next: fill
+the Ruling column, set the status line to ruled, run the grep the
+Constraints section gives, commit the spec alone as
+`docs(plans): add batch <batch> spec`, reply with the hash, and stop.
+````
+
 - S2: `/kenspc-task <spec path>`.
 - S3: `/kenspc-task-implement <task document path>`.
 - S3b: `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>`.
   Why the range: the batch's change set is that range by definition,
   whatever the branch tracks, and task-review pins a range named in its
   instructions.
-- S4: the cases with their PASS criteria; the driver line, with the nested
-  tag form and its cap per nested launch (Phase 3); plugin mode the
-  record path `docs/dry-runs/<batch>-acceptance.md` and its seven sections;
-  repo mode the reply shape (each command, its exit code, the last twenty
-  lines) and, with `Acceptance record:` set, the path to write them to and
-  commit alone.
-- S5: `Fix issue <ID> from run <run dir>: <one line>`; the case to make
-  pass; "commit the fix alone".
-- S6: the release preparation for the mode (Phase 4).
+- **S4, plugin mode** — Phase 3, when `Acceptance:` names cases and the
+  mode is `plugin`. The cases and their PASS criteria are the field's
+  sub-bullets, `(optional)` carried over; `<S3b HEAD sha>` is HEAD at S3b's
+  return; `<tag>` is S4's own tag; `<remaining>` is the budget left at S4's
+  launch. Why the nested tags and the cap are spelled out: a nested launch
+  under a worker's or a resume's tag is accepted once that worker has ended
+  and overwrites its `.json`, `.session`, and `.pid`, which Phase 4 reads;
+  and S4's own cap bounds none of its nested sessions, so a cap they shared
+  would let each case spend it once.
+
+````
+## Task: acceptance for batch <batch>
+
+The batch's commits are <baseline sha>..<S3b HEAD sha>; run the acceptance
+at that HEAD with the plugin at <plugin directory>. Seed projects live
+under <workspace>/<batch>-<seed>/, one per run, made as the case needs.
+
+First a trial run of a seed, to confirm the path under test is reachable;
+then one case per run, in the order listed:
+
+<n>. <case> — PASS: <criterion>[ (optional)]
+
+Every run is a headless session started through the driver copy, with the
+seed as its cwd and its prompt in a file:
+
+    AUTOPILOT_LOGS=<workspace>/_logs AUTOPILOT_BATCH=<batch> \
+    AUTOPILOT_PLUGIN_DIR=<plugin directory> AUTOPILOT_BUDGET_USD=<cap> \
+    <workspace>/_prompts/<batch>-run.sh <nested tag> <seed directory> <prompt file>
+
+The nested tag is <tag>-trial for the trial run and <tag>-case<n> for case
+n — a tag no other session has used. The cap is <remaining> for the first
+nested launch and, for each later one, the previous cap less the finished
+cases' costs. Wait for each nested session with
+
+    n=0; until [ -f "$LOGS/$TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+
+one Bash call per iteration, LOGS being <workspace>/_logs and TAG the
+nested tag, until <nested tag>.exit exists; the session's cost is
+total_cost_usd in <nested tag>.json.
+
+Write the record to docs/dry-runs/<batch>-acceptance.md with these
+sections in this order: Setup, Independence, Cases, Findings, Observations,
+Not exercised, Summary. Every driver reply is named in it under the case it
+belongs to; each case's line carries PASS or FAIL against its criterion and
+its cost, the sum of its nested sessions' last cumulative total_cost_usd.
+Commit the record alone, `docs: add batch <batch> acceptance record`; the
+repository changes in no other way. Reply with the record's path and one
+line per case — its number, PASS or FAIL, its cost.
+````
+
+- **S4, repo mode** — Phase 3, when `Acceptance:` names commands and the
+  mode is `repo`; the bracketed lines are written when `Acceptance record:`
+  names a path. With `Acceptance: none`, no S4 starts.
+
+````
+## Task: acceptance for batch <batch>
+
+The batch's commits are <baseline sha>..<S3b HEAD sha>; run the acceptance
+at that HEAD, in the repository. Run each of these, one per Bash call, in
+the order listed:
+
+<n>. <command> — PASS: <criterion>[ (optional)]
+
+Reply with, for each command: the command, its exit code, and the last
+twenty lines of its output.
+[Write the same lines to <Acceptance record: path> and commit that file
+alone, `docs: add batch <batch> acceptance record`; the repository changes
+in no other way.]
+````
+
+- **S5** — a fix, launched from a classified defect: a Schema F row after
+  S3b (Phase 2), or an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
+  name the finding — the row's issue ID and the review's run directory, or
+  the case's number and the record's path (plugin mode) or S4's reply (repo
+  mode); `<one line>` is the finding in one sentence. The first line is the
+  block's own heading, as the verdict loop names it.
+
+````
+Fix issue <ID> from run <run dir>: <one line>
+
+The finding, as the reviewer or the acceptance recorded it:
+<the row, or the case's lines, quoted>
+
+The case to make pass: <the check that failed, with its PASS criterion — a
+review check, a self-test, a command, an acceptance case>.
+
+Make the fix inside the allowed files, run the checks the repository's
+CLAUDE.md names for a change of this kind, and commit the fix alone — one
+commit in the repository's convention, touching nothing the finding does
+not need. Reply with the commit hash and one line on what changed.
+````
+
+- **S6, the removal commit** — Phase 4: repo mode with
+  `Release preparation: default` or a list of instructions, and plugin mode
+  with `Version: none`. The first bracketed line is written when `Version:`
+  is set in repo mode, the second when `Release preparation:` is a list.
+  With `keep`, no S6 starts.
+
+````
+## Task: release preparation for batch <batch>
+
+The batch's commits are <baseline sha>..<HEAD sha>. Make one commit,
+`docs: remove batch <batch> plan and tasks`, that `git rm`s <spec path> and
+<task document path> and touches no version and no CHANGELOG.
+[Version <Version:>: bump it where the repository's CLAUDE.md says versions
+live, in the same commit.]
+[Then carry out these instructions, each committed in the repository's
+convention:
+<the Release preparation: sub-bullets>]
+Reply with each commit's hash and subject.
+````
+
+- **S6, the release commit** — Phase 4, plugin mode with a `Version:`. The
+  bracketed words are written when git tracks the brief; an untracked brief
+  is left where it is and named in the reports as the user's to commit or
+  discard.
+
+````
+## Task: release preparation for batch <batch>, version <Version:>
+
+The batch's commits are <baseline sha>..<HEAD sha>. The repository's
+release checklist (docs/release-checklist.md, when it exists) and its
+CLAUDE.md's release convention govern this task; read both first. Then, in
+one release commit in the repository's convention:
+
+- the CHANGELOG's `— unreleased` heading gets today's date;
+- the plugin manifest's version becomes <Version:>;
+- the manifests' descriptions name the new capability;
+- the checklist's counting rows follow what the guards now print;
+- the roadmap's shipped items leave it, and its heading names the next
+  minor;
+- `git rm` <spec path> and <task document path>[ and the brief
+  <brief path>].
+
+Run the checklist's pre-flight block; its two count lines go in your reply.
+No tag, no push, no release: those are the user's. Reply with the commit
+hash and the two count lines.
+````
 
 ### The driver
 
