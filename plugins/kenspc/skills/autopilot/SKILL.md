@@ -248,7 +248,11 @@ running batch keeps launching with the text it started with.
 
 Decided once here and recorded in the settings line. `ps -o args= -p $PPID`
 from the Bash tool prints the command line of the process that runs this
-session; when it shows `-p` or `--print`, the session is headless. A
+session; when one of its arguments is `-p` or `--print` — a whole argument,
+`ps -o args= -p $PPID | tr ' ' '\n' | grep -qxE -- '-p|--print'`, since
+`--permission-mode` and `--plugin-dir` hold `-p` as a substring, and a
+substring test would read a session started as Prerequisites says as
+headless — the session is headless. A
 headless run never subscribes: it polls `<tag>.exit` with the driver form of
 the wait snippet, one tool call of about a minute per iteration. An
 interactive run subscribes to each worker with `notify_when_idle` and ends
