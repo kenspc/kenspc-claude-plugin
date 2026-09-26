@@ -368,8 +368,13 @@ After writing the file, reply with only:
   the fixes are uncommitted and naming the files,
 - in a "task" run whose Doc-sync task is DONE, one line after the statistics
   line (the uncommitted line never occurs in such a run), either
-  `Doc-sync documents: updated <path> (row <n>, <commit>)[; …][; not updated <path> (row <n>) — <reason>]`
-  or `Doc-sync documents: none affected by the fixes`. It is always present
+  `Doc-sync documents: <part>[; <part>…]`, each part
+  `updated <path> (row <n>, <commit>)` or
+  `not updated <path> (row <n>) — <reason>`, in any order, or
+  `Doc-sync documents: none affected by the fixes` when no listed document
+  was affected. A run whose one affected document was left not updated
+  writes that part alone: `none affected by the fixes` would tell the user
+  no document is stale when one is. It is always present
   in such a run, FIXED 0 included, and it is not written to `schema-b.md`,
   whose last line stays the statistics line. Why: the orchestrator reads only
   this reply, which carries no LOW row, and builds Next steps from this line;

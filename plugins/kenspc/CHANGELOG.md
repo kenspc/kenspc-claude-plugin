@@ -91,8 +91,11 @@ the batch's acceptance record, named at release.
   leading word still classifies the action, so the recount guard passes
   unchanged; the worked Schema B example is unchanged. The reply carries,
   after the statistics line, one line,
-  `Doc-sync documents: updated <path> (row <n>, <commit>)[; …][; not updated <path> (row <n>) — <reason>]`
-  or `Doc-sync documents: none affected by the fixes`, always present in
+  `Doc-sync documents: <part>[; <part>…]`, each part
+  `updated <path> (row <n>, <commit>)` or
+  `not updated <path> (row <n>) — <reason>`, in any order, so a run whose
+  one affected document was left not updated can say so, or
+  `Doc-sync documents: none affected by the fixes`, always present in
   such a run, FIXED 0 included, and not written to `schema-b.md`. When the
   Doc-sync task is DONE and FIXED is greater than 0, Schema G's Next steps
   carries that line as one bullet, reads
