@@ -333,7 +333,7 @@ turn continue from the artifact rather than from the wording.
 ```
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
-step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>
+step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
 questions answered:
@@ -438,7 +438,8 @@ Every worker is one launch, one wait, one return.
   directory>` in plugin mode — with the repository root as the worker's
   cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   (the pid and the session id from the driver's `started` line, or from
-  `<tag>.pid` and `<tag>.session`); rewrite the state file. A driver that
+  `<tag>.pid` and `<tag>.session`); rewrite the state file, its step line
+  carrying HEAD at the launch. A driver that
   exits non-zero has started nothing: its message on stderr is the stop's
   reason — or, when it names an earlier worker under the tag still
   running, that worker is the one to wait for, by its `<tag>.exit` — and
@@ -1052,9 +1053,15 @@ wording that closed it:
 - The exit: S6's commit and the reports.
 
 An artifact absent after a return — no task document after S2, HEAD still
-at the baseline after S3 (every task blocked, or the batch gate not
-passed), no Schema F verdict after S3b (a review over an empty range
-dispatches nothing) — is a stop naming it, not a transition.
+where S3 started, the `head:` the state file recorded at its launch (every
+task blocked, or the batch gate not passed), no Schema F verdict after S3b
+(a review over an empty range dispatches nothing) — is a stop naming it,
+not a transition. Why S3's own start and not the baseline: HEAD leaves the
+baseline before S3 runs — S1 commits the spec, S2's reviewer commits the
+task document — so a comparison with the baseline would read an S3 that
+built nothing as a finished step, review a documents-only range, pass the
+acceptance with nothing to accept, and remove the plan and task documents
+of a batch that implemented nothing.
 
 Why: a phase's closing sentence has been read as the end of a whole skill
 run; the next phase reads an artifact, so the artifact is what moves the
