@@ -221,9 +221,15 @@ inside the repository it clones, and the workers' logs are not the
 repository's to track.
 
 The driver is copied from `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`
-to `_prompts/<batch>-run.sh`, and the copy's `--self-test` is run once.
-Why the copy: a plugin-mode S3 may edit the shipped driver itself, and a
-running batch keeps launching with the text it started with.
+to `_prompts/<batch>-run.sh`, and the copy's `--self-test` is run once,
+with `AUTOPILOT_CLAUDE` empty on that command
+(`AUTOPILOT_CLAUDE= bash _prompts/<batch>-run.sh --self-test`). Why the
+copy: a plugin-mode S3 may edit the shipped driver itself, and a running
+batch keeps launching with the text it started with. Why the variable
+empty: the self-test launches whatever the variable names, and a value
+exported for the workers — a `claude` outside `PATH` — would stand in for
+the stub: paid sessions at every start, then a stop on the flag check,
+since the real executable echoes nothing to stderr.
 
 ### The batch name, the tags, and the main session's name
 
