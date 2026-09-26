@@ -72,11 +72,13 @@ the batch's acceptance record, named in the release commit.
   `Answer:` nor `Prototype:` is asked about before anything is written,
   quoting the word found: prototype it, or stop. A "stop" there, or a "no"
   to the prototype-again question below, ends the run with the entry
-  unchanged, and a session that cannot ask stops the same way. The
-  `answered` gate (prototype it again?) now also takes any entry the run
-  takes that holds `Answer:`, whatever its status word — named, or taken
-  with no entry named (the brief's only `needs prototype` entry, or the
-  first in document order in a session that cannot ask) — and a named
+  unchanged, and a session that cannot ask stops the same way; stopping on
+  an unrecognized word, its last message names the entry and quotes the
+  word found, or says there is none, since the word is what stopped the
+  run. The `answered` gate (prototype it again?) now also takes any entry
+  the run takes that holds `Answer:`, whatever its status word — named, or
+  taken with no entry named (the brief's only `needs prototype` entry, or
+  the first in document order in a session that cannot ask) — and a named
   unrecognized one that holds `Prototype:`; a `needs prototype` entry with
   `Prototype:` and no `Answer:`, the form an unsettled attempt leaves, is
   still prototyped again. After a "yes" to that question, an entry that
