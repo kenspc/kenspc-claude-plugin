@@ -55,7 +55,9 @@
 # exist the worker runs the same way without it.
 # Why --self-test: it proves the launch path on a machine without spending a
 # session — a stub stands in for the executable — and the skill runs the
-# copied driver's self-test at every batch start. A caller who sets
+# copied driver's self-test at every batch start; it also launches a
+# failing stub of its own, so a status other than 0 is seen to reach
+# <tag>.exit. A caller who sets
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
 # of theirs that is meant to pass echoes its arguments and
 # "cwd=<its working directory, physical path>" to stderr, since the
@@ -212,7 +214,9 @@ launch() {
 # always-passed flag with the id .session holds, a .json whose
 # session_id is not that id, and an .err that shows --plugin-dir,
 # --max-budget-usd, or --append-system-prompt with their variables unset,
-# or without cwd=<the launch's cwd, physical path>;
+# or without cwd=<the launch's cwd, physical path>; then, for a launch of
+# a stub that exits 3 under selftest-s2, a .exit not reading 3 or a
+# timeline end line without exit 3;
 # then, for a resume launch of the same stub
 # under <tag>-r1 through the command line (the parser the skill calls)
 # with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, and
@@ -229,7 +233,7 @@ launch() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG n exit_status session flag
-  local first_session first_pid refusal rc self
+  local first_session first_pid refusal rc self FTAG saved_exe
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
   # changes the working directory: the resume launch below runs it as the
@@ -262,6 +266,12 @@ STUB
     chmod +x "$base/stub/claude" || die "cannot make the stub executable"
     AUTOPILOT_CLAUDE=$base/stub/claude
   fi
+  # A second stub that exits 3 without a result, for the status check
+  # below; written whatever AUTOPILOT_CLAUDE names, so a caller's stub is
+  # used for the passing launches only.
+  mkdir -p "$base/stub" || die "cannot create $base/stub"
+  printf '#!/bin/sh\necho "$@" >&2\nexit 3\n' > "$base/stub/fail" || die "cannot write the failing stub"
+  chmod +x "$base/stub/fail" || die "cannot make the failing stub executable"
 
   # The three optional variables are unset for the first launch, whatever
   # the caller's environment holds, so their flags can be asserted absent.
@@ -358,6 +368,19 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   # directory the driver was called from.
   grep -qxF -- "cwd=$(cd "$base" && pwd -P)" "$LOGS/$TAG.err" \
     || { echo "self-test failed: $LOGS/$TAG.err does not show cwd=$(cd "$base" && pwd -P), the launch's cwd" >&2; return 1; }
+
+  # A worker's non-zero status reaches .exit and the timeline's end line:
+  # the skill reads both, and a driver that always wrote 0 would report
+  # every failed worker as a success. The failing stub exits 3 at once.
+  FTAG=selftest-s2
+  saved_exe=$AUTOPILOT_CLAUDE; AUTOPILOT_CLAUDE=$base/stub/fail
+  launch "$FTAG" "$base" "$base/prompt.md" ""
+  AUTOPILOT_CLAUDE=$saved_exe
+  n=0; until [ -f "$LOGS/$FTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ "$(cat "$LOGS/$FTAG.exit" 2>/dev/null)" = "3" ] \
+    || { echo "self-test failed: $LOGS/$FTAG.exit does not read 3, the failing stub's status" >&2; return 1; }
+  grep -q "^end   $FTAG exit 3\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
+    || { echo "self-test failed: $LOGS/selftest-timeline.log has no end line with exit 3 for $FTAG" >&2; return 1; }
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
