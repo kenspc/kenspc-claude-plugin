@@ -801,7 +801,40 @@ In `CLAUDE.md` in the same commit (ruling M10):
 
 ### Task 7: Read the repository CLAUDE.md through against the batch
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: none — the read-through found no sentence the four edits
+  missed, so CLAUDE.md is not edited and this commit holds only the status
+  update and these notes.
+- Changes/tradeoffs: sentences checked, each against the file it describes:
+  Subagent Review Architecture's "No review" paragraph ("generate-plan reads
+  the answered entry") and the prototype path paragraph (`Answer:` makes an
+  answered entry settled; "a session that cannot ask carries it" still
+  matches Phase 1's exit) against generate-plan Phase 1 Step 1; the Serial
+  review paragraph (no claim about when Phase 3 runs, so the cannot-ask stop
+  contradicts nothing); Standalone safety's copy of the reviewer invariant
+  sentence (unchanged, one line of `writes only under`); the Maintenance
+  note (check-run-contract.sh for the README/CLAUDE.md copies and the ROLE;
+  check-doc-sync-anchors.sh for the Prototype line and the leftovers
+  command); Non-Goals' Prototype line sentence (the guard holds the line in
+  both files; the same-commit rule kept); Writing Rules' cannot-ask bullet
+  (diagnose-bug, generate-plan's Open Questions exit, gap-check, approval
+  stop, and existing-file question, generate-brief's `needs prototype`
+  question, the prototype skill's gates — the new gap-round question about
+  an `answered` entry is under "gap-check" and the new prototype gate under
+  "the prototype skill's gates"); § Repository scripts/ — check-all.sh
+  (counts pinned by the checklist, unchanged), check-run-contract.sh (its
+  six checks enumerated, check 6 with its three copies, matching the
+  script header), check-doc-sync-anchors.sh (five anchors over the eleven
+  files it names, one exact count, matching the header; "README.md and
+  CLAUDE.md are deliberately outside it" still true for this guard); the
+  "Nine of the guards" paragraph and the bash 3.2 paragraph (the flat
+  `label|path` array still feeds the self-test's copy list) — unchanged and
+  still true; the Durable documents table. None found. `git diff 0128a2f --
+  CLAUDE.md` changes no guard count. check-all 0 with `guards run: 10`;
+  `check-all.sh --self-test` 0 with `self-tests run: 9` (only the
+  pre-existing SKIP).
 
 Depends on: Task 1, Task 2, Task 5, Task 6
 
