@@ -426,10 +426,11 @@ grammar in the Writing rules for the brief in
   ``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``.
   Why: the rest of the brief is the user's discovery record. The unsettled
   rewrite has one exception: an entry that held `Answer:` when the run
-  began, and that this run did not settle, keeps its `Answer:`,
-  `Evidence:`, and Prototype line — gaining at most the `Settled by:`
-  Phase 1 derived for it — and the final message names this run's commits
-  and why the question was not settled, as § The question says.
+  began, and that this run did not settle, is left as it was — status
+  word, `Answer:`, `Evidence:`, and Prototype line — gaining at most the
+  `Settled by:` Phase 1 derived for it, and the final message names this
+  run's commits and why the question was not settled, as § The question
+  says.
 - At the judgment point, the user's verdict came first.
 - The teardown ran, when there was one, and the tables it created are gone.
   A teardown that fails, or leaves a table or column the prototype created,
@@ -476,9 +477,10 @@ remove commit's body keeps the answer and the hash in history.
 is made; the entry stays `` `needs prototype` `` and gains `Evidence:` with
 the reason, and no `Prototype:`. An entry that held `Answer:` when the run
 began — one a "yes" to the prototype-again question sent on — is the
-exception: it keeps its `Answer:`, `Evidence:`, and Prototype line,
-gaining at most the `Settled by:` Phase 1 derived for it, and the final
-message gives the reason nothing was built, as § The question says.
+exception: it is left as it was — status word, `Answer:`, `Evidence:`,
+and Prototype line — gaining at most the `Settled by:` Phase 1 derived
+for it, and the final message gives the reason nothing was built, as
+§ The question says.
 
 **An entry an earlier attempt left unsettled** already carries `Evidence:`,
 and `Prototype:` when that attempt committed one. This run's rewrite
