@@ -185,12 +185,15 @@ launch() {
 # without its start or end line, an .err that does not show every
 # always-passed flag with the id .session holds, and a .json whose
 # session_id is not that id; then, for a resume launch of the same stub
-# under <tag>-r1 with that id, a .exit missing or not 0, a .session not
-# holding that id, an .err without --resume <id> or with --session-id, and
-# a timeline start line not ending in "resume" — naming the first item that
-# fails.
+# under <tag>-r1 with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD,
+# and APPEND_SP set, a .exit missing or not 0, a .session not holding that
+# id, an .err without --resume <id>, with --session-id, or without the three
+# variables' flags, and a timeline start line not ending in "resume"; then,
+# for a launch under self-s-test-s1 with AUTOPILOT_BATCH unset, a
+# self-s-test-timeline.log without its start or end line (the batch-name
+# default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
-  local base LOGS TAG RTAG n exit_status session flag
+  local base LOGS TAG RTAG BTAG n exit_status session flag
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   LOGS=$base/logs
   mkdir -p "$LOGS" || die "cannot create $LOGS"
@@ -264,8 +267,14 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
   # session has ended, so a regression there would otherwise show only then.
+  # The three optional variables are set for this launch only, so their
+  # flags are read from .err too: a plugin-mode worker launched without
+  # --plugin-dir would load the installed plugin and review code other than
+  # the batch's, and one without --max-budget-usd would run unbounded.
   RTAG=$TAG-r1
+  AUTOPILOT_PLUGIN_DIR=$base/plugin; AUTOPILOT_BUDGET_USD=1; APPEND_SP=x
   launch "$RTAG" "$base" "$base/prompt.md" "$session"
+  unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP
   n=0; until [ -f "$LOGS/$RTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
   [ -f "$LOGS/$RTAG.exit" ] || { echo "self-test failed: $LOGS/$RTAG.exit is missing after the wait" >&2; return 1; }
   exit_status=$(cat "$LOGS/$RTAG.exit")
@@ -278,6 +287,22 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/$RTAG.err shows --session-id on a resume" >&2; return 1; }
   grep -q "^start $RTAG pid [0-9][0-9]* .* resume\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no start line ending in resume for $RTAG" >&2; return 1; }
+  for flag in "--plugin-dir $base/plugin" '--max-budget-usd 1' '--append-system-prompt x'; do
+    grep -qF -- "$flag" "$LOGS/$RTAG.err" \
+      || { echo "self-test failed: $LOGS/$RTAG.err does not show $flag" >&2; return 1; }
+  done
+
+  # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
+  # before its last "-s", so a batch name that itself holds "-s" keeps its
+  # name in the timeline's file name.
+  BTAG=self-s-test-s1
+  unset AUTOPILOT_BATCH
+  launch "$BTAG" "$base" "$base/prompt.md" ""
+  n=0; until [ -f "$LOGS/$BTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  grep -q "^start $BTAG pid [0-9][0-9]* " "$LOGS/self-s-test-timeline.log" 2>/dev/null \
+    || { echo "self-test failed: $LOGS/self-s-test-timeline.log has no start line for $BTAG (the batch-name default)" >&2; return 1; }
+  grep -q "^end   $BTAG exit 0\$" "$LOGS/self-s-test-timeline.log" 2>/dev/null \
+    || { echo "self-test failed: $LOGS/self-s-test-timeline.log has no end line for $BTAG" >&2; return 1; }
 
   echo "self-test passed"
   return 0
