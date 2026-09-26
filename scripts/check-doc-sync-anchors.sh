@@ -90,10 +90,11 @@
 #                  in generate-brief's; the first of the two leftovers
 #                  commands alone with `--ignored=matching` changed to
 #                  `--ignored`; and a third copy of the leftovers command
-#                  appended to the skill. Then the main check runs on the
-#                  reverted copy (must exit 0). Opt-in: invocation with no
-#                  arguments behaves unchanged. Exit 0 on self-test pass, 1
-#                  on unexpected exit codes, 2 on fixture-stale.
+#                  appended on the line that holds the first, so a count by
+#                  line would still read two. Then the main check runs on
+#                  the reverted copy (must exit 0). Opt-in: invocation with
+#                  no arguments behaves unchanged. Exit 0 on self-test pass,
+#                  1 on unexpected exit codes, 2 on fixture-stale.
 
 set -euo pipefail
 
@@ -207,11 +208,11 @@ run_main_logic() {
 # restored by recopying (expect 1 each): `Doc-sync` renamed to `Docsync` in
 # the task example (the label is then absent from that file); the prototype
 # skill's Prototype line changed to "removed in a later commit", then
-# generate-brief's; the first
-# leftovers command alone given `--ignored` for `--ignored=matching` (the
-# count drops to one); and a third leftovers command appended (the count
-# rises to three). Finally the reverted copy (expect 0). The presence check
-# is presence-only by design, so renaming only the example's
+# generate-brief's; the first leftovers command alone given `--ignored` for
+# `--ignored=matching` (the count drops to one); and a third leftovers
+# command appended on the first one's line (the count rises to three, where
+# a count by line would read two). Finally the reverted copy (expect 0).
+# The presence check is presence-only by design, so renaming only the example's
 # `### Task 6: Doc-sync` heading is not caught while its closing note still
 # says `Doc-sync`.
 
@@ -360,11 +361,16 @@ run_self_test() {
         return 1
     fi
 
-    # Mutation 5: a third copy of the leftovers command appended.
-    printf '%s\n' "$LEFTOVERS_LITERAL" >> "$proto_file"
-    found=$(count_occurrences "$proto_file" "$LEFTOVERS_LITERAL")
-    if [[ "$found" -ne 3 ]]; then
-        echo "FAIL  self-test: leftovers append left $found occurrences in $proto_file, expected 3" >&2
+    # Mutation 5: a third copy of the leftovers command appended on the line
+    # that holds the first, so three copies sit on two lines: a count by line
+    # would still read two.
+    # Checked with grep, not count_occurrences, so a count that regressed
+    # to lines fails below as a missed mutation.
+    replace_literal "$proto_file" "$LEFTOVERS_LITERAL" "$LEFTOVERS_LITERAL $LEFTOVERS_LITERAL"
+    found=$(grep -cF -- "$LEFTOVERS_LITERAL $LEFTOVERS_LITERAL" "$proto_file" || true)
+    hits=$(grep -cF -- "$LEFTOVERS_LITERAL" "$proto_file" || true)
+    if [[ "$found" -ne 1 || "$hits" -ne 2 ]]; then
+        echo "FAIL  self-test: leftovers append left the doubled command on $found lines and the command on $hits lines of $proto_file, expected 1 and 2" >&2
         return 2
     fi
     ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?

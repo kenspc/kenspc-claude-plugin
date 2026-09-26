@@ -102,8 +102,8 @@ the batch's acceptance record, named in the release commit.
   occurs exactly twice, counted by occurrence, since the start snapshot and
   the Exit compare their two lists path by path. Its self-test gains four
   mutations that must exit 1 (the Prototype line changed in each of its two
-  files, one leftovers command changed, a third appended). Guard counts are
-  unchanged.
+  files, one leftovers command changed, a third appended on the first one's
+  line, where a count by line would read two). Guard counts are unchanged.
 - **Release checklist.** Row 4 gains the cannot-ask stop at the draft (the
   complete draft and `Plan not written: awaiting approval.`; no Write, no
   Agent call, no commit), the resumed approval that writes, reviews, and
