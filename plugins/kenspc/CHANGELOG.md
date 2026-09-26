@@ -184,7 +184,8 @@ exist yet.
   clarification committed into the spec by the main session
   (`docs(plans): record clarifications settled after <step>`).
 - **Documentation.** CLAUDE.md gains a fourth orchestration pattern,
-  "Sessions, not agents (autopilot)", the layout-tree entries, the count
+  "Sessions, not agents (autopilot)", the layout-tree entries, a File
+  Structure bullet for a skill's optional `scripts/` directory, the count
   sentences (nine skills), the bypass-permissions sentence beside the
   Development Workflow rule, three Non-Goals paragraphs (no agent teams; no
   driver completion message on the messaging socket; the workspace outside
@@ -195,7 +196,9 @@ exist yet.
   `claude --name <batch>-main --permission-mode bypassPermissions --settings '{"crossSessionInbound":"accept"}'`,
   the sixteen labels with an example, the workspace, what a run writes and
   commits, the gates, the stops, the budget rule, the reports, the
-  drivers), the seven Known behavior items below, and the version line
+  drivers), seven Known behavior items — the six below other than the
+  caps' default, with the message-limits item's stricter-inbound-settings
+  half as an item of its own — and the version line
   `Claude Code v2.1.271 or later` under Requirements (the plugin's
   `v2.1.0+` minimum is unchanged: every other skill runs on it). The root
   README gains a skills-table row and `/kenspc-autopilot` on its Commands
