@@ -1038,3 +1038,95 @@ answers each under
 as `CL<n>` — a statement and the Step it affects — and removes the answered
 question from that section; the session continues from the updated
 document.
+
+## Questions for the spec author
+
+Raised by the implementing session after the `/kenspc-task-implement` run
+over `docs/tasks/batch-e-review-pipeline-tasks.md` (implementation
+254352d..2eab1ba, review fixes 03e8b46..9ea9dfa; verification HAS ISSUES,
+row 5 FAIL at LOW; verdict FAIL). No task was BLOCKED and no ruling was
+found contradicted by the code. Each question below comes from a review
+finding that code-fixer deferred because it needs a decision on smoke scope
+or a new fixed string, from a review fix that reads a ruling past its
+words, or from regression-verifier's row 5. The finding IDs point into the
+run directory `.kenspc/runs/20260926-152446-batch-e-review-pipeline-tasks/`
+(`angle-<n>.md`, `schema-b.md`).
+
+1. **The 3.8.2 CHANGELOG entry after the review's fixes, and a
+   changelog-type Doc-sync document (D9, M9; regression-verifier row 5).**
+   Five fix commits changed shipped text the 3.8.2 entry does not record:
+   3fb055e (row 6 checks the fix commit's `Updates <path> to match the fix.`
+   body line), 851c287 (row 6's forced-BLOCKED run checks that code-fixer
+   leaves an unsynced Doc-sync task's documents alone), 9ea9dfa (row 4
+   checks the cannot-ask reprint after a requested change), 04a2397 and
+   63f48d7 (question 4's two code-fixer rules); 03e8b46 and f7dbf5c did
+   update the entry. regression-verifier recorded this as row 5 FAIL, LOW,
+   and the verdict rule ("fix commits introduced unresolved regressions")
+   makes the run FAIL. (a) Should one `docs(changelog):` commit add the five
+   items to the entry now? (b) The rule behind it: D9 lets code-fixer
+   correct only a statement a fix made false, never one it made incomplete,
+   and a document like a CHANGELOG is made incomplete by a fix, never false.
+   In a "task" run whose Doc-sync task lists such a document, code-fixer's
+   rule leaves it as it is, and regression-verifier's check 5 can then fail
+   the verdict on it, as here. Keep D9 as written (the entry is the user's
+   to extend, and a FAIL like this one is expected), or let code-fixer add
+   to a listed document whose job is to record every change? Steps 2.1,
+   4.3.
+
+2. **A progress line when the closing line is missing (D1, D4; E1, E2 →
+   a57347e, f7dbf5c).** Fixed strings give three progress lines. The review
+   fixes add, in both skills, a free-worded line for a code-fixer reply
+   without its statistics line and a regression-verifier reply without its
+   closing CLEAN or HAS ISSUES line; the final report then renders that
+   reply verbatim. Accept the wording as free, or give it a fixed form (for
+   example `code-fixer returned — no statistics line`) in Fixed strings and
+   rows 6 and 7? regression-verifier also notes that the fixes do not say
+   whether the run continues, and that in task-implement a missing
+   statistics line leaves the Doc-sync bullet's "FIXED greater than 0"
+   condition unreadable, so the missing-line bullet
+   (`code-fixer's reply has no Doc-sync documents line`) does not fire
+   either. Steps 1.1, 1.2, 2.2.
+
+3. **Where the Doc-sync section ends (M7; E3, B4 → ac2d7f8).** M7 and Step
+   2.1 read the section "up to the next `### ` heading"; the review fix ends
+   it at the next `### ` or `## ` heading, since the Doc-sync task is the
+   last task and a `## Notes` section follows it in both
+   `references/task-document-example.md` and this batch's task document.
+   M7's no-label lookup is kept. Task 3's text still says `### ` only.
+   Record the wider boundary as a clarification? Step 2.1.
+
+4. **Two code-fixer rules the review added (D9, M6; E4, B2 → 04a2397; Q2,
+   B3 → 63f48d7).** A fix that is withdrawn takes its document correction
+   back with it; and a document correction does not count toward the fix
+   size that DEFERs a MEDIUM or LOW fix spanning more than one file. Both
+   fill a case the rulings do not name. Within D9 and M6's intent, or
+   revert? Step 2.1.
+
+5. **Smoke scope for three Doc-sync branches (D19; T1, T2, T7, deferred).**
+   Each needs a seeded run in every release smoke: row 7 with a task
+   document whose Doc-sync task is DONE and FIXED greater than 0, checking
+   Schema F's bullet (M4); a row-6 variant for the not-updated branch, a
+   listed document with uncommitted changes (M6), which the Testing
+   Strategy records as Not exercised; and a row-6 variant whose task
+   document translates the `**Documents**` label (M7). Add any of them to
+   the release checklist, or list them as roadmap candidates? Step 4.4.
+
+6. **A Doc-sync task with no backticked path (M7, D8; E5, deferred,
+   LOW).** A DONE Doc-sync task whose bullets open with no backticked path
+   (a hand-written `- README.md § …`) gives code-fixer an empty list, and
+   the reply reads `Doc-sync documents: none affected by the fixes`, as if
+   checked. A reply form of its own (for example
+   `Doc-sync documents: no listed path found in the Doc-sync task`) would
+   go into Fixed strings, both skills' Next steps, and row 6. Add it, or
+   accept the gap, since generate-task's template always opens an entry
+   with a backticked path? Steps 2.1, 2.2.
+
+7. **The Known behavior item's wording (D13; Task 7).** The README item
+   departs from Step 4.2's paragraph in three places: "damage the review's
+   own fixes did" for "damage this run did", "a deferred MEDIUM or LOW
+   issue" for "a deferred issue", and "On regressions the verdict is not
+   graded by severity" for "The verdict is not graded by severity". The
+   implementer's reason: in `/kenspc-task-implement` the run itself wrote
+   the reviewed code, and a deferred HIGH does change the verdict. The
+   3.8.2 CHANGELOG's Known behavior bullet follows the README. Confirm the
+   wording? Step 4.2.
