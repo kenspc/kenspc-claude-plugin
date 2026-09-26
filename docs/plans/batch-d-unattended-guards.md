@@ -1132,6 +1132,45 @@ a file this batch may change.
   checklist bullets (Step 5.3) and the plugin README's `prototype` row
   (Step 5.2) follow.
 
+Ruling of 2026-09-26, after the main session reran the three cannot-ask
+cases on the acceptance tree `52ccc53`: F1 still failed under CL9. Each
+run read the new paragraph, wrote nothing, made no commit, left the
+brief's sha256 unchanged, and named the entry and its status word, but
+sent no frame message before its last one, which said "the derived
+`Settled by:` appears only in the frame above", "The frame came as its own
+message", or "the run stopped at the frame". The main session's reading: a
+stop that asks nothing makes no tool call between the frame and the stop,
+so the two read as one ending, and the frame stays in the reasoning while
+only the stop is sent; the interactive runs passed because their frame and
+the gate's question were already one message. Decided by the main session
+within the locked design; CL10 amends CL9.
+
+- CL10 — Step 2.1 and Step 5.4, amending CL9 (acceptance F1, rerun): two
+  messages are no longer asked for. In a session that cannot ask, when a
+  gate on the entry the run takes — named, or taken with no ENTRY — stops
+  the run, the stop's message is the frame's message: the last message
+  opens with the frame, in order (the question, `Settled by:`, the kind,
+  the location, the resources), then names the entry and the status word
+  found, or says there is none, and says why the run stopped — the shape
+  of an interactive gate's question after the frame, in one message. A
+  `Settled by:` derived in the frame is still shown and not written. A
+  stop with no question to frame (no arguments, no brief, an entry number
+  that names no entry, no `` `needs prototype` `` entry to take) is
+  unchanged and sends no frame. Phase 1's "a message of its own" does not
+  conflict: for such a stop, the message the frame goes in is the last
+  one. Why: a stop that asks nothing does nothing between the frame and the
+  stop, so a frame written apart from the stop is left out while the stop
+  still refers to it; in one message, the last thing the user sees holds
+  the frame. Fixed in `e470453`: the paragraph CL9 added to the skill's
+  Phase 1 DONE when is rewritten, and both entry gates' cannot-ask branches
+  and their gates-table cells point at the frame at the head of the last
+  message (Step 2.1); release-checklist row 10's frame criterion asks that
+  the cannot-ask stop at a gate on the entry the run takes open its last
+  message with the frame, its five items in order, then give the entry,
+  the status word, and why the run stopped (Step 5.4); the 3.8.1
+  CHANGELOG's prototype and Release checklist bullets (Step 5.3) and the
+  plugin README's `prototype` row (Step 5.2) follow.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
