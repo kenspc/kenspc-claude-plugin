@@ -110,15 +110,17 @@
 #                  itself, one file at a time, and `RUN_DIR/scratch/angle-<n>/`
 #                  changed to `RUN_DIR/tmp/angle-<n>/` on the last line of the
 #                  README's copy, so an extraction that stops short of the
-#                  sentence's period is caught. One more mutation must exit 0:
-#                  `read-only on the working tree` given a second space in
-#                  the README's copy, a whitespace-only change check 6
-#                  ignores. And one must exit 2: `Each reviewer` reworded to
-#                  `Every reviewer` in the reference, which leaves check 6 no
-#                  start line; an empty reference would be contained in every
-#                  copy. Then the main check runs on the reverted copy
-#                  (must exit 0). Exit 0 on self-test pass, 1 on unexpected
-#                  exit codes, 2 on fixture-stale.
+#                  sentence's period is caught. Two more must exit 0, each a
+#                  whitespace-only change check 6 ignores: `read-only on the
+#                  working tree` given a second space in the README's copy,
+#                  and the same words broken across two lines there, the
+#                  second indented, which a comparison line by line would
+#                  report as drift. And one must exit 2: `Each reviewer`
+#                  reworded to `Every reviewer` in the reference, which
+#                  leaves check 6 no start line; an empty reference would be
+#                  contained in every copy. Then the main check runs on the
+#                  reverted copy (must exit 0). Exit 0 on self-test pass, 1
+#                  on unexpected exit codes, 2 on fixture-stale.
 
 set -euo pipefail
 
@@ -678,6 +680,25 @@ run_self_test() {
     cp "$REPO_ROOT/$README_REL" "$WORK/$README_REL"
     if [[ "$rc" -ne 0 ]]; then
         echo "FAIL  self-test whitespace-only mutation in $README_REL: expected exit 0, got $rc" >&2
+        return 1
+    fi
+    # The same words re-wrapped: a line break inside the sentence, the new
+    # line indented. A comparison line by line reports this copy as drift,
+    # and the doubled space above cannot tell that comparison from check
+    # 6's. awk -v turns the \n in the replacement into a line break; the
+    # line count proves it landed.
+    local lines_before lines_after
+    lines_before=$(wc -l < "$WORK/$README_REL")
+    replace_literal "$WORK/$README_REL" "read-only on the working tree" "read-only\n  on the working tree"
+    lines_after=$(wc -l < "$WORK/$README_REL")
+    if [[ "$lines_after" -ne $((lines_before + 1)) ]]; then
+        echo "FAIL  self-test: re-wrap mutation did not break a line of $README_REL" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$README_REL" "$WORK/$README_REL"
+    if [[ "$rc" -ne 0 ]]; then
+        echo "FAIL  self-test re-wrap mutation in $README_REL: expected exit 0, got $rc" >&2
         return 1
     fi
     # A reference that moved: its opening words reworded, so check 6 finds
