@@ -537,8 +537,16 @@ without a recorded reason is a finding nobody owns.
 
 After S3b, `git diff --stat <baseline> HEAD -- <Zero diff paths>` prints
 nothing; anything printed is a stop naming the paths. With `Zero diff:`
-empty there is no check. Why: the paths a batch promised not to touch are
-the one promise a review does not verify.
+empty there is no check. Before the first launch, each path is resolved
+against the baseline, `git cat-file -e <baseline>:<path>`; a path absent
+there is named on the line after the settings line and in the report's
+zero-diff field. Why the check: the paths a batch promised not to touch
+are the one promise a review does not verify. Why the resolution, as a
+note and not a stop: `git diff` prints nothing for a path that matches
+nothing, so a typo or a path renamed since the section was written would
+pass as unchanged with nothing compared; and a path absent at the baseline
+can be a guard against its creation, which the check still catches, since
+a file created since the baseline is a diff.
 
 ### Budget and caps
 
@@ -911,8 +919,8 @@ conversation's language:
 Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, workspace <path>, wait <interactive|headless>
 ```
 
-A note on ignored labels, or a `Version:` ignored in repo mode, follows on
-the next line.
+A note on ignored labels, a `Version:` ignored in repo mode, or a
+`Zero diff:` path absent at the baseline follows on the next line.
 
 ### The stop conditions
 
@@ -954,7 +962,7 @@ the user has yet to see.
 - Range: <baseline sha> → <release sha, or the last commit>
 - Spec: git show <hash>:<path>
 - Design rulings and clarifications: <n> / <m> / <k>; beyond the letter: <list, or none>
-- Files changed: <list>; zero diff: <nothing printed | the paths>
+- Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
 - Total cost: USD <workers' sum> measured + USD <acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
