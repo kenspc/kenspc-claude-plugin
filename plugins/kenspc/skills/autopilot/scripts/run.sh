@@ -114,9 +114,10 @@ launch() {
   [ -n "$tag" ] || die "the tag is empty"
   [ -d "$dir" ] || die "cannot cd to $dir"
   [ -f "$prompt_file" ] || die "no prompt file $prompt_file"
-  # An empty prompt would start a paid session with no instructions, which
-  # dies and is resumed into an empty transcript before the stop.
-  [ -s "$prompt_file" ] || die "empty prompt file $prompt_file"
+  # An empty prompt — no content, or whitespace only, which cat strips to
+  # nothing — would start a paid session with no instructions, which dies
+  # and is resumed into an empty transcript before the stop.
+  grep -q '[^[:space:]]' "$prompt_file" || die "empty prompt file $prompt_file"
   # A missing executable is a refusal here, not a worker that dies at once:
   # without the check the driver printed "started", .exit read 127 with an
   # empty .json, and the skill resumed a dead worker instead of reading the
@@ -199,8 +200,8 @@ launch() {
 # whatever AUTOPILOT_LOGS says, so a self-test writes nothing under the
 # workspace. Passing: every file is present with the expected content and the
 # timeline holds both lines. It fails, in this order, on a launch naming a
-# missing executable that is not refused with status 2 naming it and
-# writing no .session; on a second launch
+# missing executable, or a whitespace-only prompt file, that is not refused
+# with status 2 naming it and writing no .session; on a second launch
 # under the tag, made while the stub still runs, that is not refused with
 # status 2 naming the pid and leaving .session and .pid as they were; a
 # .pid that does not name a live process other than the self-test's own;
@@ -280,6 +281,15 @@ STUB
     || { echo "self-test failed: a launch with a missing executable returned $rc ($([ -f "$LOGS/$TAG.session" ] && echo ".session written" || echo "no .session")), expected 2 and no .session" >&2; return 1; }
   printf '%s\n' "$refusal" | grep -qF -- "no executable $base/no-such-claude" \
     || { echo "self-test failed: the refusal of a missing executable does not name $base/no-such-claude" >&2; return 1; }
+  # A prompt file of only whitespace is refused like an empty one: cat
+  # strips the trailing newlines, so the worker would start with a blank
+  # prompt, the paid empty session the guard exists to prevent.
+  printf '\n  \n' > "$base/blank.md" || die "cannot write the blank prompt file"
+  refusal=$( (launch "$TAG" "$base" "$base/blank.md" "") 2>&1 ); rc=$?
+  [ "$rc" -eq 2 ] && [ ! -f "$LOGS/$TAG.session" ] \
+    || { echo "self-test failed: a launch with a whitespace-only prompt file returned $rc, expected 2 and no .session" >&2; return 1; }
+  printf '%s\n' "$refusal" | grep -qF -- "empty prompt file $base/blank.md" \
+    || { echo "self-test failed: the refusal of a whitespace-only prompt file does not name $base/blank.md" >&2; return 1; }
 
   launch "$TAG" "$base" "$base/prompt.md" ""
 
