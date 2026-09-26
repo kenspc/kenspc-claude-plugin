@@ -16,9 +16,10 @@ generate-plan's approval stop, in a session that cannot ask, ends at the
 draft printed in full, with nothing written, reviewed, or committed, until
 a later reply approves it; generate-plan takes an `answered` brief entry as
 settled input only when it holds `Answer:`, and asks about or carries one
-without; and the prototype skill asks before it touches a named entry
-whose status word it does not recognize or that already holds an answer,
-stopping with the brief unchanged in a session that cannot ask.
+without; and the prototype skill asks before it touches an entry that
+already holds an answer, named or not, or a named entry whose status word
+it does not recognize, stopping with the brief unchanged in a session that
+cannot ask.
 diagnose-bug's interactive exit names the reproduction commit and
 `git revert <hash>`. Three copied strings gain a guard — the reviewer
 invariant sentence's README, CLAUDE.md, and task-review copies, the
@@ -68,8 +69,10 @@ the batch's acceptance record, named in the release commit.
   `Answer:` nor `Prototype:` is asked about before anything is written,
   quoting the word found: prototype it, or stop. A session that cannot ask
   stops with the entry unchanged. The `answered` gate (prototype it again?)
-  now also takes any named entry that holds `Answer:`, whatever its status
-  word, and an unrecognized one that holds `Prototype:`; a
+  now also takes any entry the run takes that holds `Answer:`, whatever its
+  status word — named, or taken with no entry named (the brief's only
+  `needs prototype` entry, or the first in document order in a session that
+  cannot ask) — and a named unrecognized one that holds `Prototype:`; a
   `needs prototype` entry with `Prototype:` and no `Answer:`, the form an
   unsettled attempt leaves, is still prototyped again. Both gates come
   before Phase 1 writes to the brief — the entry appended for a question
@@ -112,15 +115,16 @@ the batch's acceptance record, named in the release commit.
   that cannot ask). Row 9 gains the interactive exit's commit and
   `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
   before anything is written, and their cannot-ask stop with no commit and
-  the brief's sha256 unchanged. No new row; pre-flight counts unchanged.
+  the brief's sha256 unchanged, and the prototype-again question for an
+  entry taken with no entry named that holds `Answer:`. No new row; pre-flight counts unchanged.
 - CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
   existing-file question; its prototype path paragraph names `Answer:` as
   what makes an answered entry settled input; its guard descriptions,
   Non-Goals, and Maintenance note follow the two guards' new checks. The
   plugin README's `generate-plan` row gains the cannot-ask stop at the
   draft, its `prototype` row the two new questions and their cannot-ask
-  outcome, and its Prototype path paragraph the `Answer:` rule and the
-  status-word question.
+  outcome, and its Prototype path paragraph the `Answer:` rule and both
+  questions.
 
 ### Known behavior
 
