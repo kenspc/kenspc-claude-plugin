@@ -106,6 +106,9 @@ launch() {
   [ -n "$tag" ] || die "the tag is empty"
   [ -d "$dir" ] || die "cannot cd to $dir"
   [ -f "$prompt_file" ] || die "no prompt file $prompt_file"
+  # An empty prompt would start a paid session with no instructions, which
+  # dies and is resumed into an empty transcript before the stop.
+  [ -s "$prompt_file" ] || die "empty prompt file $prompt_file"
   mkdir -p "$logs" || die "cannot create the logs directory $logs"
   logs=$(cd "$logs" && pwd) || die "cannot enter the logs directory $logs"
   prompt=$(cat "$prompt_file") || die "cannot read $prompt_file"
