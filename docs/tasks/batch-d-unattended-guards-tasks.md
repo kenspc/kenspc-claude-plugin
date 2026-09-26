@@ -978,7 +978,22 @@ Plan Step 5.2 (D-5, D-6; rulings M2, M11, D14). In
 
 ### Task 9: Add the batch's cases to release-checklist rows 4, 9, and 10
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: row 4's additions are appended at the end of the row, after
+  its existing cannot-ask and no-section clauses; row 9's interactive-exit
+  clause sits right after the clause about the exit question it follows
+  from; row 10's two gates go before the closing trigger-phrase clause,
+  after the other stop cases. Row 10's "brief unchanged" names the method
+  (`shasum -a 256` before and after) and says why `git diff` cannot show it,
+  so a smoke runner cannot fall back to the check that cannot fail.
+- Changes/tradeoffs: none. Verified: `Plan not written: awaiting approval.`
+  and the carried `answered` `From:` form each on one line, row 4 (both 0
+  at `0128a2f`); 11 numbered rows, as before; `git diff 0128a2f` touches
+  only source lines 84 (row 4), 89 (row 9), and 90 (row 10); pre-flight
+  still says `guards run: 10` and `self-tests run: 9`; check-all 0 with
+  `guards run: 10`.
 
 Depends on: Task 1-4
 
