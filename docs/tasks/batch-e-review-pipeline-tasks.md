@@ -1143,7 +1143,41 @@ a new entry directly above `## 3.8.1 — 2026-09-26`, under the heading
 
 ### Task 10: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: every listed document was verified against the committed
+  implementation and none needed an edit. `CLAUDE.md` § Subagent Review
+  Architecture holds Task 1's rendering sentence after the Parallel
+  MapReduce list and Task 4's code-fixer sentence closing the documentation
+  path paragraph, both matching the skills and `code-fixer.md` (read through
+  in Task 6). `plugins/kenspc/README.md`: § Run directory's first bullet,
+  the Documentation path paragraph, the `generate-plan` row, and the new
+  Known behavior item agree with the skill and agent text; no other README
+  sentence says where the reports are rendered or asks for a re-check
+  (the Agents table's "Applies fixes from review reports" and the design
+  principles' "feed `code-fixer`, then `regression-verifier`" stay true).
+  `plugins/kenspc/CHANGELOG.md`'s 3.8.2 entry names each behavior as
+  committed and spells every fixed form as in the task document.
+  `docs/release-checklist.md` rows 4, 6, and 7 match the skills (row 6's
+  "re-check" occurs only in "asks nobody to re-check the documents"); the
+  pre-flight block is unchanged. `docs/roadmap.md` is left to the release
+  commit, as its entry says. Promotion outcomes for the Decisions of Tasks
+  1-9: all Local — T1 (code-span progress lines; English-only rule stated
+  once; CLEAN form keyed on Schema C's closing line; CLAUDE.md placement),
+  T2 (lines copied from Task 1; skill-specific Why), T3 (the dirty listed
+  document leaves the code fix in place; how several suffixes join; label-free
+  lookup of the document list), T4 (Schema G keyed on the Doc-sync task
+  being DONE in this run or before it; task-review sentence's Why), T5
+  (paragraph placement; item 2 cross-reference), T6 (none found), T7
+  (Known behavior framed on the review's own fixes), T8 (row clause
+  placement), T9 (entry layout) — each explains a choice already carried by
+  the file it concerns, or by the CHANGELOG entry, and none is a
+  convention, constraint, or rejected alternative a reader would look for
+  in another durable document. None promoted; none needs a home.
+- Changes/tradeoffs: none — this commit holds only this task's status
+  update and notes; no listed document was edited and no other file was
+  created or modified.
 
 Depends on: Task 1-9
 
