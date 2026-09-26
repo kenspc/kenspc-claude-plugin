@@ -119,8 +119,9 @@ If it is a brief, take these three parts in order:
    carry it into the plan — answered as there. Why: prototyping first or
    carrying is the user's choice for every `needs prototype` entry, and it
    is the same choice when the entry's status is learned in the gap round.
-   An `` `answered` `` entry that holds no `Answer:` — as the brief has it,
-   or as the user marks an entry in the gap round — is a gap too: the gap
+   An `` `answered` `` entry that holds no `Answer:` — no label, or a label
+   with nothing after it (part 3), whether the brief marks it `answered` or
+   the user does in the gap round — is a gap too: the gap
    round quotes it and asks for its answer, and the question that asks an
    unrecognized entry's status also asks, for `answered`, the answer — one
    question, one round, so the one-to-two-round limit below is unchanged.
@@ -148,12 +149,17 @@ If it is a brief, take these three parts in order:
    whose status cannot be read, or whose `answered` has no answer behind
    it, is a question the brief recorded all the same, and a plan that drops
    any of them loses the question without a trace.
-3. **Answered entries.** An `` `answered` `` entry that holds `Answer:` is
-   settled input — `Answer:` makes it so, not the status word alone and not
-   a `Prototype:` line alone. A plan that relies on one cites its prototype
-   hash where the entry has a Prototype line, otherwise the entry itself
-   (`<brief path>, entry <n>`). Why: the brief is a discovery artifact and
-   may be deleted; the citation in the plan keeps the evidence reachable.
+3. **Answered entries.** An `` `answered` `` entry that holds `Answer:` —
+   the label with text after it — is settled input: `Answer:` makes it so,
+   not the status word alone and not a `Prototype:` line alone. A label
+   with nothing after it counts as no `Answer:`, so the entry is part 2's
+   gap; text after the label is taken as the answer, whatever it says. A
+   plan that relies on one cites its prototype hash where the entry has a
+   Prototype line, otherwise the entry itself (`<brief path>, entry <n>`).
+   Why: the brief is a discovery artifact and may be deleted; the citation
+   in the plan keeps the evidence reachable. An empty label gives a plan
+   nothing to rest on, and whether some text is only a placeholder is a
+   guess the skill cannot check.
 
 If it is not a brief, continue with the normal Discovery flow.
 

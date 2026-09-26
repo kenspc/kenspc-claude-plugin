@@ -15,8 +15,8 @@ Batch D. Three stops an unattended run got wrong get a defined answer:
 generate-plan's approval stop, in a session that cannot ask, ends at the
 draft printed in full, with nothing written, reviewed, or committed, until
 a later reply approves it; generate-plan takes an `answered` brief entry as
-settled input only when it holds `Answer:`, and asks about or carries one
-without; and the prototype skill asks before it touches an entry that
+settled input only when it holds `Answer:` with text after the label, and
+asks about or carries one without; and the prototype skill asks before it touches an entry that
 already holds an answer, named or not, or a named entry whose status word
 it does not recognize, stopping with the brief unchanged in a session that
 cannot ask.
@@ -55,9 +55,11 @@ the batch's acceptance record, named in the release commit.
   overwritten.
 - **generate-plan, answered entries.** An `answered` brief entry is settled
   input only when it holds `Answer:` — not by its status word alone, and not
-  by a `Prototype:` line alone; a plan relying on one cites its prototype
-  hash, or the entry itself (`<brief path>, entry <n>`) when it has no
-  Prototype line. One without `Answer:` — as the brief has it, or as the
+  by a `Prototype:` line alone. The label counts only with text after it: an
+  empty `Answer:` is no answer, and text after the label is taken as the
+  answer, with no attempt to recognize a placeholder. A plan relying on one
+  cites its prototype hash, or the entry itself (`<brief path>, entry <n>`)
+  when it has no Prototype line. One without `Answer:` — as the brief has it, or as the
   user marks an unrecognized entry in the gap round — is a gap: the gap
   round quotes it and asks for its answer, in the same question that asks an
   unrecognized entry's status, so the one-to-two-round limit holds. An entry
@@ -114,8 +116,8 @@ the batch's acceptance record, named in the release commit.
 - **Release checklist.** Row 4 gains the cannot-ask stop at the draft (the
   complete draft and `Plan not written: awaiting approval.`; no Write, no
   Agent call, no commit), the resumed approval that writes, reviews, and
-  commits, and an `answered` entry with no `Answer:` (asked about in the gap
-  round; carried with `status word answered, Answer: missing` in a session
+  commits, and an `answered` entry with no `Answer:` or an empty one (asked
+  about in the gap round; carried with `status word answered, Answer: missing` in a session
   that cannot ask). Row 9 gains the interactive exit's commit and
   `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
   before anything is written, and their cannot-ask stop with no commit and
