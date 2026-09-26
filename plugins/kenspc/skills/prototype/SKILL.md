@@ -167,11 +167,13 @@ command restores it.
   above, ends the run with the entry unchanged: the rewrite in Phase 3 for a
   run in which nothing was built does not apply to it. In a session that
   cannot ask (a system reminder to work without stopping), stop and leave the
-  entry unchanged, as above. On "prototype it", the entry is prototyped as
-  a named `` `open` `` entry is, and Phase 3 writes a status word the
-  grammar knows. Why: the skill tells an answered entry from an unsettled
-  one by its status word, so an entry whose word it cannot read may hold an
-  answer that Phase 3 would replace; the brief is not committed, so the
+  entry unchanged, as above; the last message names the entry and quotes the
+  word found, or says there is none, since the word is what stopped the
+  run. On "prototype it", the entry is prototyped as a named `` `open` ``
+  entry is, and Phase 3 writes a status word the grammar knows. Why: the
+  skill tells an answered entry from an unsettled one by its status word,
+  so an entry whose word it cannot read may hold an answer that Phase 3
+  would replace; the brief is not committed, so the
   earlier answer would then survive only in an earlier remove commit's body.
 - A named `` `open` `` entry is prototyped like any other. Why: naming it is
   the user's decision that an experiment can settle it.
