@@ -100,7 +100,9 @@ PREREQUISITES
 2. If the CONTEXT block's REVIEW_SCOPE is "task": read the task document at the path
    given by CONTEXT TASK_FILE for context, and find its Doc-sync task — the
    section under the heading `### Task N: Doc-sync` (N its number), up to the
-   next `### ` heading. Note its `**Status:**` value and its documents: the
+   next `### ` or `## ` heading, since the Doc-sync task is the last task and
+   a section such as `## Notes` can follow it. Note its `**Status:**` value
+   and its documents: the
    path in backticks that opens each bullet of its document list, an entry
    that leaves its change to another task document included. Read no label to
    find that list: the heading and the `**Status:**` line stay in English in
