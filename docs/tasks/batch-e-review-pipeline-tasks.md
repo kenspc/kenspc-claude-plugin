@@ -862,7 +862,27 @@ so § Repository scripts/ and every stated count stay as they are.
 
 ### Task 7: Document the batch in the plugin README
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the Known behavior item frames the asymmetry around the
+  review's fixes rather than "this run" — "damage the review's own fixes did
+  to code that worked before them ... a revert of those fixes undoes", and
+  "a deferred MEDIUM or LOW issue was in the reviewed code before any fix" —
+  because in `/kenspc-task-implement` the run also wrote the reviewed code,
+  so "was in the code before the run" would be false there, and a deferred
+  HIGH does change the verdict (FAIL or PARTIAL). For the same reason "not
+  graded by severity" is scoped to regressions ("On regressions the verdict
+  is not graded by severity, by decision: a LOW regression fails the run as
+  a HIGH one does"). The Run directory sentence says a progress line names
+  "the path of its report when it writes one", matching the skills, where
+  regression-verifier's line has no path.
+- Changes/tradeoffs: the Documentation path sentence opens on the replaced
+  sentence's premise ("The review's fixes land after the Doc-sync task,
+  so ...") and states the new behavior in its place. All four edits are
+  the only hunks against the base (the `generate-plan` row, the
+  Documentation path paragraph, the Run directory first bullet, and the new
+  Known behavior item).
 
 Depends on: Task 1-5
 
