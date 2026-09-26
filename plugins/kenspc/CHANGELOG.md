@@ -45,7 +45,7 @@ the batch's acceptance record, named at release.
   `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
   (no path: regression-verifier writes no report file). A code-fixer reply
   without its statistics line, or a regression-verifier reply without its
-  closing CLEAN or HAS ISSUES line, prints instead
+  CLEAN or HAS ISSUES result line, prints instead
   `code-fixer returned — no statistics line` or
   `regression-verifier returned — no result line`, the same in both skills,
   the final report renders that reply verbatim, and the run goes on. In a
