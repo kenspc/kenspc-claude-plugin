@@ -160,8 +160,9 @@ the batch's acceptance record, named at release.
   0 and no document affected, no fix commit touching a listed document and
   the bullet `No Doc-sync document describes behavior the fixes changed.`;
   in a run whose Doc-sync task is DONE, no listed document is left with an
-  uncommitted change and no fix commit touches one unless its own Action
-  carries the `— updated` suffix or its own row's File:Line names it;
+  uncommitted change and no fix commit touches one unless that document is
+  named in its own Action's `updated <path>[, <path>]` part or in its own
+  row's File:Line;
   in row 6's forced-BLOCKED run, code-fixer's reply has no
   `Doc-sync documents:` line and no fix commit touches a listed document
   unless its own row's File:Line names it; row 7 checks that without a task
