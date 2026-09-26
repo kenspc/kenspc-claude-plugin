@@ -100,9 +100,10 @@ the batch's acceptance record, named in the release commit.
   skill, and one exact-count check: the prototype skill's leftovers command
   (`git -c core.quotePath=false status --porcelain --ignored=matching -uall -- <location>`)
   occurs exactly twice, counted by occurrence, since the start snapshot and
-  the Exit compare their two lists path by path. Its self-test gains three
-  mutations that must exit 1 (the Prototype line changed, one leftovers
-  command changed, a third appended). Guard counts are unchanged.
+  the Exit compare their two lists path by path. Its self-test gains four
+  mutations that must exit 1 (the Prototype line changed in each of its two
+  files, one leftovers command changed, a third appended). Guard counts are
+  unchanged.
 - **Release checklist.** Row 4 gains the cannot-ask stop at the draft (the
   complete draft and `Plan not written: awaiting approval.`; no Write, no
   Agent call, no commit), the resumed approval that writes, reviews, and

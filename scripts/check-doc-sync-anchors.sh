@@ -79,14 +79,15 @@
 #   --self-test    Run the mutation regression fixture. Copies the eleven
 #                  target files into a temp workdir, confirms `Doc-sync` is
 #                  present in the copied task example, the Prototype line in
-#                  the copied prototype skill, and the leftovers command
-#                  twice in it (exit 2 if not), and runs the main check
-#                  (must exit 0). Then four mutations, each restored by
-#                  recopying before the next, must each exit 1: `Doc-sync`
-#                  renamed to `Docsync` in the copied task example;
-#                  "`<location>`, removed in the next commit" changed to
-#                  "`<location>`, removed in a later commit" in the prototype
-#                  skill's Prototype line; the first of the two leftovers
+#                  the copied prototype skill and generate-brief, and the
+#                  leftovers command twice in the prototype skill (exit 2 if
+#                  not), and runs the main check (must exit 0). Then five
+#                  mutations, each restored by recopying before the next,
+#                  must each exit 1: `Doc-sync` renamed to `Docsync` in the
+#                  copied task example; "`<location>`, removed in the next
+#                  commit" changed to "`<location>`, removed in a later
+#                  commit" in the prototype skill's Prototype line, and then
+#                  in generate-brief's; the first of the two leftovers
 #                  commands alone with `--ignored=matching` changed to
 #                  `--ignored`; and a third copy of the leftovers command
 #                  appended to the skill. Then the main check runs on the
@@ -202,10 +203,11 @@ run_main_logic() {
 # --- Self-test mode ---------------------------------------------------------
 #
 # Mutation regression fixture. Copies the eleven target files into a temp
-# workdir, runs the main check (expect 0), then four mutations, each
+# workdir, runs the main check (expect 0), then five mutations, each
 # restored by recopying (expect 1 each): `Doc-sync` renamed to `Docsync` in
 # the task example (the label is then absent from that file); the prototype
-# skill's Prototype line changed to "removed in a later commit"; the first
+# skill's Prototype line changed to "removed in a later commit", then
+# generate-brief's; the first
 # leftovers command alone given `--ignored` for `--ignored=matching` (the
 # count drops to one); and a third leftovers command appended (the count
 # rises to three). Finally the reverted copy (expect 0). The presence check
@@ -247,6 +249,8 @@ run_self_test() {
     local target_rel='plugins/kenspc/references/task-document-example.md'
     local target_file="$WORK/$target_rel"
     local proto_file="$WORK/$LEFTOVERS_REL"
+    local brief_rel='plugins/kenspc/skills/generate-brief/SKILL.md'
+    local brief_file="$WORK/$brief_rel"
     local proto_line_old='`<location>`, removed in the next commit'
     local proto_line_new='`<location>`, removed in a later commit'
     local leftovers_mutated='git -c core.quotePath=false status --porcelain --ignored -uall -- <location>'
@@ -272,6 +276,15 @@ run_self_test() {
     hits=$(grep -cF -- "$proto_line_old" "$proto_file" || true)
     if [[ "$hits" -ne 1 ]]; then
         echo "FAIL  self-test fixture stale: \"$proto_line_old\" found on $hits lines of $proto_file, expected 1" >&2
+        return 2
+    fi
+    if ! grep -qF -- "$prototype_line" "$brief_file"; then
+        echo "FAIL  self-test fixture stale: the Prototype line is not in $brief_file" >&2
+        return 2
+    fi
+    hits=$(grep -cF -- "$proto_line_old" "$brief_file" || true)
+    if [[ "$hits" -ne 1 ]]; then
+        echo "FAIL  self-test fixture stale: \"$proto_line_old\" found on $hits lines of $brief_file, expected 1" >&2
         return 2
     fi
     found=$(count_occurrences "$proto_file" "$LEFTOVERS_LITERAL")
@@ -317,7 +330,21 @@ run_self_test() {
         return 1
     fi
 
-    # Mutation 3: the first leftovers command alone changed; the count
+    # Mutation 3: generate-brief's copy of the Prototype line changed, so an
+    # entry dropped from ANCHOR_CHECKS for either carrier is caught.
+    replace_literal "$brief_file" "$proto_line_old" "$proto_line_new"
+    if grep -qF -- "$prototype_line" "$brief_file"; then
+        echo "FAIL  self-test: Prototype line mutation did not apply in $brief_file" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$brief_rel" "$brief_file"
+    if [[ "$rc" -ne 1 ]]; then
+        echo "FAIL  self-test negative path (generate-brief's Prototype line changed): expected exit 1 on mutated copy, got $rc" >&2
+        return 1
+    fi
+
+    # Mutation 4: the first leftovers command alone changed; the count
     # drops to one. `--ignored=matching` is on two lines, so the literal
     # replacement of the whole command touches the first only.
     replace_literal "$proto_file" "$LEFTOVERS_LITERAL" "$leftovers_mutated"
@@ -333,7 +360,7 @@ run_self_test() {
         return 1
     fi
 
-    # Mutation 4: a third copy of the leftovers command appended.
+    # Mutation 5: a third copy of the leftovers command appended.
     printf '%s\n' "$LEFTOVERS_LITERAL" >> "$proto_file"
     found=$(count_occurrences "$proto_file" "$LEFTOVERS_LITERAL")
     if [[ "$found" -ne 3 ]]; then
@@ -349,7 +376,8 @@ run_self_test() {
 
     # Revert check: the recopied files hold their targets again.
     if ! grep -qF -- "$mutation_target" "$target_file" \
-        || ! grep -qF -- "$prototype_line" "$proto_file"; then
+        || ! grep -qF -- "$prototype_line" "$proto_file" \
+        || ! grep -qF -- "$prototype_line" "$brief_file"; then
         echo "FAIL  self-test: revert did not restore the mutation targets" >&2
         return 2
     fi
