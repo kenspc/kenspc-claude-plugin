@@ -435,7 +435,7 @@ where the LOW rows and their prose remain.)
 
 ## Verification
 
-(Schema C verbatim: the table and the Detail prose for each non-PASS row.)
+(Schema C verbatim.)
 
 ## Verdict
 
