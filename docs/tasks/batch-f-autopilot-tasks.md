@@ -1317,7 +1317,28 @@ Plan Step 2.2 (rulings D23, M15).
 
 ### Task 7: Add the autopilot smoke row to the release checklist
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The return-order check is worded on the artifact the driver writes: the
+    timeline's `end   <tag> exit <status>` line carries no timestamp (Task 1
+    anchored the line at column 0), so the row compares the mtime of
+    `<tag>.exit`, written together with that line, against the return line's
+    timestamp in the trace.
+  - The row names the acceptance record by path
+    (`docs/dry-runs/batch-f-acceptance.md`) rather than "this batch's",
+    since the checklist outlives the batch and a later reader needs the
+    file name; the record is filed by the acceptance run, after this task.
+  - The cost note's "twice" is spelled out as S3's own review phase and
+    S3b, so a reader knows which two reviews the figure counts.
+- Changes/tradeoffs:
+  - The row lists `rm -rf` beside `rm -r` and names the `jq` query and the
+    positive control, so the rails check can fail: a grep with no control
+    that finds nothing proves nothing.
+  - No test framework; verification was the criteria's greps and counts,
+    the cell-count check, the diff against `5c33c4a`, the pre-flight counts,
+    the guard suite, and the zero-diff command.
 
 Depends on: Task 1-3
 
