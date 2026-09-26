@@ -94,7 +94,8 @@ exist yet.
   most thirty minutes; the main session answers with `answer <tag>: <one line>`.
   A worker that got no answer puts the question under
   `## Question for the main session` in its final message and stops, and
-  the main session resumes it with the answer under `<tag>-r1`. The
+  the main session resumes it with the answer under the step's next
+  `<tag>-r<k>`. The
   interactive main session subscribes to each worker with
   `notify_when_idle` and ends its turn; the idle notice is the wake, and
   `<tag>.exit` the completion artifact, re-read with the state file
@@ -103,9 +104,9 @@ exist yet.
   `wait headless`). `ListAgents` runs before every send, and the `[ref]`
   addresses a row when two share a name. `--resume` is the fallback for a
   worker that has died — its pid gone with no `<tag>.exit` ten seconds
-  later, or a JSON subtype other than `success` — once, under `<tag>-r1`,
-  with the fixed continue prompt; a second death of the same step is a
-  stop. No `--continue`.
+  later, or a JSON subtype other than `success` — once, under the step's
+  next `<tag>-r<k>`, with the fixed continue prompt; a second death of the
+  same step is a stop. No `--continue`.
 - **Budget and caps.** `USD 200` by default, from the `Budget:` field,
   never hard-coded; `16 sessions, 8 resumes` from `Caps:`. Before each
   launch, spent (the sum of each session's last cumulative

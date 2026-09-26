@@ -228,9 +228,16 @@ running batch keeps launching with the text it started with.
 
 - The batch name is the argument file's base name without its extension.
 - Tags: `<batch>-s1`, `-s2`, `-s3`, `-s3b`, `-s4`, `-s5`, `-s6`; a re-run
-  of a step `-s4b`, `-s5b`; a resume `<tag>-r<k>`. Why unique by
-  construction: the timeline, the costs file, and the record name a stable
-  tag, and a resumed session keeps its own session id under a new tag.
+  of a step `-s4b`, `-s5b`, a further one the next letter (`-s4c`), and
+  the narrowed review after a fix `-s3c`, a re-run of S3b; a resume
+  `<tag>-r<k>`, where `<k>` counts that step's resumes from 1 whatever
+  their reason — an answer, a death, a raised cap — so a step resumed for
+  its answer and then dead is resumed under `-r2`, that being its first
+  death. Why unique by construction: the timeline, the costs file, and the
+  record name a stable tag, a resumed session keeps its own session id
+  under a new tag, and a tag used twice would have the driver refuse the
+  launch while the earlier worker runs and overwrite its `.json`,
+  `.session`, and `.pid` once it has ended.
 - The main session's name is `<batch>-main`, the name the launch line gives
   it. When the listed name differs — the session was started otherwise —
   the run uses the name `ListAgents` prints on its first line and records it
@@ -450,9 +457,9 @@ an answer beyond it is a decision the user has not made.
   start, so the first real message is where a stricter setting shows.
 - A worker that got no answer in thirty minutes has put its question under
   `## Question for the main session` in its final message and stopped. The
-  answer goes to it as a resume under `<tag>-r1`: a prompt whose first line
-  is `answer <tag>: <one line>` and whose body is the decision, counted as
-  a resume.
+  answer goes to it as a resume under the step's next `<tag>-r<k>`: a
+  prompt whose first line is `answer <tag>: <one line>` and whose body is
+  the decision, counted as a resume.
 
 ### The verdict loop after S3b
 
@@ -460,7 +467,8 @@ S3b's Schema F verdict decides the next step. Passing: PASS, on to Phase 3.
 FAIL, or PARTIAL with HIGH rows deferred: each HIGH row and each row-3 or
 row-5 FAIL is classified by the main session as a plugin defect — S5 from
 that row, task block `Fix issue <ID> from run <run dir>: <one line>`, then a
-narrowed S3b over `<S3b HEAD>..<fix HEAD>` — or accepted as a deferral with
+narrowed review, `-s3c`, over `<S3b HEAD>..<fix HEAD>` — or accepted as a
+deferral with
 a reason recorded as a clarification in the spec. The second narrowed
 review that still FAILs is the "guards red twice in a row" stop. DEFERRED
 MEDIUM and LOW rows are classified once — a fix in S5, or a roadmap
@@ -507,7 +515,7 @@ Before each launch:
 
 A step's session is dead when its pid is gone and `<tag>.exit` is absent
 ten seconds later, or when its JSON's subtype is not `success`. It is
-resumed once under `<tag>-r1` with the continue prompt
+resumed once, under the step's next `<tag>-r<k>`, with the continue prompt
 `Continue the task in your prompt from where you stopped; your last message was cut short.`;
 a second death of the same step is a stop. A live pid is never killed and
 never judged hung: when asked, the main session reports the pid, the size
@@ -517,8 +525,8 @@ implementation is silent for longer than any timeout a prompt would pick,
 and a killed worker leaves a half-applied task.
 
 A worker ended by its cap is the budget stop. After the user raises the
-budget it is resumed under `<tag>-r1` with the continue prompt and the new
-remaining cap, counted as a resume. Why: the cap is the only bound on a
+budget it is resumed under the step's next `<tag>-r<k>` with the continue
+prompt and the new remaining cap, counted as a resume. Why: the cap is the only bound on a
 session already running, and the step it ended is the one to continue.
 
 ## Phase 3: Accept
