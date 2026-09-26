@@ -92,11 +92,14 @@ the batch's acceptance record, named in the release commit.
   Both gates come before Phase 1 writes to the brief — the entry appended
   for a question given as text, or a derived `Settled by:` — since the
   brief is not committed and a write there cannot be undone. In a session
-  that cannot ask, a stop at either gate still sends the frame first, as a
-  message of its own, and then the stop — a `Settled by:` derived in the
-  frame is shown there and not written; in the batch D acceptance
-  (`docs/dry-runs/batch-d-acceptance.md`, F1), three such stops sent only
-  their last message, which referred to a frame never sent.
+  that cannot ask, a stop at either gate opens its last message with the
+  frame, then names the entry and the word found and why the run stopped,
+  as an interactive run puts the gate's question after the frame — a
+  `Settled by:` derived in the frame is shown there and not written; in the
+  batch D acceptance (`docs/dry-runs/batch-d-acceptance.md`, F1), such
+  stops sent only the stop, which referred to a frame never sent, and
+  still did when the frame was asked for as a message apart from the stop,
+  with nothing done between the two.
 - **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
   reproduction test, the last message names that commit, says its test
   fails — and every review run in the repository reports the test run
@@ -150,8 +153,9 @@ the batch's acceptance record, named in the release commit.
   built prototype that does not settle it, and the two branches that turn
   on `Prototype:` with no `Answer:` — a `needs prototype` entry built with
   no question, and an unrecognized-word entry given the prototype-again
-  question; its frame criterion now also covers a cannot-ask stop at
-  either gate. No new row; pre-flight counts unchanged.
+  question; its frame criterion now asks that a cannot-ask stop at either
+  gate open its last message with the frame. No new row; pre-flight counts
+  unchanged.
 - CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
   existing-file question; its prototype path paragraph names `Answer:`,
   with text after the label, as what makes an answered entry settled

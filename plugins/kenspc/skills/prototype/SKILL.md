@@ -121,18 +121,21 @@ a blanket confirmation adds a stop to the path that needs none.
 
 In a session that cannot ask (a system reminder to work without stopping),
 a gate on the entry the run takes — named, or taken with no ENTRY — stops
-the run in place of asking, and the frame still goes first, as a message of
-its own; the stop follows it as the last message, which names the entry and
-the status word found, or says there is none, and says why the run stopped.
-Nothing is written to the brief and nothing is committed: a `Settled by:`
-derived for the entry is shown in the frame as in any frame, and not
-written, since the gate comes before that write. A stop before any entry is
-known — no arguments, no brief, an entry number that names no entry, no
-`` `needs prototype` `` entry to take — has no question to frame and sends
-none. Why: the frame is the one place the user sees the question, the
-location, and the resources before anything happens, and a stop that asks
-nothing has no question for the frame to come before; sent without it, the
-last message refers to a frame the user was never shown.
+the run in place of asking, and the frame's message is the last message: it
+opens with the frame, in the order above, then names the entry and the
+status word found, or says there is none, and says why the run stopped —
+the shape of a gate's question after the frame, with the stop where the
+question would be. Nothing is written to the brief and nothing is
+committed: a `Settled by:` derived for the entry is shown in the frame as
+in any frame, and not written, since the gate comes before that write. A
+stop before any entry is known — no arguments, no brief, an entry number
+that names no entry, no `` `needs prototype` `` entry to take — has no
+question to frame and sends none. Why the frame in the last message: a stop
+that asks nothing does nothing between the frame and the stop, so a frame
+written as a message apart from the stop gets left out while the stop still
+refers to it; in one message, the last thing the user sees holds the
+frame, the one place they see the question, the location, and the
+resources before anything happens.
 
 **Constraints**: this phase writes nothing but the brief entry appended for
 a question given as text and a `Settled by:` derived for an entry that
@@ -160,11 +163,11 @@ command restores it.
 - An entry the run takes — named by ENTRY, or taken with no ENTRY as above
   — that is `` `answered` ``, or that holds `Answer:` whatever its status
   word: ask whether to prototype it again. In a session that cannot ask (a
-  system reminder to work without stopping), stop after the frame, as
-  Phase 1's DONE when says, and leave the entry unchanged: the rewrite in
-  Phase 3 for a run in which nothing was built does not apply to it. Why:
-  the entry already holds an answer, and the
-  commit behind it when it has a Prototype line; Phase 3 would replace them
+  system reminder to work without stopping), stop with the frame at the
+  head of the last message, as Phase 1's DONE when says, and leave the
+  entry unchanged: the rewrite in Phase 3 for a run in which nothing was
+  built does not apply to it. Why: the entry already holds an answer, and
+  the commit behind it when it has a Prototype line; Phase 3 would replace them
   whatever the status word says, and replacing them is the user's decision.
   An entry taken without being named is the one the user looked at least,
   so its answer is the easiest to lose unasked. On "yes", an entry that
@@ -188,12 +191,12 @@ command restores it.
   whether to prototype it or stop. A "stop" here, or a "no" to the question
   above, ends the run with the entry unchanged: the rewrite in Phase 3 for a
   run in which nothing was built does not apply to it. In a session that
-  cannot ask (a system reminder to work without stopping), stop after the
-  frame and leave the entry unchanged, as above; the last message names
-  the entry and quotes the word found, or says there is none, since the
-  word is what stopped the run. On "prototype it", the entry is prototyped
-  as a named `` `open` `` entry is, and Phase 3 writes a status word the
-  grammar knows. Why: the
+  cannot ask (a system reminder to work without stopping), stop and leave
+  the entry unchanged, as above; the last message opens with the frame,
+  then names the entry and quotes the word found, or says there is none,
+  since the word is what stopped the run. On "prototype it", the entry is
+  prototyped as a named `` `open` `` entry is, and Phase 3 writes a status
+  word the grammar knows. Why: the
   skill tells an answered entry from an unsettled one by its status word,
   so an entry whose word it cannot read may hold an answer that Phase 3
   would replace; the brief is not committed, so the
@@ -327,8 +330,8 @@ what a session that cannot ask does in place of asking.
 | No arguments | Which brief and which question | Stop; nothing is built |
 | No brief | — | Stop; suggest `/kenspc-brief`; nothing is built |
 | Several `needs prototype` entries, none named | Which one | The first in document order, named in the final message |
-| The entry the run takes, named or taken with none named, is `answered`, holds `Answer:`, or has an unrecognized status word and holds `Prototype:` | Prototype it again? | Stop after the frame; the entry unchanged |
-| The named entry's status word is not recognized, and it holds neither `Answer:` nor `Prototype:` | Prototype it, or stop | Stop after the frame; the entry unchanged |
+| The entry the run takes, named or taken with none named, is `answered`, holds `Answer:`, or has an unrecognized status word and holds `Prototype:` | Prototype it again? | Stop, the frame at the head of the last message; the entry unchanged |
+| The named entry's status word is not recognized, and it holds neither `Answer:` nor `Prototype:` | Prototype it, or stop | Stop, the frame at the head of the last message; the entry unchanged |
 | A location conflict | Where | The default location, named in the final message |
 | A UI prototype that can only render in the app, and CLAUDE.md names no location | Where in the app | Nothing is built; the entry stays unsettled with the reason |
 | A UI prototype in the app: a tracked file with uncommitted changes, or the project's manifest | Go on, commit first, or stop | Nothing is built; the entry stays unsettled with the reason |
