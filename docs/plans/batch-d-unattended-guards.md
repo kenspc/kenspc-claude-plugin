@@ -1071,6 +1071,26 @@ candidate. B3 — an unrecognized entry the gap round marks
 ruled, and after `1155550` the prototype skill's unattended stop names the
 entry and its word.
 
+After a narrowed review of CL7 and CL8 (range `a278985..157af1f`, run
+`.kenspc/runs/20260926-120737-changes/`, fixes `4e132e6..cb8c414`, verdict
+PASS), the main session left its six DEFERRED rows unchanged and froze the
+batch's implementation there. Each review round of the kept-answer rule had
+found narrower cases of the same rule, and the batch's budget did not cover
+another round. E3 (an unsettled attempt whose evidence contradicts the kept
+answer leaves that answer as settled input), B4 (a session resumed with a
+reminder to work without stopping after an interactive "yes" reaches
+cannot-ask sentences without the kept-answer qualifier), E4 (the keep rule
+reads an empty `Answer:` label as an answer), T4 (row 10 has no criterion
+for a verdict the user does not give), and T3 (row 10's gate-before-write
+clause covers only the unrecognized-word gate) are listed together as one
+roadmap candidate in the main session's report, with E3's suggested
+direction: an unsettled rewrite after a "yes" leaves `answered` as the
+grammar says and carries the earlier answer and its hash in the new
+`Evidence:`. T2 (no acceptance case for a "yes" followed by a built but
+unsettled attempt) is recorded as not exercised in the acceptance; the
+acceptance's `open` entry holding `Answer:` carries no `Settled by:`, so its
+"no" case shows the gate-before-write order T3 names.
+
 ## Open Questions
 
 None. The rulings in [Design decisions](#design-decisions) close every
