@@ -246,7 +246,9 @@ resume=""
 while [ $# -gt 0 ]; do
   case $1 in
     --resume)
-      [ $# -ge 2 ] || die "--resume needs a session id"
+      # An empty id would pass the count test and then launch a fresh
+      # session under the resume tag, with no session to continue.
+      [ -n "${2:-}" ] || die "--resume needs a session id"
       resume=$2
       shift 2
       ;;
