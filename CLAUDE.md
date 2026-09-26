@@ -118,7 +118,8 @@ so the uniformity holds.
 ### Subagent Review Architecture
 
 Skills use plugin agents (defined in `agents/`) as workers, dispatched via the
-Agent tool. Three orchestration patterns:
+Agent tool — except the autopilot, whose workers are headless sessions (the
+fourth pattern below). Four orchestration patterns:
 
 **No review (generate-brief, diagnose-bug, prototype):**
 Brief is a discovery artifact, not a verifiable spec. Review happens downstream
