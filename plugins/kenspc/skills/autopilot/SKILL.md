@@ -784,7 +784,11 @@ AUTOPILOT_BATCH        the batch name in the timeline's file name
 Every worker starts with `--name <tag>`,
 `--settings '{"crossSessionInbound":"accept"}'`,
 `--permission-mode bypassPermissions`, `--output-format json`, stdin from
-`/dev/null`; a fresh launch passes `--session-id`, a resume `--resume`. Why
+`/dev/null`; a fresh launch passes `--session-id`, a resume `--resume`.
+`APPEND_SP` is listed by the driver and set by no launch of this skill:
+every worker asks by message, as the preamble says, and a worker told to
+work without stopping would answer its own questions, which the quality
+bar names as the failed run. Why
 the session id is written before the start: the transcript path and the
 resume id are known even when the worker dies before its JSON lands. Why
 `<tag>.exit` and no completion message: `.exit` is written by the driver
