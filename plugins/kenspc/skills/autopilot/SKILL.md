@@ -283,6 +283,12 @@ reminder to work without stopping), the run ends with the same message.
 - `ListAgents` names this session on its first line; otherwise the stop
   gives the version requirement.
 - The workspace is writable.
+- An existing `_logs/<batch>-state.md` names this repository on its
+  `repository:` line; one that names another is a stop naming both. Why:
+  the workspace is shared by every repository on the machine, and two plan
+  files with one base name would share the state file, the tags, the
+  logs, and the prompts — the run's memory — while `Workspace:` keeps them
+  apart once the stop has named the clash.
 - The driver copy's `--self-test` prints `self-test passed` and exits 0.
 - In plugin mode, the plugin directory holds a `plugin.json`.
 
@@ -291,8 +297,9 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 
 ### The state file
 
-`_logs/<batch>-state.md` holds the settings line, the current step and its
-tag, each session's tag, id, cost, and result, the questions answered, the
+`_logs/<batch>-state.md` holds the settings line, the repository root, the
+current step and its tag, each session's tag, id, cost, and result, the
+questions answered, the
 stops, the clarification numbers recorded in the spec, and the next action.
 It is rewritten at every transition and re-read, with `<tag>.exit`, on
 every wake — a notice, a message, a user reply — before the run acts. Why:
@@ -302,7 +309,7 @@ turn continue from the artifact rather than from the wording.
 
 ```
 Autopilot settings — …                      (the settings line)
-main session: <name>   baseline: <sha>      spec: <path> (<hash> once committed)
+main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
