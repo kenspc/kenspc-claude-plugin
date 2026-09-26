@@ -45,8 +45,11 @@ the batch's acceptance record, named at release.
   `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
   (no path: regression-verifier writes no report file). A code-fixer reply
   without its statistics line, or a regression-verifier reply without its
-  closing CLEAN or HAS ISSUES line, gets one line saying so instead, and the
-  final report renders that reply verbatim. The Schema A
+  closing CLEAN or HAS ISSUES line, prints instead
+  `code-fixer returned — no statistics line` or
+  `regression-verifier returned — no result line`, the same in both skills,
+  the final report renders that reply verbatim, and the run goes on. The
+  Schema A
   roll-up, code-fixer's reply, and Schema C are rendered once, in the final
   report: Schema F's Review summary now holds the per-angle roll-up table
   (`| Angle | HIGH | MEDIUM | LOW |`, the five angle rows, and a
@@ -72,7 +75,11 @@ the batch's acceptance record, named at release.
   false, no behavior the document never described, and no document outside
   the list; a listed path with no file is skipped. A correction that needs
   more, or a document with uncommitted changes, is left undone and reported
-  not updated with its reason, while the code fix still lands. The Schema B
+  not updated with its reason, while the code fix still lands. A correction
+  does not count toward the fix's size, so a fix localized to one file is
+  not deferred as a multi-file fix for it, and a fix withdrawn because its
+  build / test / lint run failed takes its correction back with it. The
+  Schema B
   Action cell names the document — `FIXED — updated <path>[, <path>]`, or
   `FIXED — not updated <path>: <reason>`, several joined by `; ` — and the
   leading word still classifies the action, so the recount guard passes
@@ -86,7 +93,8 @@ the batch's acceptance record, named at release.
   `No Doc-sync document describes behavior the fixes changed.` when none
   was affected, and, when the reply has no such line, states
   `code-fixer's reply has no Doc-sync documents line` and names the listed
-  documents to check against the fix commits. Schema F gains the same
+  documents to check against the fix commits; a reply without a statistics
+  line gets the bullet as for FIXED greater than 0. Schema F gains the same
   bullet whenever the reply carries the line and FIXED is greater than 0,
   without that fallback: `/kenspc-task-review` never reads the Doc-sync
   task's status. This replaces the 3.6.0 Next steps bullet that named the
@@ -122,20 +130,27 @@ the batch's acceptance record, named at release.
   with the text outside the matched block holding no line of the plan and a
   one-character edit to a copy of the file failing the comparison; an
   approving reply that asks for a change gets the full revised draft again,
-  with no Write. Rows 6 and 7 replace "then Schema A → B → C → G" and "then
+  with no Write, and in a session that cannot ask, a resumed reply that asks
+  for a change ends with the full revised draft and
+  `Plan not written: awaiting approval.`, with no Write, no Agent call, and
+  no commit. Rows 6 and 7 replace "then Schema A → B → C → G" and "then
   the Schema A roll-up, B, C, and the Schema F final report" with the three
   progress lines in order, each after its agent returns and before the next
   step, no text line beginning with `|` from the first reviewer call until
   the final report's first heading, and the roll-up header, a line holding
   `total reported `, and the Schema C header each exactly once, inside the
   final report. Row 6's re-check criterion becomes the fix-commit
-  correction — the sentence changed and nothing else in the document,
+  correction — the sentence changed and nothing else in the document, the
+  commit's body holding `Updates <path> to match the fix.`,
   `FIXED — updated <path>`,
   `Doc-sync documents: updated <path> (row <n>, <commit>)`, and one Next
   steps bullet naming the document and row — and, with FIXED greater than
   0 and no document affected, no fix commit touching a listed document and
   the bullet `No Doc-sync document describes behavior the fixes changed.`;
-  row 7 checks that without a task document code-fixer's reply has no
+  in row 6's forced-BLOCKED run, code-fixer's reply has no
+  `Doc-sync documents:` line and no fix commit touches a listed document
+  unless its own row's File:Line names it; row 7 checks that without a task
+  document code-fixer's reply has no
   `Doc-sync documents:` line and no Action cell carries the document
   suffix. No new row; pre-flight counts unchanged.
 - CLAUDE.md's Subagent Review Architecture gains two sentences: after the
