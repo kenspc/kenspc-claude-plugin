@@ -447,11 +447,17 @@ Every worker is one launch, one wait, one return.
   carrying HEAD at the launch. A driver that
   exits non-zero has started nothing: its message on stderr is the stop's
   reason — or, when it names an earlier worker under the tag still
-  running, that worker is the one to wait for, by its `<tag>.exit` — and
+  running, that worker is the one to wait for, by its `<tag>.exit`, once
+  `ps -o args= -p <pid>` has shown the driver copy's own command line
+  with the tag (`<batch>-run.sh <tag> …`); a pid whose command line is
+  another program's is a leftover from a reboot, so the run removes
+  `_logs/<tag>.pid` and launches again — and
   reading `<tag>.pid` and `<tag>.session` applies only once the `started`
   line has been printed. Why: the two files can hold an earlier launch's
   values or none, so a run that read them after a refused launch would
-  wait on a worker that does not exist, or resume beside one that does.
+  wait on a worker that does not exist, or resume beside one that does;
+  and a pid the driver did not start writes no `.exit`, so a run that
+  waited for it would wait until the user intervened.
 - **The wait, interactive.** Subscribe to the worker with `SendMessage`
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
