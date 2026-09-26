@@ -374,6 +374,8 @@ every file that carries them.
 | Progress line, reviewers | `Reviewers returned — HIGH <h>, MEDIUM <m>, LOW <l> — <RUN_DIR>/angle-1.md … angle-5.md` — in English whatever the conversation language | `task-review/SKILL.md`, `task-implement/SKILL.md`, `docs/release-checklist.md` (rows 6, 7) |
 | Progress line, code-fixer | `code-fixer returned — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md` | the same |
 | Progress line, regression-verifier | `regression-verifier returned — CLEAN`, or `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]` | the same |
+| Progress line, code-fixer reply without its statistics line (CL4) | `code-fixer returned — no statistics line` | `task-review/SKILL.md`, `task-implement/SKILL.md` |
+| Progress line, regression-verifier reply without its result line (CL4) | `regression-verifier returned — no result line` | the same |
 | Schema B Action suffix | `FIXED — updated <path>[, <path>]`; `FIXED — not updated <path>: <reason>`; several joined by `; ` | `code-fixer.md`, `docs/release-checklist.md` (row 6) |
 | Reply line | `Doc-sync documents: updated <path> (row <n>, <commit>)[; …][; not updated <path> (row <n>) — <reason>]`, or `Doc-sync documents: none affected by the fixes` | `code-fixer.md`, `task-implement/SKILL.md`, `task-review/SKILL.md`, `docs/release-checklist.md` (rows 6, 7) |
 | No-document bullet | `No Doc-sync document describes behavior the fixes changed.` | `task-implement/SKILL.md`, `task-review/SKILL.md`, `docs/release-checklist.md` (row 6) |
