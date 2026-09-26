@@ -194,8 +194,9 @@ launch() {
 # workspace. Passing: every file is present with the expected content and the
 # timeline holds both lines. It fails, in this order, on a second launch
 # under the tag, made while the stub still runs, that is not refused with
-# status 2 naming the pid and leaving .session and .pid as they were; then
-# on a missing .session,
+# status 2 naming the pid and leaving .session and .pid as they were; a
+# .pid that does not name a live process other than the self-test's own;
+# then on a missing .session,
 # a missing .pid, a .json that is missing, unparseable, or without "result",
 # a missing .err, a .exit that is missing or does not read 0, a timeline
 # without its start or end line, an .err that does not show every
@@ -257,6 +258,11 @@ STUB
     || { echo "self-test failed: the refusal of a second launch under $TAG does not name pid $first_pid" >&2; return 1; }
   [ "$(cat "$LOGS/$TAG.session")" = "$first_session" ] && [ "$(cat "$LOGS/$TAG.pid")" = "$first_pid" ] \
     || { echo "self-test failed: a refused launch under $TAG changed $LOGS/$TAG.session or $LOGS/$TAG.pid" >&2; return 1; }
+  # The pid file names a live process other than this one: the skill reads
+  # a gone pid with no .exit as a dead worker and resumes it, so a driver
+  # that wrote its own pid would have every worker resumed beside itself.
+  kill -0 "$first_pid" 2>/dev/null && [ "$first_pid" != "$$" ] \
+    || { echo "self-test failed: $LOGS/$TAG.pid names $first_pid, not a live process other than the self-test's own" >&2; return 1; }
 
   n=0; until [ -f "$LOGS/$TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
 
