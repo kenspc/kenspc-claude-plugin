@@ -383,7 +383,7 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
     <batch>-*      seed projects (plugin mode)
-    .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing is rm -rf'd
+    .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing is removed with a recursive rm
 ```
 
 `<tag>.exit`, written by the driver when a worker returns, is the
@@ -419,7 +419,8 @@ on your behalf.
 touched; guards red twice in a row; the same acceptance FAIL still failing
 after two fixes; the session cap, the resume cap, or the budget exceeded
 (a question with the numbers); a safety-rail breach (no `git push`,
-`git tag`, or release; no `rm -rf`; no resource the brief does not name; no
+`git tag`, or release; no recursive `rm` in any spelling — `rm -r`,
+`rm -rf`, `rm -fr`, `rm -R`; no resource the brief does not name; no
 secrets); a question neither the spec nor the locked design answers; a
 nested `claude -p` refused; the same step's session dead twice. Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file

@@ -753,7 +753,8 @@ one failure this batch cannot detect.
 Write only to the repository at <repository root>, the workspace at
 <workspace>, and $TMPDIR. No git push, no git tag, no release. No resource
 the brief does not name — no database, no network service. No secrets in
-any file or message. No rm -rf: discard by mv into
+any file or message. No recursive rm in any spelling — rm -r, rm -rf,
+rm -fr, rm -R: discard by mv into
 <workspace>/.trash/<name>-<timestamp>/, created when missing; deletions
 inside the repository only through git rm. Any breach is a stop: report it
 and end.

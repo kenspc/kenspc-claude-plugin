@@ -133,8 +133,9 @@ exist yet.
   the session cap, the resume cap, or the budget exceeded (a question); a
   safety-rail breach (the rails in every worker's preamble: write only to
   the repository, the workspace, and `$TMPDIR`; no `git push`, `git tag`,
-  or release; no resource the brief does not name; no secrets; no `rm -rf`
-  — discard by `mv` into `.trash/`; deletions inside the repository only
+  or release; no resource the brief does not name; no secrets; no
+  recursive `rm` in any spelling — `rm -r`, `rm -rf`, `rm -fr`, `rm -R` —
+  discard by `mv` into `.trash/`; deletions inside the repository only
   through `git rm`); a question neither the spec nor the locked design
   answers; a nested `claude -p` refused; the same step's session dead
   twice. Each ends the final message with `Autopilot stopped: <reason>`.
