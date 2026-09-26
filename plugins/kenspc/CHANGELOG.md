@@ -54,7 +54,8 @@ the batch's acceptance record, named at release.
   which then names code-fixer's pre-fix record
   (`scratch/code-fixer/pre-fix/index.txt` in the run directory), since the
   fixes it made before it stopped sit in the working tree beside the user's
-  own change. The
+  own change, or, when that record does not exist, says that code-fixer
+  recorded no edit. The
   Schema A
   roll-up, code-fixer's reply, and Schema C are rendered once, in the final
   report: Schema F's Review summary now holds the per-angle roll-up table

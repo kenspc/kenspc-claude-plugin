@@ -492,11 +492,14 @@ uncommitted, naming the files, for the user to review and commit; nothing
 in such a run commits them. When code-fixer's reply in such a run has no
 statistics line, that bullet is still written: code-fixer may have edited
 files before it stopped, so the bullet names
-`RUN_DIR/scratch/code-fixer/pre-fix/index.txt`, which, when it exists,
-lists each file code-fixer edited, with a copy of each as it stood before
-the first edit beside it. Why: those edits sit in the working tree beside
-the user's own change, and that record is the only one that tells them
-apart. When code-fixer's reply carries a
+`RUN_DIR/scratch/code-fixer/pre-fix/index.txt`, which lists each file
+code-fixer edited, with a copy of each as it stood before the first edit
+beside it. When that file does not exist, the bullet says instead that
+code-fixer left no pre-fix record, so it recorded no edit before it
+stopped. Why: those edits sit in the working tree beside the user's own
+change, and that record is the only one that tells them apart; a bullet
+that points at a record that is not there reads as fixes present. When
+code-fixer's reply carries a
 `Doc-sync documents:` line and its statistics line reports FIXED greater
 than 0, one bullet carries that line — each document the fix commits
 updated, with its row and commit, and each left not updated, with its
