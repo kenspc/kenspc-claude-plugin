@@ -210,7 +210,9 @@ launch() {
 # and APPEND_SP set, a .exit missing or not 0, a .session not holding that
 # id, an .err without --resume <id>, with --session-id, or without the three
 # variables' flags, and a timeline start line not ending in "resume"; then,
-# for a launch under self-s-test-s1 with AUTOPILOT_BATCH unset, a
+# for a launch under self-s-test-s1 with AUTOPILOT_BATCH unset and a stale
+# self-s-test-s1.exit in place, that file still present right after the
+# launch, a .exit not reading 0 after the wait, and a
 # self-s-test-timeline.log without its start or end line (the batch-name
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
@@ -352,10 +354,20 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
   # before its last "-s", so a batch name that itself holds "-s" keeps its
   # name in the timeline's file name.
+  # The same launch starts with a stale .exit from an earlier launch under
+  # the tag in place: the file is gone right after the launch and holds this
+  # worker's status after the wait. A stale one would read as this worker's
+  # completion before it starts, with an empty .json, so the skill would
+  # count the worker dead and resume it beside the live one.
   BTAG=self-s-test-s1
   unset AUTOPILOT_BATCH
+  printf '7\n' > "$LOGS/$BTAG.exit" || die "cannot write a stale $LOGS/$BTAG.exit"
   launch "$BTAG" "$base" "$base/prompt.md" ""
+  [ ! -f "$LOGS/$BTAG.exit" ] \
+    || { echo "self-test failed: a stale $LOGS/$BTAG.exit survived the launch and would read as this worker's completion" >&2; return 1; }
   n=0; until [ -f "$LOGS/$BTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ "$(cat "$LOGS/$BTAG.exit" 2>/dev/null)" = "0" ] \
+    || { echo "self-test failed: $LOGS/$BTAG.exit does not read 0 after the wait" >&2; return 1; }
   grep -q "^start $BTAG pid [0-9][0-9]* " "$LOGS/self-s-test-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/self-s-test-timeline.log has no start line for $BTAG (the batch-name default)" >&2; return 1; }
   grep -q "^end   $BTAG exit 0\$" "$LOGS/self-s-test-timeline.log" 2>/dev/null \
