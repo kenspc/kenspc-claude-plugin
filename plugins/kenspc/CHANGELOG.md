@@ -74,10 +74,14 @@ the batch's acceptance record, named in the release commit.
   `needs prototype` entry, or the first in document order in a session that
   cannot ask) — and a named unrecognized one that holds `Prototype:`; a
   `needs prototype` entry with `Prototype:` and no `Answer:`, the form an
-  unsettled attempt leaves, is still prototyped again. Both gates come
-  before Phase 1 writes to the brief — the entry appended for a question
-  given as text, or a derived `Settled by:` — since the brief is not
-  committed and a write there cannot be undone.
+  unsettled attempt leaves, is still prototyped again. After a "yes" to
+  that question, a later gate that ends in "nothing is built" leaves an
+  entry that held `Answer:` as it was — its `Answer:`, `Evidence:`, and
+  Prototype line stay — and the final message gives the reason; before,
+  Phase 3's rewrite for a run that built nothing replaced them. Both gates
+  come before Phase 1 writes to the brief — the entry appended for a
+  question given as text, or a derived `Settled by:` — since the brief is
+  not committed and a write there cannot be undone.
 - **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
   reproduction test, the last message names that commit, says its test
   fails — and every review run in the repository reports the test run
@@ -115,8 +119,9 @@ the batch's acceptance record, named in the release commit.
   that cannot ask). Row 9 gains the interactive exit's commit and
   `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
   before anything is written, and their cannot-ask stop with no commit and
-  the brief's sha256 unchanged, and the prototype-again question for an
-  entry taken with no entry named that holds `Answer:`. No new row; pre-flight counts unchanged.
+  the brief's sha256 unchanged, the prototype-again question for an entry
+  taken with no entry named that holds `Answer:`, and an entry whose answer
+  is kept when a "yes" to that question ends with nothing built. No new row; pre-flight counts unchanged.
 - CLAUDE.md's cannot-ask list gains generate-plan's approval stop and
   existing-file question; its prototype path paragraph names `Answer:` as
   what makes an answered entry settled input; its guard descriptions,

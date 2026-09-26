@@ -151,10 +151,14 @@ command restores it.
   commit behind it when it has a Prototype line; Phase 3 would replace them
   whatever the status word says, and replacing them is the user's decision.
   An entry taken without being named is the one the user looked at least,
-  so its answer is the easiest to lose unasked. A `Prototype:` line with no
-  `Answer:` under
-  `` `needs prototype` `` is the form an unsettled attempt leaves, and such
-  an entry is prototyped again like any other.
+  so its answer is the easiest to lose unasked. On "yes", a later gate that
+  ends in "nothing is built" leaves an entry that held `Answer:` as it was
+  — its `Answer:`, `Evidence:`, and Prototype line stay — and the final
+  message gives the reason nothing was built. Why: a "yes" consents to
+  replacing the answer with a new result, not with the absence of one, and
+  the brief has no committed copy to restore it from. A `Prototype:` line
+  with no `Answer:` under `` `needs prototype` `` is the form an unsettled
+  attempt leaves, and such an entry is prototyped again like any other.
 - A named entry whose status word is none of `` `open` ``,
   `` `needs prototype` ``, and `` `answered` `` — hand-edited, translated,
   or missing: one that holds `Answer:` or `Prototype:` takes the question
@@ -452,7 +456,10 @@ remove commit's body keeps the answer and the hash in history.
 
 **When nothing was built** — a gate ended in "nothing is built": no commit
 is made; the entry stays `` `needs prototype` `` and gains `Evidence:` with
-the reason, and no `Prototype:`.
+the reason, and no `Prototype:`. An entry that held `Answer:` when the run
+began — one a "yes" to the prototype-again question sent on — is the
+exception: it is left as it was, and the final message gives the reason
+nothing was built, for the reason § The question gives.
 
 **An entry an earlier attempt left unsettled** already carries `Evidence:`,
 and `Prototype:` when that attempt committed one. This run's rewrite
