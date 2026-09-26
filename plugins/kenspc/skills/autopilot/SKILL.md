@@ -412,6 +412,11 @@ Every worker is one launch, one wait, one return.
   into `<batch>-costs.txt` — replace the line that carries the same session
   id, else append; a resume's line replaces its predecessor's, since a
   resumed session's JSON carries the whole total; rewrite the state file.
+  A `<tag>.json` that is empty or not JSON — an executable that could not
+  start, a worker killed before its result — gives the return line
+  `cost USD unknown` and `no result` in the subtype's place, gets no costs
+  line, since a `0` there would read as a free session, and counts as dead
+  (Death and resume).
   Before the next step, read the JSON's `result` for
   `## Question for the main session`: a return that carries it is the
   timed-out question (The message protocol), not a finished step. Why: a
@@ -518,7 +523,8 @@ Before each launch:
 ### Death and resume
 
 A step's session is dead when its pid is gone and `<tag>.exit` is absent
-ten seconds later, or when its JSON's subtype is not `success`. It is
+ten seconds later, or when its JSON is empty, not JSON, or of a subtype
+other than `success`. It is
 resumed once, under the step's next `<tag>-r<k>`, with the continue prompt
 `Continue the task in your prompt from where you stopped; your last message was cut short.`;
 a second death of the same step is a stop. A live pid is never killed and
