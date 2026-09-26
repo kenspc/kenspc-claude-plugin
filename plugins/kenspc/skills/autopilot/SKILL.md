@@ -312,6 +312,11 @@ reminder to work without stopping), the run ends with the same message.
   files with one base name would share the state file, the tags, the
   logs, and the prompts — the run's memory — while `Workspace:` keeps them
   apart once the stop has named the clash.
+- Every `Must read:` path exists, and every `Prior specs:` entry resolves
+  (`git cat-file -e <hash>^:<path>`); otherwise the stop names the path or
+  the entry. Why: both are written into every worker's preamble, and a
+  typo there is found by the first paid worker, which then asks or goes
+  on without the material.
 - The driver copy's `--self-test` prints `self-test passed` and exits 0.
 - In plugin mode, the plugin directory holds a `plugin.json`.
 
