@@ -992,7 +992,32 @@ and the answered question is removed from that section. The prefix is `CL`,
 so a clarification cannot be read as one of the locked points E-1 to E-6 or
 the architecture rows D1 to D19.
 
-None yet.
+Rulings of 2026-09-26, after the `/kenspc-task` run over this document
+(task document `547f41a`, review fix `e054aba`). CL1 and CL2 answer the two
+plan-level concerns that run raised; neither changes a behavior. Both
+decided by the main session within the locked design.
+
+- CL1 — Step 2.1, FIXING RULES: the new Doc-sync bullet goes after the
+  uncommitted-mode bullet, not between it and the `git status --porcelain`
+  bullet, and it names the dirty-file rule by that name ("the
+  `git status --porcelain` bullet") instead of "the previous rule". The
+  `git status --porcelain` bullet and the uncommitted-mode bullet stay
+  adjacent and unedited. Why: the `git status --porcelain` bullet ends with
+  "the harm the next rule prevents", which points at the uncommitted-mode
+  bullet by position; a bullet inserted between them would silently change
+  what that phrase points at, and a reference by name survives any later
+  insertion. Task 3 of the task document already reads this way.
+- CL2 — Steps 1.1, 2.1, and 4.4: where a Step's text gives a shorter form
+  of a string listed under [Fixed strings](#fixed-strings), the table's
+  form governs. The three places: Step 1.1's
+  `HAS ISSUES: row <k> <result>, …` is the table's
+  `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`;
+  Step 2.1's `FIXED — updated <path>` is the table's
+  `FIXED — updated <path>[, <path>]`; and release-checklist row 4 (Step
+  4.4) carries the phrase `character for character`, as the table's Verbatim
+  write row requires. Why: the table is the one place a string is spelled
+  in full, and the task document already follows it; a Step's shorthand
+  copied on its own would drop the optional parts the acceptance tests for.
 
 ## Open Questions
 
