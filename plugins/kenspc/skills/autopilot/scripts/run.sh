@@ -59,8 +59,10 @@
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path.
 #
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
-# or environment error (nothing started). The worker's own status goes to
-# <tag>.exit. Self-test: 0 on pass, 1 on the first missing or wrong item.
+# or environment error, or when <tag>.pid names a live process and <tag>.exit
+# is absent — an earlier worker under the same tag still running (nothing
+# started). The worker's own status goes to <tag>.exit. Self-test: 0 on
+# pass, 1 on the first missing or wrong item.
 #
 # Bash 3.2 (the one macOS ships): no associative arrays, no array-reading
 # builtins, no case-modifying expansions; POSIX tools plus uuidgen or python3
@@ -105,6 +107,19 @@ launch() {
   mkdir -p "$logs" || die "cannot create the logs directory $logs"
   logs=$(cd "$logs" && pwd) || die "cannot enter the logs directory $logs"
   prompt=$(cat "$prompt_file") || die "cannot read $prompt_file"
+
+  # A launch under a tag whose earlier worker still runs — its pid live and
+  # its exit file not yet written — would overwrite that worker's files and
+  # put two workers into one repository; it is refused before anything is
+  # written. A pid file left by a machine that rebooted under a worker can
+  # name an unrelated process, so the message says what to remove.
+  if [ -f "$logs/$tag.pid" ] && [ ! -f "$logs/$tag.exit" ]; then
+    local earlier
+    earlier=$(cat "$logs/$tag.pid")
+    if [ -n "$earlier" ] && kill -0 "$earlier" 2>/dev/null; then
+      die "a worker under the tag $tag is still running (pid $earlier, $logs/$tag.pid); wait for $logs/$tag.exit, or remove the pid file when that process is not the worker"
+    fi
+  fi
 
   if [ -n "$resume" ]; then
     session=$resume
