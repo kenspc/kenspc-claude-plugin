@@ -380,6 +380,8 @@ The flow:
    instruction: fill the `Ruling` column, set the status line to ruled,
    run the pointer-label grep, commit the spec alone as
    `docs(plans): add batch <name> spec`, reply with the hash, and stop.
+   When S1 has stopped on the timeout (The message protocol), the same text
+   is the body of the resume prompt, under its `answer <tag>:` first line.
 5. Record the hash S1 replies with in the state file.
 
 S1's task block carries: the draft-spec task — the shape of a decided spec
@@ -954,7 +956,10 @@ whose first line is `rulings <batch>: <n> rulings`, one row per decision
 (`M<n>: <decision>`, `D<n>: <decision>`), ending with what to do next: fill
 the Ruling column, set the status line to ruled, run the grep the
 Constraints section gives, commit the spec alone as
-`docs(plans): add batch <batch> spec`, reply with the hash, and stop.
+`docs(plans): add batch <batch> spec`, reply with the hash, and stop. When
+you stopped after thirty calls and were resumed, the same rows and the same
+instruction come in the prompt that resumed you, under its first line
+`answer <tag>: <one line>`.
 ````
 
 - S2: `/kenspc-task <spec path>`.
