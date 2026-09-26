@@ -87,11 +87,11 @@ the batch's acceptance record, named in the release commit.
   does not settle it, or a verdict not given leaves its `Answer:`,
   `Evidence:`, and Prototype line in place — the one line it can gain is a
   `Settled by:` derived for it — and the final message names the new
-  attempt's commits and why the question was not settled; before, Phase 3's
-  rewrite for an unsettled run replaced them. Both gates come before
-  Phase 1 writes to the brief — the entry appended for a question given as
-  text, or a derived `Settled by:` — since the brief is not committed and a
-  write there cannot be undone.
+  attempt's commits, when it made any, and why the question was not
+  settled; before, Phase 3's rewrite for an unsettled run replaced them.
+  Both gates come before Phase 1 writes to the brief — the entry appended
+  for a question given as text, or a derived `Settled by:` — since the
+  brief is not committed and a write there cannot be undone.
 - **diagnose-bug.** On "interactively" at the exit, when Phase 1 committed a
   reproduction test, the last message names that commit, says its test
   fails — and every review run in the repository reports the test run
