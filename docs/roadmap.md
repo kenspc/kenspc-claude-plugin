@@ -7,24 +7,9 @@ its number.
 
 ## Next minor (3.9.0)
 
-1. Render Schema A / B / C once, in the final Schema G report, instead of
-   again between dispatches in Step 3 (Mac O1).
-2. Verdict asymmetry: a LOW regression brought in by a fix commit fails the
-   run, while a DEFERRED MEDIUM does not. Whether to grade the verdict by
-   severity is the maintainer's call (Mac O6).
-3. Transcript audit scripts read `subagents/agent-<id>.jsonl`: from Claude
-   Code 2.1.281 the tool_result no longer carries the report text (Mac O7).
-4. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
+1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
-5. Documents synced by a Doc-sync task can go stale when a review fix
-   changes the behavior they describe: code-fixer's fixes land after the
-   Doc-sync task. Today Schema G's Next steps asks the user to re-check them
-   (batch A review, B2). Two directions for an agent to take it over:
-   code-fixer brings a listed document into scope when a fix changes the
-   behavior it describes, or regression-verifier gains a check that the
-   listed documents still match the code after the fix commits. Not
-   shipped with 3.6.0; decide at the next release.
-6. Linters and build tools still walk into `.kenspc/`. ESLint's flat config
+2. Linters and build tools still walk into `.kenspc/`. ESLint's flat config
    ignores only `node_modules` and `.git` by default; the ESLint
    configuration migration guide: "In flat config, dotfiles (e.g.
    `.dotfile.js`) are no longer ignored by default." A runner-safe probe such
@@ -34,7 +19,7 @@ its number.
    keeping them out of those tools is open. A prototype's files under
    `prototypes/` are in the same position between its add and remove
    commits, and a gate that walks the repository reaches them there.
-7. Scratch convention follow-ups. The standalone review of the last
+3. Scratch convention follow-ups. The standalone review of the last
    scratch-probe commits (`f42bd21`, `99574bb`, `979688e`) found no HIGH
    issue and, under that plan's stop rule, deferred 14 findings, 9 MEDIUM
    and 5 LOW, with no further round. The rows and each one's suggested
@@ -85,7 +70,7 @@ its number.
    attempt, which the release checklist's name probe flags although vitest
    collected nothing; the RUN_DIR bullet already forbids `test.*`, so this
    is a behavior slip to watch, not a rule gap.
-8. Smoke candidates for the prototype chain. The batch C review (T2–T7)
+4. Smoke candidates for the prototype chain. The batch C review (T2–T7)
    proposed six release-checklist cases that the one-time acceptance
    covers but no smoke row does, and the review of its fix round proposed
    more, each marked with its ID. Each costs a headless run at every
@@ -131,7 +116,7 @@ its number.
      run with a reminder to work without stopping — the brief is written
      without asking what would settle it, and its `needs prototype`
      entry's `Settled by:` is tagged as inferred (fix-round review, T2).
-9. When the prototype skill names a leftover directory once. Today a
+5. When the prototype skill names a leftover directory once. Today a
    directory is named once, with its file count, only when every file
    under it is listed as untracked. In a project whose dependency ignore
    rule is root-anchored (`/node_modules`, the create-next-app and Create
@@ -152,22 +137,85 @@ its number.
    in the maintainer's macOS checkout). The acceptance run's O5
    (`docs/dry-runs/batch-c-acceptance.md`) already named a directory
    holding untracked and ignored files once, as that condition would.
-10. Two prototype runs went outside rules the skill already states; to
-    watch, not a rule gap (`docs/dry-runs/batch-c-acceptance.md`, O11 and
-    O12, classified behavior deviations). One asked a question outside the
-    gate table — the brief's Scope excluded any UI, and the run asked
-    whether to go on or stop — where the skill says "Every question the
-    skill asks is one of these gates". The other wrote its check script and
-    a saved render to the session scratchpad instead of the location, so
-    `git show <add commit>` does not hold the checks its `Evidence:` cites,
-    where the skill says "Everything is written under the location".
-11. A generate-plan gap round went outside a rule the skill already states;
-    to watch, not a rule gap (`docs/dry-runs/batch-d-acceptance.md`, F2,
-    classified a behavior deviation). Asking the status of two entries
-    whose status words it did not recognize, the gap round asked only for
-    the status, where the skill says "the question that asks an
-    unrecognized entry's status also asks, for `answered`, the answer — one
-    question, one round". The user replied `answered` for one of them with
-    no answer text, and that entry was still carried as the rule says, into
-    the plan's Open Questions in the `open` form with `Answer: missing`, so
-    the plan's content was not affected.
+6. Two prototype runs went outside rules the skill already states; to
+   watch, not a rule gap (`docs/dry-runs/batch-c-acceptance.md`, O11 and
+   O12, classified behavior deviations). One asked a question outside the
+   gate table — the brief's Scope excluded any UI, and the run asked
+   whether to go on or stop — where the skill says "Every question the
+   skill asks is one of these gates". The other wrote its check script and
+   a saved render to the session scratchpad instead of the location, so
+   `git show <add commit>` does not hold the checks its `Evidence:` cites,
+   where the skill says "Everything is written under the location".
+7. A generate-plan gap round went outside a rule the skill already states;
+   to watch, not a rule gap (`docs/dry-runs/batch-d-acceptance.md`, F2,
+   classified a behavior deviation). Asking the status of two entries
+   whose status words it did not recognize, the gap round asked only for
+   the status, where the skill says "the question that asks an
+   unrecognized entry's status also asks, for `answered`, the answer — one
+   question, one round". The user replied `answered` for one of them with
+   no answer text, and that entry was still carried as the rule says, into
+   the plan's Open Questions in the `open` form with `Answer: missing`, so
+   the plan's content was not affected.
+8. The review's progress lines. Between the dispatches,
+   `/kenspc-task-review` and `/kenspc-task-implement`'s review phase print
+   one fixed line per step; across the four review runs of the batch E
+   acceptance (`docs/dry-runs/batch-e-acceptance.md`, F1, classified a
+   behavior deviation), 10 of the 12 lines were printed. One run went from
+   the five reviewers' replies to the code-fixer dispatch with no
+   `Reviewers returned —` line, in the turn where it checked the report
+   files on disk; another went from regression-verifier's reply, which
+   carried its CLEAN result, to the final report with no
+   `regression-verifier returned —` line, neither the CLEAN form nor
+   `regression-verifier returned — no result line`. The steps carry each
+   line where it is printed, the same text printed it in the other runs,
+   and in all four runs the tables were rendered once, in the final report.
+   The follow-up to weigh: tie each line to the step after it — printed in
+   the message that makes the next dispatch, or that opens the final
+   report — so a missing line cannot pass unnoticed by that step.
+9. `/kenspc-task-implement` renders Schema D twice: Phase 1 Step 5 renders
+   the implementer's table and its prose sections verbatim, and Schema G's
+   Implementation section renders them again — the double render 3.8.2
+   removed for the review's reports, and both copies stay in the
+   orchestrator's context the same way. It was left out of 3.8.2 because
+   Step 5 is the Phase 1 → Phase 2 boundary, whose transition sometimes
+   failed to trigger in 3.0.2 and whose `Proceeding to code review.` line
+   smoke row 11 looks for in the trace; changing what that boundary prints
+   needs an acceptance of its own. The choice left: Step 5 prints only its
+   progress update and Schema D is rendered once, in Schema G, or both
+   renders stay.
+10. Doc-sync follow-ups, left out of 3.8.2, which has code-fixer correct a
+    DONE Doc-sync task's documents in the fix commits. The review rows are
+    in `schema-b.md` of the batch's review runs
+    `.kenspc/runs/20260926-152446-batch-e-review-pipeline-tasks/`,
+    `20260926-160144-changes/`, and `20260926-163655-changes/` (git-ignored;
+    only in the maintainer's macOS checkout). Whether each stays is the
+    maintainer's call:
+    - Guards: `check-doc-sync-anchors.sh`'s `Doc-sync` group does not list
+      `code-fixer.md`, which now finds the task by its
+      `### Task N: Doc-sync` heading — one array entry, counts unchanged;
+      and `check-run-contract.sh`'s check 5 looks for `pre-fix/index.txt`
+      in `code-fixer.md` and `regression-verifier.md` but not in
+      `task-review/SKILL.md`, whose Schema F Next steps now names it.
+    - Smoke candidates, each a seeded headless run at every release: row 7
+      with a task document whose Doc-sync task is DONE and FIXED greater
+      than 0, checking Schema F's Doc-sync bullet (run once in the batch E
+      acceptance, `docs/dry-runs/batch-e-acceptance.md` § 2.7); a row-6
+      seed that forces a Doc-sync correction — row 6 names none, and the
+      acceptance's seed, whose README stated the defect first, left the
+      Doc-sync task BLOCKED (F2), so Schema G's bullet in its `updated`
+      form has not run; the not-updated branch, a listed document with
+      uncommitted changes or a correction that needs a new section; the
+      Doc-sync section's boundary and a document outside the list; a task
+      document that translates the `**Documents**` label; and rows 6 and 7
+      checking that the final report holds each reply whole, where today
+      they check one anchor per reply.
+    - Reply and report gaps: a DONE Doc-sync task whose bullets open with
+      no backticked path gives code-fixer an empty list, and the reply
+      reads `Doc-sync documents: none affected by the fixes`, as if
+      checked; a committed run in which code-fixer is cut short can leave
+      a half-applied fix uncommitted, with no Next steps bullet for it;
+      Schema F writes no Doc-sync bullet when code-fixer's reply has no
+      statistics line, where Schema G does; and the Fixes placeholders in
+      Schema F and G, like the sentences that list what code-fixer's reply
+      carries, do not name the `Doc-sync documents:` line (the acceptance's
+      Schema G rendered it in `## Fixes` all the same).

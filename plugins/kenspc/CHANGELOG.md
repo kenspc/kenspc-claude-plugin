@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 3.8.2 — unreleased
+## 3.8.2 — 2026-09-26
 
 Batch E. A review run renders its reports once: between the dispatches,
 `/kenspc-task-review` and `/kenspc-task-implement`'s review phase print one
@@ -28,10 +28,29 @@ unchanged. The roadmap's transcript-audit item leaves with no change: no
 such script is kept in this repository (`scripts/` holds only the
 `check-*.sh` guards), and since 3.6.0 the acceptance records
 read the transcripts with `jq` directly
-(`docs/dry-runs/scratch-probes-acceptance.md`). No new command, skill,
-agent, or CONTEXT key, and the guard counts are unchanged
-(`guards run: 10`, `self-tests run: 9`), so a patch release. Release smoke:
-the batch's acceptance record, named at release.
+(`docs/dry-runs/scratch-probes-acceptance.md`). Release-checklist rows 4,
+6, and 7 check the three changes. No new command, skill, agent, or CONTEXT
+key, and the guard counts are unchanged (`guards run: 10`,
+`self-tests run: 9`), so a patch release. Release smoke: the batch's
+acceptance run, `docs/dry-runs/batch-e-acceptance.md`, seven runs headless
+on macOS against the skill and agent files this release ships — rows 6 and
+7's progress lines and single render in four review runs, one of them a
+`/kenspc-task-review` of a task document whose Doc-sync task is DONE, where
+code-fixer corrected the README in the fix commit and Schema F carried the
+Doc-sync bullet; a `/kenspc-task-implement` run whose fixes affected no
+listed document; row 4's verbatim write, interactive and in a session that
+cannot ask; and the pre-flight block. None of its four findings is a plugin
+defect. Two of the twelve progress lines were not printed (F1), a behavior
+deviation recorded in the roadmap; every review run still rendered the
+tables once, in the final report. The other three are observations: a
+seed whose README stated the defect first left one run's Doc-sync task
+BLOCKED, so that run reached no review (F2), and row 4's wording failed
+two runs whose behavior met its intent — a probe written into the
+session's own scratchpad before approval (F3), and a plan copied into
+place from the printed draft's file rather than written with Write, its
+committed blob equal to the draft (F4) — so row 4 is reworded in this
+release. Schema G's Doc-sync bullet in its `updated` form was not
+exercised. No separate smoke run was made.
 
 ### Changed
 
@@ -132,18 +151,22 @@ the batch's acceptance record, named at release.
   a Documentation impact line reformatted, and two escapes written as the
   character they stand for.
 - **Release checklist.** Row 4 compares the plan as first written — the
-  Write call's `content` in the trace, and its blob in
-  `plan-document-reviewer`'s first commit — with the draft the last message
-  before the approval printed in full, character for character after the
-  same normalization on both sides (CRLF read as LF, trailing newlines at
-  the very end dropped; a U+FEFF, an escape, and trailing spaces count),
-  with the text outside the matched block holding no line of the plan and a
-  one-character edit to a copy of the file failing the comparison; an
-  approving reply that asks for a change gets the full revised draft again,
-  with no Write, and in a session that cannot ask, a resumed reply that asks
-  for a change ends with the full revised draft and
-  `Plan not written: awaiting approval.`, with no Write, no Agent call, and
-  no commit. Rows 6 and 7 replace "then Schema A → B → C → G" and "then
+  Write call's `content` in the trace when it was written with Write, and
+  in every case its blob in `plan-document-reviewer`'s first commit — with
+  the draft the last message before the approval printed in full,
+  character for character after the same normalization on both sides (CRLF
+  read as LF, trailing newlines at the very end dropped; a U+FEFF, an
+  escape, and trailing spaces count), with the text outside the matched
+  block holding no line of the plan and a one-character edit to a copy of
+  the file failing the comparison; an approving reply that asks for a
+  change gets the full revised draft again, and in a session that cannot
+  ask, a resumed reply that asks for a change ends with the full revised
+  draft and `Plan not written: awaiting approval.`, with no Agent call and
+  no commit. Before an approval — in those two invocations, and at the
+  cannot-ask stop, where row 4 counted any Write as a failure — the trace
+  shows no Write or Edit into the project: a probe written outside the
+  project is not a write of the plan. Rows 6 and 7 replace
+  "then Schema A → B → C → G" and "then
   the Schema A roll-up, B, C, and the Schema F final report" with the three
   progress lines in order, each after its agent returns and before the next
   step and in its full form, its counts and result matching the final
@@ -156,10 +179,12 @@ the batch's acceptance record, named at release.
   `total reported `, and the Schema C header each exactly once, inside the
   final report. Row 6's re-check criterion becomes the fix-commit
   correction — the sentence changed and nothing else in the document, the
-  commit's body holding `Updates <path> to match the fix.`,
-  `FIXED — updated <path>`,
-  `Doc-sync documents: updated <path> (row <n>, <commit>)`, and one Next
-  steps bullet naming the document and row — and, with FIXED greater than
+  commit's body holding `Updates <path> to match the fix.`, the row's
+  FIXED Action naming the document in its `updated <path>[, <path>]` part,
+  code-fixer's `Doc-sync documents:` line holding the part
+  `updated <path> (row <n>, <commit>)` (neither need open with it: a
+  `not updated` part can come first), and one Next steps bullet naming the
+  document and row — and, with FIXED greater than
   0 and no document affected, no fix commit touching a listed document and
   the bullet `No Doc-sync document describes behavior the fixes changed.`;
   in a run whose Doc-sync task is DONE, no listed document that was clean
