@@ -281,10 +281,15 @@ reminder to work without stopping), the run ends with the same message.
   the settings stop, naming the field and the value. Why a stop and not
   the default: the field is one the user wrote, and a run that read it as
   absent would spend the default budget the user meant to lower.
-- The working tree is clean except the argument file when it is untracked
-  (`git -c core.quotePath=false status --porcelain -uall`). Why: an
-  untracked brief is how generate-brief leaves one; anything else in the
-  tree would be swept into a worker's commit under its message.
+- The working tree is clean except a brief given as the argument when it
+  is untracked (`git -c core.quotePath=false status --porcelain -uall`).
+  An untracked spec is a stop naming the commit to make first,
+  `docs(plans): add batch <name> spec`. Why: an untracked brief is how
+  generate-brief leaves one, and S1 commits the spec it drafts from it;
+  anything else in the tree would be swept into a worker's commit under
+  its message — a supplied spec included, since it skips Phase 1 and no
+  step commits it, while the state file and the reviewer report name its
+  hash and repo-mode S6's default `git rm` fails on an untracked path.
 - HEAD equals `Baseline:`; otherwise the stop names both.
 - `ListAgents` names this session on its first line; otherwise the stop
   gives the version requirement.
