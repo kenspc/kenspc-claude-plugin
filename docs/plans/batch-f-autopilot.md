@@ -1068,6 +1068,16 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   the preamble template name the recursive flag in any spelling, so the
   rail and the check agree (the deferred review row on the two texts).
   Steps 1.1, 2.4.
+- **CL9** — Two values the S1 and S4 templates need that the spec left
+  open, filled by the fix session and confirmed: the spec S1 writes at
+  brief entry is `docs/plans/<batch>.md` (the batch name from the brief's
+  file name, D5), and the start checks stop before S1 when a tracked file
+  already sits at that path; in plugin mode S4 commits the acceptance
+  record alone (the repo-mode reason: an uncommitted file would be swept
+  into the next commit). The S1, S4, S5, and S6 task blocks are fenced
+  templates (Step 1.1's form); no worker session has read them in this
+  batch's implementation runs, so the acceptance record lists them under
+  Not exercised until the brief-entry and plugin-mode cases run. Step 1.1.
 
 ## Open Questions
 
