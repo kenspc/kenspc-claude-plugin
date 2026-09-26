@@ -1061,7 +1061,28 @@ row keeps its three cells.
 
 ### Task 9: Write the 3.8.2 CHANGELOG entry
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the E-3 sentence was checked against the repository before it
+  was written — `git ls-files scripts` lists eleven files, all named
+  `check-*.sh` (the ten guards and `check-all.sh`), and `docs/` holds no
+  script — and its
+  "read the transcripts with `jq`" sits on one line so a line grep finds it.
+  Every fixed form the entry quotes is spelled on one line, unwrapped, as in
+  the Fixed forms. The Changed bullets follow the task's order (render
+  once, code-fixer's Doc-sync documents, the verbatim plan, the release
+  checklist, then CLAUDE.md and the README), each Source stated in words
+  beside its label (the batch A review's B2, the batch D acceptance's O3);
+  the render-once source has no label of its own, so it is stated in words
+  only. The Known behavior bullet carries the same framing as the README
+  item (the review's own fixes; a deferred MEDIUM or LOW issue in the
+  reviewed code before any fix).
+- Changes/tradeoffs: the entry is longer than the task's outline because it
+  names each fixed string and each checklist criterion so a reader can grep
+  for them; the heading keeps `unreleased` and `plugin.json` stays 3.8.1.
+  The Schema D double render in `/kenspc-task-implement`, left out of scope,
+  is not mentioned in the entry.
 
 Depends on: Task 1-8
 

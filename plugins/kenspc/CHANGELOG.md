@@ -9,6 +9,149 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 3.8.2 — unreleased
+
+Batch E. A review run renders its reports once: between the dispatches,
+`/kenspc-task-review` and `/kenspc-task-implement`'s review phase print one
+fixed progress line per step, and the Schema A roll-up, code-fixer's reply,
+and Schema C appear once, in Schema F or Schema G. In a review against a
+task document whose Doc-sync task is DONE, code-fixer corrects, in the
+fix's own commit, each sentence of a listed document that the fix made
+false, marks it in the Schema B Action cell, and reports it in one
+`Doc-sync documents:` reply line, which the final reports turn into a Next
+steps bullet instead of asking the user to re-check the documents.
+generate-plan writes the draft last printed in full, character for
+character, and prints the whole draft again for approval after any change.
+The plugin README's Known behavior says why a regression a fix brought in
+fails the verdict while a deferred MEDIUM does not; the verdict rules are
+unchanged. The roadmap's transcript-audit item leaves with no change: no
+such script is kept in this repository (`scripts/` holds only the
+`check-*.sh` guards), and since 3.6.0 the acceptance records
+read the transcripts with `jq` directly
+(`docs/dry-runs/scratch-probes-acceptance.md`). No new command, skill,
+agent, or CONTEXT key, and the guard counts are unchanged
+(`guards run: 10`, `self-tests run: 9`), so a patch release. Release smoke:
+the batch's acceptance record, named at release.
+
+### Changed
+
+- **Review rendered once.** `task-review/SKILL.md` Steps 4–6 and
+  `task-implement/SKILL.md` Phase 2 Step 3 print one line each where they
+  rendered a table or a reply, the same in both skills and in English
+  whatever the conversation language:
+  `Reviewers returned — HIGH <h>, MEDIUM <m>, LOW <l> — <RUN_DIR>/angle-1.md … angle-5.md`;
+  `code-fixer returned — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md`;
+  and `regression-verifier returned — CLEAN`, or
+  `regression-verifier returned — HAS ISSUES: row <k> <result>[, row <k> <result>…]`
+  (no path: regression-verifier writes no report file). The Schema A
+  roll-up, code-fixer's reply, and Schema C are rendered once, in the final
+  report: Schema F's Review summary now holds the per-angle roll-up table
+  (`| Angle | HIGH | MEDIUM | LOW |`, the five angle rows, and a
+  `**Total**` row) where it asked for total counts, task-review's Step 6
+  drops its example Schema C table (regression-verifier's OUTPUT FORMAT
+  defines it), and Schema G's Code Review, Fixes, and Verification
+  sections say they are rendered there only. code-fixer's reply contract is
+  unchanged. Source: the roll-up and the agents' replies were printed twice
+  in one run, between the dispatches and again in the final report, and
+  both copies stayed in the orchestrator's context.
+- **code-fixer, Doc-sync documents.** With REVIEW_SCOPE "task", code-fixer
+  finds the task document's `### Task N: Doc-sync` section and its
+  `**Status:**`, and takes its documents — the backticked path that opens
+  each bullet of its list, read by no label, since a translated task
+  document can carry a translated one — into the fix scope when that status
+  is DONE. After each fix it reads the parts of each listed document that
+  describe the changed code and corrects each sentence, list item, or table
+  row the fix made false, in the document's own language and in the fix's
+  own commit, whose body says `Updates <path> to match the fix.` It changes
+  nothing else: no new section or paragraph, no text the fix did not make
+  false, no behavior the document never described, and no document outside
+  the list; a listed path with no file is skipped. A correction that needs
+  more, or a document with uncommitted changes, is left undone and reported
+  not updated with its reason, while the code fix still lands. The Schema B
+  Action cell names the document — `FIXED — updated <path>[, <path>]`, or
+  `FIXED — not updated <path>: <reason>`, several joined by `; ` — and the
+  leading word still classifies the action, so the recount guard passes
+  unchanged; the worked Schema B example is unchanged. The reply carries,
+  after the statistics line, one line,
+  `Doc-sync documents: updated <path> (row <n>, <commit>)[; …][; not updated <path> (row <n>) — <reason>]`
+  or `Doc-sync documents: none affected by the fixes`, always present in
+  such a run, FIXED 0 included, and not written to `schema-b.md`. When the
+  Doc-sync task is DONE and FIXED is greater than 0, Schema G's Next steps
+  carries that line as one bullet, reads
+  `No Doc-sync document describes behavior the fixes changed.` when none
+  was affected, and, when the reply has no such line, states
+  `code-fixer's reply has no Doc-sync documents line` and names the listed
+  documents to check against the fix commits. Schema F gains the same
+  bullet whenever the reply carries the line and FIXED is greater than 0,
+  without that fallback: `/kenspc-task-review` never reads the Doc-sync
+  task's status. This replaces the 3.6.0 Next steps bullet that named the
+  listed documents to re-check against the fix commits. Source: the batch A
+  review's B2 — documents a Doc-sync task synced went stale when a review
+  fix changed the behavior they describe, and the report handed the check
+  back to the user.
+- **generate-plan, the approved plan written verbatim.** On approval, the
+  file is the draft last printed in full — every section, none elided or
+  summarized — character for character: no rewording, a pronoun included,
+  no reformatting, and no change to an escape or special character. A
+  change after that print — one the self-challenge finds, one shown only as
+  a revised section, one the approving reply itself asks for, or a request
+  for another language — is made to the draft, which is printed again in
+  full and approved again before anything is written. In a session that
+  cannot ask, that print ends with `Plan not written: awaiting approval.`
+  and the run stops again, and an approval given on resume writes the draft
+  that run's last message printed. The document language is the draft's,
+  set by Step 1's writing rules when it was drafted; the write-time step
+  "If the user specified a language, use it. Otherwise, default to English."
+  is gone, and Step 3's last item reads "Write the plan to the file: the
+  approved draft, as printed." Source: the batch D acceptance's O3
+  (`docs/dry-runs/batch-d-acceptance.md`), where a plan approved on resume
+  differed from the draft it approved in 7 of 355 lines: pronouns reworded,
+  a Documentation impact line reformatted, and two escapes written as the
+  character they stand for.
+- **Release checklist.** Row 4 compares the plan as first written — the
+  Write call's `content` in the trace, and its blob in
+  `plan-document-reviewer`'s first commit — with the draft the last message
+  before the approval printed in full, character for character after the
+  same normalization on both sides (CRLF read as LF, trailing newlines at
+  the very end dropped; a U+FEFF, an escape, and trailing spaces count),
+  with the text outside the matched block holding no line of the plan and a
+  one-character edit to a copy of the file failing the comparison; an
+  approving reply that asks for a change gets the full revised draft again,
+  with no Write. Rows 6 and 7 replace "then Schema A → B → C → G" and "then
+  the Schema A roll-up, B, C, and the Schema F final report" with the three
+  progress lines in order, each after its agent returns and before the next
+  step, no text line beginning with `|` from the first reviewer call until
+  the final report's first heading, and the roll-up header, a line holding
+  `total reported `, and the Schema C header each exactly once, inside the
+  final report. Row 6's re-check criterion becomes the fix-commit
+  correction — the sentence changed and nothing else in the document,
+  `FIXED — updated <path>`,
+  `Doc-sync documents: updated <path> (row <n>, <commit>)`, and one Next
+  steps bullet naming the document and row — and, with FIXED greater than
+  0 and no document affected, no fix commit touching a listed document and
+  the bullet `No Doc-sync document describes behavior the fixes changed.`;
+  row 7 checks that without a task document code-fixer's reply has no
+  `Doc-sync documents:` line and no Action cell carries the document
+  suffix. No new row; pre-flight counts unchanged.
+- CLAUDE.md's Subagent Review Architecture gains two sentences: after the
+  Parallel MapReduce list, the progress line per step and the one render
+  in Schema F or G; and, closing the documentation path paragraph,
+  code-fixer's correction of the listed documents in the fix commits. The
+  plugin README's Run directory, Documentation path, and `generate-plan`
+  row follow the three changes, and its Known behavior gains
+  "Regressions and deferred issues in the verdict".
+
+### Known behavior
+
+- **Regressions and deferred issues in the verdict.** A regression the
+  review's fixes brought in fails the verdict whatever its severity, while a
+  deferred MEDIUM does not. Behavior unchanged — the verdict rules are not
+  edited; the plugin README's new Known behavior item says why: a
+  regression is damage the run's own fixes did to code that worked before
+  them, which a revert of those fixes undoes, while a deferred MEDIUM or LOW
+  issue was in the reviewed code before any fix and is reported with its
+  reason for the user to schedule.
+
 ## 3.8.1 — 2026-09-26
 
 Batch D. Three stops an unattended run got wrong get a defined answer:
