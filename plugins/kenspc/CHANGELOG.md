@@ -116,7 +116,9 @@ the batch's acceptance record, named in the release commit.
 - **Release checklist.** Row 4 gains the cannot-ask stop at the draft (the
   complete draft and `Plan not written: awaiting approval.`; no Write, no
   Agent call, no commit), the resumed approval that writes, reviews, and
-  commits, and an `answered` entry with no `Answer:` or an empty one (asked
+  commits, the existing-file branch under that approval (the first free
+  numeric suffix, the existing file's sha256 unchanged, the new file named
+  in the final message), and an `answered` entry with no `Answer:` or an empty one (asked
   about in the gap round; carried with `status word answered, Answer: missing` in a session
   that cannot ask). Row 9 gains the interactive exit's commit and
   `git revert <hash>`, with no revert made. Row 10 gains both gates, asked
