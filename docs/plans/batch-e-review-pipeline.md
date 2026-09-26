@@ -1143,8 +1143,8 @@ decided by the main session within the locked design.
   the full grammar change in one commit; row 6's
   `Doc-sync documents: updated README.md (row <n>, H)` check stands, since
   that is one valid form.
-- CL13 — T1, T3, and E3 (DEFERRED): roadmap candidates, not changed in this
-  batch. T1 (release-checklist row 6 names no seed that forces a Doc-sync
+- CL13 — Step 4.4 (T1, T3) and Steps 1.1, 1.2, and 2.2 (E3), all
+  DEFERRED: roadmap candidates, not changed in this batch. T1 (release-checklist row 6 names no seed that forces a Doc-sync
   correction) and T3 (no smoke check of the section boundary or of a
   document outside the list) are smoke scope, like CL7's: a planted defect
   that a reviewer has to catch makes a per-release criterion depend on the
@@ -1153,6 +1153,41 @@ decided by the main session within the locked design.
   with no Next steps bullet for it) predates this batch's change in kind and
   touches the missing-statistics-line branch CL4 settled. The main
   session's report lists all three.
+
+Rulings of 2026-09-26, after the narrowed standalone review of
+`6c462a9..5d65714` (run `20260926-163655-changes`, fixes
+`188920d..8a52306`, regression-verifier CLEAN, verdict PASS, six rows
+DEFERRED). That run again printed only the fixed progress lines between its
+dispatches. CL14 and CL15 dispose of the six DEFERRED rows. All decided by
+the main session within the locked design. No further review round is run
+on `188920d..8a52306`: regression-verifier found all seven fixes in place
+with no regression, they are wording edits to the checklist, the CHANGELOG,
+and `task-review/SKILL.md`, and the acceptance exercises that text live.
+
+- CL14 — Step 4.4, release-checklist row 6, amending CL12's last sentence
+  (B3, LOW, fixed in this batch): row 6 checks that code-fixer's
+  `Doc-sync documents:` line holds the part
+  `updated <path> (row <n>, <commit>)`, and that the row's Action names the
+  document in its `updated` part, rather than that the line or the Action
+  opens with those words; the 3.8.2 CHANGELOG entry follows. Why: CL12 lets
+  the parts come in any order, so a literal prefix check would fail a valid
+  reply that lists a `not updated` part first. The release-preparation
+  session applies it, with the release checklist's other criteria.
+- CL15 — Steps 1.1, 1.2, 2.2, and 4.4 (T2 MEDIUM; R3, E3, T5 LOW; and
+  regression-verifier's note on "a `.txt` copy per file"): roadmap
+  candidates, not changed in this batch; the main session's report lists
+  them. T2 (rows 6 and 7 check one anchor per reply, not the whole render) is
+  smoke scope and would replace D5's anchors with a containment check —
+  the maintainer's call, like CL7. R3 (the Fixes placeholders and the
+  "Its reply carries" sentences list the reply's parts without the
+  `Doc-sync documents:` line) is left to the acceptance's evidence: if a
+  final report drops that line, it is a FAIL there and is fixed then. E3 (a
+  Schema F Doc-sync bullet when code-fixer's reply has no statistics line)
+  is a rare failure path that would widen M4 and CL4. T5 (the run-contract
+  guard does not look for `pre-fix/index.txt` in `task-review/SKILL.md`)
+  waits for a batch that may change `scripts/`, as M8. The "a `.txt` copy
+  per file" wording predates this batch. Q2 (CL13 named no Step) is fixed
+  in this commit.
 
 ## Open Questions
 
