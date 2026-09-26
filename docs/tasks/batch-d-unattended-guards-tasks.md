@@ -278,7 +278,27 @@ approval stop and its existing-file question.
 
 ### Task 2: Count an answered brief entry as settled only when it holds Answer:
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the gap-list rule was added as its own sentence group at the
+  end of part 2's main paragraph, after the existing unrecognized-word Why,
+  so its own Why sits beside it; it names the one-to-two-round limit "below"
+  because the limit is stated in the sub-bullet that follows. In part 2's
+  cannot-ask paragraph the existing Why ("a plan that drops either") was
+  widened to "whose status cannot be read, or whose `answered` has no answer
+  behind it, … drops any of them", since a third carried kind made "either"
+  wrong. In the Open Questions element the new form follows the
+  unrecognized-word form's shape: one sentence, then the literal on its own
+  unwrapped line.
+- Changes/tradeoffs: part 3's Why keeps the plan's wording ("the citation
+  in the plan keeps the evidence reachable") although an entry citation, as
+  opposed to a hash, does not survive the brief's deletion; the ruling
+  prescribes that wording. Verified: the `From:` literal count 1, hunks at
+  source lines 121, 132–139 (parts 2–3), and 266 (the element), none in
+  part 1 or Phase 2 Step 3; pointer-label and MUST/NEVER/CRITICAL greps
+  empty; check-no-model-names 0; check-all 0 with `guards run: 10`;
+  validate passed. CLAUDE.md: only the prototype path sentence changed.
 
 Plan Step 1.2 (D-2; rulings M5, M6, D4, D5, M10). In
 `plugins/kenspc/skills/generate-plan/SKILL.md`, Phase 1 Step 1 parts 2 and

@@ -165,8 +165,9 @@ smallest thing that settles the question, commits it
 rewrites the entry `answered` with `Answer:`, `Evidence:`, and a
 `Prototype:` line naming that commit, and removes the prototype in the next
 commit (`chore: remove prototype <slug>`); the brief is not committed. The
-next generate-plan run reads the answered entry as settled input, and a plan
-that relies on it cites the hash. A prototype runs outside the app; the one
+next generate-plan run reads the answered entry as settled input — its
+`Answer:` makes it settled, not the status word alone — and a plan that
+relies on it cites the hash. A prototype runs outside the app; the one
 in-app exception is a UI prototype that can only render inside the app,
 located by the project's CLAUDE.md or by the user, with the typecheck green
 against its baseline.

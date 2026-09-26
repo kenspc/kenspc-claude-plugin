@@ -119,6 +119,19 @@ If it is a brief, take these three parts in order:
    carry it into the plan — answered as there. Why: prototyping first or
    carrying is the user's choice for every `needs prototype` entry, and it
    is the same choice when the entry's status is learned in the gap round.
+   An `` `answered` `` entry that holds no `Answer:` — as the brief has it,
+   or as the user marks an entry in the gap round — is a gap too: the gap
+   round quotes it and asks for its answer, and the question that asks an
+   unrecognized entry's status also asks, for `answered`, the answer — one
+   question, one round, so the one-to-two-round limit below is unchanged.
+   The answer the user gives is settled input, as any gap-round answer is;
+   an entry the rounds leave without one is carried into the plan's Open
+   Questions in the `open` form, its `From:` ending
+   `status word answered, Answer: missing`.
+   Why: a status word is one token that a hand edit, a translation, or a
+   gap-round answer can set; an entry with no answer gives a plan nothing
+   to rest on, and taking it as settled lets the plan assume an answer
+   without saying so.
    - If gaps exist, ask only about the gaps (one to two rounds maximum),
      then proceed to Phase 2.
    - If no gaps, tell the user the brief covers all key dimensions and
@@ -129,14 +142,18 @@ If it is a brief, take these three parts in order:
    straight in, in the same form (`From:` and `Assumed in:`, no
    `Not prototyped:`), and an entry with an unrecognized status word is
    carried the same way, in the `open` form, its `From:` naming the word
-   found. Why: an `open` entry is an explicit gap the brief recorded, an
-   entry whose status cannot be read is a question the brief recorded all
-   the same, and a plan that drops either loses the question without a
-   trace.
-3. **Answered entries.** An `` `answered` `` entry is settled input; a plan
-   that relies on one cites its prototype hash where it does. Why: the
-   brief is a discovery artifact and may be deleted; the hash in the plan
-   keeps the evidence reachable.
+   found. An `answered` entry with no `Answer:` is carried the same way, in
+   the `open` form, its `From:` ending `status word answered, Answer: missing`.
+   Why: an `open` entry is an explicit gap the brief recorded, an entry
+   whose status cannot be read, or whose `answered` has no answer behind
+   it, is a question the brief recorded all the same, and a plan that drops
+   any of them loses the question without a trace.
+3. **Answered entries.** An `` `answered` `` entry that holds `Answer:` is
+   settled input — `Answer:` makes it so, not the status word alone and not
+   a `Prototype:` line alone. A plan that relies on one cites its prototype
+   hash where the entry has a Prototype line, otherwise the entry itself
+   (`<brief path>, entry <n>`). Why: the brief is a discovery artifact and
+   may be deleted; the citation in the plan keeps the evidence reachable.
 
 If it is not a brief, continue with the normal Discovery flow.
 
@@ -263,7 +280,10 @@ element is indistinguishable from a forgotten one.
   status was given in the gap round — as in a session that cannot ask —
   takes the `open` form, its `From:` naming the word it found:
   `From: <brief path>, entry <n>, status word <the word, or none> not recognized`.
-  One given a status there takes that status's form.
+  One given a status there takes that status's form. An `` `answered` ``
+  entry carried without an answer takes the `open` form too, its `From:`
+  saying what is missing:
+  `From: <brief path>, entry <n>, status word answered, Answer: missing`.
   Why: carrying a question is safe only when the plan says which of its
   steps rest on an assumed answer.
 
