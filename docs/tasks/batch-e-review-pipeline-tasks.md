@@ -469,7 +469,29 @@ block stay as they are.
 
 ### Task 3: Have code-fixer correct the Doc-sync documents in the fix commit
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: PREREQUISITES item 2 says outright that an entry leaving its
+  change to another task document is still a listed document, and why no
+  label is read (the heading and `**Status:**` stay English in any language,
+  a label can be translated). The FIXING RULES bullet states the dirty
+  document case in its own sentence — the `git status --porcelain` bullet's
+  rule "applies to the document alone ... the code fix still lands and is
+  not deferred for it" — because that bullet, read literally, would DEFER
+  the whole fix for any dirty file it touches. The five failure modes are
+  introduced as "It fails in five named ways", keeping the rubric form
+  (passing, then the named failures). The `action` field spells how several
+  suffixes combine: the parts after the one em-dash are joined by `; `.
+- Changes/tradeoffs: the existing `action` sentence "so a reason never
+  changes the bucket" became "so a reason or a document suffix never changes
+  the bucket", so the leading-word rule visibly covers the new suffix. The
+  reply-list item carries its Why inside the bullet, leaving the closing
+  paragraph (and its "the orchestrator renders this reply verbatim in the
+  final report") untouched. The suffix passed the Schema B recount on a copy
+  of the worked example (`FIXED — updated README.md` exits 0;
+  `UPDATED README.md — FIXED` exits 1 with `unknown action`); the example
+  block itself is unchanged.
 
 Plan Step 2.1 (E-2; rulings M5, M6, M7, D6–D11). In
 `plugins/kenspc/agents/code-fixer.md`, outside the `canonical:principle:*`,

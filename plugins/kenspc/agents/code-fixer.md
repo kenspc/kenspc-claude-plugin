@@ -98,7 +98,16 @@ PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
    commands, and project conventions (prioritize CLAUDE.md).
 2. If the CONTEXT block's REVIEW_SCOPE is "task": read the task document at the path
-   given by CONTEXT TASK_FILE for context.
+   given by CONTEXT TASK_FILE for context, and find its Doc-sync task — the
+   section under the heading `### Task N: Doc-sync` (N its number), up to the
+   next `### ` heading. Note its `**Status:**` value and its documents: the
+   path in backticks that opens each bullet of its document list, an entry
+   that leaves its change to another task document included. Read no label to
+   find that list: the heading and the `**Status:**` line stay in English in
+   a task document written in any language, while a label can be translated.
+   When the status is DONE, those documents are in the fix scope as FIXING
+   RULES says; otherwise, and in a "changes" run, no document enters it this
+   way.
 3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md`. Its files are
    the change under review and the boundary of the fixes; its Mode decides
    how fixes land (see FIXING RULES).
@@ -115,6 +124,10 @@ DONE CRITERIA
 - A final build / test / lint run was performed after the last fix and its result
   is reflected in the accountability output (so the regression-verifier sees a
   consistent state).
+- In a "task" run whose Doc-sync task is DONE, every FIXED row that corrected a
+  listed document, or left one stale, says so in its Action cell; each
+  correction is in that row's commit; and the reply carries the
+  `Doc-sync documents:` line.
 
 PROCESSING APPROACH
 - Collect all issues from all 5 reports.
@@ -176,6 +189,33 @@ FIXING RULES
   regression a fix makes inside a user hunk passes and a user's own change
   reads as a regression — and a copy that kept its own extension is a
   source file to every linter and compiler that walks the run directory.
+- In a "task" run whose Doc-sync task is DONE (PREREQUISITES item 2), after
+  each fix, read the parts of each listed document that describe the changed
+  code — the sections naming the changed function, option, command, message,
+  or file. A sentence, list item, or table row there that states the
+  behavior the fix changed is now false: correct it, in the document's own
+  language, in the fix's own commit, whose body names the document
+  (`Updates <path> to match the fix.`). Change nothing else: no new section
+  or paragraph, no text the fix did not make false, no behavior the document
+  never described, and no document outside the list; a listed path with no
+  file is skipped, not created. When the correction needs more than that, or
+  the document has uncommitted changes, record the document as not updated,
+  with the reason (see PER-ISSUE OUTPUT CONTRACT). For a document with
+  uncommitted changes the dirty-file rule of the `git status --porcelain`
+  bullet applies to the document alone: it is left untouched, while the code
+  fix still lands and is not deferred for it. Passing: every statement in a
+  listed document that a fix made false is corrected in that fix's commit,
+  and the document is otherwise unchanged. It fails in five named ways: a
+  statement the fix contradicts is left as it was; a correction lands in a
+  commit of its own; a sentence the fix did not make false is reworded; a
+  section or paragraph is added; a document outside the list is touched.
+  Why: the Doc-sync task described the code as it stood before the review's
+  fixes, so a fix that changes documented behavior makes that document wrong
+  at once; in the fix's own commit the correction travels with the change it
+  describes, where a note to the user afterwards only moves the gap to the
+  user. The limits keep the edit as surgical as the fix: a fix commit that
+  rewrites a document hides the fix, and a sentence the fix did not make
+  false is not the fix's to change.
 - Code, code comments, and commit messages stay in English.
 
 <!-- guard: the hyphen in "CODE-CRAFT PRINCIPLES" is intentional — it marks a compound-adjective exception to the ALL-CAPS-no-hyphens writer-agent header convention documented in repo-root CLAUDE.md. Do not normalize without updating the CLAUDE.md convention paragraph in the same commit. -->
@@ -229,8 +269,14 @@ the following required fields:
   the highest among its sources).
 - `file:line` — location reference from the review report.
 - `action` — FIXED | DEFERRED | NOT APPLICABLE. A NOT APPLICABLE action
-  carries its reason after an em-dash (see FIXING PRIORITY). Counts classify an
-  action by its leading word, so a reason never changes the bucket. DEDUPED is
+  carries its reason after an em-dash (see FIXING PRIORITY). In a "task" run
+  whose Doc-sync task is DONE, a FIXED action that corrected a listed
+  document names it after an em-dash, `FIXED — updated <path>[, <path>]`, and
+  one that left a listed document stale says so,
+  `FIXED — not updated <path>: <reason>`; when there are several, the parts
+  after the em-dash are joined by `; `. Counts classify an
+  action by its leading word, so a reason or a document suffix never changes
+  the bucket. DEDUPED is
   not a row action: it is the count of non-primary Source IDs.
 - `commit` — git short hash for FIXED rows, or em-dash (`—`) for a FIXED row
   in an uncommitted run; em-dash (`—`) otherwise.
@@ -311,6 +357,15 @@ After writing the file, reply with only:
 - the statistics line,
 - in an uncommitted run with FIXED greater than 0, one line after it saying
   the fixes are uncommitted and naming the files,
+- in a "task" run whose Doc-sync task is DONE, one line after the statistics
+  line (the uncommitted line never occurs in such a run), either
+  `Doc-sync documents: updated <path> (row <n>, <commit>)[; …][; not updated <path> (row <n>) — <reason>]`
+  or `Doc-sync documents: none affected by the fixes`. It is always present
+  in such a run, FIXED 0 included, and it is not written to `schema-b.md`,
+  whose last line stays the statistics line. Why: the orchestrator reads only
+  this reply, which carries no LOW row, and builds Next steps from this line;
+  a line that is always present tells a run that checked from one that did
+  not,
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,
