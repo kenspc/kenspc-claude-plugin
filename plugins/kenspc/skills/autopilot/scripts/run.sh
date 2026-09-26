@@ -84,8 +84,13 @@ usage() {
 }
 
 new_uuid() {
+  local id
   if command -v uuidgen >/dev/null 2>&1; then
-    uuidgen | tr 'A-Z' 'a-z'
+    # The status of a pipeline is tr's, so uuidgen's failure would pass as
+    # an empty id; its status is taken on its own line.
+    id=$(uuidgen) || return 1
+    [ -n "$id" ] || return 1
+    printf '%s\n' "$id" | tr 'A-Z' 'a-z'
   elif command -v python3 >/dev/null 2>&1; then
     python3 -c 'import uuid;print(uuid.uuid4())'
   else
