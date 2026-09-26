@@ -432,7 +432,11 @@ plus projected (the largest session so far, or budget ÷ 6 before the
 first) against the budget and asks "raise the budget to how much?" when it
 would be exceeded; every worker is started with `--max-budget-usd` set to
 the remaining amount, so a runaway session cannot spend past the batch. A
-worker ended by its cap is resumed once you raise the budget. Acceptance
+worker ended by its cap is resumed once you raise the budget, with the new
+remaining amount as its cap: the ended session's last cumulative total is
+already in spent, and the cap bounds only what the resumed session spends
+from there — a probe with a resumed session showed `--max-budget-usd`
+counts the invocation's own spend, not the session's earlier total. Acceptance
 cases marked `(optional)` may be cut when the budget check fails;
 implementation is never narrowed.
 

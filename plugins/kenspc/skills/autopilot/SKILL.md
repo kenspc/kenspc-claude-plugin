@@ -524,9 +524,19 @@ Before each launch:
   and would be numbers hard-coded in a prompt; the batch's own sessions are
   the only evidence in the run.
 - Every launch passes `--max-budget-usd` with the remaining amount — the
-  budget minus spent — through `AUTOPILOT_BUDGET_USD`. Why: the check
-  before a launch bounds nothing already running, and one session has
-  spent a large share of a batch before.
+  budget minus spent — through `AUTOPILOT_BUDGET_USD`. A resume passes the
+  same remaining amount, computed the same way: the ended session's last
+  cumulative `total_cost_usd` is already on its costs line and so already
+  in spent, and nothing is added back for it, since the cap bounds only
+  what the resumed invocation spends from here — a probe with a resumed
+  session showed the flag counts the invocation's own spend and not the
+  session's earlier total. When the resumed session returns, its JSON's
+  cumulative `total_cost_usd` replaces the session's line in
+  `<batch>-costs.txt` (The return), so spent counts the session once. Why:
+  the check before a launch bounds nothing already running, and one
+  session has spent a large share of a batch before; a resume cap raised
+  by the earlier total would let the session spend past the batch by that
+  much.
 - `Caps:` (`16 sessions, 8 resumes` by default) exceeded is a stop that asks
   for a new cap. In a session that cannot ask (a system reminder to work
   without stopping), the run ends with the counts. Why: the session cap is
@@ -549,8 +559,13 @@ and a killed worker leaves a half-applied task.
 
 A worker ended by its cap is the budget stop. After the user raises the
 budget it is resumed under the step's next `<tag>-r<k>` with the continue
-prompt and the new remaining cap, counted as a resume. Why: the cap is the only bound on a
-session already running, and the step it ended is the one to continue.
+prompt and the new remaining amount as its cap — the raised budget minus
+spent, in which the ended session's last cumulative total already counts
+— counted as a resume. Every resume, whatever ended the session, passes
+the batch's remaining amount this way and never that amount plus the
+session's earlier total (Budget and caps). Why: the cap is the only bound
+on a session already running, and the step it ended is the one to
+continue.
 
 ## Phase 3: Accept
 

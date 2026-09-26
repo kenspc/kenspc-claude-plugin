@@ -120,7 +120,12 @@ exist yet.
   "raise the budget to how much?" with the numbers, and the answer is
   recorded in the state file and the reports. Every worker is started with
   `--max-budget-usd` at the remaining amount; a worker its cap ended is
-  the budget stop and is resumed once the budget is raised. Acceptance
+  the budget stop and is resumed once the budget is raised, with the new
+  remaining amount as its cap — the ended session's last cumulative total
+  is already in spent, and a probe with a resumed session showed the flag
+  counts the invocation's own spend, not the session's earlier total —
+  and the resumed session's JSON replaces its line in `<batch>-costs.txt`.
+  Acceptance
   cases marked `(optional)` may be cut when the check fails; implementation
   is never narrowed.
 - **Stops.** Reopening a locked design point; a forbidden section or file;
