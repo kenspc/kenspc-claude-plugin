@@ -359,9 +359,9 @@ SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
 `check-canonical-dispatch.sh`, `check-verdict-shared.sh`, or
 `check-run-contract.sh`. After editing the reviewer invariant sentence in
 the plugin README or this file, or the reviewers' ROLE, run
-`check-run-contract.sh`: its check 6 holds those copies to the ROLE
-sentence. After editing the Prototype line (in `generate-brief/SKILL.md`
-or `prototype/SKILL.md`) or the prototype skill's leftovers command, run
+`check-run-contract.sh`. After editing the Prototype line (in
+`generate-brief/SKILL.md` or `prototype/SKILL.md`) or the prototype
+skill's leftovers command, run
 `check-doc-sync-anchors.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
