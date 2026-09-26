@@ -507,7 +507,54 @@ the environment variables, and the files it writes.
 
 ### Task 2: Write the autopilot skill
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Wait-path probe, run in the session this task ran in: the Bash tool
+    command `ps -o args= -p $PPID` printed
+    `claude -p <the prompt text> --name f-s3 --settings {"crossSessionInbound":"accept"} --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc --permission-mode bypassPermissions --output-format json`
+    — the `-p` is present, so this session is headless, and the skill's
+    test reads that flag. `$PPID` of the Bash tool's shell is the claude
+    process itself (its own parent was the driver,
+    `bash ./f-run.sh f-s3 …`). The interactive half — the same command
+    printing a line without `-p` or `--print` — cannot be verified from a
+    headless session and is left to the acceptance.
+  - A worker that timed out on its question (the question under
+    `## Question for the main session` in its final message) is answered by
+    a resume under `<tag>-r1` whose prompt opens with
+    `answer <tag>: <one line>`, counted as a resume: the spec names
+    `--resume` as the fallback without saying what the resumed prompt
+    carries, and the answer is the one thing the worker was waiting for.
+  - The costs upsert replaces the line that carries the same session id
+    (else appends), so a resume's line takes its predecessor's place — the
+    resumed session's JSON carries the whole total.
+  - `## Autopilot`, `## User report`, `## Reviewer report`, and
+    `## Question for the main session` appear only inside fenced blocks or
+    code spans, so they are strings the skill carries and not sections of
+    the skill; the preamble's six parts are `## 1.` … `## 6.` inside its
+    fenced block for the same reason.
+  - The note on ignored labels, and on a `Version:` ignored in repo mode,
+    goes on the line after the settings line, so the fixed line keeps its
+    exact form.
+  - The state file's layout is given as a fenced template: the spec lists
+    its contents and not their arrangement, and a template is what a wake
+    re-reads without guessing.
+  - The word "Ruling" appears once, capitalized, as the proper name of the
+    spec's decision column in the fixed instruction to S1 (the check is
+    case-sensitive, `grep -cwE 'ruling'`); everywhere else the skill says
+    "decision" or the plural "rulings".
+- Changes/tradeoffs:
+  - The roles table, the reviewer-report template, and the state-file
+    template are elaborations the spec's Step describes in prose; their
+    field order is the spec's.
+  - The `## 1.`-style lines inside the fenced preamble show up in a naive
+    heading grep as headings; they are block content, and a Markdown
+    renderer treats them as such.
+  - No test framework exists in this repository; verification was the
+    criteria's greps (fixed forms, labels, negative patterns, the joined
+    text), the guard suite, `check-no-model-names.sh`, the plugin
+    validator, and the driver's self-test.
 
 Depends on: Task 1
 
