@@ -57,8 +57,9 @@
 # session — a stub stands in for the executable — and the skill runs the
 # copied driver's self-test at every batch start. A caller who sets
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
-# of theirs that is meant to pass echoes its arguments to stderr, since the
-# self-test reads the flags there.
+# of theirs that is meant to pass echoes its arguments and
+# "cwd=<its working directory, physical path>" to stderr, since the
+# self-test reads the flags and the cwd there.
 #
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
 # or environment error, or when <tag>.pid names a live process and <tag>.exit
@@ -202,7 +203,8 @@ launch() {
 # without its start or end line, an .err that does not show every
 # always-passed flag with the id .session holds, a .json whose
 # session_id is not that id, and an .err that shows --plugin-dir,
-# --max-budget-usd, or --append-system-prompt with their variables unset;
+# --max-budget-usd, or --append-system-prompt with their variables unset,
+# or without cwd=<the launch's cwd, physical path>;
 # then, for a resume launch of the same stub
 # under <tag>-r1 with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD,
 # and APPEND_SP set, a .exit missing or not 0, a .session not holding that
@@ -222,9 +224,11 @@ self_test() {
     mkdir -p "$base/stub" || die "cannot create $base/stub"
     cat > "$base/stub/claude" <<'STUB'
 #!/bin/sh
-# Stub executable for run.sh --self-test: echoes its arguments to stderr,
-# prints a result object to stdout, sleeps one second, exits 0.
+# Stub executable for run.sh --self-test: echoes its arguments and its
+# working directory to stderr, prints a result object to stdout, sleeps one
+# second, exits 0.
 echo "$@" >&2
+echo "cwd=$(pwd -P)" >&2
 id=""
 while [ $# -gt 0 ]; do
   case $1 in
@@ -311,6 +315,11 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     ! grep -qF -- "$flag" "$LOGS/$TAG.err" \
       || { echo "self-test failed: $LOGS/$TAG.err shows $flag on a launch with its variable unset" >&2; return 1; }
   done
+  # The worker runs in the launch's cwd, which the stub reports as its
+  # physical path: a driver that lost its cd would run every worker in the
+  # directory the driver was called from.
+  grep -qxF -- "cwd=$(cd "$base" && pwd -P)" "$LOGS/$TAG.err" \
+    || { echo "self-test failed: $LOGS/$TAG.err does not show cwd=$(cd "$base" && pwd -P), the launch's cwd" >&2; return 1; }
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
