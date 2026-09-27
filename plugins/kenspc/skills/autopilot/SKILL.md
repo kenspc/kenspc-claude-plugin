@@ -801,12 +801,12 @@ release preparation was right.
 
 The reviewer report is built from the state file, not from memory, and also
 written to `_logs/<batch>-report.md`; the state file records its last
-transition; the final message ends with
-`Autopilot finished — <baseline sha>..<last sha>` and the sentence that the
-tag, the push, and the release are the user's. In a session that cannot
-ask (a system reminder to work without stopping), the run ends the same
-way: the two reports and the finish line, with the tag, push, and release
-left to the user.
+transition; the final message gives the sentence that the tag, the push,
+and the release are the user's, and its last line is
+`Autopilot finished — <baseline sha>..<last sha>` (Exit says why). In a
+session that cannot ask (a system reminder to work without stopping), the
+run ends the same way: the two reports, the sentence that leaves the tag,
+push, and release to the user, and the finish line last.
 
 ## Templates
 
@@ -1314,12 +1314,15 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 ## Exit
 
 On a finish, the final message holds `## User report`, `## Reviewer report`,
-every default a session that cannot ask took in place of a question, and
-ends with `Autopilot finished — <baseline sha>..<last sha>` followed by the
-sentence that the tag, the push, and the release are the user's. The skill
-tags nothing, pushes nothing, and deletes nothing outside `git rm` in a
-worker's commit. Why: the second human gate is the release, and a run that
-took it would have had one gate.
+every default a session that cannot ask took in place of a question, then
+the sentence that the tag, the push, and the release are the user's, and
+ends with `Autopilot finished — <baseline sha>..<last sha>` as its last
+line, as the stop line is the last line on a stop. Why the last line: a
+reader, and a grep over the trace, look for a run's end marker on the
+final message's last line, and a sentence after it would hide it from
+both. The skill tags nothing, pushes nothing, and deletes nothing outside
+`git rm` in a worker's commit. Why: the second human gate is the release,
+and a run that took it would have had one gate.
 
 On a stop, the final message names the step and its tag, what is on disk
 (the state file, the last session's files, the commits so far), what the
