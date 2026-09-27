@@ -448,8 +448,9 @@ function Invoke-Refused {
 # executable, on macOS and Linux one with no execute bit, or an empty or
 # whitespace-only prompt file, refused with the
 # subject named and no .session; a logs directory holding a wildcard
-# character refused with the directory named and not created; the logs
-# directory created by the launch;
+# character refused with the directory named and not created; a tag holding
+# one refused with the tag named and the logs directory not created; the
+# logs directory created by the launch;
 # the stdout line matching .pid and .session; a second launch under the
 # running tag refused with the pid named and .session and .pid unchanged;
 # .pid naming a live process other than the self-test's own; after the wait,
@@ -613,6 +614,18 @@ exit 0
     }
     if (-not $refusal.Contains("the logs directory $wildLogs")) {
         Stop-SelfTest "the refusal of the logs directory $wildLogs does not name it"
+    }
+    # A tag holding one is refused the same way: the tag named, and the logs
+    # directory, which the first launch below creates, not created yet.
+    $wildTag = 'selftest[1]-s1'
+    $env:AUTOPILOT_CLAUDE = $failStub
+    $refusal = Invoke-Refused $wildTag $base $promptFile
+    $env:AUTOPILOT_CLAUDE = $savedExe
+    if ($null -eq $refusal -or (Test-Path -LiteralPath $logsDir)) {
+        Stop-SelfTest "a launch under the tag $wildTag was not refused before writing, expected a refusal and no logs directory $logsDir"
+    }
+    if (-not $refusal.Contains("the tag $wildTag")) {
+        Stop-SelfTest "the refusal of the tag $wildTag does not name it"
     }
 
     # The launch's stdout line is what the caller reads the pid and the
