@@ -111,8 +111,9 @@
 # launch read through a command substitution is seen to return while its
 # worker runs. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
 # exercises the failure path; a stub of theirs that is meant to pass writes
-# its arguments and "cwd=<its working directory>" to its error output
-# (Write-Error, for a .ps1 run inside the inner pwsh), since the self-test
+# its arguments and "cwd=<its working directory, logical or physical path>"
+# to its error output (Write-Error, for a .ps1 run inside the inner pwsh),
+# since the self-test
 # reads the flags and the cwd in <tag>.err; prints to stdout a JSON object
 # holding "result" and the --session-id value as "session_id"; exits 0; and
 # stays alive for at least one second, since the second launch under the
@@ -371,6 +372,24 @@ function Test-FileLine {
     param([string]$Path, [string]$Pattern)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
     return @([System.IO.File]::ReadAllLines($Path) | Where-Object { $_ -cmatch $Pattern }).Count -gt 0
+}
+
+function Get-CwdLinePattern {
+    param([string]$Dir)
+    # The line a stub writes for its working directory, cwd=<path>, with the
+    # path as PowerShell's location shows it or with its symbolic links
+    # resolved, as pwd -P prints it (on macOS the temporary directory lies
+    # under a link): either names the launch's cwd. Setting the process's
+    # working directory to the path and reading it back resolves the links.
+    $logical = Resolve-FullPath $Dir
+    $saved = [System.IO.Directory]::GetCurrentDirectory()
+    try {
+        [System.IO.Directory]::SetCurrentDirectory($logical)
+        $physical = [System.IO.Directory]::GetCurrentDirectory()
+    } finally {
+        [System.IO.Directory]::SetCurrentDirectory($saved)
+    }
+    return '(^|\s)cwd=(' + [regex]::Escape($logical) + '|' + [regex]::Escape($physical) + ')$'
 }
 
 function Test-ResultJson {
@@ -651,12 +670,11 @@ exit 0
     foreach ($flag in '--plugin-dir', '--max-budget-usd', '--append-system-prompt') {
         if ($errText.Contains($flag)) { Stop-SelfTest "$errFile shows $flag on a launch with its variable unset" }
     }
-    # The worker runs in the launch's cwd, resolved here as the driver resolves
-    # it (on macOS the temporary directory lies under a symlink, so a physical
-    # path and a logical one differ): a driver that lost the location would
-    # run every worker in the directory the driver was called from.
-    $cwdLine = '(^|\s)cwd=' + [regex]::Escape((Resolve-FullPath $base)) + '$'
-    if (-not (Test-FileLine $errFile $cwdLine)) {
+    # The worker runs in the launch's cwd, read here as a logical or a
+    # physical path (on macOS the temporary directory lies under a symlink,
+    # so the two differ): a driver that lost the location would run every
+    # worker in the directory the driver was called from.
+    if (-not (Test-FileLine $errFile (Get-CwdLinePattern $base))) {
         Stop-SelfTest "$errFile does not show cwd=$(Resolve-FullPath $base), the launch's cwd"
     }
 
@@ -805,8 +823,7 @@ exit 0
     if (-not (Test-ResultJson (Join-Path $oddLogs "$oddTag.json"))) {
         Stop-SelfTest "$(Join-Path $oddLogs "$oddTag.json") is not a JSON object holding `"result`""
     }
-    $oddCwdLine = '(^|\s)cwd=' + [regex]::Escape((Resolve-FullPath $oddDir)) + '$'
-    if (-not (Test-FileLine $oddErr $oddCwdLine)) {
+    if (-not (Test-FileLine $oddErr (Get-CwdLinePattern $oddDir))) {
         Stop-SelfTest "$oddErr does not show cwd=$(Resolve-FullPath $oddDir), the launch's cwd"
     }
     if (-not (Test-FileLine $oddTimeline "^start $oddTag pid [0-9]+ ")) {
