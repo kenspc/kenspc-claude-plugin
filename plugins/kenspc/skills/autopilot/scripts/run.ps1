@@ -238,6 +238,14 @@ function Invoke-Launch {
         Stop-Driver "no executable $exe; set AUTOPILOT_CLAUDE or put claude on PATH"
     }
     $logsPath = Resolve-FullPath $logs
+    # Start-Process reads its redirection paths as wildcard patterns, and no
+    # escaping gets a path holding [ ] * or ? past it (the worker's own
+    # redirection fails on them too), so such a logs directory or tag would
+    # fail only after .session was written and a stale .exit removed; it is
+    # refused here, before anything is written.
+    if ("$logsPath$Tag".IndexOfAny([char[]]'[]*?') -ge 0) {
+        Stop-Driver "the logs directory $logs or the tag $Tag holds one of [ ] * ?, which Start-Process cannot redirect to"
+    }
     try { $null = [System.IO.Directory]::CreateDirectory($logsPath) } catch { Stop-Driver "cannot create the logs directory $logs" }
 
     $sessionFile = Join-Path $logsPath "$Tag.session"
@@ -390,7 +398,9 @@ function New-StubFile {
 # writes nothing under the workspace; it is left in place afterwards. Checks,
 # in this order, naming the first that fails: a launch naming a missing
 # executable, or an empty or whitespace-only prompt file, refused with the
-# subject named and no .session; the logs directory created by the launch;
+# subject named and no .session; a logs directory holding a wildcard
+# character refused with the directory named and not created; the logs
+# directory created by the launch;
 # the stdout line matching .pid and .session; a second launch under the
 # running tag refused with the pid named and .session and .pid unchanged;
 # .pid naming a live process other than the self-test's own; after the wait,
@@ -502,6 +512,19 @@ exit 0
         if (-not $refusal.Contains("empty prompt file $badFile")) {
             Stop-SelfTest "the refusal of the $bad prompt file does not name $badFile"
         }
+    }
+    # A logs directory holding a wildcard character is refused before
+    # anything is written, not left to fail in Start-Process after .session:
+    # the directory named, and not created.
+    $wildLogs = Join-Path $base 'logs [1]'
+    $env:AUTOPILOT_LOGS = $wildLogs
+    $refusal = Invoke-Refused $tag $base $promptFile
+    $env:AUTOPILOT_LOGS = $logsDir
+    if ($null -eq $refusal -or (Test-Path -LiteralPath $wildLogs)) {
+        Stop-SelfTest "a launch with the logs directory $wildLogs was not refused before writing, expected a refusal and no such directory"
+    }
+    if (-not $refusal.Contains("the logs directory $wildLogs")) {
+        Stop-SelfTest "the refusal of the logs directory $wildLogs does not name it"
     }
 
     # The launch's stdout line is what the caller reads the pid and the

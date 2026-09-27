@@ -228,7 +228,9 @@ exist yet.
 - **The PowerShell driver `run.ps1`.** `skills/autopilot/scripts/run.ps1`,
   for PowerShell 7 (`#Requires -Version 7.0`), is written after the bash
   driver passed acceptance. It has the same interface, files, timeline
-  lines, and refusals as `run.sh` (exit 2, nothing written), run as
+  lines, and refusals as `run.sh` (exit 2, nothing written), and also
+  refuses a logs directory or tag holding `[`, `]`, `*`, or `?`, which
+  `Start-Process` cannot redirect to. It runs as
   `pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`.
   It keeps the stale `.exit` removal, the `started` line, the batch-name
   default, and `caffeinate -i` when present. Details:

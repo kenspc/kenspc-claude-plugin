@@ -477,8 +477,9 @@ its `<tag>.exit`. A driver that mirrors `run.sh` keeps that shape, since the
 release checklist greps for the lines as they stand.
 
 `run.ps1`, beside `run.sh` in the same directory, is its PowerShell mirror.
-It has the same interface, files, timeline lines, and refusals, and runs
-under PowerShell 7 as
+It has the same interface, files, timeline lines, and refusals, and also
+refuses a logs directory or tag holding `[`, `]`, `*`, or `?`, which
+`Start-Process` cannot redirect to. It runs under PowerShell 7 as
 `pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`.
 Its `pwsh -NoProfile -File <path>/run.ps1 --self-test` launches a
 `claude.ps1` stub, put first on a temporary PATH entry, through the same
