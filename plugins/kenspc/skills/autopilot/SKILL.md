@@ -516,14 +516,30 @@ Every worker is one launch, one wait, one return.
 S2 asks at generate-task's confirmation (`Confirm, or adjust tasks before
 writing?`) and S3 at task-implement's batch gate (`Proceed with automated
 implementation?`); both arrive as `question` messages. The confirmation is
-answered from the spec: `yes` when the task list matches the spec's steps —
-every step has a task, no task is outside the spec — and a mismatch is a
-question to the user, never `yes` on the user's behalf. A question the spec
-does not answer is a stop, with the question quoted. In a session that
-cannot ask (a system reminder to work without stopping), a question the
-spec answers is answered from the spec, and one it does not answer ends the
-run with the question quoted. Why: the spec is the approved artifact, and
-an answer beyond it is a decision the user has not made.
+answered from the spec. Passing: `yes` when the task list matches the
+spec's steps — every step has a task, no task is outside the spec — and
+carries no choice the spec's words leave open. It fails in two named ways:
+
+- A mismatch answered `yes`. A step without a task, or a task outside the
+  spec, is a question to the user, never `yes` on the user's behalf.
+- A choice riding on the confirmation answered `yes`. A type, a shape, a
+  name, or a behavior the worker proposes to pin — however it frames it: a
+  detail, a task-level concretization, not a design change — is answered
+  from the spec only when the spec's words rule out every other option the
+  worker lists; otherwise it is a question to the user, with the point
+  quoted. Why: the framing is the worker's, not the spec's. Two workers
+  have put one point the spec left unstated, the shape of a result's
+  entries, in two framings — one listed it among the open details, and it
+  went to the user; the other presented it as a concretization with its
+  own suggestion, and the main session confirmed it — so a rubric that
+  looked only at coverage let the framing decide who made the choice.
+
+A question the spec does not answer is a stop, with the question quoted. In
+a session that cannot ask (a system reminder to work without stopping), a
+question the spec answers is answered from the spec, and one it does not
+answer — a choice riding on the confirmation among them — ends the run with
+the question quoted. Why: the spec is the approved artifact, and an answer
+beyond it is a decision the user has not made.
 
 ### The message protocol
 
@@ -1307,7 +1323,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | A cap exceeded | A new cap | The run ends with the counts |
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |
 | A worker's question the spec answers | — (answered from the spec) | Answered from the spec |
-| A worker's question the spec does not answer | The question, quoted | The run ends with the question quoted |
+| A worker's question the spec does not answer, a choice riding on a task-list confirmation included | The question, quoted | The run ends with the question quoted |
 | Any other stop condition | How to go on | The run ends with the reason |
 | The final gate | Tag, push, release | The run ends with the two reports and the finish line |
 

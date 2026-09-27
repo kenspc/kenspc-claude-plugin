@@ -60,9 +60,12 @@ exist yet.
   and a session that edited the plugin is not the one that reviews it. A
   worker's question at a skill's gate (generate-task's confirmation,
   task-implement's batch gate) is answered from the spec: `yes` only when
-  the task list matches the spec's steps; a mismatch is a question to the
-  user, and a question the spec does not answer is a stop, never an answer
-  on the user's behalf.
+  the task list matches the spec's steps and carries no choice the spec's
+  words leave open; a mismatch is a question to the user, and so is a
+  type, a shape, a name, or a behavior a worker proposes to pin, however
+  it frames it (a detail, a task-level concretization), unless the spec's
+  words rule out every other option it lists; a question the spec does not
+  answer is a stop, never an answer on the user's behalf.
 - **The driver `run.sh`** (`skills/autopilot/scripts/run.sh`), bash 3.2,
   copied per batch to `_prompts/<batch>-run.sh` and run through the copy.
   Interface `run.sh <tag> <cwd> <prompt-file> [--resume <session-id>]`; the

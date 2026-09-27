@@ -412,8 +412,11 @@ after <step>`). Nothing is pushed, tagged, or released.
 design table (a supplied spec counts as approved) and at the tag, push, and
 release after the reports. Everything between is answered from the spec: a
 worker's confirmation is `yes` only when its task list matches the spec's
-steps, and a question the spec does not answer is a stop, never an answer
-on your behalf.
+steps and carries no choice the spec leaves open — a type, a shape, a
+name, or a behavior a worker proposes to pin, however it frames it, comes
+to you unless the spec's words rule out every other option it lists — and
+a question the spec does not answer is a stop, never an answer on your
+behalf.
 
 **Stops.** Reopening a locked design point; a forbidden section or file
 touched; guards red twice in a row; the same acceptance FAIL still failing
