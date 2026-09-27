@@ -211,7 +211,7 @@ exist yet.
   `claude --name <batch>-main --permission-mode bypassPermissions --settings '{"crossSessionInbound":"accept"}'`,
   the sixteen labels with an example, the workspace, what a run writes and
   commits, the gates, the stops, the budget rule, the reports, the
-  drivers), seven Known behavior items — the six below other than the
+  drivers), eight Known behavior items — the seven below other than the
   caps' default, with the message-limits item's stricter-inbound-settings
   half as an item of its own — and the version line
   `Claude Code v2.1.271 or later` under Requirements (the plugin's
@@ -276,6 +276,16 @@ exist yet.
   6 + 7 sessions and runs, with 5, 9, and 7 resumes; `16 sessions` is one
   and a half times the largest session count, and the `Caps:` field
   overrides both counts.
+- **The first worker always passes the budget check.** Before any session
+  spent is 0 and the projected cost is a sixth of the budget, so the check
+  cannot stop a batch before its first worker, whatever the budget; that
+  worker runs under a `--max-budget-usd` cap of the whole budget, which
+  bounds its spend. A run with `Budget: USD 1` started its first worker
+  under a USD 1 cap; the worker spent USD 0.61, and the run stopped before
+  the second, with spent and projected at USD 0.61, asking how much to
+  raise the budget to. A budget smaller than one worker's cost stops the
+  run before the second worker too: the cap ends the first worker, and
+  that is the budget stop.
 
 ## 3.8.2 — 2026-09-26
 

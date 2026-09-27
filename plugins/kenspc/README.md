@@ -695,6 +695,16 @@ acceptance.
   the skill stops there, naming the precedence. A worker whose question is
   held runs into its thirty-minute wait and stops with the question in its
   final message, and the skill resumes it with the answer.
+- **The first worker always passes the budget check.** Before the first
+  worker the batch has no session cost to project from, so the check
+  takes a sixth of the budget as the projected cost and 0 as spent; their
+  sum never exceeds the budget, and the first worker always starts. Its
+  `--max-budget-usd` cap is the whole budget, which bounds what it can
+  spend. A budget too small for the batch therefore stops the run before
+  the second worker, not before the first — the cap ends a first worker
+  that reaches it, and the check before the second launch catches the
+  rest — with spent and projected on the stop and the question of how
+  much to raise the budget to.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
