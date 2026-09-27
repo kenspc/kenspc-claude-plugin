@@ -125,7 +125,11 @@ repository, its CLAUDE.md, AGENTS.md, README, CONTRIBUTING, and the
 subjects of its recent commits; the DESCRIPTION. In a repository, note what
 `git -c core.quotePath=false status --porcelain -uall` lists before writing
 anything, so the run can tell its own files from the user's and knows which
-tracked files already carry uncommitted changes.
+tracked files already carry uncommitted changes. The `git rev-parse` probes,
+and every other git command whose message the run reads, run under
+`LC_ALL=C`. Why: git translates its messages, and the start points below
+are told apart by git's English wording, so a translated one would stop a
+run that should go on.
 
 **DONE when** the directory is placed in exactly one start point below and
 the run goes on, or the run has stopped with nothing written. Why nothing
@@ -148,8 +152,8 @@ output and the shell's (a drive letter on Windows, a symbolic link).
 
 Three cases stop the run in either session, writing nothing, with the reason
 in the last message:
-- `git rev-parse` fails with any other message (read with `LC_ALL=C`, since
-  git translates it), which the last message quotes: git found a repository
+- `git rev-parse` fails with any other message (read under `LC_ALL=C`, as
+  Inputs says), which the last message quotes: git found a repository
   and will not read it — another user owns it (`dubious ownership`), its
   configuration refuses a bare repository — or a `.git` file points
   nowhere. Why: the directory is inside a repository all the same, and a
@@ -293,7 +297,7 @@ Why `.git` does not count at the root: a single app's directory is the
 repository root, which holds `.git` from Phase 1 on. An app directory
 elsewhere that holds a `.git` of its own is a nested repository, treated as
 one whose generator's `.git` stays (below): it is not offered scaffolding,
-and its pair stays out of the documentation commit.
+and its pair stays out of every commit (§ Confirm and commit).
 
 Ask, for each such app, whether to scaffold it and with which generator —
 the one the stack's official documentation names, offered and never
@@ -353,8 +357,8 @@ After each generator run, three things it may have left are checked:
   to work without stopping), leave it in place and say so in the final
   message; a no leaves it the same way. An app whose `.git` stays gets no
   scaffold commit, and its AGENTS.md and CLAUDE.md, written in Phase 6,
-  stay out of the documentation commit; the final message names them as
-  written and not committed. Why: git records that directory as an
+  stay out of every commit (§ Confirm and commit); the final message names
+  them as written and not committed. Why: git records that directory as an
   embedded repository, not as its files, and refuses a pathspec inside it,
   which would fail the whole commit.
 - **A `.gitignore` it replaced.** Before running a generator in a directory
@@ -369,18 +373,25 @@ repository's commit convention (Phase 6). It stages what the generator
 wrote, as the status before and after its run shows — the app's directory,
 or for a single app at the root the paths the generator created, and any
 path it wrote outside them, which the file list names — passed to
-`git commit` as a pathspec. Why one commit per app, ahead of the documents: the
-generator's output is not the run's own writing, and a diff of it alone is
-readable; the documents then describe files already in history. Why the
-pathspec: it keeps anything the user had staged out of the commit. Before
-staging, the app's status is read for a directory the stack's tools
+`git commit` as a pathspec. When the status shows nothing the generator
+wrote, the app gets no scaffold commit, as § Confirm and commit says of an
+empty pathspec, and the final message says so. Why one commit per app,
+ahead of the documents: the generator's output is not the run's own
+writing, and a diff of it alone is readable; the documents then describe
+files already in history. Why the pathspec: it keeps anything the user had
+staged out of the commit. Before staging, the app's status is read with
+ignored paths included
+(`git status --porcelain --ignored=matching -uall -- <app>`, without the
+path for a single app at the root) for a directory the stack's tools
 restore or build — a package install directory, a compiler's output — and
 each one `.gitignore` does not already ignore (probed as § Files says) is
 appended to the root `.gitignore` (only appended) and named on the file
 list. Why: such a directory is regenerated on every machine, can carry this
-machine's paths, and buries the readable diff. A commit that fails stops
-the run as § Confirm and commit describes. Without git (a no in Phase 1),
-the apps are scaffolded and nothing is committed.
+machine's paths, and buries the readable diff; plain status hides one that
+the user's own excludes already cover, and a teammate's clone does not
+ignore it. A commit that fails stops the run as § Confirm and commit
+describes. Without git (a no in Phase 1), the apps are scaffolded and
+nothing is committed.
 
 ## Phase 4: Rescan, interview rounds 3–5
 
@@ -528,11 +539,14 @@ rename.
 `.gitignore` already ignores an entry when `git check-ignore --no-index -q`
 exits 0 on a path under it (`.kenspc/runs/probe`, `CLAUDE.local.md`,
 `.trash/probe`; none need exist) and `git check-ignore --no-index -v` names
-a `.gitignore` as the source; without git, when a line of it, `\r` stripped,
-is the entry. Why: git's matching reads a CRLF file and an equivalent
-pattern (`/.kenspc/`) as meant; `--no-index` tests the patterns for a file
-already tracked too, which git otherwise never reports as ignored; and a
-rule in the user's global excludes does not reach a teammate.
+a `.gitignore` inside the repository as the source (a path from the top
+level, such as `.gitignore` or `apps/<name>/.gitignore`; a global excludes
+file prints as an absolute path, whatever its name, and does not count);
+without git, when a line of it, `\r` stripped, is the entry. Why: git's
+matching reads a CRLF file and an equivalent pattern (`/.kenspc/`) as
+meant; `--no-index` tests the patterns for a file already tracked too,
+which git otherwise never reports as ignored; and a rule in the user's
+global excludes does not reach a teammate.
 
 Nothing else is written:
 - `docs/briefs/`, `docs/plans/`, and `docs/tasks/` — the skills that write
@@ -690,7 +704,11 @@ appended to, or given the import line. Mark as well each file that held
 uncommitted changes of the user's before the run (Phase 0's status), since
 a commit takes the file whole; each path git ignores (`git check-ignore -q`
 exits 0) as written, ignored, and not committed — never added with
-`git add -f`; and each file Phase 3 or § Checks keeps out of the commit.
+`git add -f`; each file inside a directory below the top level that holds a
+`.git` of its own, such as an app's pair beside a kept `.git`, as written
+and not committed, in a rerun too, since git refuses a path inside a nested
+repository and the whole commit would fail (Phase 3); and each file
+§ Checks keeps out of the commit.
 Ask the user to confirm or adjust; apply adjustments, run the checks again,
 and list again. In a session that cannot ask (a system reminder to work
 without stopping), present the list and commit it as presented, leaving
@@ -704,8 +722,9 @@ to keep out.
 **The commit.** `docs: initialize project documentation`, staging exactly
 the listed files not marked to stay out, passed to `git commit` as a
 pathspec. When no file is left to commit — the run wrote nothing, or all
-it wrote stays out — no commit is made, and the final message says why;
-`git commit` never runs with an empty pathspec. Why: with no path,
+it wrote stays out — no commit is made, and the final message says why; no
+commit this run makes, a scaffold commit or a rerun's included, runs
+`git commit` with an empty pathspec. Why: with no path,
 `git commit` commits whatever the user had staged, under the run's
 subject. An existing repository's commit convention shapes this subject
 and the scaffold ones: the one it writes down (in its CLAUDE.md, AGENTS.md,
