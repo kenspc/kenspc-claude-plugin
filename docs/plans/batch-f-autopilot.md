@@ -1078,6 +1078,62 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   templates (Step 1.1's form); no worker session has read them in this
   batch's implementation runs, so the acceptance record lists them under
   Not exercised until the brief-entry and plugin-mode cases run. Step 1.1.
+- **CL10** — The settings line, the launch lines, and the return lines are
+  printed as lines of the main session's own reply text, each on a line of
+  its own, when the step happens; the state file does not stand in for
+  them. In the first acceptance round, case 1 wrote the settings line only
+  into the state file and printed four of its ten launch and return lines,
+  and case 4 also left the settings line in the state file alone. Plugin
+  defect: the three print instructions carry no reason, and the release
+  checklist's row 11 reads these lines from the trace. Each instruction
+  gains where the line goes and why — the user reads the settings before
+  any session is paid for, and the transcript is the one ordered record of
+  the launches and returns, since the state file is rewritten at every
+  transition. Step 1.1. Re-checked by cases 2 and 3 in the second round,
+  whose criteria include case 1's from S2 on; case 1 is not re-run on its
+  own.
+- **CL11** — Before the first session the budget check passes by
+  construction: spent 0 plus a sixth of the budget stays under the budget
+  (D10), so the first worker always starts, bounded by its
+  `--max-budget-usd` cap at the whole budget (D9). Case 4's "no worker
+  started … spent 0" contradicts D10 and is amended: PASS when the stop
+  comes before the first launch whose spent + projected exceeds the
+  budget, names the budget, spent, and projected, asks how much to raise
+  it to, and ends with `Autopilot stopped:` — which the first round's
+  case 4 met (stop before S3, spent and projected USD 0.61). Behavior
+  deviation from the case's expectation, with the design unchanged;
+  `plugins/kenspc/README.md` § Known behavior and the CHANGELOG's Known
+  behavior state it. Steps 2.2, 2.3; Testing Strategy (case 4).
+- **CL12** — On a finish, the final message's last line is the finish line
+  `Autopilot finished — <baseline sha>..<last sha>`, as the stop line is on
+  a stop; the sentence that the tag, the push, and the release are the
+  user's comes before it. The skill's Exit and Phase 4 closing paragraph
+  said "ends with … followed by the sentence", against its own Phase 4
+  DONE line, the READMEs, and the release checklist's row 11, and the
+  first round's case 1 followed the Exit. Plugin defect. Step 1.1.
+- **CL13** — generate-task's confirmation is `yes` only when the task list
+  matches the spec's steps and carries no choice the spec's words leave
+  open. A type, a shape, a name, or a behavior a worker proposes to pin,
+  however it frames it (a detail, a task-level concretization, not a
+  design change), is answered from the spec only when the spec's words
+  rule out every other option the worker lists; otherwise it is a question
+  to the user, and in a session that cannot ask the run ends with it
+  quoted. The first round answered the same unstated point (the seed's
+  `topWords` entry shape) from the spec in case 4 and escalated it in
+  case 1. Plugin defect: the confirmation's rubric named coverage only, so
+  a choice riding on a confirmation passed it. Step 1.1.
+- **CL14** — Case 1's "four workers" and "S2, S3, S3b, S6" hold for a seed
+  with `Acceptance: none` (the release checklist's row 11); with
+  `Acceptance:` naming commands, as the acceptance seed's does, S4 is the
+  fifth worker, as the criterion's last clause requires. Testing Strategy
+  (case 1).
+- **CL15** — `/help` is not available in a `-p` session ("/help isn't
+  available in this environment."); the headless equivalent is the
+  `slash_commands` list in the init message of
+  `claude -p … --output-format stream-json --verbose`, which case 7 read
+  (nine `kenspc:kenspc-*` commands). Case 7's criterion and seed (b)'s
+  acceptance case read "`/help` lists" that way in a headless run.
+  Testing Strategy (cases 3, 7).
 
 ## Open Questions
 
