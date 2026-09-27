@@ -138,7 +138,7 @@ Use `/reload-plugins` to pick up changes without restarting.
 
 ## Design Principles
 
-v3 follows six design rules:
+The v3 architecture follows six design rules:
 
 - **Workflow SOP** — The brief → plan → task → implement → review chain stays.
   Each skill's phase structure is preserved; v3 changed how each phase is
@@ -900,7 +900,21 @@ on Windows.
   so. When CLAUDE.md already has an `@AGENTS.md` line, or is a symbolic
   link to AGENTS.md (or the reverse), AGENTS.md already loads: the skill
   asks nothing and leaves CLAUDE.md alone. The line budget is checked on
-  the files the skill wrote, not on your CLAUDE.md.
+  the files the skill wrote, not on your CLAUDE.md, so the two together can
+  exceed 80 lines and repeat each other — AGENTS.md may take commands and
+  rules your CLAUDE.md already holds; the skill reports the count and the
+  repetitions and trims neither file.
+- **Generated documents can say more than you gave.** The skill writes
+  only what you said, what a file in the directory shows, or a
+  `TBD(init):` marker, yet one headless run put product claims its one-line
+  description did not make into `docs/product.md`, and a later plan draft
+  cited them as grounded there. Read `docs/product.md`, and the other topic
+  documents, once after `/kenspc-init`, before the first plan relies on
+  them.
+- **A skipped file list commits.** "Skip, use the default" at the file-list
+  confirmation commits the list as presented, less any file that held
+  uncommitted changes of yours — the default a session that cannot ask
+  takes. Only a "no" keeps the files out of history.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

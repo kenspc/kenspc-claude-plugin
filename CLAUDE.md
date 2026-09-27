@@ -120,7 +120,8 @@ and the only one bumped each release. It was set during the v3.0.0 rewrite and
 is intentionally left unchanged on subsequent releases — syncing ten files
 every release is churn that has historically drifted anyway. Bump it only on a
 future architecture-generation change (a v4 rewrite), and bump all ten together
-so the uniformity holds.
+so the uniformity holds. Plugin 4.0.0 was the maintainer's version choice, not
+an architecture rewrite, so the per-skill field stays `3.0.0`.
 
 ### Subagent Review Architecture
 

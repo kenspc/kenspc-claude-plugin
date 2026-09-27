@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.0.0 — unreleased
+## 4.0.0 — 2026-09-27
 
 Batch G. An `init-project` skill and its `/kenspc-init [project description]`
 command set a project up for the kenspc chain in one run — an empty
@@ -24,9 +24,47 @@ them mechanically, lists them for the user to confirm, and commits. It has
 no review phase and no reviewer agent, and every question it asks has a
 branch for a session that cannot ask. The version number is the
 maintainer's decision; the architecture generation is unchanged, so every
-skill, the new one included, keeps `version: 3.0.0`. No new agent and no
-new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
-(`guards run: 10`, `self-tests run: 9`).
+skill, the new one included, keeps `version: 3.0.0`. The two manifests'
+descriptions name project initialization. Release-checklist row 1 counts
+ten commands, a new row 12 runs `/kenspc-init` in an empty directory,
+interactively and headless, and the end-to-end row becomes 13. Known
+behavior records what the acceptance found around the files: a generated
+document can say more than the user gave, the pair beside an existing
+CLAUDE.md is not held to 80 lines, and a skipped file list commits. No new
+agent and no new CONTEXT key; `scripts/` is untouched, so the guard counts
+are unchanged (`guards run: 10`, `self-tests run: 9`). Release smoke: the
+batch's acceptance run, `docs/dry-runs/batch-g-acceptance.md`, on one Linux
+container at the tree `aee4311`; no skill, command, or template changed
+after it. Its twelve cases, A1–A12 (A10 and A11 optional), ran as sixteen
+case runs: seven headless — `claude -p` sessions that loaded the plugin
+from the working tree, each a session that cannot ask — and eight in which a
+subagent followed the skill's text step by step and sent each of its
+questions to the main session, which answered from the case's script; A12
+checked the skill's text and ran the pre-flight block. The main session
+added A6c, a rerun that answers only the version line's marker. Every case
+passed, with no FAIL and no finding. Not exercised within them: a .NET
+app's `apps/api/src/` layout (the container has no `dotnet`, and the
+missing-tool stop held instead), a generator's nested `.git` moved to
+`.trash/` (create-vite runs no `git init`), and a generator's merge into a
+`.gitignore` that already exists. Not reached: the paths that need `gh`
+installed and logged in — the owner and name question, creating the
+repository, reading and creating labels; the push and labels questions in
+a session that can ask; the description's natural-language triggers; a
+session that loaded the skill and asked a person, since every interactive
+half ran as a subagent following the text; and macOS and Windows. The new
+row 12's headless half, less its two trigger checks, is case A1's
+criteria, which passed in two runs; its interactive half ran only as a
+subagent following the text. Rows 1 and 2 were not run as such: every
+headless session loaded the plugin with `kenspc:init-project` and
+`kenspc:kenspc-init` in its skill list, and none counted the ten commands.
+Rows 3–11 and 13 exercise skills and commands this release leaves
+unchanged and were not run. Of thirty-seven observations, the batch's
+clarification C14 classified six: three behavior deviations — a headless
+run's `docs/product.md` stated product claims its argument did not make
+(now a Known behavior item), a rerun committed under an identity it set
+with `git -c` although one was configured, and a run that stopped ended on
+a question and described the user's files; two as designed, now Known
+behavior items; and one environment issue. No separate smoke run was made.
 
 ### Added
 
@@ -107,8 +145,9 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     `skills/init-project/templates/` as `*.tmpl`, none named `CLAUDE.md` or
     `AGENTS.md`. The files are in English unless the user
     asks otherwise, with the reason in the skill; the plugin still sets no
-    default language for task documents. The root pair stays within 80
-    lines at init and each app's pair within 40. Nothing is written under
+    default language for task documents. The root pair the run creates
+    stays within 80 lines at init (beside an existing CLAUDE.md, AGENTS.md
+    alone does) and each app's pair within 40. Nothing is written under
     `.claude/`, and no guide, CONTRIBUTING, or roadmap file is written;
     AGENTS.md says guides go in `docs/guides/`, written by `/kenspc-guide`.
   - **TBD, checks, and the commit.** A policy nobody answered is
@@ -152,7 +191,37 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
   init-project's English default for the files it writes is separate from
   the task-document rule. The plugin README gains a Project setup section,
   a Setup path in Recommended Workflow, and `gh` under the recommended
-  requirements.
+  requirements; at release its Known behavior gains two items, generated
+  documents that can say more than the user gave and a skipped file list
+  that commits, and its existing-CLAUDE.md item says the pair beside that
+  file can exceed 80 lines and repeat each other.
+- The manifests. `plugin.json` is 4.0.0. The marketplace's description and
+  `plugin.json`'s name project initialization (`plugin.json`: AGENTS.md,
+  CLAUDE.md, and the project documents); the marketplace entry's
+  one-sentence description is unchanged. The design-rules sentence in
+  `plugin.json` and in the plugin README's Design Principles reads "The v3
+  architecture follows six design rules", so "v3" names the architecture
+  generation, not a version. CLAUDE.md's per-skill version paragraph says
+  that plugin 4.0.0 was the maintainer's version choice, not an
+  architecture rewrite, so the per-skill field stays `3.0.0`.
+- The release checklist. Row 1 counts 10 commands. A new row 12,
+  `/kenspc-init`: in an empty directory the first question offers
+  `git init` with `main` as the first branch and the next is interview
+  round 1; headless, as a session that cannot ask, the run asks nothing,
+  and the result is on `main` with the template comment in AGENTS.md,
+  `@AGENTS.md` on CLAUDE.md's first line, the pair within 80 lines, every
+  Documents path present, the two safety rules, the file backlog, both
+  `.gitignore` lines, the unanswered policies as `TBD(init): …` and no
+  other TBD form, one `docs: initialize project documentation` commit, and
+  a clean tree; "what does /init do" and "init 是什么意思" invoke no skill.
+  The end-to-end row becomes 13, with its sub-criteria heading; the
+  roadmap's reference to it follows.
+- The roadmap. Its heading names the next minor, 4.1.0, and it gains the
+  two items the spec deferred: upgrading a project with `/kenspc-init` —
+  migrating a repository set up before the skill, and bringing a project
+  up to a later template, which the `kenspc-init template: 1` marker is
+  there for — and moving a backlog from files under `docs/backlog/` to
+  GitHub Issues.
 
 ### Known behavior
 
@@ -167,6 +236,29 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
   leaves it out of the commit.
 - **Branches.** The plugin still creates no branch; the one branch it names
   is the first branch of a repository `/kenspc-init` creates, `main`.
+- **Generated documents can say more than the user gave.** The skill writes
+  only what the user said, what a file shows, or a `TBD(init):` marker,
+  and still, in one headless acceptance run, `docs/product.md` stated
+  product claims its one-line argument did not make (that the product
+  replaces phone-in scheduling, that patients reschedule or cancel); a
+  second run on the same argument left its purpose `TBD(init):`, and a
+  later plan draft cited the added line as grounded in `docs/product.md`.
+  Read `docs/product.md`, and the other topic documents, once after
+  `/kenspc-init`, before the first plan relies on them.
+- **An existing CLAUDE.md and the 80-line budget.** Beside a CLAUDE.md that
+  was already there, the budget counts AGENTS.md alone, so AGENTS.md and
+  CLAUDE.md together can exceed 80 lines and repeat each other: in the
+  acceptance, one case's pair came to 110 lines with five repetitions, and
+  in another AGENTS.md copied the commands and rules the existing CLAUDE.md
+  held. `/kenspc-init` reports the combined count and the repetitions (on
+  the import question's yes) and trims neither file; which copy stays is
+  the user's to settle.
+- **A skipped file list commits.** "Skip, use the default" at the
+  file-list confirmation commits the list as presented, less any file that
+  held uncommitted changes of the user's, as a session that cannot ask
+  does: a skipped question takes the default in the skill's defaults
+  table, and there the commit is made. Only a "no" keeps the files out of
+  history.
 
 ## 3.9.0 — 2026-09-27
 

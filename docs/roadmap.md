@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (3.10.0)
+## Next minor (4.1.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -179,7 +179,7 @@ its number.
    orchestrator's context the same way. It was left out of 3.8.2 because
    Step 5 is the Phase 1 → Phase 2 boundary, whose transition sometimes
    failed to trigger in 3.0.2 and whose `Proceeding to code review.` line
-   smoke row 12 looks for in the trace; changing what that boundary prints
+   smoke row 13 looks for in the trace; changing what that boundary prints
    needs an acceptance of its own. The choice left: Step 5 prints only its
    progress update and Schema D is rendered once, in Schema G, or both
    renders stay.
@@ -245,3 +245,23 @@ its number.
     - A launch whose worker writes UTF-8 non-ASCII text, its `<tag>.json`
       and `<tag>.err` compared byte for byte, since a Windows console code
       page can re-encode them.
+12. Upgrading a project with `/kenspc-init`, which 4.0.0 left out (the batch G
+    spec's 2.15, `git show 7a14f34:docs/plans/batch-g-init-project.md`).
+    Two kinds:
+    - Migrating a repository set up before the skill: moving a long
+      CLAUDE.md's instructions into AGENTS.md and the topic documents, and
+      an AGENTS.md without the template marker onto the template's sections.
+      Today the skill moves neither: an existing CLAUDE.md gains at most the
+      `@AGENTS.md` line, and an AGENTS.md without the marker is left as it
+      is, which the final message says. Reconciling a `docs/backlog/` in the
+      user's own format, deferred after the batch's first review round
+      (the spec's C10, E19), belongs here too.
+    - Bringing a project up to a later template: adding what the newer
+      template has and the project's files lack. The
+      `kenspc-init template: 1` marker 4.0.0 writes into AGENTS.md's
+      opening comment is there so a later version can tell which template
+      wrote the files; today a rerun fills only `TBD(init):` markers.
+13. Moving a project's backlog from one file per item (`docs/backlog/`) to
+    GitHub Issues. `/kenspc-init` settles the backlog from the remote that
+    exists when it runs, so a project given a GitHub remote later keeps the
+    file backlog, and a rerun changes only `TBD(init):` markers.
