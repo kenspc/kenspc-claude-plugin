@@ -15,8 +15,8 @@ driver by platform until that acceptance.
 
 Related plan: `docs/plans/batch-f-autopilot.md` (read at `52f0bbe`). The
 plan is the complete specification; its locked design (F-1 to F-14), its
-Design decisions (M1–M16, D1–D24), and its Clarifications (CL1–CL19) are
-binding rulings. This document covers plan Phase 3 only — Step 3.1 and its
+Design decisions (M1–M16, D1–D24), and its Clarifications (CL1–CL19, and
+CL20–CL22 recorded since) are binding rulings. This document covers plan Phase 3 only — Step 3.1 and its
 Doc-sync task — the second round that M10 describes: round 1 dropped
 Phase 3 at generate-task's confirm gate, the bash driver then passed
 acceptance, and this round keeps only Step 3.1. The rulings this round
@@ -233,8 +233,9 @@ driver has passed acceptance. Its task numbers are not this document's:
     `CodeGeneration.EscapeSingleQuotedStringContent`. It doubles `'` and
     also the typographic single quotes that PowerShell treats as quote
     delimiters (U+2018 to U+201B). A cwd and a logs directory holding `’`
-    were checked by hand (`.exit` 0, `cwd=` shown). The self-test covers
-    the ASCII quote only, as specified.
+    were checked by hand (`.exit` 0, `cwd=` shown). The self-test then
+    covered the ASCII quote only, as specified; 36f77d3 later added `’`
+    to its odd-path launch.
   - Placeholders go into the inner template in a single regex pass
     (`-replace` with a scriptblock), so a value that holds a placeholder
     name is never substituted a second time.
