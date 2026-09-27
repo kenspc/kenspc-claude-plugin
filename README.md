@@ -22,6 +22,7 @@ Opinionated software development workflows — discovery brief, plan before you 
 
 | Skill | What it does |
 |-------|-------------|
+| init-project | Sets a project up for the chain after a skippable interview — `AGENTS.md` as the index, a `CLAUDE.md` that imports it, and topic documents, with `TBD(init):` where nothing was answered; optional scaffolding and GitHub repository — no review phase |
 | generate-brief | Structured discovery conversation (five dimensions) producing a shareable requirement brief — no review phase |
 | prototype | Answers one open question from a brief with a throwaway prototype — committed, its answer and hash recorded in the brief, then removed — no review phase |
 | generate-plan | Collaborative discovery (shared framework, brief-aware) + drafting + automated 4-angle review |
@@ -32,7 +33,7 @@ Opinionated software development workflows — discovery brief, plan before you 
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |
 | autopilot | Runs one batch unattended from a spec or a brief to a local release preparation — one headless session per role, driven by cross-session messages; two human gates |
 
-**Commands:** `/kenspc-brief`, `/kenspc-prototype`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-diagnose`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`, `/kenspc-autopilot`
+**Commands:** `/kenspc-init`, `/kenspc-brief`, `/kenspc-prototype`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-diagnose`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`, `/kenspc-autopilot`
 
 See the [plugin README](./plugins/kenspc/README.md) for full documentation, usage examples, and design principles.
 
