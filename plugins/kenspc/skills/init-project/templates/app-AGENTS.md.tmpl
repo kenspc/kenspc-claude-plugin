@@ -1,0 +1,21 @@
+<!--
+kenspc-init template: 1
+Line budget: this file and the CLAUDE.md beside it together, 40 lines.
+Admission rule: a line belongs in this file only when all three hold:
+  1. every session in this app needs it;
+  2. it cannot be worked out from the code;
+  3. without it an agent goes wrong, or it is a safety floor.
+Anything else goes in a topic document under docs/, or, for a rule specific
+to Claude Code, in a path-scoped rule.
+-->
+# {{app name}}
+
+{{one line: what this app is}} Stack: {{the app's stack}}. Rules and documents for the whole repository: the files at its root.
+
+## Commands
+
+{{the app's build, test, lint, and run commands, one per line, each run from this directory}}
+
+## Rules
+
+{{hard rules for this app only, one per line}}

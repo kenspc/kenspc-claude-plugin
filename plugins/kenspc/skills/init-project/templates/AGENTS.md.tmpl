@@ -1,0 +1,52 @@
+<!--
+kenspc-init template: 1
+Line budget: this file and CLAUDE.md together, 80 lines at init and 200 at most.
+Admission rule: a line belongs in this file only when all three hold:
+  1. every session needs it;
+  2. it cannot be worked out from the code;
+  3. without it an agent goes wrong, or it is a safety floor.
+Anything else goes in a topic document under docs/, in an app's own AGENTS.md,
+or, for a rule specific to Claude Code, in a path-scoped rule.
+-->
+# {{project name}}
+
+{{one line: what the project is and who it is for}} Purpose, users, scope, and non-goals: `docs/product.md`.
+
+## Commands
+
+{{the build, test, lint, and run commands, one per line, each with the directory it runs in; in a monorepo, one line saying each app's commands are in its own AGENTS.md}}
+
+## Rules
+
+- Do not deploy to staging or production, run migrations against them, or read their data.
+- Keep secrets out of the repository: no key, token, password, or connection string in any tracked file. `docs/deployment.md` says where each secret lives.
+{{further hard rules the user gave, one per line}}
+
+## Documents
+
+| Document | Holds | Changes when |
+|---|---|---|
+| `AGENTS.md` | Commands, hard rules, this table, workflow | A command changes, a hard rule is added or removed, or a document is added or removed |
+| `CLAUDE.md` | The import of this file, and rules specific to Claude Code | A rule specific to Claude Code is added or removed |
+| `README.md` | What the project is and how to start, for people | How to start changes |
+| `docs/product.md` | Purpose, users, scope, non-goals, terms | The purpose, the users, the scope, or a term changes |
+| `docs/architecture/overview.md` | Stack, components and boundaries, data, external integrations, key decisions | A component, a boundary, an integration, or a key decision changes |
+| `docs/ui/design-system.md` | Visual style, color roles, typography, components, layout, elevation, do and don't, responsive behavior; where the tokens live | The design system changes, or a token file moves |
+| `docs/release.md` | Versioning scheme, version file, when to bump, changelog, tags, who releases | A release rule changes |
+| `docs/deployment.md` | Environments, how deploys happen, where configuration and secrets live, migrations, rollback, monitoring | An environment, the pipeline, a secret's location, or a deployment policy changes |
+| `CHANGELOG.md` | What each release changed | Every change that ships | {{when: CHANGELOG.md is written}}
+| `{{apps/<name>/AGENTS.md}}` | That app's commands and rules; the CLAUDE.md beside it imports this file | That app's commands or rules change | {{when: a monorepo — one row per app}}
+
+`docs/briefs/`, `docs/plans/`, `docs/tasks/`, and `docs/backlog/` are not durable documents; files in the first three are deleted once their work is done. {{when: the backlog is files}}
+`docs/briefs/`, `docs/plans/`, and `docs/tasks/` are not durable documents; their files are deleted once their work is done. {{when: the backlog is GitHub Issues}}
+Guides go in `docs/guides/`, written by `/kenspc-guide`.
+
+## Workflow
+
+- Branches: {{the branch convention}}
+- Commits: {{the commit message convention}}
+- Backlog: GitHub Issues, labeled `bug`, `enhancement`, `debt`, and `found-by-agent`. {{when: the backlog is GitHub Issues}}
+- Backlog: one file per item in `docs/backlog/`; the format is in `docs/backlog/README.md`. {{when: the backlog is files}}
+- New backlog items: in an interactive session, only with the user's agreement; an unattended run lists what it found in its report instead.
+- Version lives in {{the file that holds the version number}} — rules in docs/release.md {{when: the versioning scheme is not none}}
+- No version number — rules in docs/release.md {{when: the versioning scheme is none}}

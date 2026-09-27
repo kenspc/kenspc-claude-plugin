@@ -1,0 +1,38 @@
+# Backlog
+
+One file per item: `docs/backlog/YYYY-MM-DD-<slug>.md`, dated the day the item is created.
+
+## Format
+
+```markdown
+---
+type: bug | enhancement | debt
+found-by: human | agent
+created: YYYY-MM-DD
+source: <where it came from: a review run, a user report, a commit>
+---
+
+# <what it is, in one line>
+
+## What
+
+<what is wrong or missing>
+
+## Why it matters
+
+<what goes wrong, or what is lost, while it stays>
+
+## Where
+
+<the files, screens, or commands it concerns>
+
+## Notes
+
+<anything else: a workaround, a lead, a link>
+```
+
+## Lifecycle
+
+There is no status field: an item is open while its file exists. The
+commit that resolves an item deletes its file; an item that is dropped is
+deleted in a commit whose message says why.
