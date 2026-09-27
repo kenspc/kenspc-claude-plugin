@@ -135,8 +135,8 @@ behind would contradict that.
 
 | Start point | How it is recognized | Where it goes |
 |---|---|---|
-| Empty, no git | `git rev-parse --is-inside-git-dir` fails, and the directory is empty | Phase 1 asks about `git init` |
-| Files, no git | `git rev-parse --is-inside-git-dir` fails, and the directory is not empty | The question below, then Phase 1 |
+| Empty, no git | `git rev-parse --is-inside-git-dir` fails with `not a git repository (or any …`, and the directory is empty | Phase 1 asks about `git init` |
+| Files, no git | `git rev-parse --is-inside-git-dir` fails with `not a git repository (or any …`, and the directory is not empty | The question below, then Phase 1 |
 | Inside another repository | `--is-inside-git-dir` prints `false`, and `git rev-parse --show-prefix` prints a path — whether or not the directory is empty | The question below |
 | Existing repository | `--is-inside-git-dir` prints `false`, and `--show-prefix` prints nothing | Only the missing files are written (Phase 6) |
 
@@ -146,8 +146,15 @@ inside it, and a `git init` there makes the nested repository the question
 below exists to prevent; and one directory can read differently in git's
 output and the shell's (a drive letter on Windows, a symbolic link).
 
-Two cases stop the run in either session, writing nothing, with the reason
+Three cases stop the run in either session, writing nothing, with the reason
 in the last message:
+- `git rev-parse` fails with any other message (read with `LC_ALL=C`, since
+  git translates it), which the last message quotes: git found a repository
+  and will not read it — another user owns it (`dubious ownership`), its
+  configuration refuses a bare repository — or a `.git` file points
+  nowhere. Why: the directory is inside a repository all the same, and a
+  `git init` there makes the nested repository the question below exists
+  to prevent.
 - `--is-inside-git-dir` prints `true`: a bare repository, or a directory
   inside `.git`, where `--show-prefix` prints nothing as it does at a top
   level. Why: files written there land in git's own data.
@@ -278,11 +285,15 @@ official generator and committed.
 **Inputs**: the app list from Phase 2; the tools Phase 0 found.
 
 **DONE when** every app whose directory does not exist yet, or holds
-nothing but `.git` and what Phase 0 counts as empty, was offered
-scaffolding, and each app the user chose has its scaffold commit — or the
-reason it has none is recorded for the final message. An app that already
-has files is not offered scaffolding. Why `.git` does not count: a single
-app's directory is the repository root, which holds `.git` from Phase 1 on.
+nothing but what Phase 0 counts as empty (and `.git`, for a single app at
+the repository root), was offered scaffolding, and each app the user chose
+has its scaffold commit — or the reason it has none is recorded for the
+final message. An app that already has files is not offered scaffolding.
+Why `.git` does not count at the root: a single app's directory is the
+repository root, which holds `.git` from Phase 1 on. An app directory
+elsewhere that holds a `.git` of its own is a nested repository, treated as
+one whose generator's `.git` stays (below): it is not offered scaffolding,
+and its pair stays out of the documentation commit.
 
 Ask, for each such app, whether to scaffold it and with which generator —
 the one the stack's official documentation names, offered and never
@@ -297,7 +308,10 @@ no scaffolding still gets every document, its commands `TBD(init):`.
   choose the options from the user's answers — never one that overwrites or
   empties a directory. Why: generators change their commands, options, and
   versions between releases, for the same reason the plugin names no model:
-  a command copied into a skill goes stale without an error.
+  a command copied into a skill goes stale without an error. Why not those
+  options: a single app's generator runs in the repository root, which
+  already holds `.git`, and they would take files the generator did not
+  write.
 - **A generator that fails** leaves its output where it is, or it moves to
   `.trash/` the way a generator's `.git` does below; nothing is deleted, the
   app gets no scaffold commit, and the final message reports the error.
