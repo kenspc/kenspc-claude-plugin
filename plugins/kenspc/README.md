@@ -479,8 +479,11 @@ release checklist greps for the lines as they stand.
 `run.ps1`, beside `run.sh` in the same directory, is its PowerShell mirror.
 It has the same interface, files, timeline lines, and refusals, and also
 refuses a logs directory or tag holding `[`, `]`, `*`, or `?`, which
-`Start-Process` cannot redirect to. It runs under PowerShell 7 as
-`pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`.
+`Start-Process` cannot redirect to. It runs under PowerShell 7.3 or later
+as
+`pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`;
+7.0 to 7.2 drop the double quotes inside the arguments they pass to the
+worker, which would break its `--settings` JSON and its prompt.
 Its `pwsh -NoProfile -File <path>/run.ps1 --self-test` launches a
 `claude.ps1` stub, put first on a temporary PATH entry, through the same
 path and prints `self-test passed`.

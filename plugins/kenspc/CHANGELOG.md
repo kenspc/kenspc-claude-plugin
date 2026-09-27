@@ -226,8 +226,10 @@ exist yet.
   `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test`
   prints `self-test passed` and exits 0; the end-to-end row becomes 12.
 - **The PowerShell driver `run.ps1`.** `skills/autopilot/scripts/run.ps1`,
-  for PowerShell 7 (`#Requires -Version 7.0`), is written after the bash
-  driver passed acceptance. It has the same interface, files, timeline
+  for PowerShell 7.3 or later (`#Requires -Version 7.3`: 7.0 to 7.2 drop
+  the double quotes inside the arguments they pass to a native program, so
+  the worker's `--settings` value would not arrive as JSON), is written
+  after the bash driver passed acceptance. It has the same interface, files, timeline
   lines, and refusals as `run.sh` (exit 2, nothing written), and also
   refuses a logs directory or tag holding `[`, `]`, `*`, or `?`, which
   `Start-Process` cannot redirect to. It runs as

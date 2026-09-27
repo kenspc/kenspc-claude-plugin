@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.3
 # run.ps1 — the PowerShell mirror of run.sh, the autopilot skill's driver.
 # Starts one headless worker session in the background and returns at once;
 # the worker's exit is recorded in a file, never reported over a socket.
@@ -18,9 +18,14 @@
 #                  resume that session instead of starting a fresh one; the
 #                  fallback for a worker that has already exited
 #
-# PowerShell 7 (pwsh). Why the #Requires line: under Windows PowerShell 5.1
-# $IsWindows is $null, so the hidden-window branch below would silently not
-# apply, and the pwsh this script starts may not exist there. The arguments
+# PowerShell 7.3 or later (pwsh). Why the #Requires line: pwsh 7.0 to 7.2
+# pass arguments to a native program the legacy way, which drops the double
+# quotes inside a value, so the worker would receive the --settings value as
+# {crossSessionInbound:accept}, which is not JSON, and a prompt stripped of
+# its double quotes; and under Windows PowerShell 5.1 $IsWindows is $null, so
+# the hidden-window branch below would silently not apply, and the pwsh this
+# script starts may not exist there. An older PowerShell does not run the
+# script at all: it names the required version and exits 1. The arguments
 # are read from $args as bash-style tokens (--self-test, --resume), which
 # pwsh -File passes through as plain strings.
 #
@@ -128,8 +133,9 @@
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
 # or environment error, or when <tag>.pid names a live process and <tag>.exit
 # is absent — an earlier worker under the same tag still running (nothing
-# started). The worker's own status goes to <tag>.exit. Self-test: 0 on
-# pass, 1 on the first missing or wrong item.
+# started); 1 from PowerShell itself when it is older than 7.3. The worker's
+# own status goes to <tag>.exit. Self-test: 0 on pass, 1 on the first
+# missing or wrong item.
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 3.0

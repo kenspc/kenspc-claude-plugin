@@ -308,12 +308,15 @@ and self-test items closes a failure an earlier review found. Where this
 task and `run.sh` agree, `run.sh`'s behavior is the specification; where
 PowerShell needs a different mechanism, this task names it.
 
-- Form: the file opens with `#Requires -Version 7.0` and a header comment,
+- Form: the file opens with `#Requires -Version 7.3` (CL20; `7.0` before
+  it) and a header comment,
   and reads its arguments from `$args` (bash-style tokens: `--self-test`,
   `--resume`), parsed as `run.sh` parses its own. Why `#Requires`: under
   Windows PowerShell 5.1 `$IsWindows` is `$null`, so the hidden-window
   branch would silently not apply and `Start-Process pwsh` would name a
-  shell that may not exist. Why `$args`: `pwsh -File` passes `--self-test`
+  shell that may not exist; and pwsh 7.0–7.2 pass native arguments
+  Legacy-style, so the `--settings` JSON and the prompt's double quotes
+  would not reach the worker intact (CL20). Why `$args`: `pwsh -File` passes `--self-test`
   and `--resume` through as plain strings (verified with pwsh 7.6.6: with a
   `param()` block they land in `$args` too, unbound).
 - Interface: `run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`
@@ -481,8 +484,8 @@ PowerShell needs a different mechanism, this task names it.
 - `plugins/kenspc/skills/autopilot/scripts/run.ps1`
 
 **Acceptance criteria:**
-- `grep -c '^#Requires -Version 7.0$' plugins/kenspc/skills/autopilot/scripts/run.ps1`
-  prints 1.
+- `grep -c '^#Requires -Version 7.3$' plugins/kenspc/skills/autopilot/scripts/run.ps1`
+  prints 1 (CL20).
 - The parse check (Context) prints `parse errors: 0` and exits 0, and its
   control exits 1.
 - From the repository root, the form the release checklist carries,
