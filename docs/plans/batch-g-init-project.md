@@ -332,3 +332,30 @@ Why 这样排：
 - **C7（recon 之后）模板档的命名与用字。** 问题：skill 目录里的模板若叫 `CLAUDE.md`，会被在本 repo 工作的 session 当成嵌套的 memory 档载入；`check-no-model-names.sh` 会拦下 `Claude-specific`、`Claude-only` 这类 `claude-` 开头的词和 model 家族名。裁决：模板档不用 `CLAUDE.md` 或 `AGENTS.md` 这种会被工具当成 memory/指示档的档名（例如加 `.tmpl` 后缀）；文字写 "specific to Claude Code"，不写 "Claude-specific"。理由：避免模板在维护者的 session 里生效，也避免 guard 失败。
 - **C8（recon 之后）A12 的 MUST/NEVER/CRITICAL 怎么判。** 问题：现有 skill 用小写的 never/must 当普通英文。裁决：A12 与 reviewer 只查大写的 `MUST`、`NEVER`、`CRITICAL`（整字、区分大小写）；小写是普通用语，可以用，但两条安全规则的模板措辞尽量不用。理由：CLAUDE.md 的规则针对的是大写的强调标记，不是英文单字。
 - **C9（recon 之后）H 模式怎样成为"无法询问"的 session。** 问题：`claude -p` 本身不一定带"work without stopping"的 system reminder。裁决：无法询问的 H case 照 batch C–E 的先例，加 `--append-system-prompt "Work without stopping; do not ask clarifying questions."`。理由：这是 repo 验收记录里已用过的做法，让 skill 的 cannot-ask 分支有明确的触发条件。
+- **C10（审查第 1 轮之后）第 1 轮 findings 的处置。** 三个 reviewer 共报 36 条（spec S1–S7、conventions C1–C6、edges E1–E23；报告在 run 目录 `review-1-*.md`，不进 repo）。裁决如下，理由都是"对应到 spec 条目或具体失败路径"，除非另写：
+  - **起点判断先看 git（E1 HIGH、S1、E12、E3）→ fix。** 先用 `git rev-parse` 判断在不在 repo、是不是 top level（不做路径字串比较；在 `.git` 目录里或 bare repo 里就停），再看目录空不空；空的子目录在别的 repo 里属于第三种起点。重跑只在"已有 repo"或"新 app"两种起点里成立，两个"停下"的起点照样停。理由：2.3 第三种起点的 Why 正是这个嵌套 repo；A4（H）会直接失败。
+  - **机械检查只管这次写的内容（E2 HIGH、S2、S3、C1）→ fix。** 80 行预算只在这次建了那一对档案时适用；重跑检查 200 行上限（或行数没有增加）；TBD 格式、`{{`、secret 检查只看这次写入或改动的行；用户自己的行不通过时只在最后讯息报告，不"修正"。理由：2.12 要求既有内容一字不改，A5、A6 的 PASS 条件依赖这一点。
+  - **TBD 标记的替换范围（E4）→ fix。** 模板让每个标记位于行尾或独占一个表格栏；回答只替换标记本身（到行尾或栏尾），不替换整行。理由：2.12"其他内容一字不改"，`Version lives in` 这一行不能丢。
+  - **保留 generator `.git` 的 app（E5、S4）→ fix。** 那个 app 的一对档案不进文件 commit 的 pathspec，在最后讯息说明写了但没 commit、以及原因。理由：reviewer 用 git 重现了 pathspec 失败，整个文件 commit 都做不成。
+  - **原本就有的档案、未 commit 的改动、被 ignore 的路径（E6、E7、E8）→ fix。** "有档案但不是 git repo"起点里被这次改动的既有档案（例如追加过的 `.gitignore`）整份 commit，并在清单上注明；在已有 repo 里，执行前就有未 commit 改动的档案，无法询问时不 commit、在最后讯息列出，可以询问时在清单上注明；被 ignore 的路径列为"写了、被 ignore、没 commit"，不用 `git add -f`。理由：2.13 commit 的是这次写的东西，不能夹带或强加用户的选择。
+  - **Scaffold commit 夹带依赖或 build 输出（E9）→ fix。** Scaffold commit 前看该 app 的 git status；该 stack 的工具会重新产生的依赖或 build 目录不 commit，先追加进 `.gitignore`（只追加），并在清单列出。理由：避免把 `obj/`、`node_modules/` 这类东西（可能带本机路径）commit 进去。
+  - **新 app 起点也遵守不覆盖和既有 CLAUDE.md 的规则（E10）→ fix。**
+  - **CLAUDE.md 与 AGENTS.md 互为 symlink（E11）、已经有 `@AGENTS.md` 一行（E18）→ fix。** 两种情况都跳过 import 的问题，说明 AGENTS.md 已被载入。理由：写进 symlink 会改到用户的 AGENTS.md；重复 import 没有意义。
+  - **CRLF 与行数计算（E13）→ fix。** 比对行时去掉 `\r`；`.gitignore` 是否已含某项用 `git check-ignore` 探测；行数按档案分别计。理由：reviewer 重现了 CRLF 下检查误判。
+  - **Secret 模式太窄、remote URL 带 token（E14）→ fix。** 扩充模式；写 remote URL 时去掉 userinfo。
+  - **超出行数预算时怎么修（E15）→ fix。** 写明修法（规则移到主题文件、合并 app 行），并写明这次执行不写 path-scoped rule（那在 `.claude/` 底下）。
+  - **README/CHANGELOG 的别名（E16）→ fix。** 任何 `README*`、`CHANGELOG*`（不分大小写）都算已存在。
+  - **只有 OS 中继档（`.DS_Store` 等）的目录（E17）→ fix。** 当作空目录，这些档不进 commit。理由：维护者用 Mac，Finder 打开过的空目录很常见，照字面会在无法询问时误停。
+  - **Detached HEAD（E21）→ fix。** 已有 repo 在 detached HEAD 时，两种模式都停下、不写、说明原因。理由：commit 会在切换 branch 后变成孤儿；停下比多一个问题简单。
+  - **Generator 的选项与失败（E22）→ fix。** 不选会覆盖或清空目录的选项；失败的输出留在原处或移到 `.trash/` 并报告，不删除；app 目录以外被 generator 写的档案列进清单。
+  - **重跑时用户一个 TBD 都没回答（E23）→ fix。** 走"不改任何东西并说明"的分支。
+  - **单一 app 在 root 时永远不会被提议 scaffolding（S5）→ fix。** 条件改为"目录不存在，或只有 `.git`"。
+  - **AGENTS.md 模板没有 `## Project` 一节（S6、C6）→ fix。** 照 2.9 加上。
+  - **新 app 起点的 app CLAUDE.md 指向不存在的 root 约定（S7）→ fix。** 只有 root AGENTS.md 带模板标记时才写那句。
+  - **GitHub owner/名称的问题没有自己的 cannot-ask 句（C3）→ fix。**
+  - **新 app 路径没有 Goal/DONE、不在 Phase transitions 和 gate 表里（C4）→ fix。**
+  - **三条规则没有 Why（C5）→ fix。**
+  - **Roadmap 还没有 2.15 的项目（C2）→ not applicable。** 1.7 把 roadmap 分给发布准备。
+  - **已存在的 `docs/backlog/` 与用户自己的格式（E19）→ defer。** 理由：不覆盖的规则已经保住用户的档案；调和用户自己的 backlog 格式属于迁移，2.15 留给之后的版本。
+  - **第一次执行 commit 失败后的重跑（E20）→ defer。** 理由：罕见路径；失败那次的最后讯息已说明没 commit 的档案，`git status` 也看得到；v1 按减法原则不加这条分支。
+  - **Implementer 的 16 个判断（`implement.md`）→ 维持。** 其中"全部用默认只结束访谈，scaffolding 等后续提议照问"符合 2.4 的字面（结束的是访谈），scaffolding 本来就是只提议、不默认执行。
