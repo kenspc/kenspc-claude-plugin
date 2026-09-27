@@ -1250,11 +1250,11 @@ A note on ignored labels, a `Version:` ignored in repo mode, or a
 The launch and return lines (Launch, wait, return) go the same way: each
 is printed in the reply, on a line of its own, when its step happens. Why
 the reply and not the state file alone: the user reads the settings there
-before any session is paid for; the transcript is the one ordered record
-of the launches and returns, since the state file is rewritten whole at
-every transition and keeps no history of them; and the release checklist
-reads all three lines from the trace, so a run that wrote them only into
-the state file fails that check with every transition in order.
+before any session is paid for, and sees each launch and return as its
+step happens, while the state file is rewritten whole at every transition
+and keeps no history of them. The ordered record on disk is the driver's
+`start` and `end` lines in `<batch>-timeline.log`, and the release
+checklist reads that and the state file, not the reply.
 
 ### The stop conditions
 
