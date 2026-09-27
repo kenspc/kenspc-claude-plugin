@@ -375,12 +375,12 @@ readable; the documents then describe files already in history. Why the
 pathspec: it keeps anything the user had staged out of the commit. Before
 staging, the app's status is read for a directory the stack's tools
 restore or build — a package install directory, a compiler's output — and
-each one git does not already ignore is appended to the root `.gitignore`
-(only appended) and named on the file list. Why: such a directory is
-regenerated on every machine, can carry this machine's paths, and buries
-the readable diff. A commit that fails stops the run as § Confirm and
-commit describes. Without git (a no in Phase 1), the apps are scaffolded
-and nothing is committed.
+each one `.gitignore` does not already ignore (probed as § Files says) is
+appended to the root `.gitignore` (only appended) and named on the file
+list. Why: such a directory is regenerated on every machine, can carry this
+machine's paths, and buries the readable diff. A commit that fails stops
+the run as § Confirm and commit describes. Without git (a no in Phase 1),
+the apps are scaffolded and nothing is committed.
 
 ## Phase 4: Rescan, interview rounds 3–5
 
@@ -494,7 +494,8 @@ committed.
 passes on them; the user confirmed the file list — in a session that cannot
 ask, it was presented and committed as presented; and the documentation
 commit exists. Or the run ended without git, at a "no" to the file list,
-or at a failing commit, and the final message says which.
+at a failing commit, or with no file left to commit, and the final message
+says which.
 
 ### Files
 
@@ -511,7 +512,7 @@ or at a failing commit, and the final message says which.
 | `CHANGELOG.md` | `CHANGELOG.md.tmpl` | Only when a versioning scheme was chosen — SemVer or CalVer, not none and not TBD |
 | `docs/backlog/README.md` | `backlog-README.md.tmpl` | When the backlog is C |
 | `apps/<name>/AGENTS.md` and `apps/<name>/CLAUDE.md` | `app-AGENTS.md.tmpl`, `app-CLAUDE.md.tmpl` | For each app of a monorepo |
-| `.gitignore` | — | Always: `.kenspc/` and `CLAUDE.local.md` appended, and `.trash/` when Phase 3 used it, each only when `.gitignore` does not already ignore it |
+| `.gitignore` | — | Always: `.kenspc/` and `CLAUDE.local.md` appended, and `.trash/` and the restore and build directories when Phase 3 used or found them, each only when `.gitignore` does not already ignore it |
 
 "Always" means wherever no such file exists: nothing that exists is
 overwritten or edited, except a README a generator wrote in this run, the
@@ -524,12 +525,14 @@ Documents table names it as it is. `docs/architecture/` is a folder so that
 the overview can later be split into `<topic>.md` files beside it without a
 rename.
 
-`.gitignore` already ignores an entry when `git check-ignore -q` exits 0 on
-a path under it (`.kenspc/runs/probe`, `CLAUDE.local.md`, `.trash/probe`;
-none need exist) and `git check-ignore -v` names `.gitignore` as the
-source; without git, when a line of it, `\r` stripped, is the entry. Why:
-git's matching reads a CRLF file and an equivalent pattern (`/.kenspc/`) as
-meant, and a rule in the user's global excludes does not reach a teammate.
+`.gitignore` already ignores an entry when `git check-ignore --no-index -q`
+exits 0 on a path under it (`.kenspc/runs/probe`, `CLAUDE.local.md`,
+`.trash/probe`; none need exist) and `git check-ignore --no-index -v` names
+a `.gitignore` as the source; without git, when a line of it, `\r` stripped,
+is the entry. Why: git's matching reads a CRLF file and an equivalent
+pattern (`/.kenspc/`) as meant; `--no-index` tests the patterns for a file
+already tracked too, which git otherwise never reports as ignored; and a
+rule in the user's global excludes does not reach a teammate.
 
 Nothing else is written:
 - `docs/briefs/`, `docs/plans/`, and `docs/tasks/` — the skills that write
@@ -630,22 +633,27 @@ import itself, and a second import loads nothing new.
 
 Run before the commit, whether or not a commit follows, on what this run
 wrote: the files it created, the lines it added to a file already there,
-and the markers a rerun replaced. Lines are compared with any `\r`
-stripped and counted per file (`grep -c ''`). Why: a CRLF file, or one
-without a final newline, otherwise reads as failing or one line short.
+and the markers a rerun replaced. The secret check alone also reads the
+user's lines the commit would add to history: all of a file history does
+not hold yet, and the lines a tracked file has that its last commit lacks.
+Why: history keeps a committed secret whoever wrote it. Lines are compared
+with any `\r` stripped and counted per file (`grep -c ''`). Why: a CRLF
+file, or one without a final newline, otherwise reads as failing or one
+line short.
 
 - The line budget, on the files of each pair the run created: the root
   pair at most 80 lines (AGENTS.md alone beside a CLAUDE.md already there),
   each app's pair at most 40. A rerun holds instead the 200-line ceiling
   that the comment states, or a count no higher than before it.
-- Each CLAUDE.md the run wrote or gave the import has `@AGENTS.md` as its
-  first line.
-- Each AGENTS.md the run wrote opens with the HTML comment holding
+- Each CLAUDE.md the run created or gave the import has `@AGENTS.md` as
+  its first line.
+- Each AGENTS.md the run created opens with the HTML comment holding
   `kenspc-init template: 1` and the admission rule's three conditions.
 - Every path in the first column of a Documents table the run wrote exists
   (for an `apps/*/AGENTS.md` row, each app's).
-- No line the run wrote holds a value that reads as a secret: a private key
-  block (`-----BEGIN … PRIVATE KEY-----`); a token with a known prefix
+- No line the run wrote, and no line of the user's the commit would add,
+  holds a value that reads as a secret: a private key block
+  (`-----BEGIN … PRIVATE KEY-----`); a token with a known prefix
   followed by its body (`gh[pousr]_`, `github_pat_`, `glpat-`,
   `xox[abposr]-`, `xapp-`, `sk-`, `sk_live_`, `rk_live_`, `npm_`, `AKIA`,
   `AIza`); a JSON web token (`eyJ…`, three dot-separated parts); a
@@ -656,19 +664,21 @@ without a final newline, otherwise reads as failing or one line short.
   name or its store's name is not a value.
 - Every `TBD` the run wrote is `TBD(init): <text>` — a search for `TBD` finds
   no other form — and no `{{` of a template slot is left.
-- `.gitignore` ignores `.kenspc/` and `CLAUDE.local.md`, probed as § Files
+- Except after a rerun or at a new app, which append nothing to it,
+  `.gitignore` ignores `.kenspc/` and `CLAUDE.local.md`, probed as § Files
   says.
 
 A check that fails on what the run wrote is fixed, and every check runs
 again; a result that fails one is not committed. A root AGENTS.md over its
 budget moves a rule to the topic document it concerns, or folds the per-app
 rows of its Documents table into one `apps/*/AGENTS.md` row; the run writes
-no path-scoped rule, since those live under `.claude/`. A check that fails
-on a line that was there before the run — the user's own `TBD`, a
-secret-looking value in their CLAUDE.md, a table row the team wrote — is
-not fixed: the final message names the file and the line. Why: no reviewer
-reads these files, and each check guards a way they fail without an error —
-an AGENTS.md too long to load in every session, a CLAUDE.md that no longer
+no path-scoped rule, since those live under `.claude/`. A secret-looking
+value on a line of the user's is not changed: that file stays out of the
+commit, marked so on the file list, and the final message names the file
+and the line's number — not the value, which a message would only copy
+further; the other files are committed. Why: no reviewer reads these
+files, and each check guards a way they fail without an error — an
+AGENTS.md too long to load in every session, a CLAUDE.md that no longer
 imports it, a table naming a file that is not there, a marker a rerun
 cannot find, a secret that history keeps; and a line the user wrote is not
 the run's to change.
@@ -680,12 +690,12 @@ appended to, or given the import line. Mark as well each file that held
 uncommitted changes of the user's before the run (Phase 0's status), since
 a commit takes the file whole; each path git ignores (`git check-ignore -q`
 exits 0) as written, ignored, and not committed — never added with
-`git add -f`; and each file Phase 3 keeps out of the commit. Ask the user
-to confirm or adjust; apply adjustments, run the checks again, and list
-again. In a session that cannot ask (a system reminder to work without
-stopping), present the list and commit it as presented, leaving out each
-file that held uncommitted changes, which the final message names. On a
-"no", nothing is committed; the files stay in the tree, and the final
+`git add -f`; and each file Phase 3 or § Checks keeps out of the commit.
+Ask the user to confirm or adjust; apply adjustments, run the checks again,
+and list again. In a session that cannot ask (a system reminder to work
+without stopping), present the list and commit it as presented, leaving
+out each file that held uncommitted changes, which the final message names.
+On a "no", nothing is committed; the files stay in the tree, and the final
 message says so. Why: no reviewer runs on these files, so the user's look
 at the list is the gate before they enter history; the user's unfinished
 work goes in only on that look, and an ignored path is one the user chose
@@ -693,7 +703,11 @@ to keep out.
 
 **The commit.** `docs: initialize project documentation`, staging exactly
 the listed files not marked to stay out, passed to `git commit` as a
-pathspec. An existing repository's commit convention shapes this subject
+pathspec. When no file is left to commit — the run wrote nothing, or all
+it wrote stays out — no commit is made, and the final message says why;
+`git commit` never runs with an empty pathspec. Why: with no path,
+`git commit` commits whatever the user had staged, under the run's
+subject. An existing repository's commit convention shapes this subject
 and the scaffold ones: the one it writes down (in its CLAUDE.md, AGENTS.md,
 or CONTRIBUTING), or, failing that, the pattern its recent commit subjects
 consistently share.
@@ -743,8 +757,10 @@ outside it.
 the DESCRIPTION.
 
 **DONE when** the pair is written, its checks pass, the user confirmed the
-file list, and the commit exists — or the run ended at a "no" to the list
-or at a failing commit, and the final message says which.
+file list, and the commit exists — or the run ended at a "no" to the list,
+at a failing commit, or with no file to commit (both files already here,
+with the import present or declined, or all it wrote staying out), and the
+final message says which.
 
 When Phase 0's question gets "a new app", the run writes only this
 directory's pair: `AGENTS.md` from `app-AGENTS.md.tmpl` and `CLAUDE.md` from
@@ -757,9 +773,9 @@ repository's root AGENTS.md carries the template marker. Why: elsewhere
 there are no such conventions to point to. No `git init`, no scaffolding,
 no GitHub step, no topic document, no backlog, and no change to the outer
 repository's `.gitignore`: the final message names which of `.kenspc/` and
-`CLAUDE.local.md` it lacks (probed from its top level), for the user to
-add. Why: the outer repository is the user's project as it stands, and
-this run was started for one directory in it.
+`CLAUDE.local.md` it lacks (probed from its top level as § Files says), for
+the user to add. Why: the outer repository is the user's project as it
+stands, and this run was started for one directory in it.
 
 The interview asks only what the pair holds: the app's name and one-line
 summary, its stack, and rules for this app only; its commands are read
@@ -802,10 +818,11 @@ message says how many markers remain and in which files.
   versioning scheme just chosen, a new Documents row — is not made; the
   final message names it for the user. Why: a rerun promises that only the
   markers change, so the user can rerun without reviewing every file again.
-- The checks run on the result; then the file list, its confirmation, and
-  the commit, as Phase 6 describes, with the subject
-  `docs: fill in answered TBD(init) markers`, adapted to the repository's
-  commit convention.
+- The checks run on what the rerun changed (§ Checks), and the final
+  message names what `.gitignore` lacks, since a rerun appends nothing to
+  it; then the file list, its confirmation, and the commit, as Phase 6
+  describes, with the subject `docs: fill in answered TBD(init) markers`,
+  adapted to the repository's commit convention.
 - No other file is written, and there is no scaffolding, GitHub step,
   push, or label. Moving an existing project onto the template, and
   bringing files an earlier template version wrote up to a later one, are
@@ -842,7 +859,7 @@ these gates.
 
 The backlog takes no question: A with a GitHub remote, C otherwise. The two
 safety rules are always written, and the documentation commit is made
-unless the user says no at the file list.
+unless the user says no at the file list or no file is left to commit.
 
 ## Exit
 
@@ -850,19 +867,20 @@ The final message gives:
 
 - the start point, and each file with what happened to it — created,
   appended to, given the import line, or left as it was;
-- the commits, each with its hash and subject;
+- the commits, each with its hash and subject, or why none was made;
 - the `TBD(init):` markers left, counted per file;
 - every default a session that cannot ask took in place of a question;
 - what is left for the user, whichever applies: an existing CLAUDE.md
   without the import (AGENTS.md not yet loaded); an existing AGENTS.md left
   without the template's sections; a generator's `.git` left in place, or a
   generator that failed and where its output is; an app not scaffolded, and
-  why; the manual GitHub steps; the labels to create; the lines a new app's
-  outer repository's `.gitignore` lacks; the files written and not
-  committed — an app's pair beside a kept `.git`, an ignored path, a file
-  that held uncommitted changes, every file after a "no"; the files that
-  were in a directory without git before the run, which no commit carried;
-  a line of the user's that a check flagged; and, after a rerun, a
+  why; the manual GitHub steps; the labels to create; the lines
+  `.gitignore` lacks after a rerun, or in a new app's outer repository; the
+  files written and not committed — an app's pair beside a kept `.git`, an
+  ignored path, a file that held uncommitted changes, a file with a
+  secret-looking value on a line of the user's (with the line's number),
+  every file after a "no"; the files that were in a directory without git
+  before the run, which no commit carried; and, after a rerun, a
   consequence of an answer that was not made.
 
 Next step: `/kenspc-init` again once some `TBD(init):` markers have
