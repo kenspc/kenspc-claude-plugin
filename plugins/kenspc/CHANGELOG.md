@@ -224,7 +224,10 @@ exist yet.
   figures; `plugin` mode is exercised once, in the batch's acceptance
   record, not per release), and also requires that
   `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test`
-  prints `self-test passed` and exits 0; the end-to-end row becomes 12.
+  prints `self-test passed` and exits 0, and that the same command with
+  `AUTOPILOT_CLAUDE` pointed at a `.ps1` stub that prints the built-in
+  stub's JSON, sleeps one second, and exits 3 makes the self-test exit 1
+  naming `.exit`; the end-to-end row becomes 12.
 - **The PowerShell driver `run.ps1`.** `skills/autopilot/scripts/run.ps1`,
   for PowerShell 7.3 or later (`#Requires -Version 7.3`: 7.0 to 7.2 drop
   the double quotes inside the arguments they pass to a native program, so
