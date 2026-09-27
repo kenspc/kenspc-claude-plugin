@@ -318,9 +318,17 @@ function Invoke-Launch {
         Stop-Driver "cannot start pwsh: $($_.Exception.Message)"
     }
     $workerPid = $proc.Id
-    Write-LfFile $pidFile "$workerPid`n"
+    # The worker runs from here on, so a failed write is reported on stderr and
+    # the launch still returns its started line with status 0, as run.sh does:
+    # a status of 2 reads as nothing started, and the caller would stop, or
+    # launch a second worker, while this one keeps running.
+    try { Write-LfFile $pidFile "$workerPid`n" } catch { [Console]::Error.WriteLine($_.Exception.Message) }
     $stamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss', [System.Globalization.CultureInfo]::InvariantCulture)
-    Write-LfFile $timeline "start $Tag pid $workerPid session $session at $stamp cwd $Dir prompt $PromptFile$extra`n" -Append
+    try {
+        Write-LfFile $timeline "start $Tag pid $workerPid session $session at $stamp cwd $Dir prompt $PromptFile$extra`n" -Append
+    } catch {
+        [Console]::Error.WriteLine($_.Exception.Message)
+    }
     return "started $Tag pid $workerPid session $session"
 }
 
