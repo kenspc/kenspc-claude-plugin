@@ -414,15 +414,6 @@ function Invoke-Refused {
     return $null
 }
 
-function New-StubFile {
-    param([string]$Path, [string]$Text)
-    try {
-        [System.IO.File]::WriteAllText($Path, $Text, $Utf8NoBom)
-    } catch {
-        Stop-Driver "cannot write the stub $Path"
-    }
-}
-
 # Invoke-SelfTest: launch a stub through the same path and check every file
 # the header names. The logs directory is always a fresh directory under the
 # system temporary directory, whatever AUTOPILOT_LOGS says, so a self-test
@@ -467,7 +458,7 @@ function Invoke-SelfTest {
 
     if ([string]::IsNullOrEmpty($env:AUTOPILOT_CLAUDE)) {
         $stubPath = Join-Path $stubDir 'claude.ps1'
-        New-StubFile $stubPath (@'
+        Write-LfFile $stubPath (@'
 # Stub executable for run.ps1 --self-test: writes its arguments and its
 # working directory to the error stream, prints a result object to stdout,
 # sleeps one second, exits 0. Write-Error, since this stub runs inside the
@@ -502,13 +493,13 @@ exit 0
     # AUTOPILOT_CLAUDE names too.
     $failStub = Join-Path $stubDir 'fail.ps1'
     $promptSeen = Join-Path $base 'prompt-seen.txt'
-    New-StubFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nexit 3`n"
+    Write-LfFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nexit 3`n"
     $slowStub = Join-Path $stubDir 'slow.ps1'
-    New-StubFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
+    Write-LfFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
     # A fourth that throws, for the check that a failure inside the worker's
     # own script still ends in .exit.
     $throwStub = Join-Path $stubDir 'throw.ps1'
-    New-StubFile $throwStub "throw 'self-test stub failure'`n"
+    Write-LfFile $throwStub "throw 'self-test stub failure'`n"
 
     # The three optional variables are unset for the first launch, whatever
     # the caller's environment holds, so their flags can be asserted absent.
@@ -519,7 +510,7 @@ exit 0
     $env:AUTOPILOT_BATCH = 'selftest'
     $tag = 'selftest-s1'
     $promptFile = Join-Path $base 'prompt.md'
-    New-StubFile $promptFile "Reply ok and stop.`n"
+    Write-LfFile $promptFile "Reply ok and stop.`n"
     [Console]::Out.WriteLine("self-test: logs directory $logsDir")
     [Console]::Out.WriteLine("self-test: executable $shownExe")
 
@@ -545,8 +536,8 @@ exit 0
     }
     # An empty prompt file, and one of only whitespace, are refused the same
     # way: the paid empty session the guard exists to prevent.
-    New-StubFile (Join-Path $base 'empty.md') ''
-    New-StubFile (Join-Path $base 'blank.md') "`n  `n"
+    Write-LfFile (Join-Path $base 'empty.md') ''
+    Write-LfFile (Join-Path $base 'blank.md') "`n  `n"
     foreach ($bad in 'empty', 'blank') {
         $badFile = Join-Path $base "$bad.md"
         $refusal = Invoke-Refused $tag $base $badFile
@@ -688,7 +679,7 @@ exit 0
     # start every worker with the wrong prompt.
     $failTag = 'selftest-s2'
     $multiPrompt = Join-Path $base 'multi.md'
-    New-StubFile $multiPrompt "First line.`nSay `"hi`" and stop.`n`n"
+    Write-LfFile $multiPrompt "First line.`nSay `"hi`" and stop.`n`n"
     $env:AUTOPILOT_CLAUDE = $failStub
     $null = Invoke-Launch $failTag $base $multiPrompt ''
     $env:AUTOPILOT_CLAUDE = $savedExe
@@ -789,7 +780,7 @@ exit 0
     $env:AUTOPILOT_BATCH = $null
     $batchExit = Join-Path $logsDir "$batchTag.exit"
     $batchTimeline = Join-Path $logsDir 'self-s-test-timeline.log'
-    New-StubFile $batchExit "7`n"
+    Write-LfFile $batchExit "7`n"
     $null = Invoke-Launch $batchTag $base $promptFile ''
     if (Test-Path -LiteralPath $batchExit) {
         Stop-SelfTest "a stale $batchExit survived the launch and would read as this worker's completion"
@@ -811,7 +802,7 @@ exit 0
     $oddLogs = Join-Path $base "logs it's"
     $null = [System.IO.Directory]::CreateDirectory($oddDir)
     $oddPrompt = Join-Path $oddDir 'prompt.md'
-    New-StubFile $oddPrompt "Reply ok and stop.`n"
+    Write-LfFile $oddPrompt "Reply ok and stop.`n"
     $env:AUTOPILOT_LOGS = $oddLogs
     $null = Invoke-Launch $oddTag $oddDir $oddPrompt ''
     $env:AUTOPILOT_LOGS = $logsDir
