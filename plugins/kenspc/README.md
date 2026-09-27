@@ -508,7 +508,9 @@ the `started` line at once.
 launched process is attached to the launching shell, with no hang-up
 protection. `Start-Process` also copies the launch streams through the
 driver's own process on macOS, so the two output files keep nothing
-written after the driver returns. The skill copies and runs `run.sh`, and
+written after the driver returns; the inner command also writes its own
+failure reason to `<tag>.err`, and `<tag>.exit` then reads 1. The skill
+copies and runs `run.sh`, and
 nothing picks a driver by platform until `run.ps1` has passed acceptance
 on Windows.
 

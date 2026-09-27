@@ -262,7 +262,9 @@ exist yet.
     settings JSON.
   - It is checked with `pwsh` on macOS: a parse and the self-test. There
     the launched process is attached to the launching shell, and the
-    launch output files keep nothing written after the driver returns.
+    launch output files keep nothing written after the driver returns;
+    the inner command also writes its own failure reason to `<tag>.err`,
+    with `<tag>.exit` reading 1.
 
   The skill still copies and runs `run.sh`. Windows acceptance of
   `run.ps1` is a roadmap line.
