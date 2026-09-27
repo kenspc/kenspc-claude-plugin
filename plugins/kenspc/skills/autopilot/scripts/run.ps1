@@ -199,7 +199,11 @@ function Write-LfFile {
             [System.IO.File]::WriteAllText($Path, $Text, $Utf8NoBom)
         }
     } catch {
-        Stop-Driver "cannot write $Path"
+        # Here and in the refusals below that catch a .NET call, the reason
+        # is the innermost exception's message, the operating system's cause
+        # where there is one ("Permission denied"): the stop's reason is this
+        # message, where run.sh's shell prints the cause before its own line.
+        Stop-Driver "cannot write ${Path}: $($_.Exception.GetBaseException().Message)"
     }
 }
 
@@ -249,7 +253,7 @@ function Invoke-Launch {
     # An empty prompt — no content, or whitespace only — would start a paid
     # session with no instructions, which dies and is resumed into an empty
     # transcript before the stop.
-    try { $promptText = [System.IO.File]::ReadAllText($promptPath) } catch { Stop-Driver "cannot read $PromptFile" }
+    try { $promptText = [System.IO.File]::ReadAllText($promptPath) } catch { Stop-Driver "cannot read ${PromptFile}: $($_.Exception.GetBaseException().Message)" }
     if ([string]::IsNullOrWhiteSpace($promptText)) { Stop-Driver "empty prompt file $PromptFile" }
     # A missing executable is a refusal here, not a worker that dies at once:
     # otherwise the driver prints "started", .exit reads a failure with an
@@ -272,7 +276,7 @@ function Invoke-Launch {
     if ("$logsPath$Tag".IndexOfAny([char[]]'[]*?') -ge 0) {
         Stop-Driver "the logs directory $logs or the tag $Tag holds one of [ ] * ?, which Start-Process cannot redirect to"
     }
-    try { $null = [System.IO.Directory]::CreateDirectory($logsPath) } catch { Stop-Driver "cannot create the logs directory $logs" }
+    try { $null = [System.IO.Directory]::CreateDirectory($logsPath) } catch { Stop-Driver "cannot create the logs directory ${logs}: $($_.Exception.GetBaseException().Message)" }
 
     $sessionFile = Join-Path $logsPath "$Tag.session"
     $pidFile = Join-Path $logsPath "$Tag.pid"
@@ -350,7 +354,7 @@ function Invoke-Launch {
     Write-LfFile $errFile ''
     # A stale exit file from an earlier launch under the same tag would read as
     # this worker's completion before it starts; nothing else is removed.
-    try { [System.IO.File]::Delete($exitFile) } catch { Stop-Driver "cannot remove the stale $exitFile" }
+    try { [System.IO.File]::Delete($exitFile) } catch { Stop-Driver "cannot remove the stale ${exitFile}: $($_.Exception.GetBaseException().Message)" }
     try {
         if ($IsWindows) {
             $proc = Start-Process -FilePath pwsh -ArgumentList $launchArgs -PassThru -WindowStyle Hidden -RedirectStandardInput $launchIn -RedirectStandardOutput $launchOut -RedirectStandardError $launchErr
