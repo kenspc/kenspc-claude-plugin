@@ -1211,6 +1211,22 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   stay as they are this batch, and the main session's reviewer report
   lists it as a candidate — not a roadmap line (F-14). Step 3.1; the
   release commit.
+- **CL23** — The second round's standalone review (`6c6cb3d..dac0eba`)
+  left four rows, settled here. R4, LOW, the second task document's
+  self-test list not updated for the later self-test items: accepted as
+  is — the document is transient and the release commit removes it. E1,
+  MEDIUM, a worker's descendant that inherits the piped streams of
+  `run.ps1`'s inner script delays `<tag>.exit` until it exits, and E3,
+  MEDIUM, non-ASCII worker output re-encoded by a Windows console code
+  page: both latent while the skill runs `run.sh`, and both join the
+  release commit's Windows roadmap line (item 11, CL22) as checks of that
+  acceptance — whether a real worker leaves such a descendant, and a
+  launch whose worker writes UTF-8 non-ASCII text compared byte for byte.
+  T3, MEDIUM, no per-release smoke check that a choice riding on the task
+  confirmation reaches the user (CL13): no checklist row, since each run
+  of it costs a worker session; the main session's reviewer report lists
+  it as a candidate for the next acceptance of this skill — not a roadmap
+  line (F-14). The release commit.
 
 ## Open Questions
 
