@@ -1162,6 +1162,23 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   section, the CHANGELOG's `run.ps1` entry, and the checklist's row 11.
   The second task document is `docs/tasks/batch-f-autopilot-ps1-tasks.md`.
   Steps 2.4, 3.1.
+- **CL19** — `run.ps1`'s `Start-Process` redirects the launched pwsh's own
+  three streams, as `run.sh`'s subshell does with
+  `> /dev/null 2>&1 < /dev/null`: without them the child inherits the
+  caller's stdout and stderr, and a caller that reads the launch through a
+  pipe (a command substitution, the Bash tool) waits until the worker
+  exits (probed with pwsh 7.6.6: 6 s against 0 s). `Start-Process` refuses
+  one path for stdout and stderr, so the three are distinct files in the
+  logs directory, none of them one of the five driver files:
+  `<tag>.launch.in` (an empty file the driver writes), `<tag>.launch.out`,
+  and `<tag>.launch.err` — portable without a null-device branch per
+  platform, and empty on a clean launch, so the inner pwsh's own error is
+  kept when its script fails. The header names them; the self-test checks
+  that they exist, that the two output files are empty after a clean
+  launch, and that a launch read through a command substitution returns
+  before a slow stub's `.exit` exists. The Documentation impact element
+  reads with CL5, CL6, and CL18, which extend its CLAUDE.md and checklist
+  entries. Step 3.1.
 
 ## Open Questions
 
