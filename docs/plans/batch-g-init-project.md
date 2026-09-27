@@ -322,3 +322,7 @@ Why 这样排：
   - pre-flight block 全部 exit 0。
 
 ## Clarifications
+
+- **C1（pre-flight）版本号。** 问题：1.7 说从现值升一个 minor（3.9.0 → 3.10.0），用户在任务末尾补充"版本可以直接上 4.0.0。先 commit，不要 push 和 tag"。裁决：release commit 用 4.0.0；只 commit，不 push、不 tag。理由：用户的补充比 1.7 的通用规则更具体，以补充为准。
+- **C2（pre-flight）Headless 模式的环境变量。** 问题：container 以 root（uid 0）执行，`claude -p --permission-mode bypassPermissions` 直接报错 `--dangerously-skip-permissions cannot be used with root/sudo privileges`。裁决：H 模式的命令一律加 `IS_SANDBOX=1`；探测证实加上后能跑，并载入 `--plugin-dir` 的插件。理由：这是验收环境的限制，不是插件行为；不加就没有 H 模式可用。
+- **C3（pre-flight）缺少的工具。** 问题：`gh` 和 `dotnet` 都不存在。裁决：A2 的 `api` app 用来验收"缺工具就停下说明、不安装"；A7 与 A9 照原 case 执行（A9 仍然做 PATH 遮蔽）。理由：缺工具正好是 spec 要测的路径，不需要改 case。
