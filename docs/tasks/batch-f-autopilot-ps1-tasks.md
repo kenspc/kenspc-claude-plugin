@@ -218,17 +218,18 @@ PowerShell needs a different mechanism, this task names it.
   2 on a usage or environment error or a refusal; self-test 0 on pass, 1 on
   the first missing or wrong item.
 - Launch, in `run.sh`'s order. Refusals, each exit 2 with a message naming
-  its subject and nothing written (no `<tag>.session`): fewer than three
-  positional arguments (usage); a cwd that is not a directory; a missing
-  prompt file; an empty or whitespace-only prompt file; an executable that
-  `Get-Command` does not find; a live worker under the tag (`<tag>.pid`
-  names a live process and `<tag>.exit` is absent — the message names the
-  pid and says what to remove when that process is not the worker);
-  `--resume` without an id; an unknown argument. Then: the logs directory
-  created; the session id — `[guid]::NewGuid()` as a lowercase string for a
-  fresh launch, the given id for a resume — written to `<tag>.session`
-  before the process starts; a stale `<tag>.exit` removed (that one file,
-  no recursion); the worker started; `<tag>.pid` written; the timeline's
+  its subject and nothing written (no `<tag>.session`): on the command
+  line, fewer than three positional arguments (usage), `--resume` without
+  an id, and an unknown argument; then, in the launch, an empty tag; a cwd
+  that is not a directory; a missing prompt file; an empty or
+  whitespace-only prompt file; an executable that `Get-Command` does not
+  find; and, after the logs directory is created, a live worker under the
+  tag (`<tag>.pid` names a live process and `<tag>.exit` is absent — the
+  message names the pid and says what to remove when that process is not
+  the worker). Then: the session id — `[guid]::NewGuid()` as a lowercase
+  string for a fresh launch, the given id for a resume — written to
+  `<tag>.session` before the process starts; a stale `<tag>.exit` removed
+  (that one file, no recursion); the worker started; `<tag>.pid` written; the timeline's
   start line appended,
   `start <tag> pid <pid> session <id> at <YYYY-MM-DD HH:MM:SS> cwd <dir> prompt <file><extra>`
   with `run.sh`'s `<extra>` words (` plugin-dir <dir>`,
@@ -237,8 +238,19 @@ PowerShell needs a different mechanism, this task names it.
 - The worker (D8, CL16): `Start-Process pwsh` with
   `-ArgumentList @('-NoProfile', '-EncodedCommand', <inner>)` and
   `-PassThru`, adding `-WindowStyle Hidden` only when `$IsWindows`;
-  `<tag>.pid` holds the started process's id. `<inner>` is the inner
-  script, UTF-16LE, base64-encoded, and every value it carries (the
+  `<tag>.pid` holds the started process's id. No process the launch starts
+  (a `caffeinate` included) holds the caller's standard streams, as
+  `run.sh`'s subshell runs with its own on `/dev/null`: `Start-Process` is
+  given `-RedirectStandardInput`, `-RedirectStandardOutput`, and
+  `-RedirectStandardError`, three distinct paths (it refuses one path named
+  twice), none of them one of the five files. Why: without them the child
+  inherits the caller's stdout and stderr, so a caller that reads the
+  launch's output through a pipe — a command substitution, the Bash tool —
+  waits until the worker exits instead of getting the `started` line at
+  once (verified with pwsh 7.6.6 on macOS: a pipe-reading caller waited
+  out a six-second child without the three parameters and returned at
+  once with them). `<inner>` is the inner script, UTF-16LE,
+  base64-encoded, and every value it carries (the
   executable, the paths, the tag, the flag values) is embedded as a
   single-quoted PowerShell literal with each `'` doubled. The inner script
   sets its location to the cwd; reads the prompt with
@@ -335,8 +347,9 @@ PowerShell needs a different mechanism, this task names it.
   `pwsh -NoProfile -File` invocation; PowerShell 7; the six variables; the
   five files, the two timeline lines, and `<batch>-costs.txt` as the
   skill's; the always-passed flags; the Whys (the session id before the
-  start, `-EncodedCommand`, the Windows-only hidden window, `caffeinate`,
-  LF-only files, the self-test and its stub); that `run.ps1` is checked on
+  start, `-EncodedCommand`, the Windows-only hidden window, the redirected
+  standard streams, `caffeinate`, LF-only files, the self-test and its
+  stub); that `run.ps1` is checked on
   macOS only — a parse and the self-test — with no hang-up protection
   there, since `run.sh` is the driver on macOS and Linux; the exit codes.
 
@@ -348,9 +361,10 @@ PowerShell needs a different mechanism, this task names it.
   prints 1.
 - The parse check (Context) prints `parse errors: 0` and exits 0, and its
   control exits 1.
-- From the repository root and again from `$TMPDIR`:
-  `pwsh -NoProfile -File <absolute path>/run.ps1 --self-test > "$TMPDIR/ps1-selftest.out" 2>&1; rc=$?`
-  gives `rc` 0, and the output holds the line `self-test passed`.
+- From the repository root, the form the release checklist carries,
+  `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test > "$TMPDIR/ps1-selftest.out" 2>&1; rc=$?`,
+  and from `$TMPDIR` the same command with the script's absolute path,
+  each give `rc` 0, and the output holds the line `self-test passed`.
 - With `AUTOPILOT_CLAUDE` pointed at a `.ps1` under `$TMPDIR` that prints
   the built-in stub's JSON, sleeps one second, and exits 3, the same
   command gives `rc` 1 and the output names `.exit`.
@@ -363,6 +377,16 @@ PowerShell needs a different mechanism, this task names it.
   which shows the stub ran and not the installed `claude`; no file the driver wrote there contains a carriage
   return (`grep -c $'\r'` prints 0 on the `.session`, `.pid`, and `.exit`
   files and the timeline).
+- A launch read through a pipe returns while its worker runs. With
+  `AUTOPILOT_LOGS` set to a fresh directory under `$TMPDIR`,
+  `AUTOPILOT_CLAUDE` pointed at a `.ps1` under `$TMPDIR` that sleeps 20
+  seconds and exits 0, and a one-line prompt file under `$TMPDIR`,
+  `out=$(pwsh -NoProfile -File <absolute path>/run.ps1 pipe-s1 "$TMPDIR" <prompt file>); rc=$?`
+  gives `rc` 0 and `out` starting `started pipe-s1 pid`; right after it
+  returns, `pipe-s1.exit` is absent from that logs directory, and within
+  60 seconds it reads `0`. A launch whose processes hold the caller's
+  stdout returns only after the stub exits, with `.exit` already written,
+  so this check can fail.
 - `grep -cF -- '<string>' plugins/kenspc/skills/autopilot/scripts/run.ps1`
   prints at least 1 for each of `Start-Process`, `-EncodedCommand`,
   `-WindowStyle Hidden`, `$IsWindows`, `-PassThru`, `Get-Content -Raw`,
@@ -495,9 +519,10 @@ modify no document outside the list.
   terminated when the launching shell is closed.
 - Not exercised here, and left to the Windows acceptance (the roadmap
   line): `run.ps1` on Windows at all, including native argument passing of
-  the `--settings` JSON value through a `.cmd` shim, the hidden window, the
-  child's independence from the launching shell, and the CRLF behavior the
-  LF-only writes guard against.
+  the `--settings` JSON value through a `.cmd` shim, the hidden window and
+  the redirected standard streams together, the child's independence from
+  the launching shell, and the CRLF behavior the LF-only writes guard
+  against.
 - On editing plugin files: a headless session under
   `--permission-mode bypassPermissions` edits the plugin's files as any
   other (CLAUDE.md § Development Workflow); a session sees a plugin edit
