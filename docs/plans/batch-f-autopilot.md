@@ -1227,6 +1227,28 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   of it costs a worker session; the main session's reviewer report lists
   it as a candidate for the next acceptance of this skill — not a roadmap
   line (F-14). The release commit.
+- **CL24** — The second acceptance round, cut by the user to simple checks
+  and two runs stopped by a small budget (the brief entry through S1–S3,
+  plugin mode through S2 and a capped S3), settled two findings. F5: with
+  CL10's fix in the tree, both headless runs printed every launch line
+  but left the settings line in the state file alone and three return
+  lines unprinted. Behavior deviation, not a second fix of the wording:
+  the instruction and its reason are in the skill, and a headless run
+  still writes the same facts to the state file instead. The release
+  checklist's row 11 therefore reads the run from the artifacts — the
+  settings line from `<batch>-state.md`, the order of launches and
+  returns from the timeline's `start` / `end` lines and each `<tag>.exit`
+  — rather than from the assistant's text, as the Plugin Design Lessons
+  put transitions on artifacts; `plugins/kenspc/README.md` § Known
+  behavior and the CHANGELOG's Known behavior say that a headless run may
+  leave the settings line and return lines in the state file only. The
+  spec's case 1 criterion reads the same way. F6: row 11's and the
+  CHANGELOG's "`plugin` mode was exercised once, in the acceptance
+  record" overstate the cut run; both say that plugin mode was exercised
+  up to its second worker (the `--plugin-dir` passing and the mode
+  detection), and that its nested acceptance, record, and release commit
+  have not run. Plugin defect in the text. Steps 2.2–2.4; Testing
+  Strategy (case 1).
 
 ## Open Questions
 
