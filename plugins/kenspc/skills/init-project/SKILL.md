@@ -177,7 +177,11 @@ a downloads folder, and a `git init` there puts them in a repository nobody
 chose. On yes, the run goes on as for an empty directory, the answer
 standing as Phase 1's answer; a yes that declines the `git init` goes on
 without git, as a no in Phase 1 does. The files that were already here are
-not staged by any commit the run makes.
+not staged by any commit the run makes, except one the run changed — a
+`.gitignore` it appended to, a CLAUDE.md it gave the import line — which is
+committed whole and marked on the file list as there before the run. Why:
+the new repository has no earlier version of that file for the run's lines
+to go on top of.
 
 **Inside another repository.** Ask whether this directory is a new app of
 the repository above it, or a project of its own. A new app gets only this
@@ -273,10 +277,12 @@ official generator and committed.
 
 **Inputs**: the app list from Phase 2; the tools Phase 0 found.
 
-**DONE when** every app whose directory does not exist yet, or is empty,
-was offered scaffolding, and each app the user chose has its scaffold
-commit — or the reason it has none is recorded for the final message. An
-app that already has files is not offered scaffolding.
+**DONE when** every app whose directory does not exist yet, or holds
+nothing but `.git` and what Phase 0 counts as empty, was offered
+scaffolding, and each app the user chose has its scaffold commit — or the
+reason it has none is recorded for the final message. An app that already
+has files is not offered scaffolding. Why `.git` does not count: a single
+app's directory is the repository root, which holds `.git` from Phase 1 on.
 
 Ask, for each such app, whether to scaffold it and with which generator —
 the one the stack's official documentation names, offered and never
@@ -288,10 +294,15 @@ no scaffolding still gets every document, its commands `TBD(init):`.
 - **No generator command in this skill.** Before running a generator, read
   its `--help` or its official documentation for the current command, its
   options, its version, and how to run it without interactive prompts, and
-  choose the options from the user's answers. Why: generators change their
-  commands, options, and versions between releases, for the same reason the
-  plugin names no model: a command copied into a skill goes stale without
-  an error.
+  choose the options from the user's answers — never one that overwrites or
+  empties a directory. Why: generators change their commands, options, and
+  versions between releases, for the same reason the plugin names no model:
+  a command copied into a skill goes stale without an error.
+- **A generator that fails** leaves its output where it is, or it moves to
+  `.trash/` the way a generator's `.git` does below; nothing is deleted, the
+  app gets no scaffold commit, and the final message reports the error.
+  Why: a partial output is the evidence of what went wrong, and a delete
+  cannot be undone.
 - **A missing tool.** When a tool the generator needs (an SDK, a runtime)
   is not on the PATH, that app is not scaffolded: say what is missing and
   where its official installer is, install nothing, and ask whether to go
@@ -322,13 +333,16 @@ After each generator run, three things it may have left are checked:
 - **A `.git` directory it created** inside the app's directory. Ask whether
   to move it out. On yes, move it to `.trash/<app>-git/` at the project root
   (with the next free `-<n>` suffix when that exists) and make sure
-  `.trash/` is in `.gitignore`; nothing is deleted. In a session that cannot
-  ask (a system reminder to work without stopping), leave it in place and
-  say so in the final message; a no leaves it the same way. An app whose
-  `.git` stays gets no scaffold commit, and the final message says why: git
-  would record its directory as an embedded repository, not as its files.
-  Why a move, not a delete: the directory may hold the generator's own first
-  commit or hooks, and a move can be undone.
+  `.trash/` is in `.gitignore`; nothing is deleted. Why a move, not a
+  delete: the directory may hold the generator's own first commit or hooks,
+  and a move can be undone. In a session that cannot ask (a system reminder
+  to work without stopping), leave it in place and say so in the final
+  message; a no leaves it the same way. An app whose `.git` stays gets no
+  scaffold commit, and its AGENTS.md and CLAUDE.md, written in Phase 6,
+  stay out of the documentation commit; the final message names them as
+  written and not committed. Why: git records that directory as an
+  embedded repository, not as its files, and refuses a pathspec inside it,
+  which would fail the whole commit.
 - **A `.gitignore` it replaced.** Before running a generator in a directory
   that already has a `.gitignore`, note the file's content; afterwards, the
   noted lines stand as they were, in order, and the generator's lines they
@@ -337,15 +351,22 @@ After each generator run, three things it may have left are checked:
 
 **The scaffold commits.** Each scaffolded app is committed alone, before
 the documentation commit: `chore: scaffold <app>`, adapted to the
-repository's commit convention (Phase 6), staging the app's directory — or,
-for a single app at the root, the paths the generator created, as the
-status before and after its run shows — passed to `git commit` as a
-pathspec. Why one commit per app, ahead of the documents: the generator's
-output is not the run's own writing, and a diff of it alone is readable;
-the documents then describe files already in history. Why the pathspec: it
-keeps anything the user had staged out of the commit. A commit that fails
-stops the run as § Confirm and commit describes. Without git (a no in
-Phase 1), the apps are scaffolded and nothing is committed.
+repository's commit convention (Phase 6). It stages what the generator
+wrote, as the status before and after its run shows — the app's directory,
+or for a single app at the root the paths the generator created, and any
+path it wrote outside them, which the file list names — passed to
+`git commit` as a pathspec. Why one commit per app, ahead of the documents: the
+generator's output is not the run's own writing, and a diff of it alone is
+readable; the documents then describe files already in history. Why the
+pathspec: it keeps anything the user had staged out of the commit. Before
+staging, the app's status is read for a directory the stack's tools
+restore or build — a package install directory, a compiler's output — and
+each one git does not already ignore is appended to the root `.gitignore`
+(only appended) and named on the file list. Why: such a directory is
+regenerated on every machine, can carry this machine's paths, and buries
+the readable diff. A commit that fails stops the run as § Confirm and
+commit describes. Without git (a no in Phase 1), the apps are scaffolded
+and nothing is committed.
 
 ## Phase 4: Rescan, interview rounds 3–5
 
@@ -474,16 +495,25 @@ or at a failing commit, and the final message says which.
 | `CHANGELOG.md` | `CHANGELOG.md.tmpl` | Only when a versioning scheme was chosen — SemVer or CalVer, not none and not TBD |
 | `docs/backlog/README.md` | `backlog-README.md.tmpl` | When the backlog is C |
 | `apps/<name>/AGENTS.md` and `apps/<name>/CLAUDE.md` | `app-AGENTS.md.tmpl`, `app-CLAUDE.md.tmpl` | For each app of a monorepo |
-| `.gitignore` | — | Always: `.kenspc/` and `CLAUDE.local.md` appended, and `.trash/` when Phase 3 used it, each only when that exact line is missing |
+| `.gitignore` | — | Always: `.kenspc/` and `CLAUDE.local.md` appended, and `.trash/` when Phase 3 used it, each only when `.gitignore` does not already ignore it |
 
 "Always" means wherever no such file exists: nothing that exists is
 overwritten or edited, except a README a generator wrote in this run, the
 lines appended to `.gitignore` (in its own line endings, after a final
 newline it lacks), and the one line an existing CLAUDE.md gains on a yes.
 Why: an existing file is the user's, and the run cannot tell which of its
-lines were deliberate. `docs/architecture/` is a folder so that the
-overview can later be split into `<topic>.md` files beside it without a
+lines were deliberate. A `README*` or `CHANGELOG*` of any name and case
+(`readme.md`, `README.rst`, `Changelog`) counts as that file, and the
+Documents table names it as it is. `docs/architecture/` is a folder so that
+the overview can later be split into `<topic>.md` files beside it without a
 rename.
+
+`.gitignore` already ignores an entry when `git check-ignore -q` exits 0 on
+a path under it (`.kenspc/runs/probe`, `CLAUDE.local.md`, `.trash/probe`;
+none need exist) and `git check-ignore -v` names `.gitignore` as the
+source; without git, when a line of it, `\r` stripped, is the entry. Why:
+git's matching reads a CRLF file and an equivalent pattern (`/.kenspc/`) as
+meant, and a rule in the user's global excludes does not reach a teammate.
 
 Nothing else is written:
 - `docs/briefs/`, `docs/plans/`, and `docs/tasks/` — the skills that write
@@ -539,14 +569,13 @@ skill. A file this list gains keeps to that.
 - No secret value goes into any file — no key, token, password, or
   connection string, even one the user types into an answer. The
   deployment document names where each secret lives (a vault's name, a
-  secret's name), never its value. Why: history keeps every committed line,
+  secret's name), never its value, and a remote's URL is written without the
+  user part an `https://` URL may carry (`https://<token>@github.com/…`
+  becomes `https://github.com/…`). Why: history keeps every committed line,
   so a committed secret is permanent.
 - AGENTS.md holds nothing the code already says: no directory tree, no
   dependency list. Why: those go stale in the file while staying right in
   the code, and every session pays for them.
-- Budget at init: the root AGENTS.md and CLAUDE.md together at most 80
-  lines, and each app's pair at most 40. The comment states 200 as the
-  long-term ceiling.
 
 ### An existing CLAUDE.md
 
@@ -563,56 +592,84 @@ AGENTS.md is therefore not yet loaded by Claude Code, and that the line
 user's, and a model has been following it as written; the import is the one
 change that makes AGENTS.md load, and it changes nothing else.
 
+AGENTS.md already loads when the two are one file — one a symbolic link to
+the other, which `[ AGENTS.md -ef CLAUDE.md ]` tells — or when a line of
+CLAUDE.md, `\r` stripped, is `@AGENTS.md`: then nothing is asked, CLAUDE.md
+is not written, and the final message says AGENTS.md already loads. Why: a
+write through the link lands in the user's AGENTS.md, which would then
+import itself, and a second import loads nothing new.
+
 ### Checks
 
-Run on the files the run wrote or changed, before the commit and whether
-or not a commit follows:
+Run before the commit, whether or not a commit follows, on what this run
+wrote: the files it created, the lines it added to a file already there,
+and the markers a rerun replaced. Lines are compared with any `\r`
+stripped and counted per file (`grep -c ''`). Why: a CRLF file, or one
+without a final newline, otherwise reads as failing or one line short.
 
-- The line budget: `cat AGENTS.md CLAUDE.md | wc -l` is at most 80, and
-  each app's pair at most 40. An existing CLAUDE.md that only gained the
-  import is left out of the count, since the run could not shorten it, and
-  its combined count is reported as § An existing CLAUDE.md says.
+- The line budget, on the files of each pair the run created: the root
+  pair at most 80 lines (AGENTS.md alone beside a CLAUDE.md already there),
+  each app's pair at most 40. A rerun holds instead the 200-line ceiling
+  that the comment states, or a count no higher than before it.
 - Each CLAUDE.md the run wrote or gave the import has `@AGENTS.md` as its
   first line.
 - Each AGENTS.md the run wrote opens with the HTML comment holding
   `kenspc-init template: 1` and the admission rule's three conditions.
-- Every path in the first column of the Documents table exists.
-- No line holds a value that reads as a secret: a private key block
-  (`-----BEGIN … PRIVATE KEY-----`); a token with a known prefix (`ghp_`,
-  `github_pat_`, `glpat-`, `xoxb-`, `sk-`, `AKIA`, `AIza`) followed by its
-  body; a connection string carrying `Password=`, `Pwd=`, `AccountKey=`, or
-  `SharedAccessKey=`, or a URL with a password in it; a key, token, secret,
-  or password label followed by a long opaque value. A secret's name or its
-  store's name is not a value.
-- Every `TBD` in the files is `TBD(init): <text>` — a search for `TBD` finds
+- Every path in the first column of a Documents table the run wrote exists
+  (for an `apps/*/AGENTS.md` row, each app's).
+- No line the run wrote holds a value that reads as a secret: a private key
+  block (`-----BEGIN … PRIVATE KEY-----`); a token with a known prefix
+  followed by its body (`gh[pousr]_`, `github_pat_`, `glpat-`,
+  `xox[abposr]-`, `xapp-`, `sk-`, `sk_live_`, `rk_live_`, `npm_`, `AKIA`,
+  `AIza`); a JSON web token (`eyJ…`, three dot-separated parts); a
+  connection string or URL carrying `Password=`, `Pwd=`, `AccountKey=`,
+  `SharedAccessKey=`, or `sig=`, or a user part
+  (`https://<user>:<password>@…`, `https://<token>@…`); a key, token,
+  secret, or password label followed by a long opaque value. A secret's
+  name or its store's name is not a value.
+- Every `TBD` the run wrote is `TBD(init): <text>` — a search for `TBD` finds
   no other form — and no `{{` of a template slot is left.
-- `.gitignore` holds `.kenspc/` and `CLAUDE.local.md`, each as a line of its
-  own.
+- `.gitignore` ignores `.kenspc/` and `CLAUDE.local.md`, probed as § Files
+  says.
 
-A check that fails is fixed, and every check runs again; a result that
-fails a check is not committed. Why: no reviewer reads these files, and
-each check guards a way they fail without an error — an AGENTS.md too long
-to load in every session, a CLAUDE.md that no longer imports it, a table
-naming a file that is not there, a marker a rerun cannot find, a secret
-that history keeps.
+A check that fails on what the run wrote is fixed, and every check runs
+again; a result that fails one is not committed. A root AGENTS.md over its
+budget moves a rule to the topic document it concerns, or folds the per-app
+rows of its Documents table into one `apps/*/AGENTS.md` row; the run writes
+no path-scoped rule, since those live under `.claude/`. A check that fails
+on a line that was there before the run — the user's own `TBD`, a
+secret-looking value in their CLAUDE.md, a table row the team wrote — is
+not fixed: the final message names the file and the line. Why: no reviewer
+reads these files, and each check guards a way they fail without an error —
+an AGENTS.md too long to load in every session, a CLAUDE.md that no longer
+imports it, a table naming a file that is not there, a marker a rerun
+cannot find, a secret that history keeps; and a line the user wrote is not
+the run's to change.
 
 ### Confirm and commit
 
 **The file list.** List every file written or changed, marked created,
-appended to, or given the import line, and name each that held uncommitted
-changes of the user's before the run, since the commit carries them. Ask
-the user to confirm or adjust; apply adjustments, run the checks again, and
-list again. In a session that cannot ask (a system reminder to work without
-stopping), present the list and commit it as presented. On a "no", nothing
-is committed; the files stay in the tree, and the final message says so.
-Why: no reviewer runs on these files, so the user's look at the list is the
-gate before they enter history.
+appended to, or given the import line. Mark as well each file that held
+uncommitted changes of the user's before the run (Phase 0's status), since
+a commit takes the file whole; each path git ignores (`git check-ignore -q`
+exits 0) as written, ignored, and not committed — never added with
+`git add -f`; and each file Phase 3 keeps out of the commit. Ask the user
+to confirm or adjust; apply adjustments, run the checks again, and list
+again. In a session that cannot ask (a system reminder to work without
+stopping), present the list and commit it as presented, leaving out each
+file that held uncommitted changes, which the final message names. On a
+"no", nothing is committed; the files stay in the tree, and the final
+message says so. Why: no reviewer runs on these files, so the user's look
+at the list is the gate before they enter history; the user's unfinished
+work goes in only on that look, and an ignored path is one the user chose
+to keep out.
 
 **The commit.** `docs: initialize project documentation`, staging exactly
-the listed files, passed to `git commit` as a pathspec. An existing
-repository's commit convention shapes this subject and the scaffold ones:
-the one it writes down (in its CLAUDE.md, AGENTS.md, or CONTRIBUTING), or,
-failing that, the pattern its recent commit subjects consistently share.
+the listed files not marked to stay out, passed to `git commit` as a
+pathspec. An existing repository's commit convention shapes this subject
+and the scaffold ones: the one it writes down (in its CLAUDE.md, AGENTS.md,
+or CONTRIBUTING), or, failing that, the pattern its recent commit subjects
+consistently share.
 Why: the history keeps one style, and the subjects given here are the
 default for a repository that has none.
 
@@ -727,8 +784,8 @@ these gates.
 | A generator's `.git` | Move it to `.trash/`? | Left in place, named in the final message; no scaffold commit for that app |
 | Hosting, with a remote | Is this the project's host? | The remote as it reads |
 | No remote | Create a GitHub repository, its owner, its name | None created |
-| An existing CLAUDE.md | Add `@AGENTS.md` at its top? | Left as it is; the final message says AGENTS.md is not yet loaded |
-| The file list | Confirm or adjust | Committed as presented |
+| An existing CLAUDE.md | Add `@AGENTS.md` at its top? (Not asked when AGENTS.md already loads) | Left as it is; the final message says AGENTS.md is not yet loaded |
+| The file list | Confirm or adjust | Committed as presented, less each file that held uncommitted changes |
 | A commit fails | How to go on | Stop and report |
 | Push | Push now? | Nothing pushed |
 | Labels, backlog A | Create the missing `debt` and `found-by-agent`? | None created; listed in the final message |
@@ -749,12 +806,15 @@ The final message gives:
 - every default a session that cannot ask took in place of a question;
 - what is left for the user, whichever applies: an existing CLAUDE.md
   without the import (AGENTS.md not yet loaded); an existing AGENTS.md left
-  without the template's sections; a generator's `.git` left in place; an
-  app not scaffolded, and why; the manual GitHub steps; the labels to
-  create; the lines a new app's outer repository's `.gitignore` lacks; the
-  files that were in a directory without git before the run, which no
-  commit carried; files left uncommitted after a "no"; and, after a rerun,
-  a consequence of an answer that was not made.
+  without the template's sections; a generator's `.git` left in place, or a
+  generator that failed and where its output is; an app not scaffolded, and
+  why; the manual GitHub steps; the labels to create; the lines a new app's
+  outer repository's `.gitignore` lacks; the files written and not
+  committed — an app's pair beside a kept `.git`, an ignored path, a file
+  that held uncommitted changes, every file after a "no"; the files that
+  were in a directory without git before the run, which no commit carried;
+  a line of the user's that a check flagged; and, after a rerun, a
+  consequence of an answer that was not made.
 
 Next step: `/kenspc-init` again once some `TBD(init):` markers have
 answers, and `/kenspc-brief` or `/kenspc-plan` for the first piece of work.
