@@ -221,8 +221,11 @@ exist yet.
   release preparation". Release-checklist row 1 counts 9 commands, and a
   new row 11, `/kenspc-autopilot <spec>`, runs one headless `repo`-mode
   batch on a one-task seed (about USD 10–20 at the batch E per-session
-  figures; `plugin` mode is exercised once, in the batch's acceptance
-  record, not per release), and also requires that
+  figures; `plugin` mode is not run per release, and the batch's
+  acceptance record ran it up to its second worker — the mode detection
+  and the `--plugin-dir` passing — while its nested acceptance, the record
+  that acceptance files, and its release commit have not run), and also
+  requires that
   `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test`
   prints `self-test passed` and exits 0, and that the same command with
   `AUTOPILOT_CLAUDE` pointed at a `.ps1` stub that prints the built-in
