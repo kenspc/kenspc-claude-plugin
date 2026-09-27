@@ -271,6 +271,8 @@ function Invoke-Launch {
 
     $sessionFile = Join-Path $logsPath "$Tag.session"
     $pidFile = Join-Path $logsPath "$Tag.pid"
+    $jsonFile = Join-Path $logsPath "$Tag.json"
+    $errFile = Join-Path $logsPath "$Tag.err"
     $exitFile = Join-Path $logsPath "$Tag.exit"
     $timeline = Join-Path $logsPath "$batch-timeline.log"
 
@@ -321,8 +323,8 @@ function Invoke-Launch {
         SETTINGS   = ConvertTo-Literal $SettingsValue
         OPTIONAL   = $optional
         EXE        = ConvertTo-Literal $exe
-        JSON       = ConvertTo-Literal (Join-Path $logsPath "$Tag.json")
-        ERR        = ConvertTo-Literal (Join-Path $logsPath "$Tag.err")
+        JSON       = ConvertTo-Literal $jsonFile
+        ERR        = ConvertTo-Literal $errFile
         EXIT       = ConvertTo-Literal $exitFile
         TIMELINE   = ConvertTo-Literal $timeline
     }
@@ -334,6 +336,13 @@ function Invoke-Launch {
     $launchOut = Join-Path $logsPath "$Tag.launch.out"
     $launchErr = Join-Path $logsPath "$Tag.launch.err"
     Write-LfFile $launchIn ''
+    # The worker's two output files are emptied here, as run.sh's redirection
+    # empties them when its subshell starts: the inner script opens them only
+    # at the worker's call, so a failure before it (the location, the prompt
+    # read) would leave an earlier launch's .json under the tag, read as this
+    # worker's result, and add its reason to that launch's .err.
+    Write-LfFile $jsonFile ''
+    Write-LfFile $errFile ''
     # A stale exit file from an earlier launch under the same tag would read as
     # this worker's completion before it starts; nothing else is removed.
     try { [System.IO.File]::Delete($exitFile) } catch { Stop-Driver "cannot remove the stale $exitFile" }
@@ -448,7 +457,8 @@ function Invoke-Refused {
 # equal, byte for byte, to that prompt and the settings JSON; a resume
 # launch through the command line with the three optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
-# batch-name default with a stale .exit removed at launch; a launch whose cwd
+# batch-name default with a stale .exit removed and a stale .json and .err
+# emptied at launch; a launch whose cwd
 # and logs directory hold a space, a single quote, and a right single
 # quotation mark; a launch whose cwd,
 # prompt file, and logs directory are relative to the caller's location,
@@ -836,15 +846,25 @@ exit 0
     # right after the launch and holds this worker's status after the wait. A
     # stale one would read as this worker's completion before it starts, with
     # an empty .json, so the worker would be counted dead and resumed beside
-    # the live one.
+    # the live one. A stale .json and .err are in place too, and hold none of
+    # their earlier content right after the launch: a worker whose script
+    # failed before its own call would otherwise leave an earlier launch's
+    # result, read as its own.
     $batchTag = 'self-s-test-s1'
     $env:AUTOPILOT_BATCH = $null
     $batchExit = Join-Path $logsDir "$batchTag.exit"
     $batchTimeline = Join-Path $logsDir 'self-s-test-timeline.log'
     Write-LfFile $batchExit "7`n"
+    $staleFiles = @((Join-Path $logsDir "$batchTag.json"), (Join-Path $logsDir "$batchTag.err"))
+    foreach ($stale in $staleFiles) { Write-LfFile $stale "stale content`n" }
     $null = Invoke-Launch $batchTag $base $promptFile ''
     if (Test-Path -LiteralPath $batchExit) {
         Stop-SelfTest "a stale $batchExit survived the launch and would read as this worker's completion"
+    }
+    foreach ($stale in $staleFiles) {
+        if (Test-FileLine $stale '^stale content$') {
+            Stop-SelfTest "$stale still holds an earlier launch's content after the launch"
+        }
     }
     Wait-ExitFile $batchExit
     if ((Read-FileText $batchExit) -cne '0') { Stop-SelfTest "$batchExit does not read 0 after the wait" }
