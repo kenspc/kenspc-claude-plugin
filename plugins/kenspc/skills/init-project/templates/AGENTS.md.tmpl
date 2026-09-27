@@ -10,7 +10,10 @@ or, for a rule specific to Claude Code, in a path-scoped rule.
 -->
 # {{project name}}
 
-{{one line: what the project is and who it is for}} Purpose, users, scope, and non-goals: `docs/product.md`.
+## Project
+
+Purpose, users, scope, and non-goals: `docs/product.md`.
+{{one line: what the project is and who it is for}}
 
 ## Commands
 
@@ -34,7 +37,7 @@ or, for a rule specific to Claude Code, in a path-scoped rule.
 | `docs/ui/design-system.md` | Visual style, color roles, typography, components, layout, elevation, do and don't, responsive behavior; where the tokens live | The design system changes, or a token file moves |
 | `docs/release.md` | Versioning scheme, version file, when to bump, changelog, tags, who releases | A release rule changes |
 | `docs/deployment.md` | Environments, how deploys happen, where configuration and secrets live, migrations, rollback, monitoring | An environment, the pipeline, a secret's location, or a deployment policy changes |
-| `CHANGELOG.md` | What each release changed | Every change that ships | {{when: CHANGELOG.md is written}}
+| `CHANGELOG.md` | What each release changed | Every change that ships | {{when: a changelog exists after this run}}
 | `{{apps/<name>/AGENTS.md}}` | That app's commands and rules; the CLAUDE.md beside it imports this file | That app's commands or rules change | {{when: a monorepo — one row per app}}
 
 `docs/briefs/`, `docs/plans/`, `docs/tasks/`, and `docs/backlog/` are not durable documents; files in the first three are deleted once their work is done. {{when: the backlog is files}}

@@ -426,7 +426,9 @@ no repository is created and nothing is pushed. On yes:
   `gh repo create --help`; nothing is pushed here. Why the owner is asked
   every time: one person creates both personal and organization
   repositories, and one created under the wrong owner has to be
-  transferred or deleted.
+  transferred or deleted. In a session that cannot ask (a system reminder
+  to work without stopping), this question does not come up, since no
+  repository is created.
 - With `gh` missing or not logged in, give the manual steps instead —
   create the repository on GitHub, then `git remote add origin <url>`, and
   push when ready — and the backlog is C. Why C, though a GitHub remote may
@@ -522,7 +524,9 @@ Nothing else is written:
   `docs/guides/`. That line is not a Documents row until a guide exists.
 - Nothing under any `.claude/` directory. Why: Claude Code treats it as a
   protected path, and a write there fails in an unattended session.
-- No CONTRIBUTING and no roadmap file.
+- No CONTRIBUTING and no roadmap file. Why: how to work on the project is
+  AGENTS.md's Workflow, which a CONTRIBUTING file would repeat, and a
+  roadmap holds plans the interview does not ask about.
 
 None of these file names matches the plugin's reminder hook — a path under
 `docs/plans/`, `docs/briefs/`, `docs/tasks/`, `docs/guides/`, or
@@ -544,6 +548,10 @@ skill. A file this list gains keeps to that.
   left out; a section left with no line is dropped with its heading. No
   placeholder paragraph is written. Why: AGENTS.md loads into every
   session, so an unknown costs one line there at most.
+- Every slot sits at the end of its line or alone in a table cell, so a
+  marker runs from `TBD(init):` to the end of its line or its cell. Why: a
+  rerun replaces the marker and nothing else, and the text before it on the
+  line is fixed text or another answer.
 - A line ending in `{{when: <condition>}}` is written, without the tag and
   the space before it, when the condition holds, and left out when it does
   not.
@@ -563,9 +571,12 @@ skill. A file this list gains keeps to that.
 - The two safety rules are always in the root AGENTS.md's Rules, their
   wording adjusted to the project, such as its environment names: no
   deploying to, migrating, or reading the data of staging or production,
-  and no secret in the repository. The Rules hold twelve at most; each
-  further rule passes the admission rule in the file's comment, and one that
-  does not goes to the topic document it concerns or to an app's AGENTS.md.
+  and no secret in the repository. Why: a deploy, a migration, or a read of
+  shared data does damage no revert of the code undoes, and history keeps a
+  committed secret. The Rules hold twelve at most, since AGENTS.md loads
+  into every session; each further rule passes the admission rule in the
+  file's comment, and one that does not goes to the topic document it
+  concerns or to an app's AGENTS.md.
 - No secret value goes into any file — no key, token, password, or
   connection string, even one the user types into an answer. The
   deployment document names where each secret lives (a vault's name, a
@@ -696,7 +707,8 @@ carries the complete repository — scaffolds and documents together.
 
 **Labels**, for backlog A. First read the repository's labels
 (`gh label list`). Ask whether to create whichever of `debt` and
-`found-by-agent` is missing; no other label is created. When `bug` or
+`found-by-agent` is missing; no other label is created, since these four
+are the ones AGENTS.md's backlog line names. When `bug` or
 `enhancement` is missing — an organization can replace GitHub's default
 labels — say so, and leave it to the user. In a session that cannot ask (a
 system reminder to work without stopping), no label is created, and the
@@ -708,14 +720,30 @@ message lists `debt` and `found-by-agent` the same way.
 
 ## A new app in another repository
 
+**Goal**: this directory's AGENTS.md and CLAUDE.md pair, and nothing
+outside it.
+
+**Inputs**: Phase 0's scan; the outer repository's root AGENTS.md, if any;
+the DESCRIPTION.
+
+**DONE when** the pair is written, its checks pass, the user confirmed the
+file list, and the commit exists — or the run ended at a "no" to the list
+or at a failing commit, and the final message says which.
+
 When Phase 0's question gets "a new app", the run writes only this
 directory's pair: `AGENTS.md` from `app-AGENTS.md.tmpl` and `CLAUDE.md` from
-`app-CLAUDE.md.tmpl`, together at most 40 lines. No `git init`, no
-scaffolding, no GitHub step, no topic document, no backlog, and no change
-to the outer repository's `.gitignore`: the final message names which of
-`.kenspc/` and `CLAUDE.local.md` it lacks, for the user to add. Why: the
-outer repository is the user's project as it stands, and this run was
-started for one directory in it.
+`app-CLAUDE.md.tmpl`, together at most 40 lines. What is already here
+follows the rules of an existing repository: nothing is overwritten
+(§ Files), an AGENTS.md without the template marker is left as Phase 0
+says, and a CLAUDE.md goes through § An existing CLAUDE.md. The lines that
+point to the root's conventions are written only when the outer
+repository's root AGENTS.md carries the template marker. Why: elsewhere
+there are no such conventions to point to. No `git init`, no scaffolding,
+no GitHub step, no topic document, no backlog, and no change to the outer
+repository's `.gitignore`: the final message names which of `.kenspc/` and
+`CLAUDE.local.md` it lacks (probed from its top level), for the user to
+add. Why: the outer repository is the user's project as it stands, and
+this run was started for one directory in it.
 
 The interview asks only what the pair holds: the app's name and one-line
 summary, its stack, and rules for this app only; its commands are read
@@ -736,9 +764,10 @@ AGENTS.md that carries the template marker, the documents its Documents
 table names, and each app's pair — and the DESCRIPTION.
 
 **DONE when** either holds:
-- No marker exists: nothing is changed, and the final message says so.
-- Every marker that got an answer has its line replaced by the answer, and
-  the run's diff changes no line that did not hold a marker.
+- No marker exists, or none got an answer: nothing is changed, and the
+  final message says so, with how many markers remain and in which files.
+- Every marker that got an answer is replaced by it, and the run's diff
+  changes no line that did not hold a marker.
 
 Ask about the markers grouped by file, in the interview's manner: one group
 per message, each skippable, a finding of a new scan offered as a suggested
@@ -747,9 +776,11 @@ ask (a system reminder to work without stopping), only the DESCRIPTION
 answers markers; when it answers none, nothing changes, and the final
 message says how many markers remain and in which files.
 
-- In an AGENTS.md or a CLAUDE.md, an answer replaces its marker's line with
-  one line. In a topic document it may take more lines — a table in place of
-  one marker line.
+- An answer replaces its marker only — from `TBD(init):` to the end of its
+  line or its table cell — and the text before the marker stays as it is.
+  In an AGENTS.md or a CLAUDE.md the answer fits on that line; in a topic
+  document a marker alone on its line may give way to more lines — a table
+  in place of one marker line.
 - A consequence that would change more than a marker — a CHANGELOG.md for a
   versioning scheme just chosen, a new Documents row — is not made; the
   final message names it for the user. Why: a rerun promises that only the
@@ -776,6 +807,7 @@ these gates.
 |---|---|---|
 | Files, no git | Is this the project directory, with `git init` here? | Stop; nothing is written |
 | Inside another repository | A new app of that repository, or a project of its own? | Stop; nothing is written |
+| New-app interview | The app's name, summary, stack, and rules | Not reached; the run stopped at Phase 0 |
 | Empty directory | `git init`, first branch `main`? | `git init`, first branch `main` |
 | Interview rounds 1–5 | Each round's questions | Not asked; the DESCRIPTION and the scan, then `TBD(init):` |
 | Scaffolding, per app | Scaffold it, and with which generator? | Not scaffolded |
