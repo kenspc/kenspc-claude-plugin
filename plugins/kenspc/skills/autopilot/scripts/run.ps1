@@ -540,10 +540,14 @@ exit 0
     }
     # A logs directory holding a wildcard character is refused before
     # anything is written, not left to fail in Start-Process after .session:
-    # the directory named, and not created.
+    # the directory named, and not created. The executable is the self-test's
+    # own stub, so a caller's missing one fails at the first launch, named,
+    # rather than here as an unnamed logs directory.
     $wildLogs = Join-Path $base 'logs [1]'
     $env:AUTOPILOT_LOGS = $wildLogs
+    $env:AUTOPILOT_CLAUDE = $failStub
     $refusal = Invoke-Refused $tag $base $promptFile
+    $env:AUTOPILOT_CLAUDE = $savedExe
     $env:AUTOPILOT_LOGS = $logsDir
     if ($null -eq $refusal -or (Test-Path -LiteralPath $wildLogs)) {
         Stop-SelfTest "a launch with the logs directory $wildLogs was not refused before writing, expected a refusal and no such directory"
@@ -862,7 +866,12 @@ exit 0
 
 try {
     $first = if ($args.Count -gt 0) { [string]$args[0] } else { '' }
-    if ($first -ceq '--self-test') { Invoke-SelfTest }
+    # A launch the self-test expected to start, refused or failed, is one of
+    # its wrong items: status 1 and a "self-test failed:" line, not the
+    # launch's status 2.
+    if ($first -ceq '--self-test') {
+        try { Invoke-SelfTest } catch { Stop-SelfTest $_.Exception.Message }
+    }
     if ($first -ceq '' -or $first -ceq '-h' -or $first -ceq '--help' -or $args.Count -lt 3) { Show-Usage }
     $resume = ''
     $i = 3
