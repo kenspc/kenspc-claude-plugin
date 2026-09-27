@@ -9,6 +9,134 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.0.0 — unreleased
+
+Batch G. An `init-project` skill and its `/kenspc-init [project description]`
+command set a project up for the kenspc chain in one run — an empty
+directory, a directory of files the user confirms is the project, a new app
+inside another repository, or an existing repository, where only the
+missing files are written. A scan comes first, then an interview in five
+skippable rounds, optional scaffolding with each stack's official
+generator, and an optional GitHub repository; the run writes `AGENTS.md` as
+the index, a `CLAUDE.md` that imports it, and long-lived topic documents,
+marking whatever nobody answered `TBD(init): <what is missing>`, checks
+them mechanically, lists them for the user to confirm, and commits. It has
+no review phase and no reviewer agent, and every question it asks has a
+branch for a session that cannot ask. The version number is the
+maintainer's decision; the architecture generation is unchanged, so every
+skill, the new one included, keeps `version: 3.0.0`. No new agent and no
+new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
+(`guards run: 10`, `self-tests run: 9`).
+
+### Added
+
+- **The init-project skill and `/kenspc-init`.** `skills/init-project/SKILL.md`
+  and `commands/kenspc-init.md` (`disable-model-invocation: true`; the
+  skill's description owns the routing, with English and Chinese trigger
+  phrases, and excludes questions about Claude Code's built-in `/init` and
+  about what "init" means). Eight phases in a fixed order — scan, git,
+  interview rounds 1–2, scaffolding, a rescan with rounds 3–5, GitHub and
+  the backlog, writing and committing, push and labels: scaffolding comes
+  before the documents so the commands are read from real files, the
+  GitHub step before them because the backlog convention depends on it,
+  and the push last so the first push carries the complete repository.
+  Effort follows the session.
+  - **Start points.** An empty directory gets `git init` with `main` as the
+    first branch (asked; done by default). A directory of files that is not
+    a repository is listed, and the run goes on only once the user confirms
+    it is the project. A directory inside another repository is asked
+    about: a new app of that repository gets only its own AGENTS.md and
+    CLAUDE.md pair, with no `git init`; a project of its own is advised to
+    move out first. An existing repository gets only the files it lacks. A
+    session that cannot ask stops, writing nothing, at the second and
+    third.
+  - **The interview.** In the user's language, five rounds — project;
+    shape and stack; UI; delivery; collaboration — each skippable. What the
+    argument or the scan answers is not asked, except the repository's
+    shape and its hosting, which are confirmed once; "use the defaults for
+    everything" ends the interview. The commands are read from
+    configuration files, never asked.
+  - **Scaffolding.** Offered per app and never done by default. No
+    generator command, option, or version is written into the skill: the
+    generator's `--help` or documentation is read before it runs. A missing
+    SDK or runtime is named, not installed. A monorepo puts each app under
+    `apps/<name>/`. A README the generator wrote is replaced with init's
+    version after one question; a `.git` directory it created is moved to
+    `.trash/` on a yes, with `.trash/` ignored and nothing deleted; a
+    `.gitignore` it replaced gets the existing lines back. Each scaffolded
+    app is committed alone (`chore: scaffold <app>`) before the
+    documentation commit.
+  - **GitHub and the backlog.** A GitHub repository is offered only when
+    there is no remote — private by default, its owner asked every time —
+    and is created with its remote set in one step, nothing pushed; without
+    `gh` installed and logged in, the skill gives the manual steps. A
+    GitHub remote gives backlog A, GitHub Issues labeled `bug`,
+    `enhancement`, `debt`, and `found-by-agent` (the last two created only
+    on a yes, after the existing labels are read); anything else gives
+    backlog C, one file per item under `docs/backlog/`, its format written
+    once in `docs/backlog/README.md`, with no status field.
+  - **The files.** `AGENTS.md` — an opening comment with the
+    `kenspc-init template: 1` marker, the line budget, and the
+    three-condition admission rule; then Project, Commands, Rules (twelve at
+    most, always with the two safety rules: no deploying to, migrating, or
+    reading the data of staging or production, and no secret in the
+    repository), Documents (a `Document | Holds | Changes when` table), and
+    Workflow (with `Version lives in <file> — rules in docs/release.md`).
+    `CLAUDE.md` — `@AGENTS.md` on its first line, then `## Claude Code`.
+    `README.md`, `docs/product.md`, `docs/architecture/overview.md`,
+    `docs/ui/design-system.md`, `docs/release.md`, `docs/deployment.md`;
+    `CHANGELOG.md` only for SemVer or CalVer; `docs/backlog/README.md` for
+    backlog C; an AGENTS.md and CLAUDE.md pair for each monorepo app; and
+    `.kenspc/` and `CLAUDE.local.md` appended to `.gitignore`. The templates
+    ship in `skills/init-project/templates/` as `*.tmpl`, none named
+    `CLAUDE.md` or `AGENTS.md`. The files are in English unless the user
+    asks otherwise, with the reason in the skill; the plugin still sets no
+    default language for task documents. The root pair stays within 80
+    lines at init and each app's pair within 40. Nothing is written under
+    `.claude/`, and no guide, CONTRIBUTING, or roadmap file is written;
+    AGENTS.md says guides go in `docs/guides/`, written by `/kenspc-guide`.
+  - **TBD, checks, and the commit.** A policy nobody answered is
+    `TBD(init): …`, never a default. Before the commit the skill checks the
+    line budget, CLAUDE.md's first line, AGENTS.md's opening comment, that
+    every path in the Documents table exists, that no value reads as a
+    secret, the TBD form, and the `.gitignore` lines; a failing check is
+    fixed first, and nothing that fails one is committed. The file list is
+    confirmed, then committed as `docs: initialize project documentation`,
+    following an existing repository's written or consistent commit
+    convention. Push and labels come last, each asked separately.
+  - **Existing files and reruns.** Nothing that exists is overwritten. An
+    existing CLAUDE.md gains only an `@AGENTS.md` first line, on a yes, the
+    rest byte-identical, and the combined line count and any visible
+    repetition are reported. A rerun in a project the skill set up changes
+    only the `TBD(init):` markers the user answers, and nothing when none
+    remains.
+
+### Changed
+
+- CLAUDE.md and both READMEs describe the init-project skill and its
+  command, and CLAUDE.md counts ten skills. CLAUDE.md's no-review pattern
+  gains init-project and what gates it; its layout tree gains the command,
+  the skill, and its `templates/` directory; its file-structure conventions
+  describe `templates/`; its writing rule on the cannot-ask sentence names
+  init-project's gates and interview rounds; and its language rule says
+  init-project's English default for the files it writes is separate from
+  the task-document rule. The plugin README gains a Project setup section,
+  a Setup path in Recommended Workflow, and `gh` under the recommended
+  requirements.
+
+### Known behavior
+
+- **An existing CLAUDE.md.** `/kenspc-init` adds only the `@AGENTS.md`
+  line, and only on a yes; a session that cannot ask leaves the file as it
+  is, so Claude Code does not load the new AGENTS.md until that line is
+  added, and the final message says so.
+- **Uncommitted edits in the documentation commit.** A `.gitignore` the
+  skill appended to, or a CLAUDE.md it gave the import line, is committed
+  whole, with any uncommitted edit of the user's in it; the file list names
+  each such file before the confirmation.
+- **Branches.** The plugin still creates no branch; the one branch it names
+  is the first branch of a repository `/kenspc-init` creates, `main`.
+
 ## 3.9.0 — 2026-09-27
 
 Batch F. An `autopilot` skill and its `/kenspc-autopilot <path to a spec or
