@@ -49,7 +49,12 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     CLAUDE.md pair, with no `git init`; a project of its own is advised to
     move out first. An existing repository gets only the files it lacks. A
     session that cannot ask stops, writing nothing, at the second and
-    third.
+    third. Git is asked before emptiness, from what `git rev-parse` prints
+    rather than by comparing paths, so an empty directory inside another
+    repository is the third start point; a directory holding only a file
+    browser's metadata counts as empty. The run stops in either session,
+    writing nothing, in a bare repository, inside a `.git` directory, or on
+    a detached HEAD.
   - **The interview.** In the user's language, five rounds — project;
     shape and stack; UI; delivery; collaboration — each skippable. What the
     argument or the scan answers is not asked, except the repository's
@@ -65,7 +70,12 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     `.trash/` on a yes, with `.trash/` ignored and nothing deleted; a
     `.gitignore` it replaced gets the existing lines back. Each scaffolded
     app is committed alone (`chore: scaffold <app>`) before the
-    documentation commit.
+    documentation commit, without the dependency and build directories its
+    tools restore, which are appended to `.gitignore`; an app whose `.git`
+    stays gets no scaffold commit, and its AGENTS.md pair stays out of the
+    documentation commit. No generator option that overwrites or empties a
+    directory is chosen, and a failed generator's output is kept, in place
+    or in `.trash/`.
   - **GitHub and the backlog.** A GitHub repository is offered only when
     there is no remote — private by default, its owner asked every time —
     and is created with its remote set in one step, nothing pushed; without
@@ -96,20 +106,28 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     `.claude/`, and no guide, CONTRIBUTING, or roadmap file is written;
     AGENTS.md says guides go in `docs/guides/`, written by `/kenspc-guide`.
   - **TBD, checks, and the commit.** A policy nobody answered is
-    `TBD(init): …`, never a default. Before the commit the skill checks the
-    line budget, CLAUDE.md's first line, AGENTS.md's opening comment, that
-    every path in the Documents table exists, that no value reads as a
-    secret, the TBD form, and the `.gitignore` lines; a failing check is
-    fixed first, and nothing that fails one is committed. The file list is
-    confirmed, then committed as `docs: initialize project documentation`,
-    following an existing repository's written or consistent commit
-    convention. Push and labels come last, each asked separately.
-  - **Existing files and reruns.** Nothing that exists is overwritten. An
+    `TBD(init): …`, never a default. Before the commit the skill checks
+    what it wrote — the line budget, CLAUDE.md's first line, AGENTS.md's
+    opening comment, that every path in the Documents table exists, that no
+    value reads as a secret, the TBD form, and the `.gitignore` lines; a
+    failing check is fixed first, and nothing that fails one is committed.
+    A line that was there before the run is never changed to pass a check:
+    the final message names it. The file list is confirmed, then committed
+    as `docs: initialize project documentation`, following an existing
+    repository's written or consistent commit convention; a path git
+    ignores is not committed, and a file that held uncommitted changes of
+    the user's is marked on the list, and left out of the commit by a
+    session that cannot ask. Push and labels come last, each asked
+    separately.
+  - **Existing files and reruns.** Nothing that exists is overwritten, and
+    a `README*` or `CHANGELOG*` of any name and case counts as existing. An
     existing CLAUDE.md gains only an `@AGENTS.md` first line, on a yes, the
     rest byte-identical, and the combined line count and any visible
-    repetition are reported. A rerun in a project the skill set up changes
-    only the `TBD(init):` markers the user answers, and nothing when none
-    remains.
+    repetition are reported; one that already imports AGENTS.md, or is a
+    symbolic link to it, is not asked about. A rerun in a project the skill
+    set up changes only the `TBD(init):` markers the user answers — each
+    marker ends its line or table cell, and an answer replaces the marker,
+    not the line — and nothing when none remains or none is answered.
 
 ### Changed
 
@@ -133,7 +151,8 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
 - **Uncommitted edits in the documentation commit.** A `.gitignore` the
   skill appended to, or a CLAUDE.md it gave the import line, is committed
   whole, with any uncommitted edit of the user's in it; the file list names
-  each such file before the confirmation.
+  each such file before the confirmation, and a session that cannot ask
+  leaves it out of the commit.
 - **Branches.** The plugin still creates no branch; the one branch it names
   is the first branch of a repository `/kenspc-init` creates, `main`.
 

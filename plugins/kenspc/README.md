@@ -246,14 +246,18 @@ you ask for another language, since coding agents and team members who join
 later read them.
 
 **Where it starts.** It scans first, then places the directory in one of
-four start points:
+four start points, asking git before looking at what the directory holds —
+an empty directory inside another repository is inside it:
 
 | Start point | In a session that can ask | In a session that cannot ask |
 |---|---|---|
-| An empty directory | Asks whether to `git init` (yes by default, first branch `main`) | `git init`, first branch `main` |
+| An empty directory, outside any repository (a file browser's `.DS_Store` or the like counts as empty) | Asks whether to `git init` (yes by default, first branch `main`) | `git init`, first branch `main` |
 | Files, but not a repository | Lists them and goes on only once you confirm this is the project | Stops, writing nothing |
-| Inside another repository | Asks: a new app of that repository — then only this directory's `AGENTS.md` and `CLAUDE.md` pair, with no `git init` — or a project of its own, which it suggests moving out first | Stops, writing nothing |
+| Inside another repository, empty or not | Asks: a new app of that repository — then only this directory's `AGENTS.md` and `CLAUDE.md` pair, with no `git init` — or a project of its own, which it suggests moving out first | Stops, writing nothing |
 | An existing repository | Writes only the files that are missing | The same |
+
+It also stops, writing nothing, in a bare repository or inside a `.git`
+directory, and on a detached HEAD, where a commit would belong to no branch.
 
 **The interview.** Five rounds, each one message, each skippable: the
 project (name, one line, users, scope, non-goals); shape and stack (one app
@@ -277,7 +281,11 @@ generator wrote is replaced with init's version after one question; a
 project root on your yes (and `.trash/` ignored), never deleted; a
 `.gitignore` it replaced gets your lines back, with its own appended. Each
 scaffolded app is committed alone (`chore: scaffold <app>`) before the
-documentation commit.
+documentation commit, without the dependency and build directories its
+tools restore, which are appended to `.gitignore` instead. An app whose
+`.git` you keep gets no scaffold commit, and its `AGENTS.md` pair is written
+but not committed; a generator that fails leaves its output in place or in
+`.trash/`, never deleted.
 
 **GitHub and the backlog.** With no remote, the skill offers to create a
 GitHub repository — private by default, its owner asked every time — with
@@ -291,7 +299,8 @@ drops an item deletes its file. Either way, AGENTS.md says that an
 interactive session adds a backlog item only with your agreement and an
 unattended run lists what it found in its report.
 
-**What it writes.** Only files that do not exist yet:
+**What it writes.** Only files that do not exist yet — a `README*` or
+`CHANGELOG*` of any name and case counts as existing:
 
 | File | Holds |
 |---|---|
@@ -319,12 +328,16 @@ mostly in the topic documents; in AGENTS.md it costs one line at most. A
 policy — a versioning scheme, a deployment method, the environments — is
 never chosen for you. The two safety rules are always written.
 
-**Checks and commits.** Before committing, the skill checks the line
-budget, CLAUDE.md's first line, AGENTS.md's opening comment, that every
-path in the Documents table exists, that no line holds a value that reads
-as a secret, that every TBD has the `TBD(init):` form, and the `.gitignore`
-lines; a failing check is fixed before anything is committed. It then
-lists every file for you to confirm and commits them as
+**Checks and commits.** Before committing, the skill checks what it wrote:
+the line budget, CLAUDE.md's first line, AGENTS.md's opening comment, that
+every path in the Documents table exists, that no line holds a value that
+reads as a secret, that every TBD has the `TBD(init):` form, and the
+`.gitignore` lines; a failing check is fixed before anything is committed.
+A line of yours that fails a check — your own `TBD`, a secret-looking value
+in your CLAUDE.md — is named in the final message, not changed. It then
+lists every file for you to confirm, marking a file that held uncommitted
+changes of yours (a session that cannot ask leaves it out of the commit)
+and a path git ignores (never added with `-f`), and commits them as
 `docs: initialize project documentation`, following the commit convention
 your repository writes down or its history shows. Last, it asks separately
 whether to push and whether to create the missing labels. A session that
@@ -333,8 +346,9 @@ nothing, and creates no label — it lists the labels to create instead.
 
 **Running it again.** In a project it set up (an `AGENTS.md` whose opening
 comment carries the template marker), `/kenspc-init` changes only the
-`TBD(init):` markers you answer, and nothing else; with no marker left it
-changes nothing and says so. A change an answer implies beyond its marker —
+`TBD(init):` markers you answer — the marker itself, not the rest of its
+line — and nothing else; with no marker left, or none answered, it changes
+nothing and says so. A change an answer implies beyond its marker —
 a `CHANGELOG.md` for a scheme you just chose — is named for you, not made.
 Upgrading files an earlier template version wrote, and moving an existing
 project's long CLAUDE.md onto the template, are not in this version.
@@ -675,7 +689,8 @@ on Windows.
   `/kenspc-init`'s documentation commit likewise carries the whole of a
   `.gitignore` it appended to, or a CLAUDE.md it gave the import line,
   with any uncommitted edit of yours in it; its file list names each such
-  file before you confirm.
+  file before you confirm, and a session that cannot ask leaves it out of
+  the commit.
 - **Regressions and deferred issues in the verdict.** The verdict is FAIL
   when the fixes "introduced unresolved regressions", whatever a
   regression's severity, while "MEDIUM and LOW issues do not change the
@@ -872,8 +887,10 @@ on Windows.
   line count and any content they visibly repeat, for you to settle. A
   session that cannot ask leaves the file as it is, so Claude Code does not
   load the new AGENTS.md until that line is added; the final message says
-  so. The line budget is checked on the files the skill wrote, not on your
-  CLAUDE.md.
+  so. When CLAUDE.md already has an `@AGENTS.md` line, or is a symbolic
+  link to AGENTS.md (or the reverse), AGENTS.md already loads: the skill
+  asks nothing and leaves CLAUDE.md alone. The line budget is checked on
+  the files the skill wrote, not on your CLAUDE.md.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
