@@ -486,7 +486,10 @@ as
 worker, which would break its `--settings` JSON and its prompt.
 Its `pwsh -NoProfile -File <path>/run.ps1 --self-test` launches a
 `claude.ps1` stub, put first on a temporary PATH entry, through the same
-path and prints `self-test passed`.
+path and prints `self-test passed`. On macOS and Linux it also launches a
+native `#!/bin/sh` stub, as the installed `claude` is a native program, and
+compares the `-p` and `--settings` values that stub receives, byte for
+byte, with a prompt that holds double quotes and with the settings JSON.
 
 It starts the worker with `Start-Process pwsh`, and the inner command
 travels base64-encoded with `-EncodedCommand`, so a path that holds a space

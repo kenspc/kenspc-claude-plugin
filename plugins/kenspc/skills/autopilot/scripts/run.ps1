@@ -112,9 +112,11 @@
 # Why --self-test: it proves the launch path on a machine without spending a
 # session. A stub claude.ps1, put first on PATH, stands in for the
 # executable; the self-test also launches a failing stub of its own, so a
-# status other than 0 is seen to reach <tag>.exit, and a slow one, so a
-# launch read through a command substitution is seen to return while its
-# worker runs. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
+# status other than 0 is seen to reach <tag>.exit, a slow one, so a launch
+# read through a command substitution is seen to return while its worker
+# runs, and, on macOS and Linux, a native #!/bin/sh one, so the -p and
+# --settings values are seen to reach a native program, as the installed
+# claude is one, byte for byte. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
 # exercises the failure path; a stub of theirs that is meant to pass writes
 # its arguments and "cwd=<its working directory, logical or physical path>"
 # to its error output (Write-Error, for a .ps1 run inside the inner pwsh),
@@ -441,7 +443,9 @@ function Invoke-Refused {
 # cwd>, and none of the three optional flags; .json's session_id equal to
 # .session; a failing stub's status 3 in .exit and the end line, and the
 # multi-line prompt it received as its -p value; a throwing stub's .exit
-# reading 1, its end line, and its reason in .err; a resume
+# reading 1, its end line, and its reason in .err; on macOS and Linux, a
+# native stub's .exit reading 0 and the -p and --settings values it received
+# equal, byte for byte, to that prompt and the settings JSON; a resume
 # launch through the command line with the three optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
 # batch-name default with a stale .exit removed at launch; a launch whose cwd
@@ -724,6 +728,56 @@ exit 0
     }
     if (-not (Test-FileLine $throwErr 'self-test stub failure')) {
         Stop-SelfTest "$throwErr does not hold the reason the worker's script failed"
+    }
+
+    # On macOS and Linux, a launch through a native program, as the installed
+    # claude is one. Every stub above is a .ps1 run inside the worker's own
+    # pwsh, which takes its arguments as PowerShell values, so an argument
+    # passing that dropped the double quotes inside a value would pass them
+    # all and break only the real worker's --settings JSON and prompt. The
+    # native stub writes the -p and --settings values it receives to files
+    # beside it, compared byte for byte with the prompt, which holds double
+    # quotes, and the settings JSON. A Windows .cmd stub is not launched here:
+    # its argument passing is checked on Windows itself.
+    if (-not $IsWindows) {
+        $nativeTag = 'selftest-s7'
+        $nativeStub = Join-Path $stubDir 'native.sh'
+        Write-LfFile $nativeStub (@'
+#!/bin/sh
+# Native stub for run.ps1 --self-test: writes the -p and --settings values it
+# receives to files beside it, prints a result object, exits 0.
+dir=$(dirname "$0")
+while [ "$#" -gt 1 ]; do
+    case $1 in
+        -p) printf '%s' "$2" > "$dir/native-prompt.txt" ;;
+        --settings) printf '%s' "$2" > "$dir/native-settings.txt" ;;
+    esac
+    shift
+done
+printf '%s\n' '{"type":"result","subtype":"success","is_error":false,"result":"stub ok","total_cost_usd":0.01,"num_turns":1}'
+exit 0
+'@ + "`n")
+        [System.IO.File]::SetUnixFileMode($nativeStub, [System.IO.UnixFileMode]'UserRead, UserWrite, UserExecute')
+        $env:AUTOPILOT_CLAUDE = $nativeStub
+        $null = Invoke-Launch $nativeTag $base $multiPrompt ''
+        $env:AUTOPILOT_CLAUDE = $savedExe
+        $nativeExit = Join-Path $logsDir "$nativeTag.exit"
+        Wait-ExitFile $nativeExit
+        if ((Read-FileText $nativeExit) -cne '0') {
+            Stop-SelfTest "$nativeExit does not read 0 after a launch through the native stub $nativeStub"
+        }
+        $nativeChecks = @(
+            @{ Flag = '-p'; File = 'native-prompt.txt'; Want = $expectedPrompt },
+            @{ Flag = '--settings'; File = 'native-settings.txt'; Want = $SettingsValue }
+        )
+        foreach ($check in $nativeChecks) {
+            $seenFile = Join-Path $stubDir $check.File
+            $seenBytes = if (Test-Path -LiteralPath $seenFile -PathType Leaf) { [System.IO.File]::ReadAllBytes($seenFile) } else { [byte[]]@() }
+            $wantBytes = $Utf8NoBom.GetBytes($check.Want)
+            if ([Convert]::ToBase64String($seenBytes) -cne [Convert]::ToBase64String($wantBytes)) {
+                Stop-SelfTest "the native stub of $nativeTag received the $($check.Flag) value `"$($Utf8NoBom.GetString($seenBytes))`", expected `"$($check.Want)`" byte for byte"
+            }
+        }
     }
 
     # A resume launch with the first launch's id, through the command line a

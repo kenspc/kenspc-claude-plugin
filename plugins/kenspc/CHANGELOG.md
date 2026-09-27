@@ -250,8 +250,11 @@ exist yet.
   - Its `--self-test` launches a `claude.ps1` stub put first on a
     temporary PATH entry and checks what `run.sh`'s does, adapted. It adds
     a launch whose cwd and logs directory hold a space and a single quote,
-    and a launch read through a command substitution that returns while a
-    slow stub still runs.
+    a launch read through a command substitution that returns while a
+    slow stub still runs, and, on macOS and Linux, a launch through a
+    native `#!/bin/sh` stub whose `-p` and `--settings` values are
+    compared byte for byte with a prompt holding double quotes and with the
+    settings JSON.
   - It is checked with `pwsh` on macOS: a parse and the self-test. There
     the launched process is attached to the launching shell, and the
     launch output files keep nothing written after the driver returns.
