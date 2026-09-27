@@ -417,7 +417,9 @@ function New-StubFile {
 # running tag refused with the pid named and .session and .pid unchanged;
 # .pid naming a live process other than the self-test's own; after the wait,
 # .session and .pid non-empty, .json parseable with "result", .err present,
-# .exit reading 0, the timeline's start and end lines; the three
+# .exit reading 0, the timeline's start and end lines; .session, .pid, .exit,
+# .launch.in, and the timeline holding no carriage return and no byte-order
+# mark; the three
 # .launch.* files present, .launch.out and .launch.err empty; .err showing
 # every always-passed flag with the id .session holds and cwd=<the launch's
 # cwd>, and none of the three optional flags; .json's session_id equal to
@@ -594,6 +596,18 @@ exit 0
     }
     if (-not (Test-FileLine $timeline "^end   $tag exit 0$")) {
         Stop-SelfTest "$timeline has no end line for $tag"
+    }
+    # The files this script writes end their lines with LF alone and carry no
+    # byte-order mark, read as bytes: the reads above drop a BOM and a
+    # trailing carriage return, while the skill reads .exit and .session with
+    # cat and the release checklist greps the timeline with $-anchored
+    # patterns.
+    foreach ($written in $sessionFile, $pidFile, $exitFile, (Join-Path $logsDir "$tag.launch.in"), $timeline) {
+        $bytes = [System.IO.File]::ReadAllBytes($written)
+        if ($bytes -contains 13) { Stop-SelfTest "$written holds a carriage return" }
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            Stop-SelfTest "$written starts with a byte-order mark"
+        }
     }
 
     # The launched pwsh's own streams go to files of their own, never to the
