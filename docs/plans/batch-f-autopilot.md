@@ -1134,6 +1134,34 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   (nine `kenspc:kenspc-*` commands). Case 7's criterion and seed (b)'s
   acceptance case read "`/help` lists" that way in a headless run.
   Testing Strategy (cases 3, 7).
+- **CL16** — D8's launch form, adjusted where it cannot run on macOS or
+  quote safely: `Start-Process` takes `-WindowStyle Hidden` only when
+  `$IsWindows` (on macOS pwsh 7.6.6 refuses the parameter, and Step 3.1's
+  self-test has to pass there); on macOS and Linux the child is attached to
+  the launching shell, with no hang-up protection, and the header says
+  `run.ps1` is checked on macOS only; the inner command travels
+  base64-encoded with `-EncodedCommand` (the encoded form of `-Command`,
+  since `Start-Process` does not quote array values that hold spaces), and
+  the self-test adds a launch whose cwd and logs path hold a space and a
+  single quote. Step 3.1.
+- **CL17** — `run.ps1` mirrors `run.sh`'s launch behavior in full, not only
+  its interface and files: the same refusals (exit 2, nothing written), the
+  stale `.exit` removal, the `started` line, the batch-name default,
+  `caffeinate -i` when present, the prompt read inside the inner command,
+  empty stdin, and a self-test that checks the same items, adapted. The
+  skill, its command, and `run.sh` stay zero diff in the second round: the
+  skill keeps copying and running `run.sh`, `run.ps1` ships beside it, and
+  nothing picks a driver by platform until the Windows acceptance (the
+  roadmap line); the plugin README says so. Step 3.1.
+- **CL18** — The release checklist's row 11 gains one clause,
+  `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test`
+  printing `self-test passed` and exiting 0, as the Fixed strings row
+  "Driver self-test" names row 11 as a carrier of both self-tests; the
+  second round's Doc-sync task lists CLAUDE.md (the layout tree and the
+  File Structure `scripts/` bullet, CL5), the plugin README's Autopilot
+  section, the CHANGELOG's `run.ps1` entry, and the checklist's row 11.
+  The second task document is `docs/tasks/batch-f-autopilot-ps1-tasks.md`.
+  Steps 2.4, 3.1.
 
 ## Open Questions
 
