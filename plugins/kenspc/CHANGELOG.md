@@ -211,7 +211,7 @@ exist yet.
   `claude --name <batch>-main --permission-mode bypassPermissions --settings '{"crossSessionInbound":"accept"}'`,
   the sixteen labels with an example, the workspace, what a run writes and
   commits, the gates, the stops, the budget rule, the reports, the
-  drivers), eight Known behavior items — the seven below other than the
+  drivers), nine Known behavior items — the eight below other than the
   caps' default, with the message-limits item's stricter-inbound-settings
   half as an item of its own — and the version line
   `Claude Code v2.1.271 or later` under Requirements (the plugin's
@@ -325,6 +325,16 @@ exist yet.
   raise the budget to. A budget smaller than one worker's cost stops the
   run before the second worker too: the cap ends the first worker, and
   that is the budget stop.
+- **A headless run may leave the settings and return lines in the state
+  file only.** The skill prints the settings line and each launch and
+  return line in its reply, each instruction with its reason. Two headless
+  runs with those instructions in place printed every launch line, yet
+  wrote the settings line only into the state file and left three of their
+  five return lines unprinted. The same facts are on disk: the settings
+  line in `_logs/<batch>-state.md`, and each launch and return as the
+  driver's `start` and `end` lines in `<batch>-timeline.log`, the `end`
+  line written together with `<tag>.exit`. Release-checklist row 11 reads
+  them there rather than from the reply.
 
 ## 3.8.2 — 2026-09-26
 

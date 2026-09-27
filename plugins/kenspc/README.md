@@ -741,6 +741,17 @@ on Windows.
   a first worker that reaches it, and the check before each later launch
   catches the rest — with spent and projected on the stop and the question
   of how much to raise the budget to.
+- **A headless run may leave the settings and return lines in the state
+  file.** The skill prints the settings line, and each launch and return
+  line, as a line of its own in its reply, and says why beside each
+  instruction. Two headless runs with those instructions in place printed
+  every launch line, yet wrote the settings line only into the state file
+  and left three of their five return lines unprinted. The same facts are
+  on disk either way: the settings line in `<batch>-state.md`, and each
+  launch and return as the driver's `start` and `end` lines in
+  `<batch>-timeline.log`, each `end` line written together with
+  `<tag>.exit`. The release checklist reads them there, not from the
+  reply.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
