@@ -198,7 +198,107 @@ driver has passed acceptance. Its task numbers are not this document's:
 
 ### Task 1: Write the PowerShell driver run.ps1
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Refusals are thrown (`Stop-Driver`), and the command line turns any
+    thrown error into exit 2. As in `run.sh`, where `die` runs in a subshell
+    of `launch`, the self-test runs the launch refusals in-process: missing
+    executable, empty and whitespace-only prompt, second launch under the
+    running tag. It reads the message and checks that no `.session` was
+    written. The resume launch, the two parser refusals, and the
+    command-substitution launch go through
+    `pwsh -NoProfile -File <this script>`. Why: the second-launch refusal
+    has to land inside the stub's one-second sleep, and starting a pwsh
+    for each check would crowd that window.
+  - `.err` is not bare lines. A `.ps1` stub's `Write-Error` arrives as
+    PowerShell's error view: a `claude.ps1:` header, the calling line, and
+    the message after a `     | ` gutter. So the self-test reads the flags
+    as substrings, and reads `cwd=<path>` as a line that ends with it after
+    the line start or whitespace. The error view wraps the message at 80
+    columns when the caller is a script file, which would split flag pairs
+    (probed with `-File`). Under `-EncodedCommand` the invocation has no
+    script name and the message stays on one line; the self-test relies on
+    that. The worker's flags sit on the inner script's `$argv` line and not
+    on the calling line, because the error view quotes the calling line
+    into `.err`: a flag there would satisfy the checks, or break the
+    resume's no-`--session-id` check.
+  - For `caffeinate`, the task's second option. The inner pwsh starts
+    `caffeinate -i -w $PID` with `Start-Process` before it runs the worker,
+    so the executable resolves as it would without `caffeinate`, and
+    `caffeinate` inherits the inner pwsh's streams (the `.launch.*` files),
+    not the caller's.
+  - Literals are made with
+    `CodeGeneration.EscapeSingleQuotedStringContent`. It doubles `'` and
+    also the typographic single quotes that PowerShell treats as quote
+    delimiters (U+2018 to U+201B). A cwd and a logs directory holding `’`
+    were checked by hand (`.exit` 0, `cwd=` shown). The self-test covers
+    the ASCII quote only, as specified.
+  - Placeholders go into the inner template in a single regex pass
+    (`-replace` with a scriptblock), so a value that holds a placeholder
+    name is never substituted a second time.
+  - In the default-stub path, after the stub dir is put first on `PATH`,
+    the self-test checks that `Get-Command claude` resolves to the stub,
+    and fails when it does not. A `claude` that resolved elsewhere would
+    start a real, paid session. The task does not list this check.
+  - Relative cwd and prompt paths are resolved against PowerShell's
+    location (`GetUnresolvedProviderPathFromPSPath`) before they are
+    embedded, because the inner script's `Set-Location` changes the base.
+    The start line keeps them as given, as `run.sh`'s does. The timestamp
+    is formatted with the invariant culture, because some cultures'
+    time separator is not `:`.
+  - The `started` line is written with an explicit LF. On Windows,
+    `WriteLine` would end it with CRLF, and a bash caller would read a
+    carriage return on the session id.
+- Changes/tradeoffs:
+  - Finding for the spec author, not treated as BLOCKED because nothing
+    the task decides is contradicted. On macOS (pwsh 7.6.6),
+    `Start-Process -RedirectStandard*` copies the launched pwsh's
+    streams through the launching pwsh process. Once `run.ps1` returns,
+    anything the inner pwsh writes to its stdout or stderr is dropped.
+    Probed three ways:
+    - An invalid stub gave `.exit` 1, no `.json`, and an empty
+      `.launch.err`.
+    - The same encoded inner script run under shell redirection recorded
+      the error.
+    - A child that wrote after its launcher returned kept running and
+      finished its own file write, but its lines were lost.
+
+    So on macOS the task's claim that the two output files "hold the
+    inner pwsh's own error when its script fails" holds only for what
+    arrives before `run.ps1` returns. The three-file redirection still
+    frees the caller's pipe (probed: a 20 s stub, and the capture returned
+    at once), and all of the self-test's launch-file checks pass. The
+    header says this. Whether Windows keeps the error is left to the
+    Windows acceptance: there `Start-Process` is expected to hand the
+    files to the child itself, which was not checked here.
+  - On this machine `pwsh` is a dotnet global-tool shim, so `.pid` holds
+    the shim's id and the inner pwsh's `$PID` differs (probed 86066 vs
+    86077). The shim lives as long as the inner pwsh, so the live-worker
+    refusal and the self-test's liveness check hold. `caffeinate` watches
+    the inner pwsh's own `$PID`.
+  - `Start-Process` refuses a missing input file, so `<tag>.launch.in` is
+    written before the process starts, and `Start-Process` truncates stale
+    `.launch.out` and `.launch.err` files. Under `-EncodedCommand`, pwsh
+    writes an uncaught error to stderr as CLIXML (observed), so the inner
+    script catches its own errors and writes them as plain text.
+    `$LASTEXITCODE` is reset to 0 before the call, so a `.ps1` executable
+    that returns without `exit` reads 0. A failure inside the inner
+    `try` (location, prompt read, executable) leaves `.exit` at 1.
+  - Verification: the parse check and its control (exit 1); both
+    self-test forms (repository root, and `$TMPDIR` with the absolute
+    path); the failing `.ps1` caller stub (rc 1, names `.exit`); the
+    20-second pipe check; every command-line refusal (exit 2, nothing
+    written); and three mutants under `$TMPDIR`, each failing the
+    self-test at its intended check:
+    - no stream redirection: fails at the `.launch.out` check;
+    - the same mutant with the launch-file check disabled: fails at the
+      command-substitution check;
+    - no quote doubling: fails at the quoted-path launch.
+
+    The mutant without redirection also made the 20-second pipe check
+    wait out the stub, with `.exit` present on return.
 
 Plan Step 3.1 (F-13, F-5, F-7; rulings D8, D7; CL16, CL17, CL19, CL2). Create
 `plugins/kenspc/skills/autopilot/scripts/run.ps1` for PowerShell 7
