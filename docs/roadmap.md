@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (3.9.0)
+## Next minor (3.10.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -179,7 +179,7 @@ its number.
    orchestrator's context the same way. It was left out of 3.8.2 because
    Step 5 is the Phase 1 → Phase 2 boundary, whose transition sometimes
    failed to trigger in 3.0.2 and whose `Proceeding to code review.` line
-   smoke row 11 looks for in the trace; changing what that boundary prints
+   smoke row 12 looks for in the trace; changing what that boundary prints
    needs an acceptance of its own. The choice left: Step 5 prints only its
    progress update and Schema D is rendered once, in Schema G, or both
    renders stay.
@@ -219,3 +219,29 @@ its number.
       Schema F and G, like the sentences that list what code-fixer's reply
       carries, do not name the `Doc-sync documents:` line (the acceptance's
       Schema G rendered it in `## Fixes` all the same).
+11. Windows acceptance of `run.ps1`, the autopilot's PowerShell driver. On
+    macOS it had only a `pwsh` parse and its `--self-test` launches
+    (`docs/dry-runs/batch-f-acceptance.md` § 2.11); no headless batch has
+    run on Windows, and the skill copies and runs `run.sh`, so nothing picks
+    `run.ps1` by platform until this acceptance passes. What it settles —
+    the batch F spec's CL22 and CL23,
+    `git show d4902b0:docs/plans/batch-f-autopilot.md`:
+    - Whether `<tag>.launch.err` keeps the inner pwsh's error on Windows.
+      On macOS `Start-Process` copies the launched pwsh's streams through
+      the driver's own process, so the launch files keep only what is
+      written before the driver returns, and the inner command's failure
+      reason reaches `<tag>.err` instead.
+    - Native argument passing through the `claude.cmd` shim: the worker's
+      `--settings` JSON and a prompt that holds `"` arrive unchanged. The
+      self-test compares both byte for byte only through a `#!/bin/sh`
+      stub, on macOS and Linux.
+    - The `run.ps1` pid's command line carries no tag, while the skill's
+      leftover-pid check reads the driver's command line with the tag
+      (`<batch>-run.sh <tag> …`) and takes any other as a leftover from a
+      reboot — latent while the skill runs `run.sh`.
+    - Whether a real worker leaves a descendant process that inherits the
+      inner script's piped streams and so delays `<tag>.exit` until that
+      process exits.
+    - A launch whose worker writes UTF-8 non-ASCII text, its `<tag>.json`
+      and `<tag>.err` compared byte for byte, since a Windows console code
+      page can re-encode them.

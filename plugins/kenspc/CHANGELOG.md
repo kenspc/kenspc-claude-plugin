@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 3.9.0 — unreleased
+## 3.9.0 — 2026-09-27
 
 Batch F. An `autopilot` skill and its `/kenspc-autopilot <path to a spec or
 a brief>` command run one batch of this plugin's own chain unattended, from
@@ -31,11 +31,58 @@ fix on demand, release preparation — each started through a driver script
 that ships with the skill and is copied per batch, and talking to the main
 session by cross-session messages. Two reports end the run: a one-page
 user report in the conversation's language and a reviewer report of fixed
-shape with a total-cost line. A new command and a new skill, so a minor
-release. No new agent and no new CONTEXT key; `scripts/` is untouched, so
-the guard counts are unchanged (`guards run: 10`, `self-tests run: 9`).
-Release smoke: named at release — the batch's acceptance record does not
-exist yet.
+shape with a total-cost line. Beside the bash driver `run.sh` ships
+`run.ps1`, its PowerShell mirror, checked on macOS only — a parse and its
+self-test; the skill still copies and runs `run.sh`. Known behavior records
+what the probes and the acceptance found about the harness: the idle
+notice a headless subscriber gets as an extra turn, one tool call per wait
+iteration, sessions that share a name, hook sessions in seeds, the
+subscription expiry, the message limits, the caps' default, the budget
+check the first worker always passes, and a headless run that leaves the
+settings and return lines in the state file only. Release-checklist row 1
+counts nine commands, a new row 11 runs one headless `repo`-mode batch and
+both drivers' self-tests, and the end-to-end row becomes 12. A new command
+and a new skill, so a minor release. No new agent and no new CONTEXT key;
+`scripts/` is untouched, so the guard counts are unchanged
+(`guards run: 10`, `self-tests run: 9`). Release smoke: the batch's
+acceptance run, `docs/dry-runs/batch-f-acceptance.md`, headless on macOS in
+two rounds, at the trees `b6a0199` and `8684c81`; the one later change to a
+shipped plugin file rewrites the reason in the skill's settings-line
+paragraph and changes no step. Round 1 ran case 1 in full — a `repo`-mode
+batch from a spec through S2, S3, S3b, S4, and S6, with a worker's question
+answered, the release commit, the two reports, and the costs file; its
+state file and timeline hold what row 11 reads there — which is row 11's
+main path (the seed's two acceptance commands added the S4 that row 11's
+`Acceptance: none` seed skips); case 9, a task document as the argument,
+which starts no worker, and case 8, a prompt that opens with the workers'
+first sentence, which invokes no skill — row 11's two refusals; case 5,
+no `git push`, `git tag`, or recursive `rm` in any session's commands —
+row 11's rails; case 6, `run.sh`'s self-test and its failing-stub control;
+case 4, a budget stop; and case 7, the pre-flight block and row 1's nine
+commands, read from a headless session's init message, since `/help` is
+not available headless. Round 2, by the user's decision, made short checks
+only: the brief entry and `plugin` mode, each run to its first budget
+stop — the design session, its decision table, the rulings, and the spec
+commit; the mode detection and the `--plugin-dir` passing to S2 and S3 —
+and `run.ps1`'s parse, self-test, failing-stub control, and
+missing-executable control, row 11's `run.ps1` clause. The full
+brief-entry chain and `plugin` mode's S3b, S4, and S6 did not run, nor did
+a death and its resume, a budget raise, or the interactive wait path.
+Rows 3–10 and 12 exercise skills and commands this release leaves
+unchanged and were not run; row 2's `/reload-plugins` was not run either,
+while every session the acceptance's driver started loaded the plugin
+from the working tree.
+Of the six findings, three are plugin defects fixed in this release that
+no run re-exercised: a sentence after the finish line (the fix checked on
+the text in round 2), one unstated point escalated to the user in one run
+and answered from the spec in another (now a question to the user by
+rule), and row 11's and this entry's overstatement of how far `plugin`
+mode ran. The budget check the first worker always passes is a behavior
+deviation, now a Known behavior item. The settings, launch, and return
+lines case 1 did not print were fixed in wording, and round 2 still left
+the settings line and three return lines in the state file only — a
+behavior deviation, so row 11 reads them from the state file and the
+timeline. No separate smoke run was made.
 
 ### Added
 
