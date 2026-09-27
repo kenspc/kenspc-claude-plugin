@@ -126,8 +126,9 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     repetition are reported; one that already imports AGENTS.md, or is a
     symbolic link to it, is not asked about. A rerun in a project the skill
     set up changes only the `TBD(init):` markers the user answers — each
-    marker ends its line or table cell, and an answer replaces the marker,
-    not the line — and nothing when none remains or none is answered.
+    marker ends its line or table cell (the version line's ends before
+    `— rules in docs/release.md`), and an answer replaces the marker, not
+    the line — and nothing when none remains or none is answered.
 
 ### Changed
 

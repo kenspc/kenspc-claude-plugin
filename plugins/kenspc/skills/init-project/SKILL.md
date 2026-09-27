@@ -549,9 +549,11 @@ skill. A file this list gains keeps to that.
   placeholder paragraph is written. Why: AGENTS.md loads into every
   session, so an unknown costs one line there at most.
 - Every slot sits at the end of its line or alone in a table cell, so a
-  marker runs from `TBD(init):` to the end of its line or its cell. Why: a
-  rerun replaces the marker and nothing else, and the text before it on the
-  line is fixed text or another answer.
+  marker runs from `TBD(init):` to the end of its line or its cell. The one
+  exception is the Workflow's version line, whose marker ends at the ` — `
+  before `rules in docs/release.md`, so the line keeps its fixed form. Why:
+  a rerun replaces the marker and nothing else, and the text around it on
+  the line is fixed text or another answer.
 - A line ending in `{{when: <condition>}}` is written, without the tag and
   the space before it, when the condition holds, and left out when it does
   not.
@@ -777,7 +779,8 @@ answers markers; when it answers none, nothing changes, and the final
 message says how many markers remain and in which files.
 
 - An answer replaces its marker only — from `TBD(init):` to the end of its
-  line or its table cell — and the text before the marker stays as it is.
+  line or its table cell, or on the Workflow's version line to the ` — `
+  before `rules in docs/release.md` — and the text around it stays as it is.
   In an AGENTS.md or a CLAUDE.md the answer fits on that line; in a topic
   document a marker alone on its line may give way to more lines — a table
   in place of one marker line.
