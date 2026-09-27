@@ -258,8 +258,10 @@ an empty directory inside another repository is inside it:
 
 It also stops, writing nothing, in a bare repository or inside a `.git`
 directory, on a detached HEAD (where a commit would belong to no branch),
-and wherever git finds a repository it will not read, such as one another
-user owns: only git's own "not a git repository" counts as no git.
+where a `.git` file points nowhere, and wherever git finds a repository it
+will not read, such as one another user owns: only git's own
+`not a git repository (or any …` message, read in English whatever your
+locale, counts as no git.
 
 **The interview.** Five rounds, each one message, each skippable: the
 project (name, one line, users, scope, non-goals); shape and stack (one app
@@ -318,7 +320,7 @@ unattended run lists what it found in its report.
 | `CHANGELOG.md` | Keep a Changelog, only when you chose SemVer or CalVer |
 | `docs/backlog/README.md` | The file backlog's format, when the backlog is files |
 | `apps/<name>/AGENTS.md`, `apps/<name>/CLAUDE.md` | Each monorepo app's commands and rules |
-| `.gitignore` | `.kenspc/` and `CLAUDE.local.md` appended when `.gitignore` does not already ignore them |
+| `.gitignore` | `.kenspc/` and `CLAUDE.local.md` appended when the repository's own `.gitignore` does not already ignore them — a rule in your global excludes does not reach a teammate |
 
 The root `AGENTS.md` and `CLAUDE.md` stay within 80 lines together at init,
 each app's pair within 40, and 200 lines is the long-term ceiling. Nothing
@@ -345,11 +347,11 @@ marking a file that held uncommitted changes of yours (a session that
 cannot ask leaves it out of the commit) and a path git ignores (never added
 with `-f`), and commits them as `docs: initialize project documentation`,
 following the commit convention your repository writes down or its history
-shows; with nothing left to commit, it makes no commit and says so. Last,
-it asks separately whether to push and whether to create the missing
-labels. A session that cannot ask commits after the checks, and creates no
-repository, pushes nothing, and creates no label — it lists the labels to
-create instead.
+shows; with nothing left to commit, it makes no commit, says so, and ends
+there. After the commit, it asks separately whether to push and whether to
+create the missing labels. A session that cannot ask commits after the
+checks, and creates no repository, pushes nothing, and creates no label —
+it lists the labels to create instead.
 
 **Running it again.** In a project it set up (an `AGENTS.md` whose opening
 comment carries the template marker), `/kenspc-init` changes only the

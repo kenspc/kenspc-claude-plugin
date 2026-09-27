@@ -54,9 +54,10 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     repository is the third start point; a directory holding only a file
     browser's metadata counts as empty. The run stops in either session,
     writing nothing, in a bare repository, inside a `.git` directory, on a
-    detached HEAD, or where git finds a repository it will not read (one
-    another user owns, for example): only git's own `not a git repository`
-    counts as no git.
+    detached HEAD, where a `.git` file points nowhere, or where git finds a
+    repository it will not read (one another user owns, for example): only
+    git's own `not a git repository (or any …` message, read in English
+    whatever the locale, counts as no git.
   - **The interview.** In the user's language, five rounds — project;
     shape and stack; UI; delivery; collaboration — each skippable. What the
     argument or the scan answers is not asked, except the repository's
@@ -74,9 +75,9 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     app is committed alone (`chore: scaffold <app>`) before the
     documentation commit, without the dependency and build directories its
     tools restore, which are appended to `.gitignore`; an app whose `.git`
-    stays gets no scaffold commit, and its AGENTS.md pair stays out of the
-    documentation commit, as does that of an app directory that already
-    holds a `.git` of its own, which is not offered scaffolding. No
+    stays gets no scaffold commit, and its AGENTS.md pair stays out of
+    every commit, a rerun's too, as does that of an app directory that
+    already holds a `.git` of its own, which is not offered scaffolding. No
     generator option that overwrites or empties a directory is chosen, and
     a failed generator's output is kept, in place or in `.trash/`.
   - **GitHub and the backlog.** A GitHub repository is offered only when
@@ -101,7 +102,8 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     `CHANGELOG.md` only for SemVer or CalVer; `docs/backlog/README.md` for
     backlog C; an AGENTS.md and CLAUDE.md pair for each monorepo app; and
     `.kenspc/` and `CLAUDE.local.md` appended to `.gitignore` where it does
-    not already ignore them. The templates ship in
+    not already ignore them (a rule in the user's global excludes does not
+    count). The templates ship in
     `skills/init-project/templates/` as `*.tmpl`, none named `CLAUDE.md` or
     `AGENTS.md`. The files are in English unless the user
     asks otherwise, with the reason in the skill; the plugin still sets no
@@ -125,7 +127,8 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     ignores is not committed, and a file that held uncommitted changes of
     the user's is marked on the list, and left out of the commit by a
     session that cannot ask. With no file left to commit, no commit is
-    made. Push and labels come last, each asked separately.
+    made and the run ends there. Push and labels follow the commit, each
+    asked separately.
   - **Existing files and reruns.** Nothing that exists is overwritten, and
     a `README*` or `CHANGELOG*` of any name and case counts as existing. An
     existing CLAUDE.md gains only an `@AGENTS.md` first line, on a yes, the
