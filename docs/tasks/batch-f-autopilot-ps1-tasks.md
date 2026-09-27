@@ -13,9 +13,9 @@ self-test). Windows acceptance is a roadmap line, written in the release
 commit. The skill keeps copying and running `run.sh`; nothing picks a
 driver by platform until that acceptance.
 
-Related plan: `docs/plans/batch-f-autopilot.md` (read at `c08b9ec`). The
+Related plan: `docs/plans/batch-f-autopilot.md` (read at `52f0bbe`). The
 plan is the complete specification; its locked design (F-1 to F-14), its
-Design decisions (M1–M16, D1–D24), and its Clarifications (CL1–CL18) are
+Design decisions (M1–M16, D1–D24), and its Clarifications (CL1–CL19) are
 binding rulings. This document covers plan Phase 3 only — Step 3.1 and its
 Doc-sync task — the second round that M10 describes: round 1 dropped
 Phase 3 at generate-task's confirm gate, the bash driver then passed
@@ -50,6 +50,14 @@ applies:
   CLAUDE.md (the layout tree and the File Structure `scripts/` bullet),
   the plugin README's Autopilot section, the CHANGELOG's `run.ps1` entry,
   and the checklist's row 11.
+- CL19: `Start-Process` redirects the launched pwsh's own three streams,
+  as `run.sh`'s subshell does with `> /dev/null 2>&1 < /dev/null`, to
+  three files in the logs directory — `<tag>.launch.in` (an empty file the
+  driver writes), `<tag>.launch.out`, and `<tag>.launch.err`; the header
+  names them; the self-test checks that they exist, that the two output
+  files are empty after a clean launch, and that a launch read through a
+  command substitution returns before a slow stub's `.exit` exists. The
+  plan's Documentation impact element reads with CL5, CL6, and CL18.
 - CL5: in round 1 CLAUDE.md's layout tree listed `scripts/run.sh` only;
   `run.ps1` joins it in this round, through the Doc-sync task.
 - CL2: the pointer-label grep's `dry-run` alternative is `dry-run\b`.
@@ -72,6 +80,8 @@ carries it, unwrapped, so `grep -F` finds it:
   `end   <tag> exit <status>` (three spaces after `end`, both at column 0);
   `<batch>-costs.txt` lines `<tag> <session_id> <total_cost_usd>` (written
   by the skill, not by a driver).
+- Launch stream files (`run.ps1` only, CL19): `<tag>.launch.in`,
+  `<tag>.launch.out`, `<tag>.launch.err`.
 - Launch stdout line: `started <tag> pid <pid> session <id>`.
 - Driver self-test: `run.ps1 --self-test`, exit 0 and the line
   `self-test passed`.
@@ -121,7 +131,7 @@ reports the last command's status, not the guard's. Both tasks also run
 ends with `self-tests run: 9`.
 
 Constraints that apply to every task (plan § Standing constraints, with
-CL16–CL18):
+CL16–CL19):
 
 - Zero diff outside this round's files. After every task, this prints
   nothing:
@@ -190,7 +200,7 @@ driver has passed acceptance. Its task numbers are not this document's:
 
 **Status:** TODO
 
-Plan Step 3.1 (F-13, F-5, F-7; rulings D8, D7; CL16, CL17, CL2). Create
+Plan Step 3.1 (F-13, F-5, F-7; rulings D8, D7; CL16, CL17, CL19, CL2). Create
 `plugins/kenspc/skills/autopilot/scripts/run.ps1` for PowerShell 7
 (`pwsh`), mirroring `run.sh` in the same directory. Read `run.sh` first,
 header and self-test included: it is the model, and each of its refusals
@@ -228,28 +238,34 @@ PowerShell needs a different mechanism, this task names it.
   message names the pid and says what to remove when that process is not
   the worker). Then: the session id — `[guid]::NewGuid()` as a lowercase
   string for a fresh launch, the given id for a resume — written to
-  `<tag>.session` before the process starts; a stale `<tag>.exit` removed
-  (that one file, no recursion); the worker started; `<tag>.pid` written; the timeline's
-  start line appended,
+  `<tag>.session` before the process starts; `<tag>.launch.in` written
+  empty; a stale `<tag>.exit` removed (that one file, no recursion); the
+  worker started; `<tag>.pid` written; the timeline's start line appended,
   `start <tag> pid <pid> session <id> at <YYYY-MM-DD HH:MM:SS> cwd <dir> prompt <file><extra>`
   with `run.sh`'s `<extra>` words (` plugin-dir <dir>`,
   ` budget USD <n>`, ` [append-system-prompt]`, ` resume`); and
   `started <tag> pid <pid> session <id>` printed to stdout.
-- The worker (D8, CL16): `Start-Process pwsh` with
+- The worker (D8, CL16, CL19): `Start-Process pwsh` with
   `-ArgumentList @('-NoProfile', '-EncodedCommand', <inner>)` and
   `-PassThru`, adding `-WindowStyle Hidden` only when `$IsWindows`;
   `<tag>.pid` holds the started process's id. No process the launch starts
   (a `caffeinate` included) holds the caller's standard streams, as
   `run.sh`'s subshell runs with its own on `/dev/null`: `Start-Process` is
-  given `-RedirectStandardInput`, `-RedirectStandardOutput`, and
-  `-RedirectStandardError`, three distinct paths (it refuses one path named
-  twice), none of them one of the five files. Why: without them the child
-  inherits the caller's stdout and stderr, so a caller that reads the
+  given `-RedirectStandardInput <logs>/<tag>.launch.in`,
+  `-RedirectStandardOutput <logs>/<tag>.launch.out`, and
+  `-RedirectStandardError <logs>/<tag>.launch.err`. These three files take
+  the launched pwsh's own streams only — the worker's output still goes to
+  `<tag>.json` and `<tag>.err` through the inner script's redirection — so
+  the two output files are empty on a clean launch and hold the inner
+  pwsh's own error when its script fails. Why: without the redirection the
+  child inherits the caller's stdout and stderr, so a caller that reads the
   launch's output through a pipe — a command substitution, the Bash tool —
   waits until the worker exits instead of getting the `started` line at
   once (verified with pwsh 7.6.6 on macOS: a pipe-reading caller waited
   out a six-second child without the three parameters and returned at
-  once with them). `<inner>` is the inner script, UTF-16LE,
+  once with them). Why three files and not the null device:
+  `Start-Process` refuses one path for stdout and stderr, and files in the
+  logs directory need no null-device branch per platform. `<inner>` is the inner script, UTF-16LE,
   base64-encoded, and every value it carries (the
   executable, the paths, the tag, the flag values) is embedded as a
   single-quoted PowerShell literal with each `'` doubled. The inner script
@@ -286,7 +302,8 @@ PowerShell needs a different mechanism, this task names it.
   `claude`, so a self-test that routed its stub through `caffeinate` would
   start a real, paid session; and it cannot run a `.ps1` at all.
 - Every file the driver itself writes — `<tag>.session`, `<tag>.pid`,
-  `<tag>.exit`, and the timeline lines — ends its lines with LF only and
+  `<tag>.exit`, the empty `<tag>.launch.in`, and the timeline lines — ends
+  its lines with LF only and
   carries no byte-order mark, on every platform: written through
   `[System.IO.File]` methods with an explicit `` `n `` and a UTF-8
   encoding without BOM, not `Set-Content`, `Add-Content`, or `Out-File`,
@@ -319,7 +336,9 @@ PowerShell needs a different mechanism, this task names it.
   `.session` and `.pid` unchanged); `.pid` naming a live process other than
   the self-test's own; after the wait, `.session` and `.pid` non-empty,
   `.json` parseable (`ConvertFrom-Json`) with `result`, `.err` present,
-  `.exit` reading `0`, and the timeline's start and end lines; `.err`
+  `.exit` reading `0`, and the timeline's start and end lines;
+  `.launch.in`, `.launch.out`, and `.launch.err` present, with
+  `.launch.out` and `.launch.err` empty (CL19); `.err`
   showing `--session-id <id>`, `--name <tag>`,
   `--settings {"crossSessionInbound":"accept"}`,
   `--permission-mode bypassPermissions`, `--output-format json`, and
@@ -342,11 +361,16 @@ PowerShell needs a different mechanism, this task names it.
   and (CL16) a launch whose cwd and logs directory both hold a space and a
   single quote, with `.exit` reading `0`, `.json` holding `result`, `.err`
   showing `cwd=<that cwd>`, and both timeline lines in that logs
-  directory. On success it prints `self-test passed` and exits 0.
+  directory; and (CL19) a launch through the command line under a tag of
+  its own, its output captured as a command substitution captures it
+  (`$out = pwsh -NoProfile -File <this script> …`), with a third stub that
+  sleeps five seconds and exits 0: the capture returns with the `started`
+  line while that tag's `.exit` does not yet exist, and `.exit` reads `0`
+  after the wait. On success it prints `self-test passed` and exits 0.
 - Header comment, in `run.sh`'s shape: the interface line and the
   `pwsh -NoProfile -File` invocation; PowerShell 7; the six variables; the
-  five files, the two timeline lines, and `<batch>-costs.txt` as the
-  skill's; the always-passed flags; the Whys (the session id before the
+  five files, the three `<tag>.launch.*` files, the two timeline lines,
+  and `<batch>-costs.txt` as the skill's; the always-passed flags; the Whys (the session id before the
   start, `-EncodedCommand`, the Windows-only hidden window, the redirected
   standard streams, `caffeinate`, LF-only files, the self-test and its
   stub); that `run.ps1` is checked on
@@ -374,9 +398,12 @@ PowerShell needs a different mechanism, this task names it.
   `^start selftest-s1 pid [0-9]+` and one matching
   `^end   selftest-s1 exit 0$`; `selftest-s1.err` shows `--name selftest-s1`
   as the stub echoed it and `selftest-s1.json` holds `"result":"stub ok"`,
-  which shows the stub ran and not the installed `claude`; no file the driver wrote there contains a carriage
-  return (`grep -c $'\r'` prints 0 on the `.session`, `.pid`, and `.exit`
-  files and the timeline).
+  which shows the stub ran and not the installed `claude`;
+  `selftest-s1.launch.in`, `selftest-s1.launch.out`, and
+  `selftest-s1.launch.err` exist, and `test -s` is false for each of the
+  three; no file the driver wrote there contains a carriage return
+  (`grep -c $'\r'` prints 0 on the `.session`, `.pid`, and `.exit` files
+  and the timeline).
 - A launch read through a pipe returns while its worker runs. With
   `AUTOPILOT_LOGS` set to a fresh directory under `$TMPDIR`,
   `AUTOPILOT_CLAUDE` pointed at a `.ps1` under `$TMPDIR` that sleeps 20
@@ -395,13 +422,16 @@ PowerShell needs a different mechanism, this task names it.
   `--max-budget-usd`, `--plugin-dir`, `--append-system-prompt`,
   `caffeinate`, `AUTOPILOT_LOGS`, `AUTOPILOT_PLUGIN_DIR`,
   `AUTOPILOT_BUDGET_USD`, `APPEND_SP`, `AUTOPILOT_CLAUDE`,
-  `AUTOPILOT_BATCH`, `claude.ps1`, `self-test passed`, and
+  `AUTOPILOT_BATCH`, `claude.ps1`, `-RedirectStandardInput`,
+  `-RedirectStandardOutput`, `-RedirectStandardError`, `.launch.in`,
+  `.launch.out`, `.launch.err`, `self-test passed`, and
   `run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`.
 - `grep -cE -- '--model|--continue|rm -r|-Recurse|Set-Content|Add-Content|Out-File' plugins/kenspc/skills/autopilot/scripts/run.ps1`
   prints 0.
 - The header comment names the interface line, the `--self-test` form,
-  PowerShell 7, the six environment variables, the five files, the two
-  timeline lines, `<batch>-costs.txt` as written by the skill, and that the
+  PowerShell 7, the six environment variables, the five files, the three
+  `<tag>.launch.*` files, the two timeline lines, `<batch>-costs.txt` as
+  written by the skill, and that the
   script is checked on macOS only with no hang-up protection there.
 - `git diff --stat c08b9ec HEAD -- plugins/kenspc/skills/autopilot/SKILL.md plugins/kenspc/skills/autopilot/scripts/run.sh plugins/kenspc/commands`
   prints nothing, and `bash plugins/kenspc/skills/autopilot/scripts/run.sh --self-test`
@@ -513,7 +543,11 @@ modify no document outside the list.
   a parent pwsh that exited normally; `-EncodedCommand` carried a path with
   a space and a single quote and passed the inner exit status through; a
   `.ps1` run in-process sends `Write-Error` output to a `2>` redirection
-  and `[Console]::Error.WriteLine` past it. The `Start-Process`
+  and `[Console]::Error.WriteLine` past it; a caller reading a
+  `Start-Process` launch through a command substitution waited out a
+  six-second child until `-RedirectStandardInput`,
+  `-RedirectStandardOutput`, and `-RedirectStandardError` were given, and
+  `Start-Process` refused one path for stdout and stderr. The `Start-Process`
   documentation (PowerShell 7.6) states that array values holding spaces
   need escaped quotes, and that on non-Windows platforms the child is
   terminated when the launching shell is closed.
