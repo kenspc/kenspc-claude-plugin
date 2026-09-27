@@ -360,3 +360,16 @@ Why 这样排：
   - **第一次执行 commit 失败后的重跑（E20）→ defer。** 理由：罕见路径；失败那次的最后讯息已说明没 commit 的档案，`git status` 也看得到；v1 按减法原则不加这条分支。
   - **Implementer 的 16 个判断（`implement.md`）→ 维持。** 其中"全部用默认只结束访谈，scaffolding 等后续提议照问"符合 2.4 的字面（结束的是访谈），scaffolding 本来就是只提议、不默认执行。
 - **C11（修正第 1 轮中，fixer-1 提问）`Version lives in` 这一行的标记范围。** 问题：C10 规定标记要在行尾或独占一栏、回答只替换到行尾或栏尾；2.9 规定 Workflow 那一行是 `Version lives in <file> — rules in docs/release.md`，版本档的位置在行中间。选项：(a) 保留 2.9 的原句，这一个标记的范围到 ` — ` 为止，在填写规则和重跑规则里各写明这个例外；(b) 不知道版本档时省掉后半句；(c) 拆成两行。裁决：(a)。理由：spec 高于 C10；只有 (a) 在第一次执行和重跑后都写出 2.9 的原句，而且分隔符是模板固定的文字，不会误判。
+- **C12（审查第 2 轮之后）第 2 轮 findings 的处置。** Round 1 的修正里，S1–S7 与 conventions 的 C3–C6 全部解决；edges 的 21 条中 20 条解决，E22 只解决一部分。新 findings 共 13 条（spec S2-1；conventions C2-1–C2-4；edges E2-1–E2-8；另有 spec 的备注 N1、N2）。裁决：
+  - **`.gitignore` 探测对已 track 的档案失效（S2-1、E2-3，MEDIUM）→ fix。** 判断 `.gitignore` 是否已含某项时用 `git check-ignore --no-index -q`；档案清单的 ignore 判断仍用一般的 `-q`。理由：reviewer 重现了已 track 的 `CLAUDE.local.md` 会被重复追加、检查永远不过、commit 永远做不成。
+  - **Secret 检查的范围（C2-1、E2-4，MEDIUM）→ fix。** Secret 检查涵盖这次会 commit 的每一行，包括第一次整份 commit 的用户档案；TBD、`{{`、行数检查仍然只管这次写的行。用户行里命中 secret 时不改用户的字，那个档案不进 commit，在最后讯息列出。README 与 CHANGELOG 的说法跟着改成一致。理由：2.14 防的是 secret 进 history，不管是谁写的；C10 的范围限制是为了不改用户的字，不是为了放过 secret。
+  - **`git rev-parse` 的其他失败被当成"没有 git"（E2-1、N1，MEDIUM）→ fix。** 只有 git 明确回报"不是 git repository"才算没有 git；其他失败（例如 dubious ownership、`safe.bareRepository`）两种模式都停下，不写任何东西，把 git 的讯息转述给用户。理由：否则会重现 E1 的嵌套 `git init`。
+  - **要 commit 的档案全部被排除时（E2-2，MEDIUM）→ fix。** 清单为空就不 commit，也不执行没有 pathspec 的 `git commit`。理由：reviewer 重现了 `git commit --` 会把用户已 stage 的东西 commit 进去。
+  - **Phase 3 的 build 目录判断算入用户的 global excludes（C2-2，LOW）→ fix。** 跟 § Files 一致，只看 repo 自己的 ignore 规则；`.gitignore` 那一列也写明这些条目。
+  - **"不选会覆盖或清空目录的选项"没有 Why（C2-3，LOW）→ fix。**
+  - **新 app 路径没有"没东西可写"的结局（C2-4，LOW）→ fix。**
+  - **只有 `.git` 的 app 目录（E2-6，LOW）→ fix。** "只有 `.git` 也算空"只适用于单一 app 的 repo root；app 目录里的 `.git` 走嵌套 `.git` 的规则。理由：reviewer 重现了 scaffold commit 会记成 gitlink。
+  - **重跑会动 `.gitignore`（E2-7，LOW）→ fix。** 重跑只改 TBD 标记，不做 `.gitignore` 的追加。理由：2.12。
+  - **"The checks run on the result" 的旧句（N2）→ fix。** 删掉或改成与 Checks 一节一致。
+  - **Generator 改到执行前就已有未 commit 改动的档案（E22 剩下的部分、E2-5，LOW）→ defer。** 理由：scaffolding 只在可以询问时进行；这种改动不会被 commit，只会留在工作树里跟用户的改动混在一起，不会丢东西；要侦测得先对每个 dirty 档做快照，v1 按减法原则不做。
+  - **Documents 表列出一个没被 commit 的档案（E2-8，LOW）→ not applicable。** 档案在工作树里存在，2.14 的路径检查成立；没 commit 的原因已在最后讯息说明。
