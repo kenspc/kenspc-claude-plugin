@@ -474,9 +474,36 @@ every batch start. The timeline's two lines, `start <tag> pid <pid> …` and
 `end   <tag> exit <status>`, begin at column 0 with no timestamp: the launch
 time is in the start line's tail, and a worker's end time is the mtime of
 its `<tag>.exit`. A driver that mirrors `run.sh` keeps that shape, since the
-release checklist greps for the lines as they stand. The PowerShell mirror,
-`run.ps1`, follows in a later release, once the bash driver has passed
-acceptance.
+release checklist greps for the lines as they stand.
+
+`run.ps1`, beside `run.sh` in the same directory, is its PowerShell mirror.
+It has the same interface, files, timeline lines, and refusals, and runs
+under PowerShell 7 as
+`pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`.
+Its `pwsh -NoProfile -File <path>/run.ps1 --self-test` launches a
+`claude.ps1` stub, put first on a temporary PATH entry, through the same
+path and prints `self-test passed`.
+
+It starts the worker with `Start-Process pwsh`, and the inner command
+travels base64-encoded with `-EncodedCommand`, so a path that holds a space
+or a single quote arrives unchanged. On Windows the window is hidden. The
+prompt is read from the file with `Get-Content -Raw`, as `run.sh` reads it
+with `cat`. The files it writes and its `started` line end with LF, with no
+byte-order mark, on every platform, so they read as `run.sh`'s do.
+
+The launched pwsh's own standard streams go to three more files in the
+logs directory: `<tag>.launch.in`, `<tag>.launch.out`, and
+`<tag>.launch.err`. Without that redirection, a caller that reads the
+launch through a pipe would wait for the worker to exit instead of getting
+the `started` line at once.
+
+`run.ps1` is checked on macOS only: a parse and its self-test. There the
+launched process is attached to the launching shell, with no hang-up
+protection. `Start-Process` also copies the launch streams through the
+driver's own process on macOS, so the two output files keep nothing
+written after the driver returns. The skill copies and runs `run.sh`, and
+nothing picks a driver by platform until `run.ps1` has passed acceptance
+on Windows.
 
 ## Known behavior
 

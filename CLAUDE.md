@@ -55,7 +55,8 @@ plugins/kenspc/
 │   └── autopilot/
 │       ├── SKILL.md
 │       └── scripts/
-│           └── run.sh           # Bash driver for the autopilot's headless sessions; the first scripts/ under a skill, and check-no-model-names.sh scans it (the PowerShell mirror follows)
+│           ├── run.sh           # Bash driver for the autopilot's headless sessions; the first scripts/ under a skill, and check-no-model-names.sh scans it
+│           └── run.ps1          # PowerShell mirror of run.sh (pwsh 7), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
 ├── README.md
 └── LICENSE
 ```
@@ -66,7 +67,7 @@ plugins/kenspc/
 
 Each skill lives in `skills/<skill-name>/` with:
 - `SKILL.md` — skill definition with YAML frontmatter (`name`, `description`, `version`, `argument-hint`) followed by structured phases/modes
-- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's `run.sh`, which `check-no-model-names.sh` scans with the rest of `skills/`
+- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's two drivers, `run.sh` and its PowerShell mirror `run.ps1`, which `check-no-model-names.sh` scans with the rest of `skills/`
 
 Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
 

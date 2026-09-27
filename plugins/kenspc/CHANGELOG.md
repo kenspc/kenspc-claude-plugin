@@ -222,13 +222,38 @@ exist yet.
   new row 11, `/kenspc-autopilot <spec>`, runs one headless `repo`-mode
   batch on a one-task seed (about USD 10–20 at the batch E per-session
   figures; `plugin` mode is exercised once, in the batch's acceptance
-  record, not per release); the end-to-end row becomes 12.
-- **The PowerShell driver `run.ps1` follows** in a later release: the same
-  interface and files, written after the bash driver has passed acceptance
-  and checked with `pwsh` on macOS (a parse and one `--self-test` launch);
-  Windows acceptance is a roadmap line. Until then the plugin README's
-  Autopilot section, CLAUDE.md's layout tree, and this entry name it as
-  following.
+  record, not per release), and also requires that
+  `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test`
+  prints `self-test passed` and exits 0; the end-to-end row becomes 12.
+- **The PowerShell driver `run.ps1`.** `skills/autopilot/scripts/run.ps1`,
+  for PowerShell 7 (`#Requires -Version 7.0`), is written after the bash
+  driver passed acceptance. It has the same interface, files, timeline
+  lines, and refusals as `run.sh` (exit 2, nothing written), run as
+  `pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`.
+  It keeps the stale `.exit` removal, the `started` line, the batch-name
+  default, and `caffeinate -i` when present. Details:
+  - The worker starts through `Start-Process pwsh`, with the inner command
+    passed by `-EncodedCommand`, so a path with a space or a single quote
+    arrives unchanged, and with `-WindowStyle Hidden` on Windows only
+    (pwsh on macOS refuses the parameter). The inner command reads the
+    prompt with `Get-Content -Raw`, gives the worker an empty stdin, and
+    writes `<tag>.exit` and the `end` line when the worker returns.
+  - The launched pwsh's own streams go to `<tag>.launch.in`,
+    `<tag>.launch.out`, and `<tag>.launch.err`, so a caller that reads
+    the launch through a pipe gets the `started` line at once.
+  - The files it writes and its `started` line end with LF and carry no
+    byte-order mark on every platform.
+  - Its `--self-test` launches a `claude.ps1` stub put first on a
+    temporary PATH entry and checks what `run.sh`'s does, adapted. It adds
+    a launch whose cwd and logs directory hold a space and a single quote,
+    and a launch read through a command substitution that returns while a
+    slow stub still runs.
+  - It is checked with `pwsh` on macOS: a parse and the self-test. There
+    the launched process is attached to the launching shell, and the
+    launch output files keep nothing written after the driver returns.
+
+  The skill still copies and runs `run.sh`. Windows acceptance of
+  `run.ps1` is a roadmap line.
 
 ### Known behavior
 

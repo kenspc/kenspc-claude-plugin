@@ -545,7 +545,62 @@ PowerShell needs a different mechanism, this task names it.
 
 ### Task 2: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Promoted, from Task 1: the `started` line ends with an explicit LF on
+    every platform. It went into `plugins/kenspc/README.md` § Autopilot
+    (the drivers paragraphs) and into the CHANGELOG's `run.ps1` bullet,
+    each time together with the LF-only, no-BOM files the task specified.
+    Why: a Windows user who parses the driver's output would look for it
+    there.
+  - Needs a home, from Task 1: whether `.launch.err` keeps the inner
+    pwsh's own error on Windows is left to the Windows acceptance. On
+    macOS it does not (Task 1's Changes/tradeoffs). Suggested destination:
+    `docs/roadmap.md`, the Windows-acceptance item for `run.ps1` that the
+    release commit appends. It is outside this task's list, so it was
+    written nowhere.
+  - Local, from Task 1, left in the task document and git:
+    - the in-process launch refusals in the self-test;
+    - reading `.err` through PowerShell's error view, and keeping the
+      flags on the `$argv` line;
+    - `caffeinate -i -w` beside the worker;
+    - `EscapeSingleQuotedStringContent` for literals;
+    - single-pass template substitution;
+    - the default-stub resolution check;
+    - relative-path resolution and the invariant-culture timestamp.
+
+    Each explains a code choice inside `run.ps1`, and the file's header and
+    comments carry what an editor of it needs.
+- Changes/tradeoffs:
+  - `plugins/kenspc/README.md`: the drivers paragraph now ends at the
+    `run.sh` shape sentence. Four short paragraphs follow for `run.ps1`:
+    the interface and self-test; the launch mechanism and line ends; the
+    `<tag>.launch.*` files; and the macOS-only check with the skill still
+    running `run.sh`. Beyond the task's list, they name the three launch
+    files and the macOS caveat on them, so that a reader of the README
+    alone learns what the driver writes.
+  - `plugins/kenspc/CHANGELOG.md`: the `run.ps1` bullet already sat under
+    `### Added`. It was rewritten in place, with nested details, and its
+    "Until then …" sentence went. The Documentation bullet gains the
+    row-11 clause.
+  - `CLAUDE.md`: in the layout tree, `run.sh` stays first and `run.ps1`
+    comes after it (not alphabetical), because `run.sh` is the driver the
+    skill runs. `run.sh`'s comment drops "(the PowerShell mirror follows)".
+    The File Structure `scripts/` bullet names both drivers.
+  - `docs/release-checklist.md`: row 11 gains the one clause after the
+    `run.sh` self-test clause. Row 1, the rest of row 11, row 12, and the
+    pre-flight block are untouched. The root `README.md` and
+    `docs/roadmap.md` are untouched, as listed.
+  - Verification:
+    - `bash scripts/check-all.sh --self-test` exits 0 with
+      `guards run: 10` and `self-tests run: 9`.
+    - Both `claude plugin validate --strict` runs pass.
+    - Both zero-diff commands print nothing.
+    - The checklist clause appears unwrapped (`grep -F`) in the checklist
+      and the CHANGELOG, the `## 3.9.0 — unreleased` heading is
+      unchanged, and no "follows" wording remains in the four documents.
 
 Depends on: Task 1
 
