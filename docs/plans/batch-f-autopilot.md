@@ -1179,6 +1179,37 @@ points F-1 to F-14 or the design rows M1–M16 and D1–D24.
   before a slow stub's `.exit` exists. The Documentation impact element
   reads with CL5, CL6, and CL18, which extend its CLAUDE.md and checklist
   entries. Step 3.1.
+- **CL20** — `run.ps1` requires PowerShell 7.3 (`#Requires -Version 7.3`):
+  7.0–7.2 pass native arguments Legacy-style, so the worker would receive
+  `--settings {crossSessionInbound:accept}` instead of JSON and a prompt
+  stripped of its double quotes, which the `.ps1` stubs cannot see. The
+  self-test adds, on macOS and Linux, one launch through a `#!/bin/sh`
+  stub that writes the `-p` and `--settings` values it receives to files,
+  compared byte for byte with a prompt that holds `"`. The Windows `.cmd`
+  shim form stays with the Windows acceptance. The CHANGELOG and the
+  README state the 7.3 floor where they name one. Step 3.1.
+- **CL21** — CL18 amended: the release checklist's row 11 `run.ps1` clause
+  also carries the failing-stub control, as the `run.sh` clause does —
+  with `AUTOPILOT_CLAUDE` pointed at a `.ps1` stub that prints the stub
+  JSON, sleeps one second, and exits 3, the self-test exits 1 naming
+  `.exit`; the CHANGELOG's Documentation bullet says the same. Steps 2.4,
+  3.1.
+- **CL22** — On macOS (pwsh 7.6.6) `Start-Process` copies the launched
+  pwsh's streams through the driver's own process, so `<tag>.launch.out`
+  and `<tag>.launch.err` keep only what is written before the driver
+  returns; `<tag>.err` carries the inner script's failure reason (probed:
+  a failing inner script, `.exit` 1, an empty `.launch.err`). CL19's
+  "the inner pwsh's own error is kept" holds on macOS through `<tag>.err`,
+  and on Windows is unverified. The release commit's Windows roadmap line
+  (item 11, M13) names what that acceptance settles: whether `.launch.err`
+  keeps the inner error on Windows, argument passing through the `.cmd`
+  shim, and the `run.ps1` pid's command line carrying no tag — the skill's
+  leftover-pid check reads the driver's command line, latent while the
+  skill runs `run.sh`. A relative `AUTOPILOT_CLAUDE` resolves against the
+  worker's cwd in both drivers; the skill never sets it, so both drivers
+  stay as they are this batch, and the main session's reviewer report
+  lists it as a candidate — not a roadmap line (F-14). Step 3.1; the
+  release commit.
 
 ## Open Questions
 
