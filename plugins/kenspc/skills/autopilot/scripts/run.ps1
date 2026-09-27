@@ -38,7 +38,12 @@
 # Files, all under the logs directory
 #   <tag>.session   the session id, written before the process starts
 #   <tag>.pid       the id of the pwsh process Start-Process started, written
-#                   at launch
+#                   at launch. Its command line is "pwsh -NoProfile
+#                   -EncodedCommand <base64>", with no tag in it, unlike
+#                   run.sh's "bash <path>/run.sh <tag> …": a caller that tells
+#                   a live worker from a pid left by a reboot by looking for
+#                   the tag on that command line reads every live run.ps1
+#                   worker as a leftover, so it needs another test here
 #   <tag>.json      the worker's stdout (--output-format json)
 #   <tag>.err       the worker's stderr, and the launched pwsh's own error
 #                   when its script fails (exit status 1)
