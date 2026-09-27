@@ -40,7 +40,8 @@
 #   <tag>.pid       the id of the pwsh process Start-Process started, written
 #                   at launch
 #   <tag>.json      the worker's stdout (--output-format json)
-#   <tag>.err       the worker's stderr
+#   <tag>.err       the worker's stderr, and the launched pwsh's own error
+#                   when its script fails (exit status 1)
 #   <tag>.exit      the worker's exit status, written right after it returns
 #   <tag>.launch.in, <tag>.launch.out, <tag>.launch.err
 #                   the launched pwsh's own standard streams, not the
@@ -50,8 +51,9 @@
 #                   script fails. On macOS and Linux Start-Process copies
 #                   these streams through this script's own process, which
 #                   returns at once, so there nothing written after it
-#                   returns is kept, an inner script's error included; the
-#                   worker still runs and <tag>.exit is still written
+#                   returns is kept, which is why that error also goes to
+#                   <tag>.err; the worker still runs and <tag>.exit is still
+#                   written
 #   <batch>-timeline.log
 #                   appended: "start <tag> pid <pid> …" at launch and
 #                   "end   <tag> exit <status>" (three spaces) when the worker
@@ -150,7 +152,12 @@ try {
     $null | & __EXE__ @argv > __JSON__ 2> __ERR__
     $status = $LASTEXITCODE
 } catch {
-    [Console]::Error.WriteLine('run.ps1: ' + $_)
+    # The reason also goes to <tag>.err: this pwsh's own stderr, the
+    # .launch.err file, keeps nothing written after run.ps1 returns on macOS.
+    # A failed append is dropped, so .exit and the end line are still written.
+    $reason = 'run.ps1: ' + $_
+    [Console]::Error.WriteLine($reason)
+    try { [System.IO.File]::AppendAllText(__ERR__, "$reason`n", $enc) } catch { }
 }
 [System.IO.File]::WriteAllText(__EXIT__, "$status`n", $enc)
 [System.IO.File]::AppendAllText(__TIMELINE__, 'end   ' + __TAG__ + " exit $status`n", $enc)
