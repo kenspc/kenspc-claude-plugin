@@ -125,7 +125,10 @@ the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`;
 `ps -o args= -p $PPID`.
 
 **DONE when** the settings line (Templates § The settings line, ending
-`wait <interactive|headless>`) has been printed and the state file written.
+`wait <interactive|headless>`) has been printed as a line of its own in
+this session's reply — the state file, which carries it too, does not
+stand in for it (Templates § The settings line says why) — and the state
+file written.
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
 the driver copy, its self-test files, the state file — and nothing into the
@@ -451,8 +454,10 @@ Every worker is one launch, one wait, one return.
   `AUTOPILOT_BUDGET_USD=<remaining>`, and `AUTOPILOT_PLUGIN_DIR=<plugin
   directory>` in plugin mode — with the repository root as the worker's
   cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
-  (the pid and the session id from the driver's `started` line, or from
-  `<tag>.pid` and `<tag>.session`); rewrite the state file, its step line
+  as a line of its own in this session's reply (the pid and the session id
+  from the driver's `started` line, or from `<tag>.pid` and
+  `<tag>.session`) — the state file does not stand in for it (Templates
+  § The settings line says why); rewrite the state file, its step line
   carrying HEAD at the launch. A driver that
   exits non-zero has started nothing: its message on stderr is the stop's
   reason — or, when it names an earlier worker under the tag still
@@ -489,8 +494,10 @@ Every worker is one launch, one wait, one return.
   `<tag>.exit` exists or the pid is gone.
 - **The return.** Print
   `S<n> returned — exit <code>, cost USD <c>, <success|subtype> — <json path>`
-  from `<tag>.exit` and `<tag>.json`; upsert `<tag> <session_id> <total_cost_usd>`
-  into `<batch>-costs.txt` — replace the line that carries the same session
+  from `<tag>.exit` and `<tag>.json`, as a line of its own in this
+  session's reply, as the launch line is — the state file does not stand
+  in for it (Templates § The settings line says why); upsert
+  `<tag> <session_id> <total_cost_usd>` into `<batch>-costs.txt` — replace the line that carries the same session
   id, else append; a resume's line replaces its predecessor's, since a
   resumed session's JSON carries the whole total; rewrite the state file.
   A `<tag>.json` that is empty or not JSON — an executable that could not
@@ -1213,7 +1220,9 @@ calls.
 ### The settings line
 
 Printed once, before the first launch, in English whatever the
-conversation's language:
+conversation's language, as a line of its own in this session's reply
+text; the state file carries the same line and does not stand in for the
+printed one:
 
 ```
 Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, workspace <path>, wait <interactive|headless>
@@ -1221,6 +1230,15 @@ Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget
 
 A note on ignored labels, a `Version:` ignored in repo mode, or a
 `Zero diff:` path absent at the baseline follows on the next line.
+
+The launch and return lines (Launch, wait, return) go the same way: each
+is printed in the reply, on a line of its own, when its step happens. Why
+the reply and not the state file alone: the user reads the settings there
+before any session is paid for; the transcript is the one ordered record
+of the launches and returns, since the state file is rewritten whole at
+every transition and keeps no history of them; and the release checklist
+reads all three lines from the trace, so a run that wrote them only into
+the state file fails that check with every transition in order.
 
 ### The stop conditions
 
