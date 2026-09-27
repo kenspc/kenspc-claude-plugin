@@ -424,7 +424,8 @@ function New-StubFile {
 # every always-passed flag with the id .session holds and cwd=<the launch's
 # cwd>, and none of the three optional flags; .json's session_id equal to
 # .session; a failing stub's status 3 in .exit and the end line, and the
-# multi-line prompt it received as its -p value; a resume
+# multi-line prompt it received as its -p value; a throwing stub's .exit
+# reading 1, its end line, and its reason in .err; a resume
 # launch through the command line with the three optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
 # batch-name default with a stale .exit removed at launch; a launch whose cwd
@@ -483,6 +484,10 @@ exit 0
     New-StubFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nexit 3`n"
     $slowStub = Join-Path $stubDir 'slow.ps1'
     New-StubFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
+    # A fourth that throws, for the check that a failure inside the worker's
+    # own script still ends in .exit.
+    $throwStub = Join-Path $stubDir 'throw.ps1'
+    New-StubFile $throwStub "throw 'self-test stub failure'`n"
 
     # The three optional variables are unset for the first launch, whatever
     # the caller's environment holds, so their flags can be asserted absent.
@@ -675,6 +680,28 @@ exit 0
     $seen = if (Test-Path -LiteralPath $promptSeen -PathType Leaf) { [System.IO.File]::ReadAllText($promptSeen) } else { $null }
     if ($seen -cne $expectedPrompt) {
         Stop-SelfTest "the worker of $failTag received the prompt `"$seen`", expected the content of $multiPrompt without its trailing line breaks"
+    }
+
+    # A failure inside the worker's own script, here an executable that
+    # throws, still writes .exit reading 1 and the end line, and leaves its
+    # reason in .err: without .exit the caller would wait out its whole wait
+    # for a worker that is gone, and without the reason it would resume a
+    # worker that cannot start.
+    $throwTag = 'selftest-s5'
+    $env:AUTOPILOT_CLAUDE = $throwStub
+    $null = Invoke-Launch $throwTag $base $promptFile ''
+    $env:AUTOPILOT_CLAUDE = $savedExe
+    $throwExit = Join-Path $logsDir "$throwTag.exit"
+    $throwErr = Join-Path $logsDir "$throwTag.err"
+    Wait-ExitFile $throwExit
+    if ((Read-FileText $throwExit) -cne '1') {
+        Stop-SelfTest "$throwExit does not read 1 after the worker's script failed"
+    }
+    if (-not (Test-FileLine $timeline "^end   $throwTag exit 1$")) {
+        Stop-SelfTest "$timeline has no end line with exit 1 for $throwTag"
+    }
+    if (-not (Test-FileLine $throwErr 'self-test stub failure')) {
+        Stop-SelfTest "$throwErr does not hold the reason the worker's script failed"
     }
 
     # A resume launch with the first launch's id, through the command line a
