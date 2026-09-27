@@ -452,7 +452,10 @@ function Invoke-Refused {
 # cwd>, and none of the three optional flags; .json's session_id equal to
 # .session; a failing stub's status 3 in .exit and the end line, and the
 # multi-line prompt it received as its -p value; a throwing stub's .exit
-# reading 1, its end line, and its reason in .err; on macOS and Linux, a
+# reading 1, its end line, and its reason in .err; a launch through the
+# command line whose .pid and timeline writes fail returning 0 with its
+# started line, both failures on stderr, and .exit reading 0; on macOS and
+# Linux, a
 # native stub's .exit reading 0 and the -p and --settings values it received
 # equal, byte for byte, to that prompt and the settings JSON; a resume
 # launch through the command line with the three optional variables set;
@@ -738,6 +741,39 @@ exit 0
     }
     if (-not (Test-FileLine $throwErr 'self-test stub failure')) {
         Stop-SelfTest "$throwErr does not hold the reason the worker's script failed"
+    }
+
+    # A launch whose .pid and timeline writes fail after its worker started,
+    # both files being directories here, still returns 0 with its started
+    # line through the command line, names both failures on stderr, and its
+    # worker still writes .exit: a status of 2 reads as nothing started, and
+    # the caller would stop, or launch a second worker under the tag, while
+    # this one runs.
+    $noWriteTag = 'selftest-s8'
+    $noWriteLogs = Join-Path $base 'logs-nowrite'
+    $noWritePid = Join-Path $noWriteLogs "$noWriteTag.pid"
+    $noWriteTimeline = Join-Path $noWriteLogs 'selftest-timeline.log'
+    $noWriteStderr = Join-Path $base 'nowrite-stderr.txt'
+    $null = [System.IO.Directory]::CreateDirectory($noWritePid)
+    $null = [System.IO.Directory]::CreateDirectory($noWriteTimeline)
+    $env:AUTOPILOT_LOGS = $noWriteLogs
+    $noWriteOut = & pwsh -NoProfile -File $self $noWriteTag $base $promptFile 2> $noWriteStderr
+    $rc = $LASTEXITCODE
+    $env:AUTOPILOT_LOGS = $logsDir
+    $noWriteLine = @($noWriteOut) -join "`n"
+    if ($rc -ne 0 -or -not $noWriteLine.StartsWith("started $noWriteTag pid ", [System.StringComparison]::Ordinal)) {
+        Stop-SelfTest "a launch of $noWriteTag whose .pid and timeline writes failed returned $rc with `"$noWriteLine`", expected 0 and its started line"
+    }
+    $noWriteErrText = [System.IO.File]::ReadAllText($noWriteStderr)
+    foreach ($failed in $noWritePid, $noWriteTimeline) {
+        if (-not $noWriteErrText.Contains("cannot write $failed")) {
+            Stop-SelfTest "the launch of $noWriteTag does not name the failed write of $failed on stderr"
+        }
+    }
+    $noWriteExit = Join-Path $noWriteLogs "$noWriteTag.exit"
+    Wait-ExitFile $noWriteExit
+    if ((Read-FileText $noWriteExit) -cne '0') {
+        Stop-SelfTest "$noWriteExit does not read 0 after a launch whose .pid and timeline writes failed"
     }
 
     # On macOS and Linux, a launch through a native program, as the installed
