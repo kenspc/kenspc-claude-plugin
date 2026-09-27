@@ -115,34 +115,57 @@ With no arguments the interview asks as usual; it is not a stop.
 **Goal**: the start point, and what the directory already tells.
 
 **Inputs**: the directory's listing, hidden entries included;
-`git rev-parse --show-toplevel`; the stack's configuration files, whatever
-the stack (a manifest or build file such as a `package.json`, a `*.csproj`
-or `*.sln`, a `pyproject.toml`, a `go.mod`); the git remotes; whether `gh`
-is installed and `gh auth status` succeeds; whether each stack's own tools
-are on the PATH (for example `dotnet`, `node`); in a repository, its
-CLAUDE.md, AGENTS.md, README, CONTRIBUTING, and the subjects of its recent
-commits; the DESCRIPTION. In a repository, note what
+`git rev-parse --is-inside-git-dir`, `git rev-parse --show-prefix`, and in a
+repository `git symbolic-ref -q HEAD`; the stack's configuration files,
+whatever the stack (a manifest or build file such as a `package.json`, a
+`*.csproj` or `*.sln`, a `pyproject.toml`, a `go.mod`); the git remotes;
+whether `gh` is installed and `gh auth status` succeeds; whether each
+stack's own tools are on the PATH (for example `dotnet`, `node`); in a
+repository, its CLAUDE.md, AGENTS.md, README, CONTRIBUTING, and the
+subjects of its recent commits; the DESCRIPTION. In a repository, note what
 `git -c core.quotePath=false status --porcelain -uall` lists before writing
 anything, so the run can tell its own files from the user's and knows which
 tracked files already carry uncommitted changes.
 
-**DONE when** the directory is placed in exactly one start point below, and
-either the run goes on or it has stopped with nothing written. Why nothing
+**DONE when** the directory is placed in exactly one start point below and
+the run goes on, or the run has stopped with nothing written. Why nothing
 is written before the start point is settled: a stop at this phase is the
 skill declining to touch a directory it cannot vouch for, and a file left
 behind would contradict that.
 
 | Start point | How it is recognized | Where it goes |
 |---|---|---|
-| Empty, no git | `ls -A` lists nothing | Phase 1 asks about `git init` |
-| Files, no git | Entries exist, and `git rev-parse --show-toplevel` fails | The question below, then Phase 1 |
-| Inside another repository | `git rev-parse --show-toplevel` names a directory above this one | The question below |
-| Existing repository | `git rev-parse --show-toplevel` names this directory | Only the missing files are written (Phase 6) |
+| Empty, no git | `git rev-parse --is-inside-git-dir` fails, and the directory is empty | Phase 1 asks about `git init` |
+| Files, no git | `git rev-parse --is-inside-git-dir` fails, and the directory is not empty | The question below, then Phase 1 |
+| Inside another repository | `--is-inside-git-dir` prints `false`, and `git rev-parse --show-prefix` prints a path — whether or not the directory is empty | The question below |
+| Existing repository | `--is-inside-git-dir` prints `false`, and `--show-prefix` prints nothing | Only the missing files are written (Phase 6) |
 
-The directory and the top level are compared as physical paths (`pwd -P`),
-since `--show-toplevel` resolves symbolic links. A directory whose AGENTS.md opens with an HTML comment holding
-`kenspc-init template:` is a rerun, whatever else it holds: the run goes to
-§ Rerun, and Phases 1–7 do not apply.
+Git is settled before emptiness, from what git prints rather than by
+comparing paths. Why: an empty directory inside another repository is still
+inside it, and a `git init` there makes the nested repository the question
+below exists to prevent; and one directory can read differently in git's
+output and the shell's (a drive letter on Windows, a symbolic link).
+
+Two cases stop the run in either session, writing nothing, with the reason
+in the last message:
+- `--is-inside-git-dir` prints `true`: a bare repository, or a directory
+  inside `.git`, where `--show-prefix` prints nothing as it does at a top
+  level. Why: files written there land in git's own data.
+- A detached HEAD in a repository, this one or the one above:
+  `git symbolic-ref -q HEAD` fails. Why: a commit made there belongs to no
+  branch, and the next checkout leaves it behind.
+
+Empty means `ls -A` lists nothing but, at most, a file browser's metadata
+(`.DS_Store`, `Thumbs.db`, `desktop.ini`), which no commit of the run
+stages. Why: a folder a file browser has opened gains such a file, and
+nothing in it needs the protection a stop gives.
+
+An AGENTS.md whose opening HTML comment holds `kenspc-init template:` makes
+the run a rerun at the existing-repository start point, and at a new app
+once the question below gets that answer: the run goes to § Rerun, and
+Phases 1–7 do not apply. At the other start points the marker changes
+nothing, and a stop still stops. Why: a rerun writes too, and a stop
+protects a directory whatever it holds.
 
 **Files, no git.** List the entries found and ask whether this directory is
 the project, saying that on yes the run will `git init` here with `main` as
@@ -181,7 +204,7 @@ migration, which this version does not do.
 
 **Goal**: a git repository at the project root, when the user wants one.
 
-**DONE when** `git rev-parse --show-toplevel` names this directory and the
+**DONE when** `git rev-parse --show-prefix` prints nothing here and the
 first branch is `main`, or the user declined and the run goes on without
 git. Nothing happens here for an existing repository or a new app in
 another repository.
@@ -753,9 +776,10 @@ Each phase starts from the artifact the previous one produced, not from the
 wording that closed it:
 
 - Phase 0 → Phase 1: the start point. A stop at Phase 0 has written nothing;
-  a rerun goes to § Rerun.
-- Phase 1 → Phase 2: `git rev-parse --show-toplevel` naming this directory,
-  or the user's no.
+  a rerun goes to § Rerun, and a new app to § A new app in another
+  repository.
+- Phase 1 → Phase 2: `git rev-parse --show-prefix` printing nothing here, or
+  the user's no.
 - Phase 2 → Phase 3: the app list.
 - Phase 3 → Phase 4: each scaffold commit's hash, or the recorded reason an
   app has none.
