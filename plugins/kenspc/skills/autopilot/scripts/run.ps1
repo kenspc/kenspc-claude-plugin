@@ -439,7 +439,8 @@ function Invoke-Refused {
 # launch through the command line with the three optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
 # batch-name default with a stale .exit removed at launch; a launch whose cwd
-# and logs directory hold a space and a single quote; a launch whose cwd,
+# and logs directory hold a space, a single quote, and a right single
+# quotation mark; a launch whose cwd,
 # prompt file, and logs directory are relative to the caller's location,
 # its .exit reading 0 and its .json holding "result"; and a launch read
 # through a command substitution returning while its slow stub still runs.
@@ -794,12 +795,14 @@ exit 0
         Stop-SelfTest "$batchTimeline has no end line for $batchTag"
     }
 
-    # A cwd and a logs directory that hold a space and a single quote: every
-    # path reaches the inner script as a literal, so one quote left undoubled
-    # would break the worker's script and it would never write .exit.
+    # A cwd and a logs directory that hold a space, a single quote, and a
+    # right single quotation mark (U+2019), which PowerShell also reads as a
+    # quote: every path reaches the inner script as a literal, so one quote
+    # left undoubled would break the worker's script and it would never write
+    # .exit.
     $oddTag = 'selftest-s3'
-    $oddDir = Join-Path $base "cwd it's"
-    $oddLogs = Join-Path $base "logs it's"
+    $oddDir = Join-Path $base ("cwd it's " + [char]0x2019)
+    $oddLogs = Join-Path $base ("logs it's " + [char]0x2019)
     $null = [System.IO.Directory]::CreateDirectory($oddDir)
     $oddPrompt = Join-Path $oddDir 'prompt.md'
     Write-LfFile $oddPrompt "Reply ok and stop.`n"
