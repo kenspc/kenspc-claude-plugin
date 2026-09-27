@@ -921,9 +921,10 @@ Determined from this repository's CLAUDE.md, § Durable documents.
      commit bumps `plugin.json` to 3.8.3, dates the CHANGELOG heading,
      `git rm`s the plan and task documents, and S6's reply carries
      `guards run: 10` and `self-tests run: 9`; no tag.
-  4. **budget stop** — seed (a) with `Budget: USD 1`. PASS: no worker
-     started (the timeline is empty for the batch), the final message ends
-     with `Autopilot stopped:` and names the budget with spent 0 and the
+  4. **budget stop** — seed (a) with `Budget: USD 1`. PASS (CL11; the
+     first worker always starts, D10): the stop comes before the first
+     launch whose spent + projected exceeds the budget, the final message
+     ends with `Autopilot stopped:` and names the budget, spent, and the
      projected amount, and asks how much to raise it to; in the headless
      case the run ends there.
   5. **rails** — over cases 1–3: no `git push`, `git tag`, `rm -r`, or
