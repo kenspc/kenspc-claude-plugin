@@ -254,8 +254,13 @@ function Invoke-Launch {
     # A missing executable is a refusal here, not a worker that dies at once:
     # otherwise the driver prints "started", .exit reads a failure with an
     # empty .json, and the skill resumes a dead worker instead of reading the
-    # reason.
-    if (-not (Get-Command -Name $exe -ErrorAction SilentlyContinue)) {
+    # reason. On macOS and Linux a file with no execute bit is missing too, as
+    # run.sh's command -v reads it: Get-Command finds such a file, but the
+    # worker's call would hand it to the platform's file opener instead of
+    # running it, so no worker would start.
+    $command = Get-Command -Name $exe -ErrorAction SilentlyContinue | Select-Object -First 1
+    $executeBits = [System.IO.UnixFileMode]'UserExecute, GroupExecute, OtherExecute'
+    if (-not $command -or (-not $IsWindows -and $command.CommandType -eq 'Application' -and -not ([System.IO.File]::GetUnixFileMode($command.Source) -band $executeBits))) {
         Stop-Driver "no executable $exe; set AUTOPILOT_CLAUDE or put claude on PATH"
     }
     $logsPath = Resolve-FullPath $logs
@@ -436,7 +441,8 @@ function Invoke-Refused {
 # system temporary directory, whatever AUTOPILOT_LOGS says, so a self-test
 # writes nothing under the workspace; it is left in place afterwards. Checks,
 # in this order, naming the first that fails: a launch naming a missing
-# executable, or an empty or whitespace-only prompt file, refused with the
+# executable, on macOS and Linux one with no execute bit, or an empty or
+# whitespace-only prompt file, refused with the
 # subject named and no .session; a logs directory holding a wildcard
 # character refused with the directory named and not created; the logs
 # directory created by the launch;
@@ -557,6 +563,21 @@ exit 0
     }
     if (-not $refusal.Contains("no executable $missing")) {
         Stop-SelfTest "the refusal of a missing executable does not name $missing"
+    }
+    # On macOS and Linux a file with no execute bit is refused the same way,
+    # as run.sh's command -v refuses it.
+    if (-not $IsWindows) {
+        $noExec = Join-Path $stubDir 'noexec.sh'
+        Write-LfFile $noExec "#!/bin/sh`nexit 0`n"
+        $env:AUTOPILOT_CLAUDE = $noExec
+        $refusal = Invoke-Refused $tag $base $promptFile
+        $env:AUTOPILOT_CLAUDE = $savedExe
+        if ($null -eq $refusal -or (Test-Path -LiteralPath $sessionFile)) {
+            Stop-SelfTest "a launch with the executable $noExec, which has no execute bit, was not refused before writing, expected a refusal and no .session"
+        }
+        if (-not $refusal.Contains("no executable $noExec")) {
+            Stop-SelfTest "the refusal of $noExec, which has no execute bit, does not name it"
+        }
     }
     # An empty prompt file, and one of only whitespace, are refused the same
     # way: the paid empty session the guard exists to prevent.
