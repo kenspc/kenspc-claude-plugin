@@ -373,3 +373,11 @@ Why 这样排：
   - **"The checks run on the result" 的旧句（N2）→ fix。** 删掉或改成与 Checks 一节一致。
   - **Generator 改到执行前就已有未 commit 改动的档案（E22 剩下的部分、E2-5，LOW）→ defer。** 理由：scaffolding 只在可以询问时进行；这种改动不会被 commit，只会留在工作树里跟用户的改动混在一起，不会丢东西；要侦测得先对每个 dirty 档做快照，v1 按减法原则不做。
   - **Documents 表列出一个没被 commit 的档案（E2-8，LOW）→ not applicable。** 档案在工作树里存在，2.14 的路径检查成立；没 commit 的原因已在最后讯息说明。
+- **C13（审查第 3 轮之后）第 3 轮 findings 的处置。** Round 2 的修正里，C2-1–C2-4、S2-1、E2-1–E2-4、E2-6、E2-7、N2 都解决，C2-2 只解决一部分。第 3 轮没有 HIGH 或 MEDIUM；新 LOW 共 9 条（spec S3-1；conventions C3-1–C3-3；edges E3-1–E3-6，其中 S3-1 与 E3-2、C3-1 与 E3-1 是同一件事）。三轮已满，之后不再开审查轮；下面标 fix 的由 `fixer-3` 修，改由 pre-flight 与验收检验，报告里写明这些修正没有经过第四轮审查。裁决：
+  - **"names a `.gitignore`"也会认到全域的 `~/.gitignore`（C3-1、E3-1）→ fix。** 只认 repo 自己的 `.gitignore`。理由：很多 Mac 把 `core.excludesFile` 设成 `~/.gitignore`，照现在的文字 `.kenspc/` 和 `CLAUDE.local.md` 就不会被追加，违反 2.8。
+  - **只被全域 excludes 盖住的 build 目录不会写进 repo 的 `.gitignore`（S3-1、E3-2，C2-2 的剩余部分）→ fix。** 找依赖与 build 目录时，看得到被 ignore 的档案（例如 status 带 `--ignored`，或直接列目录），再以 repo 自己的规则判断。理由：C12 已经裁决只看 repo 自己的规则。
+  - **`LC_ALL=C` 只写在停下那一条（E3-4）→ fix。** 所有要读 git 讯息文字的探测都在 `LC_ALL=C` 下执行。理由：非英文环境的 git 会翻译讯息，skill 会误停。
+  - **Scaffold commit 也可能没有 pathspec（E3-5）→ fix。** "清单为空就不 commit、不执行没有 pathspec 的 `git commit`"适用于这次执行的每一个 commit。理由：同 E2-2，会把用户已 stage 的东西 commit 进去。
+  - **重跑时，自带 `.git` 的 app 的档案没有被排除（E3-3）→ fix。** 把"这种 app 的一对档案不进 commit"写在每个 commit 都读得到的地方，重跑也适用。理由：否则重跑的 commit 会因 pathspec 失败。
+  - **README 与 CHANGELOG 的两处说法和 SKILL.md 不一致（C3-2、C3-3）→ fix。** 照 SKILL.md 改：`.git` 档指向不存在的路径时停下的写法；没有东西可 commit 时执行就结束，不会再问 push 与 labels。
+  - **在别的用户拥有的空目录里 `git init`（E3-6）→ defer。** 理由：罕见；git 会自己报错停下，这次执行不会写任何全域设定；v1 按减法原则不加分支。
