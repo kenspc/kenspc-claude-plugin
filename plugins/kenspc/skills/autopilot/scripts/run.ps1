@@ -421,7 +421,8 @@ function New-StubFile {
 # .launch.* files present, .launch.out and .launch.err empty; .err showing
 # every always-passed flag with the id .session holds and cwd=<the launch's
 # cwd>, and none of the three optional flags; .json's session_id equal to
-# .session; a failing stub's status 3 in .exit and the end line; a resume
+# .session; a failing stub's status 3 in .exit and the end line, and the
+# multi-line prompt it received as its -p value; a resume
 # launch through the command line with the three optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
 # batch-name default with a stale .exit removed at launch; a launch whose cwd
@@ -472,9 +473,12 @@ exit 0
     # A second stub that exits 3, for the status check, and a third that stays
     # alive five seconds, for the command-substitution check; written whatever
     # AUTOPILOT_CLAUDE names, so a caller's stub is used for the passing
-    # launches only.
+    # launches only. The second one also writes the prompt it receives, its
+    # -p value, to a file of its own, so the prompt check runs whatever
+    # AUTOPILOT_CLAUDE names too.
     $failStub = Join-Path $stubDir 'fail.ps1'
-    New-StubFile $failStub "Write-Error (`$args -join ' ')`nexit 3`n"
+    $promptSeen = Join-Path $base 'prompt-seen.txt'
+    New-StubFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nexit 3`n"
     $slowStub = Join-Path $stubDir 'slow.ps1'
     New-StubFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
 
@@ -634,9 +638,16 @@ exit 0
     # A worker's non-zero status reaches .exit and the timeline's end line:
     # the skill reads both, and a driver that always wrote 0 would report
     # every failed worker as a success. The failing stub exits 3 at once.
+    # Its prompt file has several lines, a double quote, and a trailing blank
+    # line, and the stub's -p value is the file's whole content with the
+    # trailing line breaks removed, as run.sh's $(cat) reads it: a driver
+    # that passed the path, or the file's lines as separate values, would
+    # start every worker with the wrong prompt.
     $failTag = 'selftest-s2'
+    $multiPrompt = Join-Path $base 'multi.md'
+    New-StubFile $multiPrompt "First line.`nSay `"hi`" and stop.`n`n"
     $env:AUTOPILOT_CLAUDE = $failStub
-    $null = Invoke-Launch $failTag $base $promptFile ''
+    $null = Invoke-Launch $failTag $base $multiPrompt ''
     $env:AUTOPILOT_CLAUDE = $savedExe
     $failExit = Join-Path $logsDir "$failTag.exit"
     Wait-ExitFile $failExit
@@ -645,6 +656,11 @@ exit 0
     }
     if (-not (Test-FileLine $timeline "^end   $failTag exit 3$")) {
         Stop-SelfTest "$timeline has no end line with exit 3 for $failTag"
+    }
+    $expectedPrompt = "First line.`nSay `"hi`" and stop."
+    $seen = if (Test-Path -LiteralPath $promptSeen -PathType Leaf) { [System.IO.File]::ReadAllText($promptSeen) } else { $null }
+    if ($seen -cne $expectedPrompt) {
+        Stop-SelfTest "the worker of $failTag received the prompt `"$seen`", expected the content of $multiPrompt without its trailing line breaks"
     }
 
     # A resume launch with the first launch's id, through the command line a
