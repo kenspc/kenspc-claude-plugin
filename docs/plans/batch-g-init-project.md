@@ -381,3 +381,10 @@ Why 这样排：
   - **重跑时，自带 `.git` 的 app 的档案没有被排除（E3-3）→ fix。** 把"这种 app 的一对档案不进 commit"写在每个 commit 都读得到的地方，重跑也适用。理由：否则重跑的 commit 会因 pathspec 失败。
   - **README 与 CHANGELOG 的两处说法和 SKILL.md 不一致（C3-2、C3-3）→ fix。** 照 SKILL.md 改：`.git` 档指向不存在的路径时停下的写法；没有东西可 commit 时执行就结束，不会再问 push 与 labels。
   - **在别的用户拥有的空目录里 `git init`（E3-6）→ defer。** 理由：罕见；git 会自己报错停下，这次执行不会写任何全域设定；v1 按减法原则不加分支。
+- **C14（验收之后）验收结果的分类。** A1–A9、A11、A12 全部 PASS；A10 的 README 替换与 `.gitignore` 两项 PASS，嵌套 `.git` 一项 Not exercised（create-vite 不做 `git init`）；A2 的 `apps/api/src/` Not exercised（container 没有 `dotnet`，走的是"缺工具就停下说明"的路径）。main 另加的 A6c（只回答 version 行）PASS，验证了 C11。没有 FAIL，所以没有插件缺陷要交给 fixer。观察的分类：
+  - **A1（H）在 `docs/product.md` 写了参数没说的产品描述**（例如"取代电话预约"）→ 行为偏差。Skill 的品质标准已写明只写用户说的、档案看得到的或 TBD；这是执行的模型没照做。列进 Known behavior：init 之后先读一遍 `docs/product.md`。
+  - **A3（H）停下时最后讯息以问句结尾，并引述了用户档案的内容** → 行为偏差；没有写入任何东西，case 仍 PASS。
+  - **A1 重跑用 `git -c user.name=…` commit，虽然 git 身份已设定** → 行为偏差；SKILL.md 没有这样的规定。
+  - **A5：AGENTS.md 与既有 CLAUDE.md 合计 110 行、内容重复** → 设计如此（C10：80 行预算只管这次建的那一对；2.12 要求报告合计行数与重复内容，由用户整理）。列进 Known behavior。
+  - **"跳过，用默认"用在档案清单确认时，skill 照 2.11 的默认 commit** → 设计如此（默认值表的 Commit 是"做"）。列进 Known behavior。
+  - **Headless 的 stdin 若来自非空的 `/dev/null`，会被接到参数后面** → 环境问题，不是插件行为；H case 改用空档当 stdin 重跑，结果相同。
