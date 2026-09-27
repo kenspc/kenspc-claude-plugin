@@ -53,8 +53,10 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     rather than by comparing paths, so an empty directory inside another
     repository is the third start point; a directory holding only a file
     browser's metadata counts as empty. The run stops in either session,
-    writing nothing, in a bare repository, inside a `.git` directory, or on
-    a detached HEAD.
+    writing nothing, in a bare repository, inside a `.git` directory, on a
+    detached HEAD, or where git finds a repository it will not read (one
+    another user owns, for example): only git's own `not a git repository`
+    counts as no git.
   - **The interview.** In the user's language, five rounds — project;
     shape and stack; UI; delivery; collaboration — each skippable. What the
     argument or the scan answers is not asked, except the repository's
@@ -73,9 +75,10 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     documentation commit, without the dependency and build directories its
     tools restore, which are appended to `.gitignore`; an app whose `.git`
     stays gets no scaffold commit, and its AGENTS.md pair stays out of the
-    documentation commit. No generator option that overwrites or empties a
-    directory is chosen, and a failed generator's output is kept, in place
-    or in `.trash/`.
+    documentation commit, as does that of an app directory that already
+    holds a `.git` of its own, which is not offered scaffolding. No
+    generator option that overwrites or empties a directory is chosen, and
+    a failed generator's output is kept, in place or in `.trash/`.
   - **GitHub and the backlog.** A GitHub repository is offered only when
     there is no remote — private by default, its owner asked every time —
     and is created with its remote set in one step, nothing pushed; without
@@ -97,9 +100,10 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     `docs/ui/design-system.md`, `docs/release.md`, `docs/deployment.md`;
     `CHANGELOG.md` only for SemVer or CalVer; `docs/backlog/README.md` for
     backlog C; an AGENTS.md and CLAUDE.md pair for each monorepo app; and
-    `.kenspc/` and `CLAUDE.local.md` appended to `.gitignore`. The templates
-    ship in `skills/init-project/templates/` as `*.tmpl`, none named
-    `CLAUDE.md` or `AGENTS.md`. The files are in English unless the user
+    `.kenspc/` and `CLAUDE.local.md` appended to `.gitignore` where it does
+    not already ignore them. The templates ship in
+    `skills/init-project/templates/` as `*.tmpl`, none named `CLAUDE.md` or
+    `AGENTS.md`. The files are in English unless the user
     asks otherwise, with the reason in the skill; the plugin still sets no
     default language for task documents. The root pair stays within 80
     lines at init and each app's pair within 40. Nothing is written under
@@ -111,14 +115,17 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     opening comment, that every path in the Documents table exists, that no
     value reads as a secret, the TBD form, and the `.gitignore` lines; a
     failing check is fixed first, and nothing that fails one is committed.
-    A line that was there before the run is never changed to pass a check:
-    the final message names it. The file list is confirmed, then committed
-    as `docs: initialize project documentation`, following an existing
+    A line that was there before the run is never changed to pass a check.
+    The secret check also reads the user's own lines that the commit would
+    put into history for the first time; a file with a secret-looking value
+    on such a line stays out of the commit, and the final message names it.
+    The file list is confirmed, then committed as
+    `docs: initialize project documentation`, following an existing
     repository's written or consistent commit convention; a path git
     ignores is not committed, and a file that held uncommitted changes of
     the user's is marked on the list, and left out of the commit by a
-    session that cannot ask. Push and labels come last, each asked
-    separately.
+    session that cannot ask. With no file left to commit, no commit is
+    made. Push and labels come last, each asked separately.
   - **Existing files and reruns.** Nothing that exists is overwritten, and
     a `README*` or `CHANGELOG*` of any name and case counts as existing. An
     existing CLAUDE.md gains only an `@AGENTS.md` first line, on a yes, the
@@ -128,7 +135,8 @@ new CONTEXT key; `scripts/` is untouched, so the guard counts are unchanged
     set up changes only the `TBD(init):` markers the user answers — each
     marker ends its line or table cell (the version line's ends before
     `— rules in docs/release.md`), and an answer replaces the marker, not
-    the line — and nothing when none remains or none is answered.
+    the line — and nothing when none remains or none is answered; a rerun
+    appends nothing to `.gitignore`.
 
 ### Changed
 
