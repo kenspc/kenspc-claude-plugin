@@ -56,7 +56,7 @@ plugins/kenspc/
 │       ├── SKILL.md
 │       └── scripts/
 │           ├── run.sh           # Bash driver for the autopilot's headless sessions; the first scripts/ under a skill, and check-no-model-names.sh scans it
-│           └── run.ps1          # PowerShell mirror of run.sh (pwsh 7), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
+│           └── run.ps1          # PowerShell mirror of run.sh (pwsh 7.3 or later), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
 ├── README.md
 └── LICENSE
 ```
