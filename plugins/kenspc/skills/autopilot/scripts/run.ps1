@@ -429,7 +429,9 @@ function New-StubFile {
 # launch through the command line with the three optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
 # batch-name default with a stale .exit removed at launch; a launch whose cwd
-# and logs directory hold a space and a single quote; and a launch read
+# and logs directory hold a space and a single quote; a launch whose cwd,
+# prompt file, and logs directory are relative to the caller's location,
+# its .exit reading 0 and its .json holding "result"; and a launch read
 # through a command substitution returning while its slow stub still runs.
 function Invoke-SelfTest {
     $tempRoot = [System.IO.Path]::GetTempPath()
@@ -808,6 +810,28 @@ exit 0
     }
     if (-not (Test-FileLine $oddTimeline "^end   $oddTag exit 0$")) {
         Stop-SelfTest "$oddTimeline has no end line for $oddTag"
+    }
+
+    # A cwd, a prompt file, and a logs directory given relative to the
+    # caller's location, as run.sh accepts them: the worker's own script
+    # changes location before it reads the prompt, so a path embedded as
+    # given would not be found there and the worker would die at once. Run
+    # in this process, whose location is not its working directory, so a
+    # path resolved against the working directory is caught too.
+    $relTag = 'selftest-s6'
+    $null = [System.IO.Directory]::CreateDirectory((Join-Path $base 'rel-cwd'))
+    Push-Location -LiteralPath $base
+    $env:AUTOPILOT_LOGS = 'logs'
+    $null = Invoke-Launch $relTag 'rel-cwd' 'prompt.md' ''
+    $env:AUTOPILOT_LOGS = $logsDir
+    Pop-Location
+    $relExit = Join-Path $logsDir "$relTag.exit"
+    Wait-ExitFile $relExit
+    if ((Read-FileText $relExit) -cne '0') {
+        Stop-SelfTest "$relExit does not read 0 after a launch with relative paths"
+    }
+    if (-not (Test-ResultJson (Join-Path $logsDir "$relTag.json"))) {
+        Stop-SelfTest "$(Join-Path $logsDir "$relTag.json") is not a JSON object holding `"result`" after a launch with relative paths"
     }
 
     # A launch read through a command substitution returns while its worker
