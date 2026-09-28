@@ -104,6 +104,13 @@ DONE：条目存在，日期在发布准备时填入。
 - **C2（Phase 0，Allowed files 的范围）** `Allowed files:` 管的是本批次的交付档案。流程本身的产物不在此列：S2 写在 `docs/tasks/` 的 task 文件、主 session 记在本 spec 的 clarification，以及 S6 按 `Release preparation: default` 用 `git rm` 移除的 spec 和 task 文件。理由：`Release preparation: default` 本来就要移除这两份文件，可见改动它们是预期之内的事。
 - **C3（Phase 0，第 6 个验收案例）** 第 6 个案例开头的 `（optional）` 视为 `(optional)` 标记，不计它的位置和全形括号。这只在预算检查不通过、需要删减案例时才用得上。
 - **C4（Phase 0，Documentation impact）** 本 spec 没有 `## Documentation impact` 一节。文件的更新就是 Step 4（README、CLAUDE.md）和 Step 5（CHANGELOG），所以 task 文件不需要另外的 Doc-sync task；若 task-document-reviewer 报出这个缺口，以 Step 4 和 Step 5 作答。
+- **C5（S2 确认，部分声明；用户裁定）** 只声明 model 或只声明 effort 的角色，没声明的那一项用沿用值，也就是主 session 当下的值；沿用值读不到时，那一项就不传。这样的角色在 state file 行里标作 `declared`，settings line 的 roles 列表里没声明的那一项写 `—`。
+- **C6（S2 确认，实际值的归结；用户裁定）** 读 transcript 里全部主循环 assistant 记录。只有一个不同值就照原样印出，有几个不同值就用 `+` 连起来；每一条都相符才算一致。resume 的 tag 那一行涵盖整个 session，包括之前的那一轮。
+- **C7（S2 确认，timeline）** timeline 的 `start` 行不记录 model 和 effort。Step 1 列出的 run.sh 改动不包括这一项，而 state file 已经按 worker 记下请求值。
+- **C8（S2 确认，不改的句子）** CLAUDE.md 讲 `check-no-model-names.sh` 的那句 "Skills and agents follow the session's model and effort"，以及 `scripts/check-no-model-names.sh` 档头和错误讯息里的同类说法，都保持不变。它们讲的是同一个 session 里的 skill 和 agent，说法准确；L7 要更正的只是关于 worker 的不准确说法，目前只在 run.sh 和 run.ps1 的档头。
+- **C9（S2 确认，改动的边界）** settings line 末尾加上新的一段之后，plugin README 的 Known behavior 和 release checklist smoke 第 11 行里"以 `wait headless` 结尾"的说法都跟着改写。不新增 smoke 检查，根目录 README 不改。
+- **C10（S2 确认，not observed；用户裁定）** `not observed` 照原样印出，不加 `MISMATCH:`，也不算进 reviewer report 的 `<k> mismatches`。
+- **C11（S2 确认，编号规则；用户裁定）** 本 spec 的编号标签（Locked design、Background 里的 probe、clarification 的编号）不写进任何交付档案，并用 diff grep 检查。
 
 ## Autopilot
 
