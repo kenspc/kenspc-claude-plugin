@@ -1039,6 +1039,14 @@ on Windows.
   it — `- S3: model <model>[1m]` — and the model check removes a trailing
   `[...]` from the requested value before it compares, so the suffix is
   no mismatch.
+- **The model check can misjudge both ways.** The applied model matches
+  when its ID contains the requested value, a comparison of text: the
+  transcript records the ID that served the request, not the value the
+  role declared. So a declared ID that is a prefix of the served one — a
+  declared `<id>` against a served `<id>-<suffix>` — reads as a match
+  although another model ran, and an alias that no served ID contains
+  reads as `MISMATCH: model` whichever model it resolved to. A role that
+  needs certainty declares a full model ID.
 - **An existing CLAUDE.md.** `/kenspc-init` does not rewrite a CLAUDE.md
   you already have, at the root or in `.claude/`. On your yes it adds one
   line, the import (`@AGENTS.md`; `@../AGENTS.md` from `.claude/CLAUDE.md`),
