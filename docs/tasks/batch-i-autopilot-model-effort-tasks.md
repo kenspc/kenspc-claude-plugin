@@ -11,6 +11,7 @@ Related plan: `docs/plans/batch-i-autopilot-model-effort.md`。spec 的 Locked d
 - plugin 的 skill、agent、command 和 shared 档案里不出现任何 model 名称（家族名或 `claude-` 开头的 ID），由 `check-no-model-names.sh` 检查。文件里的例子一律用 `<model>` 这类占位符。
 - spec 的编号标签（Locked design 的 L1–L12、Background 的 probe P0–P7、clarification 的 C1–C11）不写进任何交付档案（C11）。每个任务都用这个 diff grep 检查自己改动的档案，必须没有输出：
   `git diff -U0 <task 开始前的 HEAD> -- <本任务的档案> | grep -E '^\+.*\b(L([1-9]|1[0-2])|P[0-7]|C([1-9]|1[01]))\b'`
+- 每个必须没有输出的搜索（上面的编号标签 grep、各任务的 `follows the session's model` grep），先对一个必定命中的对象跑同一个 pattern，对照命中了，空结果才算通过：编号标签的 pattern 对 spec 本身（`grep -cE '\b(L([1-9]|1[0-2])|P[0-7]|C([1-9]|1[01]))\b' docs/plans/batch-i-autopilot-model-effort.md` 大于 0），`follows the session's model` 对 spec 或 task 开始前的档案（`git show <task 开始前的 HEAD>:<档案>`）。理由：用户层 CLAUDE.md 要求必须为空的搜索带一个必定命中的对照，否则 pattern 写错、档案路径写错，看起来都跟通过一样。
 - 新写的规则按 CLAUDE.md 的 Writing Rules 附上 "Why:" 散文。证据用自己的话写明什么失败、在哪个命令上，不引用 probe 或 dry-run 的编号。
 - 字段 label 和固定行（settings line、state file 行、reviewer report 字段）一律用英文。
 
@@ -200,7 +201,7 @@ Depends on: Task 1-4
 - README § Autopilot 出现 `AUTOPILOT_MODEL`、`AUTOPILOT_EFFORT`、`not determined`、`CLAUDE_CODE_EFFORT_LEVEL` 和 `Models and efforts`，并逐字写出与 SKILL.md 相同的 state file 那一行模板；CLAUDE.md § Sessions, not agents (autopilot) 出现 `AUTOPILOT_MODEL` 和 `AUTOPILOT_EFFORT`。
 - README § Known behavior 有上面四项新条目，每项都写明所列内容。本任务在这三个档新增的文字里，只有 Fable 计费那一项写出 model 名称，其他例子都用 `<model>` 占位符：`git diff -U0 <task 开始前的 HEAD> -- plugins/kenspc/README.md CLAUDE.md docs/release-checklist.md | grep -iE '^\+.*\b(opus|sonnet|haiku|fable)\b'` 印出的每一行都属于 Fable 计费那一项。README 原有的 model 名称（例如 Acknowledgements 里的）不在此列。
 - README 和 release checklist 里，不再有说 settings line 以 `wait headless` 结尾的句子。
-- `git diff -- CLAUDE.md` 没有碰到 "Skills and agents follow the session's model and effort" 那一句；`scripts/check-no-model-names.sh` 没有改动。
+- `git diff -U0 <task 开始前的 HEAD> -- CLAUDE.md | grep -E '^-.*(Skills and agents follow the|session.s model and effort; a model name)'` 没有输出，也就是 "Skills and agents follow the session's model and effort" 那一句（CLAUDE.md 里分在两行）没有被改动；对照：去掉 `^-.*` 的同一个 pattern，`git show <task 开始前的 HEAD>:CLAUDE.md | grep -E '(Skills and agents follow the|session.s model and effort; a model name)'`，命中两行。`git diff --quiet <task 开始前的 HEAD> -- scripts/check-no-model-names.sh` exit 0。
 - release checklist 的 pre-flight block 全部 exit 0，输出 `guards run: 11`，最后一行是 `self-tests run: 10`。如果计数变了，CLAUDE.md 和 checklist 写的是新的计数，而且与输出一致。
 - 共同约束的编号标签 grep 对这三个档没有输出。
 - 本任务的 commit 只改动这三个档。
@@ -223,7 +224,7 @@ Depends on: Task 1-5
 
 **Acceptance criteria:**
 - `grep -n "^## 4.2.0 — unreleased" plugins/kenspc/CHANGELOG.md` 命中一行，行号小于 `## 4.1.0` 那一行。
-- `git diff -U0 -- plugins/kenspc/CHANGELOG.md | grep -E '^-[^-]'` 没有输出，也就是只有新增的行。
+- `git diff --numstat <task 开始前的 HEAD> -- plugins/kenspc/CHANGELOG.md` 印出一行，第二栏（删除的行数）是 `0`、第一栏大于 0，也就是只有新增的行。跟 task 开始前的 HEAD 比，而不是跟 index 比：暂存或提交之后，`git diff` 不带 commit 就没有输出，检查也就不可能失败。
 - `grep -rn "follows the session's model" plugins/kenspc CLAUDE.md README.md` 仍然没有结果。
 - 共同约束的编号标签 grep 对 `CHANGELOG.md` 没有输出。
 - 本任务的 commit 只改动 `CHANGELOG.md`。
