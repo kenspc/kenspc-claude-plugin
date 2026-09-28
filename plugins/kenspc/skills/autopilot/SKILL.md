@@ -541,9 +541,10 @@ Every worker is one launch, one wait, one return.
 - **The launch.** Assemble `_prompts/<batch>-<tag>.md` from the preamble
   and the task block; run the driver copy with the environment it needs —
   `AUTOPILOT_LOGS=<workspace>/_logs`, `AUTOPILOT_BATCH=<batch>`,
-  `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_MODEL` and
-  `AUTOPILOT_EFFORT` (below), and `AUTOPILOT_PLUGIN_DIR` (below) — with
-  the repository root as the worker's cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
+  `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_WORKSPACE=<workspace>`
+  (below), `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` (below), and
+  `AUTOPILOT_PLUGIN_DIR` (below) — with the repository root as the
+  worker's cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   as a line of its own in this session's reply (the pid and the session id
   from the driver's `started` line, or from `<tag>.pid` and
   `<tag>.session`) — the state file does not stand in for it (Templates
@@ -598,6 +599,13 @@ Every worker is one launch, one wait, one return.
   inherited it read that text two ways — one launched its workers with the
   variable empty, and they ran the installed plugin; two passed the
   inherited plugin directory on, and theirs ran the working tree's skills.
+
+  Every launch, resumes included, also sets
+  `AUTOPILOT_WORKSPACE=<workspace>`, the workspace's absolute path. Why:
+  the driver builds the worker's write roots from it (The driver), which
+  the plugin's rails hook reads in every worker the driver starts, and a
+  marked nested main session writes its state file and prompts under the
+  workspace, a write the hook would deny without that root.
 - **The wait, interactive.** Subscribe to the worker with `SendMessage`
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
@@ -1250,6 +1258,7 @@ Every run is a headless session started through the driver copy, with the
 seed as its cwd and its prompt in a file:
 
     AUTOPILOT_LOGS=<workspace>/_logs AUTOPILOT_BATCH=<batch> \
+    AUTOPILOT_WORKSPACE=<workspace> \
     AUTOPILOT_PLUGIN_DIR=<plugin directory> AUTOPILOT_BUDGET_USD=<cap> \
     <workspace>/_prompts/<batch>-run.sh <nested tag> <seed directory> <prompt file>
 
@@ -1422,6 +1431,12 @@ AUTOPILOT_MODEL        when non-empty, --model <value>    (fresh launch and resu
 AUTOPILOT_EFFORT       when non-empty, --effort <value>   (fresh launch and resume)
 AUTOPILOT_CLAUDE       the executable (default claude)
 AUTOPILOT_BATCH        the batch name in the timeline's file name
+AUTOPILOT_WORKSPACE    the workspace; when non-empty, one of the write roots below (the empty string counts as unset)
+
+exported to every worker, fresh launch and resume, over any value the caller holds:
+KENSPC_AUTOPILOT_WORKER        1
+KENSPC_AUTOPILOT_WRITE_ROOTS   the roots joined by "|": the worker's repository (git rev-parse --show-toplevel in <cwd>),
+                               AUTOPILOT_WORKSPACE when non-empty, $TMPDIR when set, /tmp, /private/tmp
 
 <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
 <batch>-timeline.log   start <tag> pid <pid> …  /  end   <tag> exit <status>
@@ -1435,6 +1450,18 @@ Every worker starts with `--name <tag>`,
 `--model` is passed when `AUTOPILOT_MODEL` is non-empty, `--effort` when
 `AUTOPILOT_EFFORT` is, and `--plugin-dir` when `AUTOPILOT_PLUGIN_DIR` is,
 on a fresh launch and on a resume alike; the empty string counts as unset.
+The two exported variables are read by the plugin's rails hook
+(`${CLAUDE_PLUGIN_ROOT}/hooks/scripts/autopilot-worker-rails.sh`, on
+PreToolUse for Bash, Write, Edit, and NotebookEdit), which acts only in a
+worker that carries the marker: there it denies a recursive `rm` and a
+file-tool write outside the roots, in the worker's own calls and its
+subagents' alike. It is a best-effort guard behind the preamble's rails
+(§ 3), which still bind — it misses `find -delete`, `bash -c '…'`,
+interpreter-level deletes, `git clean`, and writes through Bash. Why the
+hook: the preamble is the worker's prompt, which the subagents it
+dispatches never see, while a plugin's PreToolUse hook fires for a
+subagent's tool call too, and its deny holds in a bypassPermissions
+session.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:
 every worker asks by message, as the preamble says, and a worker told to
 work without stopping would answer its own questions, which the quality

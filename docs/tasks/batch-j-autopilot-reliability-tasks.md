@@ -750,7 +750,23 @@ Spec Step 5.1, J-L1. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 9: SKILL.md — the workspace and the worker variables (hook built only)
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the launch bullet's environment list gains
+  `AUTOPILOT_WORKSPACE=<workspace>`, with its rule and Why in a paragraph
+  after the plugin-directory one (every launch, resumes included, the
+  absolute path; the driver builds the write roots from it, and a marked
+  nested main session writes its state file and prompts under the
+  workspace). The S4 nested driver line carries `AUTOPILOT_WORKSPACE`
+  on a line of its own. The driver section's variable block lists
+  `AUTOPILOT_WORKSPACE` and the two exported variables in run.sh's terms,
+  and its prose names the rails hook by path, its event and tools, the
+  marker-only action, its two denials, its standing behind § 3, the five
+  misses, and the Why (the preamble never reaches a worker's subagents; a
+  plugin PreToolUse hook fires for their calls, and its deny holds in
+  bypassPermissions).
+- Changes/tradeoffs: none beyond the task.
 
 Depends on: Task 1, Task 3, Task 6
 
