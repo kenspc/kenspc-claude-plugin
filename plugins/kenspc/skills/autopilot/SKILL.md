@@ -845,7 +845,10 @@ Every S5 is followed by the narrowed review — `-s3c`, the next letter for
 a later one (`-s3d`) — over the range from HEAD at the S5's first launch,
 the state file's `head:`, to its last commit, a wording-only fix included,
 before any re-run of a case and
-before the next S5. The second narrowed
+before the next S5. A defect the S5's reply marks `not fixed`, or lists
+with no commit, still stands whatever the narrowed review says, since that
+review reads only the commits the S5 made: it counts as a fix of it
+(stop condition 4) and goes to the next S5. The second narrowed
 review that still FAILs is the "guards red twice in a row" stop. DEFERRED
 MEDIUM and LOW rows are classified once — a fix in S5, or a roadmap
 candidate listed in the reviewer report — and recorded as a clarification.
@@ -1000,7 +1003,9 @@ several defects classified in the same round — then the narrowed review
 first launch to its last commit, a wording-only fix included, its verdict
 read as The verdict loop after S3b reads S3b's, and only once it passes is
 each case a fixed defect failed re-run, in a new S4 session (`-s4b`, the
-next letter for a later one) that runs only that case; a behavior
+next letter for a later one) that runs only that case, while a defect the
+S5 left unfixed goes to the next S5, as The verdict loop after S3b says;
+a behavior
 deviation → a roadmap line drafted for the release commit (plugin mode) or
 a reviewer-report line (repo mode); an observation → recorded. The same
 defect still failing after two fixes of it is a stop, counted per defect
@@ -1468,7 +1473,8 @@ Fix each defect[ inside the allowed files], run the checks the project's
 instruction files name for a change of this kind, and commit each fix
 alone — one commit per defect, in the repository's convention, touching
 nothing its finding does not need. Reply with one line per defect: its ID,
-the commit hash, and what changed.
+the commit hash, and what changed — or, for a defect you did not fix, its
+ID, `not fixed`, and why.
 ````
 
 - **S6, the removal commit** — Phase 4: repo mode with
@@ -1665,7 +1671,7 @@ the run ends with that message.
    fails.
 4. The same defect still failing after two fixes of it — a third fix is a
    guess. Counted per defect, not per case, as Phase 3's Classification
-   counts.
+   counts; an S5 that left the defect unfixed counts as a fix of it.
 5. The session cap, the resume cap, or the budget exceeded — a question
    with the numbers.
 6. A rail breach — the worker has already reported it and ended.

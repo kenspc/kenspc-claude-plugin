@@ -129,8 +129,10 @@ not probed.
   round, one commit per defect, its task block listing each defect with
   its case; every S5 is followed by the narrowed review over the range
   from HEAD at its first launch to its last commit, a wording-only fix included,
-  before any case is re-run. Stop condition 4 and Phase 3's two-fixes stop
-  count per defect.
+  before any case is re-run. A defect an S5 replies `not fixed`, or lists
+  with no commit, still stands, since the narrowed review reads only the
+  S5's commits: it goes to the next S5, counted as a fix of it. Stop
+  condition 4 and Phase 3's two-fixes stop count per defect.
 
 ### Corrections
 
