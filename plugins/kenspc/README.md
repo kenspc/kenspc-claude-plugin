@@ -580,8 +580,8 @@ the requested value; the effort matches when it equals the requested value,
 and a record with no effort field is the mismatch `effort not applied`.
 Every main-loop record counts, several values are joined with `+`, and a
 resume's line covers the whole session. A mismatch is marked, never a
-stop; a transcript the run cannot find, or a field it cannot read, is
-`not observed`, which takes no `MISMATCH:` and is not counted. The reviewer report's `Models and efforts`
+stop; a transcript the run cannot find or read, or a model it cannot read,
+is `not observed`, which takes no `MISMATCH:` and is not counted. The reviewer report's `Models and efforts`
 line gives the number of workers and of mismatches (`mismatches: none` when
 there are none) with these lines under it.
 
@@ -1005,8 +1005,11 @@ on Windows.
   without a declared model runs Fable too.
 - **The applied model and effort come from an undocumented format.** The
   run reads what a worker ran at from fields of its transcript that Claude
-  Code does not document. A field it cannot read, or a transcript it
-  cannot find, is recorded as `not observed`, and the run goes on; a
+  Code does not document. A transcript it cannot find or read, or a
+  model it cannot read, is recorded as `not observed`, and the run goes
+  on. A record with no effort field is the counted mismatch
+  `effort not applied` instead — a model without effort support writes
+  none, and so would a Claude Code release that dropped the field. A
   mismatch is marked in the state file and the reviewer report, never a
   stop.
 - **An existing CLAUDE.md.** `/kenspc-init` does not rewrite a CLAUDE.md
