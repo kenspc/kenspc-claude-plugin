@@ -34,7 +34,7 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   role's entry leaves out, take the main session's current values, read
   once at the start of the run: the effort from `$CLAUDE_EFFORT`, and the
   model from the main session's own transcript, found by
-  `$CLAUDE_CODE_SESSION_ID` under `${CLAUDE_CONFIG_DIR:-~/.claude}/projects`,
+  `$CLAUDE_CODE_SESSION_ID` under `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects`,
   where Claude Code keeps it. A value that cannot be read is recorded as
   `not determined` and is not passed.
 - **Two settings stops before the first launch.**

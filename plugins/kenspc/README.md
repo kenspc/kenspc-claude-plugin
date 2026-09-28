@@ -553,7 +553,7 @@ the field does not name or the part a role's entry leaves out, the
 pass-through values: the model and effort your session runs at when the
 run starts, the effort from `$CLAUDE_EFFORT` and the model from your
 session's own transcript, looked up by its session id under
-`${CLAUDE_CONFIG_DIR:-~/.claude}/projects` — Claude Code keeps its
+`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects` — Claude Code keeps its
 transcripts under `CLAUDE_CONFIG_DIR` when that is set, and a lookup
 under `~/.claude` alone would then find none, leaving every undeclared
 role at its settings' model. A pass-through value that cannot be read is not

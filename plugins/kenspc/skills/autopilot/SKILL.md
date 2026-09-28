@@ -294,7 +294,7 @@ model and the effort this session runs at now, which a role takes where
 - The effort: `$CLAUDE_EFFORT`, read in this session's Bash.
 - The model: from this session's own transcript. `$CLAUDE_CODE_SESSION_ID`,
   read in this session's Bash, names the file
-  `${CLAUDE_CONFIG_DIR:-~/.claude}/projects/*/<session-id>.jsonl`, found
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/<session-id>.jsonl`, found
   by that id and never by a
   directory name derived from the repository path; its last main-loop
   assistant record — a line whose `type` is `assistant`, in that file
@@ -319,7 +319,10 @@ not document, while the id names the file. Why under
 there then, and a lookup under `~/.claude` alone would find none — the
 pass-through model `not determined` on every run, every undeclared role
 at its settings' model, and every applied value (The return)
-`not observed`. Why `not determined` and no
+`not observed`. Why `$HOME` and not `~` in the default: a `~` there is
+not expanded inside double quotes, so a quoted lookup would search a
+directory named `~` and find none, with the same result. Why
+`not determined` and no
 stop: the transcript's fields are an undocumented internal format, read as
 evidence and not as a contract, and a run that stopped on them would stop
 on a format change that has nothing to do with the batch.
@@ -625,7 +628,7 @@ Every worker is one launch, one wait, one return.
 
   Once `<tag>.exit` is there, read the model and the effort the worker
   actually ran at. The session id in `<tag>.session` names its transcript,
-  `${CLAUDE_CONFIG_DIR:-~/.claude}/projects/*/<session-id>.jsonl`, the
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/<session-id>.jsonl`, the
   root The pass-through values looks under, for the reason it gives; read
   only that file's main-loop assistant records — its lines whose `type` is `assistant`, and
   not a subagent's file — each one's `message.model` and `effort`,
