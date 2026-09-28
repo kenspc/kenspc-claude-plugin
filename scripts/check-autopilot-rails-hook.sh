@@ -23,11 +23,14 @@
 # workspace, $TMPDIR, /tmp, /private/tmp — for Write, Edit, and NotebookEdit
 # (allowed); a write outside every root (denied); a relative path resolved
 # against the cwd (allowed inside, denied when a .. escapes); symlinked
-# roots; a sibling that shares a root's prefix (denied); no roots with the
-# marker set (denied); and every denied fixture again without the marker
-# and with the marker 0 (inert). Why the fixtures carry the live input's
-# shape: a hook that parses a harness-owned format goes stale silently when
-# the format changes, and a fixture shaped by guesswork would keep passing.
+# roots, and a .. after a link collapsed as written (denied); a target
+# beginning with ~, ~/, or a space, read as Claude Code reads it, with HOME
+# set to a fixture path; a sibling that shares a root's prefix (denied); no
+# roots with the marker set (denied); and every denied fixture again
+# without the marker and with the marker 0 (inert). Why the fixtures carry
+# the live input's shape: a hook that parses a harness-owned format goes
+# stale silently when the format changes, and a fixture shaped by guesswork
+# would keep passing.
 #
 # The repository and workspace roots are paths under /kenspc-rails-fixture,
 # which does not exist, so they resolve the same on every machine; the
@@ -70,22 +73,25 @@ fi
 FX_BASE=/kenspc-rails-fixture
 FX_REPO=$FX_BASE/repo
 FX_WS=$FX_BASE/workspace
+FX_HOME=$FX_BASE/home
 
 WORK=""
 cleanup() {
     [[ -n "${WORK:-}" && -d "$WORK" ]] || return 0
-    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/link" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp"
-    rmdir "$WORK/real" "$WORK/hook" 2>/dev/null || true
+    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/link" "$WORK/real/deep" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp"
+    rmdir "$WORK/real/a/b" "$WORK/real/a" "$WORK/real" "$WORK/hook" 2>/dev/null || true
     rmdir "$WORK" 2>/dev/null || true
 }
 
 # make_work: the temporary directory for the symlinked-root fixtures (a
-# directory real/ and a link to it) and for the hook's stderr.
+# directory real/ and a link to it; inside real/, a link deep to its
+# subdirectory a/b) and for the hook's stderr.
 make_work() {
     WORK=$(mktemp -d)
     trap cleanup EXIT
-    mkdir "$WORK/real"
+    mkdir -p "$WORK/real/a/b"
     ln -s "$WORK/real" "$WORK/link"
+    ln -s "$WORK/real/a/b" "$WORK/real/deep"
     # $TMPDIR as the driver writes it (with the trailing slash macOS gives
     # it); the fixture stands in the temporary directory's parent when
     # TMPDIR is unset.
@@ -137,6 +143,7 @@ decide() {
     RC=0
     OUT=$(
         unset KENSPC_AUTOPILOT_WORKER KENSPC_AUTOPILOT_WRITE_ROOTS
+        export HOME="$FX_HOME"
         if [[ "$marker" != "-" ]]; then export KENSPC_AUTOPILOT_WORKER="$marker"; fi
         export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
         "$HOOK_BASH" "$hook" < "$WORK/input.json" 2>"$WORK/stderr.txt"
@@ -250,6 +257,18 @@ run_fixtures() {
     fx "$hook" "symlinked root: the link as root, target under the real directory" allow 1 "$WORK/link" Write "$FX_REPO" "$WORK/real/a.txt"
     fx "$hook" "symlinked root: the real directory as root, target through the link" allow 1 "$WORK/real" Write "$FX_REPO" "$WORK/link/a.txt"
     fx_deny "$hook" "symlinked root: a sibling of the link's target" "$WORK/link" Write "$FX_REPO" "$WORK/other/a.txt"
+    # A .. after a link is collapsed as written, as Claude Code collapses it
+    # before the write: deep/../.. leaves real/, while the link's target
+    # a/b/../.. would stay inside it.
+    fx_deny "$hook" "a .. after a link collapsed as written" "$WORK/real" Write "$FX_REPO" "$WORK/real/deep/../../a.txt"
+
+    # A target as Claude Code reads it: a leading ~ or ~/ is $HOME, and
+    # surrounding whitespace is trimmed, rather than a path relative to the
+    # cwd, which lies inside the repository.
+    fx_deny "$hook" "a ~/ target outside the roots" "$r" Write "$FX_REPO" "~/.zshrc"
+    fx "$hook" "a ~/ target inside a root" allow 1 "$FX_HOME" Write "$FX_REPO" "~/notes/a.txt"
+    fx_deny "$hook" "a ~ target outside the roots" "$r" Edit "$FX_REPO" "~"
+    fx_deny "$hook" "a target with a leading space" "$r" Write "$FX_REPO" " $FX_BASE/outside/a.txt"
 
     # The marker set and no roots: every file-tool write is outside them.
     fx_deny "$hook" "no roots with the marker set" "" Write "$FX_REPO" "$FX_REPO/src/a.txt"

@@ -30,8 +30,10 @@
 #       so is rm without a recursive flag;
 #   (b) a Write, Edit, or NotebookEdit whose target (tool_input.file_path,
 #       or tool_input.notebook_path for NotebookEdit) lies outside every
-#       root. The target is resolved against the input's cwd when relative,
-#       with . and .. collapsed and the symbolic links of its existing
+#       root. The target is read as Claude Code reads it before the write
+#       — surrounding whitespace trimmed, a leading ~ or ~/ taken as $HOME
+#       — and resolved against the input's cwd when relative, with . and
+#       .. collapsed as written, then the symbolic links of its existing
 #       ancestors resolved; each root is resolved the same way (/tmp to
 #       /private/tmp on macOS). A target is inside a root only by whole
 #       path components: <root>-other/f is outside <root>. With the marker
@@ -256,11 +258,13 @@ field() {
 }
 
 # resolve <absolute path>: sets RESOLVED to the path with . and ..
-# collapsed and the symbolic links of its existing ancestors resolved; ""
-# stands for /. A component that does not exist is kept as written, and a
-# .. after it drops it, since it cannot be a link.
+# collapsed as written, and then the symbolic links of its existing
+# ancestors resolved; "" stands for /. A component that does not exist is
+# kept as written. Why .. first, as written: Claude Code collapses it that
+# way before the write, so a .. after a link leaves the link's parent,
+# not its target's.
 resolve() {
-  local rest=$1 out="" comp next
+  local rest=$1 lex="" out="" comp next
   while [ -n "$rest" ]; do
     comp=${rest%%/*}
     case $rest in
@@ -268,8 +272,17 @@ resolve() {
       *) rest="" ;;
     esac
     case $comp in
-      ''|.) continue ;;
-      ..) out=${out%/*}; continue ;;
+      ''|.) ;;
+      ..) lex=${lex%/*} ;;
+      *) lex="$lex/$comp" ;;
+    esac
+  done
+  rest=${lex#/}
+  while [ -n "$rest" ]; do
+    comp=${rest%%/*}
+    case $rest in
+      */*) rest=${rest#*/} ;;
+      *) rest="" ;;
     esac
     next="$out/$comp"
     if [ -L "$next" ] && [ -d "$next" ]; then
@@ -299,9 +312,18 @@ target=$(field "$key") \
   || deny "the target of this $tool call could not be read from the hook input (tool_input.$key), so the write is denied in an autopilot worker"
 json_cwd=$(field cwd) || json_cwd=$PWD
 
-case $target in
-  /*) path=$target ;;
-  *) path="$json_cwd/$target" ;;
+# The target as Claude Code reads it before the write: surrounding
+# whitespace trimmed, and a leading ~ or ~/ taken as $HOME. Joined to the
+# cwd as written, ~/.zshrc would read as a path inside the repository.
+path=${target#"${target%%[![:space:]]*}"}
+path=${path%"${path##*[![:space:]]}"}
+case $path in
+  "~") path="${HOME:-}/" ;;
+  "~/"*) path="${HOME:-}/${path#"~/"}" ;;
+esac
+case $path in
+  /*) ;;
+  *) path="$json_cwd/$path" ;;
 esac
 # A path that is not POSIX absolute even after the join (a Windows
 # drive-letter path) is not judged: the hook cannot resolve it, and the
