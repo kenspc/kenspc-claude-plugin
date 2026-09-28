@@ -582,7 +582,8 @@ writes one line per worker into the state file:
 The model matches when the applied model ID contains the requested value,
 compared without regard to case once a trailing `[...]` is removed from
 the requested value; the effort matches when it equals the requested value,
-and a record with no effort field is the mismatch `effort not applied`,
+and a record with no effort field is the mismatch `effort not applied`
+when an effort was requested,
 its applied effort written `—`: in the applied part `—` means the records
 carry no effort field, while in a requested part it means no flag was
 passed.

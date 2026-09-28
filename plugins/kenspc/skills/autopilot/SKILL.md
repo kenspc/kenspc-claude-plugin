@@ -681,8 +681,8 @@ Every worker is one launch, one wait, one return.
   field, and in a requested part that no flag was passed. Why a sign of
   its own and not `not observed`: a record without the field was read, and
   its missing effort, where an effort was requested, is a counted
-  mismatch, while `not observed` is never
-  counted. A resume's line replaces the line of the session it resumes,
+  mismatch, while `not observed` is never counted as a
+  mismatch. A resume's line replaces the line of the session it resumes,
   as its costs line does. Why: the resume's line reads the whole session,
   the earlier run included, so a line kept for each run would count one
   worker, and its mismatch, twice in the reviewer report. Why read and

@@ -64,9 +64,9 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
     value, without regard to case, once a trailing `[...]` is removed from
     the requested value.
   - The effort matches when it equals the requested value; a record with
-    no effort field is the mismatch `effort not applied`, its applied
-    effort written `—`: in the applied part `—` means the records carry no
-    effort field.
+    no effort field is the mismatch `effort not applied` when an effort
+    was requested, its applied effort written `—`: in the applied part `—`
+    means the records carry no effort field.
   - A record Claude Code writes for an API error — `message.model`
     `<synthetic>`, or `isApiErrorMessage` `true` — is left out, here and
     when the pass-through model is read: it is the harness's own, not a model's
@@ -85,7 +85,8 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   requests count against them, and a role without a declared model takes
   the main session's; the applied values come from an undocumented format
   and are `not observed` when the transcript or its model cannot be read,
-  while a record with no effort field is the mismatch `effort not applied`;
+  while a record with no effort field is the mismatch `effort not applied`
+  when an effort was requested;
   the pass-through model carries no context-size suffix, since the
   transcript's model ID has none, so a role that needs the larger window
   declares `<model>[1m]`; the model check reads a declared ID that is a
