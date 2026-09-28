@@ -138,6 +138,14 @@ DONE：条目存在，日期在发布准备时填入。
   - 嵌套 autopilot 案例的成本，是嵌套主 session 的 `total_cost_usd`，加上它的 worker 写在该嵌套 batch 自己的 `<batch>-costs.txt` 里的各行。
   - 第 3 个案例的 `<嵌套主 session 的 effort>`：嵌套主 session 由 Phase 0 的 driver 副本启动，不带 `--model` 和 `--effort`，所以跟 S4 自己一样按 settings 解析。S4 可以取自己的 `$CLAUDE_EFFORT` 作为这个值，并在记录里写明实际读到的值，以及嵌套主 session 自己的 settings line 印出的 pass-through 值。
   - 验收记录按 C1 写在 `docs/dry-runs/batch-i-acceptance.md`，commit 标题是 `docs: add batch i acceptance record`。
+- **C20（S4 验收；主 session 分类）** 8 个案例全部 PASS，记录见 `33ded00`。
+  - 第 3 个案例：嵌套 run 在 S3b 之前停下，原因是嵌套 S3 的 regression-verifier subagent 写了 `/tmp`。按 C13（验收也属于本批次）resume 嵌套主 session 一次之后，run 跑到 `Autopilot finished`。
+  - 第 6 个案例（optional）：嵌套 S3 的 subagent 写了 `/tmp`，还对自己在 `/tmp` 的临时目录下了 `rm -rf`。递归 rm 是另一条 rail，用户没有裁定过，所以不并入 C13 的例外，也不 resume；只就跑到的 S2 和 S3 评判，S3b 和 S6 列为 Not exercised。嵌套主 session 照 rail 的字面停下，行为正确。
+  - 残留在 `/tmp` 的档案由主 session 移进 workspace 的 `.trash/`。
+  - Findings 的分类：
+    - F1（嵌套主 session 没把 settings line 和 `S<n> returned —` 行印在回复里）是 behavior deviation：skill 写明了要印，model 没有照做。batch F 也有同样的情况。在发布准备时写一行 roadmap。
+    - F2（repo mode 下，继承来的 `AUTOPILOT_PLUGIN_DIR` 会传到 driver，两个嵌套主 session 的读法不同）是 skill 文字的缺口，3.9.0 就已存在，不在本批次 model 和 effort 的范围内，也没有让任何案例失败。列为 roadmap 候选，本批次不修。
+    - F3（声明为低 effort 的 S2 跳过了 generate-task 的确认，没有发问）是 behavior deviation：preamble 写明了要问，model 在低 effort 下没有照做。在发布准备时写一行 roadmap，并在报告里提醒：调低角色的 effort，可能让它跳过关卡。
 
 ## Autopilot
 
