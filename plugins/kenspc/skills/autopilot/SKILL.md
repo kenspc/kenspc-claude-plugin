@@ -631,7 +631,11 @@ Every worker is one launch, one wait, one return.
   declares one part only is `declared` too, its other requested part being
   the pass-through value that was passed — and `<what>` names each part
   that does not match, `model`, `effort`, or `effort not applied`, joined
-  with `, `. Why read and never stop: the transcript's fields are an
+  with `, `. A resume's line replaces the line of the session it resumes,
+  as its costs line does. Why: the resume's line reads the whole session,
+  the earlier run included, so a line kept for each run would count one
+  worker, and its mismatch, twice in the reviewer report. Why read and
+  never stop: the transcript's fields are an
   undocumented internal format, evidence and not a contract, so the run
   records what it could read and a reviewer judges a mismatch, while a
   stop would rest the batch on a format the harness may change.
