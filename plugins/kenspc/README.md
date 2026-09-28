@@ -1028,7 +1028,8 @@ on Windows.
   Code does not document. A transcript it cannot find or read, or a
   model it cannot read, is recorded as `not observed`, and the run goes
   on. A record with no effort field is the counted mismatch
-  `effort not applied` instead — a model without effort support writes
+  `effort not applied` when an effort was requested
+  instead — a model without effort support writes
   none, and so would a Claude Code release that dropped the field. A
   mismatch is marked in the state file and the reviewer report, never a
   stop.
