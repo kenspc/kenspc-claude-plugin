@@ -594,9 +594,13 @@ worker that hit one dropped connection as a mismatch. Several values are
 joined with `+`, and a resume's line covers the whole session. A mismatch
 is marked, never a stop; a transcript the run cannot find or read, a
 session left with only those API-error records, or a model it cannot
-read, is `not observed`, which takes no `MISMATCH:` and is not counted. The reviewer report's `Models and efforts`
-line gives the number of workers and of mismatches (`mismatches: none` when
-there are none) with these lines under it.
+read, is `not observed`, which takes no `MISMATCH:` and is not counted as
+a mismatch. The reviewer report's `Models and efforts` line,
+`<n> workers, <k> mismatches, <j> not observed`
+(`<n> workers, mismatches: none, <j> not observed` when there are
+none), gives the number of workers, of mismatches, and of workers not
+observed, with these lines under it, so a run in which no transcript
+could be read does not read like one in which every worker was verified.
 
 **The workspace.** Everything the run keeps outside the repository lives
 under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
@@ -678,8 +682,10 @@ batch and mode; baseline → release hash; the spec's `git show` command;
 design rulings and clarifications with the decisions that read the locked
 design beyond its letter; files changed and the zero-diff result;
 byte-identity / guards / counts; acceptance, one line per case with its
-cost and result; models and efforts, the number of workers and of
-mismatches with one line per worker; total cost; Not exercised;
+cost and result; models and efforts,
+`<n> workers, <k> mismatches, <j> not observed`
+(`<n> workers, mismatches: none, <j> not observed` when there are
+none) with one line per worker; total cost; Not exercised;
 release-preparation state;
 sessions / messages / resumes / stops. The total-cost line is the measured
 sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode

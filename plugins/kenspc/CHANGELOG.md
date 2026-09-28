@@ -99,9 +99,12 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
 - **The state file** gains the pass-through values and the
   `models and efforts:` lines.
 - **The reviewer report** gains a `- Models and efforts:` line before
-  `- Total cost:`: the number of workers and of mismatches
-  (`<n> workers, <k> mismatches`, or `mismatches: none`), with the state
-  file's lines under it.
+  `- Total cost:`: the number of workers, of mismatches, and of workers
+  not observed (`<n> workers, <k> mismatches, <j> not observed`, or
+  `<n> workers, mismatches: none, <j> not observed`), with the state
+  file's lines under it. A worker not observed is never counted as a
+  mismatch, and `<j>` keeps a run in which no transcript could be read
+  from reading like a verified one.
 
 ### Corrections
 

@@ -988,14 +988,19 @@ release preparation was right.
   a stated basis or nothing, and a total without it would be short by one
   session — and without the record's costs, short by the whole acceptance
   whose cases the same report lists with their costs. The
-  `Models and efforts` line counts the workers and the mismatches from
+  `Models and efforts` line, `<n> workers, <k> mismatches, <j> not observed`,
+  counts the workers, the mismatches, and the workers not observed from
   the state file's `models and efforts:` lines, which follow it as they
   stand; `<k>` is the number of lines that carry `MISMATCH:`, one per
   worker however many parts it names, since the count stands beside the
   number of workers and a count by part would give two runs over the same
-  state file two numbers; with no mismatch it reads
-  `<n> workers, mismatches: none`, and a
-  `not observed` part counts as no mismatch. Why: a worker's model and
+  state file two numbers; `<j>` is the number of lines that carry
+  `not observed`, one per worker in the same way, and a `not observed`
+  part is never counted in `<k>`; with no mismatch the line reads
+  `<n> workers, mismatches: none, <j> not observed`. Why `<j>`: a run in
+  which no transcript could be read would otherwise read
+  `mismatches: none`, the same as a run in which every worker was
+  verified. Why: a worker's model and
   effort are chosen per role and set on every launch, so the report is
   where a reviewer sees which settings the harness applied and which it
   did not.
@@ -1518,7 +1523,7 @@ the user has yet to see.
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
-- Models and efforts: <n> workers, <k> mismatches|mismatches: none
+- Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
