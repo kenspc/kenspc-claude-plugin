@@ -159,3 +159,18 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
 - 下游 repo（例如 DungeonDescent）的任何修正。
 
 ## Clarifications
+
+证据：`.kenspc/runs/batch-h/verify.md`（1.3）、`.kenspc/runs/batch-h/recon.md`（1.4）。
+
+- **C1（1.3，§ 2.1 第 3 条）** 问题：验证结果与"关掉 telemetry 或用第三方 provider 时不可用"相反。2.1.283 上设 `DISABLE_TELEMETRY=1` 或 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` 时仍会原生载入 AGENTS.md，官方文件也说这个限制只存在于 v2.1.281 以前。裁决：插件文字不宣称 telemetry 或 provider 会让原生支援失效。H1、H3 所说的"该环境可以用原生支援"写成：Claude Code v2.1.277 以上，且内建的 agents-md 插件没有被停用。理由：以验证结果为准；这样写对现行版本成立，而"有些环境没有原生支援"这条理由仍然成立（插件最低支援 v2.1.0，内建插件可以停用）。
+- **C2（1.3，§ 2.1 第 4 条）** 问题：`/memory` 那一半与验证结果相反。官方文件说 v2.1.280 起，`/memory` 和 `/context` 会列出原生载入的 AGENTS.md，`-p` 下的 `/context` 实测也列出了。InstructionsLoaded 那一半已经实测确认。裁决：H3 的第五条理由只写 InstructionsLoaded：只有经 import（或 symlink）载入的 AGENTS.md 会触发 InstructionsLoaded hook；不提 `/memory`。理由：以验证结果为准。
+- **C3（1.3，H7）** 问题：内建 `/init` 算不算"把 AGENTS.md 的内容抄进 CLAUDE.md"。证据有两项。一是官方文件：设了 `CLAUDE_CODE_NEW_INIT=1` 时，`/init` 会把 AGENTS.md 的相关部分并入生成的 CLAUDE.md。二是实测：classic 流程把 AGENTS.md 独有的两条规则改写进了 CLAUDE.md；两种流程从 init-project 的 CLAUDE.md 开始跑时，都删掉了 kenspc 指路行；只有 AGENTS.md 的 repo 跑 classic 流程，会生成一个没有 import 的 CLAUDE.md。裁决：视为已证实，在 README 的 Known behavior 加 H7 的条目。条目的补救可以多写一句：检查 `@AGENTS.md` 行和 kenspc 指路行还在不在，不在就补回。理由：文件和实测都显示 AGENTS.md 的内容会重复进 CLAUDE.md；只叫用户删掉抄进来的内容而不提指路行，用户照做之后，状态仍然是坏的。
+- **C4（recon，H1）** 问题：`check-no-model-names.sh` 的 `claude-` ID 规则会把 `claude-md`、`claude-md-or-agents-md`、`claude-md-and-agents-md` 当成模型 ID 报出来，而 H1 要求 SKILL.md 写出模式名。裁决：扩充这个 guard，照 `.claude-plugin` 的先例，测 ID 规则之前先剥掉这三个 `instructionFiles` 值。self-test 加一例：同一行同时有模式值和真的模型 ID 时，仍然要报出来。CLAUDE.md 里对这个 guard 的描述一起更新；guard 和 self-test 的计数不变。理由：用户要设这个值，需要原样的字串，绕开原字会让 final message 无法照做；剥除要精确到这三个值，guard 才仍然能抓到真的模型 ID。
+- **C5（recon，H4）** 问题：(c) 类里有两种不在 H5 范围内。裁决分两项：
+  - Durable documents 的后备（generate-plan、diagnose-bug、plan-document-reviewer 的 "README.md and CLAUDE.md themselves"）算作 (b)，改成 README.md 和项目指令档。理由：它跟 Documents table 的查找在同一句，属于 H4 第 2 点；只有 AGENTS.md 的 repo 没有 CLAUDE.md 可以当后备。
+  - `shared/code-craft-principles.md` 里 "Think Before Coding … belongs in user-level or project-level CLAUDE.md" 维持原样。理由：那是插件的设计范围说明，不在 H4、H5 之内，按减法原则不动。
+- **C6（recon，H5）** 问题：插件现在没有任何地方建议把 structural fact 写进 CLAUDE.md；task-implement 和 task-review 只在 CUSTOM_INSTRUCTIONS 里说 "not yet in CLAUDE.md"。裁决：分两部分做。
+  - 那一句按 H4 改成 "not yet in the project's instruction files"。
+  - H5 是新增的文字：本次执行用到、尚未记录的 structural fact，由两个 skill 在最终报告现有的 Next steps（或同等位置）里建议写到哪里，依 H5 的四条规则判断。不新增 schema 段落，写得越短越好。
+  - 理由：H5 明列了这两个 skill；放进现有位置，不改动报告格式。
+- **C7（recon，H6）** 问题：SKILL.md § Files 的 "Nothing under any `.claude/` directory"，以及 plugin README 的对应句子，跟 H6 要询问的 `.claude/CLAUDE.md` import 冲突。裁决：以 H6 为准。唯一的例外是：用户答应之后，在既有的 `.claude/CLAUDE.md` 最上面加一行 import；无法询问时不动它。README 同步改。理由：§ 2 优先于既有文字；这个例外只有一行，而且需要用户答应。
