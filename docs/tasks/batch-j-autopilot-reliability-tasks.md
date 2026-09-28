@@ -590,7 +590,49 @@ Spec Step 4.1 (J-L4). Files: `plugins/kenspc/hooks/scripts/autopilot-worker-rail
 
 ### Task 7: The hook's guard (hook built only)
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: fixtures are one bash call each (`fx` / `fx_deny`), with the
+  input built as compact JSON carrying the live input's keys and nesting
+  (`session_id` … `effort.level` … `tool_input` … `tool_use_id`; the path
+  in `tool_input.file_path`, or `tool_input.notebook_path` for
+  NotebookEdit); denied fixtures are recorded in indexed arrays and
+  replayed without the marker and with the marker `0`. The repository and
+  workspace roots are paths under `/kenspc-rails-fixture` (which does not
+  exist), so they resolve lexically and alike on every machine; `$TMPDIR`
+  is the guard's own (the temp directory's parent when unset). Decisions
+  are read as the deny form defines them (deny: exit 2, empty stdout, a
+  reason on stderr — which must also contain `.trash`; allow / inert: exit
+  0, empty stdout; inert also empty stderr). The input goes to the hook
+  through a file, not a pipe, since the inert hook exits without reading
+  it. JSON escaping is character by character in awk, not `gsub`, whose
+  replacement backslash handling differs between awks. Temporary files are
+  removed one by one with `rm -f` and `rmdir` — no recursive rm.
+- Changes/tradeoffs: fixture labels by kind — rm spellings (denied): `-r`,
+  `-R`, `--recursive`, bundles `-rf` `-fr` `-Rf` `-vfr`, split `-f -r`,
+  path prefix `/bin/rm`; rm positions (denied): line start, after `;`,
+  `&&`, `||`, `|`, `$(`, backtick, `xargs`, `sudo`, `command`, `env`;
+  quoted mentions (allowed): `grep -c 'rm -rf'`, `git commit -m "… rm -rf
+  …"`, `echo "rm -r"`, plus a heredoc commit message; rm without a
+  recursive flag (allowed): `rm file`, `rm -f file`; for each of Write,
+  Edit, NotebookEdit: inside the repository, the workspace, `$TMPDIR`,
+  `/tmp`, `/private/tmp` (allowed), outside every root (denied), relative
+  inside (allowed), relative `..` escape (denied), sibling sharing a root's
+  prefix (denied); symlinked roots: `/tmp/…` against the driver's roots,
+  a guard-made link as the only root with the target under its real
+  directory, the reverse, and a sibling of the link's target (denied); no
+  roots with the marker set (denied); every one of the 31 denied fixtures
+  again with the marker unset and `0` (inert). Self-test output: mutant
+  `rm-detection removed` turned 20 red, first `rm spelling -r`;
+  `root-check removed` 11, first `Write outside every root`;
+  `marker-check removed` 62, first `rm spelling -r (marker unset)`.
+  `check-all.sh` prints `guards run: 12` and `--self-test` `self-tests
+  run: 11`, both exit 0; the guard passes under `bash` and `/bin/bash`.
+  Running `check-all.sh --self-test` (and `check-run-contract.sh
+  --self-test` in Task 4) runs the other guards' EXIT traps, which
+  `rm -rf` their own `mktemp -d` directories under `$TMPDIR` — a rail
+  observation under the run's ruling 2. Writes under `/tmp`: none.
 
 Depends on: Task 1, Task 3, Task 6
 
