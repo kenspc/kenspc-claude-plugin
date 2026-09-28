@@ -419,7 +419,7 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 pass-through values, the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
-questions answered, the
+questions answered, the rail observations each worker listed, the
 stops, the clarification numbers recorded in the spec, and the next action.
 It is rewritten at every transition and re-read, with `<tag>.exit`, on
 every wake — a notice, a message, a user reply — before the run acts. Why:
@@ -438,6 +438,8 @@ models and efforts:
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 questions answered:
   <tag>: <one line> → <one line>
+rail observations:
+  <tag>: <the worker's entry, one per line | none>
 stops: <reason> (<time>)
 clarifications recorded: <numbers>
 next: <the next action>
@@ -643,7 +645,13 @@ Every worker is one launch, one wait, one return.
   `## Question for the main session`: a return that carries it is the
   timed-out question (The message protocol), not a finished step. Why: a
   worker that waited out its thirty minutes exits like one that finished,
-  and its missing artifact would otherwise be found one step later.
+  and its missing artifact would otherwise be found one step later. Read
+  the same `result` for `## Rail observations` too, and record each entry
+  under the state file's `rail observations:` section with the worker's
+  tag — `<tag>: none` when the heading is absent or empty. Why: a write
+  under `/tmp` is not a breach (the preamble's § 3), but a write nobody
+  records is one nobody can check; the section is what the reviewer
+  report's `Rail observations` line is built from.
 
   Once `<tag>.exit` is there, read the model and the effort the worker
   actually ran at. The session id in `<tag>.session` names its transcript,
@@ -1097,13 +1105,23 @@ is refused and so is a burst of about thirty sends.
 ## 3. Safety rails
 
 Write only to the repository at <repository root>, the workspace at
-<workspace>, and $TMPDIR. No git push, no git tag, no release. No resource
-the brief does not name — no database, no network service. No secrets in
-any file or message. No recursive rm in any spelling — rm -r, rm -rf,
-rm -fr, rm -R: discard by mv into
-<workspace>/.trash/<name>-<timestamp>/, created when missing; deletions
-inside the repository only through git rm. Any breach is a stop: report it
-and end.
+<workspace>, $TMPDIR, and the harness's per-session scratchpad. A write
+elsewhere under /tmp (on macOS /private/tmp) holding no secret is not a
+breach: list it under a heading `## Rail observations` in your final
+message and go on. Any other write outside those locations is a breach.
+No recursive rm in any spelling — rm -r, rm -rf, rm -fr, rm -R — wherever
+it points: discard by mv into <workspace>/.trash/<name>-<timestamp>/,
+created when missing; deletions inside the repository only through
+git rm. No git push, no git tag, no release. No resource the brief does
+not name — no database, no network service. No secrets in any file or
+message.
+
+These rails bind every subagent you dispatch, and a subagent never sees
+this prompt: write them into every subagent prompt you compose, and into
+the CUSTOM_INSTRUCTIONS of the agent dispatches made by the skills you
+run.
+
+Any breach is a stop: report it and end.
 
 ## 4. The locked design
 
@@ -1127,6 +1145,17 @@ omitted when empty. Why in the preamble: it is the only text a worker
 reads, so a field that reaches no preamble binds no worker and trips no
 stop; the zero-diff check verifies the paths a batch must not touch, and
 these two fields bound what it may.
+
+Why § 3 tells the worker to carry its rails into its subagents: a
+worker's subagents never see the preamble, so rails left there bind the
+worker alone — an implementation worker's subagent has written its
+scratch files under `/tmp`, and a nested run's subagent has run `rm -rf`
+on a scratch directory of its own. Why a scratch file under `/tmp` is
+listed and not a stop: a scratch file holding no secret, written by a
+subagent under `/tmp`, has stopped an implementation worker and a nested
+acceptance run, where a list in the final message would have recorded it
+and let the run go on; the recursive `rm` stays a breach wherever it
+points, since what it deletes is not recorded anywhere.
 
 ### The task blocks
 
@@ -1578,6 +1607,7 @@ the user has yet to see.
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
+- Rail observations: <list | none>
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
@@ -1585,7 +1615,9 @@ the user has yet to see.
 
 The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`
-field.
+field. The `Rail observations` line lists the state file's
+`rail observations:` entries other than `none`, each as `<tag>: <entry>`,
+and reads `none` when there are none.
 
 ## The gates
 

@@ -797,7 +797,29 @@ Spec Step 5.1, J-L4. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 10: SKILL.md — the rails text and the rail observations
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: § 3 is rewritten as three paragraphs: the write locations
+  (repository, workspace, `$TMPDIR`, the harness's per-session scratchpad),
+  the `/tmp` observation, the breach rule with the recursive-`rm` rule and
+  its `.trash` / `git rm` routes, and the kept rails (no push, tag, or
+  release; no unnamed resource; no secrets); then the subagent paragraph
+  (every subagent prompt composed, and `CUSTOM_INSTRUCTIONS` of the skills'
+  agent dispatches); then "Any breach is a stop" on its own. The Why sits
+  under the template, in its own words: a worker's subagents never see the
+  preamble (an implementation worker's subagent wrote scratch files under
+  `/tmp`, a nested run's subagent ran `rm -rf` on its own scratch
+  directory), and a harmless `/tmp` scratch file has stopped an
+  implementation worker and a nested acceptance run that a list would have
+  recorded; the recursive `rm` stays a breach because what it deletes is
+  recorded nowhere.
+- Changes/tradeoffs: The return reads `## Rail observations` beside the
+  timed-out-question check and records each entry, or `<tag>: none`, in a
+  new state-file section `rail observations:`; the state file's
+  description names it; the reviewer report gains
+  `- Rail observations: <list | none>` after `Not exercised`, with a
+  sentence saying it lists the section's non-`none` entries.
 
 Spec Step 5.1, J-L3. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
