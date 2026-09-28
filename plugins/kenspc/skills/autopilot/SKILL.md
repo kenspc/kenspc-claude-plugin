@@ -294,7 +294,8 @@ model and the effort this session runs at now, which a role takes where
 - The effort: `$CLAUDE_EFFORT`, read in this session's Bash.
 - The model: from this session's own transcript. `$CLAUDE_CODE_SESSION_ID`,
   read in this session's Bash, names the file
-  `~/.claude/projects/*/<session-id>.jsonl`, found by that id and never by a
+  `${CLAUDE_CONFIG_DIR:-~/.claude}/projects/*/<session-id>.jsonl`, found
+  by that id and never by a
   directory name derived from the repository path; its last main-loop
   assistant record — a line whose `type` is `assistant`, in that file
   itself and not in a subagent's file — carries the model in
@@ -313,7 +314,12 @@ is not passed: the worker resolves that part from its own settings. Why
 this session's values: an undeclared role then runs as the main session
 does now, the model and the effort the user chose for the run. Why by the
 session id: the directory name is an encoding of the path the harness does
-not document, while the id names the file. Why `not determined` and no
+not document, while the id names the file. Why under
+`$CLAUDE_CONFIG_DIR` when it is set: Claude Code keeps its transcripts
+there then, and a lookup under `~/.claude` alone would find none — the
+pass-through model `not determined` on every run, every undeclared role
+at its settings' model, and every applied value (The return)
+`not observed`. Why `not determined` and no
 stop: the transcript's fields are an undocumented internal format, read as
 evidence and not as a contract, and a run that stopped on them would stop
 on a format change that has nothing to do with the batch.
@@ -619,8 +625,9 @@ Every worker is one launch, one wait, one return.
 
   Once `<tag>.exit` is there, read the model and the effort the worker
   actually ran at. The session id in `<tag>.session` names its transcript,
-  `~/.claude/projects/*/<session-id>.jsonl`; read only that file's
-  main-loop assistant records — its lines whose `type` is `assistant`, and
+  `${CLAUDE_CONFIG_DIR:-~/.claude}/projects/*/<session-id>.jsonl`, the
+  root The pass-through values looks under, for the reason it gives; read
+  only that file's main-loop assistant records — its lines whose `type` is `assistant`, and
   not a subagent's file — each one's `message.model` and `effort`,
   skipping the records the pass-through read skips: a record whose
   `message.model` is `<synthetic>`, or that carries `isApiErrorMessage`.

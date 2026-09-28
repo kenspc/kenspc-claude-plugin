@@ -552,7 +552,11 @@ the role's values — the ones `Role settings:` declares, and, for a role
 the field does not name or the part a role's entry leaves out, the
 pass-through values: the model and effort your session runs at when the
 run starts, the effort from `$CLAUDE_EFFORT` and the model from your
-session's own transcript. A pass-through value that cannot be read is not
+session's own transcript, looked up by its session id under
+`${CLAUDE_CONFIG_DIR:-~/.claude}/projects` — Claude Code keeps its
+transcripts under `CLAUDE_CONFIG_DIR` when that is set, and a lookup
+under `~/.claude` alone would then find none, leaving every undeclared
+role at its settings' model. A pass-through value that cannot be read is not
 passed and is recorded as `not determined`; that part of the worker then
 comes from its own settings. The plugin ships no default per role and
 names no model: the declarations are the spec's. Two settings stop the
@@ -567,7 +571,8 @@ The settings line ends with the roles and the pass-through values,
 `…, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>`,
 a role's undeclared part written `—`. After each worker exits, the run
 reads the model and effort it actually ran at from its transcript — found
-by the session id in `<tag>.session`, its main-loop records only — and
+by the session id in `<tag>.session` under the same root, its main-loop
+records only — and
 writes one line per worker into the state file:
 
 ```

@@ -34,7 +34,8 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   role's entry leaves out, take the main session's current values, read
   once at the start of the run: the effort from `$CLAUDE_EFFORT`, and the
   model from the main session's own transcript, found by
-  `$CLAUDE_CODE_SESSION_ID`. A value that cannot be read is recorded as
+  `$CLAUDE_CODE_SESSION_ID` under `${CLAUDE_CONFIG_DIR:-~/.claude}/projects`,
+  where Claude Code keeps it. A value that cannot be read is recorded as
   `not determined` and is not passed.
 - **Two settings stops before the first launch.**
   - A `Role settings` entry outside its grammar: an unknown role, a role
@@ -55,7 +56,8 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   empty string, and one set with the other empty, on a fresh launch.
 - **The applied model and effort.** After each worker exits, the skill
   reads the model and effort it ran at from the main-loop records of its
-  transcript, found by the session id in `<tag>.session`. It writes one
+  transcript, found by the session id in `<tag>.session` under the same
+  root. It writes one
   line per worker to the state file:
   `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]`.
   - The model matches when the applied model ID contains the requested
