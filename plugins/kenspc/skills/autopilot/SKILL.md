@@ -40,7 +40,7 @@ the sessions, and the two reports at the end are what the user reviews.
 | S3 | implementation | `/kenspc-task-implement <task document path>` |
 | S3b | standalone review | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
 | S4 | acceptance | plugin mode: a seed-project acceptance with a record; repo mode: the `Acceptance:` commands |
-| S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified |
+| S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified, `Fix <n> issues from this round: <ID>, <ID>, …` for several |
 | S6 | release preparation | one commit per mode (Phase 4) |
 
 One role per session, and a session is never reused across roles: the
@@ -1435,7 +1435,7 @@ changes in no other way.]
   the case's number and the record's path (plugin mode) or S4's reply (repo
   mode); `<one line>` is the finding in one sentence. One S5 may carry
   several defects classified in the same round, one numbered entry each.
-  The first line is the block's own heading: for one defect
+  `<heading>`, the block's first line, is its own heading: for one defect
   `Fix issue <ID> from run <run dir>: <one line>`, and for several
   `Fix <n> issues from this round: <ID>, <ID>, …`. The bracketed words are
   written when `Allowed files:` is set, as the preamble's line is. Why one
@@ -1443,7 +1443,7 @@ changes in no other way.]
   review and the per-defect stop count read one defect per commit.
 
 ````
-Fix issue <ID> from run <run dir>: <one line>
+<heading>
 
 The defects, each as the reviewer or the acceptance recorded it:
 
