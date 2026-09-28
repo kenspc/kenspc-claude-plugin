@@ -75,8 +75,9 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
     `not observed`.
   - A mismatch is marked, never a stop. A transcript that cannot be found
     or read, or a model that cannot be read, is `not observed`, which
-    takes no `MISMATCH:` and is not counted: the transcript's fields are
-    an undocumented format, evidence and not a contract.
+    takes no `MISMATCH:` and is not counted as a mismatch: the
+    transcript's fields are an undocumented format, evidence and not a
+    contract.
 - **Known behavior: six items.** A role's model reaches every subagent
   of its worker, through `model: inherit`; the agents that set
   `effort: xhigh` keep it whatever the role's effort; a headless worker
