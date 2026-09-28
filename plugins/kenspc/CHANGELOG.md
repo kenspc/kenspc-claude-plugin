@@ -27,7 +27,8 @@ describes AGENTS.md's loading as it was verified on Claude Code 2.1.283 on
 - without it, a CLAUDE.md, `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the
   working directory or above silently stops the default
   `claude-md-or-agents-md` mode from reading AGENTS.md;
-- only an imported AGENTS.md fires the InstructionsLoaded hook.
+- only an imported or symlinked AGENTS.md fires the InstructionsLoaded
+  hook.
 
 init-project also gets the fixes that batch G's acceptance and a later run
 asked for:
@@ -80,11 +81,13 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
   1. the document that a Documents table in the project's instruction
      files assigns its topic to;
   2. an instruction file with an admission-rule comment, such as the
-     AGENTS.md `/kenspc-init` writes, but only when the fact passes that
-     rule;
+     AGENTS.md `/kenspc-init` writes: that file when the fact passes the
+     rule, and otherwise where the comment sends what fails it;
   3. the AGENTS.md a CLAUDE.md imports, with nothing copied into that
      CLAUDE.md;
-  4. otherwise CLAUDE.md.
+  4. the project's AGENTS.md when it has no CLAUDE.md, since a CLAUDE.md
+     created beside it stops the default mode from reading it;
+  5. otherwise CLAUDE.md.
 
   No report section was added.
 - **Known behavior: Claude Code's built-in `/init` after `/kenspc-init`.**
@@ -154,10 +157,11 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
       default mode from reading AGENTS.md;
     - no project setting can change the mode;
     - an older version, or a disabled built-in plugin, reads no AGENTS.md;
-    - only an imported AGENTS.md fires InstructionsLoaded;
+    - only an imported or symlinked AGENTS.md fires InstructionsLoaded;
     - a Read of CLAUDE.md shows the import as one line.
   - **Files in `.claude/`.** A `.claude/CLAUDE.md` or `.claude/AGENTS.md`
     counts as the existing file, and no root file is written beside it.
+    The Documents table and README the skill writes name it by its path.
     - The import line is the path from the importing file: `@AGENTS.md`
       side by side, `@../AGENTS.md` from `.claude/CLAUDE.md`, and
       `@.claude/AGENTS.md` the other way. Claude Code resolves an import
@@ -172,6 +176,8 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
     import. The final message says why, in one sentence.
   - **"AGENTS.md already loads"** is still decided by the import or a
     symbolic link only, since only those two load it whatever the mode.
+    An import inside a sentence outside a code span counts too
+    (`See @AGENTS.md for …`, as the built-in `/init`'s new flow wrote it).
 - **init-project's other fixes.**
   - **The conversation language.** The first message names it, and every
     question (an AskUserQuestion's header, options, and descriptions
@@ -181,11 +187,15 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
     AGENTS.md's line on those directories states the convention only, and
     the final message lists any such files the repository already tracks.
   - **A source check.** Before the commit, every topic-document sentence
-    without a source (an answer, the argument, or a file) becomes a
-    `TBD(init):` marker, and the final message lists each one.
+    without a source that states what it claims (an answer, the argument,
+    or a file) becomes a `TBD(init): <what is missing>` marker, keeping
+    none of the claim, and the final message lists each one.
   - **The git identity.** Commits use the repository's own identity, with
-    no `-c user.name` or `-c user.email`. When `git var` finds none, the
-    run stops before its first commit, in either session.
+    no `-c user.name` or `-c user.email`. Git has one only when
+    `git config user.name` and `git config user.email` both print a value,
+    read before the first generator runs. Without one, no app is
+    scaffolded, and the run stops before the documentation commit, in
+    either session.
   - **Empty directories.** A directory whose own `.gitignore` ignores it
     whole counts toward empty.
   - **A skipped file list** commits nothing, as a no does.
@@ -200,8 +210,9 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
     into the documentation commit.
   - **The interview.** An open question is asked on its own, and skipping
     a question and "use the defaults for everything" are separate
-    options.
-  - The skill grows from 940 to 1028 lines.
+    options, in a question of their own when they would take a question
+    past AskUserQuestion's four options.
+  - The skill grows from 940 to 1038 lines.
 - **Documentation.**
   - **CLAUDE.md** describes:
     - the new shared file and guard;

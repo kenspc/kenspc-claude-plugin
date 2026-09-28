@@ -343,8 +343,9 @@ the stack. The files it writes state decisions in their own words and point
 to no brief, plan, or task file, since the workflow deletes those once their
 work is done; AGENTS.md states that convention, and the final message lists
 any such files your repository already tracks. A `.claude/CLAUDE.md` or
-`.claude/AGENTS.md` counts as your CLAUDE.md or AGENTS.md, and no root file
-is written beside it. It writes nothing under `.claude/` except the import
+`.claude/AGENTS.md` counts as your CLAUDE.md or AGENTS.md, no root file is
+written beside it, and the Documents table and README the skill writes name
+it by that path. It writes nothing under `.claude/` except the import
 line an existing `.claude/CLAUDE.md` gains on your yes, no guide (AGENTS.md
 says guides go in `docs/guides/`, written by `/kenspc-guide`), and no
 `docs/briefs/`, `docs/plans/`, or `docs/tasks/`.
@@ -358,10 +359,11 @@ never chosen for you. The two safety rules are always written.
 the line budget, the import line on CLAUDE.md's first line, AGENTS.md's
 opening comment, that every path in the Documents table exists and the
 README lists the same files, that every sentence in a topic document has a
-source — your answer, the description, or a file — or becomes a
-`TBD(init):` marker the final message lists, that no line holds a value
-that reads as a secret, that every TBD has the `TBD(init):` form, and the
-`.gitignore` lines; a failing check is fixed before anything is committed.
+source that states what it claims — your answer, the description, or a
+file — or becomes a `TBD(init):` marker the final message lists, that no
+line holds a value that reads as a secret, that every TBD has the
+`TBD(init):` form, and the `.gitignore` lines; a failing check is fixed
+before anything is committed.
 The secret check also reads your own lines wherever the commit would put
 them into history for the first time — a file committed whole, an edit you
 had not committed: a file with a secret-looking value on a line of yours is
@@ -374,11 +376,13 @@ following the commit convention your repository writes down or its history
 shows; with nothing left to commit, it makes no commit, says so, and ends
 there. A "no", or a skipped confirmation, commits nothing and leaves the
 files in the tree. Commits use the git identity your repository already
-has; without one, the skill stops before its first commit, in any session,
-and says so, leaving the files in the tree. After the commit, it asks
-separately whether to push and whether to create the missing labels. A session that cannot ask commits after the
-checks, and creates no repository, pushes nothing, and creates no label —
-it lists the labels to create instead.
+has — `user.name` and `user.email` both set in git's configuration, checked
+before the first generator runs; without one, the skill scaffolds no app
+and stops before the documentation commit, in any session, and says so,
+leaving the files in the tree. After the commit, it asks separately whether
+to push and whether to create the missing labels. A session that cannot ask
+commits after the checks, and creates no repository, pushes nothing, and
+creates no label — it lists the labels to create instead.
 
 **Running it again.** In a project it set up (an `AGENTS.md` whose opening
 comment carries the template marker), `/kenspc-init` changes only the
@@ -419,9 +423,9 @@ run's reports in a directory at the root of your repository (since v3.5.0):
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
   to the commit conventions in your project's instruction files). The
-  check asks git about a path inside the directory, so a CRLF `.gitignore` with blank lines is read
-  correctly. If a commit hook rejects the commit, the run stops and reports
-  the error; it does not retry or bypass the hook.
+  check asks git about a path inside the directory, so a CRLF `.gitignore`
+  with blank lines is read correctly. If a commit hook rejects the commit,
+  the run stops and reports the error; it does not retry or bypass the hook.
 - Each agent keeps its probe and temporary files in its own subdirectory of
   the run's `scratch/` (`angle-<n>/` per reviewer, `code-fixer/`,
   `regression-verifier/`), and the orchestrating session keeps its own in
@@ -932,11 +936,12 @@ on Windows.
   `claude-md-and-agents-md` mode of its `instructionFiles` setting, on
   v2.1.277 or later with the built-in agents-md plugin enabled — in the
   default mode a CLAUDE.md stops it — and where both files load, what they
-  repeat takes up context twice. When CLAUDE.md already has the import
-  line, or is a symbolic link to AGENTS.md (or the reverse), AGENTS.md
-  already loads: the skill asks nothing and leaves CLAUDE.md alone. Claude
-  Code reading AGENTS.md on its own does not count, since it depends on the
-  mode and the version. In a repository with an AGENTS.md and no CLAUDE.md,
+  repeat takes up context twice. When CLAUDE.md already has the import —
+  on a line of its own, or inside a sentence outside a code span — or is a
+  symbolic link to AGENTS.md (or the reverse), AGENTS.md already loads:
+  the skill asks nothing and leaves CLAUDE.md alone. Claude Code reading
+  AGENTS.md on its own does not count, since it depends on the mode and the
+  version. In a repository with an AGENTS.md and no CLAUDE.md,
   the skill still writes a CLAUDE.md that imports it, and the final message
   says why: once a CLAUDE.md exists, the default mode stops reading
   AGENTS.md on its own. The line budget is checked on
@@ -948,8 +953,9 @@ on Windows.
   once put product claims its one-line description did not make into
   `docs/product.md`, and a later plan draft cited them as grounded there.
   Since 4.1.0 a check before the commit turns every topic-document sentence
-  without a source — your answer, the description, or a file — into a
-  `TBD(init):` marker and lists each one in the final message. The check is
+  without a source that states what it claims — your answer, the
+  description, or a file — into a `TBD(init):` marker naming what is
+  missing, and lists each one in the final message. The check is
   the model's own reading, so read the topic documents once after
   `/kenspc-init`, before the first plan relies on them.
 - **A skipped file list does not commit.** Skipping the file-list
