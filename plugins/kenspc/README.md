@@ -377,8 +377,9 @@ shows; with nothing left to commit, it makes no commit, says so, and ends
 there. A "no", or a skipped confirmation, commits nothing and leaves the
 files in the tree. Commits use the git identity your repository already
 has — `user.name` and `user.email` both set in git's configuration, checked
-before the first generator runs; without one, the skill scaffolds no app
-and stops before the documentation commit, in any session, and says so,
+before scaffolding is offered; without one, the skill says so at that point
+and offers no scaffolding, so you can stop it and set one first, and it
+stops before the documentation commit, in any session, and says so again,
 leaving the files in the tree. After the commit, it asks separately whether
 to push and whether to create the missing labels. A session that cannot ask
 commits after the checks, and creates no repository, pushes nothing, and
@@ -930,14 +931,18 @@ on Windows.
   at the top and leaves the rest byte for byte, then reports the two files'
   combined line count and any content they visibly repeat, for you to
   settle. For `.claude/CLAUDE.md` the question says Claude Code will ask you
-  to approve the write. On a no, or in a session that cannot ask, the file
-  stays as it is, and the final message gives the same line count and says
+  to approve the write. On a no, in a session that cannot ask, or when the
+  write is not approved, the file stays as it is, a Documents row the skill
+  writes for it says what it holds and that it does not import AGENTS.md,
+  and the final message gives the same line count and says
   when Claude Code loads AGENTS.md without the import: only in the
   `claude-md-and-agents-md` mode of its `instructionFiles` setting, on
   v2.1.277 or later with the built-in agents-md plugin enabled — in the
   default mode a CLAUDE.md stops it — and where both files load, what they
   repeat takes up context twice. When CLAUDE.md already has the import —
-  on a line of its own, or inside a sentence outside a code span — or is a
+  on a line of its own, or inside a sentence outside a code span with
+  whitespace or the line's start or end on each side (Claude Code imports
+  neither `@AGENTS.md.` nor `(@AGENTS.md)`) — or is a
   symbolic link to AGENTS.md (or the reverse), AGENTS.md already loads:
   the skill asks nothing and leaves CLAUDE.md alone. Claude Code reading
   AGENTS.md on its own does not count, since it depends on the mode and the

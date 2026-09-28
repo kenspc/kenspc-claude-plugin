@@ -79,7 +79,9 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
   report's Next steps names the fact and where to record it. The place is
   the first that applies:
   1. the document that a Documents table in the project's instruction
-     files assigns its topic to;
+     files assigns its topic to, unless the fact fails an admission-rule
+     comment in that document (the kenspc-init table assigns Commands to
+     AGENTS.md itself);
   2. an instruction file with an admission-rule comment, such as the
      AGENTS.md `/kenspc-init` writes: that file when the fact passes the
      rule, and otherwise where the comment sends what fails it;
@@ -151,6 +153,10 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
       v2.1.277 or later, with the built-in agents-md plugin enabled.
     - And it says that, where both files load, what they repeat takes up
       context twice.
+    - Without the import (a no, a session that cannot ask, or a write not
+      approved), the Documents row the skill writes for that CLAUDE.md
+      says what it holds and that it does not import AGENTS.md, in place
+      of the template's text, which names the import.
   - **The import line and the kenspc pointer line** stay in every
     CLAUDE.md the skill writes. The Why lists five reasons:
     - that CLAUDE.md, like a teammate's `CLAUDE.local.md`, stops the
@@ -177,7 +183,10 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
   - **"AGENTS.md already loads"** is still decided by the import or a
     symbolic link only, since only those two load it whatever the mode.
     An import inside a sentence outside a code span counts too
-    (`See @AGENTS.md for …`, as the built-in `/init`'s new flow wrote it).
+    (`See @AGENTS.md for …`, as the built-in `/init`'s new flow wrote it),
+    when whitespace or the line's start or end sits on each side of it:
+    probed on 2.1.283, Claude Code imports neither `@AGENTS.md.` nor
+    `(@AGENTS.md)`.
 - **init-project's other fixes.**
   - **The conversation language.** The first message names it, and every
     question (an AskUserQuestion's header, options, and descriptions
@@ -193,9 +202,9 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
   - **The git identity.** Commits use the repository's own identity, with
     no `-c user.name` or `-c user.email`. Git has one only when
     `git config user.name` and `git config user.email` both print a value,
-    read before the first generator runs. Without one, no app is
-    scaffolded, and the run stops before the documentation commit, in
-    either session.
+    read before scaffolding is offered. Without one, the run says so then
+    and offers no scaffolding, so the user can stop and set one first, and
+    it stops before the documentation commit, in either session.
   - **Empty directories.** A directory whose own `.gitignore` ignores it
     whole counts toward empty.
   - **A skipped file list** commits nothing, as a no does.
@@ -211,8 +220,10 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
   - **The interview.** An open question is asked on its own, and skipping
     a question and "use the defaults for everything" are separate
     options, in a question of their own when they would take a question
-    past AskUserQuestion's four options.
-  - The skill grows from 940 to 1038 lines.
+    past AskUserQuestion's four options. That question counts toward the
+    call's four questions, one per call covers all of the call's
+    questions, and a round that needs more takes consecutive calls.
+  - The skill grows from 940 to 1051 lines.
 - **Documentation.**
   - **CLAUDE.md** describes:
     - the new shared file and guard;
