@@ -297,8 +297,10 @@ How every round is asked, here and in Phase 4:
   (§ Defaults and TBD). A question asked with options offers skipping it
   and "use the defaults for everything" as two options, in a question of
   their own in the same call when they would take it past AskUserQuestion's
-  four. Why: one skips a question, the other ends the interview; and a
-  question over the tool's limit makes each run drop a different option.
+  four. That question counts toward the call's four questions, and one per
+  call covers every question in it; a round that needs more goes in
+  consecutive calls. Why: one skips a question, the other ends the interview;
+  and a call past the tool's limits makes each run improvise differently.
 - "Use the defaults for everything", in any wording or language, ends the
   interview: the rounds not yet asked are skipped. The questions outside
   the interview — scaffolding, the GitHub repository, the file list, push,
@@ -320,18 +322,22 @@ official generator and committed.
 
 **DONE when** every app whose directory does not exist yet, or holds
 nothing but what Phase 0 counts as empty (and `.git`, for a single app at
-the repository root), was offered scaffolding, and each app the user chose
-has its scaffold commit — or the reason it has none is recorded for the
-final message. An app that already has files is not offered scaffolding.
+the repository root), was offered scaffolding — or, without a git identity,
+the run said why none is — and each app the user chose has its scaffold
+commit, or the reason it has none is recorded for the final message. An
+app that already has files is not offered scaffolding.
 Why `.git` does not count at the root: a single app's directory is the
 repository root, which holds `.git` from Phase 1 on. An app directory
 elsewhere that holds a `.git` of its own is a nested repository, treated as
 one whose generator's `.git` stays (below): it is not offered scaffolding,
 and its pair stays out of every commit (§ Confirm and commit).
 
-Ask, for each such app, whether to scaffold it and with which generator —
-the one the stack's official documentation names, offered and never
-assumed. In a session that cannot ask (a system reminder to work without
+In a repository, git's identity is read first (§ Confirm and commit):
+without one, no app is offered scaffolding, and the run says why at that
+point, so the user can stop it and set one before any file is written.
+Otherwise, ask, for each such app, whether to scaffold it and with which
+generator — the one the stack's official documentation names, offered and
+never assumed. In a session that cannot ask (a system reminder to work without
 stopping), no app is scaffolded. Why: a generator writes many files and
 picks versions and defaults, which is the user's decision; a project with
 no scaffolding still gets every document, its commands `TBD(init):`.
@@ -692,7 +698,10 @@ original byte for byte. Then report the line count of AGENTS.md and
 CLAUDE.md together, and any content the two visibly repeat (the same rule
 or command in both), for the user to settle; the run removes nothing from
 either. In a session that cannot ask (a system reminder to work without
-stopping), leave the file as it is. Without the import, the final message
+stopping), leave the file as it is. Without the import — a no, a session
+that cannot ask, or a write that was not approved — a Documents row the run
+writes for the file says, in place of the template's Holds text, what the
+file holds and that it does not import AGENTS.md, and the final message
 gives the same line count and says when Claude Code loads AGENTS.md anyway
 — only in the `claude-md-and-agents-md` mode of its `instructionFiles`
 setting, on v2.1.277 or later with the built-in agents-md plugin enabled,
@@ -700,18 +709,21 @@ since in the default mode a CLAUDE.md stops it — that the import line would
 load it wherever CLAUDE.md loads, and that where both load, content the two
 repeat takes up context twice. Why: CLAUDE.md is the user's, and a model
 has been following it as written; the import is the one change that loads
-AGENTS.md in every mode that loads CLAUDE.md, and it changes nothing else.
+AGENTS.md in every mode that loads CLAUDE.md, and it changes nothing else;
+and the template's row names an import that file would not have.
 
 AGENTS.md already loads when the two are one file — one a symbolic link to
 the other, which `[ <AGENTS.md> -ef <CLAUDE.md> ]` tells — or when a line of
-CLAUDE.md, `\r` stripped, is the import line or holds it as a word outside
-a code span (`See @AGENTS.md for …`): then nothing is asked, CLAUDE.md is
-not written, and the final message says AGENTS.md already loads. Claude
-Code reading AGENTS.md itself does not count. Why: only these two load it
-whatever the mode and the environment, an import inside a sentence as much
-as one on its own line; a write through the link lands in the user's
-AGENTS.md, which would then import itself, and a second import loads
-nothing new.
+CLAUDE.md, `\r` stripped, is the import line or holds it outside a code
+span with whitespace or the line's start or end on each side
+(`See @AGENTS.md for …`; not `@AGENTS.md.` or `(@AGENTS.md)`): then nothing
+is asked, CLAUDE.md is not written, and the final message says AGENTS.md
+already loads. Claude Code reading AGENTS.md itself does not count. Why:
+only these two load it whatever the mode and the environment, an import
+inside a sentence as much as one on its own line, though Claude Code
+imports none with a character attached; a write through the link lands in
+the user's AGENTS.md, which would then import itself, and a second import
+loads nothing new.
 
 ### Checks
 
@@ -816,13 +828,14 @@ default for a repository that has none.
 **The identity.** The commits use the identity git already has: no
 `-c user.name` or `-c user.email`, and none set. Git has one only when
 `git config user.name` and `git config user.email` both print a value; in a
-repository, the run reads them before the first generator runs, or before
-the first commit when none runs. Without one, no app is scaffolded, and the
-run stops before its documentation commit, in either session: the files
-stay in the tree, and the final message says git has no identity. Why: a
-commit's author is the user's to choose, and one nobody set stays in
-history — without these two, git guesses one on a host whose name carries
-a domain; and a scaffold left uncommitted is one no rerun offers to commit.
+repository, the run reads them before Phase 3 offers scaffolding, or before
+the first commit when the run has no Phase 3. Without one, no app is
+scaffolded, and the run stops before its documentation commit, in either
+session: the files stay in the tree, and the final message says git has no
+identity. Why: a commit's author is the user's to choose, and one nobody
+set stays in history — without these two, git guesses one on a host whose
+name carries a domain; and a scaffold left uncommitted is one no rerun
+offers to commit.
 
 **A commit that fails** — a commit hook rejects it, or git refuses the
 pathspec — stops the run: report the error and ask the user how to go on.
