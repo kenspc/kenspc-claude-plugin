@@ -1176,7 +1176,9 @@ message.
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
 the CUSTOM_INSTRUCTIONS of the agent dispatches made by the skills you
-run.
+run. Carry every rail observation a subagent reports — under
+`## Rail observations` or on a `Rail observations` line — into your own
+`## Rail observations`, naming the subagent.
 
 Any breach is a stop: report it and end.
 
@@ -1212,7 +1214,10 @@ listed and not a stop: a scratch file holding no secret, written by a
 subagent under `/tmp`, has stopped an implementation worker and a nested
 acceptance run, where a list in the final message would have recorded it
 and let the run go on; the recursive `rm` stays a breach wherever it
-points, since what it deletes is not recorded anywhere.
+points, since what it deletes is not recorded anywhere. Why the worker
+carries its subagents' observations into its own list: the main session
+reads the worker's final message alone, so an observation left in a
+subagent's reply would reach the state file as `<tag>: none`.
 
 ### The task blocks
 
