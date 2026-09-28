@@ -9,37 +9,72 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.1.0 — unreleased
+## 4.1.0 — 2026-09-28
 
 Batch H. From v2.1.277 Claude Code reads AGENTS.md on its own, through its
 built-in agents-md plugin, and that left two things in the plugin wrong.
 init-project said an AGENTS.md without the `@AGENTS.md` import is not
 loaded. Every other skill and agent looked for a project's conventions in
 CLAUDE.md alone, although a Read of that file shows only the import line,
-and a repository with only AGENTS.md has no CLAUDE.md at all. The plugin
-now reads "the project's instruction files": a project's CLAUDE.md and
-AGENTS.md files, at the root, in `.claude/`, or in a subdirectory, and the
-files a CLAUDE.md imports, whether or not Claude Code loaded them. The term
-is defined once, and a new guard holds every copy of it. init-project now
-describes AGENTS.md's loading as it was verified on Claude Code 2.1.283 on
-2026-09-28:
-- with the import, AGENTS.md loads wherever CLAUDE.md loads;
-- without it, a CLAUDE.md, `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the
-  working directory or above silently stops the default
-  `claude-md-or-agents-md` mode from reading AGENTS.md;
-- only an imported or symlinked AGENTS.md fires the InstructionsLoaded
-  hook.
+and a repository with only AGENTS.md has no CLAUDE.md at all. The release
+has four parts:
 
-init-project also gets the fixes that batch G's acceptance and a later run
-asked for:
-- the first message names the conversation language;
-- claims in the topic documents need a source;
-- commits use the repository's own git identity;
-- a skipped file list commits nothing;
-- the lockfile, `.gitignore`, and README contents of its commits are
-  settled.
+- **The project's instruction files.** The plugin now reads "the project's
+  instruction files": a project's CLAUDE.md and AGENTS.md files, at the
+  root, in `.claude/`, or in a subdirectory, and the files a CLAUDE.md
+  imports, whether or not Claude Code loaded them. Every skill and agent
+  looks there for conventions, and code-fixer counts a cited rule as absent
+  only after searching all of them. The term is defined once, in
+  `shared/instruction-files.md`; every file that uses it carries the
+  definition, and a new guard, `check-instruction-files.sh`, holds each
+  copy to it. `check-no-model-names.sh` accepts the three `claude-md…`
+  values of the `instructionFiles` setting.
+- **AGENTS.md loading in init-project.** The skill describes AGENTS.md's
+  loading as it was verified on Claude Code 2.1.283 on 2026-09-28:
+  - with the import, AGENTS.md loads wherever CLAUDE.md loads;
+  - without it, a CLAUDE.md, `.claude/CLAUDE.md`, or `CLAUDE.local.md` in
+    the working directory or above silently stops the default
+    `claude-md-or-agents-md` mode from reading AGENTS.md;
+  - only an imported or symlinked AGENTS.md fires the InstructionsLoaded
+    hook.
 
-Guard counts: `guards run: 11`, `self-tests run: 10`.
+  It keeps the import line in every CLAUDE.md it writes, takes a
+  `.claude/CLAUDE.md` or `.claude/AGENTS.md` as the existing file, and
+  reports the two files' combined line count whether or not the import is
+  added.
+  Known behavior gains an item: do not run Claude Code's built-in `/init`
+  after `/kenspc-init`.
+- **Where to record a structural fact.** When CUSTOM_INSTRUCTIONS carried
+  a project structural fact, task-implement's and task-review's final
+  report names, in Next steps, the first place that applies to record it,
+  from the document a Documents table assigns its topic to down to
+  CLAUDE.md.
+- **init-project's other fixes**, which batch G's acceptance and a later
+  run asked for:
+  - the first message names the conversation language;
+  - claims in the topic documents need a source;
+  - commits use the repository's own git identity;
+  - a skipped file list commits nothing;
+  - the lockfile, `.gitignore`, and README contents of its commits are
+    settled.
+
+CLAUDE.md, the plugin README, and the plan-document example follow, and
+the entry ends with corrections to the 4.0.0 entry's statements this
+release makes untrue. At release, `plugin.json` is 4.1.0 and the effort
+guidance's last-reviewed date is 2026-09-28, the three `xhigh` overrides
+unchanged; the release checklist expects the new guard counts, and its
+`/kenspc-init` row checks the language line and a skipped file list; the
+roadmap names 4.2.0 as the next minor and gains the items the batch left
+out. Guard counts: `guards run: 11`, `self-tests run: 10`.
+
+Release smoke: the batch's acceptance, `docs/dry-runs/batch-h-acceptance.md`,
+on macOS with Claude Code 2.1.283 at the repository tree `ba2b215`, whose
+skill, agent, command, and template files this release ships unchanged.
+Its thirteen cases, B1–B13, all passed, with no FAIL and no finding. No
+separate smoke run was made. B9, the interactive run in Chinese, ran as a
+subagent following the skill's text and wording each question itself, so
+the drift the language line guards against could not show there; the
+maintainer re-runs it in the Mac TUI.
 
 ### Added
 
@@ -162,7 +197,8 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
     - that CLAUDE.md, like a teammate's `CLAUDE.local.md`, stops the
       default mode from reading AGENTS.md;
     - no project setting can change the mode;
-    - an older version, or a disabled built-in plugin, reads no AGENTS.md;
+    - an older version, or a disabled built-in plugin, reads no AGENTS.md
+      natively, so only the import loads it;
     - only an imported or symlinked AGENTS.md fires InstructionsLoaded;
     - a Read of CLAUDE.md shows the import as one line.
   - **Files in `.claude/`.** A `.claude/CLAUDE.md` or `.claude/AGENTS.md`
@@ -239,6 +275,24 @@ Guard counts: `guards run: 11`, `self-tests run: 10`.
       source of conventions.
   - **`references/plan-document-example.md`** determines its
     Documentation impact from the instruction files.
+- **The manifests.** `plugin.json` is 4.1.0. The effort guidance's
+  last-reviewed date is 2026-09-28 in its description, in CLAUDE.md, and in
+  the plugin README's Effort levels; the three `xhigh` overrides were
+  confirmed to hold as described. The two manifests' descriptions stay true
+  as written and are otherwise unchanged.
+- **The release checklist.** The pre-flight block and the paragraph after
+  it expect `guards run: 11` and `self-tests run: 10`. Row 12,
+  `/kenspc-init`, gains two interactive checks: the first message names
+  the conversation language, which every question and the final message
+  keep, and skipping the file list commits nothing, leaving the files in
+  the working tree.
+- **The roadmap.** Its heading names the next minor, 4.2.0. It gains three
+  `/kenspc-init` edge cases batch G deferred — a rerun after a failed first
+  commit, a generator changing a file that already held uncommitted
+  changes, and `git init` in a directory another user owns — as well as
+  detecting the `instructionFiles` setting and Claude Code's
+  `/import codex`. Its upgrade item says an existing CLAUDE.md gains at
+  most the import line, which is no longer always `@AGENTS.md`.
 
 ### Corrections to the 4.0.0 entry
 

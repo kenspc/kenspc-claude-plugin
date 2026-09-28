@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.1.0)
+## Next minor (4.2.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -252,8 +252,8 @@ its number.
       CLAUDE.md's instructions into AGENTS.md and the topic documents, and
       an AGENTS.md without the template marker onto the template's sections.
       Today the skill moves neither: an existing CLAUDE.md gains at most the
-      `@AGENTS.md` line, and an AGENTS.md without the marker is left as it
-      is, which the final message says. Reconciling a `docs/backlog/` in the
+      import line, and an AGENTS.md without the marker is left as it is,
+      which the final message says. Reconciling a `docs/backlog/` in the
       user's own format, deferred after the batch's first review round
       (the spec's C10, E19), belongs here too.
     - Bringing a project up to a later template: adding what the newer
@@ -265,3 +265,32 @@ its number.
     GitHub Issues. `/kenspc-init` settles the backlog from the remote that
     exists when it runs, so a project given a GitHub remote later keeps the
     file backlog, and a rerun changes only `TBD(init):` markers.
+14. Three `/kenspc-init` edge cases batch G deferred and 4.1.0 left as they
+    were (the batch G spec's C10 E20, C12 E2-5, and C13 E3-6,
+    `git show 7a14f34:docs/plans/batch-g-init-project.md`); the fourth, a
+    `docs/backlog/` in the user's own format, belongs to the upgrading
+    item:
+    - A rerun after the first run's commit failed. The rerun has no branch
+      for the files the failed run left uncommitted; today the failed run's
+      final message names them, and `git status` shows them.
+    - A generator that changes a file which already held uncommitted
+      changes. Scaffolding runs only in a session that can ask, and the
+      generator's change is never committed: it stays in the working tree,
+      mixed with the user's, and nothing is lost. Telling the two apart
+      would take a snapshot of every changed file before the generator runs.
+    - `git init` in an empty directory another user owns. Git reports the
+      error itself and the run writes no global setting, but the skill has
+      no branch of its own for the case.
+15. Detecting the user's `instructionFiles` setting, the mode of Claude
+    Code's built-in agents-md plugin, which 4.1.0 left out (the batch H
+    spec's 2.6, `git show d7949ac:docs/plans/batch-h-init-project-4-1.md`).
+    The setting can come from three places — the user's settings,
+    `--settings`, and managed settings, never the project's — which
+    override each other, so `/kenspc-init` states when AGENTS.md loads as a
+    condition on the mode rather than guessing the mode: a conditional
+    statement is more reliable than a guess.
+16. Claude Code's `/import codex` (`claude import codex`; in 2.1.283's help,
+    "Import config from another AI coding agent into Claude Code"), which
+    4.1.0 left out (the batch H spec's 2.6,
+    `git show d7949ac:docs/plans/batch-h-init-project-4-1.md`): nothing in
+    the plugin accounts for it, and it has not been probed.
