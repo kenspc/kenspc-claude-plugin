@@ -247,7 +247,12 @@ launch() {
 # AUTOPILOT_EFFORT set, a .exit missing after the wait or an .err without
 # --model <value> or --effort <value>; then, for a launch under
 # selftest-s4 with both set to the empty string, a .exit missing after the
-# wait or an .err that shows --model or --effort;
+# wait or an .err that shows --model or --effort; then, for a launch under
+# selftest-s5 with AUTOPILOT_MODEL set and AUTOPILOT_EFFORT the empty
+# string, a .exit missing after the wait or an .err without
+# --model <value> or showing --effort, and for one under selftest-s6 the
+# other way round, a .exit missing after the wait or an .err without
+# --effort <value> or showing --model;
 # then, for a resume launch of the same stub
 # under <tag>-r1 through the command line (the parser the skill calls)
 # with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, APPEND_SP,
@@ -264,7 +269,7 @@ launch() {
 # self-s-test-timeline.log without its start or end line (the batch-name
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
-  local base LOGS TAG RTAG BTAG MTAG ETAG n exit_status session flag
+  local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG n exit_status session flag
   local first_session first_pid refusal rc self FTAG saved_exe bad started
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
@@ -454,6 +459,31 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     ! grep -qF -- "$flag" "$LOGS/$ETAG.err" \
       || { echo "self-test failed: $LOGS/$ETAG.err shows $flag on a launch with its variable set to the empty string" >&2; return 1; }
   done
+  # One variable set and the other the empty string, the mix the skill
+  # sends when a role's other part is not determined: each flag follows its
+  # own variable, so a driver that passed both flags whenever either was set
+  # would pass an empty value, and one that passed --effort only beside
+  # --model would run the role at its settings' effort.
+  XTAG=selftest-s5
+  AUTOPILOT_MODEL=selftest-model; AUTOPILOT_EFFORT=""
+  launch "$XTAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_MODEL AUTOPILOT_EFFORT
+  n=0; until [ -f "$LOGS/$XTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$XTAG.exit" ] || { echo "self-test failed: $LOGS/$XTAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- '--model selftest-model' "$LOGS/$XTAG.err" \
+    || { echo "self-test failed: $LOGS/$XTAG.err does not show --model selftest-model" >&2; return 1; }
+  ! grep -qF -- '--effort' "$LOGS/$XTAG.err" \
+    || { echo "self-test failed: $LOGS/$XTAG.err shows --effort on a launch with AUTOPILOT_EFFORT set to the empty string" >&2; return 1; }
+  YTAG=selftest-s6
+  AUTOPILOT_MODEL=""; AUTOPILOT_EFFORT=low
+  launch "$YTAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_MODEL AUTOPILOT_EFFORT
+  n=0; until [ -f "$LOGS/$YTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$YTAG.exit" ] || { echo "self-test failed: $LOGS/$YTAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- '--effort low' "$LOGS/$YTAG.err" \
+    || { echo "self-test failed: $LOGS/$YTAG.err does not show --effort low" >&2; return 1; }
+  ! grep -qF -- '--model' "$LOGS/$YTAG.err" \
+    || { echo "self-test failed: $LOGS/$YTAG.err shows --model on a launch with AUTOPILOT_MODEL set to the empty string" >&2; return 1; }
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
