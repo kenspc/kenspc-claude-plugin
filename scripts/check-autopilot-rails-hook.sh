@@ -27,7 +27,8 @@
 # beginning with ~, ~/, or a space, read as Claude Code reads it, with HOME
 # set to a fixture path; a sibling that shares a root's prefix (denied); no
 # roots with the marker set (denied); a file-tool input whose path field
-# the hook cannot read (denied); and every denied fixture again
+# the hook cannot read (denied); a Bash input over the hook's length cap
+# (denied) and one under it (allowed); and every denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
@@ -102,8 +103,14 @@ make_work() {
 
 # json_escape <text>: the text as the inside of a JSON string. Character by
 # character rather than through gsub, whose backslash handling in the
-# replacement differs between awks.
+# replacement differs between awks; a text with nothing to escape is
+# printed as it stands, since the character loop takes a quarter of a
+# second on the long-input fixtures.
 json_escape() {
+    case "$1" in
+        *[\\\"]*|*$'\t'*|*$'\r'*|*$'\n'*) ;;
+        *) printf '%s' "$1"; return 0 ;;
+    esac
     printf '%s' "$1" | awk '
         {
             out = ""
@@ -249,6 +256,12 @@ run_fixtures() {
     # are read as commands.
     fx_deny "$hook" "rm after an arithmetic << on an earlier line" "$r" Bash "$FX_REPO" $'echo $((1<<2))\nrm -rf build'
     fx_deny "$hook" "rm after a heredoc closed by EOF) on an earlier line" "$r" Bash "$FX_REPO" $'x=$(cat <<EOF\nnote\nEOF)\nrm -rf build'
+    # A Bash input longer than the hook scans within its timeout is denied
+    # unscanned, rm or none; one under the cap is scanned.
+    t=$(printf '%060000d' 0)
+    fx "$hook" "a Bash input under the length cap, scanned" allow 1 "$r" Bash "$FX_REPO" "echo $t"
+    t=$(printf '%070000d' 0)
+    fx_deny "$hook" "a Bash input over the length cap" "$r" Bash "$FX_REPO" "echo $t"
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"

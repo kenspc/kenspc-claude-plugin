@@ -38,7 +38,10 @@
 #       /private/tmp on macOS). A target is inside a root only by whole
 #       path components: <root>-other/f is outside <root>. With the marker
 #       set and no roots, every file-tool write is outside them, and a
-#       target that cannot be read from the input is denied too.
+#       target that cannot be read from the input is denied too;
+#   (c) a Bash input longer than BASH_INPUT_CAP bytes (64 KB), unscanned:
+#       the scan's time grows with the square of the command's length, and
+#       a run that outlasts the hook's timeout denies nothing.
 # An input whose tool_name cannot be read, or a Bash input whose
 # tool_input.command cannot be read, is denied as well: were a Claude Code
 # release to rename either field, the calls would stop loudly rather than
@@ -197,22 +200,48 @@ function heredoc_op(c, i,   strip, d, ch) {
   if (d != "") { nh++; hd[nh] = d; hs[nh] = strip }
   return i
 }
-function heredocs(c, i,   k, rest, nl, line, from, hit) {
-  for (k = 1; k <= nh; k++) {
-    from = i; hit = 0
-    while (i <= length(c)) {
-      rest = substr(c, i); nl = index(rest, "\n")
-      line = nl ? substr(rest, 1, nl - 1) : rest
-      i += nl ? nl : length(rest)
-      if (hs[k]) sub(/^\t+/, "", line)
-      if (line == hd[k]) { hit = 1; break }
-    }
-    if (!hit) { i = from; break }
+# lines(c) indexes the lines of c once, so that heredocs() finds a
+# delimiter line without copying the rest of the command on every line,
+# which made a command of many << lines with no delimiter line take
+# seconds: LN[j] is line j, LO[j] its offset in c, LI[offset] its number;
+# P[t, m] is the m-th line that reads t, and Q[t, m] the m-th that reads t
+# once its leading tabs are stripped (<<-).
+function lines(c,   j, off, t) {
+  nln = split(c, LN, "\n"); off = 1
+  for (j = 1; j <= nln; j++) {
+    LO[j] = off; LI[off] = j; off += length(LN[j]) + 1
+    t = LN[j] ""; np[t]++; P[t, np[t]] = j
+    sub(/^\t+/, "", t); nq[t]++; Q[t, nq[t]] = j
+  }
+}
+# nextline(d, strip, k): the first line at or after line k that reads d,
+# its leading tabs stripped when strip, or 0 when none does. The scan asks
+# for lines in increasing order, so each pointer only moves forward.
+function nextline(d, strip, k) {
+  if (strip) {
+    while (pq[d] < nq[d] && Q[d, pq[d] + 1] < k) pq[d]++
+    return (pq[d] < nq[d]) ? Q[d, pq[d] + 1] : 0
+  }
+  while (pp[d] < np[d] && P[d, pp[d] + 1] < k) pp[d]++
+  return (pp[d] < np[d]) ? P[d, pp[d] + 1] : 0
+}
+# heredocs(c, i): i is a line start; skips the bodies of the pending
+# heredocs, each up to its delimiter line, and returns the offset after
+# the last body found. At the first delimiter line that never comes, it
+# stops there, and the lines from the start of that body are read as
+# commands.
+function heredocs(c, i,   m, k, j) {
+  k = LI[i]
+  for (m = 1; m <= nh; m++) {
+    j = nextline(hd[m], hs[m], k)
+    if (!j) break
+    k = j + 1
   }
   nh = 0
-  return i
+  return (k > nln) ? length(c) + 1 : LO[k]
 }
 function scan(c,   n, i, ch, nx) {
+  lines(c)
   n = length(c); i = 1; st = "N"; sp = 0; nw = 0; cur = ""; inw = 0; nh = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
@@ -260,6 +289,13 @@ END {
 '
 
 REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name>-<timestamp>/ (inside the repository, delete through git rm), and write under the repository, the workspace, or scratch (\$TMPDIR, /tmp)."
+
+# The longest Bash hook input, in bytes, the hook scans. Why a cap: the
+# scan's time grows with the square of the command's length under the awk
+# macOS ships (a 300 KB command took about 9 s), and a run that outlasts
+# the hook's 5-second timeout (hooks.json) denies nothing; at this cap the
+# longest command takes about half a second.
+BASH_INPUT_CAP=65536
 
 deny() {
   printf 'autopilot rails: %s. %s\n' "$1" "$REASON_ROUTE" >&2
@@ -315,6 +351,9 @@ tool=$(field tool_name) \
 
 case $tool in
   Bash)
+    bytes=$(printf '%s' "$input" | LC_ALL=C wc -c)
+    [ "$((bytes))" -le "$BASH_INPUT_CAP" ] \
+      || deny "this Bash call's hook input is $((bytes)) bytes, over the $BASH_INPUT_CAP the hook scans within its timeout, so it is denied in an autopilot worker; write long content with the Write tool, or split the command"
     found=$(printf '%s' "$input" | awk -v sq="'" "$RM_AWK") \
       || deny "the command of this Bash call could not be read from the hook input (tool_input.command), so it is denied in an autopilot worker"
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"

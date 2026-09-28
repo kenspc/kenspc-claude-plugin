@@ -1089,6 +1089,10 @@ on Windows.
   target the hook cannot read from its input is denied in a marked worker,
   with a reason saying so: were a Claude Code release to rename the path
   field, a worker's writes would stop loudly rather than pass unchecked.
+  A Bash call whose hook input is over 64 KB is denied unscanned, with a
+  reason saying so: the scan's time grows with the square of the
+  command's length, and a hook run that outlasts its 5-second timeout
+  denies nothing; long content goes through the Write tool.
   The release checklist's live hook row is where such a change shows
   before a release: `check-autopilot-rails-hook.sh` replays a copy of the
   input as Claude Code 2.1.283 sent it, which a later format would not
