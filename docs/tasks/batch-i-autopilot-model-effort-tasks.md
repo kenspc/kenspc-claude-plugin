@@ -230,7 +230,11 @@ Depends on: Task 1-4
 
 ### Task 6: CHANGELOG 的 4.2.0 条目
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: 条目按 4.1.0 的格式写：开头一段交代批次和改动原因，然后 `### Added`、`### Changed`，最后是 `### Corrections`，放对旧说法的更正。证据用自己的话写（在 Claude Code 2.1.283 上，按 driver 方式启动的 worker 跑的是 settings 解析出的 model 和 effort；不带 `--effort` 的 resume 回到 settings 的 effort，但保留 model），没有引用 probe 编号。README Known behavior 新增的四项在 CHANGELOG 里概括写出，Fable 计费那一项写成"model 的请求计入 usage credits 时"，不写 model 名称：spec 的 clarification 说 README 那一项是本批次唯一写出 model 名称的地方，CHANGELOG 不在例外之列。
+- Changes/tradeoffs: `### Corrections` 一段转述旧说法，没有照抄原句，所以 "follows the session's model" 的 grep 不会命中 CHANGELOG；段中写明 CLAUDE.md 讲 skill 和 agent 跟随 session 的那一句保持不变，以及原因。日期留作 `unreleased`，4.1.0 以前的条目没有改动（`git diff --numstat` 显示 91 行新增、0 行删除）。条目末句写明 guard 计数不变。
 
 Depends on: Task 1-5
 

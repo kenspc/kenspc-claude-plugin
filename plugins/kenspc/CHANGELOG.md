@@ -9,6 +9,97 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.2.0 — unreleased
+
+Batch I. The autopilot's workers are separate `claude -p` processes, and
+each one resolves its model and effort from its own settings. The driver
+and its documentation described a worker as running at the main session's
+model, which it does not. On Claude Code 2.1.283 a worker launched the way
+the driver launches one ran at the model and effort its settings resolved,
+not at the ones the main session had chosen, and a resume launched without
+`--effort` went back to the settings' effort while keeping the model. The
+autopilot now passes each role's model and effort on every launch, fresh
+and resumed alike, and records what each worker actually ran at. Guard
+counts are unchanged: `guards run: 11`, `self-tests run: 10`.
+
+### Added
+
+- **`Role settings:`** in a spec's or brief's `## Autopilot` section: one
+  sub-bullet per role, `- <role>: model <model>[, effort <level>]` or
+  `- <role>: effort <level>`, for the roles S1, S2, S3, S3b, S4, S5, and
+  S6. The field is empty by default. The plugin ships no default per role and names no
+  model, since a model name written into the plugin goes stale at the next
+  model generation.
+- **Pass-through values.** A role the field does not name, and the part a
+  role's entry leaves out, take the main session's current values, read
+  once at the start of the run: the effort from `$CLAUDE_EFFORT`, and the
+  model from the main session's own transcript, found by
+  `$CLAUDE_CODE_SESSION_ID`. A value that cannot be read is recorded as
+  `not determined` and is not passed.
+- **Two settings stops before the first launch.**
+  - A `Role settings` entry outside its grammar: an unknown role, a role
+    named twice, or a part that does not match, named with the value that
+    failed.
+  - `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort. The
+    variable takes precedence over `--effort`, and every worker inherits
+    it, so each declared effort would be overridden silently.
+- **`AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT`** in `run.sh` and `run.ps1`.
+  When a variable is non-empty the driver passes `--model` or `--effort`,
+  on a fresh launch and on a resume; the empty string counts as unset. The
+  skill sets both on every launch, empty where no value is known, so a
+  variable already in the main session's environment cannot leak into a
+  worker. A resume sets the values its tag was launched with, and a
+  re-run's tag takes its step's role. S4's nested acceptance sessions take
+  S4's values through the environment. Both self-tests cover the
+  variables set, unset, and set to the empty string, on a fresh launch and
+  on a resume.
+- **The applied model and effort.** After each worker exits, the skill
+  reads the model and effort it ran at from the main-loop records of its
+  transcript, found by the session id in `<tag>.session`. It writes one
+  line per worker to the state file:
+  `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]`.
+  - The model matches when the applied model ID contains the requested
+    value, without regard to case, once a trailing `[...]` is removed from
+    the requested value.
+  - The effort matches when it equals the requested value; a record with
+    no effort field is the mismatch `effort not applied`.
+  - A mismatch is marked, never a stop. A transcript or field that cannot
+    be read is `not observed`, which takes no `MISMATCH:` and is not
+    counted: the transcript's fields are an undocumented format, evidence
+    and not a contract.
+- **Known behavior: four items.** A role's model reaches every subagent
+  of its worker, through `model: inherit`; the agents that set
+  `effort: xhigh` keep it whatever the role's effort; a headless worker
+  can spend usage credits without asking, in `-p` mode, when its model's
+  requests count against them, and a role without a declared model takes
+  the main session's; the applied values come from an undocumented format
+  and are `not observed` when unreadable.
+
+### Changed
+
+- **The settings line** ends with the roles and the pass-through values,
+  `roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>`,
+  after `wait <interactive|headless>`. The plugin README's Known behavior
+  and the release checklist's autopilot smoke row no longer say the line
+  ends with `wait headless`; the smoke row still checks it.
+- **The state file** gains the pass-through values and the
+  `models and efforts:` lines.
+- **The reviewer report** gains a `- Models and efforts:` line before
+  `- Total cost:`: the number of workers and of mismatches
+  (`<n> workers, <k> mismatches`, or `mismatches: none`), with the state
+  file's lines under it.
+
+### Corrections
+
+- **Workers and the main session's model.** The headers of `run.sh` and
+  `run.ps1` said no model flag is ever passed, because the worker runs at
+  the session's model. A worker runs at whatever its own settings resolve,
+  and a resume keeps the model but not the effort, so both headers now say
+  that and give the two new variables. The skill, the plugin README, and
+  CLAUDE.md state it too. The sentence in CLAUDE.md about skills and
+  agents following the session's model and effort is unchanged: it
+  concerns the skills and agents inside one session, where it holds.
+
 ## 4.1.0 — 2026-09-28
 
 Batch H. From v2.1.277 Claude Code reads AGENTS.md on its own, through its
