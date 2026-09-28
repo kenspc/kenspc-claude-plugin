@@ -132,11 +132,11 @@ VERIFICATION CHECKS
    `.kenspc/` — this run's scratch or an earlier run's — make a command fail,
    alone or alongside failures in the project's own files, record FAIL in that
    command's row with those paths in the Detail cell; a re-run narrowed only
-   to leave out `.kenspc/` may be added to Detail as information, but it does not change
-   the Result. When the runner collected files under `.kenspc/`, the test
-   row's Detail names them, whether the run passed or failed, and a passing
-   run stays PASS, as it does for intentionally skipped tests: compare the
-   runner's list of collected files against `.kenspc/` (for example
+   to leave out `.kenspc/` may be added to Detail as information, but it does
+   not change the Result. When the runner collected files under `.kenspc/`,
+   the test row's Detail names them, whether the run passed or failed, and a
+   passing run stays PASS, as it does for intentionally skipped tests:
+   compare the runner's list of collected files against `.kenspc/` (for example
    `vitest list --filesOnly` or `jest --listTests`), and for a runner with no
    such list, or when the list command itself errors, say in Detail that this
    was not checked. The list only feeds Detail: an error from it leaves the

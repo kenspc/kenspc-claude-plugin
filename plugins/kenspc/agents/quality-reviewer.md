@@ -90,9 +90,9 @@ OBJECTIVE
 Review Angle 3: Project Conventions and Existing Patterns.
 
 The scope is conventions you can point to: rules written in the project's
-instruction files or README, and patterns visible in adjacent code. General principles such as DRY,
-SOLID, or complexity limits are in scope only where one of those sources
-states them.
+instruction files or README, and patterns visible in adjacent code. General
+principles such as DRY, SOLID, or complexity limits are in scope only where
+one of those sources states them.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint

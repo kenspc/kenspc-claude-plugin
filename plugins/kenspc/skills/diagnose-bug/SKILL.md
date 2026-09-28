@@ -108,10 +108,10 @@ read silently first — they name the test framework, its file conventions,
 and the commit conventions; the code the bug runs through. The project's
 instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
 `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
-`@`, whether or not Claude Code loaded them in this session. Before writing anything,
-note what `git -c core.quotePath=false status --porcelain -uall` lists: the
-untracked files (`??`) — with `-uall`, each file rather than its directory,
-and with `core.quotePath=false` a non-ASCII name as it is, not
+`@`, whether or not Claude Code loaded them in this session. Before writing
+anything, note what `git -c core.quotePath=false status --porcelain -uall`
+lists: the untracked files (`??`) — with `-uall`, each file rather than its
+directory, and with `core.quotePath=false` a non-ASCII name as it is, not
 octal-escaped — so the files this run creates can be told apart from the
 user's, and the tracked files with uncommitted changes, so the exit can say
 when the fix touches one.
@@ -419,8 +419,9 @@ commit would carry the whole document.
 ### Tier 3: the brief
 
 Write a brief at `docs/briefs/<name>.md` — a brief location the project's
-instruction files specify takes precedence — with the same conflict check. Its first line is
-`# Requirement Brief: <title>`, the line generate-plan recognizes a brief by.
+instruction files specify takes precedence — with the same conflict check.
+Its first line is `# Requirement Brief: <title>`, the line generate-plan
+recognizes a brief by.
 Use the brief template in `${CLAUDE_PLUGIN_ROOT}/skills/generate-brief/SKILL.md`
 with this mapping:
 

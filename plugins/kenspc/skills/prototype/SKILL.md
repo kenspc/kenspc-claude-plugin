@@ -102,10 +102,10 @@ files, read silently first — they name the stack, the commit conventions, a
 prototype location, and the development database. The project's
 instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
 `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
-`@`, whether or not Claude Code loaded them in this session. Before writing anything,
-note what `git -c core.quotePath=false status --porcelain -uall` lists, so
-the run can tell its own files from the user's and knows which tracked files
-have uncommitted changes.
+`@`, whether or not Claude Code loaded them in this session. Before writing
+anything, note what `git -c core.quotePath=false status --porcelain -uall`
+lists, so the run can tell its own files from the user's and knows which
+tracked files have uncommitted changes.
 
 **DONE when** the frame has gone to the user as a message of its own, sent
 before the prototype's first file is written, and no gate is open. The frame
@@ -248,9 +248,10 @@ written once, in the Writing rules for the brief in
 - A UI prototype that can only render inside the app is the one in-app
   kind: its location comes from the project's instruction files, or is
   asked. In a session that cannot ask (a system reminder to work without
-  stopping), with no location in them, nothing is built and the entry stays unsettled with
-  the reason. Why: no default location inside someone's app is defensible,
-  and a guessed one is an edit to the user's source tree nobody chose.
+  stopping), with no location in them, nothing is built and the entry stays
+  unsettled with the reason. Why: no default location inside someone's app
+  is defensible, and a guessed one is an edit to the user's source tree
+  nobody chose.
 - A feature prototype that needs the app's runtime runs outside the app,
   from the location, importing the app's modules, when that lets it run.
   Otherwise it is not built, in either kind of session: the entry stays

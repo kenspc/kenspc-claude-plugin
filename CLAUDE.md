@@ -94,7 +94,7 @@ the empty husk had been running as a no-op since.
 
 References live in `references/` as example documents (task format, plan format) to help users get started.
 
-Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. Three entries today: `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions); and `code-craft-principles.md`, referenced by three agents (`task-implementer`, `code-fixer`, `quality-reviewer`) — it defines the Simplicity First and Surgical Changes principles with stack-specific C# / TypeScript diff examples, and explicitly does NOT define Goal-Driven Execution (covered by DONE-criteria in every SKILL), Think Before Coding for ad-hoc interactions (belongs in user-level or project-level CLAUDE.md), per-language style guides (delegated to the project's instruction files), or agent dispatch order / CONTEXT contracts (defined in the dispatching SKILL.md and each agent's header); and `instruction-files.md` (4.1.0), the one place the plugin defines "the project's instruction files" — a project's CLAUDE.md and AGENTS.md files, at the root, in `.claude/`, or in a subdirectory, and the files a CLAUDE.md imports, whether or not Claude Code loaded them — with its Why. No skill or agent reads it at run time: each file that uses the term carries the definition sentence, and `check-instruction-files.sh` holds every copy to this one.
+Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. Three entries today: `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions); `code-craft-principles.md`, referenced by three agents (`task-implementer`, `code-fixer`, `quality-reviewer`) — it defines the Simplicity First and Surgical Changes principles with stack-specific C# / TypeScript diff examples, and explicitly does NOT define Goal-Driven Execution (covered by DONE-criteria in every SKILL), Think Before Coding for ad-hoc interactions (belongs in user-level or project-level CLAUDE.md), per-language style guides (delegated to the project's instruction files), or agent dispatch order / CONTEXT contracts (defined in the dispatching SKILL.md and each agent's header); and `instruction-files.md` (4.1.0), the one place the plugin defines "the project's instruction files" — a project's CLAUDE.md and AGENTS.md files, at the root, in `.claude/`, or in a subdirectory, and the files a CLAUDE.md imports, whether or not Claude Code loaded them — with its Why. No skill or agent reads it at run time: each file that uses the term carries the definition sentence, and `check-instruction-files.sh` holds every copy to this one.
 
 ### Portable Paths
 
@@ -186,8 +186,8 @@ next generate-plan run reads the answered entry as settled input — its
 alone — and a plan that
 relies on it cites the hash. A prototype runs outside the app; the one
 in-app exception is a UI prototype that can only render inside the app,
-located by the project's instruction files or by the user, with the typecheck green
-against its baseline.
+located by the project's instruction files or by the user, with the
+typecheck green against its baseline.
 
 init-project writes a project's AGENTS.md, CLAUDE.md, and topic documents
 from the user's answers and a scan of the directory, with

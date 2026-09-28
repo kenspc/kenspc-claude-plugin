@@ -776,16 +776,16 @@ the project's instruction files govern S6's task block: the CHANGELOG's
 becomes `Version:`; the manifests' descriptions name the new capability;
 the checklist's counting rows follow; the roadmap's shipped items leave and
 its heading names the next minor; the batch's plan and task documents,
-and its brief when git tracks it, are `git rm`ed — an untracked brief, the brief-entry case since
-S1 commits the spec alone, is left where it is and named in both reports as
-the user's to commit or discard, since `git rm` on an untracked path fails
-and the rails allow no other deletion inside the repository; one release
-commit in the repository's convention; the pre-flight block runs
-and its two count lines are in S6's reply; no tag, no push. With
-`Version: none` in plugin mode, S6 makes the removal commit only, and the
-reports say the release was not prepared. Why: stack-agnostic in form — the
-checklist and the project's instruction files are read — and the
-repository's own procedure in substance.
+and its brief when git tracks it, are `git rm`ed — an untracked brief, the
+brief-entry case since S1 commits the spec alone, is left where it is and
+named in both reports as the user's to commit or discard, since `git rm` on
+an untracked path fails and the rails allow no other deletion inside the
+repository; one release commit in the repository's convention; the
+pre-flight block runs and its two count lines are in S6's reply; no tag, no
+push. With `Version: none` in plugin mode, S6 makes the removal commit
+only, and the reports say the release was not prepared. Why:
+stack-agnostic in form — the checklist and the project's instruction files
+are read — and the repository's own procedure in substance.
 
 The zero-diff check runs again before S6 is launched, over
 `<baseline>..HEAD` as it then stands, and not after S6's commit. Why
