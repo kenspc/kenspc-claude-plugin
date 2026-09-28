@@ -20,6 +20,18 @@ after the fact; and the plugin directory on every launch, a headless main
 session's records, and the fix loop are each stated one way. Guard counts:
 `guards run: 12`, `self-tests run: 11` (one new guard, with a self-test).
 
+The evidence the batch's Whys state in their own words is on record in
+`docs/dry-runs/batch-i-acceptance.md`: the scratch files that
+subagents wrote under `/tmp`, which stopped nested cases 3 and 6, and a
+subagent's `rm -rf` on its own scratch (Observations); the headless main
+sessions that printed neither the settings line nor the return lines
+(F1); the three repo-mode main sessions that read an inherited
+`AUTOPILOT_PLUGIN_DIR` two ways (F2); and the S2 at a low effort that
+skipped its confirmation (F3). task-implementer's in-place mutation of the
+project's own source, `sed -i` with `.bak` copies restored by `cp`, is
+`docs/dry-runs/scratch-probes-acceptance.md` § 6. The S5 that fixed six
+defects was batch I's own run, outside its acceptance record.
+
 The hook was built on three probes, run on Claude Code 2.1.283 in one
 headless `bypassPermissions` session with a throwaway plugin whose
 PreToolUse hook logged its input and denied any call naming `deny-me`, and
