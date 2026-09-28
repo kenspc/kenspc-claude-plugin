@@ -231,6 +231,12 @@ run_fixtures() {
     fx "$hook" "quoted mention echo \"rm -r\"" allow 1 "$r" Bash "$FX_REPO" 'echo "rm -r"'
     fx "$hook" "quoted mention in a heredoc commit message" allow 1 "$r" Bash "$FX_REPO" \
         $'git commit -m "$(cat <<\'EOF\'\ndocs: note\n\nrm -rf is denied now\nEOF\n)"'
+    # A separator inside the quotes, before rm -rf: a hook that read the
+    # quotes as ordinary characters would split there and deny.
+    fx "$hook" "quoted separator: echo 'a && rm -rf b'" allow 1 "$r" Bash "$FX_REPO" "echo 'a && rm -rf b'"
+    fx "$hook" "quoted separator: echo 'a; rm -rf b'" allow 1 "$r" Bash "$FX_REPO" "echo 'a; rm -rf b'"
+    fx "$hook" "quoted separator: echo \"a | rm -rf b\"" allow 1 "$r" Bash "$FX_REPO" 'echo "a | rm -rf b"'
+    fx "$hook" "quoted separator: git commit -m \"…; rm -rf …\"" allow 1 "$r" Bash "$FX_REPO" 'git commit -m "docs: note; rm -rf is denied now"'
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
 
