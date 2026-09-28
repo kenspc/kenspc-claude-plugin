@@ -358,6 +358,10 @@ run_fixtures() {
 
     # The marker set and no roots: every file-tool write is outside them.
     fx_deny "$hook" "no roots with the marker set" "" Write "$FX_REPO" "$FX_REPO/src/a.txt"
+    # A root entry that is not absolute is skipped: an empty entry or .
+    # would otherwise resolve to / and hold every target.
+    fx_deny "$hook" "an empty root entry skipped" "|$FX_REPO" Write "$FX_REPO" "$FX_BASE/outside/a.txt"
+    fx_deny "$hook" "a . root entry skipped" ".|$FX_REPO" Write "$FX_REPO" "$FX_BASE/outside/a.txt"
 
     # A field the hook cannot read — the tool's name, or a Bash command —
     # denies the call rather than passing it unchecked.
