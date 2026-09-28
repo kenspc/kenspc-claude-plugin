@@ -98,7 +98,13 @@ With no arguments the interview asks as usual; it is not a stop.
 
 ## Language
 
-- The interview is in the user's language.
+- The run's first message names the conversation language: the language of
+  the user's message, or of the DESCRIPTION when there is no message.
+  Every question after it — an AskUserQuestion's question, header, options,
+  and descriptions too — and the final message are in that language; only
+  what goes into the files follows the next bullet. Why: a run that had
+  read English templates and tool output drifted into English twice; an
+  anchor stated at the start holds where a rule alone did not.
 - The files the run writes are in English, unless the user asks for another
   language. Why: they are read by coding agents and by team members who join
   later, and English is the language both are most likely to share. This
@@ -122,18 +128,18 @@ whatever the stack (a manifest or build file such as a `package.json`, a
 whether `gh` is installed and `gh auth status` succeeds; whether each
 stack's own tools are on the PATH (for example `dotnet`, `node`); in a
 repository, the project's instruction files, its README and CONTRIBUTING,
+the files it tracks under `docs/briefs/`, `docs/plans/`, and `docs/tasks/`,
 and the subjects of its recent commits; the DESCRIPTION. The project's
 instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
 `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
 `@`, whether or not Claude Code loaded them in this session. In a
-repository, note what
-`git -c core.quotePath=false status --porcelain -uall` lists before writing
-anything, so the run can tell its own files from the user's and knows which
-tracked files already carry uncommitted changes. The `git rev-parse` probes,
-and every other git command whose message the run reads, run under
-`LC_ALL=C`. Why: git translates its messages, and the start points below
-are told apart by git's English wording, so a translated one would stop a
-run that should go on.
+repository, note what `git -c core.quotePath=false status --porcelain -uall`
+lists before writing anything, so the run can tell its own files from the
+user's and knows which tracked files already carry uncommitted changes. The
+`git rev-parse` probes, and every other git command whose message the run
+reads, run under `LC_ALL=C`. Why: git translates its messages, and the
+start points below are told apart by git's English wording, so a translated
+one would stop a run that should go on.
 
 **DONE when** the directory is placed in exactly one start point below and
 the run goes on, or the run has stopped with nothing written. Why nothing
@@ -171,9 +177,12 @@ in the last message:
   branch, and the next checkout leaves it behind.
 
 Empty means `ls -A` lists nothing but, at most, a file browser's metadata
-(`.DS_Store`, `Thumbs.db`, `desktop.ini`), which no commit of the run
-stages. Why: a folder a file browser has opened gains such a file, and
-nothing in it needs the protection a stop gives.
+(`.DS_Store`, `Thumbs.db`, `desktop.ini`) and directories that ignore
+themselves whole — a directory whose own `.gitignore` has `*` as its only
+pattern — none of which a commit of the run stages. Why: a folder a file
+browser has opened gains such a file, a tool that keeps its state out of
+every repository leaves such a directory, and nothing in either needs the
+protection a stop gives.
 
 A `.claude/CLAUDE.md` or `.claude/AGENTS.md` is its directory's CLAUDE.md
 or AGENTS.md when that directory has none, and no second one is written
@@ -276,14 +285,18 @@ How every round is asked, here and in Phase 4:
 
 - One round per message: the round's questions together, each pre-filled
   with what the DESCRIPTION or the scan shows, so the user confirms rather
-  than retypes. What they already answer is not asked. The repository's
+  than retypes. What they already answer is not asked. A question nothing
+  pre-fills is asked on its own, not inside the confirmation of pre-filled
+  ones. Why: a yes to the confirmation leaves it unanswered. The repository's
   shape (one app or a monorepo) and its hosting are asked once all the
   same, even when the scan suggests them — the shape here, the hosting in
   Phase 5. Why: a monorepo with one app so far reads to a scan as a single
   app, and a remote can be a mirror; both decide where files go and which
   backlog is used, and a wrong guess is costly to move later.
 - Any round can be skipped; a skipped question takes its default
-  (§ Defaults and TBD).
+  (§ Defaults and TBD). A question asked with options offers skipping it
+  and "use the defaults for everything" as two options. Why: one skips a
+  question, the other ends the interview.
 - "Use the defaults for everything", in any wording or language, ends the
   interview: the rounds not yet asked are skipped. The questions outside
   the interview — scaffolding, the GitHub repository, the file list, push,
@@ -351,6 +364,12 @@ no scaffolding still gets every document, its commands `TBD(init):`.
   repository root. Why: `apps/<name>/` gives every app one predictable place
   for its AGENTS.md pair, and inside it the stack's tools find the layout
   they expect.
+- **The lockfile.** When the stack's package manager records resolved
+  versions in a lockfile (`package-lock.json` for npm, for example) and the
+  generator installed nothing, run its install once, starting no server; a
+  failed install leaves the scaffold as it is, and the final message says
+  so. Why: the lockfile makes a teammate's install resolve the same
+  versions, so it belongs in the scaffold commit.
 
 After each generator run, three things it may have left are checked:
 
@@ -401,12 +420,17 @@ path for a single app at the root) for a directory the stack's tools
 restore or build — a package install directory, a compiler's output — and
 each one `.gitignore` does not already ignore (probed as § Files says) is
 appended to the root `.gitignore` (only appended) and named on the file
-list. Why: such a directory is regenerated on every machine, can carry this
-machine's paths, and buries the readable diff; plain status hides one that
-the user's own excludes already cover, and a teammate's clone does not
-ignore it. A commit that fails stops the run as § Confirm and commit
-describes. Without git (a no in Phase 1), the apps are scaffolded and
-nothing is committed.
+list. The first scaffold commit that needs such a line, or `.trash/`,
+stages the root `.gitignore` with it, unless that file held uncommitted
+changes of the user's; `.kenspc/` and `CLAUDE.local.md` wait for the
+documentation commit. Why: such a directory is regenerated on every
+machine, can carry this machine's paths, and buries the readable diff;
+plain status hides one that the user's own excludes already cover, and a
+teammate's clone does not ignore it; and the commit that brings the
+directory in carries the line that keeps it out. A commit that fails, or
+git without an identity, stops the run as § Confirm and commit describes.
+Without git (a no in Phase 1), the apps are scaffolded and nothing is
+committed.
 
 ## Phase 4: Rescan, interview rounds 3–5
 
@@ -519,9 +543,9 @@ committed.
 **DONE when** the files in § Files are written; every check in § Checks
 passes on them; the user confirmed the file list — in a session that cannot
 ask, it was presented and committed as presented; and the documentation
-commit exists. Or the run ended without git, at a "no" to the file list,
-at a failing commit, or with no file left to commit, and the final message
-says which.
+commit exists. Or the run ended without git, at a "no" to the file list or
+a skipped one, without a git identity, at a failing commit, or with no file
+left to commit, and the final message says which.
 
 ### Files
 
@@ -614,6 +638,15 @@ skill. A file this list gains keeps to that.
   agents-md plugin disabled, nothing reads it; only an imported AGENTS.md
   fires the InstructionsLoaded hook; and a Read of CLAUDE.md shows the
   import as one line, which the other line explains.
+- The durable documents the run writes state each decision in their own
+  words and name no file under `docs/briefs/`, `docs/plans/`, or
+  `docs/tasks/`; a source that has to be named is written as
+  `git show <hash>:<path>`. Why: the workflow deletes those files once
+  their work is done, and a reference to one breaks then.
+- A library the user chose that no manifest lists yet is written in the
+  topic document it concerns as chosen and not yet installed, and not as
+  part of an AGENTS.md's stack. Why: an agent reads the stack as what the
+  code already uses, and would import a package that is not there.
 - Policy items — the versioning scheme, the file that holds the version,
   the environments, the deployment method, the migration policy, the branch
   and commit conventions — that nobody answered are `TBD(init):`, never a
@@ -697,7 +730,13 @@ line short.
 - Each AGENTS.md the run created opens with the HTML comment holding
   `kenspc-init template: 1` and the admission rule's three conditions.
 - Every path in the first column of a Documents table the run wrote exists
-  (for an `apps/*/AGENTS.md` row, each app's).
+  (for an `apps/*/AGENTS.md` row, each app's), and a README the run wrote
+  lists the same paths under Documentation.
+- Every sentence the run wrote in a topic document that is neither a
+  `TBD(init):` marker nor the template's fixed text has a source the run
+  can name: an answer of the user's, the DESCRIPTION, or a file, by its
+  path. A sentence without one becomes `TBD(init): <what it would say>`,
+  and the final message lists each sentence changed so.
 - No line the run wrote, and no line of the user's the commit would add,
   holds a value that reads as a secret: a private key block
   (`-----BEGIN … PRIVATE KEY-----`); a token with a known prefix
@@ -726,9 +765,10 @@ and the line's number — not the value, which a message would only copy
 further; the other files are committed. Why: no reviewer reads these
 files, and each check guards a way they fail without an error — an
 AGENTS.md too long to load in every session, a CLAUDE.md that no longer
-imports it, a table naming a file that is not there, a marker a rerun
-cannot find, a secret that history keeps; and a line the user wrote is not
-the run's to change.
+imports it, a table naming a file that is not there or a README listing
+other documents than the table, a claim nobody made that reads as the
+team's decision, a marker a rerun cannot find, a secret that history keeps;
+and a line the user wrote is not the run's to change.
 
 ### Confirm and commit
 
@@ -746,11 +786,12 @@ Ask the user to confirm or adjust; apply adjustments, run the checks again,
 and list again. In a session that cannot ask (a system reminder to work
 without stopping), present the list and commit it as presented, leaving
 out each file that held uncommitted changes, which the final message names.
-On a "no", nothing is committed; the files stay in the tree, and the final
-message says so. Why: no reviewer runs on these files, so the user's look
-at the list is the gate before they enter history; the user's unfinished
-work goes in only on that look, and an ignored path is one the user chose
-to keep out.
+On a "no", or when the user skips the question, nothing is committed; the
+files stay in the tree, and the final message says so. Why: no reviewer
+runs on these files, so the user's look at the list is the gate before they
+enter history, and a skipped list got no look; the user's unfinished work
+goes in only on that look, and an ignored path is one the user chose to
+keep out.
 
 **The commit.** `docs: initialize project documentation`, staging exactly
 the listed files not marked to stay out, passed to `git commit` as a
@@ -765,6 +806,13 @@ instruction files or its CONTRIBUTING), or, failing that, the pattern its
 recent commit subjects consistently share.
 Why: the history keeps one style, and the subjects given here are the
 default for a repository that has none.
+
+**The identity.** The commits use the identity git already has: no
+`-c user.name` or `-c user.email`, and none set. When
+`git var GIT_AUTHOR_IDENT` or `git var GIT_COMMITTER_IDENT` fails, the run
+stops before its first commit, in either session: the files stay in the
+tree, and the final message says git has no identity. Why: a commit's
+author is the user's to choose, and one the run made up stays in history.
 
 **A commit that fails** — a commit hook rejects it, or git refuses the
 pathspec — stops the run: report the error and ask the user how to go on.
@@ -884,7 +932,8 @@ message says how many markers remain and in which files.
 ## Defaults and TBD
 
 A question skipped in a session that can ask, and every question in a
-session that cannot, takes the default in the table below; an interview
+session that cannot, takes the default in the table below — except the
+file list, whose skip commits nothing (§ Confirm and commit); an interview
 item takes its answer from the DESCRIPTION or the scan when they give one,
 and is otherwise `TBD(init):`. Every question the skill asks is one of
 these gates.
@@ -911,7 +960,8 @@ these gates.
 
 The backlog takes no question: A with a GitHub remote, C otherwise. The two
 safety rules are always written, and the documentation commit is made
-unless the user says no at the file list or no file is left to commit.
+unless the user says no to the file list or skips it, git has no
+identity, or no file is left to commit.
 
 ## Exit
 
@@ -920,22 +970,25 @@ The final message gives:
 - the start point, and each file with what happened to it — created,
   appended to, given the import line, or left as it was;
 - the commits, each with its hash and subject, or why none was made;
-- the `TBD(init):` markers left, counted per file;
+- the `TBD(init):` markers left, counted per file, and each sentence the
+  source check turned into one;
 - every default a session that cannot ask took in place of a question;
 - what is left for the user, whichever applies: an existing CLAUDE.md
   without the import (the line count, and when AGENTS.md loads without it,
   as § An existing CLAUDE.md says); a CLAUDE.md written beside the user's
   AGENTS.md, and why (Phase 0); an existing AGENTS.md left without the
-  template's sections; a generator's `.git` left in place, or a
-  generator that failed and where its output is; an app not scaffolded, and
-  why; the manual GitHub steps; the labels to create; the lines
-  `.gitignore` lacks after a rerun, or in a new app's outer repository; the
-  files written and not committed — an app's pair beside a kept `.git`, an
-  ignored path, a file that held uncommitted changes, a file with a
-  secret-looking value on a line of the user's (with the line's number),
-  every file after a "no"; the files that were in a directory without git
-  before the run, which no commit carried; and, after a rerun, a
-  consequence of an answer that was not made.
+  template's sections; the files already tracked under `docs/briefs/`,
+  `docs/plans/`, or `docs/tasks/`; a generator's `.git` left in place, or a
+  generator or an install that failed and where its output is; an app not
+  scaffolded, and why; the manual GitHub steps; the labels to create; the
+  lines `.gitignore` lacks after a rerun, or in a new app's outer
+  repository; the files written and not committed — an app's pair beside a
+  kept `.git`, an ignored path, a file that held uncommitted changes, a
+  file with a secret-looking value on a line of the user's (with the line's
+  number), every file after a "no" or a skipped file list or without a git
+  identity; the files that were in a directory without git before the run,
+  which no commit carried; and, after a rerun, a consequence of an answer
+  that was not made.
 
 Next step: `/kenspc-init` again once some `TBD(init):` markers have
 answers, and `/kenspc-brief` or `/kenspc-plan` for the first piece of work.
@@ -943,8 +996,8 @@ The skill invokes neither. Why: the user decides when to start planning.
 
 ## Writing rules
 
-- Match the user's language in the conversation; the files are in English
-  unless the user asked otherwise (§ Language).
+- The conversation is in the language the first message names; the files
+  are in English unless the user asked otherwise (§ Language).
 - Commit messages are in English.
 - No branch, pull-request, rebase, or tag step: apart from naming the first
   branch of a new repository `main`, the commits land on the current
