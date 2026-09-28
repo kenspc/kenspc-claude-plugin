@@ -14,7 +14,7 @@ Skills activate automatically when Claude Code detects a matching task context.
 | generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. The brief always carries an Open Questions section: each question the discussion could not settle, marked `open` or `needs prototype` (with `Settled by:`, the result that would settle it), or `none` when nothing is open; the next-step suggestion names `/kenspc-prototype` for each `needs prototype` entry before `/kenspc-plan`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
 | prototype | Answers one open question from a brief with a throwaway prototype — logic, UI, or a feature slice. Before the prototype's first file is written, sends its frame as a message of its own — the question, the result that settles it, the kind, the location, and the resources, among them any tracked file an in-app prototype modifies — then builds the smallest thing that settles it (under `prototypes/<slug>/` by default), runs it, and commits it (`chore: add prototype <slug>`); writes the answer, the evidence, and the commit hash into the brief's entry; then removes the prototype in the next commit (`chore: remove prototype <slug>`). A location conflict, a connection your development configuration does not name, a new table or column on the development database, an in-app UI prototype's location and uncommitted files, an entry that already holds an answer, named or taken when none is named (prototype it again?), and a named entry whose status word the skill does not recognize (prototype it, or stop) are each asked about; for either entry, a "stop" or a "no" leaves the brief unchanged, and a session that cannot ask stops the same way, its last message opening with the frame. When the answer is your judgment (how a UI reads), the skill shows you the prototype after the add commit and waits for your verdict; a session that cannot ask commits and removes it and leaves the entry `needs prototype`, with what to look at and how. No review phase: the prototype is discarded, and its answer is reviewed where a plan uses it. |
 | generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. In a session that cannot ask, the run stops at the draft, printed in full, with no file written, no review, and no commit, until a later reply approves it. The plan written on approval is the draft as last printed in full, character for character; a change asked for at approval gets the full draft printed again, to approve. |
-| generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with CLAUDE.md). |
+| generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files). |
 | diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
@@ -80,7 +80,7 @@ where their description marks them safe to invoke standalone.
 | `task-implementer` | Worker | No | Implements tasks from a task document |
 | `plan-document-reviewer` | Doc reviewer | No | Reviews generated plan documents |
 | `guide-document-reviewer` | Doc reviewer | No | Reviews generated guide documents |
-| `task-document-reviewer` | Doc reviewer | No | Reviews generated task documents (completeness including Doc-sync coverage, execution order, consistency with CLAUDE.md) |
+| `task-document-reviewer` | Doc reviewer | No | Reviews generated task documents (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files) |
 
 Agents marked "Standalone: No" are orchestration-only — their description starts
 with `INTERNAL:` and their body refuses on missing CONTEXT. Invoke them through
@@ -235,9 +235,9 @@ Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement
 
 **Setup path.** In a new directory, or a repository that has no `AGENTS.md` yet, start with `/kenspc-init`: it writes the files the other skills read — the Documents table the plan's Documentation impact is determined from, the commit convention, where the version lives — and marks what you did not answer `TBD(init): …`. See [Project setup](#project-setup).
 
-**Prototype path.** A brief's `## Open Questions` lists what the discovery conversation could not settle, one numbered entry each, starting with its status: `open` (a decision or information nobody present has), `needs prototype` (a question a small experiment settles, with `Settled by:` naming the result that would settle it), or `answered` (settled by a prototype). On a brief with a `needs prototype` entry, `/kenspc-plan` first asks whether to prototype it or carry it into the plan's Open Questions, where the plan says which of its steps assume an answer; "prototype first" ends the run with a `/kenspc-prototype <brief path> <n>` line and writes no file. An `answered` entry is settled input for `/kenspc-plan` only when it holds `Answer:` with text after the label; one without, or with nothing after the label, is asked about in the gap round, or carried into the plan as `open`. `/kenspc-prototype` builds the smallest thing that settles the question — by default under `prototypes/<slug>/` at the repository root — runs it, and commits it (`chore: add prototype <slug>`); it rewrites the entry `answered` with the answer, the evidence, and that commit's hash, then removes the prototype in the next commit (`chore: remove prototype <slug>`, with the question, the answer, and the hash in its body). Read the prototype later with `git show <hash>`. An entry number that names no entry stops the run, building nothing and leaving the brief unchanged. `/kenspc-prototype` asks before it rewrites an entry that already holds an answer, named or taken when none is named, or an entry whose status word it does not recognize. When you answer yes to prototyping an entry with an answer again, the entry is rewritten only if the new attempt settles the question; when nothing is built, or the prototype's evidence does not settle it, the entry keeps its earlier answer, evidence, and Prototype line, and the final message names the new attempt's commits, when it made any, and why the question was not settled. The brief is left uncommitted, as `/kenspc-brief` leaves it. A prototype may use your development database, recognized by name only (`appsettings.Development.json`, `.env.development`, `.env.development.local`, user-secrets, or one your CLAUDE.md or README names): before it adds a table or column there, the skill warns that the development database may be the wrong place and recommends a throwaway database, and it names in the evidence every existing table it wrote rows to. It adds and applies no migration.
+**Prototype path.** A brief's `## Open Questions` lists what the discovery conversation could not settle, one numbered entry each, starting with its status: `open` (a decision or information nobody present has), `needs prototype` (a question a small experiment settles, with `Settled by:` naming the result that would settle it), or `answered` (settled by a prototype). On a brief with a `needs prototype` entry, `/kenspc-plan` first asks whether to prototype it or carry it into the plan's Open Questions, where the plan says which of its steps assume an answer; "prototype first" ends the run with a `/kenspc-prototype <brief path> <n>` line and writes no file. An `answered` entry is settled input for `/kenspc-plan` only when it holds `Answer:` with text after the label; one without, or with nothing after the label, is asked about in the gap round, or carried into the plan as `open`. `/kenspc-prototype` builds the smallest thing that settles the question — by default under `prototypes/<slug>/` at the repository root — runs it, and commits it (`chore: add prototype <slug>`); it rewrites the entry `answered` with the answer, the evidence, and that commit's hash, then removes the prototype in the next commit (`chore: remove prototype <slug>`, with the question, the answer, and the hash in its body). Read the prototype later with `git show <hash>`. An entry number that names no entry stops the run, building nothing and leaving the brief unchanged. `/kenspc-prototype` asks before it rewrites an entry that already holds an answer, named or taken when none is named, or an entry whose status word it does not recognize. When you answer yes to prototyping an entry with an answer again, the entry is rewritten only if the new attempt settles the question; when nothing is built, or the prototype's evidence does not settle it, the entry keeps its earlier answer, evidence, and Prototype line, and the final message names the new attempt's commits, when it made any, and why the question was not settled. The brief is left uncommitted, as `/kenspc-brief` leaves it. A prototype may use your development database, recognized by name only (`appsettings.Development.json`, `.env.development`, `.env.development.local`, user-secrets, or one your project's instruction files or README name): before it adds a table or column there, the skill warns that the development database may be the wrong place and recommends a throwaway database, and it names in the evidence every existing table it wrote rows to. It adds and applies no migration.
 
-**Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your CLAUDE.md names (a documentation table where it has one), or README.md and CLAUDE.md when it names none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). The review's fixes land after the Doc-sync task, so when a fix changes behavior a listed document describes, code-fixer corrects that document's sentence in the fix's own commit and changes nothing else in it; the final report names each document the fixes changed and each one left not updated, with the reason, or says none was affected.
+**Documentation path.** Every plan carries a Documentation impact section: the durable documents its steps make stale — the ones your project's instruction files name (a documentation table where they have one), or README.md and the instruction files themselves when they name none — or `N/A — <reason>`. `/kenspc-task` turns that list into a last task, `Doc-sync`, which depends on every other task. `/kenspc-task-implement` runs it after them: it brings the listed documents in line with what was built and promotes decisions made during implementation into them. A decision that belongs in a durable document none of the listed ones fits appears under Decisions needing a home in the final report, with a suggested destination, for you to place. When an earlier task is BLOCKED, the Doc-sync task is BLOCKED too (`depends on Task N (BLOCKED)`), so no document describes work that was not built. A listed document that does not exist is not created: the Doc-sync task is BLOCKED with the path named, unless the entry leaves that document to another task document (a later phase may create it). The review's fixes land after the Doc-sync task, so when a fix changes behavior a listed document describes, code-fixer corrects that document's sentence in the fix's own commit and changes nothing else in it; the final report names each document the fixes changed and each one left not updated, with the reason, or says none was affected.
 
 **Bug path.** For a bug you have observed — a wrong result, a crash, an error you can trigger — start with `/kenspc-diagnose`. It reproduces the bug with a test that fails on the current code and commits that test first (`test: reproduce <symptom>`), or records the manual steps when no failing-capable test can be written. It then finds the root cause and writes `docs/tasks/<name>.md`: a `## Diagnosis` record, a fix task that turns the reproduction test green, a regression-test task for the adjacent cases it found, and a Doc-sync task when durable documents are affected. You confirm the task list before it is written; the document is committed (`docs: add task <name>`), and the skill asks whether to run `/kenspc-task-implement` on it now or to implement it yourself. When the fix needs a decision a task cannot make — a new dependency, an API contract change, a database schema change, or a configuration change — it writes `docs/briefs/<name>.md` instead and suggests `/kenspc-plan`. A bug report it cannot reproduce ends in a question about what is missing, with no document and no commit other than the one-time `.gitignore` commit; the skill removes the test files it created for the attempt, or, if you deny the removal, names them in the question. If a commit hook rejects one of its commits — a hook that runs your test suite rejects the failing reproduction test — the skill stops and asks you rather than bypass the hook.
 
@@ -246,10 +246,11 @@ Small fixes can skip all skills and be implemented directly: a fix you can alrea
 ## Project setup
 
 `/kenspc-init [project description]` prepares a project for the chain in one
-run. The description is optional; whatever it answers is not asked. The
-interview runs in your language; the files are written in English unless
-you ask for another language, since coding agents and team members who join
-later read them.
+run. The description is optional; whatever it answers is not asked. Its
+first message names the language the run talks in — the language you wrote
+in — and every question and the final message stay in it; the files are
+written in English unless you ask for another language, since coding agents
+and team members who join later read them.
 
 **Where it starts.** It scans first, then places the directory in one of
 four start points, asking git before looking at what the directory holds —
@@ -257,7 +258,7 @@ an empty directory inside another repository is inside it:
 
 | Start point | In a session that can ask | In a session that cannot ask |
 |---|---|---|
-| An empty directory, outside any repository (a file browser's `.DS_Store` or the like counts as empty) | Asks whether to `git init` (yes by default, first branch `main`) | `git init`, first branch `main` |
+| An empty directory, outside any repository (a file browser's `.DS_Store` or the like counts as empty, and so does a directory whose own `.gitignore` ignores it whole) | Asks whether to `git init` (yes by default, first branch `main`) | `git init`, first branch `main` |
 | Files, but not a repository | Lists them and goes on only once you confirm this is the project | Stops, writing nothing |
 | Inside another repository, empty or not | Asks: a new app of that repository — then only this directory's `AGENTS.md` and `CLAUDE.md` pair, with no `git init` — or a project of its own, which it suggests moving out first | Stops, writing nothing |
 | An existing repository | Writes only the files that are missing | The same |
@@ -276,7 +277,9 @@ design system); delivery (versioning scheme and version file,
 environments, deployment method, migration policy); and collaboration
 (branch and commit conventions). What the description or the scan already
 answers is not asked, except the repository's shape and its hosting, which
-are confirmed once. "Use the defaults for everything" ends the interview.
+are confirmed once. A question nothing pre-fills is asked on its own,
+not inside a confirmation. "Use the defaults for everything" ends the
+interview, and is offered apart from skipping one question.
 Rounds 1–2 come before scaffolding and rounds 3–5 after it, so the commands
 are read from the files, never asked.
 
@@ -292,7 +295,11 @@ project root on your yes (and `.trash/` ignored), never deleted; a
 `.gitignore` it replaced gets your lines back, with its own appended. Each
 scaffolded app is committed alone (`chore: scaffold <app>`) before the
 documentation commit, without the dependency and build directories its
-tools restore, which are appended to `.gitignore` instead. An app whose
+tools restore, which are appended to `.gitignore` instead — in that same
+commit. When the stack's package manager keeps a lockfile and the generator
+installed nothing, the skill runs the install once (starting no server), so
+the lockfile goes into the scaffold commit; a failed install leaves the
+scaffold as it is and is reported. An app whose
 `.git` you keep gets no scaffold commit, and its `AGENTS.md` pair is written
 but not committed; an app directory that already holds a `.git` of its own
 is treated the same way and not offered scaffolding. A generator that fails
@@ -317,7 +324,7 @@ unattended run lists what it found in its report.
 |---|---|
 | `AGENTS.md` | An opening comment with the template marker `kenspc-init template: 1`, the line budget, and the admission rule (a line belongs only when every session needs it, the code cannot tell it, and without it an agent goes wrong or a safety floor breaks); then Project, Commands, Rules (twelve at most, always including no deploying to, migrating, or reading the data of staging or production, and no secret in the repository), Documents (a `Document \| Holds \| Changes when` table of the durable documents), and Workflow (branches, commits, backlog, and `Version lives in <file> — rules in docs/release.md`) |
 | `CLAUDE.md` | `@AGENTS.md` on its first line, then a `## Claude Code` section saying the kenspc conventions are in AGENTS.md |
-| `README.md` | What the project is and how to start, for people |
+| `README.md` | What the project is and how to start, for people, and a documentation list naming the same files as the Documents table |
 | `docs/product.md` | Purpose, users, scope, non-goals, terms |
 | `docs/architecture/overview.md` | Stack, components and boundaries, data, external integrations, key decisions |
 | `docs/ui/design-system.md` | The design system's sections, by token name — the tokens stay in code — or a line saying there is no UI |
@@ -326,13 +333,21 @@ unattended run lists what it found in its report.
 | `CHANGELOG.md` | Keep a Changelog, only when you chose SemVer or CalVer |
 | `docs/backlog/README.md` | The file backlog's format, when the backlog is files |
 | `apps/<name>/AGENTS.md`, `apps/<name>/CLAUDE.md` | Each monorepo app's commands and rules |
-| `.gitignore` | `.kenspc/` and `CLAUDE.local.md` appended when the repository's own `.gitignore` does not already ignore them — a rule in your global excludes does not reach a teammate |
+| `.gitignore` | `.kenspc/` and `CLAUDE.local.md` appended when the repository's own `.gitignore` does not already ignore them — a rule in your global excludes does not reach a teammate — in the documentation commit |
 
 The root `AGENTS.md` and `CLAUDE.md` stay within 80 lines together at init,
 each app's pair within 40, and 200 lines is the long-term ceiling. Nothing
-the code already says goes into AGENTS.md. It writes nothing under
-`.claude/`, no guide (AGENTS.md says guides go in `docs/guides/`, written by
-`/kenspc-guide`), and no `docs/briefs/`, `docs/plans/`, or `docs/tasks/`.
+the code already says goes into AGENTS.md, and a library you chose that is
+not installed yet is written as chosen in the topic document, not as part of
+the stack. The files it writes state decisions in their own words and point
+to no brief, plan, or task file, since the workflow deletes those once their
+work is done; AGENTS.md states that convention, and the final message lists
+any such files your repository already tracks. A `.claude/CLAUDE.md` or
+`.claude/AGENTS.md` counts as your CLAUDE.md or AGENTS.md, and no root file
+is written beside it. It writes nothing under `.claude/` except the import
+line an existing `.claude/CLAUDE.md` gains on your yes, no guide (AGENTS.md
+says guides go in `docs/guides/`, written by `/kenspc-guide`), and no
+`docs/briefs/`, `docs/plans/`, or `docs/tasks/`.
 
 **TBD markers.** An item nobody answered is `TBD(init): <what is missing>`,
 mostly in the topic documents; in AGENTS.md it costs one line at most. A
@@ -340,9 +355,12 @@ policy — a versioning scheme, a deployment method, the environments — is
 never chosen for you. The two safety rules are always written.
 
 **Checks and commits.** Before committing, the skill checks what it wrote:
-the line budget, CLAUDE.md's first line, AGENTS.md's opening comment, that
-every path in the Documents table exists, that no line holds a value that
-reads as a secret, that every TBD has the `TBD(init):` form, and the
+the line budget, the import line on CLAUDE.md's first line, AGENTS.md's
+opening comment, that every path in the Documents table exists and the
+README lists the same files, that every sentence in a topic document has a
+source — your answer, the description, or a file — or becomes a
+`TBD(init):` marker the final message lists, that no line holds a value
+that reads as a secret, that every TBD has the `TBD(init):` form, and the
 `.gitignore` lines; a failing check is fixed before anything is committed.
 The secret check also reads your own lines wherever the commit would put
 them into history for the first time — a file committed whole, an edit you
@@ -354,8 +372,11 @@ cannot ask leaves it out of the commit) and a path git ignores (never added
 with `-f`), and commits them as `docs: initialize project documentation`,
 following the commit convention your repository writes down or its history
 shows; with nothing left to commit, it makes no commit, says so, and ends
-there. After the commit, it asks separately whether to push and whether to
-create the missing labels. A session that cannot ask commits after the
+there. A "no", or a skipped confirmation, commits nothing and leaves the
+files in the tree. Commits use the git identity your repository already
+has; without one, the skill stops before its first commit, in any session,
+and says so, leaving the files in the tree. After the commit, it asks
+separately whether to push and whether to create the missing labels. A session that cannot ask commits after the
 checks, and creates no repository, pushes nothing, and creates no label —
 it lists the labels to create instead.
 
@@ -397,8 +418,8 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
-  to the commit conventions in your CLAUDE.md). The check asks git about a
-  path inside the directory, so a CRLF `.gitignore` with blank lines is read
+  to the commit conventions in your project's instruction files). The
+  check asks git about a path inside the directory, so a CRLF `.gitignore` with blank lines is read
   correctly. If a commit hook rejects the commit, the run stops and reports
   the error; it does not retry or bypass the hook.
 - Each agent keeps its probe and temporary files in its own subdirectory of
@@ -746,11 +767,12 @@ on Windows.
 - **Branches.** The plugin does not create branches; the one branch it
   names is the first branch of a repository `/kenspc-init` creates with
   `git init`, which is `main`. Commits follow the
-  branching rules in your project's CLAUDE.md and otherwise land on the
+  branching rules in your project's instruction files and otherwise land on the
   current branch. The plugin takes no side on branching: whether to branch is
   decided at plan time, when you approve the plan. `task-document-reviewer`
-  fixes a branch step the plan did not prescribe, or that your CLAUDE.md
-  contradicts, back to the default and records a Plan-Level Concern;
+  fixes a branch step the plan did not prescribe, or that your project's
+  instruction files contradict, back to the default and records a
+  Plan-Level Concern;
   `task-implementer` follows the task document as written and asks nothing.
 - **Dependency gate.** `/kenspc-task-implement` treats a task's `Depends on`
   line — one task (`Depends on: Task 3`), an ASCII-hyphen range
@@ -813,8 +835,9 @@ on Windows.
   location before the run — an in-app location is a directory of your app —
   are left out of the list. The skill deletes nothing.
 - **In-app UI prototypes.** Only a UI prototype that can only render inside
-  the app goes into the app. Its location comes from your CLAUDE.md or from
-  you; the project's typecheck runs before building as a baseline and again
+  the app goes into the app. Its location comes from your project's
+  instruction files or from you; the project's typecheck runs before
+  building as a baseline and again
   before the add commit, green against that baseline — a typecheck that
   cannot run (a missing command, dependencies not installed) is no
   baseline, and nothing is built; and the remove commit restores every
@@ -898,29 +921,51 @@ on Windows.
   `<tag>.exit`. The release checklist reads them there, not from the
   reply.
 - **An existing CLAUDE.md.** `/kenspc-init` does not rewrite a CLAUDE.md
-  you already have. On your yes it adds one line, `@AGENTS.md`, at the top
-  and leaves the rest byte for byte, then reports the two files' combined
-  line count and any content they visibly repeat, for you to settle. A
-  session that cannot ask leaves the file as it is, so Claude Code does not
-  load the new AGENTS.md until that line is added; the final message says
-  so. When CLAUDE.md already has an `@AGENTS.md` line, or is a symbolic
-  link to AGENTS.md (or the reverse), AGENTS.md already loads: the skill
-  asks nothing and leaves CLAUDE.md alone. The line budget is checked on
+  you already have, at the root or in `.claude/`. On your yes it adds one
+  line, the import (`@AGENTS.md`; `@../AGENTS.md` from `.claude/CLAUDE.md`),
+  at the top and leaves the rest byte for byte, then reports the two files'
+  combined line count and any content they visibly repeat, for you to
+  settle. For `.claude/CLAUDE.md` the question says Claude Code will ask you
+  to approve the write. On a no, or in a session that cannot ask, the file
+  stays as it is, and the final message gives the same line count and says
+  when Claude Code loads AGENTS.md without the import: only in the
+  `claude-md-and-agents-md` mode of its `instructionFiles` setting, on
+  v2.1.277 or later with the built-in agents-md plugin enabled — in the
+  default mode a CLAUDE.md stops it — and where both files load, what they
+  repeat takes up context twice. When CLAUDE.md already has the import
+  line, or is a symbolic link to AGENTS.md (or the reverse), AGENTS.md
+  already loads: the skill asks nothing and leaves CLAUDE.md alone. Claude
+  Code reading AGENTS.md on its own does not count, since it depends on the
+  mode and the version. In a repository with an AGENTS.md and no CLAUDE.md,
+  the skill still writes a CLAUDE.md that imports it, and the final message
+  says why: once a CLAUDE.md exists, the default mode stops reading
+  AGENTS.md on its own. The line budget is checked on
   the files the skill wrote, not on your CLAUDE.md, so the two together can
   exceed 80 lines and repeat each other — AGENTS.md may take commands and
   rules your CLAUDE.md already holds; the skill reports the count and the
   repetitions and trims neither file.
-- **Generated documents can say more than you gave.** The skill writes
-  only what you said, what a file in the directory shows, or a
-  `TBD(init):` marker, yet one headless run put product claims its one-line
-  description did not make into `docs/product.md`, and a later plan draft
-  cited them as grounded there. Read `docs/product.md`, and the other topic
-  documents, once after `/kenspc-init`, before the first plan relies on
-  them.
-- **A skipped file list commits.** "Skip, use the default" at the file-list
-  confirmation commits the list as presented, less any file that held
-  uncommitted changes of yours — the default a session that cannot ask
-  takes. Only a "no" keeps the files out of history.
+- **Generated documents are held to their sources.** An earlier version
+  once put product claims its one-line description did not make into
+  `docs/product.md`, and a later plan draft cited them as grounded there.
+  Since 4.1.0 a check before the commit turns every topic-document sentence
+  without a source — your answer, the description, or a file — into a
+  `TBD(init):` marker and lists each one in the final message. The check is
+  the model's own reading, so read the topic documents once after
+  `/kenspc-init`, before the first plan relies on them.
+- **A skipped file list does not commit.** Skipping the file-list
+  confirmation commits nothing, as a "no" does: the files stay in the
+  working tree, and the final message says so. A session that cannot ask
+  still commits after the checks.
+- **Claude Code's built-in `/init` after `/kenspc-init`.** Do not run the
+  built-in `/init` in a project `/kenspc-init` set up. It rewrites
+  CLAUDE.md and carries AGENTS.md's content into it — by design with
+  `CLAUDE_CODE_NEW_INIT=1`, and restated in its classic flow — and in the
+  runs checked it dropped the kenspc pointer line; in a repository with
+  only AGENTS.md, its classic flow wrote a CLAUDE.md without the import,
+  which stops AGENTS.md from loading in the default mode. If you already
+  ran it, delete what it copied from AGENTS.md, and check that the
+  `@AGENTS.md` line and the kenspc pointer line are still in CLAUDE.md,
+  adding back whichever is missing.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

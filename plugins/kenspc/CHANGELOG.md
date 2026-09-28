@@ -9,6 +9,227 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.1.0 — unreleased
+
+Batch H. From v2.1.277 Claude Code reads AGENTS.md on its own, through its
+built-in agents-md plugin, and that left two things in the plugin wrong.
+init-project said an AGENTS.md without the `@AGENTS.md` import is not
+loaded. Every other skill and agent looked for a project's conventions in
+CLAUDE.md alone, although a Read of that file shows only the import line,
+and a repository with only AGENTS.md has no CLAUDE.md at all. The plugin
+now reads "the project's instruction files": a project's CLAUDE.md and
+AGENTS.md files, at the root, in `.claude/`, or in a subdirectory, and the
+files a CLAUDE.md imports, whether or not Claude Code loaded them. The term
+is defined once, and a new guard holds every copy of it. init-project now
+describes AGENTS.md's loading as it was verified on Claude Code 2.1.283 on
+2026-09-28:
+- with the import, AGENTS.md loads wherever CLAUDE.md loads;
+- without it, a CLAUDE.md, `.claude/CLAUDE.md`, or `CLAUDE.local.md` in the
+  working directory or above silently stops the default
+  `claude-md-or-agents-md` mode from reading AGENTS.md;
+- only an imported AGENTS.md fires the InstructionsLoaded hook.
+
+init-project also gets the fixes that batch G's acceptance and a later run
+asked for:
+- the first message names the conversation language;
+- claims in the topic documents need a source;
+- commits use the repository's own git identity;
+- a skipped file list commits nothing;
+- the lockfile, `.gitignore`, and README contents of its commits are
+  settled.
+
+Guard counts: `guards run: 11`, `self-tests run: 10`.
+
+### Added
+
+- **The project's instruction files.** `shared/instruction-files.md` holds
+  the definition sentence and its Why, and nothing else.
+  - No skill or agent reads the file at run time. Each file that uses the
+    term carries the sentence once, next to its first use:
+    - the eleven agents (in the five reviewers, inside the drift-guarded
+      PREREQUISITES);
+    - `shared/code-craft-principles.md`;
+    - all ten skills;
+    - the plugin README.
+  - Two carriers hold their copy away from the first use:
+    - task-implement and task-review hold it inside the byte-identical
+      `canonical:run-dir` block;
+    - autopilot holds it in the worker preamble's Read first list, the
+      only text a worker reads.
+  - Why a copy rather than a reference: every dispatch needs the
+    definition. Its working part, "whether or not Claude Code loaded
+    them", is exactly what an agent that skipped a runtime Read would get
+    wrong. The writer agents inline the code-craft principles for the
+    same reason.
+- **`scripts/check-instruction-files.sh`.**
+  - It takes the sentence from the reference file. It then requires the
+    sentence, compared with whitespace normalized, in every file under
+    `skills/`, `agents/`, `commands/`, or `shared/` whose text names
+    "instruction files", and in the plugin README.
+  - Carriers are found rather than listed, so a file that starts using
+    the term without the definition fails.
+  - Its self-test covers seven paths: the unmodified tree; a changed word;
+    a re-wrapped copy; a new carrier without the sentence; the README's
+    copy removed; the reference's opening reworded (exit 2); and the
+    restoration.
+  - Guard counts go from 10 to 11, and self-test counts from 9 to 10.
+- **Where to record a structural fact** (task-implement, task-review). When
+  CUSTOM_INSTRUCTIONS carried a project structural fact, the final
+  report's Next steps names the fact and where to record it. The place is
+  the first that applies:
+  1. the document that a Documents table in the project's instruction
+     files assigns its topic to;
+  2. an instruction file with an admission-rule comment, such as the
+     AGENTS.md `/kenspc-init` writes, but only when the fact passes that
+     rule;
+  3. the AGENTS.md a CLAUDE.md imports, with nothing copied into that
+     CLAUDE.md;
+  4. otherwise CLAUDE.md.
+
+  No report section was added.
+- **Known behavior: Claude Code's built-in `/init` after `/kenspc-init`.**
+  Do not run it in a project `/kenspc-init` set up.
+  - With `CLAUDE_CODE_NEW_INIT=1`, it merges the relevant parts of
+    AGENTS.md into CLAUDE.md by design. Its classic flow restated
+    AGENTS.md-only rules in CLAUDE.md.
+  - Both flows dropped the kenspc pointer line.
+  - In a repository with only AGENTS.md, the classic flow wrote a
+    CLAUDE.md without the import.
+  - The remedy: delete what it copied, and restore the `@AGENTS.md` line
+    and the pointer line.
+
+### Changed
+
+- **The plugin reads the project's instruction files for conventions.**
+  Every place that looked for conventions in CLAUDE.md, or cited CLAUDE.md
+  as the source of a rule, now names the instruction files.
+  - **The five reviewers:** PREREQUISITES and the MEDIUM severity
+    definition.
+  - **quality-reviewer:** its description, scope, and checklist.
+  - **code-fixer:**
+    - its conventions and MEDIUM definition;
+    - a rule that a cited rule counts as absent only after every
+      instruction file was searched for it;
+    - its worked example row, which now reads
+      `NOT APPLICABLE — cited rule in no instruction file`. The mutation
+      literal in `check-run-contract.sh`'s self-test follows it.
+  - **regression-verifier:** where the build, test, and lint commands are
+    configured.
+  - **task-implementer:** where its conventions come from.
+  - **The three document reviewers:** conventions and commit conventions.
+  - **task-document-reviewer:** its third angle is renamed "Consistency
+    with the project's instruction files". It checks those files and the
+    user-level CLAUDE.md loaded into the session.
+  - **plan-document-reviewer, generate-plan, and diagnose-bug:** the
+    durable-document fallback is README.md and the instruction files.
+  - **generate-brief, generate-task, generate-guide, and prototype:**
+    locations and conventions.
+  - **autopilot:** version, release, and check conventions, and the worker
+    preamble.
+  - **task-implement and task-review:** the run-directory `.gitignore`
+    commit's convention, and CUSTOM_INSTRUCTIONS item 1.
+  - **Unchanged:** the files that name this repository's own CLAUDE.md,
+    and `shared/code-craft-principles.md`'s note on where a Think Before
+    Coding rule belongs.
+- **`check-no-model-names.sh` accepts the `instructionFiles` values.**
+  - It strips `claude-md`, `claude-md-or-agents-md`, and
+    `claude-md-and-agents-md` before the model-ID rule, as it already
+    strips `.claude-plugin`. init-project can therefore name the setting's
+    values verbatim.
+  - The self-test gains an exit-0 case for the three values and an exit-1
+    case for a real model ID beside one of them.
+  - The counts are unchanged.
+- **init-project and AGENTS.md loading.**
+  - **An existing CLAUDE.md.** The final message now reports the two
+    files' combined line count on a no or in a session that cannot ask,
+    not only on a yes.
+    - It also says when AGENTS.md loads without the import: only in the
+      `claude-md-and-agents-md` mode of the `instructionFiles` setting, on
+      v2.1.277 or later, with the built-in agents-md plugin enabled.
+    - And it says that, where both files load, what they repeat takes up
+      context twice.
+  - **The import line and the kenspc pointer line** stay in every
+    CLAUDE.md the skill writes. The Why lists five reasons:
+    - that CLAUDE.md, like a teammate's `CLAUDE.local.md`, stops the
+      default mode from reading AGENTS.md;
+    - no project setting can change the mode;
+    - an older version, or a disabled built-in plugin, reads no AGENTS.md;
+    - only an imported AGENTS.md fires InstructionsLoaded;
+    - a Read of CLAUDE.md shows the import as one line.
+  - **Files in `.claude/`.** A `.claude/CLAUDE.md` or `.claude/AGENTS.md`
+    counts as the existing file, and no root file is written beside it.
+    - The import line is the path from the importing file: `@AGENTS.md`
+      side by side, `@../AGENTS.md` from `.claude/CLAUDE.md`, and
+      `@.claude/AGENTS.md` the other way. Claude Code resolves an import
+      from the importing file's directory: probed on 2.1.283, an
+      `@AGENTS.md` in `.claude/CLAUDE.md` did not load the root
+      AGENTS.md.
+    - Adding the import to `.claude/CLAUDE.md` is asked first, since the
+      write needs the user's approval. A session that cannot ask leaves
+      the file alone. That line is the one exception to "nothing under
+      `.claude/`".
+  - **A repository with only AGENTS.md** still gets a CLAUDE.md with the
+    import. The final message says why, in one sentence.
+  - **"AGENTS.md already loads"** is still decided by the import or a
+    symbolic link only, since only those two load it whatever the mode.
+- **init-project's other fixes.**
+  - **The conversation language.** The first message names it, and every
+    question (an AskUserQuestion's header, options, and descriptions
+    included) and the final message stay in it.
+  - **Durable documents.** They state decisions in their own words and
+    name no file under `docs/briefs/`, `docs/plans/`, or `docs/tasks/`.
+    AGENTS.md's line on those directories states the convention only, and
+    the final message lists any such files the repository already tracks.
+  - **A source check.** Before the commit, every topic-document sentence
+    without a source (an answer, the argument, or a file) becomes a
+    `TBD(init):` marker, and the final message lists each one.
+  - **The git identity.** Commits use the repository's own identity, with
+    no `-c user.name` or `-c user.email`. When `git var` finds none, the
+    run stops before its first commit, in either session.
+  - **Empty directories.** A directory whose own `.gitignore` ignores it
+    whole counts toward empty.
+  - **A skipped file list** commits nothing, as a no does.
+  - **The lockfile.** A scaffold whose generator installed nothing gets
+    one install, so the lockfile enters the scaffold commit.
+  - **A chosen library not yet installed** is written as chosen, not as
+    part of the stack.
+  - **The README template's documentation list** matches the Documents
+    table, and a check holds it.
+  - **`.gitignore` lines** that scaffolding adds go into the first
+    scaffold commit that needs them. `.kenspc/` and `CLAUDE.local.md` go
+    into the documentation commit.
+  - **The interview.** An open question is asked on its own, and skipping
+    a question and "use the defaults for everything" are separate
+    options.
+  - The skill grows from 940 to 1028 lines.
+- **Documentation.**
+  - **CLAUDE.md** describes:
+    - the new shared file and guard;
+    - the extended `check-no-model-names.sh`;
+    - the renamed task-document angle;
+    - init-project's added checks;
+    - the language anchor;
+    - why templates are not named AGENTS.md.
+  - **The plugin README:**
+    - defines the term under Design Principles;
+    - updates Project setup and its Known behavior items;
+    - names the instruction files wherever it named CLAUDE.md as the
+      source of conventions.
+  - **`references/plan-document-example.md`** determines its
+    Documentation impact from the instruction files.
+
+### Corrections to the 4.0.0 entry
+
+- **An existing CLAUDE.md.** The 4.0.0 Known behavior item said that,
+  without the import line, "Claude Code does not load the new AGENTS.md
+  until that line is added". That holds only in the default mode, and in
+  the `claude-md` mode. In the `claude-md-and-agents-md` mode, on v2.1.277
+  or later, AGENTS.md loads beside CLAUDE.md without the import.
+- **A skipped file list commits.** This no longer holds from 4.1.0: a
+  skipped list commits nothing.
+- **Generated documents can say more than the user gave.** This is now
+  checked before the commit, and the item says so.
+
 ## 4.0.0 — 2026-09-27
 
 Batch G. An `init-project` skill and its `/kenspc-init [project description]`

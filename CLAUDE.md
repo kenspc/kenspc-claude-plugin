@@ -73,7 +73,7 @@ plugins/kenspc/
 Each skill lives in `skills/<skill-name>/` with:
 - `SKILL.md` — skill definition with YAML frontmatter (`name`, `description`, `version`, `argument-hint`) followed by structured phases/modes
 - `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's two drivers, `run.sh` and its PowerShell mirror `run.ps1`, which `check-no-model-names.sh` scans with the rest of `skills/`
-- `templates/` (optional) — files the skill reads by path and fills in (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/templates/<file>`); today only init-project's, one `.tmpl` file per document it writes. A template is never named `CLAUDE.md` or `AGENTS.md`, since a session working in this repository would load it as a memory file, and `check-no-model-names.sh` scans templates with the rest of `skills/`
+- `templates/` (optional) — files the skill reads by path and fills in (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/templates/<file>`); today only init-project's, one `.tmpl` file per document it writes. A template is never named `CLAUDE.md` or `AGENTS.md`, since a session working in this repository would load a `CLAUDE.md` as a memory file, and an `AGENTS.md` too wherever Claude Code reads AGENTS.md itself (its `claude-md-and-agents-md` mode), and `check-no-model-names.sh` scans templates with the rest of `skills/`
 
 Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
 
@@ -147,7 +147,8 @@ Implementation Steps — so the user's confirmation of the task list is its
 gate, and task-implement's batch gate follows. The checks the reviewer
 would make — vague acceptance criteria (its Completeness angle), language
 carried into code artifacts and a git step nobody decided (its Consistency
-with CLAUDE.md angle) — are the skill's own writing rules.
+with the project's instruction files angle) — are the skill's own writing
+rules.
 
 The diagnosis path runs from an observed bug to the same implementation run.
 `diagnose-bug` reproduces the bug first: a test in the project's test tree
@@ -185,17 +186,20 @@ next generate-plan run reads the answered entry as settled input — its
 alone — and a plan that
 relies on it cites the hash. A prototype runs outside the app; the one
 in-app exception is a UI prototype that can only render inside the app,
-located by the project's CLAUDE.md or by the user, with the typecheck green
+located by the project's instruction files or by the user, with the typecheck green
 against its baseline.
 
 init-project writes a project's AGENTS.md, CLAUDE.md, and topic documents
 from the user's answers and a scan of the directory, with
 `TBD(init): <what is missing>` where nothing answered; there is no spec a
 reviewer could check those files against. Its gate is its own mechanical
-checks before the commit — the line budget, CLAUDE.md's `@AGENTS.md` first
-line, AGENTS.md's template marker and admission-rule comment, the Documents
-table's paths, no secret-looking value, the `TBD(init):` form, and the
-`.gitignore` lines — and the user's confirmation of the file list.
+checks before the commit — the line budget, the import line on CLAUDE.md's
+first line, AGENTS.md's template marker and admission-rule comment, the
+Documents table's paths and the README's list of the same files, a source
+for every topic-document sentence (or a `TBD(init):` marker in its place),
+no secret-looking value, the `TBD(init):` form, and the `.gitignore` lines
+— and the user's confirmation of the file list, which a skip does not give
+(4.1.0).
 
 **Serial review (generate-plan, generate-task, generate-guide):**
 Skill dispatches a single named agent (`plan-document-reviewer`,
@@ -204,15 +208,17 @@ angles in order in its own context. Each angle builds on fixes from the
 previous one (cascade dependency). Agent body returns a structured change log.
 `plan-document-reviewer` and `guide-document-reviewer` review four angles;
 `task-document-reviewer` reviews three — Completeness (including Doc-sync
-coverage), Execution Order, and Consistency with CLAUDE.md. The plan
-reviewer's Completeness angle checks the plan's Documentation impact element.
-Consistency with CLAUDE.md relies on subagents loading the project- and
-user-level CLAUDE.md files themselves (`omitClaudeMd` false or absent loads
-the user, project, and local CLAUDE.md files; source: the Claude Code
-sub-agents reference, https://code.claude.com/docs/en/sub-agents, checked
-2026-09-24); the
-reviewer does not read `~/.claude/CLAUDE.md`, so an agent that opts out of
-that loading loses the user-level rules the angle checks against.
+coverage), Execution Order, and Consistency with the project's
+instruction files. The plan reviewer's Completeness angle checks the plan's
+Documentation impact element. The reviewer reads the project's instruction
+files itself (its PREREQUISITES), since whether Claude Code loaded an
+AGENTS.md depends on a setting it cannot see; for the user-level rules the
+angle also checks against, it relies on the subagent loading
+`~/.claude/CLAUDE.md` (`omitClaudeMd` false or absent loads the user,
+project, and local CLAUDE.md files; source: the Claude Code sub-agents
+reference, https://code.claude.com/docs/en/sub-agents, checked 2026-09-24).
+The reviewer does not read `~/.claude/CLAUDE.md`, so an agent that opts out
+of that loading loses the user-level rules the angle checks against.
 
 The documentation path runs from the plan to the implementation run. Every
 plan carries a Documentation impact element — the durable documents its steps
@@ -244,7 +250,8 @@ changed.
   (`requirements-reviewer`, `edge-case-reviewer`, `quality-reviewer`,
   `bug-reviewer`, `test-reviewer`) — one per angle. Angle 3
   (`quality-reviewer`) covers project conventions and existing patterns
-  — rules written in CLAUDE.md / README and patterns in adjacent code —
+  — rules written in the project's instruction files / README and
+  patterns in adjacent code —
   since v3.5; the file name is kept so the canonical dispatch block stays
   unchanged.
 - Phase 2: `code-fixer` reads all 5 reports from the run directory,
@@ -447,7 +454,7 @@ The autopilot's workspace lives outside the repository — `~/Projects/_smoke/` 
 - Reasoning depth follows the session's effort level, with `effort:` frontmatter overrides only where a file needs more (currently three), not inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
-- No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan. init-project's generated project files are a separate default, not an exception to this rule: English unless the user asks otherwise, with the reason written in the skill (they are read by agents and by team members who join later), while its interview runs in the user's language
+- No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan. init-project's generated project files are a separate default, not an exception to this rule: English unless the user asks otherwise, with the reason written in the skill (they are read by agents and by team members who join later), while its conversation runs in the language its first message names — the user's (4.1.0)
 - Evidence in a skill's or agent's Why is stated in its own words (what failed, and on which command), not cited as a dry-run record: skills and agents run as prompts in the user's project, where this repository's `docs/` does not exist, so the CHANGELOG entry cites the record instead (v3.6.0: regression-verifier's unmodified build, test, and lint rule)
 - Where a skill stops to ask the user, it states in prose, at that question, what a session that cannot ask does instead, opening with "In a session that cannot ask (a system reminder to work without stopping), …" — the wording diagnose-bug, generate-plan's Open Questions exit, gap-check, approval stop, and existing-file question, generate-brief's question about what would settle a `needs prototype` entry, the prototype skill's gates, the autopilot skill's gates, and the init-project skill's gates and interview rounds share (generate-brief's Discovery Mode Detection is the older form of the same branch). A table that summarizes a skill's gates may repeat the outcomes but does not replace the sentence, since a table cell cannot open one. Why: one wording is one signal to test for, and a grep over the file with its line breaks joined finds every branch
 
