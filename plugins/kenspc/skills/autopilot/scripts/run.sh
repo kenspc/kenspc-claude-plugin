@@ -247,7 +247,8 @@ launch() {
 # AUTOPILOT_EFFORT set, a .exit missing after the wait or an .err without
 # --model <value> or --effort <value>; then, for a launch under
 # selftest-s4 with both set to the empty string, a .exit missing after the
-# wait or an .err that shows --model or --effort; then, for a launch under
+# wait or not reading 0, an .err without --name <tag>, or an .err that
+# shows --model or --effort; then, for a launch under
 # selftest-s5 with AUTOPILOT_MODEL set and AUTOPILOT_EFFORT the empty
 # string, a .exit missing after the wait or an .err without
 # --model <value> or showing --effort, and for one under selftest-s6 the
@@ -455,6 +456,13 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   unset AUTOPILOT_MODEL AUTOPILOT_EFFORT
   n=0; until [ -f "$LOGS/$ETAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
   [ -f "$LOGS/$ETAG.exit" ] || { echo "self-test failed: $LOGS/$ETAG.exit is missing after the wait" >&2; return 1; }
+  exit_status=$(cat "$LOGS/$ETAG.exit")
+  [ "$exit_status" = "0" ] || { echo "self-test failed: $LOGS/$ETAG.exit reads $exit_status, expected 0" >&2; return 1; }
+  # The absence check below also holds for a missing or empty .err, so the
+  # launch's own --name is read there first: the flags are then absent from
+  # the arguments this launch received, not from a file that holds none.
+  grep -qF -- "--name $ETAG" "$LOGS/$ETAG.err" \
+    || { echo "self-test failed: $LOGS/$ETAG.err does not show --name $ETAG" >&2; return 1; }
   for flag in --model --effort; do
     ! grep -qF -- "$flag" "$LOGS/$ETAG.err" \
       || { echo "self-test failed: $LOGS/$ETAG.err shows $flag on a launch with its variable set to the empty string" >&2; return 1; }

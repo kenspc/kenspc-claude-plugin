@@ -481,8 +481,9 @@ function Invoke-Refused {
 # multi-line prompt it received as its -p value; a launch with
 # AUTOPILOT_MODEL and AUTOPILOT_EFFORT set, its .exit present after the wait
 # and its .err showing --model <value> and --effort <value>; a launch with
-# both set to the empty string, its .exit present after the wait and its
-# .err showing neither flag; a launch with AUTOPILOT_MODEL set and
+# both set to the empty string, its .exit present after the wait and
+# reading 0 and its .err showing --name <tag> and neither flag; a launch
+# with AUTOPILOT_MODEL set and
 # AUTOPILOT_EFFORT the empty string, and one the other way round, each with
 # its .exit present after the wait and its .err showing the set variable's
 # flag with its value and not the other flag; a throwing stub's .exit
@@ -819,7 +820,13 @@ exit 0
     $emptyErr = Join-Path $logsDir "$emptyTag.err"
     Wait-ExitFile $emptyExit
     if (-not (Test-Path -LiteralPath $emptyExit -PathType Leaf)) { Stop-SelfTest "$emptyExit is missing after the wait" }
+    $exitStatus = Read-FileText $emptyExit
+    if ($exitStatus -cne '0') { Stop-SelfTest "$emptyExit reads $exitStatus, expected 0" }
     $emptyText = [System.IO.File]::ReadAllText($emptyErr)
+    # The absence check below also holds for an empty .err, so the launch's
+    # own --name is read there first: the flags are then absent from the
+    # arguments this launch received, not from a file that holds none.
+    if (-not $emptyText.Contains("--name $emptyTag")) { Stop-SelfTest "$emptyErr does not show --name $emptyTag" }
     foreach ($flag in '--model', '--effort') {
         if ($emptyText.Contains($flag)) { Stop-SelfTest "$emptyErr shows $flag on a launch with its variable set to the empty string" }
     }
