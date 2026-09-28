@@ -185,13 +185,13 @@ every repository leaves such a directory, and nothing in either needs the
 protection a stop gives.
 
 A `.claude/CLAUDE.md` or `.claude/AGENTS.md` is its directory's CLAUDE.md
-or AGENTS.md when that directory has none, and no second one is written
-beside it. Why: Claude Code reads it as it reads the one beside it, and a
-second file would split the instructions. The import line is `@` and
-AGENTS.md's path from the CLAUDE.md — `@AGENTS.md` side by side,
-`@../AGENTS.md` from `.claude/CLAUDE.md`, `@.claude/AGENTS.md` to one in
-`.claude/` — since Claude Code resolves an import from the importing file's
-directory.
+or AGENTS.md when that directory has none, no second one is written beside
+it, and the Documents table and README the run writes name it by its path.
+Why: Claude Code reads it as it reads the one beside it, and a second file
+would split the instructions. The import line is `@` and AGENTS.md's path
+from the CLAUDE.md — `@AGENTS.md` side by side, `@../AGENTS.md` from
+`.claude/CLAUDE.md`, `@.claude/AGENTS.md` to one in `.claude/` — since
+Claude Code resolves an import from the importing file's directory.
 
 An AGENTS.md whose opening HTML comment holds `kenspc-init template:` makes
 the run a rerun at the existing-repository start point, and at a new app
@@ -295,8 +295,10 @@ How every round is asked, here and in Phase 4:
   backlog is used, and a wrong guess is costly to move later.
 - Any round can be skipped; a skipped question takes its default
   (§ Defaults and TBD). A question asked with options offers skipping it
-  and "use the defaults for everything" as two options. Why: one skips a
-  question, the other ends the interview.
+  and "use the defaults for everything" as two options, in a question of
+  their own in the same call when they would take it past AskUserQuestion's
+  four. Why: one skips a question, the other ends the interview; and a
+  question over the tool's limit makes each run drop a different option.
 - "Use the defaults for everything", in any wording or language, ends the
   interview: the rounds not yet asked are skipped. The questions outside
   the interview — scaffolding, the GitHub repository, the file list, push,
@@ -403,18 +405,18 @@ After each generator run, three things it may have left are checked:
 
 **The scaffold commits.** Each scaffolded app is committed alone, before
 the documentation commit: `chore: scaffold <app>`, adapted to the
-repository's commit convention (Phase 6). It stages what the generator
-wrote, as the status before and after its run shows — the app's directory,
-or for a single app at the root the paths the generator created, and any
-path it wrote outside them, which the file list names — passed to
-`git commit` as a pathspec. When the status shows nothing the generator
-wrote, the app gets no scaffold commit, as § Confirm and commit says of an
-empty pathspec, and the final message says so. Why one commit per app,
-ahead of the documents: the generator's output is not the run's own
-writing, and a diff of it alone is readable; the documents then describe
-files already in history. Why the pathspec: it keeps anything the user had
-staged out of the commit. Before staging, the app's status is read with
-ignored paths included
+repository's commit convention (Phase 6). It stages what the generator and
+the install wrote, as the status before and after them shows — the app's
+directory, or for a single app at the root the paths the generator and the
+install created, and any path they wrote outside them, which the file list
+names — passed to `git commit` as a pathspec. When the status shows nothing
+the generator wrote, the app gets no scaffold commit, as § Confirm and
+commit says of an empty pathspec, and the final message says so. Why one
+commit per app, ahead of the documents: the generator's output is not the
+run's own writing, and a diff of it alone is readable; the documents then
+describe files already in history. Why the pathspec: it keeps anything the
+user had staged out of the commit. Before staging, the app's status is read
+with ignored paths included
 (`git status --porcelain --ignored=matching -uall -- <app>`, without the
 path for a single app at the root) for a directory the stack's tools
 restore or build — a package install directory, a compiler's output — and
@@ -427,10 +429,10 @@ documentation commit. Why: such a directory is regenerated on every
 machine, can carry this machine's paths, and buries the readable diff;
 plain status hides one that the user's own excludes already cover, and a
 teammate's clone does not ignore it; and the commit that brings the
-directory in carries the line that keeps it out. A commit that fails, or
-git without an identity, stops the run as § Confirm and commit describes.
-Without git (a no in Phase 1), the apps are scaffolded and nothing is
-committed.
+directory in carries the line that keeps it out. A commit that fails stops
+the run, and git without an identity scaffolds no app, as § Confirm and
+commit describes. Without git (a no in Phase 1), the apps are scaffolded
+and nothing is committed.
 
 ## Phase 4: Rescan, interview rounds 3–5
 
@@ -635,9 +637,9 @@ skill. A file this list gains keeps to that.
   AGENTS.md itself: in its default mode the CLAUDE.md this run writes stops
   that reading, as a teammate's private `CLAUDE.local.md` does; no project
   setting can change the mode; before v2.1.277, or with the built-in
-  agents-md plugin disabled, nothing reads it; only an imported AGENTS.md
-  fires the InstructionsLoaded hook; and a Read of CLAUDE.md shows the
-  import as one line, which the other line explains.
+  agents-md plugin disabled, nothing reads it; only an imported or
+  symlinked AGENTS.md fires the InstructionsLoaded hook; and a Read of
+  CLAUDE.md shows the import as one line, which the other line explains.
 - The durable documents the run writes state each decision in their own
   words and name no file under `docs/briefs/`, `docs/plans/`, or
   `docs/tasks/`; a source that has to be named is written as
@@ -702,12 +704,14 @@ AGENTS.md in every mode that loads CLAUDE.md, and it changes nothing else.
 
 AGENTS.md already loads when the two are one file — one a symbolic link to
 the other, which `[ <AGENTS.md> -ef <CLAUDE.md> ]` tells — or when a line of
-CLAUDE.md, `\r` stripped, is the import line: then nothing is asked,
-CLAUDE.md is not written, and the final message says AGENTS.md already
-loads. Claude Code reading AGENTS.md itself does not count. Why: only these
-two load it whatever the mode and the environment; a write through the
-link lands in the user's AGENTS.md, which would then import itself, and a
-second import loads nothing new.
+CLAUDE.md, `\r` stripped, is the import line or holds it as a word outside
+a code span (`See @AGENTS.md for …`): then nothing is asked, CLAUDE.md is
+not written, and the final message says AGENTS.md already loads. Claude
+Code reading AGENTS.md itself does not count. Why: only these two load it
+whatever the mode and the environment, an import inside a sentence as much
+as one on its own line; a write through the link lands in the user's
+AGENTS.md, which would then import itself, and a second import loads
+nothing new.
 
 ### Checks
 
@@ -734,8 +738,10 @@ line short.
   lists the same paths under Documentation.
 - Every sentence the run wrote in a topic document that is neither a
   `TBD(init):` marker nor the template's fixed text has a source the run
-  can name: an answer of the user's, the DESCRIPTION, or a file, by its
-  path. A sentence without one becomes `TBD(init): <what it would say>`,
+  can name that states what the sentence claims: an answer of the user's,
+  the DESCRIPTION, or a file, by its path; a sentence that adds a problem,
+  a feature, or a user its source does not state has none. One without a
+  source becomes `TBD(init): <what is missing>`, keeping none of its claim,
   and the final message lists each sentence changed so.
 - No line the run wrote, and no line of the user's the commit would add,
   holds a value that reads as a secret: a private key block
@@ -808,11 +814,15 @@ Why: the history keeps one style, and the subjects given here are the
 default for a repository that has none.
 
 **The identity.** The commits use the identity git already has: no
-`-c user.name` or `-c user.email`, and none set. When
-`git var GIT_AUTHOR_IDENT` or `git var GIT_COMMITTER_IDENT` fails, the run
-stops before its first commit, in either session: the files stay in the
-tree, and the final message says git has no identity. Why: a commit's
-author is the user's to choose, and one the run made up stays in history.
+`-c user.name` or `-c user.email`, and none set. Git has one only when
+`git config user.name` and `git config user.email` both print a value; in a
+repository, the run reads them before the first generator runs, or before
+the first commit when none runs. Without one, no app is scaffolded, and the
+run stops before its documentation commit, in either session: the files
+stay in the tree, and the final message says git has no identity. Why: a
+commit's author is the user's to choose, and one nobody set stays in
+history — without these two, git guesses one on a host whose name carries
+a domain; and a scaffold left uncommitted is one no rerun offers to commit.
 
 **A commit that fails** — a commit hook rejects it, or git refuses the
 pathspec — stops the run: report the error and ask the user how to go on.
@@ -857,10 +867,10 @@ outside it.
 the DESCRIPTION.
 
 **DONE when** the pair is written, its checks pass, the user confirmed the
-file list, and the commit exists — or the run ended at a "no" to the list,
-at a failing commit, or with no file to commit (both files already here,
-with the import present or declined, or all it wrote staying out), and the
-final message says which.
+file list, and the commit exists — or the run ended at a "no" to the list
+or a skipped one, without a git identity, at a failing commit, or with no
+file to commit (both files already here, with the import present or
+declined, or all it wrote staying out), and the final message says which.
 
 When Phase 0's question gets "a new app", the run writes only this
 directory's pair: `AGENTS.md` from `app-AGENTS.md.tmpl` and `CLAUDE.md` from
