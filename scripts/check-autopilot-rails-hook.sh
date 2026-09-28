@@ -232,6 +232,11 @@ run_fixtures() {
     # break it joins the lines.
     fx_deny "$hook" "rm spelling with a leading backslash \\rm" "$r" Bash "$FX_REPO" '\rm -rf build'
     fx_deny "$hook" "rm flags after a line continuation" "$r" Bash "$FX_REPO" $'rm \\\n  -rf build'
+    # A word quoted as $'...' or $"..." is read without its $.
+    fx_deny "$hook" "rm spelling with an ANSI-C quoted flag \$'-rf'" "$r" Bash "$FX_REPO" "rm \$'-rf' build"
+    fx_deny "$hook" "rm spelling as an ANSI-C quoted word \$'rm'" "$r" Bash "$FX_REPO" "\$'rm' -rf build"
+    fx_deny "$hook" "rm spelling as a locale quoted word \$\"rm\"" "$r" Bash "$FX_REPO" '$"rm" -rf build'
+    fx_deny "$hook" "rm after an ANSI-C quote holding an escaped quote" "$r" Bash "$FX_REPO" $'printf $\'it\\\'s\\n\'\nrm -rf build'
     # rm positions, denied.
     fx_deny "$hook" "rm position line start" "$r" Bash "$FX_REPO" $'echo start\nrm -rf build'
     fx_deny "$hook" "rm position after ;" "$r" Bash "$FX_REPO" 'ls; rm -rf build'
@@ -258,6 +263,9 @@ run_fixtures() {
     fx_deny "$hook" "rm position after then" "$r" Bash "$FX_REPO" 'if [ -d build ]; then rm -rf build; fi'
     fx_deny "$hook" "rm position after do" "$r" Bash "$FX_REPO" 'for d in a b; do rm -rf "$d"; done'
     fx_deny "$hook" "rm position in a ( subshell" "$r" Bash "$FX_REPO" '(rm -rf build)'
+    fx_deny "$hook" "rm position in a function NAME { body" "$r" Bash "$FX_REPO" 'function f { rm -rf build; }; f'
+    fx_deny "$hook" "rm position after coproc" "$r" Bash "$FX_REPO" 'coproc rm -rf build'
+    fx_deny "$hook" "rm position in a coproc NAME { body" "$r" Bash "$FX_REPO" 'coproc cleaner { rm -rf build; }'
     fx_deny "$hook" "rm spelling prefix of --recursive: --rec" "$r" Bash "$FX_REPO" 'rm --rec build'
     # A << whose delimiter line never comes — an arithmetic shift, or a
     # heredoc closed by EOF) inside $( — skips nothing: the lines after it
@@ -291,6 +299,10 @@ run_fixtures() {
     fx "$hook" "quoted separator: echo \"a | rm -rf b\"" allow 1 "$r" Bash "$FX_REPO" 'echo "a | rm -rf b"'
     fx "$hook" "quoted separator: git commit -m \"…; rm -rf …\"" allow 1 "$r" Bash "$FX_REPO" 'git commit -m "docs: note; rm -rf is denied now"'
     fx "$hook" "rm -rf in a comment" allow 1 "$r" Bash "$FX_REPO" 'ls # a; rm -rf b'
+    # An escaped quote inside $'...' does not end it, so the quoted
+    # mention after it stays an argument.
+    fx "$hook" "quoted mention after an ANSI-C quote holding an escaped quote" allow 1 "$r" Bash "$FX_REPO" \
+        "printf \$'it\\'s\\n'; git commit -m 'x; rm -rf y'"
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
 

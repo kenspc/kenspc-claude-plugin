@@ -58,8 +58,9 @@ not probed.
   reason names the rail and the permitted route: `mv` into the
   workspace's `.trash/<name>-<timestamp>/`, or a write under the
   repository, the workspace, or scratch. A best-effort guard behind the
-  rails text: it misses `find -delete`, `bash -c '…'`, interpreter-level
-  deletes, `git clean`, and writes through Bash. Bash 3.2 and POSIX tools
+  rails text: it misses `find -delete`, `bash -c '…'` and a script fed to
+  a shell on stdin, interpreter-level deletes, `git clean`, and writes
+  through Bash. Bash 3.2 and POSIX tools
   only.
 - **`scripts/check-autopilot-rails-hook.sh`**, the hook's guard: fixtures
   shaped like the live hook input, one per `rm` spelling and command

@@ -23,9 +23,10 @@
 #       split across words; /bin/rm and other path prefixes too) at a
 #       command position: the start of the command, a line start, after
 #       ; && || | & ( $( or a backtick, after a shell keyword (if, then,
-#       do, ...), or after the wrappers sudo, command, env, xargs, exec,
-#       nohup, and time, their options skipped. Quoted text and heredoc
-#       bodies are arguments, not commands: grep -c 'rm -rf' f,
+#       do, ..., function NAME, coproc), or after the wrappers sudo,
+#       command, env, xargs, exec, nohup, and time, their options skipped;
+#       a word quoted as $'...' or $"..." is read without its $. Quoted
+#       text and heredoc bodies are arguments, not commands: grep -c 'rm -rf' f,
 #       git commit -m "... rm -rf ...", and echo "rm -r" are allowed, and
 #       so is rm without a recursive flag;
 #   (b) a Write, Edit, or NotebookEdit whose target (tool_input.file_path,
@@ -56,11 +57,13 @@
 # the workspace, or scratch.
 #
 # A best-effort guard behind the rails text, which still binds. Known
-# misses: find -delete (and find -exec rm), bash -c '...', eval, and a
+# misses: find -delete (and find -exec rm), bash -c '...', a script fed to
+# a shell on stdin (bash <<EOF, sh -s), eval, and a
 # trap body (trap 'rm -rf "$d"' EXIT, a quoted argument run at exit),
 # interpreter-level deletes (python, node, perl), git clean, and writes
 # through Bash (redirections, cp, mv, tee); also rm reached through a
-# variable or an alias, rm after a redirection written before the command
+# variable or an alias, or spelled through the escapes of $'...'
+# ($'\x72m', kept as written), rm after a redirection written before the command
 # name (2>/dev/null rm -rf d), other wrappers (timeout, nice), commands inside an
 # unquoted heredoc's substitutions, and paths that are not POSIX absolute
 # (a Windows drive-letter path is not judged); and a file-tool target that
@@ -125,7 +128,8 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # RM_AWK prints "<rm word> <flag>" for the first recursive rm at a command
 # position in tool_input.command, and nothing otherwise; it exits 3 when
 # there is no command to read. A small shell
-# tokenizer: single and double quotes, backslash escapes, comments,
+# tokenizer: single and double quotes, $'...' (a backslash escapes the next
+# character, which is kept as written) and $"...", backslash escapes, comments,
 # separators, $( ) and backtick substitutions (the enclosing command's words
 # are set aside and restored around them), subshells, and heredoc bodies,
 # which are skipped up to their delimiter line. A << whose delimiter line
@@ -149,6 +153,8 @@ function check(   i, wr, j, a, r) {
   while (i <= nw) {
     if (w[i] ~ /^[A-Za-z_][A-Za-z0-9_]*=/) { i++; continue }
     if (w[i] ~ /^(!|\{|if|then|else|elif|do|while|until)$/) { i++; continue }
+    if (w[i] == "function") { i += 2; continue }
+    if (w[i] == "coproc") { i++; if (i < nw && w[i + 1] == "{") i++; continue }
     wr = bname(w[i])
     if (wr ~ /^(sudo|command|env|xargs|exec|nohup|time)$/) {
       i++
@@ -246,6 +252,11 @@ function scan(c,   n, i, ch, nx) {
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }
+    if (st == "A") {
+      if (ch == "\\") { cur = cur nx; i += 2; continue }
+      if (ch == sq) st = "N"; else cur = cur ch
+      i++; continue
+    }
     if (st == "D") {
       if (ch == "\\" && index("$`\"\\\n", nx) > 0) { if (nx != "\n") cur = cur nx; i += 2; continue }
       if (ch == "\"") { st = "N"; i++; continue }
@@ -262,6 +273,8 @@ function scan(c,   n, i, ch, nx) {
     if (ch == sq) { st = "S"; inw = 1; i++; continue }
     if (ch == "\"") { st = "D"; inw = 1; i++; continue }
     if (ch == "#" && !inw) { while (i <= n && substr(c, i, 1) != "\n") i++; continue }
+    if (ch == "$" && nx == sq) { st = "A"; inw = 1; i += 2; continue }
+    if (ch == "$" && nx == "\"") { st = "D"; inw = 1; i += 2; continue }
     if (ch == "$" && nx == "(") { cur = cur "$()"; inw = 1; push("N", ")"); i += 2; continue }
     if (ch == "`") {
       if (sp > 0 && scl[sp] == "`") { pop(); i++; continue }
