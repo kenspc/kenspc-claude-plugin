@@ -100,6 +100,11 @@ DONE：条目存在，日期在发布准备时填入。
 
 ## Clarifications during implementation
 
+- **C1（Phase 0，名称与记录路径）** batch 名称按 autopilot skill 的规则取 spec 的档名 `batch-i-autopilot-model-effort`，用在 workspace 里的 tag、日志和 prompt 档名上；主 session 的名称是 `batch-i-main`（ListAgents 第一行）。验收记录写在 `docs/dry-runs/batch-i-acceptance.md`，也就是 `Allowed files:` 点名的路径，而不是 skill 模板由 batch 名称推出的 `docs/dry-runs/batch-i-autopilot-model-effort-acceptance.md`。commit 标题里的 batch 名称写 `i`，跟本 spec 自己的 commit（`docs(plans): add batch i spec`）及仓库一贯的写法一致。理由：spec 明确点名了记录的路径，而模板推出的路径落在 `Allowed files:` 之外。
+- **C2（Phase 0，Allowed files 的范围）** `Allowed files:` 管的是本批次的交付档案。流程本身的产物不在此列：S2 写在 `docs/tasks/` 的 task 文件、主 session 记在本 spec 的 clarification，以及 S6 按 `Release preparation: default` 用 `git rm` 移除的 spec 和 task 文件。理由：`Release preparation: default` 本来就要移除这两份文件，可见改动它们是预期之内的事。
+- **C3（Phase 0，第 6 个验收案例）** 第 6 个案例开头的 `（optional）` 视为 `(optional)` 标记，不计它的位置和全形括号。这只在预算检查不通过、需要删减案例时才用得上。
+- **C4（Phase 0，Documentation impact）** 本 spec 没有 `## Documentation impact` 一节。文件的更新就是 Step 4（README、CLAUDE.md）和 Step 5（CHANGELOG），所以 task 文件不需要另外的 Doc-sync task；若 task-document-reviewer 报出这个缺口，以 Step 4 和 Step 5 作答。
+
 ## Autopilot
 
 - Mode: plugin
