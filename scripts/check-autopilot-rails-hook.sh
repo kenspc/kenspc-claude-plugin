@@ -40,9 +40,14 @@
 # guard reads nothing under the autopilot workspace. The hook runs under
 # /bin/bash when that exists (bash 3.2 on macOS), else bash.
 #
-# Exit code 0: every fixture decided as expected.
-# Exit code 1: a decision differs (each one is reported).
-# Exit code 2: missing hook file, or self-test fixture stale.
+# Main mode also checks the registration in plugins/kenspc/hooks/hooks.json:
+# the hook's entry sits under PreToolUse with a matcher naming Bash, Write,
+# Edit, and NotebookEdit, since the fixtures run the script directly and
+# would stay green under a matcher that dropped a tool.
+#
+# Exit code 0: the registration holds and every fixture decided as expected.
+# Exit code 1: the registration or a decision differs (each one is reported).
+# Exit code 2: missing hook file or hooks.json, or self-test fixture stale.
 #
 # Same set -euo pipefail discipline and SCRIPT_DIR / REPO_ROOT derivation as
 # the other guards; bash 3.2, no associative arrays. Mutations use a literal
@@ -66,6 +71,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 HOOK_REL="plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh"
+HOOKS_JSON_REL="plugins/kenspc/hooks/hooks.json"
 if [[ -x /bin/bash ]]; then
     HOOK_BASH=/bin/bash
 else
@@ -390,12 +396,42 @@ run_fixtures() {
     [[ "$FAILS" -eq 0 ]]
 }
 
+# check_registration <hooks.json>: the entry that runs the hook sits under
+# PreToolUse, with a matcher naming Bash, Write, Edit, and NotebookEdit.
+# Why: the fixtures run the script directly, so a matcher that dropped a
+# tool would leave that tool's calls unchecked with every fixture green.
+# It reads the event key and the matcher line that come last before the
+# line naming the script, as hooks.json lays them out; a layout it cannot
+# read fails the check rather than passing it.
+check_registration() {
+    local json="$1" event matcher tool
+    event=$(awk '/"[A-Z][A-Za-z]*"[[:space:]]*:[[:space:]]*\[/ { e = $0 } /autopilot-worker-rails\.sh/ { print e; exit }' "$json")
+    matcher=$(awk '/"matcher"[[:space:]]*:/ { m = $0 } /autopilot-worker-rails\.sh/ { print m; exit }' "$json" \
+        | sed -n 's/.*"matcher"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+    case "$event" in
+        *'"PreToolUse"'*) ;;
+        *) echo "FAIL  $HOOKS_JSON_REL does not register the rails hook under PreToolUse" >&2; return 1 ;;
+    esac
+    for tool in Bash Write Edit NotebookEdit; do
+        case "|$matcher|" in
+            *"|$tool|"*) ;;
+            *) echo "FAIL  $HOOKS_JSON_REL: the rails hook's matcher \"$matcher\" does not name $tool" >&2; return 1 ;;
+        esac
+    done
+}
+
 run_main_logic() {
-    local hook="$REPO_ROOT/$HOOK_REL"
+    local hook="$REPO_ROOT/$HOOK_REL" json="$REPO_ROOT/$HOOKS_JSON_REL"
     if [[ ! -f "$hook" ]]; then
         echo "ERROR: missing hook $hook" >&2
         return 2
     fi
+    if [[ ! -f "$json" ]]; then
+        echo "ERROR: missing $json" >&2
+        return 2
+    fi
+    check_registration "$json" || return 1
+    echo "OK    autopilot rails hook — registered on PreToolUse for Bash, Write, Edit, and NotebookEdit"
     make_work
     if run_fixtures "$hook"; then
         echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0)"
