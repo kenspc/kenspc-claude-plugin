@@ -45,9 +45,11 @@ not probed.
   after `;`, `&&`, `||`, `|`, `$(`, a backtick, a line start, `xargs`,
   `sudo`, `command`, or `env`; quoted text and heredoc bodies are
   arguments, so `grep -c 'rm -rf' f` and a commit message that mentions
-  `rm -rf` pass), and a Write, Edit, or NotebookEdit whose target —
-  resolved against the input's `cwd`, `..` collapsed, the symlinks of its
-  existing ancestors resolved — lies outside every root in
+  `rm -rf` pass), and a Write, Edit, or NotebookEdit whose target — read
+  as Claude Code reads it, surrounding whitespace trimmed and a leading
+  `~` or `~/` taken as `$HOME`, then resolved against the input's `cwd`,
+  `..` collapsed as written, the symlinks of its existing ancestors
+  resolved — lies outside every root in
   `KENSPC_AUTOPILOT_WRITE_ROOTS`, by whole path components. A Bash input
   over 64 KB is denied unscanned: the scan's time grows with the square of
   the command's length, and a run that outlasts the hook's 5-second
@@ -95,7 +97,10 @@ not probed.
   is not a breach: it is listed under `## Rail observations` in the
   worker's final message, recorded in the state file's
   `rail observations:` section, and carried into the reviewer report's new
-  `- Rail observations: <list | none>` line.
+  `- Rail observations: <list | none>` line. A worker that left no result
+  to read — a `<tag>.json` empty or not JSON, or a subtype with no result
+  — is recorded `<tag>: not read (<reason>)`, since `none` would read as a
+  worker that wrote nowhere else.
 - **The skipped-gate post-check.** An S2 that returns without having sent
   its confirmation question has the confirmation's own rubric applied to
   the task document it committed: a match is accepted and recorded as a
@@ -113,7 +118,9 @@ not probed.
   breach, and a recursive `rm` stays a breach wherever it points. The
   rails bind every subagent the worker dispatches: it writes them into
   every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of
-  its skills' agent dispatches.
+  its skills' agent dispatches, and carries each rail observation a
+  subagent reports into its own `## Rail observations`, naming the
+  subagent.
 - **`AUTOPILOT_PLUGIN_DIR` on every launch.** The skill sets it explicitly:
   the plugin directory in plugin mode, the empty string in repo mode, a
   resume as the tag it resumes; S4's nested launches set it on their own

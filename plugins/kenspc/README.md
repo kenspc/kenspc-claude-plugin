@@ -643,8 +643,11 @@ worker writes only to the repository, the workspace, `$TMPDIR`, and the
 harness's per-session scratchpad. A write elsewhere under `/tmp` (on
 macOS `/private/tmp`) that holds no secret is not a breach: the worker
 lists it under `## Rail observations` in its final message and goes on,
-and the main session records it in the state file and on the reviewer
-report's `Rail observations` line. Any other write outside those places
+together with each rail observation a subagent of its reports, naming the
+subagent, and the main session records it in the state file and on the
+reviewer report's `Rail observations` line — `<tag>: not read (<reason>)`
+for a worker that left no result to read, which `none` would misreport as
+a worker that wrote nowhere else. Any other write outside those places
 is a breach, and so is a recursive `rm` in any spelling, wherever it
 points: a worker discards by `mv` into the workspace's
 `.trash/<name>-<timestamp>/` and deletes inside the repository only
