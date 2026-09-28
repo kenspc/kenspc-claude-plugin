@@ -111,16 +111,20 @@ no repository file changes except this task document.
   `claude -p --plugin-dir <probe plugin> --permission-mode bypassPermissions --max-budget-usd 2 --output-format json`,
   with the test variable set in its environment and the probes directory as
   its cwd. Its prompt tells the main loop to make no tool call except one
-  Agent call that dispatches a general-purpose subagent, which: (a) runs
+  Agent call, with `run_in_background: false`, that dispatches a
+  general-purpose subagent — why foreground: a background call returns at
+  once and a headless session's exit stops it (CLAUDE.md, Subagent Review
+  Architecture), so the subagent's calls would be missing for a reason that
+  has nothing to do with hooks. The subagent: (a) runs
   `touch <probes dir>/deny-me-bash` with Bash; (b) writes
   `<probes dir>/deny-me-write` with the Write tool; (c) writes
   `<probes dir>/allowed.txt` with the Write tool; (d) edits `allowed.txt`
   with the Edit tool; (e) writes a minimal notebook with the Write tool and
   changes a cell of it with the NotebookEdit tool; then replies. (d) and (e)
   exist so that the live `tool_input` JSON of every tool the hook will
-  match is saved, as the step requires. Running it in the foreground within
-  one Bash call, or in the background with the bounded wait loop, is the
-  implementer's choice.
+  match is saved, as the step requires. Running the probe session itself in
+  the foreground within one Bash call, or in the background with the
+  bounded wait loop, is the implementer's choice.
 - Save the live stdin JSON of each matched tool from the log, one file per
   tool (for example `json/Bash.json`, `json/Write.json`, `json/Edit.json`,
   `json/NotebookEdit.json`). Tasks 6 and 7 build their inputs from them.
