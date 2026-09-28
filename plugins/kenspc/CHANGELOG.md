@@ -51,8 +51,8 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   worker. A resume sets the values its tag was launched with, and a
   re-run's tag takes its step's role. S4's nested acceptance sessions take
   S4's values through the environment. Both self-tests cover the
-  variables set, unset, and set to the empty string, on a fresh launch and
-  on a resume.
+  variables set, on a fresh launch and on a resume, and unset, set to the
+  empty string, and one set with the other empty, on a fresh launch.
 - **The applied model and effort.** After each worker exits, the skill
   reads the model and effort it ran at from the main-loop records of its
   transcript, found by the session id in `<tag>.session`. It writes one
