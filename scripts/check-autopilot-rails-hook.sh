@@ -121,12 +121,16 @@ json_escape() {
 
 # make_input <tool> <cwd> <payload>: a hook input shaped like the live one.
 # A tool written <tool>/no-key carries the payload under a key the hook does
-# not read in place of command, file_path, or notebook_path: the shape a
-# renamed field would take.
+# not read in place of command, file_path, or notebook_path, and one written
+# <tool>/no-tool-name carries the tool's name under such a key in place of
+# tool_name: the shapes a renamed field would take.
 make_input() {
-    local tool="$1" cwd payload tool_input
+    local tool="$1" cwd payload tool_input name_key=tool_name
     cwd=$(json_escape "$2")
     payload=$(json_escape "$3")
+    case "$tool" in
+        */no-tool-name) name_key=renamed; tool=${tool%/no-tool-name} ;;
+    esac
     case "$tool" in
         Bash) tool_input="{\"command\":\"$payload\",\"description\":\"Fixture command\"}" ;;
         Write) tool_input="{\"file_path\":\"$payload\",\"content\":\"fixture\"}" ;;
@@ -134,8 +138,8 @@ make_input() {
         NotebookEdit) tool_input="{\"notebook_path\":\"$payload\",\"cell_id\":\"c1\",\"new_source\":\"x = 2\",\"edit_mode\":\"replace\"}" ;;
         */no-key) tool_input="{\"renamed\":\"$payload\",\"content\":\"fixture\"}" ;;
     esac
-    printf '{"session_id":"00000000-0000-4000-8000-000000000000","transcript_path":"%s/transcript.jsonl","cwd":"%s","prompt_id":"00000000-0000-4000-8000-000000000001","permission_mode":"bypassPermissions","agent_id":"a000000000000000","agent_type":"general-purpose","effort":{"level":"xhigh"},"hook_event_name":"PreToolUse","tool_name":"%s","tool_input":%s,"tool_use_id":"toolu_fixture"}' \
-        "$cwd" "$cwd" "${tool%/no-key}" "$tool_input"
+    printf '{"session_id":"00000000-0000-4000-8000-000000000000","transcript_path":"%s/transcript.jsonl","cwd":"%s","prompt_id":"00000000-0000-4000-8000-000000000001","permission_mode":"bypassPermissions","agent_id":"a000000000000000","agent_type":"general-purpose","effort":{"level":"xhigh"},"hook_event_name":"PreToolUse","%s":"%s","tool_input":%s,"tool_use_id":"toolu_fixture"}' \
+        "$cwd" "$cwd" "$name_key" "${tool%/no-key}" "$tool_input"
 }
 
 # decide <hook> <marker or -> <roots> <input>: runs the hook, sets RC, OUT,
@@ -301,6 +305,12 @@ run_fixtures() {
 
     # The marker set and no roots: every file-tool write is outside them.
     fx_deny "$hook" "no roots with the marker set" "" Write "$FX_REPO" "$FX_REPO/src/a.txt"
+
+    # A field the hook cannot read — the tool's name, or a Bash command —
+    # denies the call rather than passing it unchecked.
+    fx_deny "$hook" "Bash with no readable command field" "$r" Bash/no-key "$FX_REPO" 'rm -rf build'
+    fx_deny "$hook" "Bash with no readable tool_name" "$r" Bash/no-tool-name "$FX_REPO" 'ls'
+    fx_deny "$hook" "Write with no readable tool_name" "$r" Write/no-tool-name "$FX_REPO" "$FX_REPO/src/a.txt"
 
     # Every denied fixture again without the marker, and with the marker 0.
     k=0

@@ -39,6 +39,10 @@
 #       path components: <root>-other/f is outside <root>. With the marker
 #       set and no roots, every file-tool write is outside them, and a
 #       target that cannot be read from the input is denied too.
+# An input whose tool_name cannot be read, or a Bash input whose
+# tool_input.command cannot be read, is denied as well: were a Claude Code
+# release to rename either field, the calls would stop loudly rather than
+# pass unchecked.
 #
 # Deny form: exit status 2 with the reason on stderr, which Claude Code
 # returns to the model as the tool call's error. A probe on Claude Code
@@ -112,7 +116,8 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 '
 
 # RM_AWK prints "<rm word> <flag>" for the first recursive rm at a command
-# position in tool_input.command, and nothing otherwise. A small shell
+# position in tool_input.command, and nothing otherwise; it exits 3 when
+# there is no command to read. A small shell
 # tokenizer: single and double quotes, backslash escapes, comments,
 # separators, $( ) and backtick substitutions (the enclosing command's words
 # are set aside and restored around them), subshells, and heredoc bodies,
@@ -244,7 +249,7 @@ function scan(c,   n, i, ch, nx) {
 }
 END {
   c = jstr(buf, "command")
-  if (c == "\001") exit 0
+  if (c == "\001") exit 3
   found = ""; scan(c)
   if (found != "") printf "%s", found
 }
@@ -301,11 +306,13 @@ resolve() {
 }
 
 input=$(cat)
-tool=$(field tool_name) || exit 0
+tool=$(field tool_name) \
+  || deny "the tool name could not be read from the hook input (tool_name), so the call is denied in an autopilot worker"
 
 case $tool in
   Bash)
-    found=$(printf '%s' "$input" | awk -v sq="'" "$RM_AWK")
+    found=$(printf '%s' "$input" | awk -v sq="'" "$RM_AWK") \
+      || deny "the command of this Bash call could not be read from the hook input (tool_input.command), so it is denied in an autopilot worker"
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"
     exit 0
     ;;
