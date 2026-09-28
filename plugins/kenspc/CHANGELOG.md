@@ -121,6 +121,9 @@ not probed.
   the dispatch, and reuses it in Phase 2's review. The `canonical:run-dir`
   block, changed identically in task-review, says it is prepared before
   the first agent a run dispatches and names `scratch/task-implementer/`.
+  Since that commit, like each BLOCKED note's own commit, moves HEAD in an
+  S3 whose every task is blocked, the autopilot reads S3's Schema G
+  verdict beside its HEAD, and `BLOCKED` is a stop.
 - **A headless main session's records.** The settings line and the launch
   and return lines are printed in the reply by an interactive main
   session; in a headless one the state file and the timeline are the

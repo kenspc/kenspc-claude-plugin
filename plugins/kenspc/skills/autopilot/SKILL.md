@@ -1797,17 +1797,23 @@ wording that closed it:
 - Within Phase 2: each `<tag>.exit`; S2 → S3: the task document on disk,
   and, when S2 sent no confirmation question, the skipped-gate
   post-check's match recorded;
-  S3 → S3b: S3's `.exit` and the HEAD it left; S3b → Phase 3: its Schema F
+  S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
+  its `result` other than `BLOCKED`; S3b → Phase 3: its Schema F
   verdict and the empty zero-diff output.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit and the reports.
 
 An artifact absent after a return — no task document after S2, HEAD still
-where S3 started, the `head:` the state file recorded at its first launch (every
-task blocked, or the batch gate not passed), no Schema F verdict after S3b
+where S3 started, the `head:` the state file recorded at its first launch (the
+batch gate not passed), a `## Verdict` of `BLOCKED` in S3's `result` (every
+task blocked), no Schema F verdict after S3b
 (a review over an empty range dispatches nothing) — is a stop naming it,
-not a transition. Why S3's own start and not the baseline: HEAD leaves the
+not a transition. Why the verdict as well as HEAD: an S3 whose every task
+is blocked still moves HEAD — each BLOCKED note is committed on its own,
+and task-implement makes the one-time `.gitignore` commit before it
+dispatches the implementer — so HEAD alone would read it as a finished
+step. Why S3's own start and not the baseline: HEAD leaves the
 baseline before S3 runs — S1 commits the spec, S2's reviewer commits the
 task document — so a comparison with the baseline would read an S3 that
 built nothing as a finished step, review a documents-only range, pass the
