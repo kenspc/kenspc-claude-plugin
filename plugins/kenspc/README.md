@@ -1079,7 +1079,9 @@ on Windows.
   (Python, Node, Perl), `git clean`, and writes through Bash (redirections,
   `cp`, `mv`, `tee`); also an `rm` reached through a variable or an alias,
   other wrappers such as `timeout`, and paths that are not POSIX absolute,
-  which it does not judge. The rails text in the worker's prompt still
+  which it does not judge; and a Write or Edit whose target is itself a
+  symbolic link pointing outside the roots, since it resolves only the
+  links of the target's ancestors. The rails text in the worker's prompt still
   binds for all of these. The other way round, a file-tool call whose
   target the hook cannot read from its input is denied in a marked worker,
   with a reason saying so: were a Claude Code release to rename the path

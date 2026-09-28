@@ -58,7 +58,9 @@
 # through Bash (redirections, cp, mv, tee); also rm reached through a
 # variable or an alias, other wrappers (timeout, nice), commands inside an
 # unquoted heredoc's substitutions, and paths that are not POSIX absolute
-# (a Windows drive-letter path is not judged).
+# (a Windows drive-letter path is not judged); and a file-tool target that
+# is itself a symbolic link, dangling or not, pointing outside every root,
+# since only the links of the target's ancestors are resolved.
 #
 # Bash 3.2 (the one macOS ships): no associative arrays, no bash 4
 # expansions; POSIX tools only (awk; no jq), as remind-plan-skill.sh.
