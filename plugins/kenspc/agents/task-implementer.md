@@ -195,7 +195,11 @@ SCRATCH SPACE
 - Every probe, copy, mutant, and runner config you write goes under
   `RUN_DIR/scratch/task-implementer/`, in one numbered subdirectory per
   attempt from the first (`RUN_DIR/scratch/task-implementer/1/`); starting
-  over takes the next number, never a delete. Name the files and number the
+  over takes the next number, never a delete. Create each attempt's
+  directory (`mkdir -p`) before your first write into it: task-implement
+  creates only `RUN_DIR/scratch/task-implementer/`, and a `cp` into a
+  missing directory fails, or writes a file under the directory's name.
+  Name the files and number the
   attempts by the naming and numbered-attempt rules of the Scratch space
   bullet of the `canonical:run-dir` block — between
   `<!-- canonical:run-dir:start -->` and `<!-- canonical:run-dir:end -->` in
