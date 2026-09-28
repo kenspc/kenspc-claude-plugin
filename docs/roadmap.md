@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.2.0)
+## Next minor (4.3.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -245,6 +245,21 @@ its number.
     - A launch whose worker writes UTF-8 non-ASCII text, its `<tag>.json`
       and `<tag>.err` compared byte for byte, since a Windows console code
       page can re-encode them.
+    - A `--model` value with a bracketed suffix (`<model>[1m]`), from 4.2.0
+      on. `run.ps1` passes its flags to `claude` by splatting, and pwsh on
+      macOS and Linux globs the value for a native program: a probe in a
+      directory holding `x1` and `xm` saw `x[1m]` arrive as `x1 xm`, and
+      intact where nothing matched. pwsh on Windows does not glob, and on
+      macOS and Linux the skill runs `run.sh`, which passes the value
+      intact. A fix replaces the native call itself and keeps the empty
+      stdin, the two redirections, and the status that becomes `.exit`;
+      with it, both drivers' self-tests gain a bracketed `--model` launch
+      beside a decoy file, which neither has today (the batch I spec's
+      clarifications on its review's deferred findings,
+      `git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`; the
+      rows are in `schema-b.md` of `.kenspc/runs/20260928-184145-changes/`
+      and `20260928-202048-changes/`, git-ignored, only in the maintainer's
+      macOS checkout).
 12. Upgrading a project with `/kenspc-init`, which 4.0.0 left out (the batch G
     spec's 2.15, `git show 7a14f34:docs/plans/batch-g-init-project.md`).
     Two kinds:
@@ -294,3 +309,74 @@ its number.
     4.1.0 left out (the batch H spec's 2.6,
     `git show d7949ac:docs/plans/batch-h-init-project-4-1.md`): nothing in
     the plugin accounts for it, and it has not been probed.
+17. Autopilot's printed lines in a headless main session. In the batch I
+    acceptance (`docs/dry-runs/batch-i-acceptance.md`, F1), the nested
+    headless main sessions wrote the settings line and the
+    `S<n> returned —` lines only to their state files, never to their
+    replies, although the skill says the state file does not stand in for
+    the printed line; the batch F acceptance recorded the same for the
+    settings line. Decide whether a headless main session's reply is where
+    these lines belong, or say where they go instead.
+18. A worker at a lowered effort skipping a skill's gate. In the batch I
+    acceptance (`docs/dry-runs/batch-i-acceptance.md`, F3), an S2 worker
+    declared at a low effort through `Role settings:` skipped
+    generate-task's confirmation and sent no question, while the S2
+    workers at the pass-through effort asked. Decide whether gate-carrying
+    roles need a stated effort floor, or whether the main session should
+    check that the gate's question was sent before it accepts the step.
+19. Autopilot model and effort follow-ups, which 4.2.0 left out (the batch
+    I spec's clarifications,
+    `git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`, and
+    the acceptance record's Not exercised section,
+    `docs/dry-runs/batch-i-acceptance.md`):
+    - The model check's two misreadings. The check asks whether the
+      applied model ID contains the requested value, so a declared ID that
+      is a prefix of the served one reads as a match, and an alias that no
+      served ID contains reads as a mismatch. The rule was fixed in the
+      batch's design; the plugin README's Known behavior states both, and
+      a role that needs certainty declares a full model ID.
+    - Paths no acceptance reached:
+      - the skip of API-error records, which only a forged transcript
+        reaches;
+      - a run with `CLAUDE_CONFIG_DIR` set, which needs a second login;
+      - `CLAUDE_CODE_EFFORT_LEVEL` set while no role declares an effort,
+        which must not stop the run;
+      - a resumed worker's state line replacing its predecessor's;
+      - the role a re-run tag takes (`-s3c`, `-s4b`, `-s5b`);
+      - the settings stops on inputs beyond the five the acceptance ran
+        (an unknown effort level, an unknown role, a role named twice, the
+        effort before the model, and `CLAUDE_CODE_EFFORT_LEVEL` set beside
+        a declared effort).
+    - The SessionEnd telemetry hook reads transcripts only under
+      `${HOME}/.claude/projects`, while the autopilot's transcript lookups
+      honor `$CLAUDE_CONFIG_DIR`; the hook was outside the batch's files.
+20. A repo-mode autopilot leaves an inherited `AUTOPILOT_PLUGIN_DIR` to its
+    driver. In the batch I acceptance
+    (`docs/dry-runs/batch-i-acceptance.md`, F2), every nested main session
+    inherited the variable from its own launch line, and the skill, which
+    sets it in plugin mode and says nothing of repo mode, was read two
+    ways: one main set it to the empty string and its S2 ran the installed
+    plugin, two passed the inherited value on and their workers ran the
+    working tree's skills. `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` are set
+    on every launch, the empty string where no value is known, for this
+    reason. The gap dates from 3.9.0 and was outside the batch's scope
+    (`git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`).
+    The follow-up to weigh: set `AUTOPILOT_PLUGIN_DIR` on every launch too,
+    the empty string in repo mode.
+21. A worker's rails do not reach the subagents it dispatches. The rails
+    are in the worker's preamble, which its subagents never see, and a
+    subagent's scratch files went to `/tmp` three times in batch I. During
+    the batch, S3's task-implementer subagent wrote four scratch files
+    there and S3 stopped on it; the user ruled such a file, holding no
+    secret, an observation for the rest of the batch
+    (`git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`, its
+    clarifications). In the acceptance
+    (`docs/dry-runs/batch-i-acceptance.md`, Observations), nested S3
+    workers' subagents did the same in cases 3 and 6, a regression-verifier
+    and a task-implementer, and in case 6 the subagent also ran `rm -rf`
+    twice on its own `/tmp` scratch, a recursive rm the rails forbid in
+    every spelling; both nested runs stopped as their rails say. The
+    scratch-convention item above notes that task-implementer has no
+    scratch convention at all. Decide how a worker's rails reach the
+    subagents its skills dispatch, or which of their writes the rails
+    cover.

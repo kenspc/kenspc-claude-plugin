@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.2.0 — unreleased
+## 4.2.0 — 2026-09-28
 
 Batch I. The autopilot's workers are separate `claude -p` processes, and
 each one resolves its model and effort from its own settings. The driver
@@ -21,6 +21,29 @@ not at the ones the main session had chosen, and a resume launched without
 autopilot now passes each role's model and effort on every launch, fresh
 and resumed alike, and records what each worker actually ran at. Guard
 counts are unchanged: `guards run: 11`, `self-tests run: 10`.
+
+At release, `plugin.json` is 4.2.0, and its description and the
+marketplace's both name the per-role model and effort; the effort guidance's
+last-reviewed date stays 2026-09-28, the three `xhigh` overrides
+unchanged. The roadmap names 4.3.0 as the next minor and gains the batch's
+follow-ups: the acceptance's two behavior deviations — the nested headless
+main sessions wrote the settings line and the `S<n> returned —` lines only
+to their state files, and an S2 worker declared at a low effort skipped
+generate-task's confirmation — and the items the batch left out: a
+bracketed `--model` value under `run.ps1` on macOS and Linux, the model
+check's two misreadings and the paths no acceptance reached, an inherited
+`AUTOPILOT_PLUGIN_DIR` in repo mode, and a worker's rails, which do not
+reach the subagents it dispatches.
+
+Release smoke: the batch's acceptance, `docs/dry-runs/batch-i-acceptance.md`,
+run headless on macOS with Claude Code 2.1.283 at the repository tree
+`2c65045`, whose skill, script, agent, and command files this release ships
+unchanged. Its eight cases all passed — the optional sixth on the two
+workers its run reached — for USD 20.38 in nested sessions. Its three
+findings outside the criteria are the roadmap's: the two behavior
+deviations above, and the inherited `AUTOPILOT_PLUGIN_DIR`, a gap in the
+skill's text since 3.9.0. No separate smoke run was made. `run.ps1` was not
+run on Windows, and no worker ran Fable.
 
 ### Added
 
