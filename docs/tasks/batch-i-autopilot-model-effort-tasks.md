@@ -55,7 +55,11 @@ Dependency note: Task 2 depends on Task 1; Task 4 depends on Task 1 and Task 3; 
 
 ### Task 2: run.ps1 做对等修改
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: 两个 flag 用现有的 `$optional` 字串拼进 inner script 的 `$argv`（`ConvertTo-Literal` 包成单引号字面值），新启动和 resume 共用，也不写进 `$extra`，timeline 的 `start` 行不变。run.ps1 的 self-test 已经用掉 `selftest-s1` 到 `selftest-s8`，新增的两次新启动用 `selftest-s9`（两个变量设成 `selftest-model`/`low`）和 `selftest-s10`（两个都设成空字串），放在失败 stub（`selftest-s2`）的检查之后，位置与 `run.sh` 对应。档头 Environment 一节和 "Why --model and --effort" 那段与 `run.sh` 逐字相同（两段都用 `diff` 比对过）。
+- Changes/tradeoffs: 在本机 pwsh 7.6.6 上确认过，`$env:X = ''` 会保留一个空字串变量，不会移除它，所以 `selftest-s10` 在这台机器上真的测到空字串的情况；注释里仍写明 pwsh 若移除它，这次启动就等于没设，flag 照样不出现。突变检查在 `$TMPDIR` 下的副本上做：删掉传 `--effort` 的那一行，self-test exit 1，讯息 `selftest-s9.err does not show --effort low`；删掉传 `--model` 的那一行，exit 1，讯息 `selftest-s9.err does not show --model selftest-model`；把 effort 的非空判断改成只看是否为 `$null`，`selftest-s10` 的空字串检查报错；原档 self-test 通过，解析检查 exit 0。
 
 Depends on: Task 1
 

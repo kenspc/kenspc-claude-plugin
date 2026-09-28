@@ -35,6 +35,12 @@
 #   AUTOPILOT_BUDGET_USD  when set, --max-budget-usd <value> is passed
 #   APPEND_SP             when set, --append-system-prompt <value> is passed
 #                         (the cannot-ask variant)
+#   AUTOPILOT_MODEL       when non-empty, --model <value> is passed, on a fresh
+#                         launch and on a resume; the empty string counts as
+#                         unset
+#   AUTOPILOT_EFFORT      when non-empty, --effort <value> is passed, on a
+#                         fresh launch and on a resume; the empty string
+#                         counts as unset
 #   AUTOPILOT_CLAUDE      the executable; default claude
 #   AUTOPILOT_BATCH       the batch name in the timeline's file name; default
 #                         the tag's prefix before its last "-s" (batch-x-s3
@@ -74,9 +80,13 @@
 #
 # Always passed: --name <tag>, --settings '{"crossSessionInbound":"accept"}',
 # --permission-mode bypassPermissions, --output-format json; an empty stdin.
-# A fresh launch passes --session-id <uuid>. No model flag and no continue
-# flag are ever passed: the worker follows the session's model, and a resume
-# names its session explicitly.
+# A fresh launch passes --session-id <uuid>. No continue flag is ever passed:
+# a resume names its session explicitly.
+# Why --model and --effort go on both paths: a worker started without them
+# resolves its model and effort from its own settings, not from the session
+# that started it, and a resume keeps the model but not the effort — a
+# resume launched without --effort ran at the settings' effort rather than
+# the one its first run was given.
 #
 # Why the session id is written before the start: the transcript path and the
 # resume id are then known even when the worker dies before its JSON lands.
@@ -315,6 +325,12 @@ function Invoke-Launch {
         $optional += ", '--append-system-prompt', " + (ConvertTo-Literal $env:APPEND_SP)
         $extra += ' [append-system-prompt]'
     }
+    if (-not [string]::IsNullOrEmpty($env:AUTOPILOT_MODEL)) {
+        $optional += ", '--model', " + (ConvertTo-Literal $env:AUTOPILOT_MODEL)
+    }
+    if (-not [string]::IsNullOrEmpty($env:AUTOPILOT_EFFORT)) {
+        $optional += ", '--effort', " + (ConvertTo-Literal $env:AUTOPILOT_EFFORT)
+    }
     if ($Resume) {
         $sessionArgs = "'--resume', " + (ConvertTo-Literal $session)
         $extra += ' resume'
@@ -460,16 +476,20 @@ function Invoke-Refused {
 # mark; the three
 # .launch.* files present, .launch.out and .launch.err empty; .err showing
 # every always-passed flag with the id .session holds and cwd=<the launch's
-# cwd>, and none of the three optional flags; .json's session_id equal to
+# cwd>, and none of the five optional flags; .json's session_id equal to
 # .session; a failing stub's status 3 in .exit and the end line, and the
-# multi-line prompt it received as its -p value; a throwing stub's .exit
+# multi-line prompt it received as its -p value; a launch with
+# AUTOPILOT_MODEL and AUTOPILOT_EFFORT set, its .exit present after the wait
+# and its .err showing --model <value> and --effort <value>; a launch with
+# both set to the empty string, its .exit present after the wait and its
+# .err showing neither flag; a throwing stub's .exit
 # reading 1, its end line, and its reason in .err; a launch through the
 # command line whose .pid and timeline writes fail returning 0 with its
 # started line, both failures on stderr, and .exit reading 0; on macOS and
 # Linux, a
 # native stub's .exit reading 0 and the -p and --settings values it received
 # equal, byte for byte, to that prompt and the settings JSON; a resume
-# launch through the command line with the three optional variables set;
+# launch through the command line with the five optional variables set;
 # the command line refusing --resume with no id and an unknown argument; the
 # batch-name default with a stale .exit removed and a stale .json and .err
 # emptied at launch; a launch whose cwd
@@ -536,11 +556,13 @@ exit 0
     $throwStub = Join-Path $stubDir 'throw.ps1'
     Write-LfFile $throwStub "throw 'self-test stub failure'`n"
 
-    # The three optional variables are unset for the first launch, whatever
+    # The five optional variables are unset for the first launch, whatever
     # the caller's environment holds, so their flags can be asserted absent.
     $env:AUTOPILOT_PLUGIN_DIR = $null
     $env:AUTOPILOT_BUDGET_USD = $null
     $env:APPEND_SP = $null
+    $env:AUTOPILOT_MODEL = $null
+    $env:AUTOPILOT_EFFORT = $null
     $env:AUTOPILOT_LOGS = $logsDir
     $env:AUTOPILOT_BATCH = 'selftest'
     $tag = 'selftest-s1'
@@ -717,10 +739,10 @@ exit 0
     if ($null -eq $sessionProperty -or [string]$sessionProperty.Value -cne $session) {
         Stop-SelfTest "$jsonFile does not carry the session_id that $sessionFile holds"
     }
-    # With the three optional variables unset their flags are absent: a driver
+    # With the five optional variables unset their flags are absent: a driver
     # that passed --plugin-dir "" on every launch would start every repo-mode
     # worker with an empty plugin directory.
-    foreach ($flag in '--plugin-dir', '--max-budget-usd', '--append-system-prompt') {
+    foreach ($flag in '--plugin-dir', '--max-budget-usd', '--append-system-prompt', '--model', '--effort') {
         if ($errText.Contains($flag)) { Stop-SelfTest "$errFile shows $flag on a launch with its variable unset" }
     }
     # The worker runs in the launch's cwd, read here as a logical or a
@@ -757,6 +779,46 @@ exit 0
     $seen = if (Test-Path -LiteralPath $promptSeen -PathType Leaf) { [System.IO.File]::ReadAllText($promptSeen) } else { $null }
     if ($seen -cne $expectedPrompt) {
         Stop-SelfTest "the worker of $failTag received the prompt `"$seen`", expected the content of $multiPrompt without its trailing line breaks"
+    }
+
+    # A fresh launch with AUTOPILOT_MODEL and AUTOPILOT_EFFORT set carries
+    # both flags with their values: a worker started without them resolves
+    # its model and effort from its own settings, so a driver that dropped
+    # either would run the role at values nobody asked for. The values are
+    # placeholders, not model names.
+    $modelTag = 'selftest-s9'
+    $env:AUTOPILOT_MODEL = 'selftest-model'
+    $env:AUTOPILOT_EFFORT = 'low'
+    $null = Invoke-Launch $modelTag $base $promptFile ''
+    $env:AUTOPILOT_MODEL = $null
+    $env:AUTOPILOT_EFFORT = $null
+    $modelExit = Join-Path $logsDir "$modelTag.exit"
+    $modelErr = Join-Path $logsDir "$modelTag.err"
+    Wait-ExitFile $modelExit
+    if (-not (Test-Path -LiteralPath $modelExit -PathType Leaf)) { Stop-SelfTest "$modelExit is missing after the wait" }
+    $modelText = [System.IO.File]::ReadAllText($modelErr)
+    foreach ($flag in '--model selftest-model', '--effort low') {
+        if (-not $modelText.Contains($flag)) { Stop-SelfTest "$modelErr does not show $flag" }
+    }
+    # Set to the empty string, the two variables count as unset: the skill
+    # sets both on every launch, empty where no value was determined, so a
+    # driver that tested only whether they were set would pass an empty
+    # --model or --effort. Where pwsh removes a variable assigned the empty
+    # string, this launch is the unset case again, and the flags stay absent
+    # either way.
+    $emptyTag = 'selftest-s10'
+    $env:AUTOPILOT_MODEL = ''
+    $env:AUTOPILOT_EFFORT = ''
+    $null = Invoke-Launch $emptyTag $base $promptFile ''
+    $env:AUTOPILOT_MODEL = $null
+    $env:AUTOPILOT_EFFORT = $null
+    $emptyExit = Join-Path $logsDir "$emptyTag.exit"
+    $emptyErr = Join-Path $logsDir "$emptyTag.err"
+    Wait-ExitFile $emptyExit
+    if (-not (Test-Path -LiteralPath $emptyExit -PathType Leaf)) { Stop-SelfTest "$emptyExit is missing after the wait" }
+    $emptyText = [System.IO.File]::ReadAllText($emptyErr)
+    foreach ($flag in '--model', '--effort') {
+        if ($emptyText.Contains($flag)) { Stop-SelfTest "$emptyErr shows $flag on a launch with its variable set to the empty string" }
     }
 
     # A failure inside the worker's own script, here an executable that
@@ -866,21 +928,26 @@ exit 0
 
     # A resume launch with the first launch's id, through the command line a
     # caller uses, so a driver that dropped the --resume value is caught here
-    # rather than starting a fresh session under the resume tag. The three
+    # rather than starting a fresh session under the resume tag. The five
     # optional variables are set for this launch only, so their flags are read
     # from .err too: a plugin-mode worker launched without --plugin-dir would
-    # load the installed plugin, and one without --max-budget-usd would run
-    # unbounded.
+    # load the installed plugin, one without --max-budget-usd would run
+    # unbounded, and a resume without --effort would fall back to the
+    # settings' effort, since a resume keeps the model but not the effort.
     $resumeTag = "$tag-r1"
     $pluginDir = Join-Path $base 'plugin'
     $env:AUTOPILOT_PLUGIN_DIR = $pluginDir
     $env:AUTOPILOT_BUDGET_USD = '1'
     $env:APPEND_SP = 'x'
+    $env:AUTOPILOT_MODEL = 'selftest-model'
+    $env:AUTOPILOT_EFFORT = 'low'
     $resumeOut = & pwsh -NoProfile -File $self $resumeTag $base $promptFile --resume $session
     $rc = $LASTEXITCODE
     $env:AUTOPILOT_PLUGIN_DIR = $null
     $env:AUTOPILOT_BUDGET_USD = $null
     $env:APPEND_SP = $null
+    $env:AUTOPILOT_MODEL = $null
+    $env:AUTOPILOT_EFFORT = $null
     foreach ($line in @($resumeOut)) { [Console]::Out.WriteLine($line) }
     if ($rc -ne 0) { Stop-SelfTest "the resume launch of $resumeTag through the command line returned $rc, expected 0" }
     $resumeExit = Join-Path $logsDir "$resumeTag.exit"
@@ -898,7 +965,7 @@ exit 0
     if (-not (Test-FileLine $timeline "^start $resumeTag pid [0-9]+ .* resume$")) {
         Stop-SelfTest "$timeline has no start line ending in resume for $resumeTag"
     }
-    foreach ($flag in "--plugin-dir $pluginDir", '--max-budget-usd 1', '--append-system-prompt x') {
+    foreach ($flag in "--plugin-dir $pluginDir", '--max-budget-usd 1', '--append-system-prompt x', '--model selftest-model', '--effort low') {
         if (-not $resumeText.Contains($flag)) { Stop-SelfTest "$resumeErr does not show $flag" }
     }
     # The parser's refusals, status 2 and nothing started: --resume without an
