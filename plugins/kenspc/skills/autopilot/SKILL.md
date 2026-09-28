@@ -542,9 +542,8 @@ Every worker is one launch, one wait, one return.
   and the task block; run the driver copy with the environment it needs —
   `AUTOPILOT_LOGS=<workspace>/_logs`, `AUTOPILOT_BATCH=<batch>`,
   `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_MODEL` and
-  `AUTOPILOT_EFFORT` (below), and `AUTOPILOT_PLUGIN_DIR=<plugin
-  directory>` in plugin mode — with the repository root as the worker's
-  cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
+  `AUTOPILOT_EFFORT` (below), and `AUTOPILOT_PLUGIN_DIR` (below) — with
+  the repository root as the worker's cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   as a line of its own in this session's reply (the pid and the session id
   from the driver's `started` line, or from `<tag>.pid` and
   `<tag>.session`) — the state file does not stand in for it (Templates
@@ -588,6 +587,17 @@ Every worker is one launch, one wait, one return.
   `AUTOPILOT_EFFORT` the tag it resumes was launched with. Why: a resume
   keeps the session's model but not its effort, so a resume launched
   without `--effort` would fall back to the settings' effort.
+
+  Every launch sets `AUTOPILOT_PLUGIN_DIR` explicitly as well: the plugin
+  directory in plugin mode, the empty string in repo mode, which the
+  driver reads as unset; a resume sets the value the tag it resumes was
+  launched with. Why, as for the model and the effort: a variable of the
+  same name already in this session's environment would otherwise reach
+  the driver. Why the repo-mode value is written out: while the variable
+  was set in plugin mode alone, three repo-mode main sessions that had
+  inherited it read that text two ways — one launched its workers with the
+  variable empty, and they ran the installed plugin; two passed the
+  inherited plugin directory on, and theirs ran the working tree's skills.
 - **The wait, interactive.** Subscribe to the worker with `SendMessage`
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
@@ -1218,7 +1228,11 @@ instruction come in the prompt that resumed you, under its first line
   unless a case sets its own; the block says so. Why: nothing on the
   nested launch line shows the two values, so without the sentence S4
   would not know them, and a case whose criterion names a model or an
-  effort would run at S4's with nobody having set them.
+  effort would run at S4's with nobody having set them. Every nested
+  launch sets `AUTOPILOT_PLUGIN_DIR` explicitly on its line, as the main
+  session's launches do, and the block says so. Why: S4's environment
+  holds the plugin directory from its own launch, so a case that leaves
+  the variable out of its line still passes it, whatever the case meant.
 
 ````
 ## Task: acceptance for batch <batch>
@@ -1243,6 +1257,10 @@ The driver copy passes --model and --effort from AUTOPILOT_MODEL and
 AUTOPILOT_EFFORT, which your environment already holds from your own
 launch, so every nested session runs at your model and effort unless a
 case sets the two variables on its own launch line.
+Every nested launch sets AUTOPILOT_PLUGIN_DIR explicitly on its line: the
+plugin directory, as above, or the empty string for a run a case starts
+without it. Your environment holds the plugin directory from your own
+launch, so a line that leaves the variable out passes it all the same.
 The nested tag is <tag>-case<n> for case n[, and <tag>-trial for the trial
 run] — a tag no other session has used. The cap is <remaining> for the first
 nested launch and, for each later one, <remaining> less the costs of every
@@ -1397,7 +1415,7 @@ run.sh <tag> <cwd> <prompt-file> [--resume <session-id>]
 run.sh --self-test                          prints: self-test passed
 
 AUTOPILOT_LOGS         the logs directory (default ~/Projects/_smoke/_logs)
-AUTOPILOT_PLUGIN_DIR   when set, --plugin-dir <value>   (plugin mode)
+AUTOPILOT_PLUGIN_DIR   when non-empty, --plugin-dir <value>   (fresh launch and resume; the empty string counts as unset)
 AUTOPILOT_BUDGET_USD   when set, --max-budget-usd <value>
 APPEND_SP              when set, --append-system-prompt <value>
 AUTOPILOT_MODEL        when non-empty, --model <value>    (fresh launch and resume)
@@ -1414,9 +1432,9 @@ Every worker starts with `--name <tag>`,
 `--settings '{"crossSessionInbound":"accept"}'`,
 `--permission-mode bypassPermissions`, `--output-format json`, stdin from
 `/dev/null`; a fresh launch passes `--session-id`, a resume `--resume`.
-`--model` is passed when `AUTOPILOT_MODEL` is non-empty and `--effort`
-when `AUTOPILOT_EFFORT` is, on a fresh launch and on a resume alike; the
-empty string counts as unset.
+`--model` is passed when `AUTOPILOT_MODEL` is non-empty, `--effort` when
+`AUTOPILOT_EFFORT` is, and `--plugin-dir` when `AUTOPILOT_PLUGIN_DIR` is,
+on a fresh launch and on a resume alike; the empty string counts as unset.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:
 every worker asks by message, as the preamble says, and a worker told to
 work without stopping would answer its own questions, which the quality

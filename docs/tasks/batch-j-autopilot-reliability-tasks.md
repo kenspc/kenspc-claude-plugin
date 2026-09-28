@@ -691,7 +691,28 @@ Spec Step 4.2 (J-L4). File: `scripts/check-autopilot-rails-hook.sh` (new).
 
 ### Task 8: SKILL.md — the plugin directory on every launch
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the launch bullet's environment list now names
+  `AUTOPILOT_PLUGIN_DIR` with "(below)", and a paragraph of its own after
+  the model-and-effort paragraph gives the rule (plugin directory in plugin
+  mode, the empty string in repo mode, a resume as its tag) and two Whys:
+  the inherited-variable reason the model and effort give, and the
+  evidence in its own words (three repo-mode main sessions that inherited
+  the variable read the plugin-mode-only text two ways — one launched with
+  it empty and its workers ran the installed plugin, two passed the
+  inherited directory on and theirs ran the working tree's skills). The S4
+  task block tells S4 that every nested launch sets the variable on its
+  line — the plugin directory, or the empty string for a run a case starts
+  without it — since S4's own environment holds the plugin directory; the
+  S4 bullet carries the Why.
+- Changes/tradeoffs: the driver section's variable line now reads "when
+  non-empty, --plugin-dir <value> (fresh launch and resume; the empty
+  string counts as unset)", and its prose names `--plugin-dir` beside
+  `--model` and `--effort`. The joined-lines check finds the former
+  "`AUTOPILOT_PLUGIN_DIR=<plugin directory>` in plugin mode" in the old
+  file (positive control) and nowhere in the new one.
 
 Depends on: Task 2
 
