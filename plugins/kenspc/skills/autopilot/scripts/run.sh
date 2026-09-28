@@ -501,14 +501,16 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   # --plugin-dir would load the installed plugin and review code other than
   # the batch's, one without --max-budget-usd would run unbounded, and a
   # resume without --effort would fall back to the settings' effort, since a
-  # resume keeps the model but not the effort. This
+  # resume keeps the model but not the effort. Its effort, high, differs
+  # from the fresh launches' low, so a driver that passed a fixed --effort
+  # rather than the variable's value fails here. This
   # launch goes through the command line, the parser the skill calls, so a
   # driver that dropped the --resume value is caught here rather than
   # starting a fresh session under the resume tag.
   RTAG=$TAG-r1
   AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
   AUTOPILOT_PLUGIN_DIR=$base/plugin AUTOPILOT_BUDGET_USD=1 APPEND_SP=x \
-  AUTOPILOT_MODEL=selftest-model AUTOPILOT_EFFORT=low \
+  AUTOPILOT_MODEL=selftest-model AUTOPILOT_EFFORT=high \
     bash "$self" "$RTAG" "$base" "$base/prompt.md" --resume "$session" \
     || { echo "self-test failed: the resume launch of $RTAG through the command line did not return 0" >&2; return 1; }
   n=0; until [ -f "$LOGS/$RTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
@@ -524,7 +526,7 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   grep -q "^start $RTAG pid [0-9][0-9]* .* resume\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no start line ending in resume for $RTAG" >&2; return 1; }
   for flag in "--plugin-dir $base/plugin" '--max-budget-usd 1' '--append-system-prompt x' \
-              '--model selftest-model' '--effort low'; do
+              '--model selftest-model' '--effort high'; do
     grep -qF -- "$flag" "$LOGS/$RTAG.err" \
       || { echo "self-test failed: $LOGS/$RTAG.err does not show $flag" >&2; return 1; }
   done

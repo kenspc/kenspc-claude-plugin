@@ -975,13 +975,15 @@ exit 0
     # load the installed plugin, one without --max-budget-usd would run
     # unbounded, and a resume without --effort would fall back to the
     # settings' effort, since a resume keeps the model but not the effort.
+    # Its effort, high, differs from the fresh launches' low, so a driver that
+    # passed a fixed --effort rather than the variable's value fails here.
     $resumeTag = "$tag-r1"
     $pluginDir = Join-Path $base 'plugin'
     $env:AUTOPILOT_PLUGIN_DIR = $pluginDir
     $env:AUTOPILOT_BUDGET_USD = '1'
     $env:APPEND_SP = 'x'
     $env:AUTOPILOT_MODEL = 'selftest-model'
-    $env:AUTOPILOT_EFFORT = 'low'
+    $env:AUTOPILOT_EFFORT = 'high'
     $resumeOut = & pwsh -NoProfile -File $self $resumeTag $base $promptFile --resume $session
     $rc = $LASTEXITCODE
     $env:AUTOPILOT_PLUGIN_DIR = $null
@@ -1006,7 +1008,7 @@ exit 0
     if (-not (Test-FileLine $timeline "^start $resumeTag pid [0-9]+ .* resume$")) {
         Stop-SelfTest "$timeline has no start line ending in resume for $resumeTag"
     }
-    foreach ($flag in "--plugin-dir $pluginDir", '--max-budget-usd 1', '--append-system-prompt x', '--model selftest-model', '--effort low') {
+    foreach ($flag in "--plugin-dir $pluginDir", '--max-budget-usd 1', '--append-system-prompt x', '--model selftest-model', '--effort high') {
         if (-not $resumeText.Contains($flag)) { Stop-SelfTest "$resumeErr does not show $flag" }
     }
     # The parser's refusals, status 2 and nothing started: --resume without an
