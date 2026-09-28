@@ -298,9 +298,10 @@ model and the effort this session runs at now, which a role takes where
   directory name derived from the repository path; its last main-loop
   assistant record — a line whose `type` is `assistant`, in that file
   itself and not in a subagent's file — carries the model in
-  `message.model`, a record whose `message.model` is `<synthetic>` being
-  skipped. Why skip it: Claude Code writes such a record into the main
-  loop for an API error, and while a Bash call runs the current message's
+  `message.model`, a record whose `message.model` is `<synthetic>`, or
+  that carries `isApiErrorMessage`, being skipped. Why skip it: Claude
+  Code writes such a record into the main loop for an API error, and
+  while a Bash call runs the current message's
   own records need not be in the file yet, so after a turn that ended on
   an API error the last record can be that one; `<synthetic>` names no
   model, and passed to `--model` it would keep every undeclared worker,
@@ -607,7 +608,15 @@ Every worker is one launch, one wait, one return.
   actually ran at. The session id in `<tag>.session` names its transcript,
   `~/.claude/projects/*/<session-id>.jsonl`; read only that file's
   main-loop assistant records — its lines whose `type` is `assistant`, and
-  not a subagent's file — each one's `message.model` and `effort`. Every
+  not a subagent's file — each one's `message.model` and `effort`,
+  skipping the records the pass-through read skips: a record whose
+  `message.model` is `<synthetic>`, or that carries `isApiErrorMessage`.
+  Why skip them: Claude Code writes such a record into the main loop for
+  an API error, with no `effort` field; it is the harness's own and not a
+  model's response, and counted it would mark a worker that hit one
+  dropped connection — the usual way into a resume —
+  `MISMATCH: model, effort not applied` although every response ran at
+  the requested values. Every other
   record counts: a part with one distinct value is written as it stands,
   several distinct values are joined with `+`, and a part matches only when
   every record matches. A resume's tag reads the whole session, the earlier
@@ -627,7 +636,8 @@ Every worker is one launch, one wait, one return.
   - A part requested as `—` — its variable set to the empty string, so no
     flag was passed — is not judged.
   - A transcript that cannot be found, or that holds no main-loop assistant
-    record that can be read, is `not observed` in both parts, and a
+    record that can be read — a session left with only skipped records
+    among them — is `not observed` in both parts, and a
     `message.model` that cannot be read is `not observed` in the model
     part. `not observed` is printed as it stands: it never stops the run,
     takes no `MISMATCH:`, and is not counted as a mismatch.

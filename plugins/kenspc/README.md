@@ -578,10 +578,15 @@ The model matches when the applied model ID contains the requested value,
 compared without regard to case once a trailing `[...]` is removed from
 the requested value; the effort matches when it equals the requested value,
 and a record with no effort field is the mismatch `effort not applied`.
-Every main-loop record counts, several values are joined with `+`, and a
-resume's line covers the whole session. A mismatch is marked, never a
-stop; a transcript the run cannot find or read, or a model it cannot read,
-is `not observed`, which takes no `MISMATCH:` and is not counted. The reviewer report's `Models and efforts`
+Every main-loop record counts except the ones Claude Code writes for an
+API error — `message.model` `<synthetic>`, or `isApiErrorMessage` — which
+the pass-through read skips too: they are the harness's own, not a
+model's response, and carry no effort field, so counted they would mark a
+worker that hit one dropped connection as a mismatch. Several values are
+joined with `+`, and a resume's line covers the whole session. A mismatch
+is marked, never a stop; a transcript the run cannot find or read, a
+session left with only those API-error records, or a model it cannot
+read, is `not observed`, which takes no `MISMATCH:` and is not counted. The reviewer report's `Models and efforts`
 line gives the number of workers and of mismatches (`mismatches: none` when
 there are none) with these lines under it.
 
