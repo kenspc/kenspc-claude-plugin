@@ -488,12 +488,13 @@ function Test-ResultJson {
 }
 
 function Assert-WorkerVars {
-    param([string]$ErrFile, [string]$Workspace, [bool]$WorkspaceWanted, [string]$Repo)
+    param([string]$ErrFile, [string]$Workspace, [bool]$WorkspaceWanted, [string]$Repo, [string]$Cwd = '')
     # The self-test's check of the two exported variables a stub wrote to its
     # .err: the marker reads 1; the roots hold $TMPDIR (when set), /tmp, and
     # /private/tmp, the repository when one is given, and the workspace when
     # wanted — or, when not, no workspace entry: neither that path nor an
-    # empty entry.
+    # empty entry; and, when a cwd is given, one that is no repository's top
+    # level, no entry for it.
     if (-not (Test-FileLine $ErrFile '(^|\s)KENSPC_AUTOPILOT_WORKER=1$')) {
         Stop-SelfTest "$ErrFile does not show the marker KENSPC_AUTOPILOT_WORKER=1"
     }
@@ -511,6 +512,9 @@ function Assert-WorkerVars {
     }
     if (-not $WorkspaceWanted -and ("|$roots|".Contains("|$Workspace|") -or "|$roots|".Contains('||'))) {
         Stop-SelfTest "the roots in $ErrFile, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold a workspace entry with AUTOPILOT_WORKSPACE the empty string"
+    }
+    if ($Cwd -and "|$roots|".Contains("|$Cwd|")) {
+        Stop-SelfTest "the roots in $ErrFile, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold the cwd $Cwd, which is no repository's top level"
     }
 }
 
@@ -564,7 +568,8 @@ function Invoke-Refused {
 # with AUTOPILOT_WORKSPACE set, its .exit present after the wait and its
 # .err showing --name <tag>, the marker KENSPC_AUTOPILOT_WORKER=1, and roots
 # (KENSPC_AUTOPILOT_WRITE_ROOTS) holding $TMPDIR (when set), /tmp,
-# /private/tmp, and the workspace; a git init of a repository under the
+# /private/tmp, and the workspace, and not its cwd, which is no
+# repository's top level; a git init of a repository under the
 # self-test's directory succeeding, and a launch in that repository with
 # AUTOPILOT_WORKSPACE the empty string, the same with roots holding the
 # repository's top level and no workspace entry; a
@@ -1005,7 +1010,10 @@ exit 0
     Wait-ExitFile $wsSetExit
     if (-not (Test-Path -LiteralPath $wsSetExit -PathType Leaf)) { Stop-SelfTest "$wsSetExit is missing after the wait" }
     if (-not ([System.IO.File]::ReadAllText($wsSetErr)).Contains("--name $wsSetTag")) { Stop-SelfTest "$wsSetErr does not show --name $wsSetTag" }
-    Assert-WorkerVars $wsSetErr $workspaceDir $true ''
+    # Its cwd, $base, is no repository's top level, so the roots hold no
+    # entry for it: a driver that fell back to the cwd outside a repository
+    # would widen the rails to a directory nobody named.
+    Assert-WorkerVars $wsSetErr $workspaceDir $true '' $base
     $repoDir = Join-Path $base 'repo'
     $null = & git init -q $repoDir 2>$null
     if ($LASTEXITCODE -ne 0) { Stop-SelfTest "git init $repoDir failed, so the repository root cannot be checked" }

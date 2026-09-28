@@ -264,14 +264,15 @@ launch() {
   echo "started $tag pid $pid session $session"
 }
 
-# selftest_worker_vars <err-file> <workspace> <present|absent> <repository or empty>
+# selftest_worker_vars <err-file> <workspace> <present|absent> <repository or empty> [<cwd>]
 # The self-test's check of the two exported variables a stub wrote to its
 # .err: the marker reads 1; the roots hold $TMPDIR (when set), /tmp, and
 # /private/tmp, the repository when one is given, and the workspace when
 # present — or, when absent, no workspace entry: neither that path nor an
-# empty entry. Prints the first failure and returns 1.
+# empty entry; and, when a cwd is given, one that is no repository's top
+# level, no entry for it. Prints the first failure and returns 1.
 selftest_worker_vars() {
-  local err=$1 workspace=$2 wanted=$3 repo=$4 roots want
+  local err=$1 workspace=$2 wanted=$3 repo=$4 cwd=${5:-} roots want
   grep -qxF -- 'KENSPC_AUTOPILOT_WORKER=1' "$err" \
     || { echo "self-test failed: $err does not show the marker KENSPC_AUTOPILOT_WORKER=1" >&2; return 1; }
   roots=$(sed -n 's/^KENSPC_AUTOPILOT_WRITE_ROOTS=//p' "$err")
@@ -291,6 +292,14 @@ selftest_worker_vars() {
     case "|$roots|" in
       *"|$workspace|"*|*"||"*)
         echo "self-test failed: the roots in $err, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold a workspace entry with AUTOPILOT_WORKSPACE the empty string" >&2
+        return 1
+        ;;
+    esac
+  fi
+  if [ -n "$cwd" ]; then
+    case "|$roots|" in
+      *"|$cwd|"*)
+        echo "self-test failed: the roots in $err, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold the cwd $cwd, which is no repository's top level" >&2
         return 1
         ;;
     esac
@@ -341,7 +350,8 @@ selftest_worker_vars() {
 # for a launch under selftest-s15 with AUTOPILOT_WORKSPACE set, a .exit
 # missing after the wait, an .err without --name <tag>, without the marker
 # KENSPC_AUTOPILOT_WORKER=1, or with roots (KENSPC_AUTOPILOT_WRITE_ROOTS)
-# not holding $TMPDIR (when set), /tmp, /private/tmp, and the workspace;
+# not holding $TMPDIR (when set), /tmp, /private/tmp, and the workspace, or
+# holding its cwd, which is no repository's top level;
 # then a git init of a repository under the self-test's directory that
 # fails, and for a launch under selftest-s16 in that repository with
 # AUTOPILOT_WORKSPACE the empty string, the same items with roots not
@@ -642,7 +652,10 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   [ -f "$LOGS/$W1TAG.exit" ] || { echo "self-test failed: $LOGS/$W1TAG.exit is missing after the wait" >&2; return 1; }
   grep -qF -- "--name $W1TAG" "$LOGS/$W1TAG.err" \
     || { echo "self-test failed: $LOGS/$W1TAG.err does not show --name $W1TAG" >&2; return 1; }
-  selftest_worker_vars "$LOGS/$W1TAG.err" "$WSDIR" present "" || return 1
+  # Its cwd, $base, is no repository's top level, so the roots hold no entry
+  # for it: a driver that fell back to the cwd outside a repository would
+  # widen the rails to a directory nobody named.
+  selftest_worker_vars "$LOGS/$W1TAG.err" "$WSDIR" present "" "$base" || return 1
   W2TAG=selftest-s16
   git init -q "$base/repo" >/dev/null 2>&1 \
     || { echo "self-test failed: git init $base/repo failed, so the repository root cannot be checked" >&2; return 1; }
