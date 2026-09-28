@@ -920,7 +920,26 @@ Spec Step 5.1, J-L5. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 12: SKILL.md — a headless main session's records
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the full rule and Why live in § The settings line, in a new
+  paragraph after the launch-and-return-lines one (in a headless main
+  session, as The wait path decides, the state file and the timeline are
+  the record; nobody reads a headless reply as its steps happen, and two
+  batches' headless main sessions left the settings and return lines out
+  of their replies with nothing downstream missing them — the release
+  checklist reads the state file and the timeline). Phase 0's DONE, the
+  launch bullet, and the return bullet each state the interactive-only
+  requirement and the headless record (the timeline's `start` / `end`
+  line for the launch and return) with a short Why pointing there; the
+  settings line is now "written" as the state file's first line and
+  "printed" in an interactive session. § Phase transitions' Phase 0 entry
+  names the state file as a headless session's artifact, with its Why.
+- Changes/tradeoffs: the positive control (the perl program over
+  `a002d69`'s file) printed passages from all five places; after the task,
+  every printed passage that requires a line in the reply limits it to an
+  interactive main session.
 
 Spec Step 5.1, J-L6. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 

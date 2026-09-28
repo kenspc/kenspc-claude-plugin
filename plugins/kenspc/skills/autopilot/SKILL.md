@@ -125,11 +125,15 @@ the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`;
 `ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
 this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`.
 
-**DONE when** the settings line (Templates § The settings line, ending
-with the pass-through values) has been printed as a line of its own in
-this session's reply — the state file, which carries it too, does not
-stand in for it (Templates § The settings line says why) — and the state
-file written.
+**DONE when** the state file is written, the settings line (Templates
+§ The settings line, ending with the pass-through values) its first line,
+and, in an interactive main session, the settings line has been printed
+as a line of its own in this session's reply — there the state file,
+which carries it too, does not stand in for it (Templates § The settings
+line says why). In a headless main session (The wait path decides which)
+the state file and the timeline are the record, and the reply need not
+carry the line. Why: nothing downstream reads a headless session's reply
+(Templates § The settings line).
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
 the driver copy, its self-test files, the state file — and nothing into the
@@ -549,12 +553,15 @@ Every worker is one launch, one wait, one return.
   `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_WORKSPACE=<workspace>`
   (below), `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` (below), and
   `AUTOPILOT_PLUGIN_DIR` (below) — with the repository root as the
-  worker's cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
+  worker's cwd; in an interactive main session, print
+  `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   as a line of its own in this session's reply (the pid and the session id
   from the driver's `started` line, or from `<tag>.pid` and
-  `<tag>.session`) — the state file does not stand in for it (Templates
-  § The settings line says why); rewrite the state file, its step line
-  carrying HEAD at the launch. A driver that
+  `<tag>.session`) — there the state file does not stand in for it
+  (Templates § The settings line says why), while in a headless main
+  session the state file and the timeline's `start` line are the record,
+  since nothing downstream reads a headless reply; rewrite the state file,
+  its step line carrying HEAD at the launch. A driver that
   exits non-zero has started nothing: its message on stderr is the stop's
   reason — or, when it names an earlier worker under the tag still
   running, that worker is the one to wait for, by its `<tag>.exit`, once
@@ -631,11 +638,13 @@ Every worker is one launch, one wait, one return.
 - **The wait, headless.** Never subscribe. Poll with the driver form of the
   wait snippet, one tool call of about a minute per iteration, until
   `<tag>.exit` exists or the pid is gone.
-- **The return.** Print
+- **The return.** In an interactive main session, print
   `S<n> returned — exit <code>, cost USD <c>, <success|subtype> — <json path>`
   from `<tag>.exit` and `<tag>.json`, as a line of its own in this
-  session's reply, as the launch line is — the state file does not stand
-  in for it (Templates § The settings line says why); upsert
+  session's reply, as the launch line is — there the state file does not
+  stand in for it (Templates § The settings line says why); in a headless
+  main session the state file and the timeline's `end` line are the
+  record, since nothing downstream reads a headless reply. Upsert
   `<tag> <session_id> <total_cost_usd>` into `<batch>-costs.txt` — replace the line that carries the same session
   id, else append; a resume's line replaces its predecessor's, since a
   resumed session's JSON carries the whole total; rewrite the state file.
@@ -1557,9 +1566,10 @@ calls.
 
 ### The settings line
 
-Printed once, before the first launch, in English whatever the
-conversation's language, as a line of its own in this session's reply
-text; the state file carries the same line and does not stand in for the
+Written once, before the first launch, in English whatever the
+conversation's language, as the state file's first line, and, in an
+interactive main session, printed as a line of its own in this session's
+reply text, where the state file's copy does not stand in for the
 printed one:
 
 ```
@@ -1577,14 +1587,23 @@ declared.
 A note on ignored labels, a `Version:` ignored in repo mode, or a
 `Zero diff:` path absent at the baseline follows on the next line.
 
-The launch and return lines (Launch, wait, return) go the same way: each
-is printed in the reply, on a line of its own, when its step happens. Why
-the reply and not the state file alone: the user reads the settings there
-before any session is paid for, and sees each launch and return as its
-step happens, while the state file is rewritten whole at every transition
-and keeps no history of them. The ordered record on disk is the driver's
-`start` and `end` lines in `<batch>-timeline.log`, and the release
-checklist reads that and the state file, not the reply.
+The launch and return lines (Launch, wait, return) go the same way: in an
+interactive main session each is printed in the reply, on a line of its
+own, when its step happens. Why the reply and not the state file alone:
+the user reads the settings there before any session is paid for, and
+sees each launch and return as its step happens, while the state file is
+rewritten whole at every transition and keeps no history of them. The
+ordered record on disk is the driver's `start` and `end` lines in
+`<batch>-timeline.log`, and the release checklist reads that and the
+state file, not the reply.
+
+In a headless main session (The wait path decides which) the state file
+and the timeline are the record: the settings line, the launch lines, and
+the return lines are required there, not in the reply. Why: nobody reads
+a headless session's reply as its steps happen, and two batches' headless
+main sessions left the settings line and the return lines out of their
+replies with nothing downstream missing them — the release checklist
+reads the state file and the timeline.
 
 ### The stop conditions
 
@@ -1714,8 +1733,12 @@ later run of the same batch reads where this one stopped.
 Each phase starts from the artifact the previous one produced, not from the
 wording that closed it:
 
-- Phase 0 → Phase 1 or 2: the settings line printed and the state file
-  written.
+- Phase 0 → Phase 1 or 2: the state file written and, in an interactive
+  main session, the settings line printed; in a headless main session the
+  state file written is the artifact. Why: a headless main session keeps
+  its record in the state file and the timeline (Templates § The settings
+  line), so a transition that waited on a printed line would wait on a
+  line the run is not required to print.
 - Phase 1 → Phase 2: the spec's commit hash in the state file.
 - Within Phase 2: each `<tag>.exit`; S2 → S3: the task document on disk,
   and, when S2 sent no confirmation question, the skipped-gate
