@@ -236,6 +236,9 @@ run_fixtures() {
     fx_deny "$hook" "rm position after |" "$r" Bash "$FX_REPO" 'echo build | rm -rf build'
     fx_deny "$hook" "rm position after \$(" "$r" Bash "$FX_REPO" 'echo $(rm -rf build)'
     fx_deny "$hook" "rm position after backtick" "$r" Bash "$FX_REPO" 'echo `rm -rf build`'
+    # A substitution inside double quotes still runs its command.
+    fx_deny "$hook" "rm position after \$( inside double quotes" "$r" Bash "$FX_REPO" 'echo "$(rm -rf build)"'
+    fx_deny "$hook" "rm position after a backtick inside double quotes" "$r" Bash "$FX_REPO" 'x="`rm -rf build`"'
     fx_deny "$hook" "rm position after xargs" "$r" Bash "$FX_REPO" 'echo build | xargs rm -rf'
     fx_deny "$hook" "rm position after sudo" "$r" Bash "$FX_REPO" 'sudo rm -rf build'
     fx_deny "$hook" "rm position after command" "$r" Bash "$FX_REPO" 'command rm -rf build'
