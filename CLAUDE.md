@@ -309,7 +309,13 @@ teams. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix each need a session
 of their own; the workers run the installed plugin, or in plugin mode the
-worktree's copy with `--plugin-dir`.
+worktree's copy with `--plugin-dir`. Each worker is its own process and
+resolves its model and effort from its own settings, not from the main
+session, so the skill passes each role's values — declared in the spec's
+`Role settings:`, or the main session's own passed through — as run.sh's
+`AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT`, which the driver turns into
+`--model` and `--effort` on a fresh launch and on a resume alike (a resume
+keeps the model but not the effort).
 
 Every Agent dispatch in the skills sets `run_in_background: false`
 (v3.5.1): each skill reads the agent's result in the same turn, while a

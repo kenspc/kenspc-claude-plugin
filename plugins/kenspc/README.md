@@ -499,7 +499,7 @@ of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
 `- <Label>: <value>` fields, in any order, labels in English whatever the
 document's language. Every field has a default and none is required; the
 run prints its effective settings in one line before the first launch, and
-names any label it does not know. The sixteen labels and their defaults:
+names any label it does not know. The seventeen labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -524,6 +524,13 @@ names any label it does not know. The sixteen labels and their defaults:
 - `Challenge seeds:` sub-bullets the design session argues against — empty
 - `Prior specs:` `<hash>^:<path>` entries, read with `git show` — empty
 - `Workspace:` a directory — `~/Projects/_smoke/`
+- `Role settings:` one sub-bullet per role, `- <role>: model <model>[, effort <level>]`
+  or `- <role>: effort <level>`, where `<role>` is one of `S1`, `S2`, `S3`,
+  `S3b`, `S4`, `S5`, `S6`, `<model>` is one token with no whitespace and no
+  comma, passed to `--model` as written, and `<level>` is one of `low`,
+  `medium`, `high`, `xhigh`, `max` — empty, every role at the pass-through
+  values; a role that declares only a model, or only an effort, takes the
+  pass-through value for the part it leaves out
 
   For example, at the end of a brief:
 
@@ -537,6 +544,46 @@ names any label it does not know. The sixteen labels and their defaults:
     - npm run typecheck — PASS: exit 0 (optional)
   - Release preparation: default
   ```
+
+**Models and efforts.** A worker does not follow your session's model and
+effort: each is its own `claude -p` process, and without `--model` and
+`--effort` it resolves both from its own settings. So every launch passes
+the role's values — the ones `Role settings:` declares, and, for a role
+the field does not name or the part a role's entry leaves out, the
+pass-through values: the model and effort your session runs at when the
+run starts, the effort from `$CLAUDE_EFFORT` and the model from your
+session's own transcript. A pass-through value that cannot be read is not
+passed and is recorded as `not determined`; that part of the worker then
+comes from its own settings. The plugin ships no default per role and
+names no model: the declarations are the spec's. Two settings stop the
+run before the first launch: a `Role settings` entry outside its grammar —
+an unknown role, a role named twice, or a part that does not match, named
+with the value that failed (`- S3: effort extreme` names `extreme`) — and
+`CLAUDE_CODE_EFFORT_LEVEL` set in your session's environment while a role
+declares an effort, since that variable takes precedence over `--effort`
+and every worker inherits it.
+
+The settings line ends with the roles and the pass-through values,
+`…, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>`,
+a role's undeclared part written `—`. After each worker exits, the run
+reads the model and effort it actually ran at from its transcript — found
+by the session id in `<tag>.session`, its main-loop records only — and
+writes one line per worker into the state file:
+
+```
+<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]
+```
+
+The model matches when the applied model ID contains the requested value,
+compared without regard to case once a trailing `[...]` is removed from
+the requested value; the effort matches when it equals the requested value,
+and a record with no effort field is the mismatch `effort not applied`.
+Every main-loop record counts, several values are joined with `+`, and a
+resume's line covers the whole session. A mismatch is marked, never a
+stop; a transcript the run cannot find, or a field it cannot read, is
+`not observed`, which takes no `MISMATCH:` and is not counted. The reviewer report's `Models and efforts`
+line gives the number of workers and of mismatches (`mismatches: none` when
+there are none) with these lines under it.
 
 **The workspace.** Everything the run keeps outside the repository lives
 under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
@@ -615,7 +662,9 @@ batch and mode; baseline → release hash; the spec's `git show` command;
 design rulings and clarifications with the decisions that read the locked
 design beyond its letter; files changed and the zero-diff result;
 byte-identity / guards / counts; acceptance, one line per case with its
-cost and result; total cost; Not exercised; release-preparation state;
+cost and result; models and efforts, the number of workers and of
+mismatches with one line per worker; total cost; Not exercised;
+release-preparation state;
 sessions / messages / resumes / stops. The total-cost line is the measured
 sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode
 the acceptance cases' costs from the record (S4's nested sessions), plus
@@ -632,7 +681,13 @@ worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
 written to `<tag>.session` before the process starts, and — when the
 command exists — wrapped in `caffeinate -i`, so a macOS machine does not
 sleep under a running worker while the main session waits with no Bash
-call running. `run.sh --self-test` launches a stub through the same path
+call running. It passes `--model` when `AUTOPILOT_MODEL` is non-empty and
+`--effort` when `AUTOPILOT_EFFORT` is, on a fresh launch and on a resume
+alike, since a resume keeps the model but not the effort; the empty string
+counts as unset, and the skill sets both on every launch, empty where no
+value is known. S4's nested acceptance sessions take S4's model and effort
+through the environment, since the driver copy S4 runs reads the same two
+variables. `run.sh --self-test` launches a stub through the same path
 and prints `self-test passed`; the run executes the copy's self-test at
 every batch start. The timeline's two lines, `start <tag> pid <pid> …` and
 `end   <tag> exit <status>`, begin at column 0 with no timestamp: the launch
@@ -641,7 +696,8 @@ its `<tag>.exit`. A driver that mirrors `run.sh` keeps that shape, since the
 release checklist greps for the lines as they stand.
 
 `run.ps1`, beside `run.sh` in the same directory, is its PowerShell mirror.
-It has the same interface, files, timeline lines, and refusals, and also
+It has the same interface, environment variables, files, timeline lines,
+and refusals, and also
 refuses a logs directory or tag holding `[`, `]`, `*`, or `?`, which
 `Start-Process` cannot redirect to. It runs under PowerShell 7.3 or later
 as
@@ -871,7 +927,7 @@ on Windows.
   does not receive the notice between its tool calls: it arrives as a new
   turn after the session's final reply, and the session's JSON `result`
   then becomes that turn's last message. So a headless autopilot never
-  subscribes and polls `<tag>.exit` instead — its settings line ends with
+  subscribes and polls `<tag>.exit` instead — its settings line reads
   `wait headless` — and only an interactive main session subscribes.
 - **Sessions that share a name.** The rename Claude Code applies to a
   duplicate session name does not check the `--name` of a `-p` session at
@@ -925,6 +981,31 @@ on Windows.
   `<batch>-timeline.log`, each `end` line written together with
   `<tag>.exit`. The release checklist reads them there, not from the
   reply.
+- **A role's model reaches every subagent of its worker.** The plugin's
+  agents declare `model: inherit`, which resolves to the model of the
+  session that dispatches them, so inside an autopilot worker it is the
+  worker's own model. A role's model, declared or passed through, is
+  therefore also the model of every subagent that worker dispatches — the
+  task document reviewer under S2, and the implementer, the five
+  reviewers, the fixer, and the verifier under S3 and S3b.
+- **Agents with their own effort keep it.** An agent whose frontmatter
+  sets `effort: xhigh` — `task-implementer` and `code-fixer` — runs at
+  that effort whatever the role's effort; a role's effort sets the
+  worker's own, and that of the subagents without an `effort:` field.
+- **Fable in a headless worker can spend usage credits without asking.**
+  In `-p` mode, when a Fable request counts against usage credits, Claude
+  Code charges it without a prompt. On a Max plan that happens once the
+  weekly Fable share — up to 50% of the weekly usage limit, at no extra
+  charge — is used up; on a plan where Fable needs usage credits, it
+  happens on every request. A worker can run Fable whether a role declares
+  it or passes it through, and when your session runs Fable, every role
+  without a declared model runs Fable too.
+- **The applied model and effort come from an undocumented format.** The
+  run reads what a worker ran at from fields of its transcript that Claude
+  Code does not document. A field it cannot read, or a transcript it
+  cannot find, is recorded as `not observed`, and the run goes on; a
+  mismatch is marked in the state file and the reviewer report, never a
+  stop.
 - **An existing CLAUDE.md.** `/kenspc-init` does not rewrite a CLAUDE.md
   you already have, at the root or in `.claude/`. On your yes it adds one
   line, the import (`@AGENTS.md`; `@../AGENTS.md` from `.claude/CLAUDE.md`),

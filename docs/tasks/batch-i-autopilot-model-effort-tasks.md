@@ -180,7 +180,11 @@ Depends on: Task 1, Task 3
 
 ### Task 5: README、CLAUDE.md 和 release checklist
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: README § Autopilot 的字段列表把 `Role settings:` 放在最后（与 SKILL.md 字段表同一位置），标签数改成十七个，用脚本逐项比对过两边的标签清单完全相同。沿用规则、两个 settings stop 和记录格式写成字段列表之后的新段落 `**Models and efforts.**`，接一段讲 settings line 的新尾段、state file 行的模板（代码块，逐字与 SKILL.md 相同）、判定规则和 reviewer report 的 `Models and efforts` 行。Known behavior 的四项放在 autopilot 相关条目的末尾（"A headless run may leave the settings and return lines in the state file" 之后）。subagent 那一项点名的 agent 按 S2/S3/S3b 各自会 dispatch 的列出；`effort: xhigh` 那一项点名 `task-implementer` 和 `code-fixer`，与 pre-flight 的 effort diff 一致（`generate-plan` 是 skill，不在 worker 里当 subagent 跑）。
+- Changes/tradeoffs: README Known behavior 原句 "its settings line ends with `wait headless`" 改成 "reads `wait headless`"；checklist smoke 第 11 行 "and ending `wait headless`" 改成 "that carries `wait headless`"，其余不动，也没有新增 smoke 检查。`run.ps1` 那段只加了 "environment variables" 一词，"checked on macOS only" 那段不变。CLAUDE.md 只在 § Sessions, not agents (autopilot) 段末加一句；讲 `check-no-model-names.sh` 的那句没有动（diff grep 无输出，对照命中两行），`scripts/check-no-model-names.sh` 也没有动。pre-flight block 全部 exit 0，输出 `guards run: 11`，最后一行 `self-tests run: 10`，计数不变，所以 CLAUDE.md 和 checklist 的计数都不用改。新增文字里写出 model 名称的七行都属于 Fable 计费那一项。
 
 Depends on: Task 1-4
 
