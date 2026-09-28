@@ -629,11 +629,11 @@ skill. A file this list gains keeps to that.
 - A line ending in `{{when: <condition>}}` is written, without the tag and
   the space before it, when the condition holds, and left out when it does
   not.
-- The HTML comment at the top of each AGENTS.md, and each CLAUDE.md's
-  import line and its line saying where the instructions are, are copied
-  as they are. Why the CLAUDE.md lines, when Claude Code can read AGENTS.md
-  itself: in its default mode the CLAUDE.md this run writes stops that
-  reading, as a teammate's private `CLAUDE.local.md` does; no project
+- The HTML comment at the top of each AGENTS.md is copied as it is, and
+  each CLAUDE.md keeps the import line (Phase 0) and its line saying where
+  the instructions are. Why the CLAUDE.md lines, when Claude Code can read
+  AGENTS.md itself: in its default mode the CLAUDE.md this run writes stops
+  that reading, as a teammate's private `CLAUDE.local.md` does; no project
   setting can change the mode; before v2.1.277, or with the built-in
   agents-md plugin disabled, nothing reads it; only an imported AGENTS.md
   fires the InstructionsLoaded hook; and a Read of CLAUDE.md shows the
