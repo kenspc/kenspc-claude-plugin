@@ -64,6 +64,8 @@ producing per-task commits and a Schema D summary.
 README, and config files; the task document itself.
 
 **DONE when**:
+- The run directory was prepared and created before the implementer's
+  dispatch (Step 4).
 - Every incomplete task has been processed (DONE or BLOCKED) by the
   implementer agent.
 - The implementer agent has returned a Schema D summary.
@@ -93,7 +95,11 @@ Build a structured CONTEXT block to pass to the implementer agent:
 ```
 CONTEXT
 - TASK_FILE: <path to the task document from $ARGUMENTS>
+- RUN_DIR: <absolute run directory>
 ```
+
+`RUN_DIR` is filled in Step 4, which prepares the run directory after the
+batch confirmation.
 
 ### Step 3: Confirm with user
 
@@ -131,7 +137,86 @@ interface. Proceed?
 Wait for explicit confirmation before proceeding. If the user declines or
 wants to adjust scope, follow their instructions instead.
 
-### Step 4: Dispatch the implementer
+### Step 4: Prepare the run directory and dispatch the implementer
+
+Prepare the run directory here, after the batch confirmation and before the
+dispatch. Why after the confirmation: a declined batch then makes no
+`.gitignore` commit. Why before the dispatch: task-implementer writes its
+probes, copies, and mutants under `RUN_DIR/scratch/task-implementer/`, and
+Phase 2 reuses the same directory for the review reports.
+
+<!-- canonical:run-dir:start -->
+Prepare this run's report directory before the first agent the run
+dispatches — task-implementer in `/kenspc-task-implement`, the review agents
+in `/kenspc-task-review`. The five reviewers, code-fixer, and
+regression-verifier exchange full reports through it, task-implementer keeps
+its probes, copies, and mutants in it, and the orchestrator passes only its
+path. Why: relaying full reports through the main session has filled its
+context, and a relayed copy has lost rows on the way to the verifier.
+
+- Run-id: the current local time from `date +%Y%m%d-%H%M%S`, a hyphen, and
+  the task document's file name without its extension — or `changes` when
+  TASK_FILE is "N/A". Example: `20260923-110512-user-auth`.
+- RUN_DIR: `<root>/.kenspc/runs/<run-id>`, where `<root>` is the output of
+  `git rev-parse --show-toplevel`. Keep it absolute and forward-slashed as git
+  prints it (`C:/...` on Windows); the file tools need absolute paths. The
+  directory need not exist — the first report written creates it.
+- Scratch space: probe files, copies, and other temporary files go under
+  `RUN_DIR/scratch/` — each reviewer in its own `scratch/angle-<n>/`,
+  task-implementer in `scratch/task-implementer/`, code-fixer in
+  `scratch/code-fixer/`, regression-verifier in
+  `scratch/regression-verifier/`, and the orchestrating session itself in
+  `scratch/orchestrator/` when it runs a probe of its own. Every file there
+  is named so the project's test runner does not collect it: for vitest and
+  jest with their default patterns, no `.test.` or `.spec.` segment in a
+  file name, no file named `test.*` or `spec.*`, no `__tests__` directory,
+  and no `__mocks__` directory; where the project configures its own
+  pattern, or for any other runner, whatever that configuration actually
+  collects; a jest project keeps the `__mocks__` rule whatever its pattern.
+  Every attempt lives in a numbered subdirectory of the writer's own
+  directory from the first (`scratch/angle-5/1/`); starting over is the next
+  number (`scratch/angle-5/2/`), never a delete. A file that already carries
+  a collectable name is renamed onto a path that does not exist yet, which
+  is not a delete; renaming over an existing file is. It is ignored along
+  with the run directory and needs no cleanup.
+  Why: deleting temporary files with `rm -rf` can be denied by the user's
+  permission rules, and a verifier that could not clean up has fallen back
+  to judging fixes by reading code. The run directory is git-ignored, not
+  tool-ignored, so a test runner walking the tree collects scratch files
+  that look like tests.
+- Ignore check: run `git -C <root> check-ignore -q .kenspc/runs/probe`. The
+  probe path need not exist; a `.kenspc/` rule matches any path under the
+  directory. Asking about `.kenspc/` itself is not reliable: a blank line in
+  a CRLF `.gitignore` parses as an empty pattern, and git then reports the
+  directory as ignored when nothing ignores it.
+  - Exit 0 — already ignored; change nothing.
+  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore`, ending it the
+    way the file's existing lines end (CRLF when they end in CRLF); create
+    the file if needed, and add a line break first if its last line has
+    none. Then run `git -C <root> add .gitignore` and
+    `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
+    conventional commit, `chore: ignore kenspc run directory` by default;
+    when the project's instruction files set commit conventions (a scope
+    list, a format), apply them. The project's instruction files are its
+    CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
+    subdirectory — and the files a CLAUDE.md imports with `@`, whether or
+    not Claude Code loaded them in this session. Why a separate commit: the
+    change is one-time and visible in history, and the pathspec keeps
+    anything the user has staged out of it.
+  - Any other exit code, or a failed commit — including a commit hook's
+    rejection — stop and report the error. Do not retry, and do not bypass
+    the hook with `--no-verify`: the hook encodes the project's rules, and
+    the fix commits later in this run go through the same repository and
+    would fail the same way.
+<!-- canonical:run-dir:end -->
+
+Then create the directory before the dispatch, with
+`mkdir -p <RUN_DIR>/scratch/task-implementer`, so it exists before
+task-implementer's first tool call, and fill `RUN_DIR` in the Step 2
+CONTEXT block with it. Why: the block leaves the directory to the first
+report written, which suits the review agents, but task-implementer's first
+write there may be a shell command such as `cp`, which does not create a
+missing directory.
 
 Tell the user: "Starting task implementation. Dispatching implement agent
 now."
@@ -139,7 +224,7 @@ now."
 Then dispatch a subagent using the Agent tool:
 - Agent name: `task-implementer`
 - description: "Implement tasks from document"
-- prompt: the CONTEXT block from Step 2
+- prompt: the CONTEXT block from Step 2, with `RUN_DIR` filled in
 - run_in_background: false — the next step reads this agent's result in the
   same turn. A background call returns at once, and a headless session stops
   the agent when it exits.
@@ -216,76 +301,19 @@ After Phase 1, check the implementation results:
   G consolidated report with verdict = BLOCKED and Code Review / Fixes /
   Verification sections omitted.
 
-### Step 1: Prepare the run directory and construct the review CONTEXT block
+### Step 1: Construct the review CONTEXT block
 
-<!-- canonical:run-dir:start -->
-Prepare this run's report directory before any review agent is dispatched.
-The five reviewers, code-fixer, and regression-verifier exchange full reports
-through it, and the orchestrator passes only its path. Why: relaying full
-reports through the main session has filled its context, and a relayed copy
-has lost rows on the way to the verifier.
-
-- Run-id: the current local time from `date +%Y%m%d-%H%M%S`, a hyphen, and
-  the task document's file name without its extension — or `changes` when
-  TASK_FILE is "N/A". Example: `20260923-110512-user-auth`.
-- RUN_DIR: `<root>/.kenspc/runs/<run-id>`, where `<root>` is the output of
-  `git rev-parse --show-toplevel`. Keep it absolute and forward-slashed as git
-  prints it (`C:/...` on Windows); the file tools need absolute paths. The
-  directory need not exist — the first report written creates it.
-- Scratch space: probe files, copies, and other temporary files go under
-  `RUN_DIR/scratch/` — each reviewer in its own `scratch/angle-<n>/`,
-  code-fixer in `scratch/code-fixer/`, regression-verifier in
-  `scratch/regression-verifier/`, and the orchestrating session itself in
-  `scratch/orchestrator/` when it runs a probe of its own. Every file there
-  is named so the project's test runner does not collect it: for vitest and
-  jest with their default patterns, no `.test.` or `.spec.` segment in a
-  file name, no file named `test.*` or `spec.*`, no `__tests__` directory,
-  and no `__mocks__` directory; where the project configures its own
-  pattern, or for any other runner, whatever that configuration actually
-  collects; a jest project keeps the `__mocks__` rule whatever its pattern.
-  Every attempt lives in a numbered subdirectory of the writer's own
-  directory from the first (`scratch/angle-5/1/`); starting over is the next
-  number (`scratch/angle-5/2/`), never a delete. A file that already carries
-  a collectable name is renamed onto a path that does not exist yet, which
-  is not a delete; renaming over an existing file is. It is ignored along
-  with the run directory and needs no cleanup.
-  Why: deleting temporary files with `rm -rf` can be denied by the user's
-  permission rules, and a verifier that could not clean up has fallen back
-  to judging fixes by reading code. The run directory is git-ignored, not
-  tool-ignored, so a test runner walking the tree collects scratch files
-  that look like tests.
-- Ignore check: run `git -C <root> check-ignore -q .kenspc/runs/probe`. The
-  probe path need not exist; a `.kenspc/` rule matches any path under the
-  directory. Asking about `.kenspc/` itself is not reliable: a blank line in
-  a CRLF `.gitignore` parses as an empty pattern, and git then reports the
-  directory as ignored when nothing ignores it.
-  - Exit 0 — already ignored; change nothing.
-  - Exit 1 — append a `.kenspc/` line to `<root>/.gitignore`, ending it the
-    way the file's existing lines end (CRLF when they end in CRLF); create
-    the file if needed, and add a line break first if its last line has
-    none. Then run `git -C <root> add .gitignore` and
-    `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
-    conventional commit, `chore: ignore kenspc run directory` by default;
-    when the project's instruction files set commit conventions (a scope
-    list, a format), apply them. The project's instruction files are its
-    CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
-    subdirectory — and the files a CLAUDE.md imports with `@`, whether or
-    not Claude Code loaded them in this session. Why a separate commit: the
-    change is one-time and visible in history, and the pathspec keeps
-    anything the user has staged out of it.
-  - Any other exit code, or a failed commit — including a commit hook's
-    rejection — stop and report the error. Do not retry, and do not bypass
-    the hook with `--no-verify`: the hook encodes the project's rules, and
-    the fix commits later in this run go through the same repository and
-    would fail the same way.
-<!-- canonical:run-dir:end -->
+Reuse the run directory prepared in Phase 1 Step 4: its `RUN_DIR`, with no
+second run-id and no second preparation. Why: task-implementer's scratch and
+the review reports then sit in one run directory, and a second preparation
+would split one run's evidence across two.
 
 Build the CONTEXT block:
 - `TASK_FILE` = the same task document path from Phase 1.
 - `REVIEW_SCOPE` = "task".
 - `CUSTOM_INSTRUCTIONS` = "N/A" unless the user provided specific review
   instructions.
-- `RUN_DIR` = the run directory prepared above.
+- `RUN_DIR` = the run directory prepared in Phase 1 Step 4.
 
 ```
 CONTEXT

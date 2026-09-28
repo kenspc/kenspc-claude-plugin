@@ -127,11 +127,13 @@ If $ARGUMENTS is empty or contains no file path:
     or range, with the file count.
 
 <!-- canonical:run-dir:start -->
-Prepare this run's report directory before any review agent is dispatched.
-The five reviewers, code-fixer, and regression-verifier exchange full reports
-through it, and the orchestrator passes only its path. Why: relaying full
-reports through the main session has filled its context, and a relayed copy
-has lost rows on the way to the verifier.
+Prepare this run's report directory before the first agent the run
+dispatches — task-implementer in `/kenspc-task-implement`, the review agents
+in `/kenspc-task-review`. The five reviewers, code-fixer, and
+regression-verifier exchange full reports through it, task-implementer keeps
+its probes, copies, and mutants in it, and the orchestrator passes only its
+path. Why: relaying full reports through the main session has filled its
+context, and a relayed copy has lost rows on the way to the verifier.
 
 - Run-id: the current local time from `date +%Y%m%d-%H%M%S`, a hyphen, and
   the task document's file name without its extension — or `changes` when
@@ -142,7 +144,8 @@ has lost rows on the way to the verifier.
   directory need not exist — the first report written creates it.
 - Scratch space: probe files, copies, and other temporary files go under
   `RUN_DIR/scratch/` — each reviewer in its own `scratch/angle-<n>/`,
-  code-fixer in `scratch/code-fixer/`, regression-verifier in
+  task-implementer in `scratch/task-implementer/`, code-fixer in
+  `scratch/code-fixer/`, regression-verifier in
   `scratch/regression-verifier/`, and the orchestrating session itself in
   `scratch/orchestrator/` when it runs a probe of its own. Every file there
   is named so the project's test runner does not collect it: for vitest and

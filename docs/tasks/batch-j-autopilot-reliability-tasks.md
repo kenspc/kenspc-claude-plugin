@@ -340,7 +340,33 @@ Spec Step 2.2 (J-L4). Files: `plugins/kenspc/skills/autopilot/scripts/run.sh`,
 
 ### Task 4: task-implement prepares the run directory before task-implementer
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the block moved into Phase 1 Step 4, retitled "Prepare the
+  run directory and dispatch the implementer", rather than into a new step,
+  so no step is renumbered (the all-BLOCKED path's "Phase 2 Step 4" and the
+  "Step 3" batch-gate references stay valid). Step 4 states both Whys: after
+  the confirmation, so a declined batch makes no `.gitignore` commit; and
+  `mkdir -p <RUN_DIR>/scratch/task-implementer` before the dispatch,
+  because the block leaves the directory to the first report written, while
+  task-implementer's first write there may be a shell command such as `cp`,
+  which does not create a missing directory. Phase 2 Step 1 is now
+  "Construct the review CONTEXT block" and reuses Phase 1's `RUN_DIR`, with
+  the Why that a second preparation would split one run's evidence across
+  two directories. Phase 1's DONE list gained the prepared-and-created run
+  directory.
+- Changes/tradeoffs: inside the block only the opening sentence (the
+  preparation comes before the first agent the run dispatches —
+  task-implementer in `/kenspc-task-implement`, the review agents in
+  `/kenspc-task-review` — and task-implementer keeps its probes, copies, and
+  mutants there) and the Scratch space bullet's writer list
+  (`scratch/task-implementer/`) changed; the bytes were copied into
+  task-review/SKILL.md by script. The block's "need not exist — the first
+  report written creates it" stays, true for task-review; task-implement's
+  explicit creation lives outside the block. `check-run-contract.sh
+  --self-test` still passes (its run-dir mutation targets `- Scratch space:`,
+  kept). Writes under `/tmp`: none.
 
 Spec Step 3.1 (J-L2). Files: `plugins/kenspc/skills/task-implement/SKILL.md`,
 `plugins/kenspc/skills/task-review/SKILL.md`.
