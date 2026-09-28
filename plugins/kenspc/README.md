@@ -571,13 +571,16 @@ by the session id in `<tag>.session`, its main-loop records only — and
 writes one line per worker into the state file:
 
 ```
-<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]
+<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 ```
 
 The model matches when the applied model ID contains the requested value,
 compared without regard to case once a trailing `[...]` is removed from
 the requested value; the effort matches when it equals the requested value,
-and a record with no effort field is the mismatch `effort not applied`.
+and a record with no effort field is the mismatch `effort not applied`,
+its applied effort written `—`: in the applied part `—` means the records
+carry no effort field, while in a requested part it means no flag was
+passed.
 Every main-loop record counts except the ones Claude Code writes for an
 API error — `message.model` `<synthetic>`, or `isApiErrorMessage` — which
 the pass-through read skips too: they are the harness's own, not a

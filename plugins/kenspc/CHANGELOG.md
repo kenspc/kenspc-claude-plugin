@@ -57,12 +57,14 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   reads the model and effort it ran at from the main-loop records of its
   transcript, found by the session id in `<tag>.session`. It writes one
   line per worker to the state file:
-  `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]`.
+  `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]`.
   - The model matches when the applied model ID contains the requested
     value, without regard to case, once a trailing `[...]` is removed from
     the requested value.
   - The effort matches when it equals the requested value; a record with
-    no effort field is the mismatch `effort not applied`.
+    no effort field is the mismatch `effort not applied`, its applied
+    effort written `—`: in the applied part `—` means the records carry no
+    effort field.
   - A record Claude Code writes for an API error — `message.model`
     `<synthetic>`, or `isApiErrorMessage` — is left out, here and when the
     pass-through model is read: it is the harness's own, not a model's

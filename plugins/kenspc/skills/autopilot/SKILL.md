@@ -425,13 +425,18 @@ step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sh
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
 models and efforts:
-  <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]
+  <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 questions answered:
   <tag>: <one line> → <one line>
 stops: <reason> (<time>)
 clarifications recorded: <numbers>
 next: <the next action>
 ```
+
+In a `models and efforts:` line, `—` in the applied effort means the
+worker's records carry no `effort` field, the mismatch
+`effort not applied`; in a requested part it means no flag was passed
+(The return).
 
 ## Phase 1: Design (brief entry only)
 
@@ -654,13 +659,17 @@ Every worker is one launch, one wait, one return.
   The result is one line per worker in the state file's
   `models and efforts:` section:
 
-  `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]`
+  `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]`
 
   where `declared` marks a role `Role settings:` names — a role that
   declares one part only is `declared` too, its other requested part being
   the pass-through value that was passed — and `<what>` names each part
   that does not match, `model`, `effort`, or `effort not applied`, joined
-  with `, `. A resume's line replaces the line of the session it resumes,
+  with `, `. `—` in the applied effort means the records carry no `effort`
+  field, and in a requested part that no flag was passed. Why a sign of
+  its own and not `not observed`: a record without the field was read, and
+  its missing effort is a counted mismatch, while `not observed` is never
+  counted. A resume's line replaces the line of the session it resumes,
   as its costs line does. Why: the resume's line reads the whole session,
   the earlier run included, so a line kept for each run would count one
   worker, and its mismatch, twice in the reviewer report. Why read and
@@ -1503,13 +1512,17 @@ the user has yet to see.
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none
-  <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]
+  <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
 ```
+
+The lines under `Models and efforts` are the state file's as they stand;
+`—` in an applied effort means the worker's records carry no `effort`
+field.
 
 ## The gates
 
