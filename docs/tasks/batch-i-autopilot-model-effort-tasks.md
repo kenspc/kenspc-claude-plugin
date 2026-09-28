@@ -108,7 +108,7 @@ Depends on: Task 1
 - 字段表有 `Role settings:` 一行，文法和默认值如上，并写明部分声明的处理。`grep -n "Role settings" plugins/kenspc/skills/autopilot/SKILL.md` 命中字段表、start checks、gates 表和 stop conditions。
 - `grep -n "CLAUDE_CODE_EFFORT_LEVEL" plugins/kenspc/skills/autopilot/SKILL.md` 命中 start checks 和 stop conditions，start checks 那一项写明 `printenv CLAUDE_CODE_EFFORT_LEVEL`。
 - Phase 0 写明 `$CLAUDE_EFFORT`、`$CLAUDE_CODE_SESSION_ID`、`~/.claude/projects/*/<session-id>.jsonl` 和 `not determined`；state file 模板有沿用值那一行。
-- settings line 模板以 `pass-through <model|not determined>/<effort|not determined>` 结尾，前面是 `roles <S2 <model>/<effort>; …|none declared>`。
+- settings line 模板以 `pass-through <model|not determined>/<effort|not determined>` 结尾，前面是 `roles <S2 <model>/<effort>; …|none declared>`，并写明 roles 列表里角色没声明的那一项写 `—`。
 - `grep -n "wait <interactive|headless>" plugins/kenspc/skills/autopilot/SKILL.md` 的每一处都没有说 settings line 以它结尾。
 - 新增的每条规则都有 Why。
 - 共同约束的编号标签 grep 对 `SKILL.md` 没有输出。
@@ -127,7 +127,7 @@ Depends on: Task 1, Task 3
 
 - § Launch, wait, return 的 The launch：
   - 每次启动都明确设定 `AUTOPILOT_MODEL` 和 `AUTOPILOT_EFFORT`：用该角色声明的值；没有声明的项用 Phase 0 的沿用值；沿用值是 `not determined` 就设成空字串。Why：没有 flag 的 worker 会按自己的 settings 解析；明确设成空字串，也挡住主 session 环境里已有的同名变量。
-  - 重跑的 tag 用它那一步的角色：`-s3c` 是 S3b，`-s4b` 是 S4，`-s5b` 是 S5。
+  - 重跑的 tag 用它那一步的角色：`-s3<字母>`（`-s3c`、`-s3d` …）是 S3b，`-s4<字母>`（`-s4b`、`-s4c` …）是 S4，`-s5<字母>`（`-s5b` …）是 S5。
   - resume（`<tag>-r<k>`）沿用该 tag 原本的值。Why：resume 会保留 model 但不保留 effort，不带 flag 的 resume 会回到 settings 的 effort。
 - The return：每个 `<tag>.exit` 出现之后，用 `<tag>.session` 里的 session id 找 `~/.claude/projects/*/<session-id>.jsonl`。只读主循环的 assistant 记录，也就是这个档本身，不读 subagent 的档案；读出 `message.model` 和 `effort`，然后判定：
   - model 一致：先去掉请求值末尾的 `[...]`，实际的 model ID 不分大小写包含它，就算一致；
@@ -148,9 +148,12 @@ Depends on: Task 1, Task 3
 
 **Acceptance criteria:**
 - `grep -n "AUTOPILOT_MODEL\|AUTOPILOT_EFFORT" plugins/kenspc/skills/autopilot/SKILL.md` 命中 The launch、The driver 和 S4 task block。
+- The launch 写明：resume（`<tag>-r<k>`）沿用该 tag 原本的 `AUTOPILOT_MODEL` 和 `AUTOPILOT_EFFORT`；重跑的 tag 按它那一步的角色取值，`-s3<字母>` 是 S3b、`-s4<字母>` 是 S4、`-s5<字母>` 是 S5。
+- SKILL.md 有一句写明 worker 不沿用主 session 的 model 和 effort，没有 flag 时按自己的 settings 解析。
 - state file 那一行的模板逐字出现：`<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]`。
 - 判定规则写明：去掉末尾的 `[...]`、不分大小写的包含、`effort not applied`、多个值用 `+` 连接且每一条都要相符、`not observed` 不加 `MISMATCH:` 也不计数。
-- reviewer report 模板里 `- Models and efforts:` 的行号小于 `- Total cost:` 的行号，并写明 `mismatches: none` 的情况。
+- reviewer report 模板里 `- Models and efforts:` 的行号小于 `- Total cost:` 的行号，并写明 `mismatches: none` 的情况；Phase 4 讲 reviewer report 的那一段也提到 `Models and efforts`。
+- 新增的每条规则都有 Why。
 - § The driver 列出的环境变量与 Task 1 之后的 `run.sh` 档头一致。
 - `grep -rn "follows the session's model" plugins/kenspc` 没有结果。
 - 共同约束的编号标签 grep 对 `SKILL.md` 没有输出；`bash scripts/check-all.sh` exit 0。
@@ -194,7 +197,8 @@ Depends on: Task 1-4
 **Acceptance criteria:**
 - `grep -rn "follows the session's model" plugins/kenspc CLAUDE.md README.md` 没有结果。
 - README 的字段列表有 `Role settings:`，写出的标签数与 SKILL.md 字段表的行数一致（十七个）。
-- README § Known behavior 有上面四项新条目，每项都写明所列内容。只有 Fable 计费那一项写出 model 名称，其他例子都用 `<model>` 占位符。
+- README § Autopilot 出现 `AUTOPILOT_MODEL`、`AUTOPILOT_EFFORT`、`not determined`、`CLAUDE_CODE_EFFORT_LEVEL` 和 `Models and efforts`，并逐字写出与 SKILL.md 相同的 state file 那一行模板；CLAUDE.md § Sessions, not agents (autopilot) 出现 `AUTOPILOT_MODEL` 和 `AUTOPILOT_EFFORT`。
+- README § Known behavior 有上面四项新条目，每项都写明所列内容。本任务在这三个档新增的文字里，只有 Fable 计费那一项写出 model 名称，其他例子都用 `<model>` 占位符：`git diff -U0 <task 开始前的 HEAD> -- plugins/kenspc/README.md CLAUDE.md docs/release-checklist.md | grep -iE '^\+.*\b(opus|sonnet|haiku|fable)\b'` 印出的每一行都属于 Fable 计费那一项。README 原有的 model 名称（例如 Acknowledgements 里的）不在此列。
 - README 和 release checklist 里，不再有说 settings line 以 `wait headless` 结尾的句子。
 - `git diff -- CLAUDE.md` 没有碰到 "Skills and agents follow the session's model and effort" 那一句；`scripts/check-no-model-names.sh` 没有改动。
 - release checklist 的 pre-flight block 全部 exit 0，输出 `guards run: 11`，最后一行是 `self-tests run: 10`。如果计数变了，CLAUDE.md 和 checklist 写的是新的计数，而且与输出一致。
