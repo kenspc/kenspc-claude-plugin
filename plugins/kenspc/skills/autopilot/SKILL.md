@@ -298,7 +298,13 @@ model and the effort this session runs at now, which a role takes where
   directory name derived from the repository path; its last main-loop
   assistant record — a line whose `type` is `assistant`, in that file
   itself and not in a subagent's file — carries the model in
-  `message.model`.
+  `message.model`, a record whose `message.model` is `<synthetic>` being
+  skipped. Why skip it: Claude Code writes such a record into the main
+  loop for an API error, and while a Bash call runs the current message's
+  own records need not be in the file yet, so after a turn that ended on
+  an API error the last record can be that one; `<synthetic>` names no
+  model, and passed to `--model` it would keep every undeclared worker,
+  and each resume of it, from starting.
 
 A value that cannot be read — the variable empty, no transcript, no
 assistant record, no `message.model` — is recorded as `not determined` and
