@@ -104,7 +104,7 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
   `- Total cost:`: the number of workers, of mismatches, and of workers
   not observed (`<n> workers, <k> mismatches, <j> not observed`, or
   `<n> workers, mismatches: none, <j> not observed`), with the state
-  file's lines under it. A worker not observed is never counted as a
+  file's lines under it. A `not observed` part is never counted as a
   mismatch, and `<j>` keeps a run in which no transcript could be read
   from reading like a verified one.
 
