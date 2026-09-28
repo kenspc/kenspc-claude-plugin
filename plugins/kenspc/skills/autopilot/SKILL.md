@@ -951,7 +951,11 @@ release preparation was right.
   whose cases the same report lists with their costs. The
   `Models and efforts` line counts the workers and the mismatches from
   the state file's `models and efforts:` lines, which follow it as they
-  stand; with no mismatch it reads `<n> workers, mismatches: none`, and a
+  stand; `<k>` is the number of lines that carry `MISMATCH:`, one per
+  worker however many parts it names, since the count stands beside the
+  number of workers and a count by part would give two runs over the same
+  state file two numbers; with no mismatch it reads
+  `<n> workers, mismatches: none`, and a
   `not observed` part counts as no mismatch. Why: a worker's model and
   effort are chosen per role and set on every launch, so the report is
   where a reviewer sees which settings the harness applied and which it
