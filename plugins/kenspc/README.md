@@ -871,9 +871,9 @@ on Windows.
   whole file as it stands in your working tree, so an edit to `.gitignore`
   you had not committed — staged or not — goes into
   `chore: ignore kenspc run directory` with the `.kenspc/` line.
-  `/kenspc-task-review`, `/kenspc-task-implement`'s review phase, and
-  `/kenspc-diagnose` when it probes make that commit on their first run in
-  a repository that does not yet ignore `.kenspc/`. Commit or stash your
+  `/kenspc-task-review`, `/kenspc-task-implement` after you confirm the
+  batch, and `/kenspc-diagnose` when it probes make that commit on their
+  first run in a repository that does not yet ignore `.kenspc/`. Commit or stash your
   `.gitignore` edits first, or split that commit afterwards.
   `/kenspc-init`'s documentation commit likewise carries the whole of a
   `.gitignore` it appended to, or a CLAUDE.md it gave the import line,
