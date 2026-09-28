@@ -825,16 +825,24 @@ a skip at any effort; the post-check catches it at every effort.
 
 S3b's Schema F verdict decides the next step. Passing: PASS, on to Phase 3.
 FAIL, or PARTIAL with HIGH rows deferred: each HIGH row and each row-3 or
-row-5 FAIL is classified by the main session as a plugin defect — S5 from
-that row, task block `Fix issue <ID> from run <run dir>: <one line>`, then a
-narrowed review, `-s3c`, over `<S3b HEAD>..<fix HEAD>` — or accepted as a
-deferral with
-a reason recorded as a clarification in the spec. The second narrowed
+row-5 FAIL is classified by the main session as a plugin defect, fixed by
+an S5, or accepted as a deferral with
+a reason recorded as a clarification in the spec. One S5 may fix several
+defects classified in the same round: its task block lists each defect
+with its row (The task blocks, S5), and it commits one defect per commit.
+Every S5 is followed by the narrowed review — `-s3c`, the next letter for
+a later one (`-s3d`) — over the range from HEAD at the S5's launch to its
+last commit, a wording-only fix included, before any re-run of a case and
+before the next S5. The second narrowed
 review that still FAILs is the "guards red twice in a row" stop. DEFERRED
 MEDIUM and LOW rows are classified once — a fix in S5, or a roadmap
 candidate listed in the reviewer report — and recorded as a clarification.
 Why: the round count is where the stop conditions put it, and a deferral
-without a recorded reason is a finding nobody owns.
+without a recorded reason is a finding nobody owns. Why a narrowed review
+after every S5, a wording-only fix included: one S5 has fixed six defects
+of a round, two of them in wording only, and those two reached the next
+step with no review after them; a change of any size is a change no
+review has seen until the narrowed one runs.
 
 ### The zero-diff check
 
@@ -974,19 +982,27 @@ commands, a worker may write into the repository, and a file left
 uncommitted would be swept into a later commit under its message.
 
 **Classification.** The main session classifies each FAIL: a plugin defect
-(an implementation defect, in repo mode) → S5 fixes it, then the case is
-re-run in a new S4 session `-s4b` that runs only that case; a behavior
+(an implementation defect, in repo mode) → S5 fixes it — one S5 may fix
+several defects classified in the same round — then the narrowed review
+(`-s3<letter>`, the next letter) runs over the range from HEAD at the S5's
+launch to its last commit, a wording-only fix included, and only then is
+each case a fixed defect failed re-run, in a new S4 session (`-s4b`, the
+next letter for a later one) that runs only that case; a behavior
 deviation → a roadmap line drafted for the release commit (plugin mode) or
 a reviewer-report line (repo mode); an observation → recorded. The same
-case still failing after two fixes is a stop. Every classification is a
+defect still failing after two fixes of it is a stop, counted per defect
+as stop condition 4 counts. Every classification is a
 clarification entry in the spec, committed by the main session as
 `docs(plans): record clarifications settled after <step>`. Why: the record
 separates evidence from judgment — S4 records, the main session decides —
 and the spec's clarification section is where decisions made during
-implementation live.
+implementation live. Why the narrowed review before the re-run: a fix the
+review has not seen is re-run as if it were verified (The verdict loop
+after S3b). Why per defect: two counts, one per case and one per defect,
+would stop the same run at different points.
 
-S5's task block: the classified defect, the case to make pass, and "commit
-the fix alone".
+S5's task block: each classified defect with its case, the check to make
+pass, and one commit per defect.
 
 **The narrowing rule.** Cases marked `(optional)` may be cut when the budget
 check fails, in the order listed, with Not exercised recorded. An unmarked
@@ -1406,23 +1422,30 @@ changes in no other way.]
   S3b (Phase 2), or an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
   name the finding — the row's issue ID and the review's run directory, or
   the case's number and the record's path (plugin mode) or S4's reply (repo
-  mode); `<one line>` is the finding in one sentence. The first line is the
-  block's own heading, as the verdict loop names it; the bracketed words
-  are written when `Allowed files:` is set, as the preamble's line is.
+  mode); `<one line>` is the finding in one sentence. One S5 may carry
+  several defects classified in the same round, one numbered entry each.
+  The first line is the block's own heading: for one defect
+  `Fix issue <ID> from run <run dir>: <one line>`, and for several
+  `Fix <n> issues from this round: <ID>, <ID>, …`. The bracketed words are
+  written when `Allowed files:` is set, as the preamble's line is. Why one
+  commit per defect: each fix then reverts on its own, and the narrowed
+  review and the per-defect stop count read one defect per commit.
 
 ````
 Fix issue <ID> from run <run dir>: <one line>
 
-The finding, as the reviewer or the acceptance recorded it:
-<the row, or the case's lines, quoted>
+The defects, each as the reviewer or the acceptance recorded it:
 
-The case to make pass: <the check that failed, with its PASS criterion — a
-review check, a self-test, a command, an acceptance case>.
+<k>. <ID> — <run dir, or the case and its record>: <one line>
+   The finding: <the row, or the case's lines, quoted>
+   The case to make pass: <the check that failed, with its PASS criterion
+   — a review check, a self-test, a command, an acceptance case>
 
-Make the fix[ inside the allowed files], run the checks the project's
-instruction files name for a change of this kind, and commit the fix alone
-— one commit in the repository's convention, touching nothing the finding
-does not need. Reply with the commit hash and one line on what changed.
+Fix each defect[ inside the allowed files], run the checks the project's
+instruction files name for a change of this kind, and commit each fix
+alone — one commit per defect, in the repository's convention, touching
+nothing its finding does not need. Reply with one line per defect: its ID,
+the commit hash, and what changed.
 ````
 
 - **S6, the removal commit** — Phase 4: repo mode with
@@ -1617,7 +1640,9 @@ the run ends with that message.
    verify.
 3. Guards red twice in a row — the second narrowed review that still
    fails.
-4. The same FAIL still failing after two fixes — a third fix is a guess.
+4. The same defect still failing after two fixes of it — a third fix is a
+   guess. Counted per defect, not per case, as Phase 3's Classification
+   counts.
 5. The session cap, the resume cap, or the budget exceeded — a question
    with the numbers.
 6. A rail breach — the worker has already reported it and ended.

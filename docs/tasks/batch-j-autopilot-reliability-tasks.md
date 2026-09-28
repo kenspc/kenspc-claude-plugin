@@ -979,7 +979,31 @@ Spec Step 5.1, J-L6. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 13: SKILL.md — the fix loop
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: S5's first line for several defects is
+  `Fix <n> issues from this round: <ID>, <ID>, …`; one defect keeps
+  `Fix issue <ID> from run <run dir>: <one line>`. The template lists the
+  defects as numbered entries (`<k>. <ID> — <run dir, or the case and its
+  record>: <one line>`, then the finding and the case to make pass) and
+  asks for one commit per defect, one reply line per defect; the bullet
+  above it gives the Why (each fix reverts alone; the narrowed review and
+  the per-defect count read one defect per commit). The narrowed review's
+  range is now "from HEAD at the S5's launch to its last commit" (the
+  state file's `head:`), replacing `<S3b HEAD>..<fix HEAD>`, which did not
+  fit a second S5 or a Phase 3 fix.
+- Changes/tradeoffs: the verdict loop and Phase 3's Classification both
+  say one S5 may fix several defects of a round and that every S5 is
+  followed by the narrowed review, a wording-only fix included, before any
+  case re-run; the verdict loop's Why is the batch's evidence in its own
+  words (one S5 fixed six defects, two in wording only, and those two had
+  no review after them). Classification re-runs "each case a fixed defect
+  failed", each in its own `-s4<letter>` session, keeping the S4 block's
+  one-case re-run. Stop condition 4 and Classification's two-fixes stop
+  count per defect, with the Why that two counts would stop the same run
+  at different points; the positive control over `c2b0d9d` printed both
+  former sentences, and neither remains.
 
 Spec Step 5.1, J-L7. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
