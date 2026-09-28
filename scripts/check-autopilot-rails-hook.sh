@@ -287,6 +287,14 @@ run_fixtures() {
     # macOS target; then a link the guard made, named as the only root with
     # the write under its target, and the other way round.
     fx "$hook" "symlinked root /tmp/ in the driver's roots" allow 1 "$r" Write "$FX_REPO" "/tmp/kenspc-rails-fixture/link-check.txt"
+    # Where /tmp is a link (on macOS, to /private/tmp), each name alone as
+    # the root holds a target written under the other: the driver's roots
+    # name both, so only these show the link resolved.
+    if [[ -L /tmp ]]; then
+        t=$(cd /tmp && pwd -P)
+        fx "$hook" "symlinked root /tmp alone, target under its link target" allow 1 "/tmp" Write "$FX_REPO" "$t/kenspc-rails-fixture/a.txt"
+        fx "$hook" "symlinked root: /tmp's link target alone, target under /tmp" allow 1 "$t" Write "$FX_REPO" "/tmp/kenspc-rails-fixture/a.txt"
+    fi
     fx "$hook" "symlinked root: the link as root, target under the real directory" allow 1 "$WORK/link" Write "$FX_REPO" "$WORK/real/a.txt"
     fx "$hook" "symlinked root: the real directory as root, target through the link" allow 1 "$WORK/real" Write "$FX_REPO" "$WORK/link/a.txt"
     fx_deny "$hook" "symlinked root: a sibling of the link's target" "$WORK/link" Write "$FX_REPO" "$WORK/other/a.txt"
