@@ -587,7 +587,7 @@ its applied effort written `—`: in the applied part `—` means the records
 carry no effort field, while in a requested part it means no flag was
 passed.
 Every main-loop record counts except the ones Claude Code writes for an
-API error — `message.model` `<synthetic>`, or `isApiErrorMessage` — which
+API error — `message.model` `<synthetic>`, or `isApiErrorMessage` `true` — which
 the pass-through read skips too: they are the harness's own, not a
 model's response, and carry no effort field, so counted they would mark a
 worker that hit one dropped connection as a mismatch. Several values are

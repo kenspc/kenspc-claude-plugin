@@ -68,8 +68,8 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
     effort written `—`: in the applied part `—` means the records carry no
     effort field.
   - A record Claude Code writes for an API error — `message.model`
-    `<synthetic>`, or `isApiErrorMessage` — is left out, here and when the
-    pass-through model is read: it is the harness's own, not a model's
+    `<synthetic>`, or `isApiErrorMessage` `true` — is left out, here and
+    when the pass-through model is read: it is the harness's own, not a model's
     response, and counted it would mark a worker that hit one dropped
     connection as a mismatch. A session left with only such records is
     `not observed`.

@@ -300,13 +300,14 @@ model and the effort this session runs at now, which a role takes where
   assistant record — a line whose `type` is `assistant`, in that file
   itself and not in a subagent's file — carries the model in
   `message.model`, a record whose `message.model` is `<synthetic>`, or
-  that carries `isApiErrorMessage`, being skipped. Why skip it: Claude
+  whose `isApiErrorMessage` is `true`, being skipped. Why skip it: Claude
   Code writes such a record into the main loop for an API error, and
   while a Bash call runs the current message's
   own records need not be in the file yet, so after a turn that ended on
   an API error the last record can be that one; `<synthetic>` names no
   model, and passed to `--model` it would keep every undeclared worker,
-  and each resume of it, from starting.
+  and each resume of it, from starting. Why `true` and not the field's
+  presence: Claude Code writes the field as `false` too.
 
 A value that cannot be read — the variable empty, no transcript, no
 assistant record, no `message.model` — is recorded as `not determined` and
@@ -633,7 +634,7 @@ Every worker is one launch, one wait, one return.
   only that file's main-loop assistant records — its lines whose `type` is `assistant`, and
   not a subagent's file — each one's `message.model` and `effort`,
   skipping the records the pass-through read skips: a record whose
-  `message.model` is `<synthetic>`, or that carries `isApiErrorMessage`.
+  `message.model` is `<synthetic>`, or whose `isApiErrorMessage` is `true`.
   Why skip them: Claude Code writes such a record into the main loop for
   an API error, with no `effort` field; it is the harness's own and not a
   model's response, and counted it would mark a worker that hit one
