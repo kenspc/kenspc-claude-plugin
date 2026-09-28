@@ -1017,6 +1017,14 @@ on Windows.
   none, and so would a Claude Code release that dropped the field. A
   mismatch is marked in the state file and the reviewer report, never a
   stop.
+- **A passed-through model loses its context-size suffix.** The model ID
+  in a transcript carries no context-size suffix, so when your session
+  runs `<model>[1m]`, a role without a declared model is launched with
+  `--model <model>` and may run at the standard context window, while its
+  state line shows a match. A role that needs the larger window declares
+  it — `- S3: model <model>[1m]` — and the model check removes a trailing
+  `[...]` from the requested value before it compares, so the suffix is
+  no mismatch.
 - **An existing CLAUDE.md.** `/kenspc-init` does not rewrite a CLAUDE.md
   you already have, at the root or in `.claude/`. On your yes it adds one
   line, the import (`@AGENTS.md`; `@../AGENTS.md` from `.claude/CLAUDE.md`),

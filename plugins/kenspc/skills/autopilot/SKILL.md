@@ -318,6 +318,14 @@ stop: the transcript's fields are an undocumented internal format, read as
 evidence and not as a contract, and a run that stopped on them would stop
 on a format change that has nothing to do with the batch.
 
+The model ID in the transcript carries no context-size suffix, so the
+pass-through model never carries one: a session running `<model>[1m]`
+passes `<model>`. A role that needs the larger context window declares
+it, `- S3: model <model>[1m]`, and the model match removes a trailing
+`[...]` from the requested value before it compares, so the declared
+suffix reads as no mismatch. Why say so: a long role left undeclared, S3
+or S3b, may then run at the standard window while its line shows a match.
+
 ### The start checks
 
 Passing: every line below holds. It fails on the first that does not, and

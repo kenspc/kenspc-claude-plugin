@@ -73,14 +73,17 @@ counts are unchanged: `guards run: 11`, `self-tests run: 10`.
     or read, or a model that cannot be read, is `not observed`, which
     takes no `MISMATCH:` and is not counted: the transcript's fields are
     an undocumented format, evidence and not a contract.
-- **Known behavior: four items.** A role's model reaches every subagent
+- **Known behavior: five items.** A role's model reaches every subagent
   of its worker, through `model: inherit`; the agents that set
   `effort: xhigh` keep it whatever the role's effort; a headless worker
   can spend usage credits without asking, in `-p` mode, when its model's
   requests count against them, and a role without a declared model takes
   the main session's; the applied values come from an undocumented format
   and are `not observed` when the transcript or its model cannot be read,
-  while a record with no effort field is the mismatch `effort not applied`.
+  while a record with no effort field is the mismatch `effort not applied`;
+  the pass-through model carries no context-size suffix, since the
+  transcript's model ID has none, so a role that needs the larger window
+  declares `<model>[1m]`.
 
 ### Changed
 
