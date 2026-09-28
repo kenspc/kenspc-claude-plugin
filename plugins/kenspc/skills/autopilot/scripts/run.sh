@@ -112,7 +112,8 @@
 #
 # Bash 3.2 (the one macOS ships): no associative arrays, no array-reading
 # builtins, no case-modifying expansions; POSIX tools plus uuidgen or python3
-# for the UUID.
+# for the UUID, and git: a launch reads the worker's repository with it when
+# it is present, and --self-test needs it for the repository it creates.
 
 set -u
 
