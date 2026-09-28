@@ -417,7 +417,25 @@ Spec Step 3.1 (J-L2). Files: `plugins/kenspc/skills/task-implement/SKILL.md`,
 
 ### Task 5: task-implementer's scratch convention
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the new section is `SCRATCH SPACE`, placed after QUALITY
+  CHECKLIST (whose failing-capable test rule the mutation check serves) and
+  before STUCK HANDLING. It references the Scratch space bullet by the
+  block's two markers and the file path, and the three-step rule by the
+  RUN_DIR bullet of `${CLAUDE_PLUGIN_ROOT}/agents/regression-verifier.md`,
+  without restating either. The missing-`RUN_DIR` refusal is folded into
+  PREREQUISITE CHECK item 1 with one message naming both keys, so the
+  numbering of items 2-6 stays; the frontmatter description names the
+  RUN_DIR requirement too.
+- Changes/tradeoffs: the section names the concrete forms J-A1 checks
+  (`sed -i` on, `cp` over, `.bak`/`.orig` copy of a tracked file). It says
+  nothing of scratch space goes into a system temporary directory, with the
+  Why that such a probe has stopped an unattended run whose rails allow no
+  write there; it does not mention the harness scratchpad, since the task
+  forbids allowing any write under `/tmp` and the scratchpad lies there.
+  Writes under `/tmp`: none.
 
 Depends on: Task 4
 

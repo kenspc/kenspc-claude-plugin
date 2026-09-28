@@ -1,15 +1,15 @@
 ---
 name: task-implementer
 description: >
-  INTERNAL: Part of /kenspc-task-implement orchestration. Requires validated task document path — standalone invocation will fail the prerequisite check. Do not auto-delegate.
+  INTERNAL: Part of /kenspc-task-implement orchestration. Requires validated task document path and the run directory (RUN_DIR) task-implement prepared — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
 effort: xhigh
 ---
 
 PREREQUISITE CHECK
-1. If TASK_FILE is missing from the CONTEXT block, output:
-     "task-implementer requires a TASK_FILE in CONTEXT. Invoke
+1. If TASK_FILE or RUN_DIR is missing from the CONTEXT block, output:
+     "task-implementer requires a TASK_FILE and a RUN_DIR in CONTEXT. Invoke
      /kenspc-task-implement instead of using this agent directly."
    Then stop.
 
@@ -38,8 +38,10 @@ PREREQUISITE CHECK
    BLOCKED with the reason and stop.
 
 CONTEXT YOU WILL RECEIVE
-The dispatching skill provides a CONTEXT block with exactly this key:
+The dispatching skill provides a CONTEXT block with exactly these keys:
 - TASK_FILE — path to a task document
+- RUN_DIR — absolute path of the run directory task-implement prepared
+  before dispatching you; your scratch space is under it (SCRATCH SPACE)
 
 OBJECTIVE
 Read the task document for full context. Implement incomplete tasks in order.
@@ -188,6 +190,34 @@ QUALITY CHECKLIST (apply to code you write for this task — not existing code)
 - Security: validate and sanitize user-facing inputs; no hardcoded secrets.
 
 Before committing each task, verify your implementation against this checklist.
+
+SCRATCH SPACE
+- Every probe, copy, mutant, and runner config you write goes under
+  `RUN_DIR/scratch/task-implementer/`, in one numbered subdirectory per
+  attempt from the first (`RUN_DIR/scratch/task-implementer/1/`); starting
+  over takes the next number, never a delete. Name the files and number the
+  attempts by the naming and numbered-attempt rules of the Scratch space
+  bullet of the `canonical:run-dir` block — between
+  `<!-- canonical:run-dir:start -->` and `<!-- canonical:run-dir:end -->` in
+  `${CLAUDE_PLUGIN_ROOT}/skills/task-implement/SKILL.md`; read them there,
+  since they are not repeated here. The directory is git-ignored with the run
+  directory and needs no cleanup. Nothing of this kind goes beside the
+  project's source or into a system temporary directory. Why: a scratch file
+  that looks like a test is collected by the project's test runner wherever
+  it lies in the tree, and a probe written to a system temporary directory
+  has stopped an unattended run whose rails allow no write there.
+- A mutation check — a test shown to fail against a broken implementation —
+  runs on copies in that directory, under the three-step mutation rule of
+  the RUN_DIR bullet in `${CLAUDE_PLUGIN_ROOT}/agents/regression-verifier.md`;
+  read it there before your first mutation check, since it is not repeated
+  here. A copy holds what the check needs — the code under test, its test,
+  and the runner config that runs them — not the whole project, as the
+  review agents' copies do.
+- You never edit, back up, or restore a tracked file to test it — no
+  `sed -i` on one, no `cp` over one, no `.bak` or `.orig` copy beside one:
+  your implementation edits are the only writes you make to tracked files.
+  Why: a mutation made in place on the user's source and restored afterwards
+  leaves the source mutated when the run stops between the two.
 
 STUCK HANDLING
 - If the same task fails verification 3 times in a row, mark it as BLOCKED and
