@@ -228,6 +228,10 @@ run_fixtures() {
     fx_deny "$hook" "rm spelling bundle -vfr" "$r" Bash "$FX_REPO" 'rm -vfr build'
     fx_deny "$hook" "rm spelling split -f -r" "$r" Bash "$FX_REPO" 'rm -f -r build'
     fx_deny "$hook" "rm spelling path prefix /bin/rm" "$r" Bash "$FX_REPO" '/bin/rm -rf build'
+    # An unquoted backslash escapes the next character, and before a line
+    # break it joins the lines.
+    fx_deny "$hook" "rm spelling with a leading backslash \\rm" "$r" Bash "$FX_REPO" '\rm -rf build'
+    fx_deny "$hook" "rm flags after a line continuation" "$r" Bash "$FX_REPO" $'rm \\\n  -rf build'
     # rm positions, denied.
     fx_deny "$hook" "rm position line start" "$r" Bash "$FX_REPO" $'echo start\nrm -rf build'
     fx_deny "$hook" "rm position after ;" "$r" Bash "$FX_REPO" 'ls; rm -rf build'
