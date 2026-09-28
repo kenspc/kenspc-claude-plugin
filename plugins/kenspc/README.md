@@ -652,7 +652,11 @@ through `git rm`. No `git push`, `git tag`, or release; no resource the
 brief does not name; no secrets. A worker's subagents never see its
 prompt, so the rails tell the worker to write them into every subagent
 prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
-dispatches its skills make. Beside the text, the plugin's rails hook
+dispatches its skills make. A dispatch that has no such key —
+task-implementer's, and the three document reviewers' — carries no rails
+text: for those agents the hook's two rails below are the only ones
+enforced, and a write of theirs through Bash is neither denied nor listed
+under `Rail observations`. Beside the text, the plugin's rails hook
 enforces two of them: the driver marks each worker it starts
 (`KENSPC_AUTOPILOT_WORKER=1`) and passes its write roots
 (`KENSPC_AUTOPILOT_WRITE_ROOTS`: the worker's repository, the workspace,
