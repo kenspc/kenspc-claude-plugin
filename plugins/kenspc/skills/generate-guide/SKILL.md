@@ -59,13 +59,18 @@ If no arguments are provided, ask the user which project path to target.
 **Goal**: produce an accurate, beginner-friendly guide for the target
 project, grounded in actual code.
 
-**Inputs**: PROJECT_PATH; CUSTOM_INSTRUCTIONS; project's CLAUDE.md (project
-+ root), README, config files (package.json, *.csproj, docker-compose.yml,
-.env.example, app.json, eas.json, etc.); directory listing.
+**Inputs**: PROJECT_PATH; CUSTOM_INSTRUCTIONS; the project's instruction
+files (project + root), README, config files (package.json, *.csproj,
+docker-compose.yml, .env.example, app.json, eas.json, etc.); directory
+listing. The project's instruction files are its CLAUDE.md and AGENTS.md
+files — at the root, in `.claude/`, or in a subdirectory — and the files a
+CLAUDE.md imports with `@`, whether or not Claude Code loaded them in this
+session.
 
 **DONE when**:
-- Output path and filename are resolved (priority: CLAUDE.md convention →
-  existing guide file with overwrite-or-new prompt → ask the user).
+- Output path and filename are resolved (priority: a convention in the
+  project's instruction files → existing guide file with overwrite-or-new
+  prompt → ask the user).
 - Document language is set (user-specified → English default).
 - Any unclear setup gaps have been raised with the user (deployment target,
   required accounts/credentials not in config, unscripted database setup).
@@ -133,8 +138,8 @@ Section 5 - Build and Release (if applicable):
 - Versioning or release process (if defined in project).
 
 Section 6 - Deployment:
-- Target environment and infrastructure (as found in CLAUDE.md or project
-  config).
+- Target environment and infrastructure (as found in the project's
+  instruction files or project config).
 - Deployment steps (manual or CI/CD pipeline).
 - Environment-specific configuration (staging vs production).
 - Post-deployment verification steps.

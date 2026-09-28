@@ -96,7 +96,10 @@ description` columns, where `#` is an issue ID — the angle's letter (`R`, `E`,
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
-   commands, and project conventions (prioritize CLAUDE.md).
+   commands, and project conventions (prioritize the project's instruction files).
+   The project's instruction files are its CLAUDE.md and AGENTS.md files — at the
+   root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports
+   with `@`, whether or not Claude Code loaded them in this session.
 2. If the CONTEXT block's REVIEW_SCOPE is "task": read the task document at the path
    given by CONTEXT TASK_FILE for context, and find its Doc-sync task — the
    section under the heading `### Task N: Doc-sync` (N its number), up to the
@@ -250,20 +253,24 @@ to a stated reason instead of a different threshold.
 - HIGH — a concrete failure path: a wrong result, data loss, a crash, or a
   security exposure. Fix.
 - MEDIUM — a defect or gap with a stated consequence, or a departure from a
-  written convention in CLAUDE.md, README, or adjacent code. Fix if the change
-  is localized (single file, few lines) and low-risk. If the fix spans multiple
-  files or requires structural changes, DEFER with a detailed plan.
+  written convention in the project's instruction files, README, or adjacent
+  code. Fix if the change is localized (single file, few lines) and low-risk.
+  If the fix spans multiple files or requires structural changes, DEFER with a
+  detailed plan.
 - LOW — a small, localized issue anchored to a written convention or a specific
   defect. Fix on the same localized, low-risk terms as MEDIUM; otherwise DEFER.
 
 NOT APPLICABLE is for a finding that, once the code is read, does not meet the
 definition for its severity: the failure path does not occur, the cited
 convention does not say what the report claims, or it is a style preference
-with no written convention behind it. The row's Action cell names which part
-of the definition fails, after the action (for example
-`NOT APPLICABLE — cited rule not in CLAUDE.md`). A DEFERRED entry likewise
-names the constraint in its Deferred Issues paragraph — spans files, needs
-structural change, needs a user decision — rather than restating the severity.
+with no written convention behind it. A cited rule counts as absent only
+after every one of the project's instruction files was searched for it. Why:
+the rule may sit in an AGENTS.md or an imported file this session did not
+load. The row's Action cell names which part of the definition fails, after
+the action (for example `NOT APPLICABLE — cited rule in no instruction file`).
+A DEFERRED entry likewise names the constraint in its Deferred Issues
+paragraph — spans files, needs structural change, needs a user decision —
+rather than restating the severity.
 
 PER-ISSUE OUTPUT CONTRACT
 Every accountability entry produced by this agent is a structured record with
@@ -300,13 +307,13 @@ that order.
 <!-- example:schema-b:start -->
 ## Fixes Applied
 
-| # | Source | short_label                      | Severity | File:Line           | Action                                       | Commit  |
-|---|--------|----------------------------------|----------|---------------------|----------------------------------------------|---------|
-| 1 | B1, E1 | null deref in user lookup        | HIGH     | src/user.ts:42      | FIXED                                        | abc1234 |
-| 2 | R1     | missing 404 for unknown order id | MEDIUM   | src/orders.ts:88    | DEFERRED                                     | —       |
-| 3 | Q1     | log call bypasses shared logger  | LOW      | src/audit.ts:14     | NOT APPLICABLE — cited rule not in CLAUDE.md | —       |
-| 4 | T1     | charge amount never asserted     | MEDIUM   | test/pay.test.ts:30 | FIXED                                        | def5678 |
-| 5 | E2     | empty cart treated as missing    | LOW      | src/cart.ts:57      | FIXED                                        | 9ab0cde |
+| # | Source | short_label                      | Severity | File:Line           | Action                                             | Commit  |
+|---|--------|----------------------------------|----------|---------------------|----------------------------------------------------|---------|
+| 1 | B1, E1 | null deref in user lookup        | HIGH     | src/user.ts:42      | FIXED                                              | abc1234 |
+| 2 | R1     | missing 404 for unknown order id | MEDIUM   | src/orders.ts:88    | DEFERRED                                           | —       |
+| 3 | Q1     | log call bypasses shared logger  | LOW      | src/audit.ts:14     | NOT APPLICABLE — cited rule in no instruction file | —       |
+| 4 | T1     | charge amount never asserted     | MEDIUM   | test/pay.test.ts:30 | FIXED                                              | def5678 |
+| 5 | E2     | empty cart treated as missing    | LOW      | src/cart.ts:57      | FIXED                                              | 9ab0cde |
 
 ## Per-angle Results
 

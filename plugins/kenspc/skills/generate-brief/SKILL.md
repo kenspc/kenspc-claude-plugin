@@ -47,7 +47,11 @@ needed. A transcription of what the user said is not a brief.
 ## Prerequisites
 
 None. The skill works with no project context (pure idea) or with a project
-directory (uses CLAUDE.md and config to inform Hidden Context).
+directory (uses the project's instruction files and config to inform Hidden
+Context). The project's instruction files are its CLAUDE.md and AGENTS.md
+files — at the root, in `.claude/`, or in a subdirectory — and the files a
+CLAUDE.md imports with `@`, whether or not Claude Code loaded them in this
+session.
 
 ## Arguments
 
@@ -84,8 +88,8 @@ phrasing alone is insufficient; the field's presence is the anchor.
 
 **Goal**: understand the user's true need through structured conversation.
 
-**Inputs**: ROUGH_IDEA from $ARGUMENTS, optional project context (CLAUDE.md,
-config files), the discovery framework at
+**Inputs**: ROUGH_IDEA from $ARGUMENTS, optional project context (the
+project's instruction files, config files), the discovery framework at
 `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md`.
 
 **DONE when** either:
@@ -98,8 +102,9 @@ config files), the discovery framework at
 **Constraints**:
 - No drafts, outlines, or templates during Discovery — drafts anchor the
   conversation prematurely.
-- Read project context (CLAUDE.md, README.md, config files, directory listing)
-  silently before asking questions when in a project directory.
+- Read project context (the project's instruction files, README.md, config
+  files, directory listing) silently before asking questions when in a
+  project directory.
 - Read `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md` and use its five
   dimensions, four input clarity levels, conversation rules, and exit
   conditions as the structural guide.
@@ -128,7 +133,8 @@ config files), the discovery framework at
 structure, then point the user to the next step.
 
 **Inputs**: Discovery transcript and decisions from Phase 1; project's
-documentation conventions (CLAUDE.md or `docs/briefs/` default).
+documentation conventions (the project's instruction files or `docs/briefs/`
+default).
 
 **DONE when**:
 - The brief is saved at the chosen path and reflects what was actually
@@ -138,7 +144,7 @@ documentation conventions (CLAUDE.md or `docs/briefs/` default).
   each `needs prototype` entry — see Next-step suggestion).
 
 **Output path resolution** (priority order):
-1. CLAUDE.md-specified brief or documentation directory.
+1. A brief or documentation directory the project's instruction files specify.
 2. `docs/briefs/` (create if missing).
 3. Ask the user where to save and what to name the file.
 

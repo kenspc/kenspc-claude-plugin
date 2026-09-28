@@ -608,7 +608,7 @@ run_self_test() {
         "$REVIEW_REL" "$IMPLEMENT_REL" || return $?
     # Recount: each mutation below breaks exactly one recount rule.
     mutate_and_expect "example row action" "$FIXER_REL" \
-        "| NOT APPLICABLE — cited rule not in CLAUDE.md |" "| DEFERRED |" || return $?
+        "| NOT APPLICABLE — cited rule in no instruction file |" "| DEFERRED |" || return $?
     mutate_and_expect "per-angle cell" "$FIXER_REL" \
         "| Q     | 0     | 0        | 1              |" "| Q     | 0     | 1        | 0              |" || return $?
     mutate_and_expect "example statistics number" "$FIXER_REL" \

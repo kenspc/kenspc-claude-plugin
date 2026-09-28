@@ -35,7 +35,8 @@ plugins/kenspc/
 ├── references/                  # Example documents for user onboarding
 ├── shared/                      # Cross-skill resources (referenced via ${CLAUDE_PLUGIN_ROOT}/shared/)
 │   ├── discovery-framework.md   # Discovery logic shared by generate-brief and generate-plan
-│   └── code-craft-principles.md # Code-craft principles shared by task-implementer, code-fixer, quality-reviewer
+│   ├── code-craft-principles.md # Code-craft principles shared by task-implementer, code-fixer, quality-reviewer
+│   └── instruction-files.md     # The definition of "the project's instruction files", copied into every file that uses the term
 ├── skills/
 │   ├── init-project/
 │   │   ├── SKILL.md             # No review phase — its mechanical checks and the user's confirmation of the file list are the gate
@@ -93,7 +94,7 @@ the empty husk had been running as a no-op since.
 
 References live in `references/` as example documents (task format, plan format) to help users get started.
 
-Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. Two entries today: `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions); and `code-craft-principles.md`, referenced by three agents (`task-implementer`, `code-fixer`, `quality-reviewer`) — it defines the Simplicity First and Surgical Changes principles with stack-specific C# / TypeScript diff examples, and explicitly does NOT define Goal-Driven Execution (covered by DONE-criteria in every SKILL), Think Before Coding for ad-hoc interactions (belongs in user-level or project-level CLAUDE.md), per-language style guides (delegated to project CLAUDE.md), or agent dispatch order / CONTEXT contracts (defined in the dispatching SKILL.md and each agent's header).
+Shared resources live in `shared/` as cross-skill files (prompt frameworks, templates) referenced via `${CLAUDE_PLUGIN_ROOT}/shared/<file>.md`. Three entries today: `discovery-framework.md`, loaded by both `generate-plan` Phase 1 and `generate-brief` Phase 1 to provide a single source of truth for the discovery conversation pattern (five dimensions, four input clarity levels, exit conditions); and `code-craft-principles.md`, referenced by three agents (`task-implementer`, `code-fixer`, `quality-reviewer`) — it defines the Simplicity First and Surgical Changes principles with stack-specific C# / TypeScript diff examples, and explicitly does NOT define Goal-Driven Execution (covered by DONE-criteria in every SKILL), Think Before Coding for ad-hoc interactions (belongs in user-level or project-level CLAUDE.md), per-language style guides (delegated to the project's instruction files), or agent dispatch order / CONTEXT contracts (defined in the dispatching SKILL.md and each agent's header); and `instruction-files.md` (4.1.0), the one place the plugin defines "the project's instruction files" — a project's CLAUDE.md and AGENTS.md files, at the root, in `.claude/`, or in a subdirectory, and the files a CLAUDE.md imports, whether or not Claude Code loaded them — with its Why. No skill or agent reads it at run time: each file that uses the term carries the definition sentence, and `check-instruction-files.sh` holds every copy to this one.
 
 ### Portable Paths
 
@@ -419,7 +420,9 @@ the plugin README or this file, or the reviewers' ROLE, run
 `check-run-contract.sh`. After editing the Prototype line (in
 `generate-brief/SKILL.md` or `prototype/SKILL.md`) or the prototype
 skill's leftovers command, run
-`check-doc-sync-anchors.sh`. What each
+`check-doc-sync-anchors.sh`. After editing a file that uses "the project's
+instruction files", or `shared/instruction-files.md`, run
+`check-instruction-files.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -592,12 +595,27 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `python`, `py`, then `node`, each probed by running it, which skips the
   Windows Store `python3` alias — so the same command works on macOS,
   Windows, and WSL2.
+- `check-instruction-files.sh` — guards the definition of "the project's
+  instruction files" (4.1.0). It takes the sentence from
+  `shared/instruction-files.md` (from the line beginning
+  `The project's instruction files are` through the first line ending in a
+  period) and requires it, whitespace-normalized, in every carrier: each
+  file under `skills/`, `agents/`, `commands/`, or `shared/` whose text
+  names "instruction files" (case-insensitive; the setting name
+  `instructionFiles` does not match), and the plugin README. Carriers are
+  found rather than listed, so a file that starts using the term without
+  the definition fails. The copies are inlined rather than referenced by
+  path for the reason the writer agents inline the code-craft principles:
+  every dispatch needs the definition, and its operative part — whether or
+  not Claude Code loaded the files — is what an agent that skipped a
+  runtime Read would get wrong.
 
-Nine of the guards (`check-canonical-dispatch.sh`,
+Ten of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
 `check-notes-format-sync.sh`, `check-doc-sync-anchors.sh`,
-`check-no-model-names.sh`, `check-run-contract.sh`, `check-json.sh`) also
+`check-no-model-names.sh`, `check-run-contract.sh`, `check-json.sh`,
+`check-instruction-files.sh`) also
 accept a `--self-test` flag
 that runs
 a mutation regression fixture in a temp workdir (positive path, negative

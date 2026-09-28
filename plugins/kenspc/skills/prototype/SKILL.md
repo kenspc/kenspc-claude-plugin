@@ -97,9 +97,12 @@ ask (a system reminder to work without stopping), stop; nothing is built.
 **Goal**: one question, the result that settles it, the kind (logic, UI,
 feature), the location, and the resources — with every gate below passed.
 
-**Inputs**: the brief; the project's CLAUDE.md, README, and config files,
-read silently first — they name the stack, the commit conventions, a
-prototype location, and the development database. Before writing anything,
+**Inputs**: the brief; the project's instruction files, README, and config
+files, read silently first — they name the stack, the commit conventions, a
+prototype location, and the development database. The project's
+instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
+`.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
+`@`, whether or not Claude Code loaded them in this session. Before writing anything,
 note what `git -c core.quotePath=false status --porcelain -uall` lists, so
 the run can tell its own files from the user's and knows which tracked files
 have uncommitted changes.
@@ -224,7 +227,7 @@ written once, in the Writing rules for the brief in
 
 - The location is `prototypes/<slug>/` at the repository root
   (`git rev-parse --show-toplevel`), `<slug>` a short kebab-case name for
-  the question, unless the project's CLAUDE.md names another. An existing
+  the question, unless the project's instruction files name another. An existing
   `prototypes/<slug>/` holding only leftovers of an earlier run — files git
   does not track — is not a conflict: the next free `<slug>-<n>/` is used.
   One holding the tracked files of an earlier prototype that was never
@@ -236,16 +239,16 @@ written once, in the Writing rules for the brief in
   that wrote into an earlier prototype's files would restore them in its
   own remove commit, leaving that prototype in HEAD unnamed.
 - A location conflict is asked about: `prototypes/` already holds tracked
-  files that are not prototypes, or CLAUDE.md's location does not fit the
-  kind (an outside-the-app location for a UI prototype that can only render
-  in the app — the in-app rule below then decides). In a session that
-  cannot ask (a system reminder to work without stopping), take the default
-  location and name it in the final message.
+  files that are not prototypes, or the location the instruction files name
+  does not fit the kind (an outside-the-app location for a UI prototype that
+  can only render in the app — the in-app rule below then decides). In a
+  session that cannot ask (a system reminder to work without stopping), take
+  the default location and name it in the final message.
 - A logic or UI prototype that runs on its own goes to the location.
 - A UI prototype that can only render inside the app is the one in-app
-  kind: its location comes from CLAUDE.md, or is asked. In a session that
-  cannot ask (a system reminder to work without stopping), with no
-  CLAUDE.md location, nothing is built and the entry stays unsettled with
+  kind: its location comes from the project's instruction files, or is
+  asked. In a session that cannot ask (a system reminder to work without
+  stopping), with no location in them, nothing is built and the entry stays unsettled with
   the reason. Why: no default location inside someone's app is defensible,
   and a guessed one is an edit to the user's source tree nobody chose.
 - A feature prototype that needs the app's runtime runs outside the app,
@@ -283,7 +286,7 @@ of the tree, and a manifest change alters what the project builds.
 - The development database is recognized by name only: a development-named
   configuration file (`appsettings.Development.json`, `.env.development`,
   `.env.development.local`), the project's user-secrets, or a development
-  database the project's CLAUDE.md or README names. Any other connection is
+  database the project's instruction files or README name. Any other connection is
   asked about: may it be used. In a session that cannot ask (a system
   reminder to work without stopping), it is not used. Production resources
   are never touched. Why: an unsuffixed `.env` or `appsettings.json` can
@@ -333,7 +336,7 @@ what a session that cannot ask does in place of asking.
 | The entry the run takes, named or taken with none named, is `answered`, holds `Answer:`, or has an unrecognized status word and holds `Prototype:` | Prototype it again? | Stop, the frame at the head of the last message; the entry unchanged |
 | The named entry's status word is not recognized, and it holds neither `Answer:` nor `Prototype:` | Prototype it, or stop | Stop, the frame at the head of the last message; the entry unchanged |
 | A location conflict | Where | The default location, named in the final message |
-| A UI prototype that can only render in the app, and CLAUDE.md names no location | Where in the app | Nothing is built; the entry stays unsettled with the reason |
+| A UI prototype that can only render in the app, and the project's instruction files name no location | Where in the app | Nothing is built; the entry stays unsettled with the reason |
 | A UI prototype in the app: a tracked file with uncommitted changes, or the project's manifest | Go on, commit first, or stop | Nothing is built; the entry stays unsettled with the reason |
 | A feature prototype that needs the app's runtime and cannot run outside it | — | Nothing is built, in either kind of session; the entry stays unsettled with the reason (one that held `Answer:` is left as it was, gaining at most a derived `Settled by:`, as § The question says), and the exit says widening the exception is the user's decision |
 | A connection the development configuration does not name | May it be used | It is not used |

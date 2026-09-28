@@ -31,21 +31,26 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 OBJECTIVE
 Review the generated task document against the source plan and actual project
 to ensure it is complete, correctly ordered, actionable, and consistent with
-CLAUDE.md. Fix task-level issues directly. Record plan-level issues without
-modifying the plan. Track every change so you can report them at the end.
+the project's instruction files. Fix task-level issues directly. Record
+plan-level issues without modifying the plan. Track every change so you can
+report them at the end.
 
 PREREQUISITES
 1. Read the task document at the path given by CONTEXT TASK_DOC_PATH in full.
 2. Read the source plan document at the path given by CONTEXT SOURCE_PATH in
    full.
 3. If the CONTEXT block's PROJECT_PATH value is not "N/A":
-   - Read CLAUDE.md for project conventions, tech stack, and constraints.
+   - Read the project's instruction files for project conventions, tech
+     stack, and constraints. The project's instruction files are its
+     CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
+     subdirectory — and the files a CLAUDE.md imports with `@`, whether or
+     not Claude Code loaded them in this session.
    - Scan the project structure and key config files.
 4. If the task document is not yet tracked by git
    (`git ls-files --error-unmatch <TASK_DOC_PATH>` exits non-zero), commit it
    unchanged before any review fix: stage and commit only that file, with
    the message `docs: add task <file name without extension>` adapted to
-   the commit conventions in the project's CLAUDE.md. If a commit hook
+   the commit conventions in the project's instruction files. If a commit hook
    rejects it, stop and report the error. Why: each angle's fix then shows
    as its own diff against the document as written; without that baseline
    the first review commit carries the whole document and hides what the
@@ -101,15 +106,15 @@ one).
    - Trace through the task list in order: could a developer execute each
      task without needing to jump ahead or back?
 
-3. Consistency with CLAUDE.md
+3. Consistency with the project's instruction files
    Passing: every task can be executed as written without departing from a
-   rule in a loaded CLAUDE.md (project or user level; both are loaded into
-   this session), and no task text the implementer will carry into a code
-   artifact or a durable document is in a language other than that
-   artifact's own. A preference no loaded CLAUDE.md states is not a finding.
+   rule in the project's instruction files or in the user-level CLAUDE.md
+   loaded into this session, and no task text the implementer will carry
+   into a code artifact or a durable document is in a language other than
+   that artifact's own. A preference none of them states is not a finding.
    Failure modes:
    (1) Written-rule departure: a task instructs a step, tool, command, commit
-       form, or file placement that a loaded CLAUDE.md forbids or prescribes
+       form, or file placement that one of them forbids or prescribes
        differently. Fix the task to follow the rule.
    (2) Language carry-over: acceptance criteria, commit-message text,
        identifiers, comments, or document content given in a language other
@@ -118,11 +123,11 @@ one).
        identifiers in English) and to the target document's own language.
        Fix by rewriting those fragments.
    (3) Undecided git workflow step: a branch, pull-request, rebase, or tag
-       step that the plan did not prescribe, or that a loaded CLAUDE.md
+       step that the plan did not prescribe, or that one of them
        contradicts. Fix the task back to the default — no branch, commits on
        the current branch — and record a Plan-Level Concern naming both
-       sources, so the user decides. A step the plan prescribes and no
-       CLAUDE.md contradicts is not a finding.
+       sources, so the user decides. A step the plan prescribes and none of
+       them contradicts is not a finding.
    Why: the task document is the last artifact a human reads before an
    unattended run, so it is the last place a conflict with the project's
    written rules can be caught cheaply.
@@ -144,7 +149,8 @@ step, plan's technical approach conflicts with existing code):
   and what the user should consider.
 
 Dual issues (a plan-level cause with a task-level symptom — for example a
-plan instruction that a loaded CLAUDE.md contradicts, carried into a task):
+plan instruction that the project's instruction files contradict, carried
+into a task):
 → Fix the task document as for a task-level issue, and also record the
   cause under Plan-Level Concerns as for a plan-level issue.
 → Why: task-implement runs unattended and cannot ask; the fix keeps the run

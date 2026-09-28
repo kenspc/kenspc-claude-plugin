@@ -96,7 +96,10 @@ Read from RUN_DIR:
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
-   commands, and project conventions (prioritize CLAUDE.md).
+   commands, and project conventions (prioritize the project's instruction files).
+   The project's instruction files are its CLAUDE.md and AGENTS.md files — at the
+   root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports
+   with `@`, whether or not Claude Code loaded them in this session.
 2. If the CONTEXT block's REVIEW_SCOPE is "task": read the task document at the path
    given by CONTEXT TASK_FILE for context.
 3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md` for the set's
@@ -124,12 +127,12 @@ VERIFICATION CHECKS
    incorrect or incomplete, flag it as INCORRECTLY FIXED.
 3. Build / test / lint: run the project's build, test, and lint commands; record
    PASS or FAIL. Run each of the three as the project configures it
-   (`package.json` scripts, CLAUDE.md, the solution or `pytest` config), with no
-   path filter or exclude added. When files under `.kenspc/` — this run's
-   scratch or an earlier run's — make a command fail, alone or alongside
-   failures in the project's own files, record FAIL in that command's row with
-   those paths in the Detail cell; a re-run narrowed only to leave out
-   `.kenspc/` may be added to Detail as information, but it does not change
+   (`package.json` scripts, the project's instruction files, the solution or
+   `pytest` config), with no path filter or exclude added. When files under
+   `.kenspc/` — this run's scratch or an earlier run's — make a command fail,
+   alone or alongside failures in the project's own files, record FAIL in that
+   command's row with those paths in the Detail cell; a re-run narrowed only
+   to leave out `.kenspc/` may be added to Detail as information, but it does not change
    the Result. When the runner collected files under `.kenspc/`, the test
    row's Detail names them, whether the run passed or failed, and a passing
    run stays PASS, as it does for intentionally skipped tests: compare the

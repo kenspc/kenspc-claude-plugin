@@ -56,8 +56,11 @@ If no arguments are provided, ask the user for the plan document path.
 explicit dependencies and concrete acceptance criteria for each task.
 
 **Inputs**: PLAN_PATH (and optional PHASE / CUSTOM_INSTRUCTIONS); the
-plan's Documentation impact element; the project's CLAUDE.md, README, and
-config files; the project's source tree.
+plan's Documentation impact element; the project's instruction files,
+README, and config files; the project's source tree. The project's
+instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
+`.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
+`@`, whether or not Claude Code loaded them in this session.
 
 **DONE when**:
 - Every plan Implementation Step in scope is covered by at least one task.
@@ -200,7 +203,8 @@ single form, and a one-task range is a degenerate spelling of it.
 task document at the right path.
 
 **Inputs**: candidate task list from Phase 1; project's documentation
-conventions (CLAUDE.md or `docs/tasks/` default); reference format at
+conventions (the project's instruction files or `docs/tasks/` default);
+reference format at
 `${CLAUDE_PLUGIN_ROOT}/references/task-document-example.md`.
 
 **DONE when**:
@@ -236,7 +240,7 @@ Confirm, or adjust tasks before writing?
 ```
 
 **Output path resolution** (priority order):
-1. CLAUDE.md-specified task document location.
+1. A task document location the project's instruction files specify.
 2. `docs/tasks/` (create if missing).
 
 **Document language**: write the task document in the plan document's
@@ -246,8 +250,8 @@ artifacts — commit messages, code comments, identifiers — follows
 `task-implementer`'s CODE ARTIFACTS LANGUAGE rule, whatever the document's
 language. Why: the implementer copies task text into commits, comments, and
 documents, so the task document's language becomes theirs; inheriting the
-plan's language gives `task-document-reviewer`'s Consistency with CLAUDE.md
-angle a plugin-side anchor without the plugin imposing a language. The
+plan's language gives `task-document-reviewer`'s Consistency with the
+project's instruction files angle a plugin-side anchor without the plugin imposing a language. The
 anchors other agents parse stay exactly as written, whatever the document's
 language: the `**Status:**` line and its value, the `Depends on:` line, and
 the `### Task N: Doc-sync` heading. Why: `task-implementer` reads a task's

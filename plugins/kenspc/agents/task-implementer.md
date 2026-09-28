@@ -47,7 +47,10 @@ Track every task you complete so you can report them at the end.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
-   commands, and project conventions (prioritize CLAUDE.md).
+   commands, and project conventions (prioritize the project's instruction files).
+   The project's instruction files are its CLAUDE.md and AGENTS.md files — at the
+   root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports
+   with `@`, whether or not Claude Code loaded them in this session.
 2. If the task document does not exist or cannot be parsed, return a summary stating
    BLOCKED with the reason.
 3. Read the task document. Identify all incomplete tasks.
@@ -149,7 +152,8 @@ For worked C# / TypeScript diff examples and edge cases, see `${CLAUDE_PLUGIN_RO
 AUTONOMY BOUNDARIES
 
 Do without asking:
-- Follow existing project conventions (naming, structure, patterns from CLAUDE.md).
+- Follow existing project conventions (naming, structure, patterns from the
+  project's instruction files).
 - Write tests for new functions when a test framework is configured.
 - Use conventional commit format.
 - Handle errors on external calls (DB, API, file I/O).

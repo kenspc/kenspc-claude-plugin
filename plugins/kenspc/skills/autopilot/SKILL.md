@@ -764,19 +764,19 @@ and task documents and touches no version and no CHANGELOG. `keep` — no S6;
 the documents stay. A list of instructions — S6 runs them as its task
 block, after the default removal unless the list says `keep`.
 `Version: <string>` in repo mode is passed to S6 as an instruction to bump
-wherever the repository's CLAUDE.md says versions live, and is otherwise
+wherever the project's instruction files say versions live, and is otherwise
 ignored with a note after the settings line. Why: a product repository's
 CHANGELOG has a convention the plugin cannot know; the removal and no
 version is the default, and the field carries the rest.
 
 **Plugin mode.** The repository's release checklist
-(`docs/release-checklist.md` when it exists) and CLAUDE.md's release
-convention govern S6's task block: the CHANGELOG's `— unreleased` heading
-gets today's date; the plugin manifest's version becomes `Version:`; the
-manifests' descriptions name the new capability; the checklist's counting
-rows follow; the roadmap's shipped items leave and its heading names the
-next minor; the batch's plan and task documents, and its brief when git
-tracks it, are `git rm`ed — an untracked brief, the brief-entry case since
+(`docs/release-checklist.md` when it exists) and the release convention in
+the project's instruction files govern S6's task block: the CHANGELOG's
+`— unreleased` heading gets today's date; the plugin manifest's version
+becomes `Version:`; the manifests' descriptions name the new capability;
+the checklist's counting rows follow; the roadmap's shipped items leave and
+its heading names the next minor; the batch's plan and task documents,
+and its brief when git tracks it, are `git rm`ed — an untracked brief, the brief-entry case since
 S1 commits the spec alone, is left where it is and named in both reports as
 the user's to commit or discard, since `git rm` on an untracked path fails
 and the rails allow no other deletion inside the repository; one release
@@ -784,8 +784,8 @@ commit in the repository's convention; the pre-flight block runs
 and its two count lines are in S6's reply; no tag, no push. With
 `Version: none` in plugin mode, S6 makes the removal commit only, and the
 reports say the release was not prepared. Why: stack-agnostic in form — the
-checklist and CLAUDE.md are read — and the repository's own procedure in
-substance.
+checklist and the project's instruction files are read — and the
+repository's own procedure in substance.
 
 The zero-diff check runs again before S6 is launched, over
 `<baseline>..HEAD` as it then stands, and not after S6's commit. Why
@@ -875,7 +875,10 @@ is refused and so is a burst of about thirty sends.
 - The specification: <spec path>   (at brief entry: the brief, <brief path>)
 - Prior specs: `git show <hash>^:<path>` for each entry of Prior specs:
 - <each Must read: path>
-- The repository's CLAUDE.md
+- The project's instruction files. The project's instruction files are its
+  CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
+  subdirectory — and the files a CLAUDE.md imports with `@`, whether or not
+  Claude Code loaded them in this session.
 
 ## 3. Safety rails
 
@@ -900,7 +903,7 @@ is refused.
 
 ## 6. Constraints
 
-<the spec's constraint sections by name>, and the repository's CLAUDE.md.
+<the spec's constraint sections by name>, and the project's instruction files.
 Allowed files: <the Allowed files: paths — the files this batch may change; a file outside them is a forbidden file>.
 Byte-identity exceptions: <the Byte-identity exceptions: text — the only byte-identity sections this batch may edit>.
 ````
@@ -1112,10 +1115,10 @@ The finding, as the reviewer or the acceptance recorded it:
 The case to make pass: <the check that failed, with its PASS criterion — a
 review check, a self-test, a command, an acceptance case>.
 
-Make the fix[ inside the allowed files], run the checks the repository's
-CLAUDE.md names for a change of this kind, and commit the fix alone — one
-commit in the repository's convention, touching nothing the finding does
-not need. Reply with the commit hash and one line on what changed.
+Make the fix[ inside the allowed files], run the checks the project's
+instruction files name for a change of this kind, and commit the fix alone
+— one commit in the repository's convention, touching nothing the finding
+does not need. Reply with the commit hash and one line on what changed.
 ````
 
 - **S6, the removal commit** — Phase 4: repo mode with
@@ -1135,9 +1138,9 @@ The batch's commits are <baseline sha>..<HEAD sha>.
 [Make one commit, `docs: remove batch <batch> plan and tasks`, that `git rm`s
 <spec path> and <task document path>[ and touches no version and no
 CHANGELOG].]
-[Version <Version:>: bump it where the repository's CLAUDE.md says versions
-live, in the removal commit — in a commit of its own when this task makes
-none — and change nothing else.]
+[Version <Version:>: bump it where the project's instruction files say
+versions live, in the removal commit — in a commit of its own when this
+task makes none — and change nothing else.]
 [Then carry out these instructions, each committed in the repository's
 convention:
 <the Release preparation: sub-bullets>]
@@ -1156,9 +1159,10 @@ Reply with each commit's hash and subject.
 ## Task: release preparation for batch <batch>, version <Version:>
 
 The batch's commits are <baseline sha>..<HEAD sha>. The repository's
-release checklist (docs/release-checklist.md, when it exists) and its
-CLAUDE.md's release convention govern this task; read both first. Then, in
-one release commit in the repository's convention:
+release checklist (docs/release-checklist.md, when it exists) and the
+release convention in the project's instruction files govern this task;
+read both first. Then, in one release commit in the repository's
+convention:
 
 - the CHANGELOG's `— unreleased` heading gets today's date;
 - the plugin manifest's version becomes <Version:>;

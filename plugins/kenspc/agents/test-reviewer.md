@@ -91,7 +91,10 @@ Review Angle 5: Test Coverage.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
-   commands, and project conventions (prioritize CLAUDE.md).
+   commands, and project conventions (prioritize the project's instruction files).
+   The project's instruction files are its CLAUDE.md and AGENTS.md files — at the
+   root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports
+   with `@`, whether or not Claude Code loaded them in this session.
 2. If REVIEW_SCOPE is "task": read the task document at the path given by CONTEXT
    TASK_FILE for context.
 3. If REVIEW_SCOPE is "changes": with RUN_DIR, read `RUN_DIR/change-set.md`.
@@ -120,8 +123,8 @@ a report that turns out wrong.
 - HIGH — you can name the concrete failure path: a wrong result, data loss, a
   crash, or a security exposure, and the input or state that triggers it.
 - MEDIUM — a defect or gap with a consequence you can state, or a departure
-  from a written convention you can point to in CLAUDE.md, README, or adjacent
-  code.
+  from a written convention you can point to in the project's instruction
+  files, README, or adjacent code.
 - LOW — a small, localized issue that can be fixed alongside this change,
   anchored to a written convention or a specific defect.
 

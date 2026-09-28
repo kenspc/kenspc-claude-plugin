@@ -60,8 +60,8 @@ If the user omits the path, ask them to provide it.
 **Goal**: implement every incomplete task in the task document, in order,
 producing per-task commits and a Schema D summary.
 
-**Inputs**: PATH (task document path); the project's CLAUDE.md, README, and
-config files; the task document itself.
+**Inputs**: PATH (task document path); the project's instruction files,
+README, and config files; the task document itself.
 
 **DONE when**:
 - Every incomplete task has been processed (DONE or BLOCKED) by the
@@ -266,10 +266,13 @@ has lost rows on the way to the verifier.
     none. Then run `git -C <root> add .gitignore` and
     `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
     conventional commit, `chore: ignore kenspc run directory` by default;
-    when the project's CLAUDE.md sets commit conventions (a scope list, a
-    format), apply them. Why a separate commit: the change is one-time and
-    visible in history, and the pathspec keeps anything the user has staged
-    out of it.
+    when the project's instruction files set commit conventions (a scope
+    list, a format), apply them. The project's instruction files are its
+    CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
+    subdirectory — and the files a CLAUDE.md imports with `@`, whether or
+    not Claude Code loaded them in this session. Why a separate commit: the
+    change is one-time and visible in history, and the pathspec keeps
+    anything the user has staged out of it.
   - Any other exit code, or a failed commit — including a commit hook's
     rejection — stop and report the error. Do not retry, and do not bypass
     the hook with `--no-verify`: the hook encodes the project's rules, and
@@ -296,9 +299,9 @@ CUSTOM_INSTRUCTIONS construction:
 - Default: "N/A".
 - Override only when the session has accumulated any of the four
   context categories below; fold applicable items into 2-4 sentences:
-  1. Project structural facts not yet in CLAUDE.md (e.g., no test
-     project in solution, no lint config, only one .csproj under
-     solution root).
+  1. Project structural facts not yet in the project's instruction files
+     (e.g., no test project in solution, no lint config, only one .csproj
+     under solution root).
   2. User-authorized session-scoped permissions (e.g., auto-commit on
      trivial fixes, auto-push to feature branch).
   3. Cross-document narrative anchors (e.g., F1 phrase from a brief

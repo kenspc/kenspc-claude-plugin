@@ -67,9 +67,12 @@ requirement.
 **Goal**: understand what the user wants to build, reach consensus on scope
 and approach, and surface the dimensions a plan needs before drafting starts.
 
-**Inputs**: REQUIREMENT (free-text or file path); the project's CLAUDE.md,
-README, and config files when running inside a project; the discovery
-framework at `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md`.
+**Inputs**: REQUIREMENT (free-text or file path); the project's instruction
+files, README, and config files when running inside a project; the
+discovery framework at `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md`.
+The project's instruction files are its CLAUDE.md and AGENTS.md files — at
+the root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md
+imports with `@`, whether or not Claude Code loaded them in this session.
 
 **DONE when** **either** holds:
 
@@ -166,15 +169,15 @@ If it is not a brief, continue with the normal Discovery flow.
 ### Step 2: Read project context (if in a project directory)
 
 Before asking questions, silently gather context:
-- Read CLAUDE.md (project and root level) for conventions, tech stack,
-  constraints.
+- Read the project's instruction files (project and root level) for
+  conventions, tech stack, constraints.
 - Read README.md, package.json, *.csproj, docker-compose.yml, .env.example,
   app.json, eas.json, or any config files that reveal the stack.
 - Scan the project structure (directory listing).
 - Note the tech stack, existing patterns, and constraints.
-- Note the durable documents CLAUDE.md names (the determination basis is
-  under **Documentation impact** in Phase 2 Step 1). They are the input for
-  that element.
+- Note the durable documents the project's instruction files name (the
+  determination basis is under **Documentation impact** in Phase 2 Step 1).
+  They are the input for that element.
 
 If not in a project directory, skip this step entirely.
 
@@ -260,9 +263,9 @@ element is indistinguishable from a forgotten one.
   `<path> — N/A for this document: <reason>`: a record that it was
   considered, not a list entry, and never mixed with the whole-body
   `N/A — <reason>` form. The durable documents are the ones the
-  project's CLAUDE.md names — a documentation table where one exists,
-  otherwise the documents it names in prose; when it names none, README.md
-  and CLAUDE.md themselves.
+  project's instruction files name — a documentation table where one
+  exists, otherwise the documents they name in prose; when they name none,
+  README.md and the instruction files themselves.
 - **Data Model / API Design** — if applicable.
 - **Testing Strategy** — if applicable.
 - **Deployment Strategy** — if applicable.
@@ -380,7 +383,8 @@ of 355 lines: pronouns reworded, a Documentation impact line reformatted,
 and an escape written as the character it stands for.
 
 1. Determine the output location:
-   a. If CLAUDE.md specifies a documentation or plans directory, use it.
+   a. If the project's instruction files specify a documentation or plans
+      directory, use it.
    b. Otherwise, use `docs/plans/` (create if it does not exist).
    c. If a file already exists at the target path, ask the user whether to
       overwrite or create a new file. In a session that cannot ask (a

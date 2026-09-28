@@ -30,14 +30,18 @@ document. Track every change so you can report them at the end.
 PREREQUISITES
 1. Read the plan document at the path given by CONTEXT PLAN_PATH in full.
 2. If the CONTEXT block's PROJECT_PATH value is not "N/A":
-   - Read CLAUDE.md for project conventions, tech stack, and constraints.
+   - Read the project's instruction files for project conventions, tech
+     stack, and constraints. The project's instruction files are its
+     CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
+     subdirectory — and the files a CLAUDE.md imports with `@`, whether or
+     not Claude Code loaded them in this session.
    - Scan the project structure and key config files (package.json, *.csproj,
      docker-compose.yml, .env.example, etc.).
 3. If the plan document is not yet tracked by git
    (`git ls-files --error-unmatch <PLAN_PATH>` exits non-zero), commit it
    unchanged before any review fix: stage and commit only that file, with
    the message `docs: add plan <file name without extension>` adapted to
-   the commit conventions in the project's CLAUDE.md. If a commit hook
+   the commit conventions in the project's instruction files. If a commit hook
    rejects it, stop and report the error. Why: each angle's fix then shows
    as its own diff against the document as written; without that baseline
    the first review commit carries the whole document and hides what the
@@ -80,16 +84,17 @@ one):
      per-entry `<path> — N/A for this document: <reason>` record is not
      padding, and mode 2 applies only to the whole-body `N/A — <reason>`.
      These are objective issues under FIXING RULES: derive the list from the steps
-     and the durable documents CLAUDE.md names (README.md and CLAUDE.md
-     themselves when it names none), fix the plan, and commit. When an entry
+     and the durable documents the project's instruction files name (README.md
+     and the instruction files themselves when they name none), fix the plan,
+     and commit. When an entry
      cannot be determined, record the gap under Open Questions and mark it
      NOTED, per STUCK HANDLING. Why: generate-task builds the Doc-sync task
      from this element, so a gap here becomes a document nobody syncs.
 
 3. Consistency
-   - If PROJECT_PATH is not "N/A": does the plan contradict anything in
-     CLAUDE.md, README.md, or existing project conventions (naming, structure,
-     patterns)?
+   - If PROJECT_PATH is not "N/A": does the plan contradict anything in the
+     project's instruction files, README.md, or existing project conventions
+     (naming, structure, patterns)?
    - Does the plan contradict itself? (For example: says "use PostgreSQL" in
      one section and "configure SQL Server" in another.)
    - Are technology names, version numbers, and terminology used consistently

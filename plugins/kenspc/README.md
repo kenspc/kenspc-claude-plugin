@@ -57,7 +57,7 @@ plugins/kenspc/
     commands/
     hooks/
     references/
-    shared/               # Cross-skill resources (discovery-framework.md, code-craft-principles.md)
+    shared/               # Cross-skill resources (discovery-framework.md, code-craft-principles.md, instruction-files.md)
     skills/
     README.md
 ```
@@ -185,6 +185,12 @@ Cross-cutting properties from earlier versions are preserved:
   `shared/` may use specific languages — currently C# and TypeScript — to
   maximize teaching density; this does not constrain which projects the
   skills work with.)
+
+**The project's instruction files** (4.1.0) are where every skill and agent
+looks for a project's conventions.
+The project's instruction files are its CLAUDE.md and AGENTS.md files — at
+the root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md
+imports with `@`, whether or not Claude Code loaded them in this session.
 
 ### Effort levels
 

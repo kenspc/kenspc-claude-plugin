@@ -29,7 +29,11 @@ the guide document. Track every change so you can report them at the end.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack,
-   build/test/lint commands, and project conventions (prioritize CLAUDE.md).
+   build/test/lint commands, and project conventions (prioritize the
+   project's instruction files). The project's instruction files are its
+   CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
+   subdirectory — and the files a CLAUDE.md imports with `@`, whether or not
+   Claude Code loaded them in this session.
 2. Read the guide document at the path given by CONTEXT GUIDE_PATH in full.
 3. Scan the project structure and key config files (use the path given by
    CONTEXT PROJECT_PATH).
@@ -37,7 +41,7 @@ PREREQUISITES
    (`git ls-files --error-unmatch <GUIDE_PATH>` exits non-zero), commit it
    unchanged before any review fix: stage and commit only that file, with
    the message `docs: add guide <file name without extension>` adapted to
-   the commit conventions in the project's CLAUDE.md. If a commit hook
+   the commit conventions in the project's instruction files. If a commit hook
    rejects it, stop and report the error. Why: each angle's fix then shows
    as its own diff against the document as written; without that baseline
    the first review commit carries the whole document and hides what the
@@ -82,9 +86,9 @@ one):
      prior step.
 
 4. Consistency
-   - Compare guide content against CLAUDE.md. Are there contradictions in
-     tech stack descriptions, environment names, deployment targets, or
-     conventions?
+   - Compare guide content against the project's instruction files. Are
+     there contradictions in tech stack descriptions, environment names,
+     deployment targets, or conventions?
    - Compare guide content against README.md. Do they tell conflicting
      stories?
    - Check internal consistency within the guide itself (e.g., prerequisites

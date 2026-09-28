@@ -103,9 +103,12 @@ trigger it.
 describes — or, when no failing-capable test can be written, the manual
 reproduction steps and the reason.
 
-**Inputs**: BUG; the project's CLAUDE.md, README, and config files, read
-silently first — they name the test framework, its file conventions, and the
-commit conventions; the code the bug runs through. Before writing anything,
+**Inputs**: BUG; the project's instruction files, README, and config files,
+read silently first — they name the test framework, its file conventions,
+and the commit conventions; the code the bug runs through. The project's
+instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
+`.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
+`@`, whether or not Claude Code loaded them in this session. Before writing anything,
 note what `git -c core.quotePath=false status --porcelain -uall` lists: the
 untracked files (`??`) — with `-uall`, each file rather than its directory,
 and with `core.quotePath=false` a non-ASCII name as it is, not
@@ -189,8 +192,8 @@ passes silently in the user's own suite and asserts that the bug is absent.
 cases, the tier, and the documentation impact.
 
 **Inputs**: the reproduction from Phase 1 (the test's path, commit, and
-failure summary, or the manual steps); the code; the project's CLAUDE.md for
-the durable documents.
+failure summary, or the manual steps); the code; the project's instruction
+files for the durable documents.
 
 **DONE when** the record fields Root cause, Hypotheses, Fix scope, Adjacent
 cases, Tier, and Documentation impact can be filled.
@@ -266,8 +269,9 @@ work, which generate-plan's discovery exists for.
   `none — <reason>`, not left out.
 - **Documentation impact**: the durable documents the fix makes stale,
   determined as generate-plan determines its Documentation impact element —
-  the project CLAUDE.md's documentation table where one exists, otherwise
-  the documents it names in prose, otherwise README.md and CLAUDE.md. It is
+  the documentation table in the project's instruction files where one
+  exists, otherwise the documents they name in prose, otherwise README.md
+  and the instruction files themselves. It is
   a list (path, section where known, what changes) or the single line
   `N/A — <reason>`.
 
@@ -276,7 +280,7 @@ work, which generate-plan's discovery exists for.
 **Goal**: the artifact the next step runs on — for tier 2 a committed task
 document, for tier 3 a brief.
 
-**Inputs**: the filled record from Phase 2; the project's CLAUDE.md
+**Inputs**: the filled record from Phase 2; the project's instruction files
 (document locations, commit conventions); the Doc-sync Task template in
 `${CLAUDE_PLUGIN_ROOT}/skills/generate-task/SKILL.md`; the brief template in
 `${CLAUDE_PLUGIN_ROOT}/skills/generate-brief/SKILL.md`.
@@ -291,7 +295,7 @@ document, for tier 3 a brief.
 ### Tier 2: the task document
 
 **Output path** (priority order):
-1. A CLAUDE.md-specified task-document location.
+1. A task-document location the project's instruction files specify.
 2. `docs/tasks/<name>.md` (create the directory if missing).
 
 `<name>` is a kebab-case slug of the symptom, with no suffix or prefix —
@@ -414,8 +418,8 @@ commit would carry the whole document.
 
 ### Tier 3: the brief
 
-Write a brief at `docs/briefs/<name>.md` — a CLAUDE.md-specified brief
-location takes precedence — with the same conflict check. Its first line is
+Write a brief at `docs/briefs/<name>.md` — a brief location the project's
+instruction files specify takes precedence — with the same conflict check. Its first line is
 `# Requirement Brief: <title>`, the line generate-plan recognizes a brief by.
 Use the brief template in `${CLAUDE_PLUGIN_ROOT}/skills/generate-brief/SKILL.md`
 with this mapping:
