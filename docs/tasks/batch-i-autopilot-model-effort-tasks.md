@@ -88,7 +88,11 @@ Depends on: Task 1
 
 ### Task 3: SKILL.md — `Role settings:` 字段、两个 settings stop、沿用值和 settings line
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: 字段表的 `Role settings:` 一行放在表末（`Workspace:` 之后），表下加一段说明部分声明和 `not determined` 的处理，并附 Why（plugin 不带默认表、不写 model 名称）。沿用值写成 Phase 0 里新的一小节 `### The pass-through values`，放在 `### The wait path` 之后，因为两者都是"在这里决定一次、记进 settings line"；主循环 assistant 记录写成"`type` 为 `assistant` 的行，在该档本身、不在 subagent 的档里"，写之前用本机一份 transcript 核对过 `type`、`message.model`、`effort` 这三个字段确实存在。两个新的 start check 紧接在通用文法检查之后，在 clean tree 检查之前，都在第一个 worker 启动之前。stop conditions 加了第 10 项，把两个新的 settings stop 点名写出；gates 表那一行也写出这两项。
+- Changes/tradeoffs: Phase 0 的 DONE 句原本写 settings line "ending `wait <interactive|headless>`"，改成 "ending with the pass-through values"，所以 `wait <interactive|headless>` 现在只出现在 settings line 模板里。settings line 模板下加了一段说明 roles 列表的写法（`S3 —/low` 这个例子里 `—` 代表没声明的那一项）和 `none declared`，并附 Why。worker 不沿用主 session 的那句更正、`AUTOPILOT_MODEL`/`AUTOPILOT_EFFORT` 的设定、实际值的读取，都留给 Task 4。
 
 修改 `plugins/kenspc/skills/autopilot/SKILL.md`，只改这一个档（spec Step 3 的前半；L1、L2、L3、L9、L12；C5、C9）。
 

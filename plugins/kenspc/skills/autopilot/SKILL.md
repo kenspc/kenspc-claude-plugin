@@ -122,10 +122,11 @@ the first launch needs, checked before any session is paid for.
 **Inputs**: the argument file; the repository (`git rev-parse --show-toplevel`,
 HEAD, `git -c core.quotePath=false status --porcelain -uall`); `ListAgents`;
 the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`;
-`ps -o args= -p $PPID`.
+`ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
+this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`.
 
 **DONE when** the settings line (Templates § The settings line, ending
-`wait <interactive|headless>`) has been printed as a line of its own in
+with the pass-through values) has been printed as a line of its own in
 this session's reply — the state file, which carries it too, does not
 stand in for it (Templates § The settings line says why) — and the state
 file written.
@@ -188,6 +189,19 @@ starts, and a user who wants a smaller budget writes the field.
 | `Challenge seeds:` | sub-bullets S1 argues against | empty |
 | `Prior specs:` | `<hash>^:<path>` entries, read with `git show` | empty |
 | `Workspace:` | a directory | `~/Projects/_smoke/` |
+| `Role settings:` | one sub-bullet per role, `- <role>: model <model>[, effort <level>]` or `- <role>: effort <level>`: `<role>` one of `S1`, `S2`, `S3`, `S3b`, `S4`, `S5`, `S6`; `<model>` one token with no whitespace and no comma, passed to `--model` as written; `<level>` one of `low`, `medium`, `high`, `xhigh`, `max` | empty — every role runs at the pass-through values |
+
+`Role settings:` sets the model, the effort, or both for a role's workers
+— every session launched under that role's tags, re-runs and resumes
+included. A role the field does not name runs at the pass-through values
+(Phase 0 § The pass-through values), and so does the part a role's entry
+leaves out: a role with a model and no effort gets the pass-through effort,
+one with an effort and no model the pass-through model. A pass-through value
+that is `not determined` is not passed, and the worker resolves that part
+from its own settings. Why the declarations live only in the spec: the
+plugin ships no default table and names no model, since a model name
+written into the plugin goes stale silently at the next model generation,
+while a spec is written for the models of its own day.
 
 ### The mode and the plugin directory
 
@@ -271,6 +285,32 @@ between its tool calls but as a new turn after its final reply, its JSON
 result then being that turn's last message — a headless run that rested on
 the notice would end before its worker did.
 
+### The pass-through values
+
+Decided once here, recorded in the state file and the settings line: the
+model and the effort this session runs at now, which a role takes where
+`Role settings:` declares nothing for it.
+
+- The effort: `$CLAUDE_EFFORT`, read in this session's Bash.
+- The model: from this session's own transcript. `$CLAUDE_CODE_SESSION_ID`,
+  read in this session's Bash, names the file
+  `~/.claude/projects/*/<session-id>.jsonl`, found by that id and never by a
+  directory name derived from the repository path; its last main-loop
+  assistant record — a line whose `type` is `assistant`, in that file
+  itself and not in a subagent's file — carries the model in
+  `message.model`.
+
+A value that cannot be read — the variable empty, no transcript, no
+assistant record, no `message.model` — is recorded as `not determined` and
+is not passed: the worker resolves that part from its own settings. Why
+this session's values: an undeclared role then runs as the main session
+does now, the model and the effort the user chose for the run. Why by the
+session id: the directory name is an encoding of the path the harness does
+not document, while the id names the file. Why `not determined` and no
+stop: the transcript's fields are an undocumented internal format, read as
+evidence and not as a contract, and a run that stopped on them would stop
+on a format change that has nothing to do with the batch.
+
 ### The start checks
 
 Passing: every line below holds. It fails on the first that does not, and
@@ -284,6 +324,21 @@ reminder to work without stopping), the run ends with the same message.
   the settings stop, naming the field and the value. Why a stop and not
   the default: the field is one the user wrote, and a run that read it as
   absent would spend the default budget the user meant to lower.
+- `Role settings:` is in its grammar: every sub-bullet names a known role,
+  no role appears twice, and every part matches the table — `model` and
+  one token, `effort` and one of the five levels, the model first when both
+  are given. An unknown role, a role named twice, or any part outside the
+  grammar is the settings stop, naming `Role settings` and the value that
+  failed: `- S3: effort extreme` names `extreme`. Why: a declaration the
+  run could not read would launch that role at the pass-through values,
+  which are not what the user wrote, and a role named twice leaves no way
+  to tell which line the user meant.
+- `printenv CLAUDE_CODE_EFFORT_LEVEL`, run in this session's Bash, prints
+  nothing, or no role declares an effort; a value with an effort declared
+  is the settings stop, naming `CLAUDE_CODE_EFFORT_LEVEL`. Why: the
+  variable takes precedence over `--effort`, and every worker inherits this
+  session's environment through the driver, so each declared effort would
+  be overridden with nothing on the record saying so.
 - The working tree is clean except a brief given as the argument when it
   is untracked (`git -c core.quotePath=false status --porcelain -uall`).
   An untracked spec is a stop naming the commit to make first,
@@ -336,6 +391,7 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 ### The state file
 
 `_logs/<batch>-state.md` holds the settings line, the repository root, the
+pass-through values, the
 current step and its tag, each session's tag, id, cost, and result, the
 questions answered, the
 stops, the clarification numbers recorded in the spec, and the next action.
@@ -348,6 +404,7 @@ turn continue from the artifact rather than from the wording.
 ```
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
+pass-through: <model|not determined>/<effort|not determined>
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
@@ -1245,8 +1302,16 @@ text; the state file carries the same line and does not stand in for the
 printed one:
 
 ```
-Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, workspace <path>, wait <interactive|headless>
+Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
 ```
+
+The roles list names each role `Role settings:` declares, in the field's
+order, with its model and effort; the part a role's entry leaves out is
+written `—` (`S3 —/low`), and an empty field is `none declared`. The
+pass-through values are the ones Phase 0 determined. Why on the settings
+line: the user sees before any session is paid for which role runs at
+which model and effort, and which values a role gets where nothing is
+declared.
 
 A note on ignored labels, a `Version:` ignored in repo mode, or a
 `Zero diff:` path absent at the baseline follows on the next line.
@@ -1281,6 +1346,12 @@ the run ends with that message.
 8. A nested `claude -p` refused — the topology cannot be run here.
 9. The same step's session dead twice — a third resume replays the same
    failure.
+10. A settings stop before the first launch (The start checks), the two
+    that concern the role settings among them: a `Role settings` entry
+    outside its grammar, named with the value that failed, and
+    `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort — a run
+    that went on would launch its roles at a model or an effort nobody
+    declared.
 
 ### The decision hierarchy
 
@@ -1321,7 +1392,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | No arguments | The path | The run ends: `Autopilot stopped: no path given` |
 | The argument is neither a brief nor a spec | Which it is | The run ends with the reason |
 | Several plugins and no `Plugin:` | Which plugin | The run ends with the reason |
-| A start check fails, or a settings stop | — (a stop with its reason) | The run ends with the same message |
+| A start check fails, or a settings stop — a value outside its grammar, `Role settings` included, or `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort | — (a stop with its reason) | The run ends with the same message |
 | The launch line shows no `crossSessionInbound` accept | Whether a settings file accepts inbound messages | The run ends naming the launch line |
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |
