@@ -548,7 +548,12 @@ Every worker is one launch, one wait, one return.
   that is `not determined`, to the empty string, which the driver reads as
   unset. Why the empty string rather than leaving the variable out: a
   variable of the same name already in this session's environment would
-  otherwise reach the driver and pass a value nobody chose. A re-run's tag
+  otherwise reach the driver and pass a value nobody chose. Both values go
+  on the launch line in single quotes. Why: the `<model>` token is free
+  text from the spec, passed as written, and a backtick, `$`, or `;` in it
+  left unquoted is read by the shell — a token in backticks, a markdown
+  habit, becomes a command substitution that leaves the variable empty,
+  and the worker runs at its settings' model. A re-run's tag
   takes its step's role: `-s3<letter>` (`-s3c`, `-s3d`, …) is S3b,
   `-s4<letter>` (`-s4b`, `-s4c`, …) is S4, `-s5<letter>` (`-s5b`, …) is
   S5. Why: `Role settings:` is keyed by role, and a re-run's tag names the
