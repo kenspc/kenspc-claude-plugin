@@ -309,6 +309,12 @@ run_fixtures() {
         "printf \$'it\\'s\\n'; git commit -m 'x; rm -rf y'"
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
+    # Work the hook must not deny: a long option that is no prefix of
+    # --recursive, a -r after -- (a file named -r), and a <<- heredoc
+    # whose tab-indented body mentions rm -rf.
+    fx "$hook" "rm without a recursive flag: rm --force file" allow 1 "$r" Bash "$FX_REPO" 'rm --force notes.md'
+    fx "$hook" "rm without a recursive flag: rm -- -r" allow 1 "$r" Bash "$FX_REPO" 'rm -- -r'
+    fx "$hook" "a <<- heredoc body with tabs stripped" allow 1 "$r" Bash "$FX_REPO" $'cat <<-EOF > notes.txt\n\trm -rf build\n\tEOF'
 
     for t in Write Edit NotebookEdit; do
         # A write inside each root, allowed.
