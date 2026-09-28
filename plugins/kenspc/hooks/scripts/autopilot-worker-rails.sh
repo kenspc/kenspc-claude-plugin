@@ -116,7 +116,11 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # tokenizer: single and double quotes, backslash escapes, comments,
 # separators, $( ) and backtick substitutions (the enclosing command's words
 # are set aside and restored around them), subshells, and heredoc bodies,
-# which are skipped. sq holds the single quote.
+# which are skipped up to their delimiter line. A << whose delimiter line
+# never comes — an arithmetic shift such as $((1<<2)), or a heredoc closed
+# by EOF) inside $( — skips nothing, and the lines after it are read as
+# commands: skipped to the end, they would hide an rm that follows. sq
+# holds the single quote.
 RM_AWK=$JSON_AWK'
 function flush() { if (inw) { nw++; w[nw] = cur }; cur = ""; inw = 0 }
 function endcmd() { flush(); if (nw > 0 && found == "") check(); nw = 0 }
@@ -184,15 +188,17 @@ function heredoc_op(c, i,   strip, d, ch) {
   if (d != "") { nh++; hd[nh] = d; hs[nh] = strip }
   return i
 }
-function heredocs(c, i,   k, rest, nl, line) {
+function heredocs(c, i,   k, rest, nl, line, from, hit) {
   for (k = 1; k <= nh; k++) {
+    from = i; hit = 0
     while (i <= length(c)) {
       rest = substr(c, i); nl = index(rest, "\n")
       line = nl ? substr(rest, 1, nl - 1) : rest
       i += nl ? nl : length(rest)
       if (hs[k]) sub(/^\t+/, "", line)
-      if (line == hd[k]) break
+      if (line == hd[k]) { hit = 1; break }
     }
+    if (!hit) { i = from; break }
   }
   nh = 0
   return i
