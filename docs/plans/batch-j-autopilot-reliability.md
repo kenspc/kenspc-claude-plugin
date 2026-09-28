@@ -389,6 +389,57 @@ message.
 
 ## Clarifications during implementation
 
+Numbered J-C<n>: pointers like the spec's other labels, written into no
+shipped file.
+
+- **J-C1 (S2 confirmation; settled by the spec).** The 14-task
+  decomposition is confirmed as drafted, with the decomposing worker's
+  twelve proposals, each settled by the spec:
+  - A task marked hook-built-only changes no file when `probes.md` decides
+    no hook, and is marked DONE with the note `Not built: <decision line>`,
+    so the Doc-sync task is not blocked (the split into tasks, Delegated
+    choices).
+  - The probe also exercises Edit and NotebookEdit (Step 1.1: the live
+    JSON of each tool the hook would match).
+  - A probe that cannot be shown to hold does not hold; reruns stay within
+    the USD 10 in all (J-L4, J-A2).
+  - The hook's deny form is the one the J-P2 probe verified (the hook's
+    internal structure).
+  - task-implementer refuses a dispatch without `RUN_DIR` (J-L2; J-D1
+    rejected every fallback location).
+  - task-implement prepares the run directory after its batch confirmation
+    and before the dispatch, and creates it before the dispatch (J-L2,
+    J-A1, and the batch gate's wait for confirmation).
+  - The roots: an empty or unset `AUTOPILOT_WORKSPACE` adds no entry; a cwd
+    outside a git repository adds no repository entry; a marked worker with
+    no roots is denied every file-tool write; S4's nested driver line
+    carries `AUTOPILOT_WORKSPACE` too (J-L4's letter and "every launch").
+  - A `- Skipped gates: <list | none>` reviewer-report line, with a
+    state-file section, records J-L5's outcomes (a name, Delegated
+    choices).
+  - A line start in a multi-line command is a command position, and a
+    target is inside a root only by whole path components (the hook's
+    internal structure and the fixtures).
+  - The Doc-sync task also corrects the sentences this batch makes stale in
+    the listed documents: the release checklist's run-directory row, the
+    README's headless entry, CLAUDE.md's `RUN_DIR` contract.
+  - S5's first line for several defects, and the wording of every new text,
+    are the implementer's.
+- **J-C2 (S2's plan-level concerns; main session).**
+  1. J-L3's route through `CUSTOM_INSTRUCTIONS` does not reach a dispatch
+     without that key — task-implementer, and the document reviewers,
+     which are in the Zero diff list. J-L3 stays as written, and the gap is
+     an observation for the reviewer report: without the hook, nothing
+     mechanical carries the no-recursive-`rm` rail to task-implementer, and
+     J-L2's scratch rule bounds where it writes. task-implement's
+     `CUSTOM_INSTRUCTIONS` construction (N/A unless one of its four
+     categories applies) is not in this batch's steps and does not change;
+     § 3's instruction to the worker is what puts the rails in the field.
+  2. Documentation impact's "a fourth hook, when built" reads "a third
+     hook": two hooks are registered at the baseline
+     (`remind-plan-skill.sh`, `session-end-telemetry.sh`), as the task
+     document already says.
+
 ## Autopilot
 
 - Mode: plugin
