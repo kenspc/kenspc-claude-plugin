@@ -224,6 +224,17 @@ run_fixtures() {
     fx_deny "$hook" "rm position after sudo" "$r" Bash "$FX_REPO" 'sudo rm -rf build'
     fx_deny "$hook" "rm position after command" "$r" Bash "$FX_REPO" 'command rm -rf build'
     fx_deny "$hook" "rm position after env" "$r" Bash "$FX_REPO" 'env rm -rf build'
+    fx_deny "$hook" "rm position after env and an assignment" "$r" Bash "$FX_REPO" 'env FOO=1 rm -rf build'
+    fx_deny "$hook" "rm position after exec" "$r" Bash "$FX_REPO" 'exec rm -rf build'
+    fx_deny "$hook" "rm position after nohup" "$r" Bash "$FX_REPO" 'nohup rm -rf build'
+    fx_deny "$hook" "rm position after time" "$r" Bash "$FX_REPO" 'time rm -rf build'
+    fx_deny "$hook" "rm position after sudo -u and its argument" "$r" Bash "$FX_REPO" 'sudo -u root rm -rf build'
+    fx_deny "$hook" "rm position after xargs -n and its argument" "$r" Bash "$FX_REPO" 'echo build | xargs -n 1 rm -rf'
+    fx_deny "$hook" "rm position after an assignment prefix" "$r" Bash "$FX_REPO" 'FOO=1 rm -rf build'
+    fx_deny "$hook" "rm position after then" "$r" Bash "$FX_REPO" 'if [ -d build ]; then rm -rf build; fi'
+    fx_deny "$hook" "rm position after do" "$r" Bash "$FX_REPO" 'for d in a b; do rm -rf "$d"; done'
+    fx_deny "$hook" "rm position in a ( subshell" "$r" Bash "$FX_REPO" '(rm -rf build)'
+    fx_deny "$hook" "rm spelling prefix of --recursive: --rec" "$r" Bash "$FX_REPO" 'rm --rec build'
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
