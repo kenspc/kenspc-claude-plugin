@@ -186,3 +186,18 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
   - autopilot 的定义句放在 worker preamble 里。理由：worker 只读这段文字。
   - `shared/instruction-files.md` 多一个 H1 标题。理由：跟其他 shared 档一致。
   - task-document-reviewer 的第 3 个角度仍然同时对照用户层级的 CLAUDE.md。理由：这样角度不会变窄。
+- **C10（1.6，第 1 轮审查的处置）** 报告：`.kenspc/runs/batch-h/review-1-{spec,conventions,edges}.md`。
+  - **H5 规则 3 的缺口（E1 HIGH = S4）：fix。** 只有 AGENTS.md、没有 CLAUDE.md 的项目，建议写进 AGENTS.md，不建议另建 CLAUDE.md。理由：§ 2.1 的事实是，另建一个 CLAUDE.md 会让默认模式停读 AGENTS.md，而且没有提示；H5 规则 3 写的时候没考虑到这种 repo。这是 spec 自身的缺口，按 spec 的事实补上，不算改第 2 节的值。
+  - **#1 来源检查形同虚设（E2 HIGH，加上 S1 MEDIUM）：fix。** 来源本身要说出那一句所主张的内容；比来源多出来的问题、功能、用户，都算没有来源。指不出来源的那一句，改写成 `TBD(init): <缺的是什么>`，不把原句的主张留在 marker 里。理由：只要能"指出某个来源"就算过，从一句话的描述推论出来的内容永远过得了，#1 就等于没有作用；把主张留在 marker 里，B2 仍然会失败。
+  - **AskUserQuestion 只收 2–4 个选项（E3 MEDIUM）：fix。** 选项加上那两个以后超过 4 个时，把这两个另外放成同一次呼叫里的一个问题。理由：#4 在第 3、4 轮会超过工具的上限，每次执行会各自取舍，结果不一致。
+  - **身份判断接受 git 自己猜出来的身份（E4 MEDIUM = S7）：fix。** 只有 `git config user.name` 和 `git config user.email` 都印出值，才算有身份。理由：#2 要的是"已设定"的身份；主机名带网域的机器上，`git var` 会接受猜出来的身份。这台 Mac 刚好测不出来。
+  - **单一 app 放在 root 时，scaffold 的 pathspec 漏掉 lockfile（S2 MEDIUM = E8）：fix。** 写成"generator 和安装步骤建立的路径"。
+  - **规则顺序，以及被准入规则拒绝的事实（E5 = S3 = V1，LOW）：fix。** 按顺序取第一条符合的规则；被准入规则拒绝的事实，照该注释指的去处写，不再落回同一个 AGENTS.md。理由：只需要一个子句，而且对应 H5 第 2 条的具体缺陷。
+  - **句中的 import 没被认出（E6 LOW）：fix。** 一行里用字词形式出现的 `@AGENTS.md`，只要不在 code span 里，也算 import。理由：新版 `/init` 就是这样写的；只要几个字，否则 final message 会写出错误的载入说明。
+  - **身份的停止点在 generator 之后（E7 LOW）：fix。** 在第一个 generator 执行之前就检查身份；没有身份就不 scaffold，文件照样写，然后停在文档 commit 之前。理由：只要一句，就能避免 scaffold 的产物永远没人 commit。
+  - **漏写 symlink（S5 LOW）：fix。** 写成 "only an imported or symlinked AGENTS.md"。理由：C2 的原文就是这样。
+  - **Documents table 和 README 写成 root 的 `CLAUDE.md`（S6 LOW）：fix。** 既有 `.claude/CLAUDE.md` 时，按它的实际路径写。理由：一个子句；否则 B8 那种布局，路径检查每次都会失败。
+  - **new-app 路径的 DONE 缺两种结束方式（V2 LOW）：fix。** 理由：DONE criteria 惯例。
+  - **行宽与句式（V3 LOW）：fix。** 只做 reflow。理由：surface style 惯例。
+  - **#1 扩及 README 和 AGENTS.md（E9 LOW）：defer。** 理由：§ 2.4 #1 明写只查 topic 文件；列进建议栏。
+  - **子目录定义不排除依赖目录（E10 LOW，例如 `node_modules/*/AGENTS.md`）：defer。** 理由：情况罕见，而且要改 § 2.2 的定义文字和 23 份拷贝；列进建议栏。
