@@ -1075,9 +1075,12 @@ on Windows.
   session the driver marked with `KENSPC_AUTOPILOT_WORKER=1` — the hook
   denies a recursive `rm` at a command position and a Write, Edit, or
   NotebookEdit outside the write roots. It misses `find -delete` (and
-  `find -exec rm`), `bash -c '…'` and `eval`, interpreter-level deletes
+  `find -exec rm`), `bash -c '…'`, `eval`, and a `trap` body
+  (`trap 'rm -rf "$d"' EXIT`), interpreter-level deletes
   (Python, Node, Perl), `git clean`, and writes through Bash (redirections,
   `cp`, `mv`, `tee`); also an `rm` reached through a variable or an alias,
+  an `rm` after a redirection written before the command name
+  (`2>/dev/null rm -rf d`),
   other wrappers such as `timeout`, and paths that are not POSIX absolute,
   which it does not judge; and a Write or Edit whose target is itself a
   symbolic link pointing outside the roots, since it resolves only the

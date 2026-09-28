@@ -53,10 +53,12 @@
 # the workspace, or scratch.
 #
 # A best-effort guard behind the rails text, which still binds. Known
-# misses: find -delete (and find -exec rm), bash -c '...' and eval,
+# misses: find -delete (and find -exec rm), bash -c '...', eval, and a
+# trap body (trap 'rm -rf "$d"' EXIT, a quoted argument run at exit),
 # interpreter-level deletes (python, node, perl), git clean, and writes
 # through Bash (redirections, cp, mv, tee); also rm reached through a
-# variable or an alias, other wrappers (timeout, nice), commands inside an
+# variable or an alias, rm after a redirection written before the command
+# name (2>/dev/null rm -rf d), other wrappers (timeout, nice), commands inside an
 # unquoted heredoc's substitutions, and paths that are not POSIX absolute
 # (a Windows drive-letter path is not judged); and a file-tool target that
 # is itself a symbolic link, dangling or not, pointing outside every root,
