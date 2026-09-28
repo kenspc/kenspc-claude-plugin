@@ -111,6 +111,7 @@ DONE：条目存在，日期在发布准备时填入。
 - **C9（S2 确认，改动的边界）** settings line 末尾加上新的一段之后，plugin README 的 Known behavior 和 release checklist smoke 第 11 行里"以 `wait headless` 结尾"的说法都跟着改写。不新增 smoke 检查，根目录 README 不改。
 - **C10（S2 确认，not observed；用户裁定）** `not observed` 照原样印出，不加 `MISMATCH:`，也不算进 reviewer report 的 `<k> mismatches`。
 - **C11（S2 确认，编号规则；用户裁定）** 本 spec 的编号标签（Locked design、Background 里的 probe、clarification 的编号）不写进任何交付档案，并用 diff grep 检查。
+- **C12（S2 结束，model 名称的范围）** L2 和 Constraints 所说的"plugin 的档案里不出现 model 名称"，范围是 `check-no-model-names.sh` 扫描的档案（`skills/`、`agents/`、`commands/`、`shared/`），Step 3 的 DONE 就是这样写的。L4 和 Step 4 要求 README 写出 Fable 的计费风险，所以 README 的 Known behavior 里 Fable 计费那一项是本批次唯一写出 model 名称的地方，其他例子一律用 `<model>` 占位符。
 
 ## Autopilot
 
