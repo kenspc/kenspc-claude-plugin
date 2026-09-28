@@ -508,7 +508,14 @@ files under `.kenspc/` that the test run collected and that passed, one
 bullet names them as the Detail does and asks the user to delete them —
 runs are never deleted and the plugin deletes nothing itself, so a collected
 probe that passes stays in the user's own test run until the user removes
-it.
+it. When CUSTOM_INSTRUCTIONS carried a project structural fact (item 1 of its
+construction), one bullet names the fact and where to record it: the
+document that a Documents table in the project's instruction files assigns
+its topic to; an instruction file with an admission-rule comment, such as
+the AGENTS.md `/kenspc-init` writes, only when the fact passes that rule;
+the AGENTS.md a CLAUDE.md imports, with nothing copied into that CLAUDE.md;
+otherwise CLAUDE.md. Why: a fact recorded where the project keeps its
+instructions reaches the next run without a CUSTOM_INSTRUCTIONS line.
 ```
 
 #### Verdict determination
