@@ -113,6 +113,20 @@ DONE：条目存在，日期在发布准备时填入。
 - **C11（S2 确认，编号规则；用户裁定）** 本 spec 的编号标签（Locked design、Background 里的 probe、clarification 的编号）不写进任何交付档案，并用 diff grep 检查。
 - **C12（S2 结束，model 名称的范围）** L2 和 Constraints 所说的"plugin 的档案里不出现 model 名称"，范围是 `check-no-model-names.sh` 扫描的档案（`skills/`、`agents/`、`commands/`、`shared/`），Step 3 的 DONE 就是这样写的。L4 和 Step 4 要求 README 写出 Fable 的计费风险，所以 README 的 Known behavior 里 Fable 计费那一项是本批次唯一写出 model 名称的地方，其他例子一律用 `<model>` 占位符。
 - **C13（S3 停止，/tmp 临时档；用户裁定）** S3 的 task-implementer subagent 把 4 个临时档（self-test 输出、pre-flight 输出、字段标签清单）写到了 `/tmp`，不在 `$TMPDIR` 之内，S3 按 rail 停了下来。用户裁定：这 4 个档移进 workspace 的 `.trash/`，S3 继续跑审查阶段；本批次余下的部分，worker 派出的 subagent 在 `/tmp` 写的临时档只要不含 secret，就只记为 observation，不算停止条件。其他 rail 一律不变。理由：preamble 的 rail 只有 worker session 看得到，它派出的 subagent 并不知道这条规则。
+- **C14（S3 审查的延后项；用户裁定）** S3 的 code-fixer 延后了 7 项，处理如下：
+  1. harness 自己写的 `<synthetic>` 记录（`message.model` 是 `<synthetic>`，或带 `isApiErrorMessage`）不是 model 的回应，读实际值时一律排除；只剩这类记录的 session 记为 `not observed`。这收窄了 C6 的"全部记录"，属于超出字面的解读。沿用值那一侧，S3b 已在 `5699964` 修好。交给 S5。
+  2. transcript 的 model ID 不带 context 后缀，所以沿用的 model 不含 `[1m]`。需要较大 window 的角色自己声明 `<model>[1m]`。只在 SKILL.md 的沿用值一节和 README 的 Known behavior 写明，来源不改。交给 S5。
+  3. 记录里没有 `effort` 字段时，applied 那一栏保留 `—`。模板改成 `<effort|—|not observed>`，并在模板旁写明 `—` 在这里的意思：记录里没有 effort 字段。SKILL.md、README、CHANGELOG 各处保持一致。交给 S5。
+  4. transcript 的查找根目录改为 `${CLAUDE_CONFIG_DIR:-~/.claude}/projects`，沿用值和每个 worker 实际值的两处查找，以及 README 的说明，一并修改。这是超出 L12 字面的解读。交给 S5。
+  5. reviewer report 的 `Models and efforts` 一行加上 `, <j> not observed`，不算进 `<k>`。SKILL.md 的模板和 Phase 4 的叙述、README、CHANGELOG 一并修改。交给 S5。
+  6. model 的包含判定不改，因为它是锁定点。README 的 Known behavior 写明两种误判：声明的 ID 是实际 ID 的前缀时会判为一致；不被实际 ID 包含的 alias 会判为不一致。只改文件，交给 S5，另列为 roadmap 候选。
+  7. 验收的缺口见 C16。
+- **C15（S3b 的延后项；主 session 分类）** row 1 同 C14 第 1 项，row 7 同 C14 第 3 项。row 4 列为 roadmap 候选：run.ps1 在 macOS 和 Linux 上会把带方括号的 `--model` 值当成 glob 展开，但 skill 在这两个平台用的是 run.sh，而 Windows 上的 pwsh 不会展开，要修就得重写原生呼叫。row 5、12、13 见 C16。另外，subagent 跑 guard 脚本时，脚本内部用 `rm -rf` 清理自己的临时目录，这不算触犯 rail：rail 管的是 worker 自己下的指令，而验收第 7 个案例本来就要求跑 `bash scripts/check-all.sh --self-test`。
+- **C16（验收加强；用户裁定）**
+  - 新增第 8 个案例：嵌套 autopilot，headless，三种文法 stop 的输入各跑一次：`- S7: effort low`（未知角色）、同一个 `- S3:` 写两行（重复角色）、`- S3: effort low, model <model>`（effort 写在 model 前面）— PASS：每次都在第一个 worker 之前以 `Autopilot stopped:` 结束，讯息点名 `Role settings` 和出错的值，timeline 里没有 `start` 行。
+  - 第 3 个案例的 seed spec 另加 `- S3b: effort <嵌套主 session 的 effort>`，用来测只声明一部分的角色。原有的 PASS 条件不变，另外加上四项：settings line 的 roles 列表有 `S3b —/<effort>`；S3b 的 state line 标 `(declared)`，requested 的 model 是沿用值；S3b 没有 `MISMATCH`；嵌套主 session 的 transcript 里，每条 driver 启动行都设了 `AUTOPILOT_MODEL` 和 `AUTOPILOT_EFFORT`（值可以是空字串）。
+  - 以下列为 Not exercised，也列为 roadmap 候选：`CLAUDE_CODE_EFFORT_LEVEL` 已设、但没有任何角色声明 effort 时不应停下；resume 行的替换；重跑 tag 所对应的角色。
+- **C17（验收用哪一份 driver）** 第 1、2 个案例测的是 S4 启动时 HEAD 的 `run.sh`，复制到 workspace 之后再用，不是 Phase 0 复制的 driver 副本，因为那份仍是 4.1.0 的内容。嵌套 autopilot 的案例（第 3 到 6 个和第 8 个）照 S4 的 task block，用 Phase 0 的 driver 副本启动嵌套主 session，嵌套主 session 以 `--plugin-dir` 载入工作树里的新 skill，再复制它自己的新 driver。
 
 ## Autopilot
 
