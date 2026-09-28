@@ -557,10 +557,13 @@ Project-level shell scripts live in `scripts/` at the repo root:
   model. Three rules: frontmatter `model:` values must be `inherit`; no
   model family name as a whole word (case-insensitive); no `claude-`
   model-ID prefix (case-insensitive). The plugin's own `.claude-plugin`
-  directory name is stripped before the ID rule is tested, so a line
-  carrying both is still reported. Skills and agents follow the session's
-  model and effort; a model name in a prompt pins it to one generation.
-  CHANGELOG and `docs/` are out of scope.
+  directory name, and the three values of Claude Code's `instructionFiles`
+  setting (`claude-md`, `claude-md-or-agents-md`,
+  `claude-md-and-agents-md`), which init-project names verbatim, are
+  stripped before the ID rule is tested, so a line carrying one of them
+  and a real model ID is still reported. Skills and agents follow the
+  session's model and effort; a model name in a prompt pins it to one
+  generation. CHANGELOG and `docs/` are out of scope.
 - `check-run-contract.sh` — guards the run-directory contract: the
   `canonical:run-dir` block is byte-identical in the two SKILLs; its
   `git check-ignore` probe answers correctly against a CRLF `.gitignore`

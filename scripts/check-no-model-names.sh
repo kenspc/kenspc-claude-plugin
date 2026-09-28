@@ -20,10 +20,14 @@
 #      rewording, which is preferred over a silent miss.
 #   3. A model-ID prefix, case-insensitive: `claude-` followed by a letter or
 #      digit (claude-opus-..., claude-3-...). The plugin's own `.claude-plugin`
-#      directory name is stripped from each line before this rule is tested,
-#      so a line that mentions both `.claude-plugin` and a real model ID is
-#      still reported — the exclusion removes the directory name, not the
-#      line. `${CLAUDE_PLUGIN_ROOT}` never matches (underscore, not hyphen).
+#      directory name, and the three values of Claude Code's `instructionFiles`
+#      setting (`claude-md-and-agents-md`, `claude-md-or-agents-md`, and
+#      `claude-md` where no letter, digit, or hyphen follows it), are stripped
+#      from each line before this rule is tested, so a line that mentions one
+#      of them and a real model ID is still reported — the exclusion removes
+#      the name, not the line. init-project names the setting's values
+#      verbatim, since a user has to type them. `${CLAUDE_PLUGIN_ROOT}` never
+#      matches (underscore, not hyphen).
 #
 # Trailing carriage returns are stripped first so CRLF checkouts on Windows
 # parse the frontmatter delimiters the same way as LF checkouts.
@@ -38,13 +42,16 @@
 #
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the four
-#                  scanned directories into a temp workdir and checks nine
-#                  paths: three that must exit 0 (unmodified copy, a
-#                  `.claude-plugin`-only line, a `model:` mention in body
-#                  prose), five that must exit 1 (a capitalized and a
+#                  scanned directories into a temp workdir and checks eleven
+#                  paths: four that must exit 0 (unmodified copy, a
+#                  `.claude-plugin`-only line, a line holding only the three
+#                  `instructionFiles` values, a `model:` mention in body
+#                  prose), six that must exit 1 (a capitalized and a
 #                  lowercase family name, a model ID sharing a line with
-#                  `.claude-plugin`, frontmatter `model: opus`, frontmatter
-#                  `model: fast-path`), and the reverted copy (must exit 0).
+#                  `.claude-plugin`, a model ID sharing a line with an
+#                  `instructionFiles` value, frontmatter `model: opus`,
+#                  frontmatter `model: fast-path`), and the reverted copy
+#                  (must exit 0).
 #                  Opt-in: invocation with no
 #                  arguments behaves unchanged. Exit 0 on self-test pass, 1 on
 #                  unexpected exit codes, 2 on fixture-stale.
@@ -102,6 +109,9 @@ run_main_logic() {
             lower = tolower(line)
             stripped = lower
             gsub(/\.claude-plugin/, "", stripped)
+            gsub(/claude-md-(and|or)-agents-md/, "", stripped)
+            while (match(stripped, /claude-md([^a-z0-9-]|$)/))
+                stripped = substr(stripped, 1, RSTART - 1) substr(stripped, RSTART + 9)
             if (lower ~ /(^|[^a-z])(opus|sonnet|haiku|fable)([^a-z]|$)/ ||
                 stripped ~ /claude-[a-z0-9]/)
                 print FILENAME ":" FNR ": " line
@@ -178,6 +188,9 @@ run_self_test() {
     printf '%s\n' 'See .claude-plugin/plugin.json for the version.' >> "$target_file"
     expect 0 "exclusion" || return 1
 
+    printf '%s\n' 'Modes: claude-md, claude-md-or-agents-md, and claude-md-and-agents-md.' >> "$target_file"
+    expect 0 "instructionFiles-values exclusion" || return 1
+
     printf '%s\n' 'Pass model: fast-path to the helper.' >> "$target_file"
     expect 0 "body-prose model:" || return 1
 
@@ -192,6 +205,11 @@ run_self_test() {
     # The ID carries no family name, so only rule 3 can catch it.
     printf '%s\n' 'Pinned in .claude-plugin to claude-instant-1.2.' >> "$target_file"
     expect 1 "same-line model-ID" || return 1
+
+    # The same for the instructionFiles exclusion: stripping the mode value
+    # leaves the real ID on the line to be caught.
+    printf '%s\n' 'Set claude-md-and-agents-md, then pin claude-instant-1.2.' >> "$target_file"
+    expect 1 "model-ID beside an instructionFiles value" || return 1
 
     set_frontmatter_model opus
     expect 1 "frontmatter model: opus" || return 1
