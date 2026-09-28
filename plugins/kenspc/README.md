@@ -636,7 +636,10 @@ after two fixes; the session cap, the resume cap, or the budget exceeded
 `git tag`, or release; no recursive `rm` in any spelling — `rm -r`,
 `rm -rf`, `rm -fr`, `rm -R`; no resource the brief does not name; no
 secrets); a question neither the spec nor the locked design answers; a
-nested `claude -p` refused; the same step's session dead twice. Every stop
+nested `claude -p` refused; the same step's session dead twice; a settings
+stop before the first launch, among them a `Role settings` entry outside
+its grammar and `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an
+effort (see Models and efforts). Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file
 holds the next action.
 
