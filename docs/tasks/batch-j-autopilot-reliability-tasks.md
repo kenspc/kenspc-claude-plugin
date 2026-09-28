@@ -77,7 +77,7 @@ Constraints for every task:
   names, plus this task document's status and notes.
 
 Dependency note: Task 3 depends on Task 1; Task 5 on Task 4; Task 6 on
-Tasks 1 and 3; Task 7 on Tasks 1 and 6; Task 8 on Task 2; Task 9 on Tasks
+Tasks 1 and 3; Task 7 on Tasks 1, 3, and 6; Task 8 on Task 2; Task 9 on Tasks
 1, 3, and 6; Task 14 (Doc-sync) on Tasks 1-13. Tasks 3, 6, 7, and 9 are
 **(hook built only)**.
 
@@ -426,7 +426,7 @@ Spec Step 4.1 (J-L4). Files: `plugins/kenspc/hooks/scripts/autopilot-worker-rail
 
 **Status:** TODO
 
-Depends on: Task 1, Task 6
+Depends on: Task 1, Task 3, Task 6
 
 Spec Step 4.2 (J-L4). File: `scripts/check-autopilot-rails-hook.sh` (new).
 
@@ -438,8 +438,9 @@ Spec Step 4.2 (J-L4). File: `scripts/check-autopilot-rails-hook.sh` (new).
   exists, else `bash`.
 - Fixtures carry the field names and nesting of Task 1's saved live JSON,
   copied into the guard; the guard reads nothing under the workspace. Each
-  fixture gives the input, the environment (marker, roots, cwd), and the
-  expected decision. They cover:
+  fixture gives the input, the environment (marker, roots — joined with
+  Task 3's separator, in the form the driver writes them — and cwd), and
+  the expected decision. They cover:
   - each `rm` spelling and position Task 6 lists, denied;
   - each quoted mention (`grep -c 'rm -rf' f`, `git commit -m "… rm -rf …"`,
     `echo "rm -r"`), allowed;
