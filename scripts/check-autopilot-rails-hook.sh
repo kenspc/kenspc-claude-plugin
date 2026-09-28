@@ -26,7 +26,8 @@
 # roots, and a .. after a link collapsed as written (denied); a target
 # beginning with ~, ~/, or a space, read as Claude Code reads it, with HOME
 # set to a fixture path; a sibling that shares a root's prefix (denied); no
-# roots with the marker set (denied); and every denied fixture again
+# roots with the marker set (denied); a file-tool input whose path field
+# the hook cannot read (denied); and every denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
@@ -119,6 +120,9 @@ json_escape() {
 }
 
 # make_input <tool> <cwd> <payload>: a hook input shaped like the live one.
+# A tool written <tool>/no-key carries the payload under a key the hook does
+# not read in place of command, file_path, or notebook_path: the shape a
+# renamed field would take.
 make_input() {
     local tool="$1" cwd payload tool_input
     cwd=$(json_escape "$2")
@@ -128,9 +132,10 @@ make_input() {
         Write) tool_input="{\"file_path\":\"$payload\",\"content\":\"fixture\"}" ;;
         Edit) tool_input="{\"file_path\":\"$payload\",\"old_string\":\"a\",\"new_string\":\"b\",\"replace_all\":false}" ;;
         NotebookEdit) tool_input="{\"notebook_path\":\"$payload\",\"cell_id\":\"c1\",\"new_source\":\"x = 2\",\"edit_mode\":\"replace\"}" ;;
+        */no-key) tool_input="{\"renamed\":\"$payload\",\"content\":\"fixture\"}" ;;
     esac
     printf '{"session_id":"00000000-0000-4000-8000-000000000000","transcript_path":"%s/transcript.jsonl","cwd":"%s","prompt_id":"00000000-0000-4000-8000-000000000001","permission_mode":"bypassPermissions","agent_id":"a000000000000000","agent_type":"general-purpose","effort":{"level":"xhigh"},"hook_event_name":"PreToolUse","tool_name":"%s","tool_input":%s,"tool_use_id":"toolu_fixture"}' \
-        "$cwd" "$cwd" "$tool" "$tool_input"
+        "$cwd" "$cwd" "${tool%/no-key}" "$tool_input"
 }
 
 # decide <hook> <marker or -> <roots> <input>: runs the hook, sets RC, OUT,
@@ -265,6 +270,8 @@ run_fixtures() {
         fx_deny "$hook" "$t relative .. escape" "$r" "$t" "$FX_REPO/sub" "../../../escape.txt"
         # A sibling that shares a root's prefix, denied.
         fx_deny "$hook" "$t sibling sharing a root's prefix" "$r" "$t" "$FX_REPO" "$FX_REPO-other/a.txt"
+        # A target the hook cannot read, denied even inside a root.
+        fx_deny "$hook" "$t with no readable path field" "$r" "$t/no-key" "$FX_REPO" "$FX_REPO/src/a.txt"
     done
 
     # Symlinked roots: /tmp against the driver's roots, which name it and its
