@@ -103,7 +103,9 @@ denies, with exit 2 and the reason on stderr, a Bash command that runs a
 recursive `rm` at a command position and a Write, Edit, or NotebookEdit
 whose resolved target lies outside every root, and a Bash input over
 64 KB unscanned, since a scan that outlasts the hook's 5-second timeout
-denies nothing — in the worker's own calls
+denies nothing; a call whose tool name, Bash command, or file-tool target
+it cannot read from its input is denied too, so a renamed field stops the
+calls loudly — in the worker's own calls
 and its subagents' alike, since a plugin's PreToolUse hook fires for a
 subagent's call too and its deny holds in bypassPermissions (probed on
 Claude Code 2.1.283). It is a best-effort guard behind the preamble's

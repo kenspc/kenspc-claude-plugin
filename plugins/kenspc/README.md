@@ -1087,10 +1087,13 @@ on Windows.
   which it does not judge; and a Write or Edit whose target is itself a
   symbolic link pointing outside the roots, since it resolves only the
   links of the target's ancestors. The rails text in the worker's prompt still
-  binds for all of these. The other way round, a file-tool call whose
-  target the hook cannot read from its input is denied in a marked worker,
-  with a reason saying so: were a Claude Code release to rename the path
-  field, a worker's writes would stop loudly rather than pass unchecked.
+  binds for all of these. The other way round, a call whose fields the
+  hook cannot read from its input — the tool's name, a Bash call's
+  command, or a file-tool call's target — is denied in a marked worker,
+  with a reason saying so: were a Claude Code release to rename one of
+  them, a worker's calls would stop loudly rather than pass unchecked: a
+  renamed tool name would stop every call of every worker, and a renamed
+  command every Bash call.
   A Bash call whose hook input is over 64 KB is denied unscanned, with a
   reason saying so: the scan's time grows with the square of the
   command's length, and a hook run that outlasts its 5-second timeout

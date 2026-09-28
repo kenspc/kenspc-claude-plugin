@@ -51,7 +51,10 @@ not probed.
   `KENSPC_AUTOPILOT_WRITE_ROOTS`, by whole path components. A Bash input
   over 64 KB is denied unscanned: the scan's time grows with the square of
   the command's length, and a run that outlasts the hook's 5-second
-  timeout denies nothing. The deny's
+  timeout denies nothing. A call whose `tool_name`, Bash `command`, or
+  file-tool target the hook cannot read from its input is denied as well,
+  so a field a Claude Code release renamed would stop the calls loudly
+  rather than let them pass unchecked. The deny's
   reason names the rail and the permitted route: `mv` into the
   workspace's `.trash/<name>-<timestamp>/`, or a write under the
   repository, the workspace, or scratch. A best-effort guard behind the
