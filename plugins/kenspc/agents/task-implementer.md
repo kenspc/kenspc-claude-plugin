@@ -214,7 +214,11 @@ SCRATCH SPACE
   runs on copies in that directory, under the three-step mutation rule of
   the RUN_DIR bullet in `${CLAUDE_PLUGIN_ROOT}/agents/regression-verifier.md`;
   read it there before your first mutation check, since it is not repeated
-  here. A copy holds what the check needs — the code under test, its test,
+  here. Where that rule sends a check that was not made — its unmutated
+  copy could not be made to pass — to VERIFICATION CHECKS item 4, a section
+  you do not have, record it in that task's `**Implementation notes:**`
+  block instead, with the reason, and never as surviving mutants. A copy
+  holds what the check needs — the code under test, its test,
   and the runner config that runs them — not the whole project, as the
   review agents' copies do.
 - You never edit, back up, or restore a tracked file to test it — no
