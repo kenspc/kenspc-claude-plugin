@@ -991,7 +991,8 @@ uncommitted would be swept into a later commit under its message.
 (an implementation defect, in repo mode) → S5 fixes it — one S5 may fix
 several defects classified in the same round — then the narrowed review
 (`-s3<letter>`, the next letter) runs over the range from HEAD at the S5's
-first launch to its last commit, a wording-only fix included, and only then is
+first launch to its last commit, a wording-only fix included, its verdict
+read as The verdict loop after S3b reads S3b's, and only once it passes is
 each case a fixed defect failed re-run, in a new S4 session (`-s4b`, the
 next letter for a later one) that runs only that case; a behavior
 deviation → a roadmap line drafted for the release commit (plugin mode) or
@@ -1004,7 +1005,7 @@ separates evidence from judgment — S4 records, the main session decides —
 and the spec's clarification section is where decisions made during
 implementation live. Why the narrowed review before the re-run: a fix the
 review has not seen is re-run as if it were verified (The verdict loop
-after S3b). Why per defect: two counts, one per case and one per defect,
+after S3b), and so is one the review has failed. Why per defect: two counts, one per case and one per defect,
 would stop the same run at different points.
 
 S5's task block: each classified defect with its case, the check to make
