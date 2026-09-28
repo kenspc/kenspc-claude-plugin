@@ -9,9 +9,9 @@ Related plan: `docs/plans/batch-i-autopilot-model-effort.md`。spec 的 Locked d
 所有任务的共同约束：
 - 只改 spec `## Autopilot` 的 `Allowed files:` 列出的档案；`Zero diff:` 列出的路径不动。
 - plugin 的 skill、agent、command 和 shared 档案里不出现任何 model 名称（家族名或 `claude-` 开头的 ID），由 `check-no-model-names.sh` 检查。文件里的例子一律用 `<model>` 这类占位符。
-- spec 的编号标签（Locked design 的 L1–L12、Background 的 probe P0–P7、clarification 的 C1–C11）不写进任何交付档案（C11）。每个任务都用这个 diff grep 检查自己改动的档案，必须没有输出：
-  `git diff -U0 <task 开始前的 HEAD> -- <本任务的档案> | grep -E '^\+.*\b(L([1-9]|1[0-2])|P[0-7]|C([1-9]|1[01]))\b'`
-- 每个必须没有输出的搜索（上面的编号标签 grep、各任务的 `follows the session's model` grep），先对一个必定命中的对象跑同一个 pattern，对照命中了，空结果才算通过：编号标签的 pattern 对 spec 本身（`grep -cE '\b(L([1-9]|1[0-2])|P[0-7]|C([1-9]|1[01]))\b' docs/plans/batch-i-autopilot-model-effort.md` 大于 0），`follows the session's model` 对 spec 或 task 开始前的档案（`git show <task 开始前的 HEAD>:<档案>`）。理由：用户层 CLAUDE.md 要求必须为空的搜索带一个必定命中的对照，否则 pattern 写错、档案路径写错，看起来都跟通过一样。
+- spec 的编号标签（Locked design 的 L1–L12、Background 的 probe P0–P7、clarification 的 C1–C13）不写进任何交付档案（C11）。每个任务都用这个 diff grep 检查自己改动的档案，必须没有输出：
+  `git diff -U0 <task 开始前的 HEAD> -- <本任务的档案> | grep -E '^\+.*\b(L([1-9]|1[0-2])|P[0-7]|C([1-9]|1[0-3]))\b'`
+- 每个必须没有输出的搜索（上面的编号标签 grep、各任务的 `follows the session's model` grep），先对一个必定命中的对象跑同一个 pattern，对照命中了，空结果才算通过：编号标签的 pattern 对 spec 本身（`grep -cE '\b(L([1-9]|1[0-2])|P[0-7]|C([1-9]|1[0-3]))\b' docs/plans/batch-i-autopilot-model-effort.md` 大于 0），`follows the session's model` 对 spec 或 task 开始前的档案（`git show <task 开始前的 HEAD>:<档案>`）。理由：用户层 CLAUDE.md 要求必须为空的搜索带一个必定命中的对照，否则 pattern 写错、档案路径写错，看起来都跟通过一样。
 - 新写的规则按 CLAUDE.md 的 Writing Rules 附上 "Why:" 散文。证据用自己的话写明什么失败、在哪个命令上，不引用 probe 或 dry-run 的编号。
 - 字段 label 和固定行（settings line、state file 行、reviewer report 字段）一律用英文。
 
