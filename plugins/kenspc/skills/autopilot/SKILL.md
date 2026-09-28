@@ -419,7 +419,8 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 pass-through values, the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
-questions answered, the rail observations each worker listed, the
+questions answered, the rail observations each worker listed, the gates
+a worker skipped and their outcome, the
 stops, the clarification numbers recorded in the spec, and the next action.
 It is rewritten at every transition and re-read, with `<tag>.exit`, on
 every wake — a notice, a message, a user reply — before the run acts. Why:
@@ -440,6 +441,8 @@ questions answered:
   <tag>: <one line> → <one line>
 rail observations:
   <tag>: <the worker's entry, one per line | none>
+skipped gates:
+  <S2|S3> <tag>: <accepted as a behavior deviation | stop: <the mismatch or choice> | recorded>
 stops: <reason> (<time>)
 clarifications recorded: <numbers>
 next: <the next action>
@@ -651,7 +654,9 @@ Every worker is one launch, one wait, one return.
   tag — `<tag>: none` when the heading is absent or empty. Why: a write
   under `/tmp` is not a breach (the preamble's § 3), but a write nobody
   records is one nobody can check; the section is what the reviewer
-  report's `Rail observations` line is built from.
+  report's `Rail observations` line is built from. At S2's and S3's
+  return, check whether the step asked its gate (§ A worker's question at
+  a gate, on a skipped gate).
 
   Once `<tag>.exit` is there, read the model and the effort the worker
   actually ran at. The session id in `<tag>.session` names its transcript,
@@ -746,6 +751,33 @@ question the spec answers is answered from the spec, and one it does not
 answer — a choice riding on the confirmation among them — ends the run with
 the question quoted. Why: the spec is the approved artifact, and an answer
 beyond it is a decision the user has not made.
+
+**A skipped gate** is checked after the fact, at the step's return — the
+skipped-gate post-check — not prevented. An S2 that returns without having sent its confirmation
+question — no `question <tag>:` carrying the task list's confirmation
+from S2's tag or its resumes, none in the state file's
+`questions answered:` — has the confirmation's own rubric above applied
+to the task document it committed: every step has a task, no task lies
+outside the spec, and no choice the spec's words leave open rides on it.
+A match is accepted and recorded as a behavior deviation, in the state
+file's `skipped gates:` section and on the reviewer report's
+`Skipped gates` line. No match, or a choice left open, is a stop of stop
+condition 7's kind, with the mismatch or the choice quoted. In a session
+that cannot ask (a system reminder to work without stopping), the run
+ends with it. Why checked and not prevented: an S2 at a lowered effort
+has skipped the confirmation and sent no question while the S2 workers at
+the pass-through effort asked, though the preamble told every one of them
+to ask; the committed task document is on disk to check with the same
+rubric the question would have met.
+
+An S3 that returns without having asked task-implement's batch gate is
+recorded only, in the same section and line. Why: once S2's task list has
+passed — by its answered question or by the post-check — the batch
+gate's answer is yes by construction.
+
+No role gets an effort floor for its gate. Why: a floor per role would be
+a plugin default, which the plugin does not ship, and it would not catch
+a skip at any effort; the post-check catches it at every effort.
 
 ### The message protocol
 
@@ -1571,7 +1603,9 @@ the run ends with that message.
    with the numbers.
 6. A rail breach — the worker has already reported it and ended.
 7. A question neither the spec nor the locked design answers — an answer
-   would be the main session's own.
+   would be the main session's own; the skipped-gate post-check's
+   mismatch or open choice after an S2 that sent no confirmation question
+   is one (§ A worker's question at a gate).
 8. A nested `claude -p` refused — the topology cannot be run here.
 9. The same step's session dead twice — a third resume replays the same
    failure.
@@ -1608,6 +1642,7 @@ the user has yet to see.
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Rail observations: <list | none>
+- Skipped gates: <list | none>
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
@@ -1617,7 +1652,9 @@ The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`
 field. The `Rail observations` line lists the state file's
 `rail observations:` entries other than `none`, each as `<tag>: <entry>`,
-and reads `none` when there are none.
+and reads `none` when there are none. The `Skipped gates` line lists the
+state file's `skipped gates:` entries — the step, its tag, and the
+outcome — and reads `none` when no worker skipped its gate.
 
 ## The gates
 
@@ -1637,6 +1674,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |
 | A worker's question the spec answers | — (answered from the spec) | Answered from the spec |
 | A worker's question the spec does not answer, a choice riding on a task-list confirmation included | The question, quoted | The run ends with the question quoted |
+| S2 returned without its confirmation question, and the post-check of its task document finds a mismatch or an open choice | The mismatch or the choice, quoted | The run ends with it quoted |
 | Any other stop condition | How to go on | The run ends with the reason |
 | The final gate | Tag, push, release | The run ends with the two reports and the finish line |
 
@@ -1679,7 +1717,9 @@ wording that closed it:
 - Phase 0 → Phase 1 or 2: the settings line printed and the state file
   written.
 - Phase 1 → Phase 2: the spec's commit hash in the state file.
-- Within Phase 2: each `<tag>.exit`; S2 → S3: the task document on disk;
+- Within Phase 2: each `<tag>.exit`; S2 → S3: the task document on disk,
+  and, when S2 sent no confirmation question, the skipped-gate
+  post-check's match recorded;
   S3 → S3b: S3's `.exit` and the HEAD it left; S3b → Phase 3: its Schema F
   verdict and the empty zero-diff output.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)

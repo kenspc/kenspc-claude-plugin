@@ -861,7 +861,28 @@ Spec Step 5.1, J-L3. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 11: SKILL.md — the check of a skipped gate
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the check is named "the skipped-gate post-check" and lives in
+  § A worker's question at a gate, as a paragraph after the gate rubric it
+  reuses; The return points at it for S2 and S3. "Sent no confirmation
+  question" is read from the evidence the main session already keeps: no
+  `question <tag>:` from S2's tag or its resumes, none in the state file's
+  `questions answered:`. The Why for checking rather than preventing is the
+  batch's own evidence in its words (a lowered-effort S2 skipped the
+  confirmation though the preamble told it to ask, while pass-through S2s
+  asked); the no-floor Why is that a floor is a plugin default and would
+  not catch a skip at any effort. S3's skipped batch gate is recorded only,
+  with the by-construction Why.
+- Changes/tradeoffs: stop condition 7 names the post-check's mismatch or
+  open choice; the gates table gains its row (asks the mismatch or the
+  choice, quoted; cannot-ask: the run ends with it quoted); the state file
+  gains `skipped gates:` (`<S2|S3> <tag>: <accepted as a behavior deviation
+  | stop: … | recorded>`) and the reviewer report `- Skipped gates: <list |
+  none>` with a sentence on how it is built. § Phase transitions' S2 → S3
+  entry also names the post-check's match — an artifact-based transition
+  like the others, beyond the task's letter.
 
 Spec Step 5.1, J-L5. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
