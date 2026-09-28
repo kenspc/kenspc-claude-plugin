@@ -132,7 +132,11 @@ Depends on: Task 1
 
 ### Task 4: SKILL.md — 每次启动设两个变量、读出实际值、判定一致、写进记录和报告
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: 读出实际值的规则写在 The return 那一条 bullet 里、原有文字之后的续段，一条子列表列出判定规则，state file 那一行的模板逐字放在续段里，也放进 § The state file 模板新增的 `models and efforts:` 一节，以及 reviewer report 模板 `- Models and efforts:` 下面。transcript 里有主循环记录、只是缺 `effort` 字段的情况，spec 同时有两条可套用的说法（缺 `effort` 字段算 `effort not applied` 的不一致；读不到字段算 `not observed`）。这里取较具体的那条：缺字段就是 `effort not applied`，applied 那一栏对这条记录写 `—`；`not observed` 只用在 transcript 找不到、没有读得到的主循环 assistant 记录，或 `message.model` 读不到的时候。这样 `MISMATCH: effort not applied` 和"`not observed` 不加 `MISMATCH:`"不会互相冲突。`<what>` 定为 `model`、`effort`、`effort not applied` 三者之一或几项，用 `, ` 连接。reviewer report 模板那一行写成 `<n> workers, <k> mismatches|mismatches: none`，沿用 settings line 里 `acceptance <k> cases|none` 的写法，Phase 4 的叙述另外写明没有不一致时的完整写法。
+- Changes/tradeoffs: worker 不沿用主 session 的 model 和 effort 这句写在 The launch 的续段开头，后面接着写每次启动都要设这两个变量、重跑 tag 对应的角色和 resume 的规则，各附 Why。S4 task block 里的那句用 plain text（跟 block 里其他提到变量的文字一样没有反引号），因为它是 worker 读的 prompt；Templates 的 S4 bullet 同步写明，并附 Why。§ The driver 的变量表插在 `APPEND_SP` 之后，顺序与 `run.sh` 档头一致（用脚本逐项比对过）。"follows the session's model" 的空结果对照用 spec（命中 4 行），因为 task 开始前的 SKILL.md 本来就没有这句。另外留意到：spec 要求读全部主循环 assistant 记录，Claude Code 可能在 transcript 里写入 model 不是真实 model ID 的合成记录（例如 API 错误时），这种记录会让 model 那一栏出现 `+` 连接的多个值并被判为不一致；本任务照 spec 写，没有另外排除，记在这里供 reviewer 判断。
 
 Depends on: Task 1, Task 3
 

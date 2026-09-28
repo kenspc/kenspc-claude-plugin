@@ -392,7 +392,8 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 
 `_logs/<batch>-state.md` holds the settings line, the repository root, the
 pass-through values, the
-current step and its tag, each session's tag, id, cost, and result, the
+current step and its tag, each session's tag, id, cost, and result, each
+worker's requested and applied model and effort, the
 questions answered, the
 stops, the clarification numbers recorded in the spec, and the next action.
 It is rewritten at every transition and re-read, with `<tag>.exit`, on
@@ -408,6 +409,8 @@ pass-through: <model|not determined>/<effort|not determined>
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
+models and efforts:
+  <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]
 questions answered:
   <tag>: <one line> → <one line>
 stops: <reason> (<time>)
@@ -508,7 +511,8 @@ Every worker is one launch, one wait, one return.
 - **The launch.** Assemble `_prompts/<batch>-<tag>.md` from the preamble
   and the task block; run the driver copy with the environment it needs —
   `AUTOPILOT_LOGS=<workspace>/_logs`, `AUTOPILOT_BATCH=<batch>`,
-  `AUTOPILOT_BUDGET_USD=<remaining>`, and `AUTOPILOT_PLUGIN_DIR=<plugin
+  `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_MODEL` and
+  `AUTOPILOT_EFFORT` (below), and `AUTOPILOT_PLUGIN_DIR=<plugin
   directory>` in plugin mode — with the repository root as the worker's
   cwd; print `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   as a line of its own in this session's reply (the pid and the session id
@@ -529,6 +533,22 @@ Every worker is one launch, one wait, one return.
   wait on a worker that does not exist, or resume beside one that does;
   and a pid the driver did not start writes no `.exit`, so a run that
   waited for it would wait until the user intervened.
+
+  A worker does not follow this session's model and effort: it is its own
+  `claude -p` process, and without `--model` and `--effort` it resolves
+  both from its own settings. So every launch sets `AUTOPILOT_MODEL` and
+  `AUTOPILOT_EFFORT` explicitly, each to the role's declared value
+  (`Role settings:`), else to the pass-through value (Phase 0), else, when
+  that is `not determined`, to the empty string, which the driver reads as
+  unset. Why the empty string rather than leaving the variable out: a
+  variable of the same name already in this session's environment would
+  otherwise reach the driver and pass a value nobody chose. A re-run's tag
+  takes its step's role: `-s3<letter>` (`-s3c`, `-s3d`, …) is S3b,
+  `-s4<letter>` (`-s4b`, `-s4c`, …) is S4, `-s5<letter>` (`-s5b`, …) is
+  S5. A resume, `<tag>-r<k>`, sets the same `AUTOPILOT_MODEL` and
+  `AUTOPILOT_EFFORT` the tag it resumes was launched with. Why: a resume
+  keeps the session's model but not its effort, so a resume launched
+  without `--effort` would fall back to the settings' effort.
 - **The wait, interactive.** Subscribe to the worker with `SendMessage`
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
@@ -567,6 +587,45 @@ Every worker is one launch, one wait, one return.
   timed-out question (The message protocol), not a finished step. Why: a
   worker that waited out its thirty minutes exits like one that finished,
   and its missing artifact would otherwise be found one step later.
+
+  Once `<tag>.exit` is there, read the model and the effort the worker
+  actually ran at. The session id in `<tag>.session` names its transcript,
+  `~/.claude/projects/*/<session-id>.jsonl`; read only that file's
+  main-loop assistant records — its lines whose `type` is `assistant`, and
+  not a subagent's file — each one's `message.model` and `effort`. Every
+  record counts: a part with one distinct value is written as it stands,
+  several distinct values are joined with `+`, and a part matches only when
+  every record matches. A resume's tag reads the whole session, the earlier
+  run included.
+  - The model matches when the actual model ID contains the requested
+    value, compared without regard to case, once a trailing `[...]` is
+    removed from the requested value.
+  - The effort matches when the record's `effort` equals the requested
+    value. A record with no `effort` field does not match, the applied
+    effort shows `—` for it, and the mismatch is written
+    `effort not applied`.
+  - A part requested as `—` — its variable set to the empty string, so no
+    flag was passed — is not judged.
+  - A transcript that cannot be found, or that holds no main-loop assistant
+    record that can be read, is `not observed` in both parts, and a
+    `message.model` that cannot be read is `not observed` in the model
+    part. `not observed` is printed as it stands: it never stops the run,
+    takes no `MISMATCH:`, and is not counted as a mismatch.
+  - A mismatch is recorded and marked, never a stop.
+
+  The result is one line per worker in the state file's
+  `models and efforts:` section:
+
+  `<tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]`
+
+  where `declared` marks a role `Role settings:` names — a role that
+  declares one part only is `declared` too, its other requested part being
+  the pass-through value that was passed — and `<what>` names each part
+  that does not match, `model`, `effort`, or `effort not applied`, joined
+  with `, `. Why read and never stop: the transcript's fields are an
+  undocumented internal format, evidence and not a contract, so the run
+  records what it could read and a reviewer judges a mismatch, while a
+  stop would rest the batch on a format the harness may change.
 
 ### A worker's question at a gate
 
@@ -870,7 +929,14 @@ release preparation was right.
   an interactive session has no JSON result, so its cost is a number with
   a stated basis or nothing, and a total without it would be short by one
   session — and without the record's costs, short by the whole acceptance
-  whose cases the same report lists with their costs.
+  whose cases the same report lists with their costs. The
+  `Models and efforts` line counts the workers and the mismatches from
+  the state file's `models and efforts:` lines, which follow it as they
+  stand; with no mismatch it reads `<n> workers, mismatches: none`, and a
+  `not observed` part counts as no mismatch. Why: a worker's model and
+  effort are chosen per role and set on every launch, so the report is
+  where a reviewer sees which settings the harness applied and which it
+  did not.
 
 The reviewer report is built from the state file, not from memory, and also
 written to `_logs/<batch>-report.md`; the state file records its last
@@ -1072,7 +1138,14 @@ instruction come in the prompt that resumed you, under its first line
   under a worker's or a resume's tag is accepted once that worker has ended
   and overwrites its `.json`, `.session`, and `.pid`, which Phase 4 reads;
   and S4's own cap bounds none of its nested sessions, so a cap they shared
-  would let each case spend it once.
+  would let each case spend it once. The nested sessions take S4's
+  `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` through the environment — the
+  main session set both for S4's launch, and the driver copy S4 runs reads
+  them from there — so they run at the acceptance role's model and effort
+  unless a case sets its own; the block says so. Why: nothing on the
+  nested launch line shows the two values, so without the sentence S4
+  would not know them, and a case whose criterion names a model or an
+  effort would run at S4's with nobody having set them.
 
 ````
 ## Task: acceptance for batch <batch>
@@ -1093,6 +1166,10 @@ seed as its cwd and its prompt in a file:
     AUTOPILOT_PLUGIN_DIR=<plugin directory> AUTOPILOT_BUDGET_USD=<cap> \
     <workspace>/_prompts/<batch>-run.sh <nested tag> <seed directory> <prompt file>
 
+The driver copy passes --model and --effort from AUTOPILOT_MODEL and
+AUTOPILOT_EFFORT, which your environment already holds from your own
+launch, so every nested session runs at your model and effort unless a
+case sets the two variables on its own launch line.
 The nested tag is <tag>-case<n> for case n[, and <tag>-trial for the trial
 run] — a tag no other session has used. The cap is <remaining> for the first
 nested launch and, for each later one, <remaining> less the costs of every
@@ -1250,6 +1327,8 @@ AUTOPILOT_LOGS         the logs directory (default ~/Projects/_smoke/_logs)
 AUTOPILOT_PLUGIN_DIR   when set, --plugin-dir <value>   (plugin mode)
 AUTOPILOT_BUDGET_USD   when set, --max-budget-usd <value>
 APPEND_SP              when set, --append-system-prompt <value>
+AUTOPILOT_MODEL        when non-empty, --model <value>    (fresh launch and resume)
+AUTOPILOT_EFFORT       when non-empty, --effort <value>   (fresh launch and resume)
 AUTOPILOT_CLAUDE       the executable (default claude)
 AUTOPILOT_BATCH        the batch name in the timeline's file name
 
@@ -1262,6 +1341,9 @@ Every worker starts with `--name <tag>`,
 `--settings '{"crossSessionInbound":"accept"}'`,
 `--permission-mode bypassPermissions`, `--output-format json`, stdin from
 `/dev/null`; a fresh launch passes `--session-id`, a resume `--resume`.
+`--model` is passed when `AUTOPILOT_MODEL` is non-empty and `--effort`
+when `AUTOPILOT_EFFORT` is, on a fresh launch and on a resume alike; the
+empty string counts as unset.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:
 every worker asks by message, as the preamble says, and a worker told to
 work without stopping would answer its own questions, which the quality
@@ -1374,6 +1456,8 @@ the user has yet to see.
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
+- Models and efforts: <n> workers, <k> mismatches|mismatches: none
+  <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Release preparation: <commit | not prepared | kept>
