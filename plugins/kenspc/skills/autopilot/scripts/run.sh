@@ -21,6 +21,12 @@
 #   AUTOPILOT_BUDGET_USD  when set, --max-budget-usd <value> is passed
 #   APPEND_SP             when set, --append-system-prompt <value> is passed
 #                         (the cannot-ask variant)
+#   AUTOPILOT_MODEL       when non-empty, --model <value> is passed, on a fresh
+#                         launch and on a resume; the empty string counts as
+#                         unset
+#   AUTOPILOT_EFFORT      when non-empty, --effort <value> is passed, on a
+#                         fresh launch and on a resume; the empty string
+#                         counts as unset
 #   AUTOPILOT_CLAUDE      the executable; default claude
 #   AUTOPILOT_BATCH       the batch name in the timeline's file name; default
 #                         the tag's prefix before its last "-s" (batch-x-s3
@@ -42,9 +48,13 @@
 #
 # Always passed: --name <tag>, --settings '{"crossSessionInbound":"accept"}',
 # --permission-mode bypassPermissions, --output-format json; stdin from
-# /dev/null. A fresh launch passes --session-id <uuid>. No model flag and no
-# continue flag are ever passed: the worker follows the session's model, and
-# a resume names its session explicitly.
+# /dev/null. A fresh launch passes --session-id <uuid>. No continue flag is
+# ever passed: a resume names its session explicitly.
+# Why --model and --effort go on both paths: a worker started without them
+# resolves its model and effort from its own settings, not from the session
+# that started it, and a resume keeps the model but not the effort — a
+# resume launched without --effort ran at the settings' effort rather than
+# the one its first run was given.
 #
 # Why the session id is written before the start: the transcript path and the
 # resume id are then known even when the worker dies before its JSON lands.
@@ -174,6 +184,12 @@ launch() {
     args+=(--append-system-prompt "$APPEND_SP")
     extra="$extra [append-system-prompt]"
   fi
+  if [ -n "${AUTOPILOT_MODEL:-}" ]; then
+    args+=(--model "$AUTOPILOT_MODEL")
+  fi
+  if [ -n "${AUTOPILOT_EFFORT:-}" ]; then
+    args+=(--effort "$AUTOPILOT_EFFORT")
+  fi
   if [ -n "$resume" ]; then
     cmd=("$exe" -p --resume "$session" "$prompt" "${args[@]}")
     extra="$extra resume"
@@ -223,16 +239,22 @@ launch() {
 # without its start or end line, an .err that does not show every
 # always-passed flag with the id .session holds, a .json whose
 # session_id is not that id, and an .err that shows --plugin-dir,
-# --max-budget-usd, or --append-system-prompt with their variables unset,
-# or without cwd=<the launch's cwd, physical path>; then, for a launch of
-# a stub that exits 3 under selftest-s2, a .exit not reading 3 or a
-# timeline end line without exit 3;
+# --max-budget-usd, --append-system-prompt, --model, or --effort with their
+# variables unset, or without cwd=<the launch's cwd, physical path>; then,
+# for a launch of a stub that exits 3 under selftest-s2, a .exit not
+# reading 3 or a timeline end line without exit 3;
+# then, for a launch under selftest-s3 with AUTOPILOT_MODEL and
+# AUTOPILOT_EFFORT set, a .exit missing after the wait or an .err without
+# --model <value> or --effort <value>; then, for a launch under
+# selftest-s4 with both set to the empty string, a .exit missing after the
+# wait or an .err that shows --model or --effort;
 # then, for a resume launch of the same stub
 # under <tag>-r1 through the command line (the parser the skill calls)
-# with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, and
-# APPEND_SP set, a command line not returning 0, a .exit missing or not 0,
+# with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, APPEND_SP,
+# AUTOPILOT_MODEL, and AUTOPILOT_EFFORT set, a command line not returning
+# 0, a .exit missing or not 0,
 # a .session not holding that id, an .err without --resume <id>, with
-# --session-id, or without the three variables' flags, a timeline start
+# --session-id, or without the five variables' flags, a timeline start
 # line not ending in "resume", and a command line with --resume and no id,
 # or with an unknown argument, that does not return 2 or writes
 # <tag>-r1-x.session; then,
@@ -242,7 +264,7 @@ launch() {
 # self-s-test-timeline.log without its start or end line (the batch-name
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
-  local base LOGS TAG RTAG BTAG n exit_status session flag
+  local base LOGS TAG RTAG BTAG MTAG ETAG n exit_status session flag
   local first_session first_pid refusal rc self FTAG saved_exe bad started
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
@@ -283,9 +305,9 @@ STUB
   printf '#!/bin/sh\necho "$@" >&2\nexit 3\n' > "$base/stub/fail" || die "cannot write the failing stub"
   chmod +x "$base/stub/fail" || die "cannot make the failing stub executable"
 
-  # The three optional variables are unset for the first launch, whatever
+  # The five optional variables are unset for the first launch, whatever
   # the caller's environment holds, so their flags can be asserted absent.
-  unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP
+  unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP AUTOPILOT_MODEL AUTOPILOT_EFFORT
   AUTOPILOT_LOGS=$LOGS
   AUTOPILOT_BATCH=selftest
   TAG=selftest-s1
@@ -377,10 +399,10 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   done
   grep -qF -- "\"session_id\":\"$session\"" "$LOGS/$TAG.json" \
     || { echo "self-test failed: $LOGS/$TAG.json does not carry the session_id that $LOGS/$TAG.session holds" >&2; return 1; }
-  # With the three optional variables unset their flags are absent: a
+  # With the five optional variables unset their flags are absent: a
   # driver that passed --plugin-dir "" on every launch would start every
   # repo-mode worker with an empty plugin directory.
-  for flag in --plugin-dir --max-budget-usd --append-system-prompt; do
+  for flag in --plugin-dir --max-budget-usd --append-system-prompt --model --effort; do
     ! grep -qF -- "$flag" "$LOGS/$TAG.err" \
       || { echo "self-test failed: $LOGS/$TAG.err shows $flag on a launch with its variable unset" >&2; return 1; }
   done
@@ -403,19 +425,52 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   grep -q "^end   $FTAG exit 3\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no end line with exit 3 for $FTAG" >&2; return 1; }
 
+  # A fresh launch with AUTOPILOT_MODEL and AUTOPILOT_EFFORT set carries
+  # both flags with their values: a worker started without them resolves
+  # its model and effort from its own settings, so a driver that dropped
+  # either would run the role at values nobody asked for. The values are
+  # placeholders, not model names.
+  MTAG=selftest-s3
+  AUTOPILOT_MODEL=selftest-model; AUTOPILOT_EFFORT=low
+  launch "$MTAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_MODEL AUTOPILOT_EFFORT
+  n=0; until [ -f "$LOGS/$MTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$MTAG.exit" ] || { echo "self-test failed: $LOGS/$MTAG.exit is missing after the wait" >&2; return 1; }
+  for flag in '--model selftest-model' '--effort low'; do
+    grep -qF -- "$flag" "$LOGS/$MTAG.err" \
+      || { echo "self-test failed: $LOGS/$MTAG.err does not show $flag" >&2; return 1; }
+  done
+  # Set to the empty string, the two variables count as unset: the skill
+  # sets both on every launch, empty where no value was determined, so a
+  # driver that tested only whether they were set would pass an empty
+  # --model or --effort.
+  ETAG=selftest-s4
+  AUTOPILOT_MODEL=""; AUTOPILOT_EFFORT=""
+  launch "$ETAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_MODEL AUTOPILOT_EFFORT
+  n=0; until [ -f "$LOGS/$ETAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$ETAG.exit" ] || { echo "self-test failed: $LOGS/$ETAG.exit is missing after the wait" >&2; return 1; }
+  for flag in --model --effort; do
+    ! grep -qF -- "$flag" "$LOGS/$ETAG.err" \
+      || { echo "self-test failed: $LOGS/$ETAG.err shows $flag on a launch with its variable set to the empty string" >&2; return 1; }
+  done
+
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
   # session has ended, so a regression there would otherwise show only then.
-  # The three optional variables are set for this launch only, so their
+  # The five optional variables are set for this launch only, so their
   # flags are read from .err too: a plugin-mode worker launched without
   # --plugin-dir would load the installed plugin and review code other than
-  # the batch's, and one without --max-budget-usd would run unbounded. This
+  # the batch's, one without --max-budget-usd would run unbounded, and a
+  # resume without --effort would fall back to the settings' effort, since a
+  # resume keeps the model but not the effort. This
   # launch goes through the command line, the parser the skill calls, so a
   # driver that dropped the --resume value is caught here rather than
   # starting a fresh session under the resume tag.
   RTAG=$TAG-r1
   AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
   AUTOPILOT_PLUGIN_DIR=$base/plugin AUTOPILOT_BUDGET_USD=1 APPEND_SP=x \
+  AUTOPILOT_MODEL=selftest-model AUTOPILOT_EFFORT=low \
     bash "$self" "$RTAG" "$base" "$base/prompt.md" --resume "$session" \
     || { echo "self-test failed: the resume launch of $RTAG through the command line did not return 0" >&2; return 1; }
   n=0; until [ -f "$LOGS/$RTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
@@ -430,7 +485,8 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/$RTAG.err shows --session-id on a resume" >&2; return 1; }
   grep -q "^start $RTAG pid [0-9][0-9]* .* resume\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no start line ending in resume for $RTAG" >&2; return 1; }
-  for flag in "--plugin-dir $base/plugin" '--max-budget-usd 1' '--append-system-prompt x'; do
+  for flag in "--plugin-dir $base/plugin" '--max-budget-usd 1' '--append-system-prompt x' \
+              '--model selftest-model' '--effort low'; do
     grep -qF -- "$flag" "$LOGS/$RTAG.err" \
       || { echo "self-test failed: $LOGS/$RTAG.err does not show $flag" >&2; return 1; }
   done

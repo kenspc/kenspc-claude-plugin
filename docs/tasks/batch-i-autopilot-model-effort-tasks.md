@@ -21,7 +21,11 @@ Dependency note: Task 2 depends on Task 1; Task 4 depends on Task 1 and Task 3; 
 
 ### Task 1: run.sh 按两个新变量传 `--model` 和 `--effort`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: 两个 flag 加在共用的 `args` 末尾（`APPEND_SP` 之后），不写进 `extra`，所以 timeline 的 `start` 行不变。新增的两次新启动用独立的 tag：`selftest-s3`（两个变量设成 `selftest-model`/`low`）和 `selftest-s4`（两个都设成空字串），放在失败 stub（`selftest-s2`）之后、命令行 resume 之前；每次都先等 `.exit` 出现再读 `.err`，因为 stub 的参数是它启动后才写进 `.err` 的。变量用 shell 赋值、launch 之后 `unset`，写法跟现有的 `saved_exe` 换 stub 一致；命令行 resume 则跟另外三个变量一样放在环境前缀里。
+- Changes/tradeoffs: 档头 "Always passed" 那段拆成两句：continue flag 那半句保留，另起一句 "Why" 说明 worker 按自己的 settings 解析、resume 保留 model 不保留 effort，证据用自己的话写（不带 `--effort` 的 resume 跑在 settings 的 effort 上）。突变检查在 `$TMPDIR` 下的副本上做，工作树没有改动过：把 `args+=(--effort …)` 换成 `:`，self-test exit 1，讯息是 `selftest-s3.err does not show --effort low`；把 `args+=(--model …)` 换成 `:`，exit 1，讯息是 `selftest-s3.err does not show --model selftest-model`；原档再跑一次 exit 0。另外做了两次任务没要求的突变：把非空判断改成只看有没有设（`${AUTOPILOT_EFFORT+x}`），`selftest-s4` 的空字串检查报错；只在新启动时传 `--effort`，`selftest-s1-r1` 的 resume 检查报错。调用端环境里已有 `AUTOPILOT_MODEL`、`AUTOPILOT_EFFORT` 时 self-test 照样通过，第一次启动前的 `unset` 挡住了它们。commit 里除了 `run.sh` 还有本 task 文件（状态和这段 notes）：实作流程要求代码和状态在同一个 commit，task 文件属于流程产物，不是交付档案；后面各任务同样处理。
 
 修改 `plugins/kenspc/skills/autopilot/scripts/run.sh`，只改这一个档（spec Step 1；L5、L7、L11）。
 
