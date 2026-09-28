@@ -1374,6 +1374,11 @@ Every nested launch sets AUTOPILOT_PLUGIN_DIR explicitly on its line: the
 plugin directory, as above, or the empty string for a run a case starts
 without it. Your environment holds the plugin directory from your own
 launch, so a line that leaves the variable out passes it all the same.
+AUTOPILOT_WORKSPACE on the line is this batch's workspace; a case whose
+nested run is an autopilot batch with a Workspace: of its own sets it to
+that workspace instead, since the nested main session writes its state
+file and prompts there, and the rails hook denies a marked session's
+write outside the workspace its line names.
 The nested tag is <tag>-case<n> for case n[, and <tag>-trial for the trial
 run] — a tag no other session has used. The cap is <remaining> for the first
 nested launch and, for each later one, <remaining> less the costs of every
