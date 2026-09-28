@@ -485,7 +485,45 @@ Spec Step 3.2 (J-L2). File: `plugins/kenspc/agents/task-implementer.md`.
 
 ### Task 6: The rails hook (hook built only)
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: deny form exit 2 with the reason on stderr (Task 1's verified
+  form). The JSON is read by a small awk string extractor (first
+  `"key":"…"` member, escapes decoded; a quote inside a JSON string is
+  always escaped, so a key cannot match inside a value), and the `rm` rule
+  by an awk shell tokenizer: quotes, backslashes, comments, separators
+  (`;` `&&` `||` `|` `&` newline `(`), `$( )` and backtick substitutions
+  (the enclosing command's words are set aside and restored), redirections
+  (`2>&1`, `&>`, `>|` are not separators), and heredoc bodies, which are
+  skipped — so the usual `git commit -m "$(cat <<'EOF' … EOF)"` message
+  mentioning `rm -rf` is allowed. Beyond the listed wrappers (sudo,
+  command, env, xargs, their options and option arguments skipped), shell
+  keywords (`if then else elif do while until ! {`) and `exec`, `nohup`,
+  `time` also pass the command position on, at no extra mechanism.
+  `--rec` and other prefixes of `--recursive` count, as GNU rm accepts
+  them; `--` ends the flag scan. Paths are resolved component by component
+  (a `cd … && pwd -P` fork only for a symlinked directory); a target that
+  is not POSIX absolute after the join with `cwd` (a Windows drive-letter
+  path) is not judged, so a Windows worker is not denied every write; a
+  file-tool target missing from the input is denied. The route text names
+  both `.trash/<name>-<timestamp>/` and the repository / workspace /
+  scratch, so every deny's reason contains `.trash`.
+- Changes/tradeoffs: the inert path exits without reading stdin. A second
+  probe session (`inert-probe/` in the probes directory, USD 0.6565836,
+  added to probes.md's cost section, sum now USD 1.034371) showed Claude
+  Code 2.1.283 tolerating a hook that exits without reading a 120108-byte
+  input: exit 0, `subtype` success, no hook error in the transcript. Checked
+  with a scratch runner (`$TMPDIR/batch-j-t6-hooktest/run_cases.py`, 105
+  cases from the live JSON under `/bin/bash` 3.2.57, all as expected:
+  without the marker a recursive-`rm` and an outside write give exit 0 and
+  no output; with the marker they are denied, `grep -c 'rm -rf' f` and a
+  write inside the repository are allowed). Timing: 0.13 s for a 1 MB
+  Write input with the marker, 0.002 s inert. The header's known misses
+  add `find -exec rm`, `eval`, rm through a variable or alias, other
+  wrappers, an unquoted heredoc's substitutions, and non-POSIX paths to the
+  five required. File mode 644, like the two existing hook scripts (run
+  through `bash`). Writes under `/tmp`: none by this task's commands.
 
 Depends on: Task 1, Task 3
 

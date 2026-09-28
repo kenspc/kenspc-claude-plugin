@@ -1,5 +1,5 @@
 {
-  "description": "kenspc plugin hooks: skill reminders and session-end telemetry",
+  "description": "kenspc plugin hooks: skill reminders, session-end telemetry, and the autopilot worker rails",
   "hooks": {
     "PreToolUse": [
       {
@@ -8,6 +8,16 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/remind-plan-skill.sh\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/autopilot-worker-rails.sh\"",
             "timeout": 5
           }
         ]
