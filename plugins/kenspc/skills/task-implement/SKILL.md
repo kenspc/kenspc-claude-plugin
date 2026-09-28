@@ -511,12 +511,13 @@ probe that passes stays in the user's own test run until the user removes
 it. When CUSTOM_INSTRUCTIONS carried a project structural fact (item 1 of
 its construction), one bullet names the fact and where to record it, the
 first of these that applies: the document that a Documents table in the
-project's instruction files assigns its topic to; an instruction file with
-an admission-rule comment, such as the AGENTS.md `/kenspc-init` writes —
-that file when the fact passes the rule, and otherwise where the comment
-sends what fails it; the AGENTS.md a CLAUDE.md imports, with nothing copied
-into that CLAUDE.md; the project's AGENTS.md when it has no CLAUDE.md;
-otherwise CLAUDE.md. Why: a fact recorded where the project keeps its
+project's instruction files assigns its topic to, unless the fact fails an
+admission-rule comment in that document; an instruction file with an
+admission-rule comment, such as the AGENTS.md `/kenspc-init` writes — that
+file when the fact passes the rule, and otherwise where the comment sends
+what fails it; the AGENTS.md a CLAUDE.md imports, with nothing copied into
+that CLAUDE.md; the project's AGENTS.md when it has no CLAUDE.md; otherwise
+CLAUDE.md. Why: a fact recorded where the project keeps its
 instructions reaches the next run without a CUSTOM_INSTRUCTIONS line, and a
 CLAUDE.md created beside an AGENTS.md stops Claude Code's default mode from
 reading that AGENTS.md.
