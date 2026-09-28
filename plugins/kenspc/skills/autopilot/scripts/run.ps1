@@ -490,7 +490,8 @@ function Test-ResultJson {
 function Assert-WorkerVars {
     param([string]$ErrFile, [string]$Workspace, [bool]$WorkspaceWanted, [string]$Repo, [string]$Cwd = '')
     # The self-test's check of the two exported variables a stub wrote to its
-    # .err: the marker reads 1; the roots hold $TMPDIR (when set), /tmp, and
+    # .err: the marker reads 1; the roots do not hold the stale entry the
+    # self-test's environment carries, and hold $TMPDIR (when set), /tmp, and
     # /private/tmp, the repository when one is given, and the workspace when
     # wanted — or, when not, no workspace entry: neither that path nor an
     # empty entry; and, when a cwd is given, one that is no repository's top
@@ -501,6 +502,9 @@ function Assert-WorkerVars {
     $rootsLine = @([System.IO.File]::ReadAllLines($ErrFile) | Where-Object { $_ -cmatch '(^|\s)KENSPC_AUTOPILOT_WRITE_ROOTS=' }) | Select-Object -First 1
     $roots = if ($rootsLine) { [regex]::Match($rootsLine, 'KENSPC_AUTOPILOT_WRITE_ROOTS=(.*)$').Groups[1].Value } else { '' }
     if ([string]::IsNullOrEmpty($roots)) { Stop-SelfTest "$ErrFile shows no roots in KENSPC_AUTOPILOT_WRITE_ROOTS" }
+    if ("|$roots|".Contains('|/kenspc-selftest-stale-root|')) {
+        Stop-SelfTest "the roots in $ErrFile, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold the caller's stale entry /kenspc-selftest-stale-root"
+    }
     $wanted = @('/tmp', '/private/tmp')
     if (-not [string]::IsNullOrEmpty($env:TMPDIR)) { $wanted += $env:TMPDIR }
     if ($Repo) { $wanted += $Repo }
@@ -564,12 +568,13 @@ function Invoke-Refused {
 # AUTOPILOT_PLUGIN_DIR the empty string and one with it set, each with its
 # .exit present after the wait and its .err showing --name <tag>, and
 # --plugin-dir <value> for the set one and no --plugin-dir for the other;
-# with the caller's environment holding KENSPC_AUTOPILOT_WORKER=0, a launch
-# with AUTOPILOT_WORKSPACE set, its .exit present after the wait and its
-# .err showing --name <tag>, the marker KENSPC_AUTOPILOT_WORKER=1, and roots
-# (KENSPC_AUTOPILOT_WRITE_ROOTS) holding $TMPDIR (when set), /tmp,
-# /private/tmp, and the workspace, and not its cwd, which is no
-# repository's top level; a git init of a repository under the
+# with the caller's environment holding KENSPC_AUTOPILOT_WORKER=0 and the
+# stale roots KENSPC_AUTOPILOT_WRITE_ROOTS=/kenspc-selftest-stale-root, a
+# launch with AUTOPILOT_WORKSPACE set, its .exit present after the wait and
+# its .err showing --name <tag>, the marker KENSPC_AUTOPILOT_WORKER=1, and
+# roots (KENSPC_AUTOPILOT_WRITE_ROOTS) holding $TMPDIR (when set), /tmp,
+# /private/tmp, and the workspace, and not the stale entry or its cwd,
+# which is no repository's top level; a git init of a repository under the
 # self-test's directory succeeding, and a launch in that repository with
 # AUTOPILOT_WORKSPACE the empty string, the same with roots holding the
 # repository's top level and no workspace entry; a
@@ -665,10 +670,13 @@ exit 0
     $env:APPEND_SP = $null
     $env:AUTOPILOT_MODEL = $null
     $env:AUTOPILOT_EFFORT = $null
-    # The caller's environment holds the marker 0 for every launch below, so
-    # a driver that did not overwrite it would pass 0 to the worker; the
-    # workspace is unset unless a launch sets it.
+    # The caller's environment holds the marker 0 and a stale roots list for
+    # every launch below, so a driver that did not overwrite them would pass
+    # them to the worker — a nested launch from a marked session would hand
+    # it the outer worker's roots; the workspace is unset unless a launch
+    # sets it.
     $env:KENSPC_AUTOPILOT_WORKER = '0'
+    $env:KENSPC_AUTOPILOT_WRITE_ROOTS = '/kenspc-selftest-stale-root'
     $env:AUTOPILOT_WORKSPACE = $null
     $env:AUTOPILOT_LOGS = $logsDir
     $env:AUTOPILOT_BATCH = 'selftest'

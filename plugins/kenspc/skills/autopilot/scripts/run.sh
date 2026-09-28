@@ -266,7 +266,8 @@ launch() {
 
 # selftest_worker_vars <err-file> <workspace> <present|absent> <repository or empty> [<cwd>]
 # The self-test's check of the two exported variables a stub wrote to its
-# .err: the marker reads 1; the roots hold $TMPDIR (when set), /tmp, and
+# .err: the marker reads 1; the roots do not hold the stale entry the
+# self-test's environment carries, and hold $TMPDIR (when set), /tmp, and
 # /private/tmp, the repository when one is given, and the workspace when
 # present — or, when absent, no workspace entry: neither that path nor an
 # empty entry; and, when a cwd is given, one that is no repository's top
@@ -278,6 +279,12 @@ selftest_worker_vars() {
   roots=$(sed -n 's/^KENSPC_AUTOPILOT_WRITE_ROOTS=//p' "$err")
   [ -n "$roots" ] \
     || { echo "self-test failed: $err shows no roots in KENSPC_AUTOPILOT_WRITE_ROOTS" >&2; return 1; }
+  case "|$roots|" in
+    *"|/kenspc-selftest-stale-root|"*)
+      echo "self-test failed: the roots in $err, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold the caller's stale entry /kenspc-selftest-stale-root" >&2
+      return 1
+      ;;
+  esac
   set -- /tmp /private/tmp
   if [ -n "${TMPDIR:-}" ]; then set -- "$@" "$TMPDIR"; fi
   if [ -n "$repo" ]; then set -- "$@" "$repo"; fi
@@ -346,12 +353,13 @@ selftest_worker_vars() {
 # an .err that shows --plugin-dir, and for one under selftest-s14 with it
 # set, a .exit missing after the wait, an .err without --name <tag>, or an
 # .err without --plugin-dir <value>;
-# then, with the caller's environment holding KENSPC_AUTOPILOT_WORKER=0,
+# then, with the caller's environment holding KENSPC_AUTOPILOT_WORKER=0
+# and the stale roots KENSPC_AUTOPILOT_WRITE_ROOTS=/kenspc-selftest-stale-root,
 # for a launch under selftest-s15 with AUTOPILOT_WORKSPACE set, a .exit
 # missing after the wait, an .err without --name <tag>, without the marker
 # KENSPC_AUTOPILOT_WORKER=1, or with roots (KENSPC_AUTOPILOT_WRITE_ROOTS)
 # not holding $TMPDIR (when set), /tmp, /private/tmp, and the workspace, or
-# holding its cwd, which is no repository's top level;
+# holding the stale entry or its cwd, which is no repository's top level;
 # then a git init of a repository under the self-test's directory that
 # fails, and for a launch under selftest-s16 in that repository with
 # AUTOPILOT_WORKSPACE the empty string, the same items with roots not
@@ -428,10 +436,13 @@ STUB
   # The five optional variables are unset for the first launch, whatever
   # the caller's environment holds, so their flags can be asserted absent.
   unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP AUTOPILOT_MODEL AUTOPILOT_EFFORT
-  # The caller's environment holds the marker 0 for every launch below, so
-  # a driver that did not overwrite it would pass 0 to the worker; the
-  # workspace is unset unless a launch sets it.
+  # The caller's environment holds the marker 0 and a stale roots list for
+  # every launch below, so a driver that did not overwrite them would pass
+  # them to the worker — a nested launch from a marked session would hand
+  # it the outer worker's roots; the workspace is unset unless a launch
+  # sets it.
   KENSPC_AUTOPILOT_WORKER=0; export KENSPC_AUTOPILOT_WORKER
+  KENSPC_AUTOPILOT_WRITE_ROOTS=/kenspc-selftest-stale-root; export KENSPC_AUTOPILOT_WRITE_ROOTS
   unset AUTOPILOT_WORKSPACE
   AUTOPILOT_LOGS=$LOGS
   AUTOPILOT_BATCH=selftest
