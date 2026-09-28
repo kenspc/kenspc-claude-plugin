@@ -133,6 +133,11 @@ DONE：条目存在，日期在发布准备时填入。
   - Q3（telemetry hook 只读 `~/.claude`，档案不在 `Allowed files:` 之内）和 T5（没有 self-test 传带方括号的 `--model`，跟 run.ps1 原生呼叫的改写绑在一起）列为 roadmap 候选。
   - regression-verifier 提出的三处措辞交给一个小 S5 修改：SKILL.md 里 "`not observed` is never counted" 改成 "never counted as a mismatch"；README 和 CHANGELOG 讲 `effort not applied` 的句子加上 "when an effort was requested"。这些是纯措辞改动，不再跑缩小范围的审查，验收第 7 个案例会再跑一次全部 guard。
   - L12 里 `~/.claude` 的写法不改：Locked design 不可更改，而 spec 会在发布准备时移除。
+- **C19（S4 的操作说明；主 session）**
+  - 嵌套 autopilot 的案例（第 3 到 6 个和第 8 个）：嵌套 session 的 prompt 只有一行 `/kenspc-autopilot <seed spec 的路径>`，不能以 worker 的开场句 "You are a headless sub-session of the batch …" 开头，否则 autopilot 会把它当成自己的 worker 而拒绝。每个 seed 的 spec 档名各不相同，batch 名称因此也不同。seed spec 的 `## Autopilot` 写 `Acceptance: none`，`Budget:` 不超过 S4 给这个案例的上限。
+  - 嵌套 autopilot 案例的成本，是嵌套主 session 的 `total_cost_usd`，加上它的 worker 写在该嵌套 batch 自己的 `<batch>-costs.txt` 里的各行。
+  - 第 3 个案例的 `<嵌套主 session 的 effort>`：嵌套主 session 由 Phase 0 的 driver 副本启动，不带 `--model` 和 `--effort`，所以跟 S4 自己一样按 settings 解析。S4 可以取自己的 `$CLAUDE_EFFORT` 作为这个值，并在记录里写明实际读到的值，以及嵌套主 session 自己的 settings line 印出的 pass-through 值。
+  - 验收记录按 C1 写在 `docs/dry-runs/batch-i-acceptance.md`，commit 标题是 `docs: add batch i acceptance record`。
 
 ## Autopilot
 
