@@ -482,7 +482,10 @@ function Invoke-Refused {
 # AUTOPILOT_MODEL and AUTOPILOT_EFFORT set, its .exit present after the wait
 # and its .err showing --model <value> and --effort <value>; a launch with
 # both set to the empty string, its .exit present after the wait and its
-# .err showing neither flag; a throwing stub's .exit
+# .err showing neither flag; a launch with AUTOPILOT_MODEL set and
+# AUTOPILOT_EFFORT the empty string, and one the other way round, each with
+# its .exit present after the wait and its .err showing the set variable's
+# flag with its value and not the other flag; a throwing stub's .exit
 # reading 1, its end line, and its reason in .err; a launch through the
 # command line whose .pid and timeline writes fail returning 0 with its
 # started line, both failures on stderr, and .exit reading 0; on macOS and
@@ -820,6 +823,37 @@ exit 0
     foreach ($flag in '--model', '--effort') {
         if ($emptyText.Contains($flag)) { Stop-SelfTest "$emptyErr shows $flag on a launch with its variable set to the empty string" }
     }
+    # One variable set and the other the empty string, the mix the skill
+    # sends when a role's other part is not determined: each flag follows its
+    # own variable, so a driver that passed both flags whenever either was set
+    # would pass an empty value, and one that passed --effort only beside
+    # --model would run the role at its settings' effort.
+    $mixModelTag = 'selftest-s11'
+    $env:AUTOPILOT_MODEL = 'selftest-model'
+    $env:AUTOPILOT_EFFORT = ''
+    $null = Invoke-Launch $mixModelTag $base $promptFile ''
+    $env:AUTOPILOT_MODEL = $null
+    $env:AUTOPILOT_EFFORT = $null
+    $mixModelExit = Join-Path $logsDir "$mixModelTag.exit"
+    $mixModelErr = Join-Path $logsDir "$mixModelTag.err"
+    Wait-ExitFile $mixModelExit
+    if (-not (Test-Path -LiteralPath $mixModelExit -PathType Leaf)) { Stop-SelfTest "$mixModelExit is missing after the wait" }
+    $mixModelText = [System.IO.File]::ReadAllText($mixModelErr)
+    if (-not $mixModelText.Contains('--model selftest-model')) { Stop-SelfTest "$mixModelErr does not show --model selftest-model" }
+    if ($mixModelText.Contains('--effort')) { Stop-SelfTest "$mixModelErr shows --effort on a launch with AUTOPILOT_EFFORT set to the empty string" }
+    $mixEffortTag = 'selftest-s12'
+    $env:AUTOPILOT_MODEL = ''
+    $env:AUTOPILOT_EFFORT = 'low'
+    $null = Invoke-Launch $mixEffortTag $base $promptFile ''
+    $env:AUTOPILOT_MODEL = $null
+    $env:AUTOPILOT_EFFORT = $null
+    $mixEffortExit = Join-Path $logsDir "$mixEffortTag.exit"
+    $mixEffortErr = Join-Path $logsDir "$mixEffortTag.err"
+    Wait-ExitFile $mixEffortExit
+    if (-not (Test-Path -LiteralPath $mixEffortExit -PathType Leaf)) { Stop-SelfTest "$mixEffortExit is missing after the wait" }
+    $mixEffortText = [System.IO.File]::ReadAllText($mixEffortErr)
+    if (-not $mixEffortText.Contains('--effort low')) { Stop-SelfTest "$mixEffortErr does not show --effort low" }
+    if ($mixEffortText.Contains('--model')) { Stop-SelfTest "$mixEffortErr shows --model on a launch with AUTOPILOT_MODEL set to the empty string" }
 
     # A failure inside the worker's own script, here an executable that
     # throws, still writes .exit reading 1 and the end line, and leaves its
