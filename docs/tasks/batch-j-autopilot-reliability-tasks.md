@@ -90,7 +90,32 @@ J-L5 Task 11, J-L6 Task 12, J-L7 Task 13); Step 6.1 → Task 14.
 
 ### Task 1: Probe the hook mechanics
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: probes.md is
+  `/Users/kenspc/Projects/_smoke/batch-j-autopilot-reliability-probes/probes.md`;
+  its decision line reads `Decision: build the hook` — all three probes held
+  on Claude Code 2.1.283 in one probe session (run1). Deny form: exit status
+  2 with the reason on stderr (chosen over the JSON `permissionDecision`
+  output because a bash 3.2 script without `jq` then needs no JSON escaping
+  of the reason); the denied subagent call's tool result reads
+  `PreToolUse:Bash hook error: [...]: DENIED by probe hook: ...`, is_error
+  true. The live JSON carries `agent_id` and `agent_type` on a subagent's
+  call, and the file path fields are `tool_input.file_path` for Write and
+  Edit and `tool_input.notebook_path` for NotebookEdit; saved as
+  `json/Bash.json`, `json/Write.json`, `json/Edit.json`,
+  `json/NotebookEdit.json` in the probes directory. Test variable
+  `KENSPC_RAIL_PROBE_VAR`.
+- Changes/tradeoffs: the probe hook denies on `deny-me` anywhere in its
+  stdin JSON rather than in `tool_input` alone (no other field of the live
+  JSON held it). The subagent was told to Read before Edit and NotebookEdit
+  so the tools' read-first validation could not keep the hook from firing.
+  Probe cost: USD 0.3777874 in one session (sum 0.3777874). No `rm` was run.
+  A hook-script bug (a `printf` format starting with `--`) was found and
+  fixed on a `$TMPDIR` copy before the probe session ran. Writes under
+  `/tmp`: none by this task's commands; the probe session's own harness
+  created `/private/tmp/claude-501/-Users-kenspc-Projects--smoke-batch-j-autopilot-reliability-probes`.
 
 Spec Step 1.1 (J-L4). Writes only under
 `<workspace>/batch-j-autopilot-reliability-probes/` (the probes directory);
