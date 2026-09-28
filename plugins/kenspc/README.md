@@ -397,8 +397,11 @@ project's long CLAUDE.md onto the template, are not in this version.
 
 ## Run directory
 
-`/kenspc-task-review` and `/kenspc-task-implement` (Phase 2) keep each review
-run's reports in a directory at the root of your repository (since v3.5.0):
+`/kenspc-task-review` and `/kenspc-task-implement` keep each run's reports in
+a directory at the root of your repository (since v3.5.0).
+`/kenspc-task-implement` prepares it after you confirm the batch and before
+it dispatches task-implementer, which keeps its own probes there, and its
+review reuses the same directory (since 4.3.0):
 
 ```
 .kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
@@ -406,6 +409,7 @@ run's reports in a directory at the root of your repository (since v3.5.0):
     angle-1.md … angle-5.md    # full report from each review angle
     schema-b.md                # code-fixer's full accountability list
     scratch/                   # probe and temporary files, one subdirectory per agent
+        task-implementer/      # task-implementer's probes, copies, mutants, and runner configs
         angle-<n>/             # each reviewer
         code-fixer/
             pre-fix/           # an uncommitted run: each fixed file before its first edit, as .txt, plus index.txt
@@ -423,14 +427,20 @@ run's reports in a directory at the root of your repository (since v3.5.0):
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
-  to the commit conventions in your project's instruction files). The
+  to the commit conventions in your project's instruction files); in
+  `/kenspc-task-implement` that commit comes after you confirm the batch, so
+  a declined batch commits nothing. The
   check asks git about a path inside the directory, so a CRLF `.gitignore`
   with blank lines is read correctly. If a commit hook rejects the commit,
   the run stops and reports the error; it does not retry or bypass the hook.
 - Each agent keeps its probe and temporary files in its own subdirectory of
-  the run's `scratch/` (`angle-<n>/` per reviewer, `code-fixer/`,
-  `regression-verifier/`), and the orchestrating session keeps its own in
-  `orchestrator/` when it probes. Every file there is named so the project's
+  the run's `scratch/` (`task-implementer/`, `angle-<n>/` per reviewer,
+  `code-fixer/`, `regression-verifier/`), and the orchestrating session keeps
+  its own in `orchestrator/` when it probes. task-implementer runs a mutation
+  check — a new test shown failing against a broken implementation — on
+  copies there, and never edits, backs up, or restores a tracked file to
+  test it: a mutation made in place and restored afterwards would leave your
+  source mutated if the run stopped between the two. Every file there is named so the project's
   test runner does not collect it: for vitest and jest with their default
   patterns, no `.test.` or `.spec.` segment in a file name, no file named
   `test.*` or `spec.*`, no `__tests__` directory, and no `__mocks__`
@@ -498,8 +508,9 @@ without a prompt to approve it.
 of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
 `- <Label>: <value>` fields, in any order, labels in English whatever the
 document's language. Every field has a default and none is required; the
-run prints its effective settings in one line before the first launch, and
-names any label it does not know. The seventeen labels and their defaults:
+run writes its effective settings in one line before the first launch —
+into the state file, and, in an interactive main session, into its reply —
+and names any label it does not know. The seventeen labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -620,7 +631,38 @@ completion artifact: the idle notice only wakes the main session, which
 then reads the file. `<batch>-state.md` is rewritten at every transition
 and re-read on every wake, so a long batch continues from what is on disk.
 `<batch>-costs.txt` holds one line per session with its last cumulative
-`total_cost_usd`.
+`total_cost_usd`. An interactive main session also prints the settings
+line and each `S<n> started —` and `S<n> returned —` line in its reply; in
+a headless main session (`wait headless` on the settings line) the state
+file and the timeline are the record, and nothing is required of the
+reply, which nothing downstream reads — the release checklist reads the
+state file and the timeline.
+
+**The rails.** Every worker's prompt carries the same safety rails. A
+worker writes only to the repository, the workspace, `$TMPDIR`, and the
+harness's per-session scratchpad. A write elsewhere under `/tmp` (on
+macOS `/private/tmp`) that holds no secret is not a breach: the worker
+lists it under `## Rail observations` in its final message and goes on,
+and the main session records it in the state file and on the reviewer
+report's `Rail observations` line. Any other write outside those places
+is a breach, and so is a recursive `rm` in any spelling, wherever it
+points: a worker discards by `mv` into the workspace's
+`.trash/<name>-<timestamp>/` and deletes inside the repository only
+through `git rm`. No `git push`, `git tag`, or release; no resource the
+brief does not name; no secrets. A worker's subagents never see its
+prompt, so the rails tell the worker to write them into every subagent
+prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
+dispatches its skills make. Beside the text, the plugin's rails hook
+enforces two of them: the driver marks each worker it starts
+(`KENSPC_AUTOPILOT_WORKER=1`) and passes its write roots
+(`KENSPC_AUTOPILOT_WRITE_ROOTS`: the worker's repository, the workspace,
+`$TMPDIR`, `/tmp`, and `/private/tmp`, joined by `|`), and a PreToolUse
+hook on Bash, Write, Edit, and NotebookEdit denies, in a marked worker
+only, a Bash command that runs a recursive `rm` and a file-tool write
+outside the roots — in the worker's own calls and its subagents' alike,
+since a plugin hook fires for a subagent's tool call too. The deny's
+reason names the rail and the permitted route. The hook is a best-effort
+guard (see Known behavior), and the rails text still binds.
 
 **What a run writes and commits.** In `repo` mode: the workers' commits
 (the task document, the implementation, the review's fixes) and, with
@@ -645,16 +687,33 @@ steps and carries no choice the spec leaves open — a type, a shape, a
 name, or a behavior a worker proposes to pin, however it frames it, comes
 to you unless the spec's words rule out every other option it lists — and
 a question the spec does not answer is a stop, never an answer on your
-behalf.
+behalf. A gate a worker skips is checked afterwards, not prevented: an S2
+that returns without having sent its confirmation question has its
+committed task document checked with the same rubric — a match is
+accepted and recorded as a behavior deviation, a mismatch or a choice left
+open is a stop — and an S3 that skipped task-implement's batch gate is
+recorded only, since its answer is yes once S2's list has passed. No role
+gets an effort floor: it would be a plugin default, and it would not catch
+a skip at any effort. The reviewer report's `Skipped gates` line lists
+each skip with its step, tag, and outcome.
+
+**Fixes.** A defect the main session classifies — a review row after S3b,
+or an acceptance FAIL — goes to an S5 fix session. One S5 may fix several
+defects classified in the same round, one commit per defect. Every S5 is
+followed by a narrowed review (`-s3c`, then `-s3d`, …) over the range from
+HEAD at its launch to its last commit, a wording-only fix included, before
+any acceptance case is re-run.
 
 **Stops.** Reopening a locked design point; a forbidden section or file
-touched; guards red twice in a row; the same acceptance FAIL still failing
-after two fixes; the session cap, the resume cap, or the budget exceeded
-(a question with the numbers); a safety-rail breach (no `git push`,
-`git tag`, or release; no recursive `rm` in any spelling — `rm -r`,
-`rm -rf`, `rm -fr`, `rm -R`; no resource the brief does not name; no
-secrets); a question neither the spec nor the locked design answers; a
-nested `claude -p` refused; the same step's session dead twice; a settings
+touched; guards red twice in a row; the same defect still failing after
+two fixes of it, counted per defect; the session cap, the resume cap, or
+the budget exceeded (a question with the numbers); a safety-rail breach
+(see The rails: a write outside the repository, the workspace, `$TMPDIR`,
+the scratchpad, and `/tmp`; a recursive `rm` in any spelling — `rm -r`,
+`rm -rf`, `rm -fr`, `rm -R`; a `git push`, `git tag`, or release; a
+resource the brief does not name; a secret); a question neither the spec
+nor the locked design answers, the skipped-gate check's mismatch or open
+choice among them; a nested `claude -p` refused; the same step's session dead twice; a settings
 stop before the first launch, among them a `Role settings` entry outside
 its grammar and `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an
 effort (see Models and efforts). Every stop
@@ -686,8 +745,8 @@ byte-identity / guards / counts; acceptance, one line per case with its
 cost and result; models and efforts,
 `<n> workers, <k> mismatches, <j> not observed`
 (`<n> workers, mismatches: none, <j> not observed` when there are
-none) with one line per worker; total cost; Not exercised;
-release-preparation state;
+none) with one line per worker; total cost; Not exercised; rail
+observations; skipped gates; release-preparation state;
 sessions / messages / resumes / stops. The total-cost line is the measured
 sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode
 the acceptance cases' costs from the record (S4's nested sessions), plus
@@ -704,14 +763,23 @@ worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
 written to `<tag>.session` before the process starts, and — when the
 command exists — wrapped in `caffeinate -i`, so a macOS machine does not
 sleep under a running worker while the main session waits with no Bash
-call running. It passes `--model` when `AUTOPILOT_MODEL` is non-empty and
-`--effort` when `AUTOPILOT_EFFORT` is, on a fresh launch and on a resume
-alike, since a resume keeps the model but not the effort; the empty string
-counts as unset, and the skill sets both on every launch, empty where no
-value is known. S4's nested acceptance sessions take S4's model and effort
+call running. It passes `--model` when `AUTOPILOT_MODEL` is non-empty,
+`--effort` when `AUTOPILOT_EFFORT` is, and `--plugin-dir` when
+`AUTOPILOT_PLUGIN_DIR` is, on a fresh launch and on a resume alike, since
+a resume keeps the model but not the effort; the empty string counts as
+unset. The skill sets all three on every launch — the model and the effort
+empty where no value is known, the plugin directory in `plugin` mode and
+the empty string in `repo` mode — since a variable of the same name
+inherited from your session would otherwise reach the driver. Every
+launch also sets `AUTOPILOT_WORKSPACE`, and the driver exports
+`KENSPC_AUTOPILOT_WORKER=1` and `KENSPC_AUTOPILOT_WRITE_ROOTS` to every
+worker, fresh or resumed, over any value your session holds (see The
+rails). S4's nested acceptance sessions take S4's model and effort
 through the environment, since the driver copy S4 runs reads the same two
-variables. `run.sh --self-test` launches a stub through the same path
-and prints `self-test passed`; the run executes the copy's self-test at
+variables, and every nested launch sets `AUTOPILOT_PLUGIN_DIR` on its own
+line. `run.sh --self-test` launches a stub through the same path
+and prints `self-test passed` (it needs git, for a repository it creates
+to check the write roots); the run executes the copy's self-test at
 every batch start. The timeline's two lines, `start <tag> pid <pid> …` and
 `end   <tag> exit <status>`, begin at column 0 with no timestamp: the launch
 time is in the start line's tail, and a worker's end time is the mtime of
@@ -993,17 +1061,37 @@ on Windows.
   a first worker that reaches it, and the check before each later launch
   catches the rest — with spent and projected on the stop and the question
   of how much to raise the budget to.
-- **A headless run may leave the settings and return lines in the state
-  file.** The skill prints the settings line, and each launch and return
-  line, as a line of its own in its reply, and says why beside each
-  instruction. Two headless runs with those instructions in place printed
-  every launch line, yet wrote the settings line only into the state file
-  and left three of their five return lines unprinted. The same facts are
-  on disk either way: the settings line in `<batch>-state.md`, and each
-  launch and return as the driver's `start` and `end` lines in
+- **A headless main session's record is the state file and the
+  timeline.** An interactive main session prints the settings line and
+  each launch and return line in its reply. Since 4.3.0 a headless one is
+  not required to: headless runs under the earlier instruction to print
+  them wrote the settings line only into the state file and left return
+  lines unprinted, and nothing downstream reads a headless reply. The same
+  facts are on disk either way: the settings line in `<batch>-state.md`,
+  and each launch and return as the driver's `start` and `end` lines in
   `<batch>-timeline.log`, each `end` line written together with
-  `<tag>.exit`. The release checklist reads them there, not from the
-  reply.
+  `<tag>.exit`. The release checklist reads them there.
+- **The rails hook is a best-effort guard.** In an autopilot worker — a
+  session the driver marked with `KENSPC_AUTOPILOT_WORKER=1` — the hook
+  denies a recursive `rm` at a command position and a Write, Edit, or
+  NotebookEdit outside the write roots. It misses `find -delete` (and
+  `find -exec rm`), `bash -c '…'` and `eval`, interpreter-level deletes
+  (Python, Node, Perl), `git clean`, and writes through Bash (redirections,
+  `cp`, `mv`, `tee`); also an `rm` reached through a variable or an alias,
+  other wrappers such as `timeout`, and paths that are not POSIX absolute,
+  which it does not judge. The rails text in the worker's prompt still
+  binds for all of these. The other way round, a file-tool call whose
+  target the hook cannot read from its input is denied in a marked worker,
+  with a reason saying so: were a Claude Code release to rename the path
+  field, a worker's writes would stop loudly rather than pass unchecked.
+  The release checklist's live hook row is where such a change shows
+  before a release: `check-autopilot-rails-hook.sh` replays a copy of the
+  input as Claude Code 2.1.283 sent it, which a later format would not
+  match. Outside a marked worker the hook reads one
+  variable and exits with no output, but it starts on every Bash, Write,
+  Edit, and NotebookEdit call of every session with the plugin enabled.
+  Whether a worker that `run.ps1` starts on Windows can run the bash hook
+  at all has not been probed.
 - **A role's model reaches every subagent of its worker.** The plugin's
   agents declare `model: inherit`, which resolves to the model of the
   session that dispatches them, so inside an autopilot worker it is the

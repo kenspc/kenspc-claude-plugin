@@ -59,12 +59,6 @@ its number.
    - O6: the lint and build paths of the unmodified-command rule are
      untested by any acceptance run — the target project had neither
      script, so the build row was a PASS that could not fail.
-   From the same report's § 6 precedent table: task-implementer has no
-   scratch convention at all — it runs before the run directory exists —
-   and in batch A it ran its mutation checks on the project's own `src/`
-   files in place (`sed -i`, `.bak` copies in the session scratchpad, `cp`
-   to restore), so a run that stops between the mutation and the restore
-   leaves the user's source mutated.
    From the batch B acceptance (`docs/dry-runs/batch-b-acceptance.md`,
    F2): regression-verifier named a log `test.out` under its scratch
    attempt, which the release checklist's name probe flags although vitest
@@ -309,22 +303,7 @@ its number.
     4.1.0 left out (the batch H spec's 2.6,
     `git show d7949ac:docs/plans/batch-h-init-project-4-1.md`): nothing in
     the plugin accounts for it, and it has not been probed.
-17. Autopilot's printed lines in a headless main session. In the batch I
-    acceptance (`docs/dry-runs/batch-i-acceptance.md`, F1), the nested
-    headless main sessions wrote the settings line and the
-    `S<n> returned —` lines only to their state files, never to their
-    replies, although the skill says the state file does not stand in for
-    the printed line; the batch F acceptance recorded the same for the
-    settings line. Decide whether a headless main session's reply is where
-    these lines belong, or say where they go instead.
-18. A worker at a lowered effort skipping a skill's gate. In the batch I
-    acceptance (`docs/dry-runs/batch-i-acceptance.md`, F3), an S2 worker
-    declared at a low effort through `Role settings:` skipped
-    generate-task's confirmation and sent no question, while the S2
-    workers at the pass-through effort asked. Decide whether gate-carrying
-    roles need a stated effort floor, or whether the main session should
-    check that the gate's question was sent before it accepts the step.
-19. Autopilot model and effort follow-ups, which 4.2.0 left out (the batch
+17. Autopilot model and effort follow-ups, which 4.2.0 left out (the batch
     I spec's clarifications,
     `git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`, and
     the acceptance record's Not exercised section,
@@ -350,33 +329,14 @@ its number.
     - The SessionEnd telemetry hook reads transcripts only under
       `${HOME}/.claude/projects`, while the autopilot's transcript lookups
       honor `$CLAUDE_CONFIG_DIR`; the hook was outside the batch's files.
-20. A repo-mode autopilot leaves an inherited `AUTOPILOT_PLUGIN_DIR` to its
-    driver. In the batch I acceptance
-    (`docs/dry-runs/batch-i-acceptance.md`, F2), every nested main session
-    inherited the variable from its own launch line, and the skill, which
-    sets it in plugin mode and says nothing of repo mode, was read two
-    ways: one main set it to the empty string and its S2 ran the installed
-    plugin, two passed the inherited value on and their workers ran the
-    working tree's skills. `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` are set
-    on every launch, the empty string where no value is known, for this
-    reason. The gap dates from 3.9.0 and was outside the batch's scope
-    (`git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`).
-    The follow-up to weigh: set `AUTOPILOT_PLUGIN_DIR` on every launch too,
-    the empty string in repo mode.
-21. A worker's rails do not reach the subagents it dispatches. The rails
-    are in the worker's preamble, which its subagents never see, and a
-    subagent's scratch files went to `/tmp` three times in batch I. During
-    the batch, S3's task-implementer subagent wrote four scratch files
-    there and S3 stopped on it; the user ruled such a file, holding no
-    secret, an observation for the rest of the batch
-    (`git show 6598ba6:docs/plans/batch-i-autopilot-model-effort.md`, its
-    clarifications). In the acceptance
-    (`docs/dry-runs/batch-i-acceptance.md`, Observations), nested S3
-    workers' subagents did the same in cases 3 and 6, a regression-verifier
-    and a task-implementer, and in case 6 the subagent also ran `rm -rf`
-    twice on its own `/tmp` scratch, a recursive rm the rails forbid in
-    every spelling; both nested runs stopped as their rails say. The
-    scratch-convention item above notes that task-implementer has no
-    scratch convention at all. Decide how a worker's rails reach the
-    subagents its skills dispatch, or which of their writes the rails
-    cover.
+18. Whether an autopilot worker on Windows can run the rails hook. The
+    worker rails hook (4.3.0) is a bash script, registered as
+    `bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/autopilot-worker-rails.sh"`,
+    and the probes that decided to build it ran on macOS only. Open: whether
+    Claude Code on Windows runs a bash hook at all, which needs a `bash` on
+    its PATH (Git Bash), and, where it does, what the hook makes of a
+    Windows worker — it judges only POSIX absolute paths, so a drive-letter
+    target is allowed unjudged, and `run.ps1` writes the repository root as
+    git prints it there (`C:/…`). `run.ps1` exports the marker and the
+    roots as `run.sh` does; nothing picks it by platform until the Windows
+    acceptance of `run.ps1` above has passed.

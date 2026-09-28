@@ -80,14 +80,33 @@ Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name
 Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`, `disable-model-invocation: true`). Commands are explicit entry points only: since Claude Code merged commands and skills, both descriptions load into context and compete for natural-language auto-routing — the skill's description owns the trigger phrases, so each command keeps a one-line description and opts out of model invocation (v3.4.2).
 
 Hooks are defined in `hooks/hooks.json` with scripts in `hooks/scripts/`.
-Two hooks are registered: `PreToolUse` on `Write` → `remind-plan-skill.sh`
+Three hooks are registered: `PreToolUse` on `Write` → `remind-plan-skill.sh`
 (plan-skill reminder — note it fires on every Write call, not only
 plugin-related ones; its task and brief messages name every skill that
 writes those directories: generate-task or diagnose-bug for `docs/tasks/`,
 generate-brief, diagnose-bug, or prototype (which records an answer in an
-existing brief) for `docs/briefs/`), and `SessionEnd` →
+existing brief) for `docs/briefs/`); `PreToolUse` on
+`Bash|Write|Edit|NotebookEdit` → `autopilot-worker-rails.sh` (the
+autopilot worker rails, 4.3.0 — an environment constraint in the sense
+of the Plugin Design Lessons, not a workflow guard); and `SessionEnd` →
 `session-end-telemetry.sh`
-(post-hoc telemetry; background in Plugin Design Lessons). A former
+(post-hoc telemetry; background in Plugin Design Lessons). The rails hook
+starts on every matched call of every session with the plugin enabled and
+is inert there — exit 0, no output, stdin unread — unless
+`KENSPC_AUTOPILOT_WORKER` is exactly `1`, the marker the autopilot driver
+(`run.sh`, `run.ps1`) exports to every worker with
+`KENSPC_AUTOPILOT_WRITE_ROOTS` (the worker's repository, the workspace,
+`$TMPDIR`, `/tmp`, `/private/tmp`, joined by `|` — no Windows path holds
+it, while `:` is in every drive letter and `;` may be in a file name). In a
+marked worker it
+denies, with exit 2 and the reason on stderr, a Bash command that runs a
+recursive `rm` at a command position and a Write, Edit, or NotebookEdit
+whose resolved target lies outside every root — in the worker's own calls
+and its subagents' alike, since a plugin's PreToolUse hook fires for a
+subagent's call too and its deny holds in bypassPermissions (probed on
+Claude Code 2.1.283). It is a best-effort guard behind the preamble's
+rails text; its header lists what it misses, and
+`check-autopilot-rails-hook.sh` holds its decisions. A former
 `SessionStart` → `check-deps.sh` hook was removed in v3.4.2: its
 ralph-loop dependency check was gutted by the v2 subagent refactor and
 the empty husk had been running as a no-op since.
@@ -269,14 +288,16 @@ reply, and Schema C are rendered once, in the final report (Schema F in
 Since v3.5 the agents exchange reports through a per-run directory,
 `<repo root>/.kenspc/runs/<run-id>/`, passed as the `RUN_DIR` CONTEXT key.
 The orchestrating skill prepares it and, when `.kenspc/` is not yet
-git-ignored, makes a one-time `.gitignore` commit. In a review without a
+git-ignored, makes a one-time `.gitignore` commit — task-implement after
+its batch confirmation and before it dispatches task-implementer, reusing
+the same directory for its review (4.3.0). In a review without a
 task document it then writes `change-set.md` (v3.7), the change set every
 agent reads (see CONTEXT block contract). Each reviewer writes only
 its own `angle-<n>.md`, and `code-fixer` only `schema-b.md`. Probe and
 temporary files go in one scratch subdirectory per writer —
-`scratch/angle-<n>/` for each reviewer, `scratch/code-fixer/`,
-`scratch/regression-verifier/`, and `scratch/orchestrator/` for the main
-session — and are named so the project's test runner does not collect them
+`scratch/task-implementer/`, `scratch/angle-<n>/` for each reviewer,
+`scratch/code-fixer/`, `scratch/regression-verifier/`, and
+`scratch/orchestrator/` for the main session — and are named so the project's test runner does not collect them
 (vitest and jest with their default patterns: no `.test.` or `.spec.`
 segment in a file name, no file named `test.*` or `spec.*`, no `__tests__`
 directory, and no `__mocks__` directory; a project-configured pattern or
@@ -368,7 +389,10 @@ SKILL.md must construct exactly those keys. See each agent file's
 `RUN_DIR` (v3.5) is optional for the 5 review-angle agents — without it they
 reply inline and write nothing, which keeps standalone invocation working as
 before — and required for `code-fixer` and `regression-verifier`, which read
-their inputs from it. It replaces the earlier `REVIEW_REPORTS` and
+their inputs from it, and (4.3.0) for `task-implementer`, which writes its
+probes, copies, mutants, and runner configs under
+`RUN_DIR/scratch/task-implementer/` and runs a mutation check on copies
+there, never on a tracked file. It replaces the earlier `REVIEW_REPORTS` and
 `ACCOUNTABILITY_LIST` keys: the file names inside the run directory are
 fixed, so one path is the only value the orchestrator has to get right.
 
@@ -435,7 +459,9 @@ the plugin README or this file, or the reviewers' ROLE, run
 skill's leftovers command, run
 `check-doc-sync-anchors.sh`. After editing a file that uses "the project's
 instruction files", or `shared/instruction-files.md`, run
-`check-instruction-files.sh`. What each
+`check-instruction-files.sh`. After editing
+`hooks/scripts/autopilot-worker-rails.sh`, run
+`check-autopilot-rails-hook.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -622,13 +648,29 @@ Project-level shell scripts live in `scripts/` at the repo root:
   every dispatch needs the definition, and its operative part — whether or
   not Claude Code loaded the files — is what an agent that skipped a
   runtime Read would get wrong.
+- `check-autopilot-rails-hook.sh` — guards the autopilot worker rails
+  hook (4.3.0) by feeding `hooks/scripts/autopilot-worker-rails.sh`
+  fixtures and asserting each decision (deny: exit 2, empty stdout, a
+  reason on stderr naming `.trash`; allow and inert: exit 0, no stdout).
+  The fixtures carry the field names and nesting of the live hook input
+  Claude Code 2.1.283 sent for Bash, Write, Edit, and NotebookEdit calls,
+  copied into the guard, since a hook that parses a harness-owned format
+  goes stale silently (Plugin Design Lessons): every recursive-`rm`
+  spelling and command position the hook lists, quoted mentions, `rm`
+  without a recursive flag, a write inside each root for each file tool,
+  outside every root, relative and `..`-escaping paths, symlinked roots, a
+  sibling sharing a root's prefix, no roots, and every denied fixture
+  again without the marker and with the marker `0`. The hook runs under
+  `/bin/bash` when it exists. Its self-test turns three mutants red — the
+  `rm` detection, the root check, and the marker check removed — and
+  cleans up without a recursive `rm`.
 
-Ten of the guards (`check-canonical-dispatch.sh`,
+Eleven of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
 `check-notes-format-sync.sh`, `check-doc-sync-anchors.sh`,
 `check-no-model-names.sh`, `check-run-contract.sh`, `check-json.sh`,
-`check-instruction-files.sh`) also
+`check-instruction-files.sh`, `check-autopilot-rails-hook.sh`) also
 accept a `--self-test` flag
 that runs
 a mutation regression fixture in a temp workdir (positive path, negative
@@ -645,7 +687,11 @@ Guards run under the bash 3.2 that macOS ships as well as under newer bash,
 so they avoid bash 4 features such as associative arrays (`declare -A`):
 `check-doc-sync-anchors.sh` keeps its anchor groups in one flat `label|path`
 array for that reason, and its self-test copies its files from that same
-array so the fixture cannot drift from the groups it tests.
+array so the fixture cannot drift from the groups it tests. For the same
+portability, a guard that escapes text in awk does it character by
+character, not through `gsub`: POSIX reads two backslashes in a `gsub`
+replacement as one, while the awk macOS ships writes both
+(`check-autopilot-rails-hook.sh` builds its JSON fixtures this way).
 
 Run `bash scripts/check-all.sh --self-test` before tagging any release.
 Plain `bash scripts/check-all.sh` (main mode only) is the natural pre-commit

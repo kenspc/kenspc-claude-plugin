@@ -1042,7 +1042,52 @@ Spec Step 5.1, J-L7. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 14: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promotion outcomes, by the task that made each decision.
+  Promoted — Task 1: the deny form (exit 2, reason on stderr) and the
+  probed facts (a plugin PreToolUse hook fires for a subagent's call, its
+  deny holds in bypassPermissions, on Claude Code 2.1.283) into CLAUDE.md's
+  hooks paragraph, and the three probe results into the CHANGELOG entry's
+  introduction. Task 3: the `|` roots separator and why not `:` or `;`
+  into CLAUDE.md's hooks paragraph. Task 6: quoted text and heredoc bodies
+  read as arguments into the CHANGELOG; non-POSIX paths not judged and a
+  file-tool target the hook cannot read denied into the plugin README's
+  Known behavior; the inert path leaving stdin unread, with the probe that
+  showed it harmless, into CLAUDE.md and the CHANGELOG. Task 7: awk
+  escaping character by character rather than through `gsub` into
+  CLAUDE.md's guard-portability paragraph, and the guard's cleanup without
+  a recursive `rm` into its CLAUDE.md bullet. Task 11: no effort floor,
+  with its Why, into the plugin README's gates paragraph and the
+  CHANGELOG. Needs a home: none. Local: Task 2's self-test tags, Task 3's
+  unresolved roots (the driver headers), Task 4's placement without
+  renumbering, Task 5's section placement, and the wording choices of
+  Tasks 8-13, which live in the files they explain.
+- Changes/tradeoffs: plugin README — § Run directory (the tree's
+  `task-implementer/`, the per-agent list, the preparation before
+  task-implementer's dispatch, the `.gitignore` commit after the batch
+  confirmation, the in-place-mutation rule); § Autopilot (the headless
+  records, a new **The rails.** paragraph with the hook, the skipped-gate
+  check in the gates paragraph, a new **Fixes.** paragraph, the Stops
+  paragraph's stop 4 per defect and the rails breach list, the drivers'
+  three flag variables, `AUTOPILOT_WORKSPACE`, the exported variables, the
+  self-test's need for git, and the two new report lines); § Known behavior
+  (the headless entry restated as the rule, a new rails-hook entry with its
+  misses, the Windows gap, and the fail-closed read). CLAUDE.md — three
+  hooks, the run-dir paragraph, the `RUN_DIR` contract, the maintenance
+  note, the new guard's bullet, "Eleven of the guards". CHANGELOG —
+  `## 4.3.0 — unreleased` with Added / Changed / Corrections. Release
+  checklist — counts 12 / 11, the run-directory check's
+  `scratch/task-implementer/` plus two row-6 criteria (the run directory
+  before task-implementer's first call; no tracked-file backup or mutation),
+  row 11's headless sentence restated, and a new row 14 for the live hook.
+  Roadmap — items 17, 18, 20, 21 and the scratch item's task-implementer
+  paragraph removed, 19 renumbered 17, a new item 18 for the Windows bash
+  gap. Root README untouched (no skill summary changed). The release
+  checklist's pre-flight block exited 0 (`guards run: 12`,
+  `self-tests run: 11`), and the pointer grep printed nothing (the spec:
+  62 lines).
 
 Depends on: Task 1-13
 

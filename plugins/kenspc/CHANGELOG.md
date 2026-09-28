@@ -9,6 +9,133 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.3.0 — unreleased
+
+Batch J. An unattended autopilot batch now finishes on its own evidence.
+The rails a worker obeys reach the subagents it dispatches — in text
+always, and, since Claude Code allows it, through a PreToolUse hook as
+well; task-implementer keeps its probes, copies, and mutants in the run
+directory instead of the user's source; a gate a worker skips is caught
+after the fact; and the plugin directory on every launch, a headless main
+session's records, and the fix loop are each stated one way. Guard counts:
+`guards run: 12`, `self-tests run: 11` (one new guard, with a self-test).
+
+The hook was built on three probes, run on Claude Code 2.1.283 in one
+headless `bypassPermissions` session with a throwaway plugin whose
+PreToolUse hook logged its input and denied any call naming `deny-me`, and
+whose one general-purpose subagent made the calls. All three held: the
+hook fired for the subagent's Bash, Write, Edit, and NotebookEdit calls,
+each input carrying the subagent's `agent_id` and `agent_type`; its deny
+— exit status 2 with the reason on stderr — stopped the subagent's Bash
+and Write calls, and neither file was created while the allowed write
+landed; and the hook's process saw a variable set only in the session's
+environment. A second probe showed Claude Code tolerating a hook that
+exits without reading a 120 KB input, the shape of the hook's inert path.
+Whether a worker that `run.ps1` starts on Windows can run a bash hook was
+not probed.
+
+### Added
+
+- **The autopilot worker rails hook**,
+  `hooks/scripts/autopilot-worker-rails.sh`, registered on PreToolUse for
+  `Bash|Write|Edit|NotebookEdit`. It is inert — exit 0, no output, stdin
+  unread — unless `KENSPC_AUTOPILOT_WORKER` is exactly `1`. In a marked
+  worker it denies a Bash command that runs `rm` with a recursive flag at
+  a command position (every flag spelling, `/bin/rm` and other prefixes,
+  after `;`, `&&`, `||`, `|`, `$(`, a backtick, a line start, `xargs`,
+  `sudo`, `command`, or `env`; quoted text and heredoc bodies are
+  arguments, so `grep -c 'rm -rf' f` and a commit message that mentions
+  `rm -rf` pass), and a Write, Edit, or NotebookEdit whose target —
+  resolved against the input's `cwd`, `..` collapsed, the symlinks of its
+  existing ancestors resolved — lies outside every root in
+  `KENSPC_AUTOPILOT_WRITE_ROOTS`, by whole path components. The deny's
+  reason names the rail and the permitted route: `mv` into the
+  workspace's `.trash/<name>-<timestamp>/`, or a write under the
+  repository, the workspace, or scratch. A best-effort guard behind the
+  rails text: it misses `find -delete`, `bash -c '…'`, interpreter-level
+  deletes, `git clean`, and writes through Bash. Bash 3.2 and POSIX tools
+  only.
+- **`scripts/check-autopilot-rails-hook.sh`**, the hook's guard: fixtures
+  shaped like the live hook input, one per `rm` spelling and command
+  position, quoted mention, non-recursive `rm`, write inside each root for
+  each file tool, write outside, relative and `..`-escaping path,
+  symlinked root, sibling sharing a root's prefix, and no roots, and every
+  denied fixture again without the marker and with the marker `0`. Its
+  `--self-test` turns three mutants red (the `rm` detection, the root
+  check, and the marker check removed). `check-all.sh` picks it up.
+- **The worker variables.** `run.sh` and `run.ps1` export
+  `KENSPC_AUTOPILOT_WORKER=1` and `KENSPC_AUTOPILOT_WRITE_ROOTS` to every
+  worker, fresh and resumed, over any value the caller's environment
+  holds. The roots, joined by `|`: the worker's repository
+  (`git rev-parse --show-toplevel` in its cwd), `AUTOPILOT_WORKSPACE` when
+  non-empty, `$TMPDIR` when set, `/tmp`, and `/private/tmp`. Both headers
+  list the new `AUTOPILOT_WORKSPACE`, which the skill sets on every launch;
+  both self-tests assert the marker and the roots on fresh launches and
+  resumes, one of them in a repository the self-test creates, so the
+  self-tests now need git.
+- **task-implementer's scratch.** task-implementer requires `RUN_DIR` and
+  writes every probe, copy, mutant, and runner config under
+  `RUN_DIR/scratch/task-implementer/`, one numbered subdirectory per
+  attempt, under the run-directory block's naming rules. A mutation check
+  runs on copies there, under the three-step rule of
+  `agents/regression-verifier.md`; the agent never edits, backs up, or
+  restores a tracked file to test it, since a mutation made in place and
+  restored afterwards leaves the source mutated when the run stops between
+  the two.
+- **Rail observations.** A worker's write under `/tmp` holding no secret
+  is not a breach: it is listed under `## Rail observations` in the
+  worker's final message, recorded in the state file's
+  `rail observations:` section, and carried into the reviewer report's new
+  `- Rail observations: <list | none>` line.
+- **The skipped-gate post-check.** An S2 that returns without having sent
+  its confirmation question has the confirmation's own rubric applied to
+  the task document it committed: a match is accepted and recorded as a
+  behavior deviation, and a mismatch or a choice left open is a stop of
+  the unanswered-question kind. An S3 that skipped the batch gate is
+  recorded only. No role gets an effort floor. The state file gains
+  `skipped gates:`, the reviewer report `- Skipped gates: <list | none>`,
+  and the gates table a row.
+
+### Changed
+
+- **The preamble's rails (§ 3).** A worker may write to the repository,
+  the workspace, `$TMPDIR`, and the harness's per-session scratchpad; a
+  write elsewhere under `/tmp` is a rail observation; any other write is a
+  breach, and a recursive `rm` stays a breach wherever it points. The
+  rails bind every subagent the worker dispatches: it writes them into
+  every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of
+  its skills' agent dispatches.
+- **`AUTOPILOT_PLUGIN_DIR` on every launch.** The skill sets it explicitly:
+  the plugin directory in plugin mode, the empty string in repo mode, a
+  resume as the tag it resumes; S4's nested launches set it on their own
+  lines. Both drivers already passed `--plugin-dir` only for a non-empty
+  value; their headers now say the empty string counts as unset, and both
+  self-tests cover unset, empty, and set, on a fresh launch and on a
+  resume.
+- **task-implement prepares the run directory in Phase 1**, after the
+  batch confirmation (a declined batch makes no `.gitignore` commit) and
+  before it dispatches task-implementer, creates it, passes `RUN_DIR` in
+  the dispatch, and reuses it in Phase 2's review. The `canonical:run-dir`
+  block, changed identically in task-review, says it is prepared before
+  the first agent a run dispatches and names `scratch/task-implementer/`.
+- **A headless main session's records.** The settings line and the launch
+  and return lines are printed in the reply by an interactive main
+  session; in a headless one the state file and the timeline are the
+  record, and § Phase transitions' Phase 0 entry rests on the state file.
+- **The fix loop.** One S5 may fix several defects classified in the same
+  round, one commit per defect, its task block listing each defect with
+  its case; every S5 is followed by the narrowed review over the range
+  from HEAD at its launch to its last commit, a wording-only fix included,
+  before any case is re-run. Stop condition 4 and Phase 3's two-fixes stop
+  count per defect.
+
+### Corrections
+
+- **The plugin README's headless entry** said a headless run "may leave"
+  the settings and return lines in the state file; it now states the rule
+  that the state file and the timeline are a headless main session's
+  record.
+
 ## 4.2.0 — 2026-09-28
 
 Batch I. The autopilot's workers are separate `claude -p` processes, and
