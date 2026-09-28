@@ -213,3 +213,33 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
   - **R3-1 LOW：defer。** 在 monorepo 的 root 执行时，如果某个 app 已有的 CLAUDE.md 没加 import，root AGENTS.md 里那个 app 的那一行仍然写着"旁边的 CLAUDE.md import 这个档案"。
   - **R3-2 LOW：defer。** 在 fenced code block 或 HTML 注释里的 `@AGENTS.md`，仍然被当成会载入。这是第 3 轮之前就有的问题。
   - 理由：审查已经到第三轮的上限，修了之后没有下一轮可以审；两项都是罕见的布局。列进建议栏。
+- **C13（1.7，验收）** 报告：`.kenspc/runs/batch-h/accept-{h,s1,s2,static}.md`，剧本在 `accept-scripts.md`。
+  - **结果**：B1–B13 全部 PASS，没有 FAIL，所以没有要分类的 FAIL，也不开 fixer。
+  - **B13 `b13-agents` 的裁决：PASS，另记一条 observation。** draft 的 Documentation impact 多列了 `AGENTS.md`，而它不在该 seed 的 Documents table 里。理由：B13 要测的是，只有 AGENTS.md、没有 CLAUDE.md 时，generate-plan 找不找得到 Documents table，结果找到了（`docs/product.md`、`docs/api.md` 只可能来自那张表）。多出来的是指令档本身，因为某个步骤会让它过时；表里漏了这一行，是 main 建 seed 时只写三行造成的，init 自己的模板有这一行。
+  - **Observation 的分类：**
+    - **行为偏差**（skill 文字写得清楚，模型没照做）：
+      - 5 次 headless 的 `/kenspc-init` 只有 1 次在第一则讯息写明对话语言（N1）；
+      - b2-3 的 final message 把 marker 总数写成 41，实际是 37；
+      - H 模式没有一次在 Exit 列出档案清单"照原样 commit"这个默认；
+      - S 模式的 acceptor 自己写的两个 header 夹了英文词。
+    - **4.0.0 就有的模糊或设计，不在 § 2 范围，列进建议栏**：
+      - 第 5 轮被跳过时，政策项记成 TBD，即使项目指令档已经写了该惯例（S1-2）；
+      - 用户自带、没有模板标记的 AGENTS.md 缺 Workflow，backlog 规则无处可写，rerun 也填不了 marker（S1-6）；
+      - skip 这一对选项自成一题时，用户什么都不跳也得回答它（O4）；
+      - 技术栈被跳过时，scaffold 该怎么提（O3）；
+      - 以哪一则讯息定语言（O6）；
+      - 跳过档案清单之后，没有把档案 commit 进去的途径（O7）；
+      - app 的 README 在 scaffold commit 之前还是之后换掉（O9，batch G O8 至今仍在）；
+      - R2-5 保留了模板里 "Changes when" 的固定文字，以及 README 模板第 12 行的 CLAUDE.md 描述（S1-5）；
+      - generate-plan 没有规定：自己的表漏列的指令档怎么处理（B13-O1）。
+    - **环境**：
+      - remember 插件在每个 seed 都建了 `.remember/`，每次都判定为空目录，N3 有效；
+      - security-guidance 的 hook 在每次 commit 时触发，但都跳过了审查；
+      - output style 的 Insight 区块；
+      - 本机主机名没有点号，所以 B4 分辨不出新旧两种身份检查；
+      - npm 12 的 `allowScripts` 警告（O10）。
+    - **Not exercised**：
+      - N7 的 scaffold 那一半：create-vite 自己的 `.gitignore` 已经忽略 `node_modules`；
+      - 在可以询问的 session 里，scaffold 之前的身份检查；
+      - B9 在真正载入 skill 的 TUI 里的表现，留给用户在 Mac TUI 补跑。
+  - **流程记录**：main 与 acceptor-s2 之间的 SendMessage 有一则的延迟（讯息在对方执行中送达时会排到下一次恢复），后来请对方收到重复讯息时先 `sleep 20` 再继续，就解决了。
