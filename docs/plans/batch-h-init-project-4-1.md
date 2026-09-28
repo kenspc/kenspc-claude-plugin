@@ -181,3 +181,8 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
   - 计数变成 guards run 11、self-tests run 10，由 1.8 更新 checklist。
   - 定义句不列 `CLAUDE.local.md`，那是个人、被 git 忽略的档案。
   - 理由：插件的先例是 `code-craft-principles.md` 权威、各处内联、再由 guard 保护，每次 dispatch 都用得到的规则不依赖 runtime Read；定义里起作用的"不论这次有没有载入"，正是一个跳过 Read 的 agent 会弄错的地方；自动侦测载体，以后新用到这个名词的档案漏了定义也会被抓到。
+- **C9（1.5，C8 的执行）** 问题：implementer 回报了三处偏离，请求确认。裁决：三处都照准。
+  - task-implement 和 task-review 的定义句放在 byte-identical 的 `canonical:run-dir` 区块里，不放在第一次使用的地方。理由：在别处再放一份，就违反"每档一份"。
+  - autopilot 的定义句放在 worker preamble 里。理由：worker 只读这段文字。
+  - `shared/instruction-files.md` 多一个 H1 标题。理由：跟其他 shared 档一致。
+  - task-document-reviewer 的第 3 个角度仍然同时对照用户层级的 CLAUDE.md。理由：这样角度不会变窄。
