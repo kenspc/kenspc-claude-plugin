@@ -209,3 +209,7 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
   - **R2-5 LOW（Documents table 的 CLAUDE.md 那一行）：fix。** 既有 CLAUDE.md 没有加 import 时（用户拒绝、无法询问，或 `.claude/CLAUDE.md` 被拒绝写入），那一行照实写：这个档案装什么，并说它没有 import AGENTS.md。理由：模板的固定文字写的是"装着 import"，在 B6、B8 的路径上是假的；来源检查只看 topic 文件，抓不到这一行。
   - **仅用环境变量设定的身份也会让执行停下（候选 a）：不是 finding。** 这是照 C10 裁决做出来的结果，而且停下是安全的（不 commit，档案留着）。列进建议栏。
   - **"跳过这一题"没说是跳哪一题（候选 b）：不是 finding。** 真正的缺口是 R2-4。
+- **C12（1.6，第 3 轮审查的处置）** 报告：`.kenspc/runs/batch-h/review-3.md`。R2-1 到 R2-5 全部修好，没有破坏第 2 节的任何一项，也没有破坏 § 2.5 的任何 PASS 条件。没有 HIGH，也没有 MEDIUM。
+  - **R3-1 LOW：defer。** 在 monorepo 的 root 执行时，如果某个 app 已有的 CLAUDE.md 没加 import，root AGENTS.md 里那个 app 的那一行仍然写着"旁边的 CLAUDE.md import 这个档案"。
+  - **R3-2 LOW：defer。** 在 fenced code block 或 HTML 注释里的 `@AGENTS.md`，仍然被当成会载入。这是第 3 轮之前就有的问题。
+  - 理由：审查已经到第三轮的上限，修了之后没有下一轮可以审；两项都是罕见的布局。列进建议栏。
