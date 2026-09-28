@@ -201,3 +201,11 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
   - **行宽与句式（V3 LOW）：fix。** 只做 reflow。理由：surface style 惯例。
   - **#1 扩及 README 和 AGENTS.md（E9 LOW）：defer。** 理由：§ 2.4 #1 明写只查 topic 文件；列进建议栏。
   - **子目录定义不排除依赖目录（E10 LOW，例如 `node_modules/*/AGENTS.md`）：defer。** 理由：情况罕见，而且要改 § 2.2 的定义文字和 23 份拷贝；列进建议栏。
+- **C11（1.6，第 2 轮审查的处置）** 报告：`.kenspc/runs/batch-h/review-2.md`。C10 的 13 项里，11 项已修好，E3、E5 只修了一部分，并由下面的 R2-2、R2-4 接手。
+  - **R2-1 MEDIUM（E6 的修法造成回归）：fix。** 句中的 import 只认两侧是空白或行首、行尾的 `@AGENTS.md`，而且不在 code span 里；`@AGENTS.md.`、`(@AGENTS.md)` 都不算。README 和 CHANGELOG 同步。理由：实测 Claude Code 不会 import 后面紧接标点的写法。照原本的修法，run 会宣称"已经载入"，把坏掉的状态确认成好的，正是这个 batch 要防止的事。
+  - **R2-2 LOW（E5 没修完）：fix。** 带有准入规则注释的去处（规则 1 指到的档案也算），只收通过该规则的事实。两个 skill 用同一个子句。理由：C10 的裁决是"不再落回同一个 AGENTS.md"。kenspc-init 的 Documents table 把 Commands 这个主题交给 AGENTS.md 自己，所以规则 1 仍然会让事实落回去。
+  - **R2-3 LOW（身份检查太晚）：fix。** 在 Phase 3 提出 scaffold 之前就读身份；没有身份就当场说明，不再提出 scaffold。理由：只要一句，仍然符合 C10 的"在第一个 generator 执行之前"，也让可以询问的用户有机会先把身份设好。
+  - **R2-4 LOW（AskUserQuestion 一次最多 4 个问题）：fix。** 那一对选项自成的问题也计入该次呼叫的 4 个；每次呼叫只放一个这样的问题，涵盖同一次呼叫里的所有问题；一轮放不下的，分成连续几次呼叫。理由：只要一句，否则每次执行各自即兴处理。
+  - **R2-5 LOW（Documents table 的 CLAUDE.md 那一行）：fix。** 既有 CLAUDE.md 没有加 import 时（用户拒绝、无法询问，或 `.claude/CLAUDE.md` 被拒绝写入），那一行照实写：这个档案装什么，并说它没有 import AGENTS.md。理由：模板的固定文字写的是"装着 import"，在 B6、B8 的路径上是假的；来源检查只看 topic 文件，抓不到这一行。
+  - **仅用环境变量设定的身份也会让执行停下（候选 a）：不是 finding。** 这是照 C10 裁决做出来的结果，而且停下是安全的（不 commit，档案留着）。列进建议栏。
+  - **"跳过这一题"没说是跳哪一题（候选 b）：不是 finding。** 真正的缺口是 R2-4。
