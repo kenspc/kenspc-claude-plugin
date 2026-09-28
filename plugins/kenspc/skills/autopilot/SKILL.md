@@ -630,7 +630,8 @@ Every worker is one launch, one wait, one return.
   Once `<tag>.exit` is there, read the model and the effort the worker
   actually ran at. The session id in `<tag>.session` names its transcript,
   `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/<session-id>.jsonl`, the
-  root The pass-through values looks under, for the reason it gives; read
+  root the pass-through model is read under, for the reason given there
+  (Phase 0 § The pass-through values); read
   only that file's main-loop assistant records — its lines whose `type` is `assistant`, and
   not a subagent's file — each one's `message.model` and `effort`,
   skipping the records the pass-through read skips: a record whose
