@@ -259,6 +259,9 @@ run_fixtures() {
     # are read as commands.
     fx_deny "$hook" "rm after an arithmetic << on an earlier line" "$r" Bash "$FX_REPO" $'echo $((1<<2))\nrm -rf build'
     fx_deny "$hook" "rm after a heredoc closed by EOF) on an earlier line" "$r" Bash "$FX_REPO" $'x=$(cat <<EOF\nnote\nEOF)\nrm -rf build'
+    # A heredoc whose delimiter line comes ends there: the lines after it
+    # are commands again.
+    fx_deny "$hook" "rm after a heredoc's delimiter line" "$r" Bash "$FX_REPO" $'cat <<EOF > notes.txt\nhello\nEOF\nrm -rf build'
     # A Bash input longer than the hook scans within its timeout is denied
     # unscanned, rm or none; one under the cap is scanned.
     t=$(printf '%060000d' 0)
