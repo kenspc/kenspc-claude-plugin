@@ -362,6 +362,10 @@ run_fixtures() {
     fx_deny "$hook" "a ~ target outside the roots" "$r" Edit "$FX_REPO" "~"
     fx_deny "$hook" "a target with a leading space" "$r" Write "$FX_REPO" " $FX_BASE/outside/a.txt"
 
+    # A path that is not POSIX absolute even after the join, such as a
+    # Windows drive-letter path, is not judged: the hook cannot resolve it.
+    fx "$hook" "a Windows drive-letter target, not judged" allow 1 "$r" Write 'C:\repo' 'C:\repo\a.txt'
+
     # The marker set and no roots: every file-tool write is outside them.
     fx_deny "$hook" "no roots with the marker set" "" Write "$FX_REPO" "$FX_REPO/src/a.txt"
     # A root entry that is not absolute is skipped: an empty entry or .
