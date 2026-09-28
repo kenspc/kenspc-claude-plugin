@@ -1555,7 +1555,7 @@ AUTOPILOT_MODEL        when non-empty, --model <value>    (fresh launch and resu
 AUTOPILOT_EFFORT       when non-empty, --effort <value>   (fresh launch and resume)
 AUTOPILOT_CLAUDE       the executable (default claude)
 AUTOPILOT_BATCH        the batch name in the timeline's file name
-AUTOPILOT_WORKSPACE    the workspace; when non-empty, one of the write roots below (the empty string counts as unset)
+AUTOPILOT_WORKSPACE    the workspace; when non-empty, one of the write roots below, refused unless absolute (the empty string counts as unset)
 
 exported to every worker, fresh launch and resume, over any value the caller holds:
 KENSPC_AUTOPILOT_WORKER        1

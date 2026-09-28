@@ -34,8 +34,9 @@
 #                         the tag's prefix before its last "-s" (batch-x-s3
 #                         gives batch-x)
 #   AUTOPILOT_WORKSPACE   the batch's workspace; when non-empty, one of the
-#                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below; the
-#                         empty string counts as unset
+#                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below, and
+#                         refused unless it is an absolute path; the empty
+#                         string counts as unset
 #
 # Exported to every worker, on a fresh launch and on a resume, overwriting
 # any value the caller's environment holds:
@@ -162,6 +163,14 @@ launch() {
   # nothing — would start a paid session with no instructions, which dies
   # and is resumed into an empty transcript before the stop.
   grep -q '[^[:space:]]' "$prompt_file" || die "empty prompt file $prompt_file"
+  # A workspace that is not an absolute path — a ~ form passed in quotes,
+  # or a relative one — is refused: the rails hook skips a root that does
+  # not start with /, so it would deny every write the worker made to the
+  # workspace, and the run would stop on what reads as a rail breach.
+  case ${AUTOPILOT_WORKSPACE:-} in
+    ''|/*) ;;
+    *) die "AUTOPILOT_WORKSPACE is not an absolute path ($AUTOPILOT_WORKSPACE); pass the workspace's absolute path" ;;
+  esac
   # A missing executable is a refusal here, not a worker that dies at once:
   # without the check the driver printed "started", .exit read 127 with an
   # empty .json, and the skill resumed a dead worker instead of reading the
@@ -319,8 +328,9 @@ selftest_worker_vars() {
 # whatever AUTOPILOT_LOGS says, so a self-test writes nothing under the
 # workspace. Passing: every file is present with the expected content and the
 # timeline holds both lines. It fails, in this order, on a launch naming a
-# missing executable, or an empty or whitespace-only prompt file, that is
-# not refused with status 2 naming it and writing no .session; on a logs
+# missing executable, an empty or whitespace-only prompt file, or an
+# AUTOPILOT_WORKSPACE that is not an absolute path, that is not refused
+# with status 2 naming it and writing no .session; on a logs
 # directory the launch did not create; on a stdout line other than
 # "started <tag> pid <pid> session <id>" with the pid and the id that .pid
 # and .session hold; on a second launch
@@ -471,6 +481,15 @@ STUB
       || { echo "self-test failed: a launch with the $bad prompt file returned $rc, expected 2 and no .session" >&2; return 1; }
     printf '%s\n' "$refusal" | grep -qF -- "empty prompt file $base/$bad.md" \
       || { echo "self-test failed: the refusal of the $bad prompt file does not name $base/$bad.md" >&2; return 1; }
+  done
+  # A workspace that is not an absolute path is refused the same way: the
+  # rails hook would skip it as a root and deny every write to it.
+  for bad in '~/Projects/_smoke' 'workspace'; do
+    refusal=$( (AUTOPILOT_WORKSPACE=$bad launch "$TAG" "$base" "$base/prompt.md" "") 2>&1 ); rc=$?
+    [ "$rc" -eq 2 ] && [ ! -f "$LOGS/$TAG.session" ] \
+      || { echo "self-test failed: a launch with AUTOPILOT_WORKSPACE=$bad returned $rc, expected 2 and no .session" >&2; return 1; }
+    printf '%s\n' "$refusal" | grep -qF -- "AUTOPILOT_WORKSPACE is not an absolute path ($bad)" \
+      || { echo "self-test failed: the refusal of AUTOPILOT_WORKSPACE=$bad does not name it" >&2; return 1; }
   done
 
   # The launch's stdout is captured: the skill reads the pid and the

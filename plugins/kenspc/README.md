@@ -773,7 +773,9 @@ unset. The skill sets all three on every launch — the model and the effort
 empty where no value is known, the plugin directory in `plugin` mode and
 the empty string in `repo` mode — since a variable of the same name
 inherited from your session would otherwise reach the driver. Every
-launch also sets `AUTOPILOT_WORKSPACE`, and the driver exports
+launch also sets `AUTOPILOT_WORKSPACE` to the workspace's absolute path
+(the driver refuses a relative one, which the rails hook would skip as a
+root), and the driver exports
 `KENSPC_AUTOPILOT_WORKER=1` and `KENSPC_AUTOPILOT_WRITE_ROOTS` to every
 worker, fresh or resumed, over any value your session holds (see The
 rails). S4's nested acceptance sessions take S4's model and effort

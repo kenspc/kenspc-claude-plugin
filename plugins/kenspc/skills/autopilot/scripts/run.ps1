@@ -48,8 +48,9 @@
 #                         the tag's prefix before its last "-s" (batch-x-s3
 #                         gives batch-x)
 #   AUTOPILOT_WORKSPACE   the batch's workspace; when non-empty, one of the
-#                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below; the
-#                         empty string counts as unset
+#                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below, and
+#                         refused unless it is an absolute path; the empty
+#                         string counts as unset
 #
 # Exported to every worker, on a fresh launch and on a resume, overwriting
 # any value the caller's environment holds:
@@ -291,6 +292,13 @@ function Invoke-Launch {
     # transcript before the stop.
     try { $promptText = [System.IO.File]::ReadAllText($promptPath) } catch { Stop-Driver "cannot read ${PromptFile}: $($_.Exception.GetBaseException().Message)" }
     if ([string]::IsNullOrWhiteSpace($promptText)) { Stop-Driver "empty prompt file $PromptFile" }
+    # A workspace that is not an absolute path — a ~ form passed in quotes,
+    # or a relative one — is refused: the rails hook skips a root that does
+    # not start with /, so it would deny every write the worker made to the
+    # workspace, and the run would stop on what reads as a rail breach.
+    if (-not [string]::IsNullOrEmpty($env:AUTOPILOT_WORKSPACE) -and -not [System.IO.Path]::IsPathFullyQualified($env:AUTOPILOT_WORKSPACE)) {
+        Stop-Driver "AUTOPILOT_WORKSPACE is not an absolute path ($($env:AUTOPILOT_WORKSPACE)); pass the workspace's absolute path"
+    }
     # A missing executable is a refusal here, not a worker that dies at once:
     # otherwise the driver prints "started", .exit reads a failure with an
     # empty .json, and the skill resumes a dead worker instead of reading the
@@ -539,8 +547,9 @@ function Invoke-Refused {
 # system temporary directory, whatever AUTOPILOT_LOGS says, so a self-test
 # writes nothing under the workspace; it is left in place afterwards. Checks,
 # in this order, naming the first that fails: a launch naming a missing
-# executable, on macOS and Linux one with no execute bit, or an empty or
-# whitespace-only prompt file, refused with the
+# executable, on macOS and Linux one with no execute bit, an empty or
+# whitespace-only prompt file, or an AUTOPILOT_WORKSPACE that is not an
+# absolute path, refused with the
 # subject named and no .session; a logs directory holding a wildcard
 # character refused with the directory named and not created; a tag holding
 # one refused with the tag named and the logs directory not created; the
@@ -733,6 +742,19 @@ exit 0
         }
         if (-not $refusal.Contains("empty prompt file $badFile")) {
             Stop-SelfTest "the refusal of the $bad prompt file does not name $badFile"
+        }
+    }
+    # A workspace that is not an absolute path is refused the same way: the
+    # rails hook would skip it as a root and deny every write to it.
+    foreach ($bad in '~/Projects/_smoke', 'workspace') {
+        $env:AUTOPILOT_WORKSPACE = $bad
+        $refusal = Invoke-Refused $tag $base $promptFile
+        $env:AUTOPILOT_WORKSPACE = $null
+        if ($null -eq $refusal -or (Test-Path -LiteralPath $sessionFile)) {
+            Stop-SelfTest "a launch with AUTOPILOT_WORKSPACE=$bad was not refused before writing, expected a refusal and no .session"
+        }
+        if (-not $refusal.Contains("AUTOPILOT_WORKSPACE is not an absolute path ($bad)")) {
+            Stop-SelfTest "the refusal of AUTOPILOT_WORKSPACE=$bad does not name it"
         }
     }
     # A logs directory holding a wildcard character is refused before

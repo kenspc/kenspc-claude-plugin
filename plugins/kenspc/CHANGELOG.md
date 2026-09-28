@@ -76,7 +76,9 @@ not probed.
   holds. The roots, joined by `|`: the worker's repository
   (`git rev-parse --show-toplevel` in its cwd), `AUTOPILOT_WORKSPACE` when
   non-empty, `$TMPDIR` when set, `/tmp`, and `/private/tmp`. Both headers
-  list the new `AUTOPILOT_WORKSPACE`, which the skill sets on every launch;
+  list the new `AUTOPILOT_WORKSPACE`, which the skill sets on every launch
+  and both drivers refuse unless it is an absolute path, since the hook
+  skips a root that does not start with `/`;
   both self-tests assert the marker and the roots on fresh launches and
   resumes, one of them in a repository the self-test creates, so the
   self-tests now need git.
