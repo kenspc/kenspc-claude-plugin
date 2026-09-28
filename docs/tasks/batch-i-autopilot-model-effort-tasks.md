@@ -49,7 +49,7 @@ Dependency note: Task 2 depends on Task 1; Task 4 depends on Task 1 and Task 3; 
 - `grep -n "follows the session's model" plugins/kenspc/skills/autopilot/scripts/run.sh` 没有结果。
 - 共同约束的编号标签 grep 对 `run.sh` 没有输出。
 - `bash scripts/check-all.sh` exit 0，其中 `check-no-model-names.sh` 通过。
-- 本任务的 commit 只改动 `run.sh`。
+- 本任务的 commit 除 `run.sh` 外不改动任何交付档案（本 task 文件是流程产物，不在此列）。
 
 ---
 
@@ -82,7 +82,7 @@ Depends on: Task 1
 - 档头列出的环境变量和规则与 `run.sh` 一致；`grep -n "follows the session's model" plugins/kenspc/skills/autopilot/scripts/run.ps1` 没有结果。
 - 共同约束的编号标签 grep 对 `run.ps1` 没有输出。
 - `bash scripts/check-all.sh` exit 0。
-- 本任务的 commit 只改动 `run.ps1`。
+- 本任务的 commit 除 `run.ps1` 外不改动任何交付档案。
 
 ---
 
@@ -126,7 +126,7 @@ Depends on: Task 1
 - 新增的每条规则都有 Why。
 - 共同约束的编号标签 grep 对 `SKILL.md` 没有输出。
 - `bash scripts/check-all.sh` exit 0，其中 `check-no-model-names.sh` 和 `check-instruction-files.sh` 通过。
-- 本任务的 commit 只改动 `SKILL.md`。
+- 本任务的 commit 除 `SKILL.md` 外不改动任何交付档案。
 
 ---
 
@@ -174,7 +174,7 @@ Depends on: Task 1, Task 3
 - § The driver 列出的环境变量与 Task 1 之后的 `run.sh` 档头一致。
 - `grep -n "follows the session's model" plugins/kenspc/skills/autopilot/SKILL.md` 没有结果。整个 `plugins/kenspc` 的检查在 Task 5：`run.ps1` 那一句由 Task 2 更正，本任务不依赖 Task 2。
 - 共同约束的编号标签 grep 对 `SKILL.md` 没有输出；`bash scripts/check-all.sh` exit 0。
-- 本任务的 commit 只改动 `SKILL.md`。
+- 本任务的 commit 除 `SKILL.md` 外不改动任何交付档案。
 
 ---
 
@@ -224,7 +224,7 @@ Depends on: Task 1-4
 - `git diff -U0 <task 开始前的 HEAD> -- CLAUDE.md | grep -E '^-.*(Skills and agents follow the|session.s model and effort; a model name)'` 没有输出，也就是 "Skills and agents follow the session's model and effort" 那一句（CLAUDE.md 里分在两行）没有被改动；对照：去掉 `^-.*` 的同一个 pattern，`git show <task 开始前的 HEAD>:CLAUDE.md | grep -E '(Skills and agents follow the|session.s model and effort; a model name)'`，命中两行。`git diff --quiet <task 开始前的 HEAD> -- scripts/check-no-model-names.sh` exit 0。
 - release checklist 的 pre-flight block 全部 exit 0，输出 `guards run: 11`，最后一行是 `self-tests run: 10`。如果计数变了，CLAUDE.md 和 checklist 写的是新的计数，而且与输出一致。
 - 共同约束的编号标签 grep 对这三个档没有输出。
-- 本任务的 commit 只改动这三个档。
+- 本任务的 commit 除这三个档外不改动任何交付档案。
 
 ---
 
@@ -251,4 +251,4 @@ Depends on: Task 1-5
 - `git diff --numstat <task 开始前的 HEAD> -- plugins/kenspc/CHANGELOG.md` 印出一行，第二栏（删除的行数）是 `0`、第一栏大于 0，也就是只有新增的行。跟 task 开始前的 HEAD 比，而不是跟 index 比：暂存或提交之后，`git diff` 不带 commit 就没有输出，检查也就不可能失败。
 - `grep -rn "follows the session's model" plugins/kenspc CLAUDE.md README.md` 仍然没有结果。
 - 共同约束的编号标签 grep 对 `CHANGELOG.md` 没有输出。
-- 本任务的 commit 只改动 `CHANGELOG.md`。
+- 本任务的 commit 除 `CHANGELOG.md` 外不改动任何交付档案。
