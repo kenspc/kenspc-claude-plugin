@@ -444,7 +444,7 @@ models and efforts:
 questions answered:
   <tag>: <one line> → <one line>
 rail observations:
-  <tag>: <the worker's entry, one per line | none>
+  <tag>: <the worker's entry, one per line | none | not read (<reason>)>
 skipped gates:
   <S2|S3> <tag>: <accepted as a behavior deviation | stop: <the mismatch or choice> | recorded>
 stops: <reason> (<time>)
@@ -665,10 +665,16 @@ Every worker is one launch, one wait, one return.
   and its missing artifact would otherwise be found one step later. Read
   the same `result` for `## Rail observations` too, and record each entry
   under the state file's `rail observations:` section with the worker's
-  tag — `<tag>: none` when the heading is absent or empty. Why: a write
+  tag — `<tag>: none` when the heading is absent or empty, and
+  `<tag>: not read (<reason>)` when there is no `result` to read: a
+  `<tag>.json` that is empty or not JSON, or a subtype that carries no
+  result. Why: a write
   under `/tmp` is not a breach (the preamble's § 3), but a write nobody
   records is one nobody can check; the section is what the reviewer
-  report's `Rail observations` line is built from. At S2's and S3's
+  report's `Rail observations` line is built from. Why `not read` apart
+  from `none`: a worker whose final message never arrived has observed
+  nothing anyone knows of, and recorded as `none` it would read as a
+  worker that wrote nowhere else. At S2's and S3's
   return, check whether the step asked its gate (§ A worker's question at
   a gate, on a skipped gate).
 
