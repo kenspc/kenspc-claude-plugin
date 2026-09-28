@@ -127,6 +127,12 @@ DONE：条目存在，日期在发布准备时填入。
   - 第 3 个案例的 seed spec 另加 `- S3b: effort <嵌套主 session 的 effort>`，用来测只声明一部分的角色。原有的 PASS 条件不变，另外加上四项：settings line 的 roles 列表有 `S3b —/<effort>`；S3b 的 state line 标 `(declared)`，requested 的 model 是沿用值；S3b 没有 `MISMATCH`；嵌套主 session 的 transcript 里，每条 driver 启动行都设了 `AUTOPILOT_MODEL` 和 `AUTOPILOT_EFFORT`（值可以是空字串）。
   - 以下列为 Not exercised，也列为 roadmap 候选：`CLAUDE_CODE_EFFORT_LEVEL` 已设、但没有任何角色声明 effort 时不应停下；resume 行的替换；重跑 tag 所对应的角色。
 - **C17（验收用哪一份 driver）** 第 1、2 个案例测的是 S4 启动时 HEAD 的 `run.sh`，复制到 workspace 之后再用，不是 Phase 0 复制的 driver 副本，因为那份仍是 4.1.0 的内容。嵌套 autopilot 的案例（第 3 到 6 个和第 8 个）照 S4 的 task block，用 Phase 0 的 driver 副本启动嵌套主 session，嵌套主 session 以 `--plugin-dir` 载入工作树里的新 skill，再复制它自己的新 driver。
+- **C18（S3c 的延后项；主 session 分类）**
+  - T2：第 3 个案例的 PASS 条件改用 C14 第 3、5 项裁定的新格式。S6 的 state line 写 `applied <id>/— MISMATCH: effort not applied`，不带 `not observed`；reviewer report 那一行写 `<n> workers, 1 mismatches, 0 not observed`。这是用户既有裁定的推论。
+  - T3（验收碰不到 API-error 记录的排除逻辑）和 T4（没有设了 `CLAUDE_CONFIG_DIR` 的案例）列入 Not exercised，另列为 roadmap 候选。前者要伪造 transcript，后者要另一套登录凭证，都超出这次验收的做法。
+  - Q3（telemetry hook 只读 `~/.claude`，档案不在 `Allowed files:` 之内）和 T5（没有 self-test 传带方括号的 `--model`，跟 run.ps1 原生呼叫的改写绑在一起）列为 roadmap 候选。
+  - regression-verifier 提出的三处措辞交给一个小 S5 修改：SKILL.md 里 "`not observed` is never counted" 改成 "never counted as a mismatch"；README 和 CHANGELOG 讲 `effort not applied` 的句子加上 "when an effort was requested"。这些是纯措辞改动，不再跑缩小范围的审查，验收第 7 个案例会再跑一次全部 guard。
+  - L12 里 `~/.claude` 的写法不改：Locked design 不可更改，而 spec 会在发布准备时移除。
 
 ## Autopilot
 
