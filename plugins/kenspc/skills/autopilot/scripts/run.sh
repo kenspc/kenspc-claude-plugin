@@ -17,7 +17,9 @@
 #
 # Environment (all optional)
 #   AUTOPILOT_LOGS        the logs directory; default $HOME/Projects/_smoke/_logs
-#   AUTOPILOT_PLUGIN_DIR  when set, --plugin-dir <value> is passed (plugin mode)
+#   AUTOPILOT_PLUGIN_DIR  when non-empty, --plugin-dir <value> is passed, on a
+#                         fresh launch and on a resume (plugin mode); the
+#                         empty string counts as unset (repo mode)
 #   AUTOPILOT_BUDGET_USD  when set, --max-budget-usd <value> is passed
 #   APPEND_SP             when set, --append-system-prompt <value> is passed
 #                         (the cannot-ask variant)
@@ -254,23 +256,32 @@ launch() {
 # --model <value> or showing --effort, and for one under selftest-s6 the
 # other way round, a .exit missing after the wait or an .err without
 # --effort <value> or showing --model;
+# then, for a launch under selftest-s13 with AUTOPILOT_PLUGIN_DIR the empty
+# string, a .exit missing after the wait, an .err without --name <tag>, or
+# an .err that shows --plugin-dir, and for one under selftest-s14 with it
+# set, a .exit missing after the wait, an .err without --name <tag>, or an
+# .err without --plugin-dir <value>;
 # then, for a resume launch of the same stub
 # under <tag>-r1 through the command line (the parser the skill calls)
 # with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, APPEND_SP,
 # AUTOPILOT_MODEL, and AUTOPILOT_EFFORT set, a command line not returning
 # 0, a .exit missing or not 0,
 # a .session not holding that id, an .err without --resume <id>, with
-# --session-id, or without the five variables' flags, a timeline start
-# line not ending in "resume", and a command line with --resume and no id,
-# or with an unknown argument, that does not return 2 or writes
-# <tag>-r1-x.session; then,
+# --session-id, or without --name <tag> or the five variables' flags, a
+# timeline start line not ending in "resume", and a command line with
+# --resume and no id, or with an unknown argument, that does not return 2
+# or writes <tag>-r1-x.session; then, for resume launches through the
+# command line under <tag>-r2 with AUTOPILOT_PLUGIN_DIR unset and under
+# <tag>-r3 with it the empty string, a command line not returning 0, a
+# .exit missing after the wait, an .err without --name <tag>, or an .err
+# that shows --plugin-dir; then,
 # for a launch under self-s-test-s1 with AUTOPILOT_BATCH unset and a stale
 # self-s-test-s1.exit in place, that file still present right after the
 # launch, a .exit not reading 0 after the wait, and a
 # self-s-test-timeline.log without its start or end line (the batch-name
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
-  local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG n exit_status session flag
+  local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG PETAG PSTAG PRTAG plugin_case n exit_status session flag
   local first_session first_pid refusal rc self FTAG saved_exe bad started
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
@@ -492,6 +503,33 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/$YTAG.err does not show --effort low" >&2; return 1; }
   ! grep -qF -- '--model' "$LOGS/$YTAG.err" \
     || { echo "self-test failed: $LOGS/$YTAG.err shows --model on a launch with AUTOPILOT_MODEL set to the empty string" >&2; return 1; }
+  # AUTOPILOT_PLUGIN_DIR follows the same rule: the skill sets it on every
+  # launch, the plugin directory in plugin mode and the empty string in repo
+  # mode, so a driver that tested only whether it was set would start every
+  # repo-mode worker with an empty --plugin-dir, and one that dropped the
+  # value would start a plugin-mode worker on the installed plugin. Each
+  # case reads its own --name first, so --plugin-dir is looked for in the
+  # arguments this launch received.
+  PETAG=selftest-s13
+  AUTOPILOT_PLUGIN_DIR=""
+  launch "$PETAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_PLUGIN_DIR
+  n=0; until [ -f "$LOGS/$PETAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$PETAG.exit" ] || { echo "self-test failed: $LOGS/$PETAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $PETAG" "$LOGS/$PETAG.err" \
+    || { echo "self-test failed: $LOGS/$PETAG.err does not show --name $PETAG" >&2; return 1; }
+  ! grep -qF -- '--plugin-dir' "$LOGS/$PETAG.err" \
+    || { echo "self-test failed: $LOGS/$PETAG.err shows --plugin-dir on a launch with AUTOPILOT_PLUGIN_DIR set to the empty string" >&2; return 1; }
+  PSTAG=selftest-s14
+  AUTOPILOT_PLUGIN_DIR=$base/plugin
+  launch "$PSTAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_PLUGIN_DIR
+  n=0; until [ -f "$LOGS/$PSTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$PSTAG.exit" ] || { echo "self-test failed: $LOGS/$PSTAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $PSTAG" "$LOGS/$PSTAG.err" \
+    || { echo "self-test failed: $LOGS/$PSTAG.err does not show --name $PSTAG" >&2; return 1; }
+  grep -qF -- "--plugin-dir $base/plugin" "$LOGS/$PSTAG.err" \
+    || { echo "self-test failed: $LOGS/$PSTAG.err does not show --plugin-dir $base/plugin" >&2; return 1; }
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
@@ -525,6 +563,8 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/$RTAG.err shows --session-id on a resume" >&2; return 1; }
   grep -q "^start $RTAG pid [0-9][0-9]* .* resume\$" "$LOGS/selftest-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/selftest-timeline.log has no start line ending in resume for $RTAG" >&2; return 1; }
+  grep -qF -- "--name $RTAG" "$LOGS/$RTAG.err" \
+    || { echo "self-test failed: $LOGS/$RTAG.err does not show --name $RTAG" >&2; return 1; }
   for flag in "--plugin-dir $base/plugin" '--max-budget-usd 1' '--append-system-prompt x' \
               '--model selftest-model' '--effort high'; do
     grep -qF -- "$flag" "$LOGS/$RTAG.err" \
@@ -541,6 +581,29 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   [ "$rc" -eq 2 ] || { echo "self-test failed: a command line with an unknown argument returned $rc, expected 2" >&2; return 1; }
   [ ! -f "$LOGS/$RTAG-x.session" ] \
     || { echo "self-test failed: a refused command line wrote $LOGS/$RTAG-x.session" >&2; return 1; }
+  # A resume with AUTOPILOT_PLUGIN_DIR unset, and one with it the empty
+  # string, through the command line: a resume builds its flags on the same
+  # path, and the skill resumes a repo-mode worker with the empty string, so
+  # each is read for --plugin-dir as the fresh launches are.
+  for PRTAG in "$TAG-r2" "$TAG-r3"; do
+    if [ "$PRTAG" = "$TAG-r2" ]; then
+      plugin_case=unset
+      AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
+        bash "$self" "$PRTAG" "$base" "$base/prompt.md" --resume "$session"; rc=$?
+    else
+      plugin_case="set to the empty string"
+      AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
+      AUTOPILOT_PLUGIN_DIR="" \
+        bash "$self" "$PRTAG" "$base" "$base/prompt.md" --resume "$session"; rc=$?
+    fi
+    [ "$rc" -eq 0 ] || { echo "self-test failed: the resume launch of $PRTAG through the command line returned $rc, expected 0" >&2; return 1; }
+    n=0; until [ -f "$LOGS/$PRTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+    [ -f "$LOGS/$PRTAG.exit" ] || { echo "self-test failed: $LOGS/$PRTAG.exit is missing after the wait" >&2; return 1; }
+    grep -qF -- "--name $PRTAG" "$LOGS/$PRTAG.err" \
+      || { echo "self-test failed: $LOGS/$PRTAG.err does not show --name $PRTAG" >&2; return 1; }
+    ! grep -qF -- '--plugin-dir' "$LOGS/$PRTAG.err" \
+      || { echo "self-test failed: $LOGS/$PRTAG.err shows --plugin-dir on a resume with AUTOPILOT_PLUGIN_DIR $plugin_case" >&2; return 1; }
+  done
 
   # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
   # before its last "-s", so a batch name that itself holds "-s" keeps its

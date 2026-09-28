@@ -197,7 +197,31 @@ no repository file changes except this task document.
 
 ### Task 2: The drivers treat an empty `AUTOPILOT_PLUGIN_DIR` as unset, self-tested
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the four new cases use the same tags in both drivers, unused
+  by either before — `selftest-s13` (fresh, empty), `selftest-s14` (fresh,
+  set), `selftest-s1-r2` (resume, unset), `selftest-s1-r3` (resume, empty);
+  the existing `selftest-s1` (fresh, unset) and `selftest-s1-r1` (resume,
+  set) complete the six, and `selftest-s1-r1` gained its `--name <tag>`
+  check before the flag checks so all six read their own `--name` first.
+  The resumes go through each driver's command line, as `-r1` does. The
+  launch code (`[ -n "${AUTOPILOT_PLUGIN_DIR:-}" ]`,
+  `[string]::IsNullOrEmpty`) is unchanged.
+- Changes/tradeoffs: mutation runs on `$TMPDIR` copies
+  (`batch-j-t2-mutation-1/` for run.sh, `batch-j-t2-mutation-2/` for
+  run.ps1): run.sh with `${AUTOPILOT_PLUGIN_DIR+x}` in place of
+  `${AUTOPILOT_PLUGIN_DIR:-}` exited 1 with `self-test failed: …/selftest-s13.err
+  shows --plugin-dir on a launch with AUTOPILOT_PLUGIN_DIR set to the empty
+  string`, the unmodified copy passed (exit 0); run.ps1 with
+  `$null -ne $env:AUTOPILOT_PLUGIN_DIR` in place of the
+  `IsNullOrEmpty` test exited 1 with the same `selftest-s13` message, the
+  unmodified copy passed (exit 0). pwsh 7.6.6 on this machine keeps a
+  variable assigned the empty string (a child process sees `X=`), so the
+  empty case is exercised there; run.ps1's comment keeps the existing note
+  that an older pwsh that removes it makes the case the unset one again.
+  Writes under `/tmp`: none.
 
 Spec Step 2.1 (J-L1). Files: `plugins/kenspc/skills/autopilot/scripts/run.sh`,
 `plugins/kenspc/skills/autopilot/scripts/run.ps1`.

@@ -31,7 +31,9 @@
 #
 # Environment (all optional)
 #   AUTOPILOT_LOGS        the logs directory; default $HOME/Projects/_smoke/_logs
-#   AUTOPILOT_PLUGIN_DIR  when set, --plugin-dir <value> is passed (plugin mode)
+#   AUTOPILOT_PLUGIN_DIR  when non-empty, --plugin-dir <value> is passed, on a
+#                         fresh launch and on a resume (plugin mode); the
+#                         empty string counts as unset (repo mode)
 #   AUTOPILOT_BUDGET_USD  when set, --max-budget-usd <value> is passed
 #   APPEND_SP             when set, --append-system-prompt <value> is passed
 #                         (the cannot-ask variant)
@@ -486,15 +488,23 @@ function Invoke-Refused {
 # with AUTOPILOT_MODEL set and
 # AUTOPILOT_EFFORT the empty string, and one the other way round, each with
 # its .exit present after the wait and its .err showing the set variable's
-# flag with its value and not the other flag; a throwing stub's .exit
+# flag with its value and not the other flag; a launch with
+# AUTOPILOT_PLUGIN_DIR the empty string and one with it set, each with its
+# .exit present after the wait and its .err showing --name <tag>, and
+# --plugin-dir <value> for the set one and no --plugin-dir for the other; a
+# throwing stub's .exit
 # reading 1, its end line, and its reason in .err; a launch through the
 # command line whose .pid and timeline writes fail returning 0 with its
 # started line, both failures on stderr, and .exit reading 0; on macOS and
 # Linux, a
 # native stub's .exit reading 0 and the -p and --settings values it received
 # equal, byte for byte, to that prompt and the settings JSON; a resume
-# launch through the command line with the five optional variables set;
-# the command line refusing --resume with no id and an unknown argument; the
+# launch through the command line with the five optional variables set, its
+# .err showing --name <tag> and their flags;
+# the command line refusing --resume with no id and an unknown argument;
+# resume launches through the command line with AUTOPILOT_PLUGIN_DIR unset
+# and with it the empty string, each returning 0, its .exit present after
+# the wait, and its .err showing --name <tag> and no --plugin-dir; the
 # batch-name default with a stale .exit removed and a stale .json and .err
 # emptied at launch; a launch whose cwd
 # and logs directory hold a space, a single quote, and a right single
@@ -861,6 +871,37 @@ exit 0
     $mixEffortText = [System.IO.File]::ReadAllText($mixEffortErr)
     if (-not $mixEffortText.Contains('--effort low')) { Stop-SelfTest "$mixEffortErr does not show --effort low" }
     if ($mixEffortText.Contains('--model')) { Stop-SelfTest "$mixEffortErr shows --model on a launch with AUTOPILOT_MODEL set to the empty string" }
+    # AUTOPILOT_PLUGIN_DIR follows the same rule: the skill sets it on every
+    # launch, the plugin directory in plugin mode and the empty string in repo
+    # mode, so a driver that tested only whether it was set would start every
+    # repo-mode worker with an empty --plugin-dir, and one that dropped the
+    # value would start a plugin-mode worker on the installed plugin. Each
+    # case reads its own --name first, so --plugin-dir is looked for in the
+    # arguments this launch received. Where pwsh removes a variable assigned
+    # the empty string, the empty case is the unset case again.
+    $pluginEmptyTag = 'selftest-s13'
+    $env:AUTOPILOT_PLUGIN_DIR = ''
+    $null = Invoke-Launch $pluginEmptyTag $base $promptFile ''
+    $env:AUTOPILOT_PLUGIN_DIR = $null
+    $pluginEmptyExit = Join-Path $logsDir "$pluginEmptyTag.exit"
+    $pluginEmptyErr = Join-Path $logsDir "$pluginEmptyTag.err"
+    Wait-ExitFile $pluginEmptyExit
+    if (-not (Test-Path -LiteralPath $pluginEmptyExit -PathType Leaf)) { Stop-SelfTest "$pluginEmptyExit is missing after the wait" }
+    $pluginEmptyText = [System.IO.File]::ReadAllText($pluginEmptyErr)
+    if (-not $pluginEmptyText.Contains("--name $pluginEmptyTag")) { Stop-SelfTest "$pluginEmptyErr does not show --name $pluginEmptyTag" }
+    if ($pluginEmptyText.Contains('--plugin-dir')) { Stop-SelfTest "$pluginEmptyErr shows --plugin-dir on a launch with AUTOPILOT_PLUGIN_DIR set to the empty string" }
+    $pluginSetTag = 'selftest-s14'
+    $pluginSetDir = Join-Path $base 'plugin'
+    $env:AUTOPILOT_PLUGIN_DIR = $pluginSetDir
+    $null = Invoke-Launch $pluginSetTag $base $promptFile ''
+    $env:AUTOPILOT_PLUGIN_DIR = $null
+    $pluginSetExit = Join-Path $logsDir "$pluginSetTag.exit"
+    $pluginSetErr = Join-Path $logsDir "$pluginSetTag.err"
+    Wait-ExitFile $pluginSetExit
+    if (-not (Test-Path -LiteralPath $pluginSetExit -PathType Leaf)) { Stop-SelfTest "$pluginSetExit is missing after the wait" }
+    $pluginSetText = [System.IO.File]::ReadAllText($pluginSetErr)
+    if (-not $pluginSetText.Contains("--name $pluginSetTag")) { Stop-SelfTest "$pluginSetErr does not show --name $pluginSetTag" }
+    if (-not $pluginSetText.Contains("--plugin-dir $pluginSetDir")) { Stop-SelfTest "$pluginSetErr does not show --plugin-dir $pluginSetDir" }
 
     # A failure inside the worker's own script, here an executable that
     # throws, still writes .exit reading 1 and the end line, and leaves its
@@ -1008,6 +1049,7 @@ exit 0
     if (-not (Test-FileLine $timeline "^start $resumeTag pid [0-9]+ .* resume$")) {
         Stop-SelfTest "$timeline has no start line ending in resume for $resumeTag"
     }
+    if (-not $resumeText.Contains("--name $resumeTag")) { Stop-SelfTest "$resumeErr does not show --name $resumeTag" }
     foreach ($flag in "--plugin-dir $pluginDir", '--max-budget-usd 1', '--append-system-prompt x', '--model selftest-model', '--effort high') {
         if (-not $resumeText.Contains($flag)) { Stop-SelfTest "$resumeErr does not show $flag" }
     }
@@ -1022,6 +1064,30 @@ exit 0
     if ($rc -ne 2) { Stop-SelfTest "a command line with an unknown argument returned $rc, expected 2" }
     $refusedSession = Join-Path $logsDir "$resumeTag-x.session"
     if (Test-Path -LiteralPath $refusedSession) { Stop-SelfTest "a refused command line wrote $refusedSession" }
+    # A resume with AUTOPILOT_PLUGIN_DIR unset, and one with it the empty
+    # string, through the command line: a resume builds its flags on the same
+    # path, and the skill resumes a repo-mode worker with the empty string, so
+    # each is read for --plugin-dir as the fresh launches are.
+    $pluginResumeCases = @(
+        @{ Tag = "$tag-r2"; PluginDir = $null; Label = 'unset' },
+        @{ Tag = "$tag-r3"; PluginDir = ''; Label = 'set to the empty string' }
+    )
+    foreach ($pluginCase in $pluginResumeCases) {
+        $caseTag = $pluginCase.Tag
+        $env:AUTOPILOT_PLUGIN_DIR = $pluginCase.PluginDir
+        $caseOut = & pwsh -NoProfile -File $self $caseTag $base $promptFile --resume $session
+        $rc = $LASTEXITCODE
+        $env:AUTOPILOT_PLUGIN_DIR = $null
+        foreach ($line in @($caseOut)) { [Console]::Out.WriteLine($line) }
+        if ($rc -ne 0) { Stop-SelfTest "the resume launch of $caseTag through the command line returned $rc, expected 0" }
+        $caseExit = Join-Path $logsDir "$caseTag.exit"
+        $caseErr = Join-Path $logsDir "$caseTag.err"
+        Wait-ExitFile $caseExit
+        if (-not (Test-Path -LiteralPath $caseExit -PathType Leaf)) { Stop-SelfTest "$caseExit is missing after the wait" }
+        $caseText = [System.IO.File]::ReadAllText($caseErr)
+        if (-not $caseText.Contains("--name $caseTag")) { Stop-SelfTest "$caseErr does not show --name $caseTag" }
+        if ($caseText.Contains('--plugin-dir')) { Stop-SelfTest "$caseErr shows --plugin-dir on a resume with AUTOPILOT_PLUGIN_DIR $($pluginCase.Label)" }
+    }
 
     # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
     # before its last "-s", so a batch name that itself holds "-s" keeps its
