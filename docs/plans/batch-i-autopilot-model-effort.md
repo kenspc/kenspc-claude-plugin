@@ -112,6 +112,7 @@ DONE：条目存在，日期在发布准备时填入。
 - **C10（S2 确认，not observed；用户裁定）** `not observed` 照原样印出，不加 `MISMATCH:`，也不算进 reviewer report 的 `<k> mismatches`。
 - **C11（S2 确认，编号规则；用户裁定）** 本 spec 的编号标签（Locked design、Background 里的 probe、clarification 的编号）不写进任何交付档案，并用 diff grep 检查。
 - **C12（S2 结束，model 名称的范围）** L2 和 Constraints 所说的"plugin 的档案里不出现 model 名称"，范围是 `check-no-model-names.sh` 扫描的档案（`skills/`、`agents/`、`commands/`、`shared/`），Step 3 的 DONE 就是这样写的。L4 和 Step 4 要求 README 写出 Fable 的计费风险，所以 README 的 Known behavior 里 Fable 计费那一项是本批次唯一写出 model 名称的地方，其他例子一律用 `<model>` 占位符。
+- **C13（S3 停止，/tmp 临时档；用户裁定）** S3 的 task-implementer subagent 把 4 个临时档（self-test 输出、pre-flight 输出、字段标签清单）写到了 `/tmp`，不在 `$TMPDIR` 之内，S3 按 rail 停了下来。用户裁定：这 4 个档移进 workspace 的 `.trash/`，S3 继续跑审查阶段；本批次余下的部分，worker 派出的 subagent 在 `/tmp` 写的临时档只要不含 secret，就只记为 observation，不算停止条件。其他 rail 一律不变。理由：preamble 的 rail 只有 worker session 看得到，它派出的 subagent 并不知道这条规则。
 
 ## Autopilot
 
