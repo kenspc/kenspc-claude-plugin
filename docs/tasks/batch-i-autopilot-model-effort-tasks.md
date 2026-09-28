@@ -155,7 +155,7 @@ Depends on: Task 1, Task 3
 - reviewer report 模板里 `- Models and efforts:` 的行号小于 `- Total cost:` 的行号，并写明 `mismatches: none` 的情况；Phase 4 讲 reviewer report 的那一段也提到 `Models and efforts`。
 - 新增的每条规则都有 Why。
 - § The driver 列出的环境变量与 Task 1 之后的 `run.sh` 档头一致。
-- `grep -rn "follows the session's model" plugins/kenspc` 没有结果。
+- `grep -n "follows the session's model" plugins/kenspc/skills/autopilot/SKILL.md` 没有结果。整个 `plugins/kenspc` 的检查在 Task 5：`run.ps1` 那一句由 Task 2 更正，本任务不依赖 Task 2。
 - 共同约束的编号标签 grep 对 `SKILL.md` 没有输出；`bash scripts/check-all.sh` exit 0。
 - 本任务的 commit 只改动 `SKILL.md`。
 
