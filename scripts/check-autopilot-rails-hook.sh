@@ -262,6 +262,10 @@ run_fixtures() {
     # A heredoc whose delimiter line comes ends there: the lines after it
     # are commands again.
     fx_deny "$hook" "rm after a heredoc's delimiter line" "$r" Bash "$FX_REPO" $'cat <<EOF > notes.txt\nhello\nEOF\nrm -rf build'
+    # A comment runs to the end of its line, a quote inside it included; a
+    # # inside a word starts none.
+    fx_deny "$hook" "rm on the line after a comment holding a quote" "$r" Bash "$FX_REPO" $'# don\'t keep the build\nrm -rf build'
+    fx_deny "$hook" "rm after a # inside a word, which starts no comment" "$r" Bash "$FX_REPO" 'echo a#b; rm -rf build'
     # A Bash input longer than the hook scans within its timeout is denied
     # unscanned, rm or none; one under the cap is scanned.
     t=$(printf '%060000d' 0)
@@ -281,6 +285,7 @@ run_fixtures() {
     fx "$hook" "quoted separator: echo 'a; rm -rf b'" allow 1 "$r" Bash "$FX_REPO" "echo 'a; rm -rf b'"
     fx "$hook" "quoted separator: echo \"a | rm -rf b\"" allow 1 "$r" Bash "$FX_REPO" 'echo "a | rm -rf b"'
     fx "$hook" "quoted separator: git commit -m \"…; rm -rf …\"" allow 1 "$r" Bash "$FX_REPO" 'git commit -m "docs: note; rm -rf is denied now"'
+    fx "$hook" "rm -rf in a comment" allow 1 "$r" Bash "$FX_REPO" 'ls # a; rm -rf b'
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
 
