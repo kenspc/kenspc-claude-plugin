@@ -33,6 +33,26 @@
 #   AUTOPILOT_BATCH       the batch name in the timeline's file name; default
 #                         the tag's prefix before its last "-s" (batch-x-s3
 #                         gives batch-x)
+#   AUTOPILOT_WORKSPACE   the batch's workspace; when non-empty, one of the
+#                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below; the
+#                         empty string counts as unset
+#
+# Exported to every worker, on a fresh launch and on a resume, overwriting
+# any value the caller's environment holds:
+#   KENSPC_AUTOPILOT_WORKER       1, the marker
+#   KENSPC_AUTOPILOT_WRITE_ROOTS  the roots, joined by "|": the worker's
+#                         repository (git rev-parse --show-toplevel run in
+#                         <cwd>; no entry when that fails),
+#                         AUTOPILOT_WORKSPACE when non-empty, $TMPDIR when
+#                         set, /tmp, and /private/tmp, each as given, with
+#                         no symbolic link resolved
+# Why: the plugin's rails hook reads the two variables and acts only in a
+# worker that carries the marker, so every other session's tool calls pass
+# it untouched; the caller's values are overwritten, since a marker of 0 or
+# a roots list left in the main session's environment would otherwise
+# reach the worker. Why "|": no Windows path holds it, while ":" is in
+# every drive letter and ";" may be in a file name; run.ps1 joins the roots
+# the same way, and the hook splits them on it.
 #
 # Files, all under the logs directory
 #   <tag>.session   the session id, written before the process starts
@@ -71,9 +91,11 @@
 # failing stub of its own, so a status other than 0 is seen to reach
 # <tag>.exit. A caller who sets
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
-# of theirs that is meant to pass echoes its arguments and
-# "cwd=<its working directory, physical path>" to stderr, since the
-# self-test reads the flags and the cwd there; prints to stdout a JSON
+# of theirs that is meant to pass echoes its arguments,
+# "cwd=<its working directory, physical path>", and the two exported
+# variables as the lines "KENSPC_AUTOPILOT_WORKER=<value>" and
+# "KENSPC_AUTOPILOT_WRITE_ROOTS=<value>" to stderr, since the self-test
+# reads the flags, the cwd, and the variables there; prints to stdout a JSON
 # object holding "result" and the --session-id value as "session_id", the
 # two keys the self-test reads from <tag>.json; exits 0; and stays alive for
 # at least one second: the second launch under the tag, refused only while
@@ -126,7 +148,7 @@ new_uuid() {
 # launch <tag> <cwd> <prompt-file> <resume-session-id or empty>
 # Starts the worker and prints "started <tag> pid <pid> session <id>".
 launch() {
-  local tag dir prompt_file resume logs batch exe prompt session pid stamp extra
+  local tag dir prompt_file resume logs batch exe prompt session pid stamp extra roots top
   tag=$1; dir=$2; prompt_file=$3; resume=$4
   logs=${AUTOPILOT_LOGS:-$HOME/Projects/_smoke/_logs}
   batch=${AUTOPILOT_BATCH:-${tag%-s*}}
@@ -202,12 +224,31 @@ launch() {
     cmd=(caffeinate -i "${cmd[@]}")
   fi
 
+  # The rails hook's roots, joined by "|" (the header says why). A cwd
+  # outside a git repository, or no git, adds no repository entry.
+  roots=""
+  if command -v git >/dev/null 2>&1; then
+    top=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null) || top=""
+    if [ -n "$top" ]; then
+      roots=$top
+    fi
+  fi
+  if [ -n "${AUTOPILOT_WORKSPACE:-}" ]; then
+    roots="${roots:+$roots|}$AUTOPILOT_WORKSPACE"
+  fi
+  if [ -n "${TMPDIR:-}" ]; then
+    roots="${roots:+$roots|}$TMPDIR"
+  fi
+  roots="${roots:+$roots|}/tmp|/private/tmp"
+
   cd "$dir" || die "cannot cd to $dir"
   # A stale exit file from an earlier launch under the same tag would read as
   # this worker's completion before it starts; nothing else is removed.
   rm -f "$logs/$tag.exit"
   (
     trap '' HUP
+    export KENSPC_AUTOPILOT_WORKER=1
+    export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
     "${cmd[@]}" > "$logs/$tag.json" 2> "$logs/$tag.err" < /dev/null
     status=$?
     printf '%s\n' "$status" > "$logs/$tag.exit"
@@ -220,6 +261,40 @@ launch() {
     "$tag" "$pid" "$session" "$stamp" "$dir" "$prompt_file" "$extra" \
     >> "$logs/$batch-timeline.log"
   echo "started $tag pid $pid session $session"
+}
+
+# selftest_worker_vars <err-file> <workspace> <present|absent> <repository or empty>
+# The self-test's check of the two exported variables a stub wrote to its
+# .err: the marker reads 1; the roots hold $TMPDIR (when set), /tmp, and
+# /private/tmp, the repository when one is given, and the workspace when
+# present — or, when absent, no workspace entry: neither that path nor an
+# empty entry. Prints the first failure and returns 1.
+selftest_worker_vars() {
+  local err=$1 workspace=$2 wanted=$3 repo=$4 roots want
+  grep -qxF -- 'KENSPC_AUTOPILOT_WORKER=1' "$err" \
+    || { echo "self-test failed: $err does not show the marker KENSPC_AUTOPILOT_WORKER=1" >&2; return 1; }
+  roots=$(sed -n 's/^KENSPC_AUTOPILOT_WRITE_ROOTS=//p' "$err")
+  [ -n "$roots" ] \
+    || { echo "self-test failed: $err shows no roots in KENSPC_AUTOPILOT_WRITE_ROOTS" >&2; return 1; }
+  set -- /tmp /private/tmp
+  if [ -n "${TMPDIR:-}" ]; then set -- "$@" "$TMPDIR"; fi
+  if [ -n "$repo" ]; then set -- "$@" "$repo"; fi
+  if [ "$wanted" = present ]; then set -- "$@" "$workspace"; fi
+  for want in "$@"; do
+    case "|$roots|" in
+      *"|$want|"*) ;;
+      *) echo "self-test failed: the roots in $err, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, do not hold $want" >&2; return 1 ;;
+    esac
+  done
+  if [ "$wanted" = absent ]; then
+    case "|$roots|" in
+      *"|$workspace|"*|*"||"*)
+        echo "self-test failed: the roots in $err, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold a workspace entry with AUTOPILOT_WORKSPACE the empty string" >&2
+        return 1
+        ;;
+    esac
+  fi
+  return 0
 }
 
 # self_test: launch a stub through the same path and check every file the
@@ -261,20 +336,34 @@ launch() {
 # an .err that shows --plugin-dir, and for one under selftest-s14 with it
 # set, a .exit missing after the wait, an .err without --name <tag>, or an
 # .err without --plugin-dir <value>;
+# then, with the caller's environment holding KENSPC_AUTOPILOT_WORKER=0,
+# for a launch under selftest-s15 with AUTOPILOT_WORKSPACE set, a .exit
+# missing after the wait, an .err without --name <tag>, without the marker
+# KENSPC_AUTOPILOT_WORKER=1, or with roots (KENSPC_AUTOPILOT_WRITE_ROOTS)
+# not holding $TMPDIR (when set), /tmp, /private/tmp, and the workspace;
+# then a git init of a repository under the self-test's directory that
+# fails, and for a launch under selftest-s16 in that repository with
+# AUTOPILOT_WORKSPACE the empty string, the same items with roots not
+# holding the repository's top level or holding a workspace entry;
 # then, for a resume launch of the same stub
 # under <tag>-r1 through the command line (the parser the skill calls)
 # with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, APPEND_SP,
-# AUTOPILOT_MODEL, and AUTOPILOT_EFFORT set, a command line not returning
-# 0, a .exit missing or not 0,
+# AUTOPILOT_MODEL, AUTOPILOT_EFFORT, and AUTOPILOT_WORKSPACE set, a command
+# line not returning 0, a .exit missing or not 0,
 # a .session not holding that id, an .err without --resume <id>, with
 # --session-id, or without --name <tag> or the five variables' flags, a
-# timeline start line not ending in "resume", and a command line with
+# timeline start line not ending in "resume", the marker and roots items of
+# selftest-s15, and a command line with
 # --resume and no id, or with an unknown argument, that does not return 2
 # or writes <tag>-r1-x.session; then, for resume launches through the
 # command line under <tag>-r2 with AUTOPILOT_PLUGIN_DIR unset and under
 # <tag>-r3 with it the empty string, a command line not returning 0, a
 # .exit missing after the wait, an .err without --name <tag>, or an .err
-# that shows --plugin-dir; then,
+# that shows --plugin-dir; then, for a resume launch through the command
+# line under <tag>-r4 with AUTOPILOT_WORKSPACE the empty string, a command
+# line not returning 0, a .exit missing after the wait, an .err without
+# --name <tag>, without the marker, or with roots not holding $TMPDIR
+# (when set), /tmp, and /private/tmp or holding a workspace entry; then,
 # for a launch under self-s-test-s1 with AUTOPILOT_BATCH unset and a stale
 # self-s-test-s1.exit in place, that file still present right after the
 # launch, a .exit not reading 0 after the wait, and a
@@ -282,6 +371,7 @@ launch() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG PETAG PSTAG PRTAG plugin_case n exit_status session flag
+  local WSDIR W1TAG W2TAG W3TAG repo_top
   local first_session first_pid refusal rc self FTAG saved_exe bad started
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
@@ -296,11 +386,13 @@ self_test() {
     mkdir -p "$base/stub" || die "cannot create $base/stub"
     cat > "$base/stub/claude" <<'STUB'
 #!/bin/sh
-# Stub executable for run.sh --self-test: echoes its arguments and its
-# working directory to stderr, prints a result object to stdout, sleeps one
-# second, exits 0.
+# Stub executable for run.sh --self-test: echoes its arguments, its working
+# directory, and the two exported worker variables to stderr, prints a
+# result object to stdout, sleeps one second, exits 0.
 echo "$@" >&2
 echo "cwd=$(pwd -P)" >&2
+echo "KENSPC_AUTOPILOT_WORKER=${KENSPC_AUTOPILOT_WORKER:-}" >&2
+echo "KENSPC_AUTOPILOT_WRITE_ROOTS=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}" >&2
 id=""
 while [ $# -gt 0 ]; do
   case $1 in
@@ -319,12 +411,17 @@ STUB
   # below; written whatever AUTOPILOT_CLAUDE names, so a caller's stub is
   # used for the passing launches only.
   mkdir -p "$base/stub" || die "cannot create $base/stub"
-  printf '#!/bin/sh\necho "$@" >&2\nexit 3\n' > "$base/stub/fail" || die "cannot write the failing stub"
+  printf '#!/bin/sh\necho "$@" >&2\necho "KENSPC_AUTOPILOT_WORKER=${KENSPC_AUTOPILOT_WORKER:-}" >&2\necho "KENSPC_AUTOPILOT_WRITE_ROOTS=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}" >&2\nexit 3\n' > "$base/stub/fail" || die "cannot write the failing stub"
   chmod +x "$base/stub/fail" || die "cannot make the failing stub executable"
 
   # The five optional variables are unset for the first launch, whatever
   # the caller's environment holds, so their flags can be asserted absent.
   unset AUTOPILOT_PLUGIN_DIR AUTOPILOT_BUDGET_USD APPEND_SP AUTOPILOT_MODEL AUTOPILOT_EFFORT
+  # The caller's environment holds the marker 0 for every launch below, so
+  # a driver that did not overwrite it would pass 0 to the worker; the
+  # workspace is unset unless a launch sets it.
+  KENSPC_AUTOPILOT_WORKER=0; export KENSPC_AUTOPILOT_WORKER
+  unset AUTOPILOT_WORKSPACE
   AUTOPILOT_LOGS=$LOGS
   AUTOPILOT_BATCH=selftest
   TAG=selftest-s1
@@ -530,6 +627,33 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/$PSTAG.err does not show --name $PSTAG" >&2; return 1; }
   grep -qF -- "--plugin-dir $base/plugin" "$LOGS/$PSTAG.err" \
     || { echo "self-test failed: $LOGS/$PSTAG.err does not show --plugin-dir $base/plugin" >&2; return 1; }
+  # The worker variables on two fresh launches: one with AUTOPILOT_WORKSPACE
+  # set, and one with it the empty string whose cwd is a git repository the
+  # self-test creates, so the roots hold that repository's top level. The
+  # rails hook reads the marker and the roots, so a driver that dropped
+  # either would leave a worker's rails to the text alone.
+  WSDIR=$base/workspace
+  W1TAG=selftest-s15
+  AUTOPILOT_WORKSPACE=$WSDIR
+  launch "$W1TAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_WORKSPACE
+  n=0; until [ -f "$LOGS/$W1TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$W1TAG.exit" ] || { echo "self-test failed: $LOGS/$W1TAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $W1TAG" "$LOGS/$W1TAG.err" \
+    || { echo "self-test failed: $LOGS/$W1TAG.err does not show --name $W1TAG" >&2; return 1; }
+  selftest_worker_vars "$LOGS/$W1TAG.err" "$WSDIR" present "" || return 1
+  W2TAG=selftest-s16
+  git init -q "$base/repo" >/dev/null 2>&1 \
+    || { echo "self-test failed: git init $base/repo failed, so the repository root cannot be checked" >&2; return 1; }
+  repo_top=$(cd "$base/repo" && pwd -P)
+  AUTOPILOT_WORKSPACE=""
+  launch "$W2TAG" "$base/repo" "$base/prompt.md" ""
+  unset AUTOPILOT_WORKSPACE
+  n=0; until [ -f "$LOGS/$W2TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$W2TAG.exit" ] || { echo "self-test failed: $LOGS/$W2TAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $W2TAG" "$LOGS/$W2TAG.err" \
+    || { echo "self-test failed: $LOGS/$W2TAG.err does not show --name $W2TAG" >&2; return 1; }
+  selftest_worker_vars "$LOGS/$W2TAG.err" "$WSDIR" absent "$repo_top" || return 1
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid
@@ -548,7 +672,7 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   RTAG=$TAG-r1
   AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
   AUTOPILOT_PLUGIN_DIR=$base/plugin AUTOPILOT_BUDGET_USD=1 APPEND_SP=x \
-  AUTOPILOT_MODEL=selftest-model AUTOPILOT_EFFORT=high \
+  AUTOPILOT_MODEL=selftest-model AUTOPILOT_EFFORT=high AUTOPILOT_WORKSPACE=$WSDIR \
     bash "$self" "$RTAG" "$base" "$base/prompt.md" --resume "$session" \
     || { echo "self-test failed: the resume launch of $RTAG through the command line did not return 0" >&2; return 1; }
   n=0; until [ -f "$LOGS/$RTAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
@@ -570,6 +694,7 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     grep -qF -- "$flag" "$LOGS/$RTAG.err" \
       || { echo "self-test failed: $LOGS/$RTAG.err does not show $flag" >&2; return 1; }
   done
+  selftest_worker_vars "$LOGS/$RTAG.err" "$WSDIR" present "" || return 1
   # The parser's refusals, status 2 and nothing started: --resume without
   # an id would otherwise launch a fresh session under the resume tag, and
   # an unknown argument would pass unnoticed.
@@ -604,6 +729,18 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     ! grep -qF -- '--plugin-dir' "$LOGS/$PRTAG.err" \
       || { echo "self-test failed: $LOGS/$PRTAG.err shows --plugin-dir on a resume with AUTOPILOT_PLUGIN_DIR $plugin_case" >&2; return 1; }
   done
+  # A resume with AUTOPILOT_WORKSPACE the empty string: the marker still
+  # reads 1 and the roots hold no workspace entry, as on a fresh launch.
+  W3TAG=$TAG-r4
+  AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$AUTOPILOT_CLAUDE \
+  AUTOPILOT_WORKSPACE="" \
+    bash "$self" "$W3TAG" "$base" "$base/prompt.md" --resume "$session"; rc=$?
+  [ "$rc" -eq 0 ] || { echo "self-test failed: the resume launch of $W3TAG through the command line returned $rc, expected 0" >&2; return 1; }
+  n=0; until [ -f "$LOGS/$W3TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$W3TAG.exit" ] || { echo "self-test failed: $LOGS/$W3TAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $W3TAG" "$LOGS/$W3TAG.err" \
+    || { echo "self-test failed: $LOGS/$W3TAG.err does not show --name $W3TAG" >&2; return 1; }
+  selftest_worker_vars "$LOGS/$W3TAG.err" "$WSDIR" absent "" || return 1
 
   # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
   # before its last "-s", so a batch name that itself holds "-s" keeps its

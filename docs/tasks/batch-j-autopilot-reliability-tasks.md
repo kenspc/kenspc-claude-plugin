@@ -260,7 +260,38 @@ Spec Step 2.1 (J-L1). Files: `plugins/kenspc/skills/autopilot/scripts/run.sh`,
 
 ### Task 3: The drivers export the worker variables (hook built only)
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the roots separator is `|`, stated in both headers — no
+  Windows path holds it, while `:` is in every drive letter (run.ps1 is
+  written for Windows) and `;` may be in a file name. The roots are
+  written as given, unresolved and in the order repository, workspace,
+  `$TMPDIR`, `/tmp`, `/private/tmp` (for example
+  `/var/folders/…/T/|/tmp|/private/tmp` — `$TMPDIR` keeps its trailing
+  slash); resolving symlinks and trailing slashes is the hook's job. The
+  repository entry comes from `git -C <cwd> rev-parse --show-toplevel`
+  (git's own resolved path); no git, or a cwd outside a repository, adds no
+  entry. `$TMPDIR` counts only when non-empty, as `AUTOPILOT_WORKSPACE`
+  does. run.sh exports the two variables inside the worker's subshell;
+  run.ps1 sets them in the inner script, just before the worker's call,
+  through a new `__ROOTS__` literal.
+- Changes/tradeoffs: the self-tests export `KENSPC_AUTOPILOT_WORKER=0` into
+  their own environment for every launch and assert the marker `1` and the
+  roots on four new or extended launches: `selftest-s15` (fresh, workspace
+  set), `selftest-s16` (fresh, workspace empty, cwd a `git init`
+  repository under the self-test directory: roots hold its top level),
+  `selftest-s1-r1` (resume, workspace added), `selftest-s1-r4` (resume,
+  workspace empty); an empty workspace must leave neither that path nor an
+  empty entry (`||`). The built-in passing and failing stubs of both
+  drivers write the two variables. The self-tests now need git (for the
+  `git init`). Mutation runs on `$TMPDIR` copies (`batch-j-t3-mutation-1/`
+  run.sh, `batch-j-t3-mutation-2/` run.ps1): with the marker's export
+  removed each exited 1 with `…/selftest-s15.err does not show the marker
+  KENSPC_AUTOPILOT_WORKER=1`; with the workspace entry removed each exited
+  1 with `the roots in …/selftest-s15.err, KENSPC_AUTOPILOT_WRITE_ROOTS=…,
+  do not hold …/workspace`; the unmodified copies passed (exit 0). Writes
+  under `/tmp`: none.
 
 Depends on: Task 1
 

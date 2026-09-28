@@ -47,6 +47,26 @@
 #   AUTOPILOT_BATCH       the batch name in the timeline's file name; default
 #                         the tag's prefix before its last "-s" (batch-x-s3
 #                         gives batch-x)
+#   AUTOPILOT_WORKSPACE   the batch's workspace; when non-empty, one of the
+#                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below; the
+#                         empty string counts as unset
+#
+# Exported to every worker, on a fresh launch and on a resume, overwriting
+# any value the caller's environment holds:
+#   KENSPC_AUTOPILOT_WORKER       1, the marker
+#   KENSPC_AUTOPILOT_WRITE_ROOTS  the roots, joined by "|": the worker's
+#                         repository (git rev-parse --show-toplevel run in
+#                         <cwd>; no entry when that fails),
+#                         AUTOPILOT_WORKSPACE when non-empty, $TMPDIR when
+#                         set, /tmp, and /private/tmp, each as given, with
+#                         no symbolic link resolved
+# Why: the plugin's rails hook reads the two variables and acts only in a
+# worker that carries the marker, so every other session's tool calls pass
+# it untouched; the caller's values are overwritten, since a marker of 0 or
+# a roots list left in the main session's environment would otherwise
+# reach the worker. Why "|": no Windows path holds it, while ":" is in
+# every drive letter and ";" may be in a file name; run.sh joins the roots
+# the same way, and the hook splits them on it.
 #
 # Files, all under the logs directory
 #   <tag>.session   the session id, written before the process starts
@@ -130,10 +150,12 @@
 # --settings values are seen to reach a native program, as the installed
 # claude is one, byte for byte. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
 # exercises the failure path; a stub of theirs that is meant to pass writes
-# its arguments and "cwd=<its working directory, logical or physical path>"
+# its arguments, "cwd=<its working directory, logical or physical path>",
+# and the two exported variables as "KENSPC_AUTOPILOT_WORKER=<value>" and
+# "KENSPC_AUTOPILOT_WRITE_ROOTS=<value>", each on a line of its own,
 # to its error output (Write-Error, for a .ps1 run inside the inner pwsh),
 # since the self-test
-# reads the flags and the cwd in <tag>.err; prints to stdout a JSON object
+# reads the flags, the cwd, and the variables in <tag>.err; prints to stdout a JSON object
 # holding "result" and the --session-id value as "session_id"; exits 0; and
 # stays alive for at least one second, since the second launch under the
 # tag and the liveness check on <tag>.pid follow the launch within it.
@@ -173,6 +195,8 @@ try {
     $caffeinate = __CAFFEINATE__
     if ($caffeinate) { $null = Start-Process -FilePath $caffeinate -ArgumentList @('-i', '-w', "$PID") }
     $prompt = (Get-Content -Raw -LiteralPath __PROMPT__ -ErrorAction Stop) -replace '(\r?\n)+\z', ''
+    $env:KENSPC_AUTOPILOT_WORKER = '1'
+    $env:KENSPC_AUTOPILOT_WRITE_ROOTS = __ROOTS__
     $argv = @('-p', $prompt, __SESSION__, '--name', __TAG__, '--settings', __SETTINGS__, '--permission-mode', 'bypassPermissions', '--output-format', 'json'__OPTIONAL__)
     $global:LASTEXITCODE = 0
     $null | & __EXE__ @argv > __JSON__ 2> __ERR__
@@ -341,6 +365,22 @@ function Invoke-Launch {
     }
     $caffeinate = Get-Command -Name caffeinate -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 
+    # The rails hook's roots, joined by "|" (the header says why). A cwd
+    # outside a git repository, or no git, adds no repository entry.
+    $roots = @()
+    $git = Get-Command -Name git -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($git) {
+        try {
+            $top = [string](& $git.Source -C (Resolve-FullPath $Dir) rev-parse --show-toplevel 2>$null)
+            if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrEmpty($top)) { $roots += $top }
+        } catch {
+            # No repository entry: the same outcome as a cwd outside one.
+        }
+    }
+    if (-not [string]::IsNullOrEmpty($env:AUTOPILOT_WORKSPACE)) { $roots += $env:AUTOPILOT_WORKSPACE }
+    if (-not [string]::IsNullOrEmpty($env:TMPDIR)) { $roots += $env:TMPDIR }
+    $roots += '/tmp', '/private/tmp'
+
     $values = @{
         CWD        = ConvertTo-Literal (Resolve-FullPath $Dir)
         CAFFEINATE = if ($caffeinate) { ConvertTo-Literal $caffeinate.Source } else { '$null' }
@@ -354,6 +394,7 @@ function Invoke-Launch {
         ERR        = ConvertTo-Literal $errFile
         EXIT       = ConvertTo-Literal $exitFile
         TIMELINE   = ConvertTo-Literal $timeline
+        ROOTS      = ConvertTo-Literal ($roots -join '|')
     }
     $inner = $InnerTemplate -replace '__([A-Z]+)__', { $values[$_.Groups[1].Value] }
     $encoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($inner))
@@ -446,6 +487,33 @@ function Test-ResultJson {
     return ($parsed -is [System.Management.Automation.PSCustomObject]) -and ($null -ne $parsed.PSObject.Properties['result'])
 }
 
+function Assert-WorkerVars {
+    param([string]$ErrFile, [string]$Workspace, [bool]$WorkspaceWanted, [string]$Repo)
+    # The self-test's check of the two exported variables a stub wrote to its
+    # .err: the marker reads 1; the roots hold $TMPDIR (when set), /tmp, and
+    # /private/tmp, the repository when one is given, and the workspace when
+    # wanted — or, when not, no workspace entry: neither that path nor an
+    # empty entry.
+    if (-not (Test-FileLine $ErrFile '(^|\s)KENSPC_AUTOPILOT_WORKER=1$')) {
+        Stop-SelfTest "$ErrFile does not show the marker KENSPC_AUTOPILOT_WORKER=1"
+    }
+    $rootsLine = @([System.IO.File]::ReadAllLines($ErrFile) | Where-Object { $_ -cmatch '(^|\s)KENSPC_AUTOPILOT_WRITE_ROOTS=' }) | Select-Object -First 1
+    $roots = if ($rootsLine) { [regex]::Match($rootsLine, 'KENSPC_AUTOPILOT_WRITE_ROOTS=(.*)$').Groups[1].Value } else { '' }
+    if ([string]::IsNullOrEmpty($roots)) { Stop-SelfTest "$ErrFile shows no roots in KENSPC_AUTOPILOT_WRITE_ROOTS" }
+    $wanted = @('/tmp', '/private/tmp')
+    if (-not [string]::IsNullOrEmpty($env:TMPDIR)) { $wanted += $env:TMPDIR }
+    if ($Repo) { $wanted += $Repo }
+    if ($WorkspaceWanted) { $wanted += $Workspace }
+    foreach ($want in $wanted) {
+        if (-not "|$roots|".Contains("|$want|")) {
+            Stop-SelfTest "the roots in $ErrFile, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, do not hold $want"
+        }
+    }
+    if (-not $WorkspaceWanted -and ("|$roots|".Contains("|$Workspace|") -or "|$roots|".Contains('||'))) {
+        Stop-SelfTest "the roots in $ErrFile, KENSPC_AUTOPILOT_WRITE_ROOTS=$roots, hold a workspace entry with AUTOPILOT_WORKSPACE the empty string"
+    }
+}
+
 function Invoke-Refused {
     param([string]$Tag, [string]$Dir, [string]$PromptFile)
     # A launch run in this process, as the command line runs it: the refusal
@@ -491,7 +559,15 @@ function Invoke-Refused {
 # flag with its value and not the other flag; a launch with
 # AUTOPILOT_PLUGIN_DIR the empty string and one with it set, each with its
 # .exit present after the wait and its .err showing --name <tag>, and
-# --plugin-dir <value> for the set one and no --plugin-dir for the other; a
+# --plugin-dir <value> for the set one and no --plugin-dir for the other;
+# with the caller's environment holding KENSPC_AUTOPILOT_WORKER=0, a launch
+# with AUTOPILOT_WORKSPACE set, its .exit present after the wait and its
+# .err showing --name <tag>, the marker KENSPC_AUTOPILOT_WORKER=1, and roots
+# (KENSPC_AUTOPILOT_WRITE_ROOTS) holding $TMPDIR (when set), /tmp,
+# /private/tmp, and the workspace; a git init of a repository under the
+# self-test's directory succeeding, and a launch in that repository with
+# AUTOPILOT_WORKSPACE the empty string, the same with roots holding the
+# repository's top level and no workspace entry; a
 # throwing stub's .exit
 # reading 1, its end line, and its reason in .err; a launch through the
 # command line whose .pid and timeline writes fail returning 0 with its
@@ -499,12 +575,16 @@ function Invoke-Refused {
 # Linux, a
 # native stub's .exit reading 0 and the -p and --settings values it received
 # equal, byte for byte, to that prompt and the settings JSON; a resume
-# launch through the command line with the five optional variables set, its
-# .err showing --name <tag> and their flags;
+# launch through the command line with the five optional variables and
+# AUTOPILOT_WORKSPACE set, its .err showing --name <tag>, their flags, the
+# marker, and roots holding the workspace;
 # the command line refusing --resume with no id and an unknown argument;
 # resume launches through the command line with AUTOPILOT_PLUGIN_DIR unset
 # and with it the empty string, each returning 0, its .exit present after
-# the wait, and its .err showing --name <tag> and no --plugin-dir; the
+# the wait, and its .err showing --name <tag> and no --plugin-dir; a resume
+# launch through the command line with AUTOPILOT_WORKSPACE the empty
+# string, returning 0, its .exit present after the wait, and its .err
+# showing --name <tag>, the marker, and roots with no workspace entry; the
 # batch-name default with a stale .exit removed and a stale .json and .err
 # emptied at launch; a launch whose cwd
 # and logs directory hold a space, a single quote, and a right single
@@ -528,12 +608,15 @@ function Invoke-SelfTest {
     if ([string]::IsNullOrEmpty($env:AUTOPILOT_CLAUDE)) {
         $stubPath = Join-Path $stubDir 'claude.ps1'
         Write-LfFile $stubPath (@'
-# Stub executable for run.ps1 --self-test: writes its arguments and its
-# working directory to the error stream, prints a result object to stdout,
-# sleeps one second, exits 0. Write-Error, since this stub runs inside the
-# inner pwsh, where [Console]::Error would bypass the 2> redirection.
+# Stub executable for run.ps1 --self-test: writes its arguments, its
+# working directory, and the two exported worker variables to the error
+# stream, prints a result object to stdout, sleeps one second, exits 0.
+# Write-Error, since this stub runs inside the inner pwsh, where
+# [Console]::Error would bypass the 2> redirection.
 Write-Error ($args -join ' ')
 Write-Error "cwd=$((Get-Location).Path)"
+Write-Error "KENSPC_AUTOPILOT_WORKER=$env:KENSPC_AUTOPILOT_WORKER"
+Write-Error "KENSPC_AUTOPILOT_WRITE_ROOTS=$env:KENSPC_AUTOPILOT_WRITE_ROOTS"
 $id = ''
 for ($i = 0; $i -lt $args.Count - 1; $i++) {
     if ($args[$i] -ceq '--session-id' -or $args[$i] -ceq '--resume') { $id = $args[$i + 1] }
@@ -562,7 +645,7 @@ exit 0
     # AUTOPILOT_CLAUDE names too.
     $failStub = Join-Path $stubDir 'fail.ps1'
     $promptSeen = Join-Path $base 'prompt-seen.txt'
-    Write-LfFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nexit 3`n"
+    Write-LfFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nWrite-Error `"KENSPC_AUTOPILOT_WORKER=`$env:KENSPC_AUTOPILOT_WORKER`"`nWrite-Error `"KENSPC_AUTOPILOT_WRITE_ROOTS=`$env:KENSPC_AUTOPILOT_WRITE_ROOTS`"`nexit 3`n"
     $slowStub = Join-Path $stubDir 'slow.ps1'
     Write-LfFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
     # A fourth that throws, for the check that a failure inside the worker's
@@ -577,6 +660,11 @@ exit 0
     $env:APPEND_SP = $null
     $env:AUTOPILOT_MODEL = $null
     $env:AUTOPILOT_EFFORT = $null
+    # The caller's environment holds the marker 0 for every launch below, so
+    # a driver that did not overwrite it would pass 0 to the worker; the
+    # workspace is unset unless a launch sets it.
+    $env:KENSPC_AUTOPILOT_WORKER = '0'
+    $env:AUTOPILOT_WORKSPACE = $null
     $env:AUTOPILOT_LOGS = $logsDir
     $env:AUTOPILOT_BATCH = 'selftest'
     $tag = 'selftest-s1'
@@ -902,6 +990,45 @@ exit 0
     $pluginSetText = [System.IO.File]::ReadAllText($pluginSetErr)
     if (-not $pluginSetText.Contains("--name $pluginSetTag")) { Stop-SelfTest "$pluginSetErr does not show --name $pluginSetTag" }
     if (-not $pluginSetText.Contains("--plugin-dir $pluginSetDir")) { Stop-SelfTest "$pluginSetErr does not show --plugin-dir $pluginSetDir" }
+    # The worker variables on two fresh launches: one with AUTOPILOT_WORKSPACE
+    # set, and one with it the empty string whose cwd is a git repository the
+    # self-test creates, so the roots hold that repository's top level. The
+    # rails hook reads the marker and the roots, so a driver that dropped
+    # either would leave a worker's rails to the text alone.
+    $workspaceDir = Join-Path $base 'workspace'
+    $wsSetTag = 'selftest-s15'
+    $env:AUTOPILOT_WORKSPACE = $workspaceDir
+    $null = Invoke-Launch $wsSetTag $base $promptFile ''
+    $env:AUTOPILOT_WORKSPACE = $null
+    $wsSetExit = Join-Path $logsDir "$wsSetTag.exit"
+    $wsSetErr = Join-Path $logsDir "$wsSetTag.err"
+    Wait-ExitFile $wsSetExit
+    if (-not (Test-Path -LiteralPath $wsSetExit -PathType Leaf)) { Stop-SelfTest "$wsSetExit is missing after the wait" }
+    if (-not ([System.IO.File]::ReadAllText($wsSetErr)).Contains("--name $wsSetTag")) { Stop-SelfTest "$wsSetErr does not show --name $wsSetTag" }
+    Assert-WorkerVars $wsSetErr $workspaceDir $true ''
+    $repoDir = Join-Path $base 'repo'
+    $null = & git init -q $repoDir 2>$null
+    if ($LASTEXITCODE -ne 0) { Stop-SelfTest "git init $repoDir failed, so the repository root cannot be checked" }
+    # The repository's top level as git prints it: its symbolic links
+    # resolved, read back as Get-CwdLinePattern reads a physical path, and
+    # with forward slashes, as git writes a Windows path.
+    $savedCwd = [System.IO.Directory]::GetCurrentDirectory()
+    try {
+        [System.IO.Directory]::SetCurrentDirectory($repoDir)
+        $repoTop = [System.IO.Directory]::GetCurrentDirectory().Replace('\', '/')
+    } finally {
+        [System.IO.Directory]::SetCurrentDirectory($savedCwd)
+    }
+    $wsEmptyTag = 'selftest-s16'
+    $env:AUTOPILOT_WORKSPACE = ''
+    $null = Invoke-Launch $wsEmptyTag $repoDir $promptFile ''
+    $env:AUTOPILOT_WORKSPACE = $null
+    $wsEmptyExit = Join-Path $logsDir "$wsEmptyTag.exit"
+    $wsEmptyErr = Join-Path $logsDir "$wsEmptyTag.err"
+    Wait-ExitFile $wsEmptyExit
+    if (-not (Test-Path -LiteralPath $wsEmptyExit -PathType Leaf)) { Stop-SelfTest "$wsEmptyExit is missing after the wait" }
+    if (-not ([System.IO.File]::ReadAllText($wsEmptyErr)).Contains("--name $wsEmptyTag")) { Stop-SelfTest "$wsEmptyErr does not show --name $wsEmptyTag" }
+    Assert-WorkerVars $wsEmptyErr $workspaceDir $false $repoTop
 
     # A failure inside the worker's own script, here an executable that
     # throws, still writes .exit reading 1 and the end line, and leaves its
@@ -1025,6 +1152,7 @@ exit 0
     $env:APPEND_SP = 'x'
     $env:AUTOPILOT_MODEL = 'selftest-model'
     $env:AUTOPILOT_EFFORT = 'high'
+    $env:AUTOPILOT_WORKSPACE = $workspaceDir
     $resumeOut = & pwsh -NoProfile -File $self $resumeTag $base $promptFile --resume $session
     $rc = $LASTEXITCODE
     $env:AUTOPILOT_PLUGIN_DIR = $null
@@ -1032,6 +1160,7 @@ exit 0
     $env:APPEND_SP = $null
     $env:AUTOPILOT_MODEL = $null
     $env:AUTOPILOT_EFFORT = $null
+    $env:AUTOPILOT_WORKSPACE = $null
     foreach ($line in @($resumeOut)) { [Console]::Out.WriteLine($line) }
     if ($rc -ne 0) { Stop-SelfTest "the resume launch of $resumeTag through the command line returned $rc, expected 0" }
     $resumeExit = Join-Path $logsDir "$resumeTag.exit"
@@ -1053,6 +1182,7 @@ exit 0
     foreach ($flag in "--plugin-dir $pluginDir", '--max-budget-usd 1', '--append-system-prompt x', '--model selftest-model', '--effort high') {
         if (-not $resumeText.Contains($flag)) { Stop-SelfTest "$resumeErr does not show $flag" }
     }
+    Assert-WorkerVars $resumeErr $workspaceDir $true ''
     # The parser's refusals, status 2 and nothing started: --resume without an
     # id would otherwise launch a fresh session under the resume tag, and an
     # unknown argument would pass unnoticed.
@@ -1088,6 +1218,21 @@ exit 0
         if (-not $caseText.Contains("--name $caseTag")) { Stop-SelfTest "$caseErr does not show --name $caseTag" }
         if ($caseText.Contains('--plugin-dir')) { Stop-SelfTest "$caseErr shows --plugin-dir on a resume with AUTOPILOT_PLUGIN_DIR $($pluginCase.Label)" }
     }
+    # A resume with AUTOPILOT_WORKSPACE the empty string: the marker still
+    # reads 1 and the roots hold no workspace entry, as on a fresh launch.
+    $wsResumeTag = "$tag-r4"
+    $env:AUTOPILOT_WORKSPACE = ''
+    $wsResumeOut = & pwsh -NoProfile -File $self $wsResumeTag $base $promptFile --resume $session
+    $rc = $LASTEXITCODE
+    $env:AUTOPILOT_WORKSPACE = $null
+    foreach ($line in @($wsResumeOut)) { [Console]::Out.WriteLine($line) }
+    if ($rc -ne 0) { Stop-SelfTest "the resume launch of $wsResumeTag through the command line returned $rc, expected 0" }
+    $wsResumeExit = Join-Path $logsDir "$wsResumeTag.exit"
+    $wsResumeErr = Join-Path $logsDir "$wsResumeTag.err"
+    Wait-ExitFile $wsResumeExit
+    if (-not (Test-Path -LiteralPath $wsResumeExit -PathType Leaf)) { Stop-SelfTest "$wsResumeExit is missing after the wait" }
+    if (-not ([System.IO.File]::ReadAllText($wsResumeErr)).Contains("--name $wsResumeTag")) { Stop-SelfTest "$wsResumeErr does not show --name $wsResumeTag" }
+    Assert-WorkerVars $wsResumeErr $workspaceDir $false ''
 
     # The batch-name default, with AUTOPILOT_BATCH unset: the tag's prefix
     # before its last "-s", so a batch name that itself holds "-s" keeps its
