@@ -174,3 +174,10 @@ H 模式没有特别说明的，一律用 `--settings` 指定默认模式 `claud
   - H5 是新增的文字：本次执行用到、尚未记录的 structural fact，由两个 skill 在最终报告现有的 Next steps（或同等位置）里建议写到哪里，依 H5 的四条规则判断。不新增 schema 段落，写得越短越好。
   - 理由：H5 明列了这两个 skill；放进现有位置，不改动报告格式。
 - **C7（recon，H6）** 问题：SKILL.md § Files 的 "Nothing under any `.claude/` directory"，以及 plugin README 的对应句子，跟 H6 要询问的 `.claude/CLAUDE.md` import 冲突。裁决：以 H6 为准。唯一的例外是：用户答应之后，在既有的 `.claude/CLAUDE.md` 最上面加一行 import；无法询问时不动它。README 同步改。理由：§ 2 优先于既有文字；这个例外只有一行，而且需要用户答应。
+- **C8（1.5，§ 2.2）** 问题：定义放在哪里，其他地方用引用还是抄同一句。implementer 提议 E(ii)，裁决照准：
+  - 权威来源是新档 `shared/instruction-files.md`，只放一句定义和一句 Why。
+  - 每个使用这个名词的档案，在第一次使用处附同一句定义；五个 reviewer 放在已受 drift guard 保护的 PREREQUISITES。plugin README 也附一份。
+  - 新增 `scripts/check-instruction-files.sh`。它从权威档抽出那一句，逐一检查 skills、agents、shared、commands 底下所有含 "instruction files" 的档案和 plugin README，在空白正规化后都要含有这一句；guard 附 `--self-test`。
+  - 计数变成 guards run 11、self-tests run 10，由 1.8 更新 checklist。
+  - 定义句不列 `CLAUDE.local.md`，那是个人、被 git 忽略的档案。
+  - 理由：插件的先例是 `code-craft-principles.md` 权威、各处内联、再由 guard 保护，每次 dispatch 都用得到的规则不依赖 runtime Read；定义里起作用的"不论这次有没有载入"，正是一个跳过 Read 的 agent 会弄错的地方；自动侦测载体，以后新用到这个名词的档案漏了定义也会被抓到。
