@@ -328,7 +328,9 @@ Spec Step 3.2 (J-L2). File: `plugins/kenspc/agents/task-implementer.md`.
     never a delete;
   - a mutation check runs on copies there, under the three-step rule of the
     RUN_DIR bullet in `${CLAUDE_PLUGIN_ROOT}/agents/regression-verifier.md`
-    — referenced, not copied;
+    — referenced, not copied; a copy holds what the check needs, not the
+    whole project, as the review agents' copies do (the spec's Risks:
+    copies for mutation checks in large projects);
   - the agent never edits, backs up, or restores a tracked file to test it;
     its implementation edits are the only writes it makes to tracked files.
     Why, in its own words: a mutation made in place on the user's source
@@ -507,7 +509,11 @@ Spec Step 5.1, J-L1. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
   the empty string counts as unset.
 - No sentence in SKILL.md still sets the variable for plugin mode alone
   (the launch bullet's former "`AUTOPILOT_PLUGIN_DIR=<plugin directory>` in
-  plugin mode" is gone).
+  plugin mode" is gone), read at every line
+  `grep -n AUTOPILOT_PLUGIN_DIR plugins/kenspc/skills/autopilot/SKILL.md`
+  prints together with the line its sentence continues on — the former
+  phrase itself wraps between `<plugin` and `directory>`, so a grep for it
+  finds nothing even before the task.
 - `bash scripts/check-all.sh` exits 0.
 
 ---
@@ -636,15 +642,29 @@ Spec Step 5.1, J-L6. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
   record. Why: two batches' headless main sessions left those lines out of
   their replies, and nothing downstream reads the reply — the release
   checklist reads the state file and the timeline.
+- § Phase transitions, whose Phase 0 entry reads "the settings line printed
+  and the state file written": the printed line is an interactive main
+  session's condition; in a headless main session the transition rests on
+  the state file written. Why: otherwise a headless run that follows the
+  four places above would miss the artifact this entry names.
 
 **Acceptance criteria:**
-- Every sentence that requires printing the settings line or a launch or
-  return line in the reply limits it to an interactive main session: each
-  hit of `grep -n 'does not stand in' plugins/kenspc/skills/autopilot/SKILL.md`
-  sits in a sentence that says so (positive control: the grep hits at least
-  one line).
+- Every passage that requires printing the settings line or a launch or
+  return line in the reply limits it to an interactive main session. The
+  passages are found with the file's line breaks joined, since several of
+  these sentences wrap across two lines and a line-by-line grep misses
+  them:
+  `perl -0777 -ne 's/\s+/ /g; while (/does not stand in|(?:this session.s|the|its) reply|settings line printed/g) { my $s = $-[0]; print substr($_, $s < 120 ? 0 : $s - 120, 200), "\n" }' plugins/kenspc/skills/autopilot/SKILL.md`
+  — each printed passage that requires a line in the reply says the
+  requirement is an interactive main session's. Positive control, run
+  first: the same program over the file before the task
+  (`git show <HEAD before the task>:plugins/kenspc/skills/autopilot/SKILL.md | perl -0777 -ne '<the same program>'`)
+  prints passages from all five places — Phase 0's DONE, the launch bullet,
+  the return bullet, § The settings line, and § Phase transitions.
 - The four places above state that in a headless main session the state
-  file and the timeline are the record, with the Why.
+  file and the timeline are the record, with the Why; § Phase transitions'
+  Phase 0 entry names the state file as a headless main session's
+  artifact.
 - `bash scripts/check-all.sh` exits 0.
 
 ---
@@ -664,7 +684,10 @@ Spec Step 5.1, J-L7. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
   directory or case and record, its one line, the check to make pass — and
   asks for one commit per defect.
 - Stop condition 4 counts per defect: the same defect still failing after
-  two fixes of it.
+  two fixes of it. Phase 3's Classification states the same count — its
+  sentence "The same case still failing after two fixes is a stop" counts
+  per defect, as stop condition 4 does. Why: two counts, one per case and
+  one per defect, would stop the same run at different points.
 
 **Acceptance criteria:**
 - The verdict loop and Phase 3's Classification both say an S5 is followed
@@ -672,7 +695,15 @@ Spec Step 5.1, J-L7. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
   included, and that one S5 may fix several defects of one round.
 - The S5 task block lists each defect with its case and asks for one commit
   per defect.
-- Stop condition 4 counts per defect.
+- Stop condition 4 counts per defect, and so does Classification's
+  two-fixes stop; no sentence in SKILL.md still counts the two fixes per
+  case or per FAIL. Each such sentence is read in the output of
+  `perl -0777 -ne 's/\s+/ /g; print "$&\n" while /[^.]{0,80}two fixes[^.]{0,40}/g' plugins/kenspc/skills/autopilot/SKILL.md`,
+  which joins the file's line breaks (Classification's sentence wraps).
+  Positive control, run first: the same program over the file before the
+  task (`git show <HEAD before the task>:<path> | perl -0777 -ne '<the same program>'`)
+  prints both "The same case still failing after two fixes is a stop" and
+  "The same FAIL still failing after two fixes".
 - `bash scripts/check-all.sh` exits 0.
 
 ---
@@ -711,9 +742,11 @@ no other file):
   block contract: `RUN_DIR` required for task-implementer too); the hooks'
   runtime behaviour (the hooks paragraph under § Skill Development
   Conventions: the rails hook, when built — its event, matcher, marker,
-  and inert path); the guard and self-test counts (§ Repository scripts/:
-  the new guard's bullet and its place among the guards with a
-  `--self-test`, when built) (Steps 3.1, 3.2, 4.1, 4.2).
+  and inert path — and the paragraph's "Two hooks are registered" becomes
+  three; two hooks are registered today, so the rails hook is the third,
+  whatever count the spec gives); the guard and self-test counts
+  (§ Repository scripts/: the new guard's bullet and its place among the
+  guards with a `--self-test`, when built) (Steps 3.1, 3.2, 4.1, 4.2).
 - `plugins/kenspc/CHANGELOG.md` — a `## 4.3.0 — unreleased` entry above
   4.2.0: what the batch changed, the probe results and the hook decision,
   and the guard counts (Steps 1.1-5.1).
