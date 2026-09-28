@@ -121,8 +121,12 @@ whatever the stack (a manifest or build file such as a `package.json`, a
 `*.csproj` or `*.sln`, a `pyproject.toml`, a `go.mod`); the git remotes;
 whether `gh` is installed and `gh auth status` succeeds; whether each
 stack's own tools are on the PATH (for example `dotnet`, `node`); in a
-repository, its CLAUDE.md, AGENTS.md, README, CONTRIBUTING, and the
-subjects of its recent commits; the DESCRIPTION. In a repository, note what
+repository, the project's instruction files, its README and CONTRIBUTING,
+and the subjects of its recent commits; the DESCRIPTION. The project's
+instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
+`.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
+`@`, whether or not Claude Code loaded them in this session. In a
+repository, note what
 `git -c core.quotePath=false status --porcelain -uall` lists before writing
 anything, so the run can tell its own files from the user's and knows which
 tracked files already carry uncommitted changes. The `git rev-parse` probes,
@@ -171,6 +175,15 @@ Empty means `ls -A` lists nothing but, at most, a file browser's metadata
 stages. Why: a folder a file browser has opened gains such a file, and
 nothing in it needs the protection a stop gives.
 
+A `.claude/CLAUDE.md` or `.claude/AGENTS.md` is its directory's CLAUDE.md
+or AGENTS.md when that directory has none, and no second one is written
+beside it. Why: Claude Code reads it as it reads the one beside it, and a
+second file would split the instructions. The import line is `@` and
+AGENTS.md's path from the CLAUDE.md — `@AGENTS.md` side by side,
+`@../AGENTS.md` from `.claude/CLAUDE.md`, `@.claude/AGENTS.md` to one in
+`.claude/` — since Claude Code resolves an import from the importing file's
+directory.
+
 An AGENTS.md whose opening HTML comment holds `kenspc-init template:` makes
 the run a rerun at the existing-repository start point, and at a new app
 once the question below gets that answer: the run goes to § Rerun, and
@@ -211,9 +224,11 @@ take apart later.
 An AGENTS.md without the template marker is the user's: it is left as it
 is, it gains none of the template's sections, and the final message says
 so; a CLAUDE.md the run writes beside it says only that the project's
-instructions are in AGENTS.md, since that file holds no kenspc conventions.
-Why: moving an existing project's instructions onto the template is a
-migration, which this version does not do.
+instructions are in AGENTS.md, since that file holds no kenspc conventions,
+and the final message says why it was written: once a CLAUDE.md exists,
+Claude Code's default mode stops reading AGENTS.md, which the import line
+keeps loaded. Why: moving an existing project's instructions onto the
+template is a migration, which this version does not do.
 
 ## Phase 1: Git
 
@@ -553,8 +568,10 @@ Nothing else is written:
   them create them when they need them.
 - No guide: generate-guide writes guides, and AGENTS.md says they go in
   `docs/guides/`. That line is not a Documents row until a guide exists.
-- Nothing under any `.claude/` directory. Why: Claude Code treats it as a
-  protected path, and a write there fails in an unattended session.
+- Nothing under any `.claude/` directory, except the import line an
+  existing `.claude/CLAUDE.md` gains on the user's yes (§ An existing
+  CLAUDE.md). Why: Claude Code treats it as a protected path, and a write
+  there fails in an unattended session.
 - No CONTRIBUTING and no roadmap file. Why: how to work on the project is
   AGENTS.md's Workflow, which a CONTRIBUTING file would repeat, and a
   roadmap holds plans the interview does not ask about.
@@ -588,7 +605,15 @@ skill. A file this list gains keeps to that.
 - A line ending in `{{when: <condition>}}` is written, without the tag and
   the space before it, when the condition holds, and left out when it does
   not.
-- The HTML comment at the top of each AGENTS.md is copied as it is.
+- The HTML comment at the top of each AGENTS.md, and each CLAUDE.md's
+  import line and its line saying where the instructions are, are copied
+  as they are. Why the CLAUDE.md lines, when Claude Code can read AGENTS.md
+  itself: in its default mode the CLAUDE.md this run writes stops that
+  reading, as a teammate's private `CLAUDE.local.md` does; no project
+  setting can change the mode; before v2.1.277, or with the built-in
+  agents-md plugin disabled, nothing reads it; only an imported AGENTS.md
+  fires the InstructionsLoaded hook; and a Read of CLAUDE.md shows the
+  import as one line, which the other line explains.
 - Policy items — the versioning scheme, the file that holds the version,
   the environments, the deployment method, the migration policy, the branch
   and commit conventions — that nobody answered are `TBD(init):`, never a
@@ -623,25 +648,33 @@ skill. A file this list gains keeps to that.
 
 ### An existing CLAUDE.md
 
-Ask whether to add one line, `@AGENTS.md`, at its top, leaving everything
-else as it is. On yes, write that line, in the file's own line ending,
-followed by the original content unchanged: `tail -n +2 CLAUDE.md` then
-matches the original byte for byte. Then report the line count of AGENTS.md
-and CLAUDE.md together, and any content the two visibly repeat (the same
-rule or command in both), for the user to settle; the run removes nothing
-from either. In a session that cannot ask (a system reminder to work
-without stopping), leave CLAUDE.md as it is, and the final message says that
-AGENTS.md is therefore not yet loaded by Claude Code, and that the line
-`@AGENTS.md` at the top of CLAUDE.md would load it. Why: CLAUDE.md is the
-user's, and a model has been following it as written; the import is the one
-change that makes AGENTS.md load, and it changes nothing else.
+Ask whether to add one line, the import line (Phase 0), at its top,
+leaving everything else as it is; for a `.claude/CLAUDE.md`, say that
+Claude Code will ask to approve the write, since `.claude/` is a protected
+path. On yes, write that line, in the file's own line ending, followed by
+the original content unchanged: `tail -n +2` of the file then matches the
+original byte for byte. Then report the line count of AGENTS.md and
+CLAUDE.md together, and any content the two visibly repeat (the same rule
+or command in both), for the user to settle; the run removes nothing from
+either. In a session that cannot ask (a system reminder to work without
+stopping), leave the file as it is. Without the import, the final message
+gives the same line count and says when Claude Code loads AGENTS.md anyway
+— only in the `claude-md-and-agents-md` mode of its `instructionFiles`
+setting, on v2.1.277 or later with the built-in agents-md plugin enabled,
+since in the default mode a CLAUDE.md stops it — that the import line would
+load it wherever CLAUDE.md loads, and that where both load, content the two
+repeat takes up context twice. Why: CLAUDE.md is the user's, and a model
+has been following it as written; the import is the one change that loads
+AGENTS.md in every mode that loads CLAUDE.md, and it changes nothing else.
 
 AGENTS.md already loads when the two are one file — one a symbolic link to
-the other, which `[ AGENTS.md -ef CLAUDE.md ]` tells — or when a line of
-CLAUDE.md, `\r` stripped, is `@AGENTS.md`: then nothing is asked, CLAUDE.md
-is not written, and the final message says AGENTS.md already loads. Why: a
-write through the link lands in the user's AGENTS.md, which would then
-import itself, and a second import loads nothing new.
+the other, which `[ <AGENTS.md> -ef <CLAUDE.md> ]` tells — or when a line of
+CLAUDE.md, `\r` stripped, is the import line: then nothing is asked,
+CLAUDE.md is not written, and the final message says AGENTS.md already
+loads. Claude Code reading AGENTS.md itself does not count. Why: only these
+two load it whatever the mode and the environment; a write through the
+link lands in the user's AGENTS.md, which would then import itself, and a
+second import loads nothing new.
 
 ### Checks
 
@@ -659,8 +692,8 @@ line short.
   pair at most 80 lines (AGENTS.md alone beside a CLAUDE.md already there),
   each app's pair at most 40. A rerun holds instead the 200-line ceiling
   that the comment states, or a count no higher than before it.
-- Each CLAUDE.md the run created or gave the import has `@AGENTS.md` as
-  its first line.
+- Each CLAUDE.md the run created or gave the import has the import line
+  (Phase 0) as its first line.
 - Each AGENTS.md the run created opens with the HTML comment holding
   `kenspc-init template: 1` and the admission rule's three conditions.
 - Every path in the first column of a Documents table the run wrote exists
@@ -727,9 +760,9 @@ commit this run makes, a scaffold commit or a rerun's included, runs
 `git commit` with an empty pathspec. Why: with no path,
 `git commit` commits whatever the user had staged, under the run's
 subject. An existing repository's commit convention shapes this subject
-and the scaffold ones: the one it writes down (in its CLAUDE.md, AGENTS.md,
-or CONTRIBUTING), or, failing that, the pattern its recent commit subjects
-consistently share.
+and the scaffold ones: the one it writes down (in the project's
+instruction files or its CONTRIBUTING), or, failing that, the pattern its
+recent commit subjects consistently share.
 Why: the history keeps one style, and the subjects given here are the
 default for a repository that has none.
 
@@ -869,7 +902,7 @@ these gates.
 | A generator's `.git` | Move it to `.trash/`? | Left in place, named in the final message; no scaffold commit for that app |
 | Hosting, with a remote | Is this the project's host? | The remote as it reads |
 | No remote | Create a GitHub repository, its owner, its name | None created |
-| An existing CLAUDE.md | Add `@AGENTS.md` at its top? (Not asked when AGENTS.md already loads) | Left as it is; the final message says AGENTS.md is not yet loaded |
+| An existing CLAUDE.md, at the root or in `.claude/` | Add the import line at its top? (Not asked when AGENTS.md already loads) | Left as it is; the final message says when AGENTS.md loads without the import, with the two files' line count |
 | The file list | Confirm or adjust | Committed as presented, less each file that held uncommitted changes |
 | A commit fails | How to go on | Stop and report |
 | Push | Push now? | Nothing pushed |
@@ -890,8 +923,10 @@ The final message gives:
 - the `TBD(init):` markers left, counted per file;
 - every default a session that cannot ask took in place of a question;
 - what is left for the user, whichever applies: an existing CLAUDE.md
-  without the import (AGENTS.md not yet loaded); an existing AGENTS.md left
-  without the template's sections; a generator's `.git` left in place, or a
+  without the import (the line count, and when AGENTS.md loads without it,
+  as § An existing CLAUDE.md says); a CLAUDE.md written beside the user's
+  AGENTS.md, and why (Phase 0); an existing AGENTS.md left without the
+  template's sections; a generator's `.git` left in place, or a
   generator that failed and where its output is; an app not scaffolded, and
   why; the manual GitHub steps; the labels to create; the lines
   `.gitignore` lacks after a rerun, or in a new app's outer repository; the
