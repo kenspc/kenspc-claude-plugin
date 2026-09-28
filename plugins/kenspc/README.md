@@ -701,7 +701,7 @@ each skip with its step, tag, and outcome.
 or an acceptance FAIL — goes to an S5 fix session. One S5 may fix several
 defects classified in the same round, one commit per defect. Every S5 is
 followed by a narrowed review (`-s3c`, then `-s3d`, …) over the range from
-HEAD at its launch to its last commit, a wording-only fix included, before
+HEAD at its first launch to its last commit, a wording-only fix included, before
 any acceptance case is re-run.
 
 **Stops.** Reopening a locked design point; a forbidden section or file

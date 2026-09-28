@@ -436,7 +436,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
-step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the launch>
+step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
 models and efforts:
@@ -561,7 +561,12 @@ Every worker is one launch, one wait, one return.
   (Templates § The settings line says why), while in a headless main
   session the state file and the timeline's `start` line are the record,
   since nothing downstream reads a headless reply; rewrite the state file,
-  its step line carrying HEAD at the launch. A driver that
+  its step line carrying HEAD at the step's first launch — a resume,
+  `<tag>-r<k>`, keeps the `head:` its step already holds. Why the first
+  launch: an S5 that committed one defect's fix, died, and was resumed
+  would otherwise have its narrowed review start after that commit, which
+  would reach its case's re-run unreviewed, and an S3 resume that
+  committed nothing more would read as an S3 that built nothing. A driver that
   exits non-zero has started nothing: its message on stderr is the stop's
   reason — or, when it names an earlier worker under the tag still
   running, that worker is the one to wait for, by its `<tag>.exit`, once
@@ -831,8 +836,9 @@ a reason recorded as a clarification in the spec. One S5 may fix several
 defects classified in the same round: its task block lists each defect
 with its row (The task blocks, S5), and it commits one defect per commit.
 Every S5 is followed by the narrowed review — `-s3c`, the next letter for
-a later one (`-s3d`) — over the range from HEAD at the S5's launch to its
-last commit, a wording-only fix included, before any re-run of a case and
+a later one (`-s3d`) — over the range from HEAD at the S5's first launch,
+the state file's `head:`, to its last commit, a wording-only fix included,
+before any re-run of a case and
 before the next S5. The second narrowed
 review that still FAILs is the "guards red twice in a row" stop. DEFERRED
 MEDIUM and LOW rows are classified once — a fix in S5, or a roadmap
@@ -985,7 +991,7 @@ uncommitted would be swept into a later commit under its message.
 (an implementation defect, in repo mode) → S5 fixes it — one S5 may fix
 several defects classified in the same round — then the narrowed review
 (`-s3<letter>`, the next letter) runs over the range from HEAD at the S5's
-launch to its last commit, a wording-only fix included, and only then is
+first launch to its last commit, a wording-only fix included, and only then is
 each case a fixed defect failed re-run, in a new S4 session (`-s4b`, the
 next letter for a later one) that runs only that case; a behavior
 deviation → a roadmap line drafted for the release commit (plugin mode) or
@@ -1780,7 +1786,7 @@ wording that closed it:
 - The exit: S6's commit and the reports.
 
 An artifact absent after a return — no task document after S2, HEAD still
-where S3 started, the `head:` the state file recorded at its launch (every
+where S3 started, the `head:` the state file recorded at its first launch (every
 task blocked, or the batch gate not passed), no Schema F verdict after S3b
 (a review over an empty range dispatches nothing) — is a stop naming it,
 not a transition. Why S3's own start and not the baseline: HEAD leaves the

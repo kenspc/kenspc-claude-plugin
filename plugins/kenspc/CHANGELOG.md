@@ -125,7 +125,7 @@ not probed.
 - **The fix loop.** One S5 may fix several defects classified in the same
   round, one commit per defect, its task block listing each defect with
   its case; every S5 is followed by the narrowed review over the range
-  from HEAD at its launch to its last commit, a wording-only fix included,
+  from HEAD at its first launch to its last commit, a wording-only fix included,
   before any case is re-run. Stop condition 4 and Phase 3's two-fixes stop
   count per defect.
 
