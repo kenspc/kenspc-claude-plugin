@@ -660,12 +660,22 @@ Project-level shell scripts live in `scripts/` at the repo root:
   Claude Code 2.1.283 sent for Bash, Write, Edit, and NotebookEdit calls,
   copied into the guard, since a hook that parses a harness-owned format
   goes stale silently (Plugin Design Lessons): every recursive-`rm`
-  spelling and command position the hook lists, quoted mentions, `rm`
-  without a recursive flag, a write inside each root for each file tool,
-  outside every root, relative and `..`-escaping paths, symlinked roots, a
-  sibling sharing a root's prefix, no roots, and every denied fixture
-  again without the marker and with the marker `0`. The hook runs under
-  `/bin/bash` when it exists. Its self-test turns three mutants red — the
+  spelling and command position the hook lists (`$'…'` and `$"…"` words,
+  backslash escapes, and substitutions inside double quotes among them),
+  quoted mentions and a comment, `rm` without a recursive flag and the
+  other work it must not deny (`rm --force`, `rm -- -r`, a `<<-` body), an
+  `rm` after a heredoc whose delimiter line comes and after a `<<` whose
+  delimiter line never does, a Bash input over the length cap and one
+  under it, a write inside each root for each file tool, outside every
+  root, relative and `..`-escaping paths, symlinked roots and a `..` after
+  a link collapsed as written, `~`, `~/`, and leading-space targets, a
+  Windows drive-letter path left unjudged, a sibling sharing a root's
+  prefix, no roots and root entries that are not absolute, an unreadable
+  tool name, command, or path field, and every denied fixture again
+  without the marker and with the marker `0`. Main mode also checks that
+  `hooks.json` registers the hook under PreToolUse with a matcher naming
+  all four tools, since the fixtures run the script directly. The hook
+  runs under `/bin/bash` when it exists. Its self-test turns three mutants red — the
   `rm` detection, the root check, and the marker check removed — and
   cleans up without a recursive `rm`.
 

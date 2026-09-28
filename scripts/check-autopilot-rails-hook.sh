@@ -18,16 +18,23 @@
 #   inert  exit 0, empty stdout, empty stderr (the marker is not 1)
 #
 # The fixtures cover every recursive rm spelling and command position the
-# hook lists (denied); quoted mentions of rm -rf (allowed); rm without a
-# recursive flag (allowed); a write inside each root — the repository, the
+# hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
+# and substitutions inside double quotes among them; quoted mentions of
+# rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
+# and other work the hook must not deny — rm --force, rm -- -r, a <<- body
+# with its tabs stripped (allowed); an rm after a heredoc whose delimiter
+# line comes, and after a << whose delimiter line never does (denied); a
+# write inside each root — the repository, the
 # workspace, $TMPDIR, /tmp, /private/tmp — for Write, Edit, and NotebookEdit
 # (allowed); a write outside every root (denied); a relative path resolved
 # against the cwd (allowed inside, denied when a .. escapes); symlinked
 # roots, and a .. after a link collapsed as written (denied); a target
 # beginning with ~, ~/, or a space, read as Claude Code reads it, with HOME
-# set to a fixture path; a sibling that shares a root's prefix (denied); no
-# roots with the marker set (denied); a file-tool input whose path field
-# the hook cannot read (denied); a Bash input over the hook's length cap
+# set to a fixture path; a Windows drive-letter path, not judged (allowed);
+# a sibling that shares a root's prefix (denied); no roots with the marker
+# set, and root entries that are not absolute (denied); an input whose tool
+# name, Bash command, or file-tool path the hook cannot read (denied); a
+# Bash input over the hook's length cap
 # (denied) and one under it (allowed); and every denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes

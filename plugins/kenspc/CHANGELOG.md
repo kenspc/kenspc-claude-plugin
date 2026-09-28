@@ -78,10 +78,16 @@ not probed.
   only.
 - **`scripts/check-autopilot-rails-hook.sh`**, the hook's guard: fixtures
   shaped like the live hook input, one per `rm` spelling and command
-  position, quoted mention, non-recursive `rm`, write inside each root for
-  each file tool, write outside, relative and `..`-escaping path,
-  symlinked root, sibling sharing a root's prefix, and no roots, and every
-  denied fixture again without the marker and with the marker `0`. Its
+  position (quoted and escaped words among them), quoted mention and
+  comment, non-recursive `rm` and other work the hook must not deny,
+  heredoc that closes and `<<` that never does, Bash input over and under
+  the length cap, write inside each root for each file tool, write
+  outside, relative and `..`-escaping path, symlinked root, `~` and
+  leading-space target, Windows drive-letter path, sibling sharing a
+  root's prefix, no roots and a root entry that is not absolute, and
+  unreadable field, and every denied fixture again without the marker and
+  with the marker `0`; main mode also checks that `hooks.json` registers
+  the hook under PreToolUse for all four tools. Its
   `--self-test` turns three mutants red (the `rm` detection, the root
   check, and the marker check removed). `check-all.sh` picks it up.
 - **The worker variables.** `run.sh` and `run.ps1` export
