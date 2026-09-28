@@ -545,7 +545,11 @@ Every worker is one launch, one wait, one return.
   otherwise reach the driver and pass a value nobody chose. A re-run's tag
   takes its step's role: `-s3<letter>` (`-s3c`, `-s3d`, …) is S3b,
   `-s4<letter>` (`-s4b`, `-s4c`, …) is S4, `-s5<letter>` (`-s5b`, …) is
-  S5. A resume, `<tag>-r<k>`, sets the same `AUTOPILOT_MODEL` and
+  S5. Why: `Role settings:` is keyed by role, and a re-run's tag names the
+  step it repeats, not a role; `-s3c` is the narrowed review after a fix,
+  S3b's work and not S3's implementation, so read by its prefix it would
+  take the implementer's values. A resume, `<tag>-r<k>`, sets the same
+  `AUTOPILOT_MODEL` and
   `AUTOPILOT_EFFORT` the tag it resumes was launched with. Why: a resume
   keeps the session's model but not its effort, so a resume launched
   without `--effort` would fall back to the settings' effort.
@@ -596,7 +600,12 @@ Every worker is one launch, one wait, one return.
   record counts: a part with one distinct value is written as it stands,
   several distinct values are joined with `+`, and a part matches only when
   every record matches. A resume's tag reads the whole session, the earlier
-  run included.
+  run included. Why every record: the records of one session need not
+  agree — a resume keeps the model but not the effort — and a line built
+  from one record would hide the part of the session that ran at another
+  value, the substitution the line exists to show. Why the whole session:
+  a resume keeps its session id, so its `<tag>.session` names the same
+  transcript, which holds the earlier run's records beside its own.
   - The model matches when the actual model ID contains the requested
     value, compared without regard to case, once a trailing `[...]` is
     removed from the requested value.
