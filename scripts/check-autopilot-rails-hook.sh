@@ -73,7 +73,8 @@
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
-#                  removed (the timed $( ) fixture). Then the restored copy
+#                  removed (the timed $( ) fixture, which must be the first
+#                  red). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 
@@ -201,6 +202,7 @@ FAILS=0
 FIRST_RED=""
 QUIET=0
 TIMED=""
+SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time"
 D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
 
 # fx <hook> <label> <expect> <marker or -> <roots> <tool> <cwd> <payload>
@@ -360,7 +362,7 @@ run_fixtures() {
     # of every word before it, which took tens of seconds and let the rm
     # through.
     t=$(awk 'BEGIN { for (i = 0; i < 12000; i++) printf "$(x) " }')
-    fx_timed "$hook" "a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time" 2.5 "echo $t; rm -rf build"
+    fx_timed "$hook" "$SUBST_TIMED_LABEL" 2.5 "echo $t; rm -rf build"
     # A command word of 64000 characters with no slash, then a recursive
     # rm, decided in under half the hook's timeout. Taking the word's base
     # name once ran a regex from every position in the word, which took
@@ -577,6 +579,13 @@ run_self_test() {
         fi
         if run_fixtures "$copy"; then
             echo "FAIL  self-test: the mutant with the $name removed passed every fixture" >&2
+            return 1
+        fi
+        # Only the timed $( ) fixture measures the push's cost; a mutant
+        # red first elsewhere (its text broke the awk program, say) proves
+        # nothing about it.
+        if [[ "$name" == constant-time-push && "$FIRST_RED" != "$SUBST_TIMED_LABEL" ]]; then
+            echo "FAIL  self-test: the mutant with the $name removed turned another fixture red first: $FIRST_RED" >&2
             return 1
         fi
         echo "OK    self-test mutant '$name removed' turned $FAILS fixture(s) red, first: $FIRST_RED"
