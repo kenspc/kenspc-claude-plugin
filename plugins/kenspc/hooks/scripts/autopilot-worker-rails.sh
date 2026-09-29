@@ -46,7 +46,9 @@
 # An input whose tool_name cannot be read, or a Bash input whose
 # tool_input.command cannot be read, is denied as well: were a Claude Code
 # release to rename either field, the calls would stop loudly rather than
-# pass unchecked.
+# pass unchecked. Such a denial, and that of a file-tool target that cannot
+# be read, offers no route, since a retry is read the same way: its reason
+# says so and asks for the denial to be reported.
 #
 # Deny form: exit status 2 with the reason on stderr, which Claude Code
 # returns to the model as the tool call's error. A probe on Claude Code
@@ -54,7 +56,9 @@
 # headless bypassPermissions session: neither file was created.
 # The reason names the rail and the permitted route: discard by mv into the
 # workspace's .trash/<name>-<timestamp>/, and write under the repository,
-# the workspace, or scratch.
+# the workspace, or scratch; for a field that cannot be read, that no route
+# applies and that the denial is to be listed under ## Rail observations
+# before the worker ends.
 #
 # A best-effort guard behind the rails text, which still binds. Known
 # misses: find -delete (and find -exec rm), bash -c '...', a script fed to
@@ -314,6 +318,9 @@ END {
 '
 
 REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name>-<timestamp>/ (inside the repository, delete through git rm), and write under the repository, the workspace, or scratch (\$TMPDIR, /tmp)."
+# In place of the route, for a field of the input the hook cannot read:
+# every later call is read the same way, so a retry would be denied too.
+REASON_UNREADABLE="No permitted route applies: the hook reads every such call the same way and denies a retry too. This is not a breach: list this denial with its reason under ## Rail observations and end."
 
 # The longest Bash hook input, in bytes, the hook scans. Why a cap: the
 # scan's time grows with the square of the command's length under the awk
@@ -325,8 +332,9 @@ REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name
 # check-autopilot-rails-hook.sh times — takes 0.3 to 0.6 seconds.
 BASH_INPUT_CAP=65536
 
+# deny <reason> [<tail>]: the tail is the permitted route unless given.
 deny() {
-  printf 'autopilot rails: %s. %s\n' "$1" "$REASON_ROUTE" >&2
+  printf 'autopilot rails: %s. %s\n' "$1" "${2:-$REASON_ROUTE}" >&2
   exit 2
 }
 
@@ -375,7 +383,7 @@ resolve() {
 
 input=$(cat)
 tool=$(field tool_name) \
-  || deny "the tool name could not be read from the hook input (tool_name), so the call is denied in an autopilot worker"
+  || deny "the tool name could not be read from the hook input (tool_name), so the call is denied in an autopilot worker" "$REASON_UNREADABLE"
 
 case $tool in
   Bash)
@@ -383,7 +391,7 @@ case $tool in
     [ "$((bytes))" -le "$BASH_INPUT_CAP" ] \
       || deny "this Bash call's hook input is $((bytes)) bytes, over the $BASH_INPUT_CAP the hook scans within its timeout, so it is denied in an autopilot worker; write long content with the Write tool, or split the command"
     found=$(printf '%s' "$input" | awk -v sq="'" "$RM_AWK") \
-      || deny "the command of this Bash call could not be read from the hook input (tool_input.command), so it is denied in an autopilot worker"
+      || deny "the command of this Bash call could not be read from the hook input (tool_input.command), so it is denied in an autopilot worker" "$REASON_UNREADABLE"
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"
     exit 0
     ;;
@@ -393,7 +401,7 @@ case $tool in
 esac
 
 target=$(field "$key") \
-  || deny "the target of this $tool call could not be read from the hook input (tool_input.$key), so the write is denied in an autopilot worker"
+  || deny "the target of this $tool call could not be read from the hook input (tool_input.$key), so the write is denied in an autopilot worker" "$REASON_UNREADABLE"
 json_cwd=$(field cwd) || json_cwd=$PWD
 
 # The target as Claude Code reads it before the write: surrounding

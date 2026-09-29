@@ -13,7 +13,9 @@
 # "|" in the form the driver writes them, and the cwd — and the expected
 # decision, read the way the hook's deny form defines it:
 #
-#   deny   exit 2, empty stdout, a reason on stderr
+#   deny   exit 2, empty stdout, a reason on stderr that names the
+#          permitted route, or, for a field the hook cannot read, says no
+#          route applies and asks for the denial to be reported
 #   allow  exit 0, empty stdout
 #   inert  exit 0, empty stdout, empty stderr (the marker is not 1)
 #
@@ -34,7 +36,8 @@
 # set to a fixture path; a Windows drive-letter path, not judged (allowed);
 # a sibling that shares a root's prefix (denied); no roots with the marker
 # set, and root entries that are not absolute (denied); an input whose tool
-# name, Bash command, or file-tool path the hook cannot read (denied); a
+# name, Bash command, or file-tool path the hook cannot read (denied, with
+# no route offered and the denial to be reported); a
 # Bash input over the hook's length cap
 # (denied) and one under it (allowed); a command of many $( )
 # substitutions under the cap, then rm -rf, a long command word with no
@@ -205,24 +208,38 @@ QUIET=0
 TIMED=""
 SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time"
 LTGT_TIMED_LABEL="a word of 32000 <| pairs under the length cap, then rm -rf, decided in time"
+# What an unreadable-field denial says in place of the permitted route. Why:
+# the hook reads every later call the same way, so a worker sent down the
+# route would retry until its cap; the autopilot preamble tells it to list
+# the denial and end instead.
+UNREADABLE_NO_ROUTE="No permitted route applies"
+UNREADABLE_REPORT="list this denial with its reason under ## Rail observations and end"
 D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
 
 # fx <hook> <label> <expect> <marker or -> <roots> <tool> <cwd> <payload>
+# <expect> deny-unreadable is a deny whose reason offers no route and asks
+# for the denial to be reported, as a field the hook cannot read gets.
 fx() {
-    local hook="$1" label="$2" expect="$3" marker="$4" roots="$5" tool="$6" cwd="$7" payload="$8" ok=0
+    local hook="$1" label="$2" expect="$3" marker="$4" roots="$5" tool="$6" cwd="$7" payload="$8" ok=0 want="$3"
+    if [[ "$expect" == deny-unreadable ]]; then want=deny; fi
     decide "$hook" "$marker" "$roots" "$(make_input "$tool" "$cwd" "$payload")"
-    if [[ "$GOT" == "$expect" ]]; then
+    if [[ "$GOT" == "$want" ]]; then
         ok=1
-    elif [[ "$expect" == allow && "$GOT" == inert ]]; then
+    elif [[ "$want" == allow && "$GOT" == inert ]]; then
         ok=1
     fi
     if [[ "$expect" == deny && "$ok" -eq 1 && "$ERR" != *.trash* ]]; then
         ok=0
         GOT="deny without .trash in its reason"
     fi
+    if [[ "$expect" == deny-unreadable && "$ok" -eq 1 ]] \
+        && [[ "$ERR" != *"$UNREADABLE_NO_ROUTE"* || "$ERR" != *"$UNREADABLE_REPORT"* || "$ERR" == *.trash* ]]; then
+        ok=0
+        GOT="deny whose reason does not say '$UNREADABLE_NO_ROUTE' and '$UNREADABLE_REPORT', or names .trash"
+    fi
     # The autopilot preamble tells a worker to know a denial by this text in
     # its error, so a renamed prefix would leave that cue stale.
-    if [[ "$expect" == deny && "$ok" -eq 1 && "$ERR" != "autopilot rails: "* ]]; then
+    if [[ "$want" == deny && "$ok" -eq 1 && "$ERR" != "autopilot rails: "* ]]; then
         ok=0
         GOT="deny whose reason does not open with 'autopilot rails: '"
     fi
@@ -236,10 +253,11 @@ fx() {
 }
 
 # fx_deny: a fixture expected denied with the marker 1, recorded so that it
-# is replayed without the marker and with the marker 0.
+# is replayed without the marker and with the marker 0. An optional seventh
+# argument, deny-unreadable, expects the unreadable-field reason.
 fx_deny() {
-    local hook="$1" label="$2" roots="$3" tool="$4" cwd="$5" payload="$6" n
-    fx "$hook" "$label" deny 1 "$roots" "$tool" "$cwd" "$payload"
+    local hook="$1" label="$2" roots="$3" tool="$4" cwd="$5" payload="$6" expect="${7:-deny}" n
+    fx "$hook" "$label" "$expect" 1 "$roots" "$tool" "$cwd" "$payload"
     n=${#D_LABEL[@]}
     D_LABEL[$n]=$label; D_ROOTS[$n]=$roots; D_TOOL[$n]=$tool; D_CWD[$n]=$cwd; D_PAYLOAD[$n]=$payload
 }
@@ -419,8 +437,9 @@ run_fixtures() {
         fx_deny "$hook" "$t relative .. escape" "$r" "$t" "$FX_REPO/sub" "../../../escape.txt"
         # A sibling that shares a root's prefix, denied.
         fx_deny "$hook" "$t sibling sharing a root's prefix" "$r" "$t" "$FX_REPO" "$FX_REPO-other/a.txt"
-        # A target the hook cannot read, denied even inside a root.
-        fx_deny "$hook" "$t with no readable path field" "$r" "$t/no-key" "$FX_REPO" "$FX_REPO/src/a.txt"
+        # A target the hook cannot read, denied even inside a root, with no
+        # route offered.
+        fx_deny "$hook" "$t with no readable path field" "$r" "$t/no-key" "$FX_REPO" "$FX_REPO/src/a.txt" deny-unreadable
     done
 
     # Symlinked roots: /tmp against the driver's roots, which name it and its
@@ -463,10 +482,11 @@ run_fixtures() {
     fx_deny "$hook" "a . root entry skipped" ".|$FX_REPO" Write "$FX_REPO" "$FX_BASE/outside/a.txt"
 
     # A field the hook cannot read — the tool's name, or a Bash command —
-    # denies the call rather than passing it unchecked.
-    fx_deny "$hook" "Bash with no readable command field" "$r" Bash/no-key "$FX_REPO" 'rm -rf build'
-    fx_deny "$hook" "Bash with no readable tool_name" "$r" Bash/no-tool-name "$FX_REPO" 'ls'
-    fx_deny "$hook" "Write with no readable tool_name" "$r" Write/no-tool-name "$FX_REPO" "$FX_REPO/src/a.txt"
+    # denies the call rather than passing it unchecked, and its reason
+    # offers no route: a retry is read the same way.
+    fx_deny "$hook" "Bash with no readable command field" "$r" Bash/no-key "$FX_REPO" 'rm -rf build' deny-unreadable
+    fx_deny "$hook" "Bash with no readable tool_name" "$r" Bash/no-tool-name "$FX_REPO" 'ls' deny-unreadable
+    fx_deny "$hook" "Write with no readable tool_name" "$r" Write/no-tool-name "$FX_REPO" "$FX_REPO/src/a.txt" deny-unreadable
 
     # Every denied fixture again without the marker, and with the marker 0.
     k=0

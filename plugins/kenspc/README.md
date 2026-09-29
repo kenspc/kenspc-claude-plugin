@@ -676,7 +676,12 @@ since a plugin hook fires for a subagent's tool call too. The deny's
 reason names the rail and the permitted route. A call the hook denied is
 not a breach, since it never ran: the worker takes the route the deny
 names, lists the denial under `## Rail observations`, naming the subagent
-that made the call, and goes on. A denial in task-implementer or a
+that made the call, and goes on. A denial whose reason says a field of
+the hook input could not be read — the tool name, a Bash command, or a
+file-tool target — names no route, since the hook reads every later call
+the same way: it is not a breach either, and the worker lists it with its
+reason and ends, which puts a field a Claude Code release renamed in
+front of the main session at once. A denial in task-implementer or a
 document reviewer, whose dispatch carries no rails text, is not listed:
 a worker sees only a subagent's reply, not its tool results. The hook is
 a best-effort guard (see Known behavior), and the rails text still binds.
@@ -1119,7 +1124,10 @@ on Windows.
   with a reason saying so: were a Claude Code release to rename one of
   them, a worker's calls would stop loudly rather than pass unchecked: a
   renamed tool name would stop every call of every worker, and a renamed
-  command every Bash call.
+  command every Bash call. That reason names no route and asks for the
+  denial to be reported: it is not a breach, and the worker lists it with
+  its reason under `## Rail observations` and ends, rather than going on
+  to retry, until its cap, calls the hook denies the same way.
   A Bash call whose hook input is over 64 KB is denied unscanned, with a
   reason saying so: the scan's time grows with the square of the
   command's length, and a hook run that outlasts its 5-second timeout

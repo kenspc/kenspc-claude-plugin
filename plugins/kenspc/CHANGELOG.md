@@ -74,10 +74,13 @@ not probed.
   repository, the workspace, or scratch. A denied call is not a breach,
   since it never ran: the worker takes that route, lists the denial under
   `## Rail observations`, naming the subagent that made the call, and
-  goes on. A denial in task-implementer or a document reviewer, whose
-  dispatch carries no rails text, is not listed: a worker sees only a
-  subagent's reply, not its tool results. A best-effort guard behind the
-  rails text: it misses `find -delete`, `bash -c '…'` and a script fed to
+  goes on. A denial of a field the hook could not read names no route —
+  its reason says so and asks for the denial to be reported, since the
+  hook reads every later call the same way — and the worker lists it with
+  its reason and ends. A denial in task-implementer or a document
+  reviewer, whose dispatch carries no rails text, is not listed: a worker
+  sees only a subagent's reply, not its tool results. A best-effort guard
+  behind the rails text: it misses `find -delete`, `bash -c '…'` and a script fed to
   a shell on stdin, interpreter-level deletes, `git clean`, and writes
   through Bash. Bash 3.2 and POSIX tools
   only.
@@ -95,8 +98,9 @@ not probed.
   outside, relative and `..`-escaping path, symlinked root, `~` and
   leading-space target, Windows drive-letter path, sibling sharing a
   root's prefix, no roots and a root entry that is not absolute, and
-  unreadable field, and every denied fixture again without the marker and
-  with the marker `0`; main mode also checks that `hooks.json` registers
+  unreadable field, denied with a reason that offers no route and asks
+  for the denial to be reported, and every denied fixture again without
+  the marker and with the marker `0`; main mode also checks that `hooks.json` registers
   the hook under PreToolUse for all four tools. Its
   `--self-test` turns five mutants red (the `rm` detection, the root
   check, and the marker check removed, the constant-time push removed,
@@ -151,7 +155,11 @@ not probed.
   subagent that made the call, and goes on; a denial in task-implementer
   or a document reviewer, whose dispatch carries no rails text, is not
   listed, since a worker sees only a subagent's reply, not its tool
-  results. The rails govern what a
+  results. A denial whose reason says a field of the hook input could not
+  be read names no route: it is not a breach either, and the worker lists
+  it with its reason and ends, since the hook would deny every later call
+  it reads the same way, and a worker that went on would retry until its
+  cap. The rails govern what a
   worker or a subagent writes — its own commands and tool calls: a
   program it runs that removes a temporary directory it created itself (a
   guard's or a test script's `mktemp` cleanup), or writes its own cache,

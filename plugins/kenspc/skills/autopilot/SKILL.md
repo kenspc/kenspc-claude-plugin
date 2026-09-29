@@ -1200,7 +1200,12 @@ find -delete, a Python shutil.rmtree — still is.
 A call the rails hook denied — its error contains `autopilot rails:` — is
 not a breach, since it never ran: take the permitted route the denial
 names, list the denial under `## Rail observations`, naming the subagent
-that made the call when a subagent made it, and go on.
+that made the call when a subagent made it, and go on. A denial whose
+reason says a field of the hook input could not be read — the tool name,
+a Bash command, or a file-tool target — names no route, since the hook
+reads every later call the same way: it is not a breach either, but list
+it with its reason under `## Rail observations` and end, whether you or a
+subagent met it.
 
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
@@ -1251,10 +1256,16 @@ the hook denied is listed and not a stop: the denial kept it from
 running, so nothing was deleted or written outside the roots, and its
 reason names the route that stays inside the rails; with § 3 silent on
 it, one worker would stop on the same blocked attempt that another
-worked around with nothing recorded. Why the rails govern an agent's own
-commands and tool calls: a guard's exit trap that removes the directory
-it made with mktemp, or a tool's own cache, is not a delete or a write
-the agent chose; read as one, the rails have kept review agents from
+worked around with nothing recorded. Why a denial of a field the hook
+could not read ends the worker instead: a field goes unreadable when a
+Claude Code release renames it, and the hook then denies every call it
+reads that way — every call for a renamed tool name, every Bash call for
+a renamed command — so a worker that took the route and went on would
+retry until its cap, with the renamed field recorded only as a run of
+denials; ending puts it in front of the main session at once. Why the
+rails govern an agent's own commands and tool calls: a guard's exit trap
+that removes the directory it made with mktemp, or a tool's own cache, is
+not a delete or a write the agent chose; read as one, the rails have kept review agents from
 running the repository's own checks, and workers that reworded them for
 code-fixer and regression-verifier alone broke task-review's rule that
 those two get the reviewers' CONTEXT unchanged.

@@ -105,7 +105,8 @@ whose resolved target lies outside every root, and a Bash input over
 64 KB unscanned, since a scan that outlasts the hook's 5-second timeout
 denies nothing; a call whose tool name, Bash command, or file-tool target
 it cannot read from its input is denied too, so a renamed field stops the
-calls loudly — in the worker's own calls
+calls loudly, with a reason that names no route, since a retry is read
+the same way — in the worker's own calls
 and its subagents' alike, since a plugin's PreToolUse hook fires for a
 subagent's call too and its deny holds in bypassPermissions (probed on
 Claude Code 2.1.283). It is a best-effort guard behind the preamble's
@@ -656,8 +657,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   hook (4.3.0) by feeding `hooks/scripts/autopilot-worker-rails.sh`
   fixtures and asserting each decision (deny: exit 2, empty stdout, a
   reason on stderr opening `autopilot rails:`, the text the autopilot
-  preamble tells a worker to know a denial by, and naming `.trash`; allow
-  and inert: exit 0, no stdout).
+  preamble tells a worker to know a denial by, and naming `.trash` — or,
+  for a field the hook cannot read, saying no permitted route applies and
+  asking for the denial to be listed under `## Rail observations` before
+  the worker ends, with no `.trash`; allow and inert: exit 0, no stdout).
   The fixtures carry the field names and nesting of the live hook input
   Claude Code 2.1.283 sent for Bash, Write, Edit, and NotebookEdit calls,
   copied into the guard, since a hook that parses a harness-owned format
