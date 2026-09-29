@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.3.0)
+## Next minor (4.4.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -340,3 +340,49 @@ its number.
     git prints it there (`C:/…`). `run.ps1` exports the marker and the
     roots as `run.sh` does; nothing picks it by platform until the Windows
     acceptance of `run.ps1` above has passed.
+19. regression-verifier writes temporary files outside its scratch
+    directory. In two acceptance runs, 4.2.0's
+    (`docs/dry-runs/batch-i-acceptance.md`, case 3) and 4.3.0's
+    (`docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`, F1,
+    classified a behavior deviation), its review wrote its `npm test` output
+    to `/tmp/rv-npm-test.txt`, and once an issue-ID list to the project's
+    root, which it then removed, although its RUN_DIR bullet puts probe and
+    temporary files under `RUN_DIR/scratch/regression-verifier/`. The
+    agent's text states the rule; the model did not follow it.
+20. `/kenspc-task-implement` states no branch for a task document with no
+    incomplete task. Step 3 presents the incomplete tasks, and Phase 2
+    covers "at least one DONE" and "every task BLOCKED". A session given an
+    all-DONE document stopped before its batch gate and prepared no run
+    directory, which is reasonable, but nothing in the skill says so
+    (`docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`, F2, an
+    observation: a gap in the skill's text that predates 4.3.0).
+21. Autopilot rails follow-ups, which 4.3.0 left out (its reviews and
+    acceptance: the batch J spec's clarifications,
+    `git show f671f2d:docs/plans/batch-j-autopilot-reliability.md`, and the
+    acceptance record's Not exercised section,
+    `docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`):
+    - Rails-hook spellings split by a line continuation — `&\<newline>>`,
+      `$\<newline>'`, `$\<newline>(`, a heredoc operator or delimiter —
+      which the scanner misjudges because bash joins continued lines before
+      it splits words, while the scanner reads one next character in
+      several places; one shared "next character, skipping continuations"
+      read would cover the class. The hook's header and the plugin README's
+      Known behavior name the class among the hook's misses.
+    - Whether a worker's end on an unreadable-field denial is a
+      main-session stop of its own (today the run stops only when a later
+      transition finds an artifact missing, naming the artifact, not the
+      field), and the wording of the caveat on denials inside agents
+      without rails text beside it (an unreadable-field denial reaches the
+      worker in the subagent's reply).
+    - Any failure of the hook's awk reported as an unreadable field: a
+      missing awk denies every call, a killed one one command, and each
+      wants its own reason.
+    - The `## Rail observations` heading is pinned on the hook side only;
+      no guard ties it to the preamble's heading and the one the main
+      session reads at a worker's return (the autopilot skill's § Launch,
+      wait, return).
+    - Paths 4.3.0's acceptance did not exercise live: a preamble-carrying
+      worker meeting a denial (list it and go on; for an unreadable field,
+      list it and end), the rails carried into subagents' prompts and
+      `CUSTOM_INSTRUCTIONS` with a subagent's observations carried back, and
+      an S2's skipped gate reaching the post-check.

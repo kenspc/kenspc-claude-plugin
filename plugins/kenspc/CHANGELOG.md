@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.3.0 — unreleased
+## 4.3.0 — 2026-09-29
 
 Batch J. An unattended autopilot batch now finishes on its own evidence.
 The rails a worker obeys reach the subagents it dispatches — in text
@@ -45,6 +45,40 @@ environment. A second probe showed Claude Code tolerating a hook that
 exits without reading a 120 KB input, the shape of the hook's inert path.
 Whether a worker that `run.ps1` starts on Windows can run a bash hook was
 not probed.
+
+At release, `plugin.json` is 4.3.0, and its description and the
+marketplace's both name the rails that reach every subagent; the effort
+guidance's last-reviewed date stays 2026-09-28, since no `effort:` line
+changed, and the review of the three `xhigh` overrides is left to the
+maintainer before tagging. The release checklist already expects
+`guards run: 12` and `self-tests run: 11`. The hook's header and the plugin
+README's Known behavior name one more class of misses: a two-character
+token split by a line continuation (`&\<newline>>`, `$\<newline>'`,
+`$\<newline>(`, a heredoc operator or delimiter), which bash joins before
+it splits words while the hook reads one next character. The roadmap names
+4.4.0 as the next minor and gains the batch's follow-ups: the acceptance's
+behavior deviation — regression-verifier wrote temporary files outside its
+scratch directory, as in 4.2.0's acceptance — and its observation that
+`/kenspc-task-implement` states no branch for a task document with no
+incomplete task; and the rails follow-ups the batch left out: that
+continuation class, whether a worker's end on an unreadable-field denial is
+a main-session stop of its own and the caveat's wording beside it, any awk
+failure reported as an unreadable field, the `## Rail observations` heading
+pinned on the hook side only, and the paths the acceptance did not exercise
+live.
+
+Release smoke: the batch's acceptance,
+`docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`, run headless
+on macOS with Claude Code 2.1.284 at the repository tree `27bb22c`, whose
+skill, script, hook, agent, and command files this release ships unchanged
+apart from the misses line above. Cases 1 to 5, 7, and 8 passed; the
+optional case 6 was not exercised, since the S2 declared at a low effort
+sent its confirmation question; the nested sessions cost USD 8.63. Its
+case 4 ran release-checklist row 14's marked session and control without
+the row's Edit call, which the row gained during the batch, so the live
+Edit matcher was not exercised; row 11's headless batch was not run. Its
+two findings outside the criteria are the roadmap's. No separate smoke run
+was made. `run.ps1` was not run on Windows.
 
 ### Added
 

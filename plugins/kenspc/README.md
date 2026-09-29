@@ -1114,6 +1114,7 @@ on Windows.
   or spelled through the escapes of `$'…'` (`$'\x72m'`),
   an `rm` after a redirection written before the command name
   (`2>/dev/null rm -rf d`),
+  a two-character token split by a line continuation (`&\<newline>>`, `$\<newline>'`, `$\<newline>(`, a heredoc operator or delimiter),
   other wrappers such as `timeout`, and paths that are not POSIX absolute,
   which it does not judge; and a Write or Edit whose target is itself a
   symbolic link pointing outside the roots, since it resolves only the

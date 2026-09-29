@@ -71,7 +71,10 @@
 # name (2>/dev/null rm -rf d), other wrappers (timeout, nice), commands inside an
 # unquoted heredoc's substitutions, a case arm inside a $( ) that follows
 # another word, whose ) the hook reads as the substitution's end
-# (echo $(case x in a) rm -rf y;; esac)), and paths that are not POSIX absolute
+# (echo $(case x in a) rm -rf y;; esac)), a two-character token split by a
+# line continuation (&\<newline>>, $\<newline>', $\<newline>(, a heredoc
+# operator or delimiter), which bash joins before it splits words while the
+# hook reads one next character, and paths that are not POSIX absolute
 # (a Windows drive-letter path is not judged); and a file-tool target that
 # is itself a symbolic link, dangling or not, pointing outside every root,
 # since only the links of the target's ancestors are resolved.
