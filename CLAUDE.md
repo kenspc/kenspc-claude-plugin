@@ -661,7 +661,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   copied into the guard, since a hook that parses a harness-owned format
   goes stale silently (Plugin Design Lessons): every recursive-`rm`
   spelling and command position the hook lists (`$'…'` and `$"…"` words,
-  backslash escapes, and substitutions inside double quotes among them),
+  backslash escapes, substitutions inside double quotes, and substitutions
+  among the `rm`'s own words among them),
   quoted mentions and a comment, `rm` without a recursive flag and the
   other work it must not deny (`rm --force`, `rm -- -r`, a `<<-` body), an
   `rm` after a heredoc whose delimiter line comes and after a `<<` whose

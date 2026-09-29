@@ -19,7 +19,8 @@
 #
 # The fixtures cover every recursive rm spelling and command position the
 # hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
-# and substitutions inside double quotes among them; quoted mentions of
+# substitutions inside double quotes, and substitutions among the rm's own
+# words among them; quoted mentions of
 # rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
 # and other work the hook must not deny — rm --force, rm -- -r, a <<- body
 # with its tabs stripped (allowed); an rm after a heredoc whose delimiter
@@ -300,6 +301,13 @@ run_fixtures() {
     # A substitution inside double quotes still runs its command.
     fx_deny "$hook" "rm position after \$( inside double quotes" "$r" Bash "$FX_REPO" 'echo "$(rm -rf build)"'
     fx_deny "$hook" "rm position after a backtick inside double quotes" "$r" Bash "$FX_REPO" 'x="`rm -rf build`"'
+    # A substitution among the rm's own words: the enclosing command's words
+    # are kept below the substitution's and checked once it ends, at any
+    # depth.
+    fx_deny "$hook" "rm -rf with a \$( ) in its argument" "$r" Bash "$FX_REPO" 'rm -rf "$(pwd)/build"'
+    fx_deny "$hook" "rm -rf with a \$( ) holding && in its argument" "$r" Bash "$FX_REPO" 'rm -rf "$(cd build && pwd)"'
+    fx_deny "$hook" "rm -rf with a backtick substitution in its argument" "$r" Bash "$FX_REPO" 'rm -rf `pwd`/build'
+    fx_deny "$hook" "rm -rf inside a \$( ), with a \$( ) in its argument" "$r" Bash "$FX_REPO" 'echo $(rm -rf $(mktemp -d))'
     fx_deny "$hook" "rm position after xargs" "$r" Bash "$FX_REPO" 'echo build | xargs rm -rf'
     fx_deny "$hook" "rm position after sudo" "$r" Bash "$FX_REPO" 'sudo rm -rf build'
     fx_deny "$hook" "rm position after command" "$r" Bash "$FX_REPO" 'command rm -rf build'
@@ -372,6 +380,7 @@ run_fixtures() {
         "printf \$'it\\'s\\n'; git commit -m 'x; rm -rf y'"
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
+    fx "$hook" "rm without a recursive flag: rm -f with a \$( ) in its argument" allow 1 "$r" Bash "$FX_REPO" 'rm -f "$(pwd)/x"'
     # Work the hook must not deny: a long option that is no prefix of
     # --recursive, a -r after -- (a file named -r), and a <<- heredoc
     # whose tab-indented body mentions rm -rf.

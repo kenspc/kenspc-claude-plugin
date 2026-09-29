@@ -81,7 +81,8 @@ not probed.
   only.
 - **`scripts/check-autopilot-rails-hook.sh`**, the hook's guard: fixtures
   shaped like the live hook input, one per `rm` spelling and command
-  position (quoted and escaped words among them), quoted mention and
+  position (quoted and escaped words, and substitutions among the `rm`'s
+  own words, among them), quoted mention and
   comment, non-recursive `rm` and other work the hook must not deny,
   heredoc that closes and `<<` that never does, Bash input over and under
   the length cap, a command of 12000 `$( )` substitutions under the cap
