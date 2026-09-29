@@ -28,8 +28,8 @@
 # mentions of
 # rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
 # and other work the hook must not deny — rm --force, rm -- -r, a <<- body
-# with its tabs stripped, a redirection a line continuation splits
-# (allowed); an rm after a heredoc whose delimiter
+# with its tabs stripped, rm -f and then a | past a line continuation and
+# grep -r (allowed); an rm after a heredoc whose delimiter
 # line comes, and after a << whose delimiter line never does (denied); a
 # write inside each root — the repository, the
 # workspace, $TMPDIR, /tmp, /private/tmp — for Write, Edit, and NotebookEdit
@@ -448,7 +448,9 @@ run_fixtures() {
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
     fx "$hook" "rm without a recursive flag: rm -f with a \$( ) in its argument" allow 1 "$r" Bash "$FX_REPO" 'rm -f "$(pwd)/x"'
-    fx "$hook" "rm without a recursive flag: rm 2>&1 split by a line continuation" allow 1 "$r" Bash "$FX_REPO" $'rm 2>\\\n&1 build'
+    # A | past a line continuation that follows no < or > ends the rm's
+    # command, so the -r of the grep after it is not the rm's.
+    fx "$hook" "rm without a recursive flag: rm -f, then a | past a line continuation and grep -r" allow 1 "$r" Bash "$FX_REPO" $'rm -f notes.md\\\n| grep -r x'
     # Work the hook must not deny: a long option that is no prefix of
     # --recursive, a -r after -- (a file named -r), and a <<- heredoc
     # whose tab-indented body mentions rm -rf.
