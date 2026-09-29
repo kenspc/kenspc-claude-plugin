@@ -551,6 +551,29 @@ shipped file.
      `docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`; its commit
      subject names the batch as the spec's own commit does,
      `docs: add batch j acceptance record`.
+- **J-C6 (stop condition 3 after S3d; the user's rulings).** S3d, the
+  second narrowed review, FAILed on one regression that its own fix
+  `931cd48` introduced. The rails hook now allows a recursive `rm` whose
+  redirection a line continuation splits (`rm 2>\<newline>&1 -rf build`,
+  `rm >\<newline>| rm.log -r build`), which it denied before. That is
+  guards red twice in a row.
+  1. One more round, the last: one S5 fixes that regression — the
+     `\`+newline branch keeps a `<` or `>` adjacent to the `|` or `&` that
+     follows it, and both commands become denied fixtures — and S3d's T4:
+     the timed `<|` fixture's mutant no longer has to turn that fixture red
+     first, since the quoted fixtures now kill the same mutant, and a
+     faster machine would otherwise fail the self-test on a correct hook.
+     A third narrowed review follows, over `c0fb690..<the S5's HEAD>`.
+  2. Ruled in advance: when that review FAILs and every item left open is
+     a LOW spelling the rails hook misjudges, the items go to the roadmap,
+     not to another round, and the run goes on to S4. Anything else — a
+     HIGH, a MEDIUM, or a LOW of another kind — is a question to the user.
+  3. S3d's other deferred LOW rows go to the roadmap, and S6 adds them to
+     `docs/roadmap.md`. They are R2/B4 (the caveat's wording beside
+     unreadable-field denials), E4/R4 (whether an unreadable-field end is
+     a main-session stop), E5 (any awk failure reported as an unreadable
+     field), and T5 (the `## Rail observations` heading pinned on the hook
+     side only).
 
 ## Autopilot
 
