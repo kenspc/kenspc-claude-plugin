@@ -652,9 +652,14 @@ is a breach, and so is a recursive `rm` in any spelling, wherever it
 points: a worker discards by `mv` into the workspace's
 `.trash/<name>-<timestamp>/` and deletes inside the repository only
 through `git rm`. No `git push`, `git tag`, or release; no resource the
-brief does not name; no secrets. A worker's subagents never see its
-prompt, so the rails tell the worker to write them into every subagent
-prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
+brief does not name; no secrets. The rails govern what a worker or a
+subagent writes — its own commands and tool calls: a program it runs that
+removes a temporary directory it created itself (a guard's or a test
+script's `mktemp` cleanup), or writes its own cache, is not a breach,
+while a recursive delete the agent writes, in any language (`rm -r`,
+`find -delete`, a Python `shutil.rmtree`), still is. A worker's subagents
+never see its prompt, so the rails tell the worker to write them into
+every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
 dispatches its skills make. A dispatch that has no such key —
 task-implementer's, and the three document reviewers' — carries no rails
 text: for those agents the hook's two rails below are the only ones

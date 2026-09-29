@@ -143,8 +143,13 @@ not probed.
   breach, and a recursive `rm` stays a breach wherever it points. A call
   the rails hook denied is a rail observation, not a breach: the worker
   takes the permitted route the denial names, lists it, naming the
-  subagent that made the call, and goes on. The
-  rails bind every subagent the worker dispatches: it writes them into
+  subagent that made the call, and goes on. The rails govern what a
+  worker or a subagent writes — its own commands and tool calls: a
+  program it runs that removes a temporary directory it created itself (a
+  guard's or a test script's `mktemp` cleanup), or writes its own cache,
+  is not a breach, while a recursive delete the agent writes, in any
+  language (`rm -r`, `find -delete`, a Python `shutil.rmtree`), still is.
+  The rails bind every subagent the worker dispatches: it writes them into
   every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of
   its skills' agent dispatches, and carries each rail observation a
   subagent reports into its own `## Rail observations`, naming the

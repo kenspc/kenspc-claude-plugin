@@ -1191,6 +1191,12 @@ git rm. No git push, no git tag, no release. No resource the brief does
 not name — no database, no network service. No secrets in any file or
 message.
 
+The rails govern what you write — your own commands and tool calls. A
+program you run that removes a temporary directory it created itself (a
+guard's or a test script's mktemp cleanup), or writes its own cache, is
+not a breach; a recursive delete you write, in any language — rm -r,
+find -delete, a Python shutil.rmtree — still is.
+
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
 the CUSTOM_INSTRUCTIONS of the agent dispatches made by the skills you
@@ -1245,7 +1251,13 @@ the hook denied is listed and not a stop: the denial kept it from
 running, so nothing was deleted or written outside the roots, and its
 reason names the route that stays inside the rails; with § 3 silent on
 it, one worker would stop on the same blocked attempt that another
-worked around with nothing recorded.
+worked around with nothing recorded. Why the rails govern an agent's own
+commands and tool calls: a guard's exit trap that removes the directory
+it made with mktemp, or a tool's own cache, is not a delete or a write
+the agent chose; read as one, the rails have kept review agents from
+running the repository's own checks, and workers that reworded them for
+code-fixer and regression-verifier alone broke task-review's rule that
+those two get the reviewers' CONTEXT unchanged.
 
 ### The task blocks
 
