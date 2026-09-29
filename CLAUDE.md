@@ -655,7 +655,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
 - `check-autopilot-rails-hook.sh` — guards the autopilot worker rails
   hook (4.3.0) by feeding `hooks/scripts/autopilot-worker-rails.sh`
   fixtures and asserting each decision (deny: exit 2, empty stdout, a
-  reason on stderr naming `.trash`; allow and inert: exit 0, no stdout).
+  reason on stderr opening `autopilot rails:`, the text the autopilot
+  preamble tells a worker to know a denial by, and naming `.trash`; allow
+  and inert: exit 0, no stdout).
   The fixtures carry the field names and nesting of the live hook input
   Claude Code 2.1.283 sent for Bash, Write, Edit, and NotebookEdit calls,
   copied into the guard, since a hook that parses a harness-owned format

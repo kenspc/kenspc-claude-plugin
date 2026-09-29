@@ -216,6 +216,12 @@ fx() {
         ok=0
         GOT="deny without .trash in its reason"
     fi
+    # The autopilot preamble tells a worker to know a denial by this text in
+    # its error, so a renamed prefix would leave that cue stale.
+    if [[ "$expect" == deny && "$ok" -eq 1 && "$ERR" != "autopilot rails: "* ]]; then
+        ok=0
+        GOT="deny whose reason does not open with 'autopilot rails: '"
+    fi
     if [[ "$ok" -eq 0 ]]; then
         FAILS=$((FAILS + 1))
         if [[ -z "$FIRST_RED" ]]; then FIRST_RED=$label; fi
@@ -250,7 +256,7 @@ fx_timed() {
     TIMED="${TIMED:+$TIMED and }${secs}s"
     if ! awk -v e="$secs" -v l="$limit" 'BEGIN { exit !(e + 0 < l + 0) }'; then
         why="decided in ${secs}s, not under ${limit}s"
-    elif [[ "$GOT" != deny || "$ERR" != *"recursive rm"* || "$ERR" != *.trash* ]]; then
+    elif [[ "$GOT" != deny || "$ERR" != "autopilot rails: "* || "$ERR" != *"recursive rm"* || "$ERR" != *.trash* ]]; then
         why="expected its recursive rm denied, got $GOT (exit $RC, stdout '$OUT', stderr '$ERR')"
     fi
     if [[ -n "$why" ]]; then
