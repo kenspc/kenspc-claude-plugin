@@ -36,8 +36,9 @@
 # name, Bash command, or file-tool path the hook cannot read (denied); a
 # Bash input over the hook's length cap
 # (denied) and one under it (allowed); a command of many $( )
-# substitutions under the cap, then rm -rf, denied in under half the hook's
-# 5-second timeout (timed); and every denied fixture again
+# substitutions under the cap, then rm -rf, and a long command word with no
+# slash, then rm -rf, each denied in under half the hook's 5-second timeout
+# (timed); and every denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
@@ -71,7 +72,7 @@
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
-#                  removed (the timed fixture). Then the restored copy
+#                  removed (the timed $( ) fixture). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 
@@ -241,12 +242,13 @@ fx_deny() {
 # would take; a run the limit cuts off is red on its time, and on its reason
 # too, since its killed awk makes the hook deny the command as unreadable.
 fx_timed() {
-    local hook="$1" label="$2" limit="$3" payload="$4" why="" n input TIMEFORMAT=%R
+    local hook="$1" label="$2" limit="$3" payload="$4" why="" n input secs TIMEFORMAT=%R
     input=$(make_input Bash "$FX_REPO" "$payload")
     { time decide "$hook" 1 "$FX_ROOTS" "$input" 5 ; } 2> "$WORK/time.txt"
-    TIMED=$(cat "$WORK/time.txt")
-    if ! awk -v e="$TIMED" -v l="$limit" 'BEGIN { exit !(e + 0 < l + 0) }'; then
-        why="decided in ${TIMED}s, not under ${limit}s"
+    secs=$(cat "$WORK/time.txt")
+    TIMED="${TIMED:+$TIMED and }${secs}s"
+    if ! awk -v e="$secs" -v l="$limit" 'BEGIN { exit !(e + 0 < l + 0) }'; then
+        why="decided in ${secs}s, not under ${limit}s"
     elif [[ "$GOT" != deny || "$ERR" != *"recursive rm"* || "$ERR" != *.trash* ]]; then
         why="expected its recursive rm denied, got $GOT (exit $RC, stdout '$OUT', stderr '$ERR')"
     fi
@@ -264,7 +266,7 @@ fx_timed() {
 # run_fixtures <hook>: every fixture; returns 1 when any decision differs.
 run_fixtures() {
     local hook="$1" r="$FX_ROOTS" t k
-    FAILS=0; FIRST_RED=""
+    FAILS=0; FIRST_RED=""; TIMED=""
     D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
 
     # rm spellings, denied.
@@ -344,6 +346,12 @@ run_fixtures() {
     # took tens of seconds and let the rm through.
     t=$(awk 'BEGIN { for (i = 0; i < 12000; i++) printf "$(x) " }')
     fx_timed "$hook" "a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time" 2.5 "echo $t; rm -rf build"
+    # A command word of 64000 characters with no slash, then a recursive
+    # rm, decided in under half the hook's timeout. Taking the word's base
+    # name once ran a regex from every position in the word, which took
+    # about 15 seconds and let the rm through.
+    t=$(printf '%064000d' 0)
+    fx_timed "$hook" "a command word of 64000 characters with no slash, then rm -rf, decided in time" 2.5 "$t; rm -rf build"
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
@@ -483,7 +491,7 @@ run_main_logic() {
     echo "OK    autopilot rails hook — registered on PreToolUse for Bash, Write, Edit, and NotebookEdit"
     make_work
     if run_fixtures "$hook"; then
-        echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0; the timed command in ${TIMED}s)"
+        echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0; the timed commands in ${TIMED})"
         return 0
     fi
     echo "" >&2

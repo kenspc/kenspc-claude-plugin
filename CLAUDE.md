@@ -667,7 +667,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `rm` after a heredoc whose delimiter line comes and after a `<<` whose
   delimiter line never does, a Bash input over the length cap and one
   under it, a command of 12000 `$( )` substitutions under the cap and then
-  `rm -rf`, which must be denied in under 2.5 seconds, half the hook's
+  `rm -rf`, and a command word of 64000 characters with no slash and then
+  `rm -rf`, each of which must be denied in under 2.5 seconds, half the hook's
   timeout (timed, the hook under a CPU limit of that timeout, so a slow
   scan costs the guard seconds), a write inside each root for each file
   tool, outside every root, relative and `..`-escaping paths, symlinked
@@ -682,7 +683,7 @@ Project-level shell scripts live in `scripts/` at the repo root:
   runs under `/bin/bash` when it exists. Its self-test turns four mutants red — the
   `rm` detection, the root check, and the marker check removed, and the
   constant-time push removed (every word collected so far copied on each
-  `$(`, which only the timed fixture catches) — and
+  `$(`, which only the timed `$( )` fixture catches) — and
   cleans up without a recursive `rm`.
 
 Eleven of the guards (`check-canonical-dispatch.sh`,

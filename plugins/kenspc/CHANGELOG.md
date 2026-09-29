@@ -85,7 +85,8 @@ not probed.
   comment, non-recursive `rm` and other work the hook must not deny,
   heredoc that closes and `<<` that never does, Bash input over and under
   the length cap, a command of 12000 `$( )` substitutions under the cap
-  and then `rm -rf`, denied in under half the hook's 5-second timeout
+  and then `rm -rf` and a command word of 64000 characters with no slash
+  and then `rm -rf`, each denied in under half the hook's 5-second timeout
   (timed), write inside each root for each file tool, write
   outside, relative and `..`-escaping path, symlinked root, `~` and
   leading-space target, Windows drive-letter path, sibling sharing a

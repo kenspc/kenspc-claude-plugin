@@ -140,7 +140,10 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 RM_AWK=$JSON_AWK'
 function flush() { if (inw) { nw++; w[nw] = cur }; cur = ""; inw = 0 }
 function endcmd() { flush(); if (nw > base && found == "") check(); nw = base }
-function bname(x) { sub(/.*\//, "", x); return x }
+# bname splits on / rather than sub(/.*\//, ...): the awk macOS ships
+# retries that regex from every position of a word with no slash, which
+# made a 64 KB command word take about 15 seconds.
+function bname(x,   p, k) { k = split(x, p, "/"); return p[k] }
 function takesarg(wr, o) {
   if (wr == "sudo") return o ~ /^-[ugCDhprtUT]$/
   if (wr == "xargs") return o ~ /^-[nILPsEdaJRS]$/
@@ -311,9 +314,9 @@ REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name
 # scan's time grows with the square of the command's length under the awk
 # macOS ships (a 300 KB command took about 9 s), and a run that outlasts
 # the hook's 5-second timeout (hooks.json) denies nothing; at this cap
-# every shape measured — many words, a long quoted argument, many lines or
-# heredoc operators, many $( ) substitutions, the shape
-# check-autopilot-rails-hook.sh times — takes about half a second.
+# every shape measured — many words, a long command word or quoted
+# argument, many lines or heredoc operators, many $( ) substitutions, the
+# shapes check-autopilot-rails-hook.sh times — takes about half a second.
 BASH_INPUT_CAP=65536
 
 deny() {
