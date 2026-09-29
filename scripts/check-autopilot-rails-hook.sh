@@ -37,9 +37,9 @@
 # name, Bash command, or file-tool path the hook cannot read (denied); a
 # Bash input over the hook's length cap
 # (denied) and one under it (allowed); a command of many $( )
-# substitutions under the cap, then rm -rf, and a long command word with no
-# slash, then rm -rf, each denied in under half the hook's 5-second timeout
-# (timed); and every denied fixture again
+# substitutions under the cap, then rm -rf, a long command word with no
+# slash, then rm -rf, and a word of many <| pairs, then rm -rf, each denied
+# in under half the hook's 5-second timeout (timed); and every denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
@@ -69,12 +69,13 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against four mutants,
+#                  unmodified copy (must pass), then against five mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
 #                  removed (the timed $( ) fixture, which must be the first
-#                  red). Then the restored copy
+#                  red), the last-character check removed (the timed <|
+#                  fixture, which must be the first red). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 
@@ -203,6 +204,7 @@ FIRST_RED=""
 QUIET=0
 TIMED=""
 SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time"
+LTGT_TIMED_LABEL="a word of 32000 <| pairs under the length cap, then rm -rf, decided in time"
 D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
 
 # fx <hook> <label> <expect> <marker or -> <roots> <tool> <cwd> <payload>
@@ -369,6 +371,12 @@ run_fixtures() {
     # about 15 seconds and let the rm through.
     t=$(printf '%064000d' 0)
     fx_timed "$hook" "a command word of 64000 characters with no slash, then rm -rf, decided in time" 2.5 "$t; rm -rf build"
+    # One word of 32000 <| pairs (64 KB), then a recursive rm, decided in
+    # under half the hook's timeout. A | or & after < or > stays in the
+    # word, and testing whether the word ended in < or > once read the
+    # whole word on every | or &, which took over 3 seconds.
+    t=$(awk 'BEGIN { for (i = 0; i < 32000; i++) printf "<|" }')
+    fx_timed "$hook" "$LTGT_TIMED_LABEL" 2.5 "echo $t; rm -rf build"
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
@@ -538,7 +546,7 @@ replace_literal() {
 }
 
 run_self_test() {
-    local hook="$REPO_ROOT/$HOOK_REL" copy name old new rc
+    local hook="$REPO_ROOT/$HOOK_REL" copy name old new rc want
     if [[ ! -f "$hook" ]]; then
         echo "ERROR: missing hook $hook" >&2
         return 2
@@ -554,10 +562,11 @@ run_self_test() {
         return 1
     fi
 
-    # Four mutants, each a literal replacement in a fresh copy. The
+    # Five mutants, each a literal replacement in a fresh copy. The
     # constant-time push mutant copies every word collected so far on each
-    # push, as the hook once did.
-    for name in rm-detection root-check marker-check constant-time-push; do
+    # push, and the last-character check mutant matches the whole word
+    # against [<>]$ on each | or &, as the hook once did.
+    for name in rm-detection root-check marker-check constant-time-push last-character-check; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -571,6 +580,9 @@ run_self_test() {
             constant-time-push)
                 old='function push(ret, cl) {'
                 new='function push(ret, cl,   k) { for (k = 1; k <= nw; k++) sw[sp, k] = w[k]' ;;
+            last-character-check)
+                old='substr(cur, length(cur)) ~ /[<>]/'
+                new='cur ~ /[<>]$/' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?
@@ -581,10 +593,16 @@ run_self_test() {
             echo "FAIL  self-test: the mutant with the $name removed passed every fixture" >&2
             return 1
         fi
-        # Only the timed $( ) fixture measures the push's cost; a mutant
-        # red first elsewhere (its text broke the awk program, say) proves
-        # nothing about it.
-        if [[ "$name" == constant-time-push && "$FIRST_RED" != "$SUBST_TIMED_LABEL" ]]; then
+        # Only a timed fixture measures the cost a timing mutant restores —
+        # the $( ) one the push's, the <| one the last-character check's; a
+        # mutant red first elsewhere (its text broke the awk program, say)
+        # proves nothing about it.
+        case "$name" in
+            constant-time-push) want=$SUBST_TIMED_LABEL ;;
+            last-character-check) want=$LTGT_TIMED_LABEL ;;
+            *) want="" ;;
+        esac
+        if [[ -n "$want" && "$FIRST_RED" != "$want" ]]; then
             echo "FAIL  self-test: the mutant with the $name removed turned another fixture red first: $FIRST_RED" >&2
             return 1
         fi

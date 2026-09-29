@@ -295,7 +295,10 @@ function scan(c,   n, i, ch, nx) {
       if (substr(c, i + 2, 1) == "<") { cur = cur "<<<"; inw = 1; i += 3; continue }
       i = heredoc_op(c, i + 2); continue
     }
-    if ((ch == "&" || ch == "|") && (nx == ">" || cur ~ /[<>]$/)) { cur = cur ch; inw = 1; i++; continue }
+    # A | or & after < or > stays in the word (<|, >&). Only the last
+    # character of the word is read: matching the whole word against [<>]$
+    # on every | or & made one 64 KB word of <| pairs take over 3 seconds.
+    if ((ch == "&" || ch == "|") && (nx == ">" || substr(cur, length(cur)) ~ /[<>]/)) { cur = cur ch; inw = 1; i++; continue }
     if (ch == ";" || ch == "&" || ch == "|") { endcmd(); i++; continue }
     cur = cur ch; inw = 1; i++
   }
@@ -317,8 +320,9 @@ REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name
 # macOS ships (a 300 KB command took about 9 s), and a run that outlasts
 # the hook's 5-second timeout (hooks.json) denies nothing; at this cap
 # every shape measured — many words, a long command word or quoted
-# argument, many lines or heredoc operators, many $( ) substitutions, the
-# shapes check-autopilot-rails-hook.sh times — takes about half a second.
+# argument, many lines or heredoc operators, many $( ) substitutions or
+# subshells, one word of <| or <& pairs, the shapes
+# check-autopilot-rails-hook.sh times — takes 0.3 to 0.6 seconds.
 BASH_INPUT_CAP=65536
 
 deny() {
