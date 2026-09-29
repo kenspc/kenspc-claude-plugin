@@ -239,7 +239,10 @@ Transcript check for row 11 (4.3.0):
 - Over each session's transcript — the main session's, each worker's
   (`<session-id>.jsonl`, the id in its `<tag>.session`), and each of their
   subagents' (`<session-id>/subagents/agent-*.jsonl`) — the command below
-  prints nothing. The `jq` query takes every Bash command in the
+  exits 0 and prints nothing. Why the status: a transcript `jq` cannot
+  open, or one with a truncated line, prints nothing either, its error on
+  stderr only, and `jq`'s own status, with nothing piped after it, is what
+  tells that apart from a pass. The `jq` query takes every Bash command in the
   transcript except a call whose tool result is an error containing
   `autopilot rails:`, the rails hook's denial, and prints each one that
   runs `git push`, `git tag`, or `rm` with a recursive flag in any
@@ -272,7 +275,8 @@ Transcript check for row 11 (4.3.0):
   and an allowed `bash -c 'rm -fr cache'`, a shape the hook misses — the
   same command prints exactly `rm -rf dist` and `bash -c 'rm -fr cache'`,
   one per line: the denied call skipped, the `git rm` route passed, and
-  both recursive spellings that ran found.
+  both recursive spellings that ran found. With a truncated line appended
+  to it, the same command prints nothing and exits non-zero.
 
   ```jsonl
   {"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_denied","name":"Bash","input":{"command":"rm -rf build"}}]}}
