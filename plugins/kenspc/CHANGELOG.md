@@ -81,15 +81,18 @@ not probed.
   position (quoted and escaped words among them), quoted mention and
   comment, non-recursive `rm` and other work the hook must not deny,
   heredoc that closes and `<<` that never does, Bash input over and under
-  the length cap, write inside each root for each file tool, write
+  the length cap, a command of 12000 `$( )` substitutions under the cap
+  and then `rm -rf`, denied in under half the hook's 5-second timeout
+  (timed), write inside each root for each file tool, write
   outside, relative and `..`-escaping path, symlinked root, `~` and
   leading-space target, Windows drive-letter path, sibling sharing a
   root's prefix, no roots and a root entry that is not absolute, and
   unreadable field, and every denied fixture again without the marker and
   with the marker `0`; main mode also checks that `hooks.json` registers
   the hook under PreToolUse for all four tools. Its
-  `--self-test` turns three mutants red (the `rm` detection, the root
-  check, and the marker check removed). `check-all.sh` picks it up.
+  `--self-test` turns four mutants red (the `rm` detection, the root
+  check, and the marker check removed, and the constant-time push
+  removed). `check-all.sh` picks it up.
 - **The worker variables.** `run.sh` and `run.ps1` export
   `KENSPC_AUTOPILOT_WORKER=1` and `KENSPC_AUTOPILOT_WRITE_ROOTS` to every
   worker, fresh and resumed, over any value the caller's environment

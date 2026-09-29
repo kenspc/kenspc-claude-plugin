@@ -666,8 +666,12 @@ Project-level shell scripts live in `scripts/` at the repo root:
   other work it must not deny (`rm --force`, `rm -- -r`, a `<<-` body), an
   `rm` after a heredoc whose delimiter line comes and after a `<<` whose
   delimiter line never does, a Bash input over the length cap and one
-  under it, a write inside each root for each file tool, outside every
-  root, relative and `..`-escaping paths, symlinked roots and a `..` after
+  under it, a command of 12000 `$( )` substitutions under the cap and then
+  `rm -rf`, which must be denied in under 2.5 seconds, half the hook's
+  timeout (timed, the hook under a CPU limit of that timeout, so a slow
+  scan costs the guard seconds), a write inside each root for each file
+  tool, outside every root, relative and `..`-escaping paths, symlinked
+  roots and a `..` after
   a link collapsed as written, `~`, `~/`, and leading-space targets, a
   Windows drive-letter path left unjudged, a sibling sharing a root's
   prefix, no roots and root entries that are not absolute, an unreadable
@@ -675,8 +679,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   without the marker and with the marker `0`. Main mode also checks that
   `hooks.json` registers the hook under PreToolUse with a matcher naming
   all four tools, since the fixtures run the script directly. The hook
-  runs under `/bin/bash` when it exists. Its self-test turns three mutants red — the
-  `rm` detection, the root check, and the marker check removed — and
+  runs under `/bin/bash` when it exists. Its self-test turns four mutants red — the
+  `rm` detection, the root check, and the marker check removed, and the
+  constant-time push removed (every word collected so far copied on each
+  `$(`, which only the timed fixture catches) — and
   cleans up without a recursive `rm`.
 
 Eleven of the guards (`check-canonical-dispatch.sh`,

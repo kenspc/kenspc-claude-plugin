@@ -131,7 +131,7 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # tokenizer: single and double quotes, $'...' (a backslash escapes the next
 # character, which is kept as written) and $"...", backslash escapes, comments,
 # separators, $( ) and backtick substitutions (the enclosing command's words
-# are set aside and restored around them), subshells, and heredoc bodies,
+# are kept below theirs until they end), subshells, and heredoc bodies,
 # which are skipped up to their delimiter line. A << whose delimiter line
 # never comes — an arithmetic shift such as $((1<<2)), or a heredoc closed
 # by EOF) inside $( — skips nothing, and the lines after it are read as
@@ -139,7 +139,7 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # holds the single quote.
 RM_AWK=$JSON_AWK'
 function flush() { if (inw) { nw++; w[nw] = cur }; cur = ""; inw = 0 }
-function endcmd() { flush(); if (nw > 0 && found == "") check(); nw = 0 }
+function endcmd() { flush(); if (nw > base && found == "") check(); nw = base }
 function bname(x) { sub(/.*\//, "", x); return x }
 function takesarg(wr, o) {
   if (wr == "sudo") return o ~ /^-[ugCDhprtUT]$/
@@ -149,7 +149,7 @@ function takesarg(wr, o) {
   return 0
 }
 function check(   i, wr, j, a, r) {
-  i = 1
+  i = base + 1
   while (i <= nw) {
     if (w[i] ~ /^[A-Za-z_][A-Za-z0-9_]*=/) { i++; continue }
     if (w[i] ~ /^(!|\{|if|then|else|elif|do|while|until)$/) { i++; continue }
@@ -180,16 +180,20 @@ function check(   i, wr, j, a, r) {
     if (a ~ /^-[^-]/ && a ~ /[rR]/) { found = w[i] " " a; return }
   }
 }
-function push(ret, cl,   k) {
-  sp++; sret[sp] = ret; scl[sp] = cl; snw[sp] = nw
-  for (k = 1; k <= nw; k++) sw[sp, k] = w[k]
+# push and pop enter and leave a substitution or subshell. The words of its
+# command go on top of those of the enclosing command, as w[base + 1] to
+# w[nw], and the enclosing words stay where they are, so each push and pop
+# takes the same time whatever the length of the command: copying the
+# enclosing words out and back made a command of many $( ) take tens of
+# seconds at the length cap.
+function push(ret, cl) {
+  sp++; sret[sp] = ret; scl[sp] = cl; sbase[sp] = base
   scur[sp] = cur; sinw[sp] = inw
-  nw = 0; cur = ""; inw = 0; st = "N"
+  base = nw; cur = ""; inw = 0; st = "N"
 }
-function pop(   k) {
+function pop() {
   endcmd()
-  nw = snw[sp]
-  for (k = 1; k <= nw; k++) w[k] = sw[sp, k]
+  base = sbase[sp]
   cur = scur[sp]; inw = sinw[sp]; st = sret[sp]; sp--
 }
 function heredoc_op(c, i,   strip, d, ch) {
@@ -248,7 +252,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; nw = 0; cur = ""; inw = 0; nh = 0
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; nh = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }
@@ -306,8 +310,10 @@ REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name
 # The longest Bash hook input, in bytes, the hook scans. Why a cap: the
 # scan's time grows with the square of the command's length under the awk
 # macOS ships (a 300 KB command took about 9 s), and a run that outlasts
-# the hook's 5-second timeout (hooks.json) denies nothing; at this cap the
-# longest command takes about half a second.
+# the hook's 5-second timeout (hooks.json) denies nothing; at this cap
+# every shape measured — many words, a long quoted argument, many lines or
+# heredoc operators, many $( ) substitutions, the shape
+# check-autopilot-rails-hook.sh times — takes about half a second.
 BASH_INPUT_CAP=65536
 
 deny() {

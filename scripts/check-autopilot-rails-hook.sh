@@ -35,7 +35,9 @@
 # set, and root entries that are not absolute (denied); an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied); a
 # Bash input over the hook's length cap
-# (denied) and one under it (allowed); and every denied fixture again
+# (denied) and one under it (allowed); a command of many $( )
+# substitutions under the cap, then rm -rf, denied in under half the hook's
+# 5-second timeout (timed); and every denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
@@ -65,10 +67,11 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against three mutants,
+#                  unmodified copy (must pass), then against four mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
-#                  removed, the marker check removed. Then the restored copy
+#                  removed, the marker check removed, the constant-time push
+#                  removed (the timed fixture). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 
@@ -93,7 +96,7 @@ FX_HOME=$FX_BASE/home
 WORK=""
 cleanup() {
     [[ -n "${WORK:-}" && -d "$WORK" ]] || return 0
-    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/link" "$WORK/real/deep" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp"
+    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/time.txt" "$WORK/link" "$WORK/real/deep" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp"
     rmdir "$WORK/real/a/b" "$WORK/real/a" "$WORK/real" "$WORK/hook" 2>/dev/null || true
     rmdir "$WORK" 2>/dev/null || true
 }
@@ -162,12 +165,14 @@ make_input() {
         "$cwd" "$cwd" "$name_key" "${tool%/no-key}" "$tool_input"
 }
 
-# decide <hook> <marker or -> <roots> <input>: runs the hook, sets RC, OUT,
-# ERR, and GOT (deny, allow, inert, or other). The input goes through a
-# file, not a pipe: the inert hook exits without reading it, and a pipe's
-# writer would then fail and make the status its own.
+# decide <hook> <marker or -> <roots> <input> [<cpu seconds>]: runs the
+# hook, sets RC, OUT, ERR, and GOT (deny, allow, inert, or other). The input
+# goes through a file, not a pipe: the inert hook exits without reading it,
+# and a pipe's writer would then fail and make the status its own. With
+# <cpu seconds>, the hook and its awk run under that CPU limit where the
+# system lets the guard set one.
 decide() {
-    local hook="$1" marker="$2" roots="$3"
+    local hook="$1" marker="$2" roots="$3" cpu="${5:-}"
     printf '%s' "$4" > "$WORK/input.json"
     RC=0
     OUT=$(
@@ -175,6 +180,7 @@ decide() {
         export HOME="$FX_HOME"
         if [[ "$marker" != "-" ]]; then export KENSPC_AUTOPILOT_WORKER="$marker"; fi
         export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
+        if [[ -n "$cpu" ]]; then ulimit -t "$cpu" 2>/dev/null || true; fi
         "$HOOK_BASH" "$hook" < "$WORK/input.json" 2>"$WORK/stderr.txt"
     ) || RC=$?
     ERR=$(cat "$WORK/stderr.txt")
@@ -192,6 +198,7 @@ decide() {
 FAILS=0
 FIRST_RED=""
 QUIET=0
+TIMED=""
 D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
 
 # fx <hook> <label> <expect> <marker or -> <roots> <tool> <cwd> <payload>
@@ -223,6 +230,35 @@ fx_deny() {
     fx "$hook" "$label" deny 1 "$roots" "$tool" "$cwd" "$payload"
     n=${#D_LABEL[@]}
     D_LABEL[$n]=$label; D_ROOTS[$n]=$roots; D_TOOL[$n]=$tool; D_CWD[$n]=$cwd; D_PAYLOAD[$n]=$payload
+}
+
+# fx_timed <hook> <label> <limit> <payload>: a Bash command whose recursive
+# rm is expected denied, with the marker set, in under <limit> seconds of
+# wall-clock time; recorded for the replays as fx_deny records. Why a time:
+# a hook run that outlasts the hook's 5-second timeout (hooks.json) denies
+# nothing, so a slow deny is an allow. The hook runs under a CPU limit of
+# that timeout, so a slow scan costs the guard seconds, not the minute it
+# would take; a run the limit cuts off is red on its time, and on its reason
+# too, since its killed awk makes the hook deny the command as unreadable.
+fx_timed() {
+    local hook="$1" label="$2" limit="$3" payload="$4" why="" n input TIMEFORMAT=%R
+    input=$(make_input Bash "$FX_REPO" "$payload")
+    { time decide "$hook" 1 "$FX_ROOTS" "$input" 5 ; } 2> "$WORK/time.txt"
+    TIMED=$(cat "$WORK/time.txt")
+    if ! awk -v e="$TIMED" -v l="$limit" 'BEGIN { exit !(e + 0 < l + 0) }'; then
+        why="decided in ${TIMED}s, not under ${limit}s"
+    elif [[ "$GOT" != deny || "$ERR" != *"recursive rm"* || "$ERR" != *.trash* ]]; then
+        why="expected its recursive rm denied, got $GOT (exit $RC, stdout '$OUT', stderr '$ERR')"
+    fi
+    if [[ -n "$why" ]]; then
+        FAILS=$((FAILS + 1))
+        if [[ -z "$FIRST_RED" ]]; then FIRST_RED=$label; fi
+        if [[ "$QUIET" -eq 0 ]]; then
+            echo "FAIL  $label: $why" >&2
+        fi
+    fi
+    n=${#D_LABEL[@]}
+    D_LABEL[$n]=$label; D_ROOTS[$n]=$FX_ROOTS; D_TOOL[$n]=Bash; D_CWD[$n]=$FX_REPO; D_PAYLOAD[$n]=$payload
 }
 
 # run_fixtures <hook>: every fixture; returns 1 when any decision differs.
@@ -302,6 +338,12 @@ run_fixtures() {
     fx "$hook" "a Bash input under the length cap, scanned" allow 1 "$r" Bash "$FX_REPO" "echo $t"
     t=$(printf '%070000d' 0)
     fx_deny "$hook" "a Bash input over the length cap" "$r" Bash "$FX_REPO" "echo $t"
+    # Under the cap, the slowest shape to scan: 12000 unquoted $( ) words
+    # (60 KB), then a recursive rm, decided in under half the hook's
+    # timeout. Each $( ) once cost a copy of every word before it, which
+    # took tens of seconds and let the rm through.
+    t=$(awk 'BEGIN { for (i = 0; i < 12000; i++) printf "$(x) " }')
+    fx_timed "$hook" "a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time" 2.5 "echo $t; rm -rf build"
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
@@ -441,7 +483,7 @@ run_main_logic() {
     echo "OK    autopilot rails hook — registered on PreToolUse for Bash, Write, Edit, and NotebookEdit"
     make_work
     if run_fixtures "$hook"; then
-        echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0)"
+        echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0; the timed command in ${TIMED}s)"
         return 0
     fi
     echo "" >&2
@@ -486,8 +528,10 @@ run_self_test() {
         return 1
     fi
 
-    # Three mutants, each a literal replacement in a fresh copy.
-    for name in rm-detection root-check marker-check; do
+    # Four mutants, each a literal replacement in a fresh copy. The
+    # constant-time push mutant copies every word collected so far on each
+    # push, as the hook once did.
+    for name in rm-detection root-check marker-check constant-time-push; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -498,6 +542,9 @@ run_self_test() {
             marker-check)
                 old='[ "${KENSPC_AUTOPILOT_WORKER:-}" = 1 ] || exit 0'
                 new=': marker check removed' ;;
+            constant-time-push)
+                old='function push(ret, cl) {'
+                new='function push(ret, cl,   k) { for (k = 1; k <= nw; k++) sw[sp, k] = w[k]' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?
