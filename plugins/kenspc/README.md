@@ -676,8 +676,10 @@ since a plugin hook fires for a subagent's tool call too. The deny's
 reason names the rail and the permitted route. A call the hook denied is
 not a breach, since it never ran: the worker takes the route the deny
 names, lists the denial under `## Rail observations`, naming the subagent
-that made the call, and goes on. The hook is a best-effort
-guard (see Known behavior), and the rails text still binds.
+that made the call, and goes on. A denial in task-implementer or a
+document reviewer, whose dispatch carries no rails text, is not listed:
+a worker sees only a subagent's reply, not its tool results. The hook is
+a best-effort guard (see Known behavior), and the rails text still binds.
 
 **What a run writes and commits.** In `repo` mode: the workers' commits
 (the task document, the implementation, the review's fixes) and, with
