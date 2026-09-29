@@ -261,7 +261,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; nh = 0
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; nh = 0; ltgt = -1
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }
@@ -299,11 +299,15 @@ function scan(c,   n, i, ch, nx) {
       if (substr(c, i + 2, 1) == "<") { cur = cur "<<<"; inw = 1; i += 3; continue }
       i = heredoc_op(c, i + 2); continue
     }
-    # A | or & after < or > stays in the word (<|, >&). Only the last
-    # character of the word is read: matching the whole word against [<>]$
-    # on every | or & made one 64 KB word of <| pairs take over 3 seconds.
-    if ((ch == "&" || ch == "|") && (nx == ">" || substr(cur, length(cur)) ~ /[<>]/)) { cur = cur ch; inw = 1; i++; continue }
+    # A | or & right after an unquoted < or > stays in the word (<|, >&).
+    # ltgt holds the offset of the last unquoted < or > the word took, so
+    # only the character before the | or & is read: matching the
+    # whole word against [<>]$ on every | or & made one 64 KB word of <|
+    # pairs take over 3 seconds, and a quoted or escaped < or > ("a>"|rm)
+    # is no redirection, so the | after it still ends the command.
+    if ((ch == "&" || ch == "|") && (nx == ">" || ltgt == i - 1)) { cur = cur ch; inw = 1; i++; continue }
     if (ch == ";" || ch == "&" || ch == "|") { endcmd(); i++; continue }
+    if (ch == "<" || ch == ">") ltgt = i
     cur = cur ch; inw = 1; i++
   }
   endcmd()

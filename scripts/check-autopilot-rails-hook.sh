@@ -21,8 +21,9 @@
 #
 # The fixtures cover every recursive rm spelling and command position the
 # hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
-# substitutions inside double quotes, and substitutions among the rm's own
-# words among them; quoted mentions of
+# substitutions inside double quotes, a | or & after a quoted or escaped <
+# or >, and substitutions among the rm's own words among them; quoted
+# mentions of
 # rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
 # and other work the hook must not deny — rm --force, rm -- -r, a <<- body
 # with its tabs stripped (allowed); an rm after a heredoc whose delimiter
@@ -395,6 +396,14 @@ run_fixtures() {
     # whole word on every | or &, which took over 3 seconds.
     t=$(awk 'BEGIN { for (i = 0; i < 32000; i++) printf "<|" }')
     fx_timed "$hook" "$LTGT_TIMED_LABEL" 2.5 "echo $t; rm -rf build"
+    # A | or & after a quoted or escaped < or > ends the command: that < or
+    # > is no redirection. These come after the timed <| fixture, which the
+    # self-test's last-character mutant must turn red first, since that
+    # mutant, the whole word matched against [<>]$, misreads them too.
+    fx_deny "$hook" "rm position after | following a double-quoted >" "$r" Bash "$FX_REPO" 'echo "a>"|rm -rf build'
+    fx_deny "$hook" "rm position after | following a single-quoted <" "$r" Bash "$FX_REPO" "echo 'a<'|rm -rf build"
+    fx_deny "$hook" "rm position after | following an escaped >" "$r" Bash "$FX_REPO" 'echo a\>|rm -rf build'
+    fx_deny "$hook" "rm position after & following a double-quoted >" "$r" Bash "$FX_REPO" 'echo "->"&rm -rf build'
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
@@ -601,7 +610,7 @@ run_self_test() {
                 old='function push(ret, cl) {'
                 new='function push(ret, cl,   k) { for (k = 1; k <= nw; k++) sw[sp, k] = w[k]' ;;
             last-character-check)
-                old='substr(cur, length(cur)) ~ /[<>]/'
+                old='ltgt == i - 1'
                 new='cur ~ /[<>]$/' ;;
         esac
         cp "$hook" "$copy"
