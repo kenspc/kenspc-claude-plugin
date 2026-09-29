@@ -65,7 +65,9 @@
 # variable or an alias, or spelled through the escapes of $'...'
 # ($'\x72m', kept as written), rm after a redirection written before the command
 # name (2>/dev/null rm -rf d), other wrappers (timeout, nice), commands inside an
-# unquoted heredoc's substitutions, and paths that are not POSIX absolute
+# unquoted heredoc's substitutions, a case arm inside a $( ) that follows
+# another word, whose ) the hook reads as the substitution's end
+# (echo $(case x in a) rm -rf y;; esac)), and paths that are not POSIX absolute
 # (a Windows drive-letter path is not judged); and a file-tool target that
 # is itself a symbolic link, dangling or not, pointing outside every root,
 # since only the links of the target's ancestors are resolved.
