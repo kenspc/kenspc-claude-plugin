@@ -74,7 +74,9 @@ not probed.
   repository, the workspace, or scratch. A denied call is not a breach,
   since it never ran: the worker takes that route, lists the denial under
   `## Rail observations`, naming the subagent that made the call, and
-  goes on. A best-effort guard behind the
+  goes on. A denial in task-implementer or a document reviewer, whose
+  dispatch carries no rails text, is not listed: a worker sees only a
+  subagent's reply, not its tool results. A best-effort guard behind the
   rails text: it misses `find -delete`, `bash -c '…'` and a script fed to
   a shell on stdin, interpreter-level deletes, `git clean`, and writes
   through Bash. Bash 3.2 and POSIX tools
@@ -145,7 +147,10 @@ not probed.
   breach, and a recursive `rm` stays a breach wherever it points. A call
   the rails hook denied is a rail observation, not a breach: the worker
   takes the permitted route the denial names, lists it, naming the
-  subagent that made the call, and goes on. The rails govern what a
+  subagent that made the call, and goes on; a denial in task-implementer
+  or a document reviewer, whose dispatch carries no rails text, is not
+  listed, since a worker sees only a subagent's reply, not its tool
+  results. The rails govern what a
   worker or a subagent writes — its own commands and tool calls: a
   program it runs that removes a temporary directory it created itself (a
   guard's or a test script's `mktemp` cleanup), or writes its own cache,

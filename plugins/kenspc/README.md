@@ -1098,7 +1098,9 @@ on Windows.
   NotebookEdit outside the write roots. A denied call is a rail
   observation, not a breach: the worker takes the route the deny's reason
   names, lists the denial, naming the subagent that made the call, and
-  goes on. The hook misses `find -delete` (and
+  goes on. A denial in task-implementer or a document reviewer, whose
+  dispatch carries no rails text, is not listed: a worker sees only a
+  subagent's reply, not its tool results. The hook misses `find -delete` (and
   `find -exec rm`), `bash -c '…'`, a script fed to a shell on stdin
   (`bash <<EOF`), `eval`, and a `trap` body
   (`trap 'rm -rf "$d"' EXIT`), interpreter-level deletes
