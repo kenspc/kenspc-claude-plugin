@@ -71,7 +71,10 @@ not probed.
   rather than let them pass unchecked. The deny's
   reason names the rail and the permitted route: `mv` into the
   workspace's `.trash/<name>-<timestamp>/`, or a write under the
-  repository, the workspace, or scratch. A best-effort guard behind the
+  repository, the workspace, or scratch. A denied call is not a breach,
+  since it never ran: the worker takes that route, lists the denial under
+  `## Rail observations`, naming the subagent that made the call, and
+  goes on. A best-effort guard behind the
   rails text: it misses `find -delete`, `bash -c '…'` and a script fed to
   a shell on stdin, interpreter-level deletes, `git clean`, and writes
   through Bash. Bash 3.2 and POSIX tools
@@ -114,8 +117,9 @@ not probed.
   restores a tracked file to test it, since a mutation made in place and
   restored afterwards leaves the source mutated when the run stops between
   the two.
-- **Rail observations.** A worker's write under `/tmp` holding no secret
-  is not a breach: it is listed under `## Rail observations` in the
+- **Rail observations.** A worker's write under `/tmp` holding no secret,
+  and a call the rails hook denied, are not breaches: each is listed
+  under `## Rail observations` in the
   worker's final message, recorded in the state file's
   `rail observations:` section, and carried into the reviewer report's new
   `- Rail observations: <list | none>` line. A worker that left no result
@@ -136,7 +140,10 @@ not probed.
 - **The preamble's rails (§ 3).** A worker may write to the repository,
   the workspace, `$TMPDIR`, and the harness's per-session scratchpad; a
   write elsewhere under `/tmp` is a rail observation; any other write is a
-  breach, and a recursive `rm` stays a breach wherever it points. The
+  breach, and a recursive `rm` stays a breach wherever it points. A call
+  the rails hook denied is a rail observation, not a breach: the worker
+  takes the permitted route the denial names, lists it, naming the
+  subagent that made the call, and goes on. The
   rails bind every subagent the worker dispatches: it writes them into
   every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of
   its skills' agent dispatches, and carries each rail observation a

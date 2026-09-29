@@ -668,7 +668,10 @@ hook on Bash, Write, Edit, and NotebookEdit denies, in a marked worker
 only, a Bash command that runs a recursive `rm` and a file-tool write
 outside the roots — in the worker's own calls and its subagents' alike,
 since a plugin hook fires for a subagent's tool call too. The deny's
-reason names the rail and the permitted route. The hook is a best-effort
+reason names the rail and the permitted route. A call the hook denied is
+not a breach, since it never ran: the worker takes the route the deny
+names, lists the denial under `## Rail observations`, naming the subagent
+that made the call, and goes on. The hook is a best-effort
 guard (see Known behavior), and the rails text still binds.
 
 **What a run writes and commits.** In `repo` mode: the workers' commits
@@ -1085,7 +1088,10 @@ on Windows.
 - **The rails hook is a best-effort guard.** In an autopilot worker — a
   session the driver marked with `KENSPC_AUTOPILOT_WORKER=1` — the hook
   denies a recursive `rm` at a command position and a Write, Edit, or
-  NotebookEdit outside the write roots. It misses `find -delete` (and
+  NotebookEdit outside the write roots. A denied call is a rail
+  observation, not a breach: the worker takes the route the deny's reason
+  names, lists the denial, naming the subagent that made the call, and
+  goes on. The hook misses `find -delete` (and
   `find -exec rm`), `bash -c '…'`, a script fed to a shell on stdin
   (`bash <<EOF`), `eval`, and a `trap` body
   (`trap 'rm -rf "$d"' EXIT`), interpreter-level deletes

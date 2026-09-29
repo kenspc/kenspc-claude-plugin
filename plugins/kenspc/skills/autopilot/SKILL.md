@@ -1198,6 +1198,11 @@ run. Carry every rail observation a subagent reports — under
 `## Rail observations` or on a `Rail observations` line — into your own
 `## Rail observations`, naming the subagent.
 
+A call the rails hook denied — its error begins `autopilot rails:` — is
+not a breach, since it never ran: take the permitted route the denial
+names, list the denial under `## Rail observations`, naming the subagent
+that made the call when a subagent made it, and go on.
+
 Any breach is a stop: report it and end.
 
 ## 4. The locked design
@@ -1235,7 +1240,12 @@ and let the run go on; the recursive `rm` stays a breach wherever it
 points, since what it deletes is not recorded anywhere. Why the worker
 carries its subagents' observations into its own list: the main session
 reads the worker's final message alone, so an observation left in a
-subagent's reply would reach the state file as `<tag>: none`.
+subagent's reply would reach the state file as `<tag>: none`. Why a call
+the hook denied is listed and not a stop: the denial kept it from
+running, so nothing was deleted or written outside the roots, and its
+reason names the route that stays inside the rails; with § 3 silent on
+it, one worker would stop on the same blocked attempt that another
+worked around with nothing recorded.
 
 ### The task blocks
 
