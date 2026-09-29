@@ -586,6 +586,31 @@ shipped file.
   the hook header's known misses and in the README's Known behavior entry
   on the hook, beside its roadmap line. That is one line of documentation
   in each, and the release diff the user reads at the final gate shows it.
+- **J-C8 (S4's acceptance; the main session's classification).** Record
+  `0ce45bc`. Cases 1-5, 7, and 8 PASS; case 6 (optional) Not exercised,
+  since S2 at `effort low` sent its confirmation question. No FAIL, so no
+  S5 and no re-run.
+  1. F1 — regression-verifier, in case 1's nested review, wrote its
+     `npm test` output to `/tmp/rv-npm-test.txt` and an issue-ID list to
+     the seed's root, although its RUN_DIR bullet puts temporary files
+     under `RUN_DIR/scratch/regression-verifier/`. The same file name
+     appears in batch I's case 3. This is a behavior deviation: the agent's
+     text states the rule and the model did not follow it. The agent is in
+     the Zero diff list, so the finding goes to a roadmap line in S6's
+     release commit.
+  2. F2 — task-implement states no branch for a task document with no
+     incomplete task. It is a gap in the skill's text that predates this
+     batch and lies outside its steps. It is an observation, and it goes to
+     a roadmap line with the others.
+  3. The paths the acceptance did not exercise live, and J-C6 item 3's and
+     J-C7's items, go into one roadmap item of autopilot rails follow-ups.
+     The paths are: a preamble-carrying worker meeting a denial; the rails
+     carried into subagents' prompts and `CUSTOM_INSTRUCTIONS`; an S2's
+     skipped gate reaching the post-check.
+  4. S4's own transcript holds this machine's local messaging-socket token,
+     printed by an `env` listing whose redaction did not match. It is in no
+     file in the repository and in no message. This is an observation for
+     the reports.
 
 ## Autopilot
 
