@@ -229,9 +229,12 @@ fx() {
     elif [[ "$want" == allow && "$GOT" == inert ]]; then
         ok=1
     fi
-    if [[ "$expect" == deny && "$ok" -eq 1 && "$ERR" != *.trash* ]]; then
+    # A deny that names the route must not also say no route applies, which
+    # would send the worker to end rather than take the route.
+    if [[ "$expect" == deny && "$ok" -eq 1 ]] \
+        && [[ "$ERR" != *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
         ok=0
-        GOT="deny without .trash in its reason"
+        GOT="deny without .trash in its reason, or saying '$UNREADABLE_NO_ROUTE'"
     fi
     if [[ "$expect" == deny-unreadable && "$ok" -eq 1 ]] \
         && [[ "$ERR" != *"$UNREADABLE_NO_ROUTE"* || "$ERR" != *"$UNREADABLE_REPORT"* || "$ERR" == *.trash* ]]; then
