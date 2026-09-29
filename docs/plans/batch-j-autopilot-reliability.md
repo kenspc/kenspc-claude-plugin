@@ -574,6 +574,18 @@ shipped file.
      a main-session stop), E5 (any awk failure reported as an unreadable
      field), and T5 (the `## Rail observations` heading pinned on the hook
      side only).
+- **J-C7 (S3e's verdict; the main session).** S3e, the third narrowed
+  review, PASSed. Its two deferred LOW rows are spellings the rails hook
+  misjudges when a line continuation splits a two-character token
+  (`&\<newline>>`, `$\<newline>'`, `$\<newline>(`, a heredoc operator or
+  delimiter). The hooks at `c0fb690` and `931cd48^` decide them the same
+  way, so they are no regression. S5c's observation
+  `rm &\<newline>> rm.log -rf build` is the same class. Under J-C6 item 2
+  they go to the roadmap, with no further round. J-L4 says the hook's known
+  misses are documented, so S6's release commit also names the class in
+  the hook header's known misses and in the README's Known behavior entry
+  on the hook, beside its roadmap line. That is one line of documentation
+  in each, and the release diff the user reads at the final gate shows it.
 
 ## Autopilot
 
