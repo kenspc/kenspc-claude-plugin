@@ -9,14 +9,14 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.4.0 — unreleased
+## 4.4.0 — 2026-09-29
 
 init-project turns on the Claude Code plugins a new project's stacks need,
 in the project's own `.claude/settings.json`, on the user's yes. Guard
-counts are unchanged: `guards run: 12`, `self-tests run: 11`. This entry
-extends as items land; the date is filled at release.
+counts are unchanged: `guards run: 12`, `self-tests run: 11`.
 
-No acceptance run was made for this change: it is accepted in use. What
+No acceptance run and no smoke run were made for this release: the change
+is accepted in use, and the pre-flight passed on the release tree. What
 the skill's Whys state was established on Claude Code 2.1.284 before it was
 written, from `claude plugin` commands run against an isolated
 `CLAUDE_CONFIG_DIR` in throwaway repositories, and from Claude Code's
