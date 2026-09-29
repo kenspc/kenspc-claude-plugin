@@ -1197,17 +1197,17 @@ guard's or a test script's mktemp cleanup), or writes its own cache, is
 not a breach; a recursive delete you write, in any language — rm -r,
 find -delete, a Python shutil.rmtree — still is.
 
+A call the rails hook denied — its error begins `autopilot rails:` — is
+not a breach, since it never ran: take the permitted route the denial
+names, list the denial under `## Rail observations`, naming the subagent
+that made the call when a subagent made it, and go on.
+
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
 the CUSTOM_INSTRUCTIONS of the agent dispatches made by the skills you
 run. Carry every rail observation a subagent reports — under
 `## Rail observations` or on a `Rail observations` line — into your own
 `## Rail observations`, naming the subagent.
-
-A call the rails hook denied — its error begins `autopilot rails:` — is
-not a breach, since it never ran: take the permitted route the denial
-names, list the denial under `## Rail observations`, naming the subagent
-that made the call when a subagent made it, and go on.
 
 Any breach is a stop: report it and end.
 
