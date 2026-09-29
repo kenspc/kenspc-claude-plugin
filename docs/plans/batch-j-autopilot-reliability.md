@@ -475,6 +475,82 @@ shipped file.
      tool-results under `~/.claude/projects/`, the CLI's backups under
      `~/.claude/backups/`, pwsh's startup cache — are observations; item 3
      covers them in shipped runs.
+  6. S5 wrote item 3's "a delete the agent writes" as "a recursive delete
+     the agent writes": a plain `rm file` was never a breach, and the
+     option the user chose named `shutil.rmtree`, a recursive delete.
+- **J-C4 (S3c's verdict loop; the user's rulings, and the main session's
+  classification).** S3c's first narrowed review FAILed on one incomplete
+  fix; the four items below go to one S5, one commit each, and a second
+  narrowed review follows (a FAIL there is stop condition 3).
+  1. B2, incompletely fixed (the main session): the caveat that a denial
+     inside an agent whose dispatch carries no rails text (task-implementer,
+     the document reviewers) never reaches the worker's list is in the
+     README's rails paragraph only; it goes into every other place that
+     makes the claim — the README's Known behavior entry and the two 4.3.0
+     CHANGELOG entries.
+  2. The rails hook's `cur ~ /[<>]$/` check rescans the whole current word
+     on every `|` or `&` after a `<` or `>`, 3.3 s for 64 KB of `<|` (the
+     main session): the same class as J-C3 item 2's `$( )` stack, a plugin
+     defect — the last character only, and a timed fixture that fails on
+     the old check.
+  3. A denial whose reason says a field of the hook input could not be read
+     (`tool_name`, the Bash `command`, or a file-tool target) has no route
+     the next call can take (the user; S3c's E3): it is not a breach, and
+     the worker lists it with its reason under `## Rail observations` and
+     ends — a stop, which puts the renamed field in front of the main
+     session at once. The hook's three unreadable-field reasons say the
+     route does not apply and the denial is to be reported, and the guard's
+     unreadable-field fixtures assert that text; § 3, placed with the
+     denied-call paragraph so it reaches subagents, its Why, the README's
+     rails paragraph and Known behavior, and the 4.3.0 CHANGELOG change in
+     the same commit. This narrows J-C3 item 1 for that one class.
+  4. Release-checklist smoke row 11's `jq` query skips a Bash call whose
+     tool result is the rails hook's denial (an error containing
+     `autopilot rails:`), with a positive control — a denied `rm -rf` the
+     query must skip, and an allowed one it must still find (the user;
+     S3c's R3): a denied call is not a breach (J-C3 item 1), so a worker
+     that took the `mv` route does not fail the row.
+- **J-C5 (S4's operating notes; the main session).**
+  1. Which driver copy. J-A4 and J-A5 name the worktree's `run.sh`: S4
+     copies HEAD's `plugins/kenspc/skills/autopilot/scripts/run.sh` into
+     the workspace once, at its start
+     (`_prompts/batch-j-autopilot-reliability-s4-head-run.sh`), and runs
+     its `--self-test` before the first nested launch. The Phase 0 copy,
+     `_prompts/batch-j-autopilot-reliability-run.sh`, is 4.2.0's, exports
+     no marker, and knows no `AUTOPILOT_WORKSPACE`. J-A1's nested session and
+     J-A7's nested main session are launched through the HEAD copy too,
+     with `AUTOPILOT_PLUGIN_DIR=<plugin directory>` and
+     `AUTOPILOT_WORKSPACE=/Users/kenspc/Projects/_smoke`, as a 4.3.0 S4
+     launches a nested session. J-A4's control session is launched through
+     the Phase 0 copy with the same `AUTOPILOT_PLUGIN_DIR` — the same
+     plugin directory with `KENSPC_AUTOPILOT_WORKER` unset, which the HEAD
+     copy would set. The record names the copy each launch used.
+  2. J-A7's evidence for "no `--plugin-dir`". A real worker's `.err` holds
+     Claude Code's stderr and never its own command line, so a `.err`
+     without `--plugin-dir` shows nothing either way. The evidence is each
+     nested worker's `start` line in the nested batch's timeline, where
+     HEAD's driver writes `plugin-dir <value>` only when it passes the flag;
+     the positive control is the same field on any plugin-mode start line
+     of this batch's own timeline. A nested worker caught alive also has
+     its `ps -o args=` recorded.
+  3. Nested autopilot. J-A7's nested session's prompt is
+     `/kenspc-autopilot <seed spec path>` alone — a prompt that opens with
+     the worker sentence is refused by the skill's own guard. The seed is a
+     git repository with no `.claude-plugin/marketplace.json`, so the mode
+     is detected as repo; its spec's `## Autopilot` sets `Acceptance: none`,
+     a `Budget:` that lets S2 run and stops the run before S3, and J-A6's
+     `Role settings:` line. The case's cost is the nested main session's
+     `total_cost_usd` plus the lines of the nested batch's own
+     `<batch>-costs.txt`.
+  4. A nested headless session has no one to answer it. J-A1's prompt may
+     confirm task-implement's batch gate in advance; a question a nested
+     session sends to a main-session name that is S4's own tag reaches S4,
+     which answers from the case's design. The answer and its source go in
+     the record.
+  5. The record: at the path the skill's template gives,
+     `docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`; its commit
+     subject names the batch as the spec's own commit does,
+     `docs: add batch j acceptance record`.
 
 ## Autopilot
 
