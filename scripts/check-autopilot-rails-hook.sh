@@ -22,11 +22,13 @@
 # The fixtures cover every recursive rm spelling and command position the
 # hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
 # substitutions inside double quotes, a | or & after a quoted or escaped <
-# or >, and substitutions and redirections among the rm's own words among
-# them; quoted mentions of
+# or >, and substitutions and redirections among the rm's own words, a
+# redirection a line continuation splits included, among them; quoted
+# mentions of
 # rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
 # and other work the hook must not deny — rm --force, rm -- -r, a <<- body
-# with its tabs stripped (allowed); an rm after a heredoc whose delimiter
+# with its tabs stripped, a redirection a line continuation splits
+# (allowed); an rm after a heredoc whose delimiter
 # line comes, and after a << whose delimiter line never does (denied); a
 # write inside each root — the repository, the
 # workspace, $TMPDIR, /tmp, /private/tmp — for Write, Edit, and NotebookEdit
@@ -345,6 +347,10 @@ run_fixtures() {
     # still the rm's.
     fx_deny "$hook" "rm -rf after a 2>&1 among its words" "$r" Bash "$FX_REPO" 'rm 2>&1 -rf build'
     fx_deny "$hook" "rm -r after a >| redirection among its words" "$r" Bash "$FX_REPO" 'rm >| rm.log -r build'
+    # Bash joins a line continuation's lines before it splits words, so a
+    # continuation between the < or > and its & or | leaves one redirection.
+    fx_deny "$hook" "rm -rf after a 2>&1 split by a line continuation" "$r" Bash "$FX_REPO" $'rm 2>\\\n&1 -rf build'
+    fx_deny "$hook" "rm -r after a >| split by a line continuation" "$r" Bash "$FX_REPO" $'rm >\\\n| rm.log -r build'
     fx_deny "$hook" "rm position after xargs" "$r" Bash "$FX_REPO" 'echo build | xargs rm -rf'
     fx_deny "$hook" "rm position after sudo" "$r" Bash "$FX_REPO" 'sudo rm -rf build'
     fx_deny "$hook" "rm position after command" "$r" Bash "$FX_REPO" 'command rm -rf build'
@@ -433,6 +439,7 @@ run_fixtures() {
     fx "$hook" "rm without a recursive flag: rm file" allow 1 "$r" Bash "$FX_REPO" 'rm notes.md'
     fx "$hook" "rm without a recursive flag: rm -f file" allow 1 "$r" Bash "$FX_REPO" 'rm -f notes.md'
     fx "$hook" "rm without a recursive flag: rm -f with a \$( ) in its argument" allow 1 "$r" Bash "$FX_REPO" 'rm -f "$(pwd)/x"'
+    fx "$hook" "rm without a recursive flag: rm 2>&1 split by a line continuation" allow 1 "$r" Bash "$FX_REPO" $'rm 2>\\\n&1 build'
     # Work the hook must not deny: a long option that is no prefix of
     # --recursive, a -r after -- (a file named -r), and a <<- heredoc
     # whose tab-indented body mentions rm -rf.
@@ -618,8 +625,8 @@ run_self_test() {
                 old='function push(ret, cl) {'
                 new='function push(ret, cl,   k) { for (k = 1; k <= nw; k++) sw[sp, k] = w[k]' ;;
             last-character-check)
-                old='ltgt == i - 1'
-                new='cur ~ /[<>]$/' ;;
+                old='nx == ">" || ltgt == i - 1'
+                new='nx == ">" || cur ~ /[<>]$/' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?

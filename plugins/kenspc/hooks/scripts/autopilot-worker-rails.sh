@@ -282,7 +282,10 @@ function scan(c,   n, i, ch, nx) {
     }
     if (ch == " " || ch == "\t") { flush(); i++; continue }
     if (ch == "\n") { endcmd(); i++; if (nh > 0) i = heredocs(c, i); continue }
-    if (ch == "\\") { if (nx != "\n") { cur = cur nx; inw = 1 }; i += 2; continue }
+    # A line continuation right after an unquoted < or > moves ltgt past
+    # it: bash joins the lines before it splits words, so >\<newline>& is
+    # still >&, and the & or | after it stays in the word.
+    if (ch == "\\") { if (nx != "\n") { cur = cur nx; inw = 1 } else if (ltgt == i - 1) ltgt = i + 1; i += 2; continue }
     if (ch == sq) { st = "S"; inw = 1; i++; continue }
     if (ch == "\"") { st = "D"; inw = 1; i++; continue }
     if (ch == "#" && !inw) { while (i <= n && substr(c, i, 1) != "\n") i++; continue }
