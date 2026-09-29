@@ -131,7 +131,10 @@ not probed.
   under `## Rail observations` in the
   worker's final message, recorded in the state file's
   `rail observations:` section, and carried into the reviewer report's new
-  `- Rail observations: <list | none>` line. A worker that left no result
+  `- Rail observations: <list | none>` line. A denial in task-implementer
+  or a document reviewer, whose dispatch carries no rails text, is not
+  listed: a worker sees only a subagent's reply, not its tool results.
+  A worker that left no result
   to read — a `<tag>.json` empty or not JSON, or a subtype with no result
   — is recorded `<tag>: not read (<reason>)`, since `none` would read as a
   worker that wrote nowhere else.
