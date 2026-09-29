@@ -203,15 +203,19 @@ model's default effort — which is re-tuned with each generation — and raise
 it only where the work under-executes or is hard to validate
 ([Choosing a Claude model and effort level in Claude Code](https://claude.com/blog/claude-model-and-effort-level-in-claude-code);
 [Choosing the right effort level in Claude Code](https://academy.claude.com/tutorials/choosing-the-right-effort-level-in-claude-code);
-last reviewed 2026-09-28).
+last reviewed 2026-09-29).
 
-Three files override the session at `xhigh`:
+Three files override the session:
 
-| File | Why |
-|---|---|
-| `agents/task-implementer.md` | Unattended long-horizon implementation — nobody is watching to catch a run that stops short or skips verification |
-| `agents/code-fixer.md` | Unattended deduplication and fix / build / test loops across all five review reports |
-| `skills/generate-plan/SKILL.md` | Multi-round draft/challenge; plan cost amortizes over every downstream task |
+| File | Effort | Why |
+|---|---|---|
+| `agents/task-implementer.md` | `high` | Unattended long-horizon implementation — nobody is watching to catch a run that stops short or skips verification |
+| `agents/code-fixer.md` | `high` | Unattended deduplication and fix / build / test loops across all five review reports |
+| `skills/generate-plan/SKILL.md` | `xhigh` | Multi-round draft/challenge; plan cost amortizes over every downstream task |
+
+The two agents run one level above the generation's default effort
+(`medium` at the 2026-09-29 review; `xhigh` through 4.2.x), and move with
+it when a later generation's default does.
 
 When a session runs at `xhigh`/`max`, set a large max-output-token budget
 so the model has room to think and act across its subagents and tool calls
@@ -1149,8 +1153,8 @@ on Windows.
   task document reviewer under S2, and the implementer, the five
   reviewers, the fixer, and the verifier under S3 and S3b.
 - **Agents with their own effort keep it.** An agent whose frontmatter
-  sets `effort: xhigh` — `task-implementer` and `code-fixer` — runs at
-  that effort whatever the role's effort; a role's effort sets the
+  sets its own effort — `task-implementer` and `code-fixer`, at `high` —
+  runs at that effort whatever the role's effort; a role's effort sets the
   worker's own, and that of the subagents without an `effort:` field.
 - **Fable in a headless worker can spend usage credits without asking.**
   In `-p` mode, when a Fable request counts against usage credits, Claude
@@ -1249,7 +1253,7 @@ on Windows.
 **Required:**
 - Claude Code v2.1.0+ (the version line that supports the `effort:`
   frontmatter on SKILL.md and agent .md files; required for the three
-  `xhigh` overrides listed under [Effort levels](#effort-levels)).
+  effort overrides listed under [Effort levels](#effort-levels)).
 - `/kenspc-autopilot` needs `Claude Code v2.1.271 or later`: cross-session
   messaging, the idle-notice subscription (`notify_when_idle`), the own-name
   line of `ListAgents`, and notices to headless senders. The plugin's
@@ -1259,10 +1263,11 @@ on Windows.
 - `gh`, installed and logged in, for `/kenspc-init`'s GitHub step (creating
   a repository, reading and creating labels). Without it the skill gives
   the manual steps and keeps the backlog in files.
-- A session that allows a generous max-output-token budget — the three
-  overrides run at `xhigh`, and so does everything else when your session
-  does; the model needs room to think and act across its subagents and tool
-  calls.
+- A session that allows a generous max-output-token budget —
+  `generate-plan` runs at `xhigh`, the two unattended agents at `high`, and
+  every other skill and agent at your session's effort, `xhigh` or `max`
+  when you set it; the model needs room to think and act across its
+  subagents and tool calls.
 
 ## Reference Documents
 

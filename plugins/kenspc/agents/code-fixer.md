@@ -4,7 +4,7 @@ description: >
   INTERNAL: Part of /kenspc-task-review orchestration. Requires a RUN_DIR CONTEXT key pointing at the run directory that holds the 5 review reports — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
-effort: xhigh
+effort: high
 ---
 
 PREREQUISITE CHECK

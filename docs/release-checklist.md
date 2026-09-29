@@ -13,12 +13,13 @@ Run from the repository root:
 (
 set -e
 
-# Effort overrides — exactly these three files declare effort:, each xhigh;
-# every other skill and agent follows the session (diff exits 1 on any drift)
+# Effort overrides — exactly these three files declare effort:, generate-plan
+# at xhigh and the two unattended agents at high; every other skill and
+# agent follows the session (diff exits 1 on any drift)
 diff <(grep -H '^effort:' plugins/kenspc/skills/*/SKILL.md plugins/kenspc/agents/*.md) - <<'EOF'
 plugins/kenspc/skills/generate-plan/SKILL.md:effort: xhigh
-plugins/kenspc/agents/code-fixer.md:effort: xhigh
-plugins/kenspc/agents/task-implementer.md:effort: xhigh
+plugins/kenspc/agents/code-fixer.md:effort: high
+plugins/kenspc/agents/task-implementer.md:effort: high
 EOF
 
 # The plugin loader's own validation: the marketplace manifest (repo root),
@@ -49,11 +50,13 @@ checklist.
 ## Docs currency (manual)
 
 CLAUDE.md (§ Subagent Review Architecture) records why three files
-override the session's effort at `xhigh` (`task-implementer`,
-`code-fixer`, `generate-plan`) and carries a "last reviewed" date against
+override the session's effort — `generate-plan` at `xhigh`,
+`task-implementer` and `code-fixer` at `high`, one level above the
+generation's default effort — and carries a "last reviewed" date against
 Anthropic's effort guidance. Confirm each override's rationale still holds
-for the current Claude generation — drop an override whose reason no longer
-applies rather than re-pinning a value — and update that date (also in
+for the current Claude generation, and that the two agents still sit one
+level above its default — move them when the default moves, and drop an
+override whose reason no longer applies — and update that date (also in
 `plugin.json` and the README Effort levels section) before tagging.
 
 ## Smoke checklist (manual, ~10 minutes)

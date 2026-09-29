@@ -362,21 +362,30 @@ default is re-tuned with each model generation, so the plugin does not
 pin per-generation values (sources: "Choosing a Claude model and effort
 level in Claude Code", claude.com blog, 2026-07-07; "Choosing the right
 effort level in Claude Code", Claude Academy). Guidance last reviewed
-against the Claude 5 generation 2026-09-28 — at each release, confirm
+against the Claude 5 generation 2026-09-29 — at each release, confirm
 the override rationale below still holds (see the release checklist).
 
 The `effort:` frontmatter in each file is authoritative — this prose
 records the rationale, not a second copy of the values. Three files
-override the session, each at `xhigh`:
+override the session:
 
-- `task-implementer` — unattended long-horizon implementation. Nobody is
-  watching to catch a run that stops short of the batch or skips a
-  verification step, so the thoroughness has to come from the agent.
-- `code-fixer` — also unattended: deduplication across five reports and
-  a fix / build / test loop per finding, with no user checkpoint before
-  regression-verifier runs.
-- `generate-plan` — multi-round draft/challenge across project context;
-  plan cost amortizes over downstream tasks (`max` through v3.4.x).
+- `task-implementer` (`high`) — unattended long-horizon implementation.
+  Nobody is watching to catch a run that stops short of the batch or
+  skips a verification step, so the thoroughness has to come from the
+  agent.
+- `code-fixer` (`high`) — also unattended: deduplication across five
+  reports and a fix / build / test loop per finding, with no user
+  checkpoint before regression-verifier runs.
+- `generate-plan` (`xhigh`) — multi-round draft/challenge across project
+  context; plan cost amortizes over downstream tasks (`max` through
+  v3.4.x).
+
+The two agents sit one level above the generation's default effort,
+`medium` at the maintainer's 2026-09-29 review: their unattended work
+needs more than the default, and one level is the margin the maintainer
+chose (4.3.0; `xhigh` through 4.2.x). A generation whose default moves is
+the review's cue to move them with it. `generate-plan` keeps `xhigh`,
+since a plan's cost amortizes over every task built from it.
 
 Everything else — the 5 review-angle agents, `regression-verifier`, the
 3 document reviewers, and the nine other skills — runs at the session's

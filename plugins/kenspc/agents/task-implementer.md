@@ -4,7 +4,7 @@ description: >
   INTERNAL: Part of /kenspc-task-implement orchestration. Requires validated task document path and the run directory (RUN_DIR) task-implement prepared — standalone invocation will fail the prerequisite check. Do not auto-delegate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
-effort: xhigh
+effort: high
 ---
 
 PREREQUISITE CHECK

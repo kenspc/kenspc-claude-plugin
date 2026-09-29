@@ -17,8 +17,11 @@ always, and, since Claude Code allows it, through a PreToolUse hook as
 well; task-implementer keeps its probes, copies, and mutants in the run
 directory instead of the user's source; a gate a worker skips is caught
 after the fact; and the plugin directory on every launch, a headless main
-session's records, and the fix loop are each stated one way. Guard counts:
-`guards run: 12`, `self-tests run: 11` (one new guard, with a self-test).
+session's records, and the fix loop are each stated one way. At release,
+task-implementer and code-fixer drop from `xhigh` to `high` effort, one
+level above the generation's default; generate-plan keeps `xhigh`. Guard
+counts: `guards run: 12`, `self-tests run: 11` (one new guard, with a
+self-test).
 
 The evidence the batch's Whys state in their own words is on record in
 `docs/dry-runs/batch-i-acceptance.md`: the scratch files that
@@ -48,9 +51,10 @@ not probed.
 
 At release, `plugin.json` is 4.3.0, and its description and the
 marketplace's both name the rails that reach every subagent; the effort
-guidance's last-reviewed date stays 2026-09-28, since no `effort:` line
-changed, and the review of the three `xhigh` overrides is left to the
-maintainer before tagging. The release checklist already expects
+guidance's last-reviewed date is 2026-09-29, in that description, in
+CLAUDE.md, and in the plugin README's Effort levels: the maintainer's
+review kept generate-plan at `xhigh` and moved task-implementer and
+code-fixer to `high` (Changed). The release checklist already expects
 `guards run: 12` and `self-tests run: 11`. The hook's header and the plugin
 README's Known behavior name one more class of misses: a two-character
 token split by a line continuation (`&\<newline>>`, `$\<newline>'`,
@@ -71,7 +75,9 @@ Release smoke: the batch's acceptance,
 `docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`, run headless
 on macOS with Claude Code 2.1.284 at the repository tree `27bb22c`, whose
 skill, script, hook, agent, and command files this release ships unchanged
-apart from the misses line above. Cases 1 to 5, 7, and 8 passed; the
+apart from the misses line above and the two agents' `effort:` lines: the
+acceptance ran task-implementer and code-fixer at `xhigh`, and the release
+ships them at `high`. Cases 1 to 5, 7, and 8 passed; the
 optional case 6 was not exercised, since the S2 declared at a low effort
 sent its confirmation question; the nested sessions cost USD 8.63. Its
 case 4 ran release-checklist row 14's marked session and control without
@@ -235,6 +241,14 @@ was made. `run.ps1` was not run on Windows.
   with no commit, still stands, since the narrowed review reads only the
   S5's commits: it goes to the next S5, counted as a fix of it. Stop
   condition 4 and Phase 3's two-fixes stop count per defect.
+- **Effort overrides.** `task-implementer` and `code-fixer` run at `high`,
+  down from `xhigh`: one level above the Claude 5 generation's default
+  effort, `medium` at the maintainer's 2026-09-29 review, is the margin
+  their unattended work gets, and they move with the default when a later
+  generation's does. `generate-plan` keeps `xhigh`. The release checklist's
+  effort-override diff and its Docs currency step, CLAUDE.md, the plugin
+  README's Effort levels, Known behavior, and Requirements, and
+  `plugin.json`'s description follow.
 
 ### Corrections
 
