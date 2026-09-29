@@ -10,7 +10,7 @@ Skills activate automatically when Claude Code detects a matching task context.
 
 | Skill | Description |
 |-------|-------------|
-| init-project | Sets a project up for the kenspc chain in one run: an empty directory (after `git init`, first branch `main`), a directory of files once you confirm it is the project, a new app inside another repository (its `AGENTS.md` and `CLAUDE.md` pair only), or an existing repository, where it writes only what is missing. Interviews you in five skippable rounds — project; shape and stack; UI; delivery; collaboration — reading the commands from the files rather than asking; offers to scaffold each app with its stack's official generator and, with no remote, to create a private GitHub repository. Writes `AGENTS.md` as the index (commands, hard rules including two safety rules, a Documents table, workflow), a `CLAUDE.md` that imports it, and topic documents under `docs/`, marking what you did not answer `TBD(init): …`; runs its checks, asks you to confirm the file list, and commits. A rerun fills only the `TBD(init):` markers you answer. See [Project setup](#project-setup). No review phase: its mechanical checks and your confirmation of the file list are the gate. |
+| init-project | Sets a project up for the kenspc chain in one run: an empty directory (after `git init`, first branch `main`), a directory of files once you confirm it is the project, a new app inside another repository (its `AGENTS.md` and `CLAUDE.md` pair only, and its stack's plugins on your yes), or an existing repository, where it writes only what is missing. Interviews you in five skippable rounds — project; shape and stack; UI; delivery; collaboration — reading the commands from the files rather than asking; offers to scaffold each app with its stack's official generator and, with no remote, to create a private GitHub repository. Offers to turn on the Claude Code plugins the stacks need — each language's LSP plugin, and `microsoft-docs` for .NET or Azure — in the project's `.claude/settings.json`, naming any language server missing from your PATH. Writes `AGENTS.md` as the index (commands, hard rules including two safety rules, a Documents table, workflow), a `CLAUDE.md` that imports it, and topic documents under `docs/`, marking what you did not answer `TBD(init): …`; runs its checks, asks you to confirm the file list, and commits. A rerun fills only the `TBD(init):` markers you answer. See [Project setup](#project-setup). No review phase: its mechanical checks and your confirmation of the file list are the gate. |
 | generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. The brief always carries an Open Questions section: each question the discussion could not settle, marked `open` or `needs prototype` (with `Settled by:`, the result that would settle it), or `none` when nothing is open; the next-step suggestion names `/kenspc-prototype` for each `needs prototype` entry before `/kenspc-plan`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
 | prototype | Answers one open question from a brief with a throwaway prototype — logic, UI, or a feature slice. Before the prototype's first file is written, sends its frame as a message of its own — the question, the result that settles it, the kind, the location, and the resources, among them any tracked file an in-app prototype modifies — then builds the smallest thing that settles it (under `prototypes/<slug>/` by default), runs it, and commits it (`chore: add prototype <slug>`); writes the answer, the evidence, and the commit hash into the brief's entry; then removes the prototype in the next commit (`chore: remove prototype <slug>`). A location conflict, a connection your development configuration does not name, a new table or column on the development database, an in-app UI prototype's location and uncommitted files, an entry that already holds an answer, named or taken when none is named (prototype it again?), and a named entry whose status word the skill does not recognize (prototype it, or stop) are each asked about; for either entry, a "stop" or a "no" leaves the brief unchanged, and a session that cannot ask stops the same way, its last message opening with the frame. When the answer is your judgment (how a UI reads), the skill shows you the prototype after the add commit and waits for your verdict; a session that cannot ask commits and removes it and leaves the entry `needs prototype`, with what to look at and how. No review phase: the prototype is discarded, and its answer is reviewed where a plan uses it. |
 | generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. In a session that cannot ask, the run stops at the draft, printed in full, with no file written, no review, and no commit, until a later reply approves it. The plan written on approval is the draft as last printed in full, character for character; a change asked for at approval gets the full draft printed again, to approve. |
@@ -264,7 +264,7 @@ an empty directory inside another repository is inside it:
 |---|---|---|
 | An empty directory, outside any repository (a file browser's `.DS_Store` or the like counts as empty, and so does a directory whose own `.gitignore` ignores it whole) | Asks whether to `git init` (yes by default, first branch `main`) | `git init`, first branch `main` |
 | Files, but not a repository | Lists them and goes on only once you confirm this is the project | Stops, writing nothing |
-| Inside another repository, empty or not | Asks: a new app of that repository — then only this directory's `AGENTS.md` and `CLAUDE.md` pair, with no `git init` — or a project of its own, which it suggests moving out first | Stops, writing nothing |
+| Inside another repository, empty or not | Asks: a new app of that repository — then only this directory's `AGENTS.md` and `CLAUDE.md` pair, with no `git init`, and on your yes its stack's plugins in the root's `.claude/settings.json` — or a project of its own, which it suggests moving out first | Stops, writing nothing |
 | An existing repository | Writes only the files that are missing | The same |
 
 It also stops, writing nothing, in a bare repository or inside a `.git`
@@ -321,6 +321,28 @@ drops an item deletes its file. Either way, AGENTS.md says that an
 interactive session adds a backlog item only with your agreement and an
 unattended run lists what it found in its report.
 
+**The stacks' plugins.** Once the stacks are settled, the skill offers to
+turn on the Claude Code plugins they need in the repository root's
+`.claude/settings.json`, where a project's `true` turns a plugin on even
+when your user settings turn it off: for each app's language, the LSP
+plugin Anthropic's official marketplace (`claude-plugins-official`)
+carries for it, and `microsoft-docs` for a .NET app or one deployed to
+Azure. A monorepo gets the union; any other plugin goes on only if you add
+it. The skill finds them at run time — `claude plugin list --available
+--json` and the marketplace's catalog — rather than from a list of its own,
+and shows each LSP plugin's language server and whether it is on your
+PATH; it never installs a language server, and an LSP plugin without one
+does nothing. The question is asked even after "use the defaults for
+everything" and offers only the entries the file does not have yet — an
+explicit `false` there is yours and stays. On your yes it runs
+`claude plugin install <plugin>@<marketplace> --scope project` for each,
+which adds the entry and installs the plugin on this machine; Claude Code
+writes the file back in its own formatting, and a check confirms the other
+keys kept their values. The file goes into the documentation commit. A
+session that cannot ask enables nothing and lists the entries and the
+command. See [Known behavior](#known-behavior) for a monorepo and for your
+collaborators.
+
 **What it writes.** Only files that do not exist yet — a `README*` or
 `CHANGELOG*` of any name and case counts as existing:
 
@@ -338,6 +360,7 @@ unattended run lists what it found in its report.
 | `docs/backlog/README.md` | The file backlog's format, when the backlog is files |
 | `apps/<name>/AGENTS.md`, `apps/<name>/CLAUDE.md` | Each monorepo app's commands and rules |
 | `.gitignore` | `.kenspc/` and `CLAUDE.local.md` appended when the repository's own `.gitignore` does not already ignore them — a rule in your global excludes does not reach a teammate — in the documentation commit |
+| `.claude/settings.json` | The stacks' plugins, on your yes: only the `enabledPlugins` entries it lacks, added by `claude plugin install --scope project`, in the documentation commit |
 
 The root `AGENTS.md` and `CLAUDE.md` stay within 80 lines together at init,
 each app's pair within 40, and 200 lines is the long-term ceiling. Nothing
@@ -350,9 +373,10 @@ any such files your repository already tracks. A `.claude/CLAUDE.md` or
 `.claude/AGENTS.md` counts as your CLAUDE.md or AGENTS.md, no root file is
 written beside it, and the Documents table and README the skill writes name
 it by that path. It writes nothing under `.claude/` except the import
-line an existing `.claude/CLAUDE.md` gains on your yes, no guide (AGENTS.md
-says guides go in `docs/guides/`, written by `/kenspc-guide`), and no
-`docs/briefs/`, `docs/plans/`, or `docs/tasks/`.
+line an existing `.claude/CLAUDE.md` gains on your yes and the plugin
+entries the root's `.claude/settings.json` gains on your yes, no guide
+(AGENTS.md says guides go in `docs/guides/`, written by `/kenspc-guide`),
+and no `docs/briefs/`, `docs/plans/`, or `docs/tasks/`.
 
 **TBD markers.** An item nobody answered is `TBD(init): <what is missing>`,
 mostly in the topic documents; in AGENTS.md it costs one line at most. A
@@ -366,8 +390,10 @@ README lists the same files, that every sentence in a topic document has a
 source that states what it claims — your answer, the description, or a
 file — or becomes a `TBD(init):` marker the final message lists, that no
 line holds a value that reads as a secret, that every TBD has the
-`TBD(init):` form, and the `.gitignore` lines; a failing check is fixed
-before anything is committed.
+`TBD(init):` form, the `.gitignore` lines, and that `.claude/settings.json`
+parses and gained only the plugin entries you confirmed; a failing check is
+fixed before anything is committed, except in `.claude/settings.json`,
+which then stays out of the commit instead.
 The secret check also reads your own lines wherever the commit would put
 them into history for the first time — a file committed whole, an edit you
 had not committed: a file with a secret-looking value on a line of yours is
@@ -386,15 +412,18 @@ and offers no scaffolding, so you can stop it and set one first, and it
 stops before the documentation commit, in any session, and says so again,
 leaving the files in the tree. After the commit, it asks separately whether
 to push and whether to create the missing labels. A session that cannot ask
-commits after the checks, and creates no repository, pushes nothing, and
-creates no label — it lists the labels to create instead.
+commits after the checks, and creates no repository, enables no plugin,
+pushes nothing, and creates no label — it lists the plugin entries and the
+labels to create instead.
 
 **Running it again.** In a project it set up (an `AGENTS.md` whose opening
 comment carries the template marker), `/kenspc-init` changes only the
 `TBD(init):` markers you answer — the marker itself, not the rest of its
-line — and nothing else, `.gitignore` included (what it lacks is named, not
-appended); with no marker left, or none answered, it changes nothing and
-says so. A change an answer implies beyond its marker — a `CHANGELOG.md`
+line — and the plugin entries you confirm that `.claude/settings.json`
+still lacks (a stack added since, or a plugin the marketplace gained), and
+nothing else, `.gitignore` included (what it lacks is named, not
+appended); with no marker answered and no entry added, it changes nothing
+and says so. A change an answer implies beyond its marker — a `CHANGELOG.md`
 for a scheme you just chose — is named for you, not made.
 Upgrading files an earlier template version wrote, and moving an existing
 project's long CLAUDE.md onto the template, are not in this version.
@@ -1228,6 +1257,18 @@ on Windows.
   missing, and lists each one in the final message. The check is
   the model's own reading, so read the topic documents once after
   `/kenspc-init`, before the first plan relies on them.
+- **The stacks' plugins, in a monorepo and on a collaborator's machine.**
+  Claude Code reads the shared `.claude/settings.json` from the directory a
+  session starts in, not from the repository root, so a session started in
+  `apps/<name>/` does not get the plugins `/kenspc-init` enabled at the
+  root: start Claude Code at the root, where the rest of the kenspc workflow
+  runs too. A committed entry turns a plugin on for a collaborator but does
+  not download it, so each collaborator runs
+  `claude plugin install <plugin>@<marketplace> --scope project` once —
+  which, like the skill's own install, writes the file back in Claude
+  Code's formatting and sets an entry's `false` to `true`. An LSP plugin
+  also needs its language server on the PATH of the shell `claude` starts
+  from; without it, the plugin can do nothing.
 - **A skipped file list does not commit.** Skipping the file-list
   confirmation commits nothing, as a "no" does: the files stay in the
   working tree, and the final message says so. A session that cannot ask
@@ -1263,6 +1304,8 @@ on Windows.
 - `gh`, installed and logged in, for `/kenspc-init`'s GitHub step (creating
   a repository, reading and creating labels). Without it the skill gives
   the manual steps and keeps the backlog in files.
+- The `claude` command on the PATH, for `/kenspc-init`'s plugin step.
+  Without it the skill enables no plugin, and its final message says so.
 - A session that allows a generous max-output-token budget —
   `generate-plan` runs at `xhigh`, the two unattended agents at `high`, and
   every other skill and agent at your session's effort, `xhigh` or `max`

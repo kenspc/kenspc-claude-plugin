@@ -223,7 +223,11 @@ Documents table's paths and the README's list of the same files, a source
 for every topic-document sentence (or a `TBD(init):` marker in its place),
 no secret-looking value, the `TBD(init):` form, and the `.gitignore` lines
 — and the user's confirmation of the file list, which a skip does not give
-(4.1.0).
+(4.1.0). On the user's yes it also turns on the stacks' Claude Code plugins
+in the root's `.claude/settings.json`, through `claude plugin install
+--scope project` for the entries the file lacks, found at run time rather
+than from a table in the skill; a further check holds that file to valid
+JSON that gained only the confirmed `enabledPlugins` keys (4.4.0).
 
 **Serial review (generate-plan, generate-task, generate-guide):**
 Skill dispatches a single named agent (`plan-document-reviewer`,
@@ -613,8 +617,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   model. Three rules: frontmatter `model:` values must be `inherit`; no
   model family name as a whole word (case-insensitive); no `claude-`
   model-ID prefix (case-insensitive). The plugin's own `.claude-plugin`
-  directory name, and the three values of Claude Code's `instructionFiles`
-  setting (`claude-md`, `claude-md-or-agents-md`,
+  directory name, the official plugin marketplace's name
+  (`claude-plugins-official`), and the three values of Claude Code's
+  `instructionFiles` setting (`claude-md`, `claude-md-or-agents-md`,
   `claude-md-and-agents-md`), which init-project names verbatim, are
   stripped before the ID rule is tested, so a line carrying one of them
   and a real model ID is still reported. Skills and agents follow the

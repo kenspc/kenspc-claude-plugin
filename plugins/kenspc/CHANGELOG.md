@@ -9,6 +9,84 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.4.0 — unreleased
+
+init-project turns on the Claude Code plugins a new project's stacks need,
+in the project's own `.claude/settings.json`, on the user's yes. Guard
+counts are unchanged: `guards run: 12`, `self-tests run: 11`. This entry
+extends as items land; the date is filled at release.
+
+No acceptance run was made for this change: it is accepted in use. What
+the skill's Whys state was established on Claude Code 2.1.284 before it was
+written, from `claude plugin` commands run against an isolated
+`CLAUDE_CONFIG_DIR` in throwaway repositories, and from Claude Code's
+settings, plugin-install, and permission-modes documentation:
+
+- `claude plugin install <plugin id> --scope project` writes
+  `enabledPlugins` into the `.claude/settings.json` of the directory it
+  runs in. Its command names no path, so the protected-path check does not
+  see it; in an interactive session in auto mode it ran without a stop.
+- It sets an existing `false` to `true`, so the skill runs it only for the
+  keys the file lacks.
+- It writes the whole file back in its own formatting (two-space
+  indentation, LF, its own key order), keeping every other key's value; it
+  does the same when a collaborator runs it, as the documentation tells
+  each to, so the skill accepts the rewrite and checks the values.
+- It serves a plugin already installed at user scope as well, so the skill
+  needs no `claude plugin enable`.
+- Claude Code reads the shared `.claude/settings.json` from the directory a
+  session starts in: `claude plugin list` run in `apps/web/` showed the
+  root's entries off and that directory's own file's on. The skill writes
+  one file at the repository root and says so.
+- `claude plugin list --available --json` lists under `available` only the
+  plugins not installed, so the skill reads `installed` too; it carries no
+  language server, which the marketplace's catalog gives.
+
+### Added
+
+- **The stacks' plugins in init-project** (§ Plugins for the stacks, in
+  Phase 6). Once Phase 4's rescan has settled the stacks, the skill derives
+  the list: for each app's language, the LSP plugin that
+  `claude-plugins-official` carries for it, and `microsoft-docs` for a
+  .NET app or one deployed to Azure; a monorepo gets the union, and nothing
+  else goes on unless the user adds it. What exists is read at run time,
+  never from a table in the skill: `claude plugin list --available --json`,
+  and each LSP plugin's `lspServers` — its language server's command and
+  file extensions — from the marketplace's `.claude-plugin/marketplace.json`
+  under the `installLocation` that `claude plugin marketplace list --json`
+  prints. The list is its own question, asked even after "use the defaults
+  for everything", showing each language server and whether it is on the
+  PATH; the skill never installs one. On a yes it runs the install at the
+  repository root for each entry the file lacks, never touching another
+  key, `.claude/settings.local.json`, or user settings, and the file goes
+  on the file list and into the documentation commit. A session that
+  cannot ask writes nothing, and the final message gives the entries and
+  the command. A new check holds the file: it parses as JSON, and only the
+  confirmed `enabledPlugins` keys were added, each `true`; a file that
+  fails it stays out of the commit. A rerun offers only the entries still
+  missing (subject `chore: enable the stacks' Claude Code plugins` when no
+  marker changed); a new app in another repository adds its stack's
+  entries to the outer repository's root file, its one write outside its
+  directory. The final message reports what was enabled, skipped, or
+  already there, the language servers missing from the PATH, that each
+  collaborator runs the install once, and, in a monorepo, that a session
+  started in an app's directory does not read the root's file. The gates
+  table, § Files, and Phase 2's list of questions asked after "use the
+  defaults for everything" follow.
+
+### Changed
+
+- **`check-no-model-names.sh`** strips `claude-plugins-official`, the name
+  of Anthropic's official plugin marketplace, before its model-ID rule, as
+  it strips `.claude-plugin` and the `instructionFiles` values: init-project
+  names it in the plugin IDs it enables. Its self-test gains a line that
+  names the marketplace alone (exit 0) and one that pairs it with a model
+  ID (exit 1).
+- **The plugin README** describes the plugin step under Project setup,
+  adds `.claude/settings.json` to What it writes, and gains a Known
+  behavior entry (a monorepo's starting directory; a collaborator's one
+  install) and a Requirements line (`claude` on the PATH).
+
 ## 4.3.0 — 2026-09-29
 
 Batch J. An unattended autopilot batch now finishes on its own evidence.

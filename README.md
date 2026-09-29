@@ -22,7 +22,7 @@ Opinionated software development workflows — discovery brief, plan before you 
 
 | Skill | What it does |
 |-------|-------------|
-| init-project | Sets a project up for the chain after a skippable interview — `AGENTS.md` as the index, a `CLAUDE.md` that imports it, and topic documents, with `TBD(init):` where nothing was answered; optional scaffolding and GitHub repository — no review phase |
+| init-project | Sets a project up for the chain after a skippable interview — `AGENTS.md` as the index, a `CLAUDE.md` that imports it, and topic documents, with `TBD(init):` where nothing was answered; optional scaffolding, GitHub repository, and the stacks' Claude Code plugins in the project's settings — no review phase |
 | generate-brief | Structured discovery conversation (five dimensions) producing a shareable requirement brief — no review phase |
 | prototype | Answers one open question from a brief with a throwaway prototype — committed, its answer and hash recorded in the brief, then removed — no review phase |
 | generate-plan | Collaborative discovery (shared framework, brief-aware) + drafting + automated 4-angle review |

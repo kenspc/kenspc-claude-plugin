@@ -24,7 +24,9 @@ a directory of files about to become a project, or an existing repository.
 The run writes `AGENTS.md` as the index, a `CLAUDE.md` that imports it and
 holds what is specific to Claude Code, and a set of long-lived topic
 documents, from what the user answers in an interview and what a scan of
-the directory shows. A user who answers nothing still gets every file, with
+the directory shows; on the user's yes, it also turns on the Claude Code
+plugins the stacks need, in the project's own settings. A user who answers
+nothing still gets every file, with
 `TBD(init): <what is missing>` where an answer belongs. The files are sized
 for a small team on a mid-sized project.
 
@@ -82,9 +84,10 @@ directory tree, a dependency list); and a file of the user's overwritten.
 - `git` on the PATH. Without it the run stops before writing anything and
   says so. Why: every start point is recognized through git, and the files
   are committed.
-- Optional: `gh`, installed and logged in, for the GitHub step (Phase 5),
-  and a stack's own tools, for scaffolding that stack (Phase 3). The skill
-  installs neither.
+- Optional: `gh`, installed and logged in, for the GitHub step (Phase 5);
+  a stack's own tools, for scaffolding that stack (Phase 3); and the
+  `claude` command, for the stacks' plugins (§ Plugins for the stacks). The
+  skill installs none of them.
 
 ## Arguments
 
@@ -303,10 +306,10 @@ How every round is asked, here and in Phase 4:
   and a call past the tool's limits makes each run improvise differently.
 - "Use the defaults for everything", in any wording or language, ends the
   interview: the rounds not yet asked are skipped. The questions outside
-  the interview — scaffolding, the GitHub repository, the file list, push,
-  labels — are still asked. Why: each is its own decision about writing
-  outside the documents or over the network, which a wish to stop
-  answering questions does not make.
+  the interview — scaffolding, the GitHub repository, the stacks' plugins,
+  the file list, push, labels — are still asked. Why: each is its own
+  decision about writing outside the documents or over the network, which
+  a wish to stop answering questions does not make.
 
 In a session that cannot ask (a system reminder to work without stopping),
 no round is asked: every answer comes from the DESCRIPTION and the scan, the
@@ -571,11 +574,15 @@ left to commit, and the final message says which.
 | `docs/backlog/README.md` | `backlog-README.md.tmpl` | When the backlog is C |
 | `apps/<name>/AGENTS.md` and `apps/<name>/CLAUDE.md` | `app-AGENTS.md.tmpl`, `app-CLAUDE.md.tmpl` | For each app of a monorepo |
 | `.gitignore` | — | Always: `.kenspc/` and `CLAUDE.local.md` appended, and `.trash/` and the restore and build directories when Phase 3 used or found them, each only when `.gitignore` does not already ignore it |
+| `.claude/settings.json`, at the repository root | — | On the user's yes to the stacks' plugins: the `enabledPlugins` entries it lacks, added by `claude plugin install` (§ Plugins for the stacks) |
 
 "Always" means wherever no such file exists: nothing that exists is
 overwritten or edited, except a README a generator wrote in this run, the
 lines appended to `.gitignore` (in its own line endings, after a final
-newline it lacks), and the one line an existing CLAUDE.md gains on a yes.
+newline it lacks), the one line an existing CLAUDE.md gains on a yes, and
+the `enabledPlugins` entries an existing `.claude/settings.json` gains on a
+yes, which Claude Code writes back in its own formatting (§ Plugins for the
+stacks).
 Why: an existing file is the user's, and the run cannot tell which of its
 lines were deliberate. A `README*` or `CHANGELOG*` of any name and case
 (`readme.md`, `README.rst`, `Changelog`) counts as that file, and the
@@ -602,8 +609,9 @@ Nothing else is written:
   `docs/guides/`. That line is not a Documents row until a guide exists.
 - Nothing under any `.claude/` directory, except the import line an
   existing `.claude/CLAUDE.md` gains on the user's yes (§ An existing
-  CLAUDE.md). Why: Claude Code treats it as a protected path, and a write
-  there fails in an unattended session.
+  CLAUDE.md) and the plugin entries the root `.claude/settings.json` gains
+  on the user's yes (§ Plugins for the stacks). Why: Claude Code treats it
+  as a protected path, and a write there fails in an unattended session.
 - No CONTRIBUTING and no roadmap file. Why: how to work on the project is
   AGENTS.md's Workflow, which a CONTRIBUTING file would repeat, and a
   roadmap holds plans the interview does not ask about.
@@ -725,6 +733,106 @@ imports none with a character attached; a write through the link lands in
 the user's AGENTS.md, which would then import itself, and a second import
 loads nothing new.
 
+### Plugins for the stacks
+
+The Claude Code plugins that serve one stack are enabled per repository, in
+its `.claude/settings.json`, not in each user's settings. Why: a project's
+`"<plugin>@<marketplace>": true` turns on a plugin the user's settings turn
+off, its skills and MCP server with it; and a repository that should enable
+one and does not fails silently — without its LSP plugin, Claude in a .NET
+repository falls back to text search and says nothing. The time to add them
+is when the repository is set up, with each app's stack known.
+
+**The list** is derived once the stacks are final, after Phase 4's rescan,
+which can still change one:
+- for each app's language, the LSP plugin that `claude-plugins-official`
+  carries for it, if there is one;
+- `microsoft-docs`, for a .NET app or an app deployed to Azure.
+
+Nothing else is on it: frontend-design and the other plugins that serve no
+stack are added only when the user adds them at the question. A monorepo's
+list is the union of its apps'.
+
+**What exists is read at run time**, never from a list in this skill.
+`claude plugin list --available --json` gives the marketplaces' plugins
+under two top-level keys: `available`, the ones not installed on this
+machine, each with its `pluginId`, `name`, and `description`, and
+`installed`, the installed ones, by `id`; a plugin already installed
+appears only under `installed`, so both are read. An LSP plugin's entry in
+its marketplace's catalog — `.claude-plugin/marketplace.json` in the
+directory `claude plugin marketplace list --json` gives as the
+marketplace's `installLocation` — declares its `lspServers`: for each, the
+`command` it runs, which is the language server, and under
+`extensionToLanguage` the file extensions it serves, which tell its
+language. Whether a server's command is on the PATH is looked up as Phase 0
+looks up a stack's tools. Why at run time: thirteen LSP plugins exist today
+and the set changes, so a table here would go stale without an error, for
+the reason Phase 3 names no generator command. When the list or the
+catalog cannot be read, or holds no plugin for a language, that app gets
+no entry, and the final message says so.
+
+**The question** is one of its own, asked when the list holds an entry the
+root's `.claude/settings.json` does not name yet. It is pre-filled with the
+list — each entry with the app it serves and, for an LSP plugin, its
+language server's command and whether that is on the PATH, since an LSP
+plugin whose server is missing can do nothing — and the user confirms it,
+edits it, or skips it. An entry the file already names, with any value, is
+not offered, and the question says it is there. It is asked even after
+"use the defaults for everything". Why: like scaffolding and the file list,
+it writes outside the documents. In a session that cannot ask (a system
+reminder to work without stopping), nothing is written: the final message
+gives the entries and the command that adds them. Why: `.claude/` is a
+protected path, and which plugins a project turns on is the user's choice.
+A skip writes nothing either. A language server that is not on the PATH is
+never installed: the question and the final message name it, and
+installing it is left to the user. Why: installing it changes the user's
+machine beyond the project, as installing an SDK would (Phase 3).
+
+**The write** is Claude Code's own: `claude plugin install <plugin id>
+--scope project --json`, once for each confirmed entry, run at the
+repository root. It adds the entry to `enabledPlugins` and installs the
+plugin on this machine when it is not installed yet; a plugin already
+installed gets its entry the same way, so no `claude plugin enable` is
+needed. Why the command rather than an edit of the file: Claude Code then
+merges its own file and installs what the machine lacks. Why it passes the
+protected-path check: the command names no path, so that check, which
+guards the writes Claude Code sees going to `.claude/`, never sees it, and
+it is approved like any other shell command — in an interactive session in
+auto mode on Claude Code 2.1.284 it ran without a stop. An Edit of the file
+is a protected-path write instead: prompted in every mode that asks, denied
+in `dontAsk`, and never pre-approved by an allow rule.
+
+- Only the `enabledPlugins` keys the file lacks are added. The file is
+  noted before the first install — its content, or that there is none — and
+  no install runs for a key it already holds, whatever the value. Why: the
+  command sets its key to `true` over an explicit `false`, and that `false`
+  is the user's.
+- The command writes the whole file back in its own formatting: two-space
+  indentation, LF line endings, and the keys in its own order. The other
+  keys keep their values, which § Checks confirms, and the file list marks
+  a file that existed as rewritten. Why this is accepted: the same command,
+  which Claude Code's documentation has each collaborator run once,
+  rewrites the file the same way, so an edit that kept the user's
+  formatting would only put that off.
+- Nothing else is written: no other key, no `.claude/settings.local.json`,
+  no user-scope setting, and no `--yes`. Why: those settings are each
+  user's own, and `--yes` accepts a command a marketplace declares, which
+  only the user can.
+- An install that fails — a non-zero exit, or an `outcome` other than `ok`
+  in its JSON line — adds nothing for that entry, and the final message
+  gives its error.
+
+**One file, at the repository root**, in a monorepo too. Claude Code reads
+the shared `.claude/settings.json` from the directory a session starts in,
+not from the repository root: a session started in `apps/<name>/` reads
+that directory's file and not the root's, as Claude Code's settings
+documentation says, and `claude plugin list` run in an app's directory on
+2.1.284 showed the root's entries as off. The kenspc workflow runs at the
+root, where its documents and `.kenspc/` are, so the entries go there, and
+the final message says that a session started in an app's directory does
+not get them. `--scope project` writes the file of the directory it runs
+in, which is why the command runs at the root.
+
 ### Checks
 
 Run before the commit, whether or not a commit follows, on what this run
@@ -771,11 +879,19 @@ line short.
 - Except after a rerun or at a new app, which append nothing to it,
   `.gitignore` ignores `.kenspc/` and `CLAUDE.local.md`, probed as § Files
   says.
+- A `.claude/settings.json` the run gave entries parses as JSON, and,
+  compared with what the run noted before its first install (nothing, when
+  there was no file), differs only by the `enabledPlugins` keys the user
+  confirmed, each `true`: every other key, and every entry already there,
+  holds its old value.
 
 A check that fails on what the run wrote is fixed, and every check runs
-again; a result that fails one is not committed. A root AGENTS.md over its
-budget moves a rule to the topic document it concerns, or folds the per-app
-rows of its Documents table into one `apps/*/AGENTS.md` row; the run writes
+again; a result that fails one is not committed. A `.claude/settings.json`
+that fails its check is not edited back: it stays out of the commit,
+marked so on the file list, and the final message names what differs. A
+root AGENTS.md over its budget moves a rule to the topic document it
+concerns, or folds the per-app rows of its Documents table into one
+`apps/*/AGENTS.md` row; the run writes
 no path-scoped rule, since those live under `.claude/`. A secret-looking
 value on a line of the user's is not changed: that file stays out of the
 commit, marked so on the file list, and the final message names the file
@@ -785,13 +901,16 @@ files, and each check guards a way they fail without an error — an
 AGENTS.md too long to load in every session, a CLAUDE.md that no longer
 imports it, a table naming a file that is not there or a README listing
 other documents than the table, a claim nobody made that reads as the
-team's decision, a marker a rerun cannot find, a secret that history keeps;
-and a line the user wrote is not the run's to change.
+team's decision, a marker a rerun cannot find, a secret that history keeps,
+a project setting changed beyond what the user confirmed; and a line the
+user wrote is not the run's to change.
 
 ### Confirm and commit
 
 **The file list.** List every file written or changed, marked created,
-appended to, or given the import line. Mark as well each file that held
+appended to, given the import line, or given plugin entries — and, for a
+`.claude/settings.json` that existed, rewritten in Claude Code's formatting
+(§ Plugins for the stacks). Mark as well each file that held
 uncommitted changes of the user's before the run (Phase 0's status), since
 a commit takes the file whole; each path git ignores (`git check-ignore -q`
 exits 0) as written, ignored, and not committed — never added with
@@ -813,8 +932,10 @@ keep out.
 
 **The commit.** `docs: initialize project documentation`, staging exactly
 the listed files not marked to stay out, passed to `git commit` as a
-pathspec. When no file is left to commit — the run wrote nothing, or all
-it wrote stays out — no commit is made, and the final message says why; no
+pathspec. `.claude/settings.json` goes into it with the documents. Why: it
+is shared project configuration, which reaches collaborators only through
+the repository. When no file is left to commit — the run wrote nothing, or
+all it wrote stays out — no commit is made, and the final message says why; no
 commit this run makes, a scaffold commit or a rerun's included, runs
 `git commit` with an empty pathspec. Why: with no path,
 `git commit` commits whatever the user had staged, under the run's
@@ -873,8 +994,9 @@ message lists `debt` and `found-by-agent` the same way.
 
 ## A new app in another repository
 
-**Goal**: this directory's AGENTS.md and CLAUDE.md pair, and nothing
-outside it.
+**Goal**: this directory's AGENTS.md and CLAUDE.md pair, and outside it
+nothing but the plugin entries its stack adds, on the user's yes, to the
+outer repository's root `.claude/settings.json`.
 
 **Inputs**: Phase 0's scan; the outer repository's root AGENTS.md, if any;
 the DESCRIPTION.
@@ -904,25 +1026,35 @@ The interview asks only what the pair holds: the app's name and one-line
 summary, its stack, and rules for this app only; its commands are read
 from its files, as Phase 4 reads them. In a session that cannot ask (a
 system reminder to work without stopping), the run never reaches this
-interview: it stopped at Phase 0's question. The checks that apply to the
-pair run (budget, first line, template comment, secrets, TBD form); then
-the file list, its confirmation, and the commit, as Phase 6 describes,
-under the outer repository's commit convention.
+interview: it stopped at Phase 0's question. Then § Plugins for the stacks
+runs for this app's stack, against the outer repository's root
+`.claude/settings.json`, with the install run at that root: it offers only
+the entries that file does not name yet, and the file, when it gains any,
+joins the file list and the commit. Why the root's file: the repository's
+sessions read it when started at its root, where its workflow runs. The
+checks that apply run (budget, first line, template comment, secrets, TBD
+form, and the settings check when entries were added); then the file list,
+its confirmation, and the commit, as Phase 6 describes, under the outer
+repository's commit convention.
 
 ## Rerun
 
-**Goal**: the `TBD(init):` markers the user answers filled in, and nothing
-else changed.
+**Goal**: the `TBD(init):` markers the user answers filled in, the stacks'
+plugin entries still missing added on the user's yes, and nothing else
+changed.
 
 **Inputs**: every `TBD(init):` marker in the files the run owns — the
 AGENTS.md that carries the template marker, the documents its Documents
-table names, and each app's pair — and the DESCRIPTION.
+table names, and each app's pair; the stacks a scan shows; the root's
+`.claude/settings.json`; and the DESCRIPTION.
 
 **DONE when** either holds:
-- No marker exists, or none got an answer: nothing is changed, and the
-  final message says so, with how many markers remain and in which files.
-- Every marker that got an answer is replaced by it, and the run's diff
-  changes no line that did not hold a marker.
+- No marker got an answer, or none exists, and no plugin entry was added:
+  nothing is changed, and the final message says so, with how many markers
+  remain and in which files.
+- Every marker that got an answer is replaced by it, every plugin entry the
+  user confirmed is added, and the run's diff changes no line that did not
+  hold a marker, `.claude/settings.json` aside.
 
 Ask about the markers grouped by file, in the interview's manner: one group
 per message, each skippable, a finding of a new scan offered as a suggested
@@ -930,6 +1062,13 @@ answer and used only when the user accepts it. In a session that cannot
 ask (a system reminder to work without stopping), only the DESCRIPTION
 answers markers; when it answers none, nothing changes, and the final
 message says how many markers remain and in which files.
+
+After the markers, § Plugins for the stacks runs as in a first run, from
+the stacks a scan shows, offering only the entries the root's
+`.claude/settings.json` does not name yet; with none missing, nothing is
+asked. Why: a stack added since the first run, or a plugin the marketplace
+has gained, can leave the file short, and an entry already there, `false`
+included, is the user's.
 
 - An answer replaces its marker only — from `TBD(init):` to the end of its
   line or its table cell, or on the Workflow's version line to the ` — `
@@ -944,13 +1083,14 @@ message says how many markers remain and in which files.
 - The checks run on what the rerun changed (§ Checks), and the final
   message names what `.gitignore` lacks, since a rerun appends nothing to
   it; then the file list, its confirmation, and the commit, as Phase 6
-  describes, with the subject `docs: fill in answered TBD(init) markers`,
-  adapted to the repository's commit convention.
-- No other file is written, and there is no scaffolding, GitHub step,
-  push, or label. Moving an existing project onto the template, and
-  bringing files an earlier template version wrote up to a later one, are
-  not in this version; the `kenspc-init template: 1` marker is kept for
-  that later upgrade.
+  describes, with the subject `docs: fill in answered TBD(init) markers` —
+  or `chore: enable the stacks' Claude Code plugins`, when only plugin
+  entries were added — adapted to the repository's commit convention.
+- No other file is written, `.claude/settings.json` aside, and there is no
+  scaffolding, GitHub step, push, or label. Moving an existing project onto
+  the template, and bringing files an earlier template version wrote up to
+  a later one, are not in this version; the `kenspc-init template: 1`
+  marker is kept for that later upgrade.
 
 ## Defaults and TBD
 
@@ -975,6 +1115,7 @@ these gates.
 | Hosting, with a remote | Is this the project's host? | The remote as it reads |
 | No remote | Create a GitHub repository, its owner, its name | None created |
 | An existing CLAUDE.md, at the root or in `.claude/` | Add the import line at its top? (Not asked when AGENTS.md already loads) | Left as it is; the final message says when AGENTS.md loads without the import, with the two files' line count |
+| The stacks' plugins | Enable these entries in the root's `.claude/settings.json` — confirm, edit, or skip? (Asked even after "use the defaults for everything"; not asked when none is missing) | None enabled; the final message gives the entries and the command that adds them |
 | The file list | Confirm or adjust | Committed as presented, less each file that held uncommitted changes |
 | A commit fails | How to go on | Stop and report |
 | Push | Push now? | Nothing pushed |
@@ -996,6 +1137,16 @@ The final message gives:
 - the `TBD(init):` markers left, counted per file, and each sentence the
   source check turned into one;
 - every default a session that cannot ask took in place of a question;
+- the stacks' plugins: each entry enabled, and each one skipped, declined,
+  or already named in `.claude/settings.json`; each app no plugin was found
+  for, or the command that failed; each install that failed, with its
+  error; each language server not on the PATH, by its command, for the
+  user to install; in a session that cannot ask, the entries and
+  `claude plugin install <plugin id> --scope project`, run at the
+  repository root, which adds them; and, once entries are enabled, that
+  each collaborator runs that command once, since a committed entry turns a
+  plugin on without downloading it, and, in a monorepo, that a session
+  started in an app's directory does not read the root's file;
 - what is left for the user, whichever applies: an existing CLAUDE.md
   without the import (the line count, and when AGENTS.md loads without it,
   as § An existing CLAUDE.md says); a CLAUDE.md written beside the user's
@@ -1008,10 +1159,11 @@ The final message gives:
   repository; the files written and not committed — an app's pair beside a
   kept `.git`, an ignored path, a file that held uncommitted changes, a
   file with a secret-looking value on a line of the user's (with the line's
-  number), every file after a "no" or a skipped file list or without a git
-  identity; the files that were in a directory without git before the run,
-  which no commit carried; and, after a rerun, a consequence of an answer
-  that was not made.
+  number), a `.claude/settings.json` that failed its check, every file
+  after a "no" or a skipped file list or without a git identity; the files
+  that were in a directory without git before the run, which no commit
+  carried; and, after a rerun, a consequence of an answer that was not
+  made.
 
 Next step: `/kenspc-init` again once some `TBD(init):` markers have
 answers, and `/kenspc-brief` or `/kenspc-plan` for the first piece of work.
