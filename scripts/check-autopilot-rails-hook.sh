@@ -22,8 +22,8 @@
 # The fixtures cover every recursive rm spelling and command position the
 # hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
 # substitutions inside double quotes, a | or & after a quoted or escaped <
-# or >, and substitutions among the rm's own words among them; quoted
-# mentions of
+# or >, and substitutions and redirections among the rm's own words among
+# them; quoted mentions of
 # rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
 # and other work the hook must not deny — rm --force, rm -- -r, a <<- body
 # with its tabs stripped (allowed); an rm after a heredoc whose delimiter
@@ -337,6 +337,11 @@ run_fixtures() {
     fx_deny "$hook" "rm -rf with a \$( ) holding && in its argument" "$r" Bash "$FX_REPO" 'rm -rf "$(cd build && pwd)"'
     fx_deny "$hook" "rm -rf with a backtick substitution in its argument" "$r" Bash "$FX_REPO" 'rm -rf `pwd`/build'
     fx_deny "$hook" "rm -rf inside a \$( ), with a \$( ) in its argument" "$r" Bash "$FX_REPO" 'echo $(rm -rf $(mktemp -d))'
+    # A redirection among the rm's own words: the & or | right after its <
+    # or > stays in the word (2>&1, >|), so the recursive flag after it is
+    # still the rm's.
+    fx_deny "$hook" "rm -rf after a 2>&1 among its words" "$r" Bash "$FX_REPO" 'rm 2>&1 -rf build'
+    fx_deny "$hook" "rm -r after a >| redirection among its words" "$r" Bash "$FX_REPO" 'rm >| rm.log -r build'
     fx_deny "$hook" "rm position after xargs" "$r" Bash "$FX_REPO" 'echo build | xargs rm -rf'
     fx_deny "$hook" "rm position after sudo" "$r" Bash "$FX_REPO" 'sudo rm -rf build'
     fx_deny "$hook" "rm position after command" "$r" Bash "$FX_REPO" 'command rm -rf build'
