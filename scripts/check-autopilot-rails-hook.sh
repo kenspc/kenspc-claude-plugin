@@ -22,7 +22,8 @@
 # The fixtures cover every recursive rm spelling and command position the
 # hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
 # substitutions inside double quotes, a | or & after a quoted or escaped <
-# or >, and substitutions and redirections among the rm's own words, a
+# or >, a | after a line continuation that follows no < or >, and
+# substitutions and redirections among the rm's own words, a
 # redirection a line continuation splits included, among them; quoted
 # mentions of
 # rm -rf and an rm -rf in a comment (allowed); rm without a recursive flag
@@ -351,6 +352,9 @@ run_fixtures() {
     # continuation between the < or > and its & or | leaves one redirection.
     fx_deny "$hook" "rm -rf after a 2>&1 split by a line continuation" "$r" Bash "$FX_REPO" $'rm 2>\\\n&1 -rf build'
     fx_deny "$hook" "rm -r after a >| split by a line continuation" "$r" Bash "$FX_REPO" $'rm >\\\n| rm.log -r build'
+    # A continuation that follows no < or > joins no redirection: the | after
+    # it still ends the command.
+    fx_deny "$hook" "rm position after a | past a line continuation with no < or > before it" "$r" Bash "$FX_REPO" $'echo build\\\n|rm -rf build'
     fx_deny "$hook" "rm position after xargs" "$r" Bash "$FX_REPO" 'echo build | xargs rm -rf'
     fx_deny "$hook" "rm position after sudo" "$r" Bash "$FX_REPO" 'sudo rm -rf build'
     fx_deny "$hook" "rm position after command" "$r" Bash "$FX_REPO" 'command rm -rf build'
