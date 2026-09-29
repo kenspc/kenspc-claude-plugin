@@ -692,8 +692,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   constant-time push removed (every word collected so far copied on each
   `$(`, which only the timed `$( )` fixture catches), and the
   last-character check removed (the whole word matched against `[<>]$` on
-  each `|` or `&`, which the timed `<|` fixture must catch first) — and
-  cleans up without a recursive `rm`.
+  each `|` or `&`, which any fixture may catch: the quoted and escaped `<`
+  or `>` fixtures do, and the timed `<|` fixture only by a margin too thin
+  to require) — and cleans up without a recursive `rm`.
 
 Eleven of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,

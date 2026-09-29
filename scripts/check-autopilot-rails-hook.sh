@@ -80,8 +80,9 @@
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
 #                  removed (the timed $( ) fixture, which must be the first
-#                  red), the last-character check removed (the timed <|
-#                  fixture, which must be the first red). Then the restored copy
+#                  red), the last-character check removed (any fixture red:
+#                  the quoted and escaped < or > fixtures catch it, the
+#                  timed <| one only by a thin margin). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 
@@ -210,7 +211,6 @@ FIRST_RED=""
 QUIET=0
 TIMED=""
 SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time"
-LTGT_TIMED_LABEL="a word of 32000 <| pairs under the length cap, then rm -rf, decided in time"
 # What an unreadable-field denial says in place of the permitted route. Why:
 # the hook reads every later call the same way, so a worker sent down the
 # route would retry until its cap; the autopilot preamble tells it to list
@@ -407,13 +407,18 @@ run_fixtures() {
     # One word of 32000 <| pairs (64 KB), then a recursive rm, decided in
     # under half the hook's timeout. A | or & after < or > stays in the
     # word, and testing whether the word ended in < or > once read the
-    # whole word on every | or &, which took over 3 seconds.
+    # whole word on every | or &, which took over 3 seconds. That old check
+    # decided this fixture in 3.354s when it was added, and in 3.3 to 3.64s
+    # since, against about 0.55s for the hook: about 1.3 to 1.45 times the
+    # limit. The self-test does not require this fixture to turn the
+    # last-character mutant red, since a faster machine or awk would bring
+    # the old check under the limit and fail the self-test on a correct
+    # hook; the quoted and escaped fixtures below catch that mutant.
     t=$(awk 'BEGIN { for (i = 0; i < 32000; i++) printf "<|" }')
-    fx_timed "$hook" "$LTGT_TIMED_LABEL" 2.5 "echo $t; rm -rf build"
+    fx_timed "$hook" "a word of 32000 <| pairs under the length cap, then rm -rf, decided in time" 2.5 "echo $t; rm -rf build"
     # A | or & after a quoted or escaped < or > ends the command: that < or
-    # > is no redirection. These come after the timed <| fixture, which the
-    # self-test's last-character mutant must turn red first, since that
-    # mutant, the whole word matched against [<>]$, misreads them too.
+    # > is no redirection. The self-test's last-character mutant, the whole
+    # word matched against [<>]$, misreads them too.
     fx_deny "$hook" "rm position after | following a double-quoted >" "$r" Bash "$FX_REPO" 'echo "a>"|rm -rf build'
     fx_deny "$hook" "rm position after | following a single-quoted <" "$r" Bash "$FX_REPO" "echo 'a<'|rm -rf build"
     fx_deny "$hook" "rm position after | following an escaped >" "$r" Bash "$FX_REPO" 'echo a\>|rm -rf build'
@@ -637,13 +642,13 @@ run_self_test() {
             echo "FAIL  self-test: the mutant with the $name removed passed every fixture" >&2
             return 1
         fi
-        # Only a timed fixture measures the cost a timing mutant restores —
-        # the $( ) one the push's, the <| one the last-character check's; a
-        # mutant red first elsewhere (its text broke the awk program, say)
-        # proves nothing about it.
+        # Only the timed $( ) fixture measures the cost the push mutant
+        # restores; that mutant red first elsewhere (its text broke the awk
+        # program, say) proves nothing about it. The last-character mutant
+        # may turn any fixture red: see the comment beside the timed <|
+        # fixture.
         case "$name" in
             constant-time-push) want=$SUBST_TIMED_LABEL ;;
-            last-character-check) want=$LTGT_TIMED_LABEL ;;
             *) want="" ;;
         esac
         if [[ -n "$want" && "$FIRST_RED" != "$want" ]]; then
