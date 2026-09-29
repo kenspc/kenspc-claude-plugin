@@ -354,10 +354,11 @@ run_fixtures() {
     fx "$hook" "a Bash input under the length cap, scanned" allow 1 "$r" Bash "$FX_REPO" "echo $t"
     t=$(printf '%070000d' 0)
     fx_deny "$hook" "a Bash input over the length cap" "$r" Bash "$FX_REPO" "echo $t"
-    # Under the cap, the slowest shape to scan: 12000 unquoted $( ) words
-    # (60 KB), then a recursive rm, decided in under half the hook's
-    # timeout. Each $( ) once cost a copy of every word before it, which
-    # took tens of seconds and let the rm through.
+    # Under the cap, the shape whose substitution-stack cost this fixture
+    # guards: 12000 unquoted $( ) words (60 KB), then a recursive rm,
+    # decided in under half the hook's timeout. Each $( ) once cost a copy
+    # of every word before it, which took tens of seconds and let the rm
+    # through.
     t=$(awk 'BEGIN { for (i = 0; i < 12000; i++) printf "$(x) " }')
     fx_timed "$hook" "a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time" 2.5 "echo $t; rm -rf build"
     # A command word of 64000 characters with no slash, then a recursive
