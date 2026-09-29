@@ -439,6 +439,42 @@ shipped file.
      hook": two hooks are registered at the baseline
      (`remind-plan-skill.sh`, `session-end-telemetry.sh`), as the task
      document already says.
+- **J-C3 (S3b's verdict loop; the user's rulings, and the main session's
+  classification).**
+  1. A call the rails hook denied is not a breach (the user; S3b's R2): the
+     worker takes the permitted route the deny names, lists the denial
+     under `## Rail observations` naming the subagent, and goes on. To S5,
+     with the README's rails paragraph and Known behavior, and the 4.3.0
+     CHANGELOG, in the same commit.
+  2. The 64 KB cap on a Bash hook input stays (the user): an input the hook
+     cannot scan within its timeout is denied unscanned — the fail-closed
+     form of the recursive-`rm` denial, as the denial of an unreadable
+     tool name or command is. A reading beyond J-L4's letter, named in the
+     reviewer report. The substitution-heavy commands under the cap that
+     still outlast the timeout (S3b's row 3, E1/B4, incompletely fixed)
+     are a plugin defect: to S5 — the substitution stack made constant
+     time per push and pop, a timing fixture that fails if the cost
+     returns, and the "about half a second" claims corrected wherever they
+     are written.
+  3. The rails govern what an agent or subagent writes — its own commands
+     and tool calls (the user): a program it runs that removes a temporary
+     directory it created itself (a guard's or a test script's `mktemp`
+     cleanup), or writes its own cache, is not a breach; a delete the
+     agent writes, in any language, still is. A reading beyond J-L3's
+     letter, named in the reviewer report. To S5: § 3 of the preamble and
+     the README's rails paragraph. Why: the rails sentence, carried into
+     the review agents' `CUSTOM_INSTRUCTIONS`, kept two reviewers in S3 and
+     in S3b from running `check-all.sh`, and both workers reworded it for
+     code-fixer and regression-verifier against task-review's
+     same-CONTEXT rule.
+  4. S3's T6 and E7 are closed by S3b's `a11cac2` (the guard asserts the
+     hook's matcher) and `2401ce3` (a defect an S5 leaves unfixed counts
+     as a fix of it and goes to the next S5 — the conservative reading of
+     stop condition 4's two fixes).
+  5. The harness's and tools' own writes outside the roots in S3 and S3b —
+     tool-results under `~/.claude/projects/`, the CLI's backups under
+     `~/.claude/backups/`, pwsh's startup cache — are observations; item 3
+     covers them in shipped runs.
 
 ## Autopilot
 
