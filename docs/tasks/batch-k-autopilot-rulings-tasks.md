@@ -893,7 +893,24 @@ Spec Step 2.2 — K-L8. Files: `plugins/kenspc/agents/code-fixer.md`,
 
 ### Task 11: `check-run-contract.sh` check 5 names `rulings.md`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: a `RULINGS_NAME` constant beside `CHANGE_SET_NAME` and
+  `PRE_FIX_INDEX`, a third loop in check 5 over task-review, task-implement,
+  code-fixer, and regression-verifier, one `OK` line of its own, and the
+  shared failure message extended to say who writes and who reads the
+  file. The self-test's four mutations rename every occurrence to
+  `decisions.md` through `replace_all_literal`, one carrier at a time, each
+  guarded against a mutation that did not apply (exit 2); the header's
+  mutation count goes from nineteen to twenty-three.
+- Changes/tradeoffs: the self-test was itself mutation-checked on copies
+  under this run's scratch (`scratch/task-implementer/2/`): the unmodified
+  guard's self-test passed there (exit 0), and a mutant whose rulings loop
+  dropped task-implement failed it with
+  "rulings name mutation in …/task-implement/SKILL.md: expected exit 1,
+  got 0" (exit 1). `check-all.sh --self-test` ends with
+  `self-tests run: 11`, and `check-all.sh` with `guards run: 12`.
 
 Depends on: Task 9, Task 10
 

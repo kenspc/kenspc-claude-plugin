@@ -35,7 +35,11 @@
 #      file that does not name it is reported. The pre-fix record's index,
 #      `pre-fix/index.txt`, is checked the same way in agents/code-fixer.md,
 #      which writes it in an uncommitted run, and agents/regression-verifier.md,
-#      which reads it.
+#      which reads it. So is the rulings file, `rulings.md`, in
+#      skills/task-review/SKILL.md and skills/task-implement/SKILL.md, which
+#      write it to the run directory before code-fixer's dispatch when they
+#      hold a ruling on the reviewers' findings, and in agents/code-fixer.md
+#      and agents/regression-verifier.md, which read it there.
 #   6. The reviewer invariant sentence ("Each reviewer is read-only on the
 #      working tree and writes only under `RUN_DIR`: …"). It lives in four
 #      places: the five reviewers' ROLE, the canonical dispatch block of
@@ -66,9 +70,10 @@
 #
 # Exit code 0: all checks pass.
 # Exit code 1: a block diverges, the ignore probe answers wrongly, the
-#              recount disagrees, a file does not name change-set.md, or a
-#              copy of the reviewer invariant sentence does not contain the
-#              reviewers' ROLE sentence.
+#              recount disagrees, a file does not name change-set.md,
+#              pre-fix/index.txt, or rulings.md where check 5 requires it,
+#              or a copy of the reviewer invariant sentence does not contain
+#              the reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
 #              command in the run-dir block, no start line of the reviewer
 #              invariant sentence in agents/requirements-reviewer.md (the
@@ -85,12 +90,13 @@
 #                  target files (the five above, plugins/kenspc/README.md,
 #                  and CLAUDE.md) into a temp workdir, confirms
 #                  `change-set.md` is present in the four files check 5
-#                  reads, `pre-fix/index.txt` in its two, and the reviewer
+#                  reads, `pre-fix/index.txt` in its two, `rulings.md` in
+#                  its four, and the reviewer
 #                  invariant sentence's start line once in the copied
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on nineteen mutations that
+#                  prefix classification), then on twenty-three mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
@@ -103,7 +109,10 @@
 #                  of the four copied files check 5 reads, one file at a
 #                  time (every occurrence, through a replace-all helper,
 #                  since it occurs on several lines), the pre-fix index
-#                  name removed from each of its two carriers in turn, and
+#                  name removed from each of its two carriers in turn, the
+#                  rulings file name removed from each of its four carriers
+#                  in turn (every occurrence, through the same replace-all
+#                  helper), and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
@@ -136,6 +145,7 @@ README_REL="plugins/kenspc/README.md"
 CLAUDE_REL="CLAUDE.md"
 CHANGE_SET_NAME="change-set.md"
 PRE_FIX_INDEX="pre-fix/index.txt"
+RULINGS_NAME="rulings.md"
 INVARIANT_START="Each reviewer is read-only on the working tree"
 
 # Print the lines strictly between the start and end markers of <name>.
@@ -416,15 +426,23 @@ run_main_logic() {
             missing=1
         fi
     done
+    for f in "$review" "$implement" "$fixer" "$verifier"; do
+        if ! grep -qF -- "$RULINGS_NAME" "$f"; then
+            echo "MISSING '$RULINGS_NAME' in $f" >&2
+            missing=1
+        fi
+    done
     if [[ "$missing" -ne 0 ]]; then
         echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
         echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
-        echo "regression-verifier. Restore the name, or rename it in every carrier and in" >&2
-        echo "this guard together." >&2
+        echo "regression-verifier; task-review and task-implement write a ruling on the" >&2
+        echo "findings to RUN_DIR/$RULINGS_NAME, and code-fixer and regression-verifier read it." >&2
+        echo "Restore the name, or rename it in every carrier and in this guard together." >&2
         return 1
     fi
     echo "OK    $CHANGE_SET_NAME — named in task-review, code-fixer, regression-verifier, requirements-reviewer"
     echo "OK    $PRE_FIX_INDEX — named in code-fixer, regression-verifier"
+    echo "OK    $RULINGS_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
 
     # Check 6: the reviewer invariant sentence in its three copies.
     local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
@@ -524,6 +542,12 @@ run_self_test() {
     for rel in "$FIXER_REL" "$VERIFIER_REL"; do
         if ! grep -qF -- "$PRE_FIX_INDEX" "$WORK/$rel"; then
             echo "FAIL  self-test fixture stale: '$PRE_FIX_INDEX' not found in $rel" >&2
+            return 2
+        fi
+    done
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$FIXER_REL" "$VERIFIER_REL"; do
+        if ! grep -qF -- "$RULINGS_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$RULINGS_NAME' not found in $rel" >&2
             return 2
         fi
     done
@@ -652,6 +676,21 @@ run_self_test() {
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
         if [[ "$rc" -ne 1 ]]; then
             echo "FAIL  self-test pre-fix index mutation in $rel: expected exit 1, got $rc" >&2
+            return 1
+        fi
+    done
+    # The rulings file name, renamed in each of its four carriers in turn,
+    # every occurrence, so only check 5's rulings loop can catch it.
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$FIXER_REL" "$VERIFIER_REL"; do
+        replace_all_literal "$WORK/$rel" "$RULINGS_NAME" "decisions.md"
+        if grep -qF -- "$RULINGS_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test: rulings mutation did not apply ('$RULINGS_NAME' still in $rel)" >&2
+            return 2
+        fi
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        cp "$REPO_ROOT/$rel" "$WORK/$rel"
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test rulings name mutation in $rel: expected exit 1, got $rc" >&2
             return 1
         fi
     done
