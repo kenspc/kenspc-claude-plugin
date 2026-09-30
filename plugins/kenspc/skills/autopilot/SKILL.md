@@ -1164,7 +1164,11 @@ the main session as a plugin defect, fixed by an S5, or accepted as a
 deferral with
 a reason recorded as a clarification in the spec, naming who ruled. A
 ruled ID that no report lists keeps the verdict from PASS the same way and
-is classified as such a ruled row. Each
+is classified as such a ruled row, its `rulings.md` entry standing for the
+row it lacks: the main session names, from the entry and the reports, the
+finding the ruling meant, and an S5 for it quotes the entry as its
+finding, with that finding's row when one matches. Why: the S5 task block
+quotes a row, and an ID with none would give an S5 nothing to fix. Each
 such ruled row is classified as a HIGH row is, whatever its severity. Why: a
 ruling the review did not carry out is a decision of the run's own that
 the review overrode, and read as a MEDIUM or LOW row it would be
