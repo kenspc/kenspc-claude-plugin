@@ -19,8 +19,10 @@ Related plan: `docs/plans/batch-k-autopilot-rulings.md`. The spec's labels
 decisions), K-C<n> (clarifications) — are pointers in this document only
 and appear in no shipped file.
 
-Rulings at this document's confirmation (the main session, recorded in the
-spec as K-C1 to K-C4):
+Rulings by the main session, recorded in the spec's
+`## Clarifications during implementation` — K-C1 to K-C4 at this
+document's confirmation, K-C5 and K-C6 at Phase 0, K-C7 to K-C9 on its
+review's plan-level concerns:
 
 - **K-C1.** The second failure of the skipped-gate post-check is a stop
   stated at the post-check, outside the numbered stop list, with the
@@ -36,13 +38,32 @@ spec as K-C1 to K-C4):
 - **K-C3.** Task 6 carries only what the two settings pages state, with
   both URLs and the date 2026-09-30. Server-delivered settings stay the
   locked design's "a source the main session cannot read" case, which
-  asks. No local cache path for them and no claim about what a
-  non-interactive run writes. No network use in S3.
+  asks; K-C8 adds when that source counts as present, from a third page.
+  No network use in S3.
 - **K-C4.** Delegated names: the subsection `### How the main session
   rules`, in Phase 2 directly before `### A worker's question at a gate`;
   the reviewer-report line `- Follow-up candidates: <list | none>`; the
   shared unreadable-field literal `could not be read from the hook input`
   (the hook's own text).
+- **K-C5.** The spec was untracked at the start; the main session made the
+  commit the start check names, `8db589b`, which is the batch's baseline.
+- **K-C6.** Phase 0 read `crossSessionInbound` from the settings files
+  ahead of this batch: `accept` in the user settings, none in the project,
+  no managed source, and the run went on without the question.
+- **K-C7.** The Linux and WSL managed-settings directory is written in
+  `SKILL.md` in Task 6's runnable pattern form, with a sentence naming the
+  documented directory, since the literal fails `check-no-model-names.sh`
+  (Task 6).
+- **K-C8.** A source the main session cannot read (settings delivered from a
+  server) counts as present when
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json` exists — then
+  the question; absent, the source counts as absent and the delivery-notice
+  stop stays the backstop (Task 6).
+- **K-C9.** "The user's reply in an interactive run" adds no pause and no
+  question: the orchestrating skill writes `RUN_DIR/rulings.md` from a
+  ruling it holds when it reaches the code-fixer dispatch — in an
+  interactive run, a message from the user received before that dispatch —
+  and the text promises no pause for one (Task 9).
 
 Constraints for every task:
 
@@ -409,7 +430,7 @@ Spec Step 1.1 — K-L2; K-C1, K-C2, K-C4. File:
 
 **Status:** TODO
 
-Spec Step 1.2 — K-L9, K-L10; K-C3. File:
+Spec Step 1.2 — K-L9, K-L10; K-C3, K-C7, K-C8. File:
 `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 - **§ The start checks, the inbound bullet.** When the launch line carries
@@ -425,14 +446,16 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
   A file that exists and cannot be read or parsed, or a source the main
   session cannot read (settings delivered from a server): the question as
   today, followed by "In a session that cannot ask (a system reminder to
-  work without stopping), the run ends naming the launch line." The text
-  says when the main session treats a source it cannot read as present,
-  from what the two pages below state; the stop on the first message's
-  delivery notice (§ The message protocol) stays the backstop. Why: three
+  work without stopping), the run ends naming the launch line." Settings
+  delivered from a server count as present when
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json` exists — then
+  the question — and as absent when it does not (K-C8); either way the stop
+  on the first message's delivery notice (§ The message protocol) stays the
+  backstop. Why: three
   batches asked the same question with the value already read from the user
   settings and no project or managed override found.
-- **The Why cites the two pages and the date, carrying only what they
-  state (K-C3).** As read on 2026-09-30:
+- **The Why cites the pages and the date, carrying only what they state
+  (K-C3, K-C8).** As read on 2026-09-30:
   - https://code.claude.com/docs/en/settings — precedence, highest first:
     managed settings; the command line (`claude --settings`); project local
     (`.claude/settings.local.json`); shared project (`.claude/settings.json`);
@@ -459,9 +482,16 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
     highest-ranked source that delivers at least one policy key and ignores
     the others; `crossSessionInbound` is among the lock keys, for which the
     strictest value any source sets applies when the sources are merged.
-  No local cache path for server-managed settings, and no claim about what
-  a non-interactive run writes.
-- **The Linux and WSL directory in `SKILL.md`.** `check-no-model-names.sh`
+  - https://code.claude.com/docs/en/server-managed-settings, cited for these
+    facts only (K-C8) — the server-managed settings cache is
+    `~/.claude/remote-settings.json`, and the delivered settings are kept in
+    the configuration directory, `~/.claude` unless `CLAUDE_CONFIG_DIR` is
+    set, so the lookup is
+    `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`; a
+    non-interactive run does not write the cache for settings that need
+    approval, which is why the delivery-notice stop stays the backstop when
+    the file is absent.
+- **The Linux and WSL directory in `SKILL.md` (K-C7).** `check-no-model-names.sh`
   (on the spec's Zero diff list, so not edited) reads `claude-` followed by
   a letter or digit as a model-ID prefix and strips only the exceptions it
   lists, so the Linux and WSL directory above, written literally into
@@ -474,7 +504,8 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
   (the name is the implementer's), and Phase 0's **Inputs** gains the
   settings files.
 - **The gates table's inbound row**: asked only when a file cannot be read
-  or parsed or a source cannot be read; the cannot-ask outcome unchanged.
+  or parsed, or the server-managed settings cache exists (K-C8); the
+  cannot-ask outcome unchanged.
 - **§ The `## Autopilot` section (K-L10).** `- <Label> (<note>):` is read as
   `- <Label>:` for a known label. The note is carried with the field: for
   `Acceptance:`, as a run-notes line in both S4 task blocks (a bracketed
@@ -494,11 +525,13 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
 - Read by the bullet, the case three batches asked about — `accept` in the
   user settings file, and no project, local, or managed-settings file that
   sets the key — goes on without the question, the state file recording the
-  user settings file and line; a source the main session cannot read raises
-  the question only on a condition the bullet states and the main session
-  can check.
-- Its Why names both URLs and `2026-09-30` and states nothing the two pages
-  above do not state.
+  user settings file and line; settings delivered from a server raise the
+  question only when `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`
+  exists, and count as absent when it does not, the delivery-notice stop
+  named as the backstop (K-C8).
+- Its Why names the three URLs and `2026-09-30`, cites the
+  server-managed-settings page only for the cache facts above, and states
+  nothing the three pages do not state.
 - `bash scripts/check-no-model-names.sh` exits 0 with the Linux and WSL
   managed-settings file named in `SKILL.md` in a form the main session can
   resolve there, and `git diff 8db589b -- scripts/check-no-model-names.sh`
@@ -608,15 +641,18 @@ Spec Step 1.3 — K-L12; K-C4. File:
 
 **Status:** TODO
 
-Spec Step 2.1 — K-L8. Files: `plugins/kenspc/skills/task-review/SKILL.md`,
+Spec Step 2.1 — K-L8; K-C9. Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 `plugins/kenspc/skills/task-implement/SKILL.md`.
 
 - **task-review Step 5**, before the code-fixer dispatch and outside every
   `canonical:` block: a ruling on the reviewers' findings given after they
-  returned and before code-fixer is dispatched — the user's reply in an
-  interactive run, or an autopilot main session's answer to the worker
-  running the review — is written by the orchestrating skill to
-  `RUN_DIR/rulings.md` before the dispatch. The file: a first line naming
+  returned and before code-fixer is dispatched — in an interactive run, a
+  message from the user received before that dispatch; in an autopilot
+  worker, the main session's answer to the worker running the review — is
+  written by the orchestrating skill to `RUN_DIR/rulings.md` before the
+  dispatch, from the ruling it holds when it reaches the dispatch. The step
+  adds no pause and no question, and the text promises no pause for a
+  ruling (K-C9). The file: a first line naming
   who ruled, then one entry per ruling:
   `- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
   or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>` (any grammar beyond this
@@ -642,6 +678,10 @@ Spec Step 2.1 — K-L8. Files: `plugins/kenspc/skills/task-review/SKILL.md`,
   the CONTEXT stays unchanged, and that a ruling never goes into
   `CUSTOM_INSTRUCTIONS`; task-review states the entry grammar and the
   absent-file rule; Schema F and Schema G mention the file when it exists.
+- Neither file adds a pause or a question before the code-fixer dispatch,
+  or promises one: the file is written from a ruling the skill holds when it
+  reaches the dispatch — in an interactive run, a message from the user
+  received before it (K-C9).
 - `bash scripts/check-all.sh` exits 0.
 
 ---
