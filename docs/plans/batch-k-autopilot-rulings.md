@@ -582,6 +582,65 @@ Settled after S2 (all ruled by the main session under Constraints,
   interactive task-review should offer a pause to rule on findings before
   code-fixer runs, which would be a new gate.
 
+Settled after S3 (all ruled by the main session under Constraints,
+"Rulings for this run", 1 and 3; S3's own review ran in its task-implement
+Phase 2, run directory `.kenspc/runs/20260930-234108-batch-k-autopilot-rulings-tasks/`,
+verdict PASS, 20 fixed, 5 deferred, 2 not applicable):
+
+- **K-C10** (S3's review, `799b144`, ruled by the main session). The
+  corrected acceptance case now passes on the unbroken clone before it
+  fails on the break. Accepted as a refinement within K-L5, not a
+  reopening: a failure on the break is a negative control only when the
+  unbroken form passed first, the plugin's three-step mutation rule. It
+  reads K-L5 beyond its letter and goes on the reviewer report's
+  `beyond the letter` list.
+- **K-C11** (S3's review, row E3/B5, DEFERRED MEDIUM, ruled by the main
+  session; to the S5 after S3b, per ruling 3). The delivery notice covers a
+  hold on the worker's side only. No new stop: `SKILL.md` says the
+  delivery-notice stop stays the backstop for the worker's side, and that a
+  hold on the main session's own inbound shows as a worker that returns
+  with `## Question for the main session` although no `question <tag>:`
+  message from it arrived; the main session answers it by the resume as
+  today, records the sign, and names the settings precedence in both
+  reports. The README's "caught the same way" and the CHANGELOG follow.
+  Why no stop: the run can go on through the resume, and K-L2 keeps the
+  numbered list; a stop would hold an unattended run for a setting the
+  user can fix after it.
+- **K-C12** (S3's review, row 12's Doc-sync gap, ruled by the main
+  session; to the S5 after S3b as a one-line fix in an allowed file). The
+  4.5.0 CHANGELOG's Phase 0 inbound entry names the file a launch line's
+  `--settings` names among the sources read.
+- **K-C13** (S3's review note on `d9dd607`, ruled by the main session; to
+  the S5 after S3b as a one-sentence fix). The macOS managed preferences
+  are read from `/Library/Managed Preferences/…` plist files, where macOS
+  installs a configuration profile's managed preferences; Claude Code's
+  managed-settings page names only the `com.anthropic.claudecode` domain.
+  The Why says which fact comes from which source. It reads K-L9 ("the
+  managed-settings path per platform is taken from Claude Code's settings
+  documentation") beyond its letter and goes on `beyond the letter`.
+- **K-C14** (found by the main session reading S3's Phase 0 text; to the
+  S5 after S3b). S3 made "no source that sets the key" a stop naming the
+  launch line, with the Why that no source is then known to accept inbound
+  messages. The documentation says otherwise:
+  https://code.claude.com/docs/en/cross-session-messaging § Control inbound
+  messages (read 2026-10-01): when no value applies, a session that
+  bypasses permission prompts delivers a message whose sender also
+  bypasses, and holds the rest. Prerequisites start the main session in
+  bypassPermissions and the driver starts every worker so, so with no
+  source setting the key the run goes on, the state file's inbound record
+  reading the default; a main session not in that mode is caught by
+  K-C11's sign. Why: a stop there would stop a run the default serves,
+  the waste this batch removes.
+- **K-C15** (S3's review, rows E6, E7, E8, T4, DEFERRED LOW, ruled by the
+  main session under ruling 3). Follow-up candidates for the user, listed
+  in the reviewer report and not fixed: a ruling that arrives after the
+  code-fixer dispatch (E6, tied to K-C9's pause question); a `rulings.md`
+  entry outside its grammar (E7); a task status outside the four words
+  (E8, needs `task-implementer.md`, on the Zero diff list); a guard for the
+  telemetry hook's transcript root (T4, a new guard outside Allowed files).
+  None is a one-line fix in an allowed file. R8's and B3's NOT APPLICABLE
+  stand as code-fixer gave them.
+
 ## Autopilot
 
 - Mode: plugin
