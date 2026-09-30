@@ -120,10 +120,12 @@ use by the next product-repository batch, whose reviewer report shows the
 - **Phase 0 inbound check (autopilot).** When the launch line carries no
   `crossSessionInbound` accept, the main session reads the value from the
   managed, user, and project settings files with the documented
-  precedence, going on with `accept` and recording where it came from; it
-  asks only when a file cannot be read or parsed, or the server-managed
-  settings cache exists. Three batches had asked with `accept` already in
-  the user settings and no override.
+  precedence, going on with `accept` and recording where it came from;
+  `hold`, `refuse`, or no source that sets the key is a stop naming the
+  launch line, where 4.4.1 asked whether a settings file accepted inbound
+  messages. It asks only when a file cannot be read or parsed, or the
+  server-managed settings cache exists. Three batches had asked with
+  `accept` already in the user settings and no override.
 - **A label with a note (autopilot).** `- <Label> (<note>): <value>` reads
   as the known label; the `Acceptance:` note becomes a `Run notes:` line in
   both S4 task blocks, another field's note is named after the settings
