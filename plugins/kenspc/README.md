@@ -591,8 +591,9 @@ value other than `accept`, `hold`, or `refuse`, or when the
 server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists;
 a session that cannot ask ends naming the launch line. The first message's
 delivery notice still stops the run on a value the read missed that holds a
-worker's inbound, and a hold on the main session's own inbound is recorded
-and named in the reports (see Known behavior).
+worker's inbound, and a worker's question that never arrived as a message
+is recorded as not received, with the causes to check named in the
+reports (see Known behavior).
 
 **The `## Autopilot` section.** The batch's settings are the last section
 of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
@@ -1287,9 +1288,11 @@ on Windows.
   only: a value that holds the main session's own inbound sends none, since
   the worker's question never arrives and no answer is sent. The worker
   runs into its thirty-minute wait and stops with the question in its final
-  message, and the skill resumes it with the answer; a question that never
-  arrived as a message is the sign of that hold, which the skill records,
-  naming the settings precedence in both reports for you to change. The
+  message, and the skill resumes it with the answer. A question that never
+  arrived as a message is recorded as not received, not as a hold: a send
+  that failed, or one the worker never made, leaves the same return. Both
+  reports name the causes to check — the main session's own inbound under
+  the settings precedence, or a send that failed or was never made. The
   run does not stop for it.
 - **A main-session ruling can be wrong.** The autopilot's main session
   rules every point the spec leaves open, except the stop conditions,

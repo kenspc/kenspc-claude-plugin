@@ -149,11 +149,12 @@ use by the next product-repository batch, whose reviewer report shows the
   value, a source sets a value other than `accept`, `hold`, or `refuse`,
   or the server-managed settings cache exists. Three batches had asked with
   `accept` already in the user settings and no override. The first
-  message's delivery notice stays the backstop for a worker's held inbound;
-  a hold on the main session's own, which sends no notice, shows as a
-  worker that returns with a question that never arrived as a message, and
-  is answered by the resume, recorded, and named with the settings
-  precedence in both reports.
+  message's delivery notice stays the backstop for a worker's held inbound.
+  A worker that returns with a question that never arrived as a message —
+  the main session's own inbound held, which sends no notice, or a send
+  that failed or was never made — is answered by the resume, recorded as
+  a question not received, and named in both reports with those causes to
+  check.
 - **A label with a note (autopilot).** `- <Label> (<note>): <value>` reads
   as the known label; the `Acceptance:` note becomes a `Run notes:` line in
   both S4 task blocks, another field's note is named after the settings

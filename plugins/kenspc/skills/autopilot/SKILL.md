@@ -494,10 +494,10 @@ reminder to work without stopping), the run ends with the same message.
     start the main session in bypassPermissions and the driver starts
     every worker so, so the default delivers every message of the run. A
     main session started without bypass permissions holds its workers'
-    questions under the default, and that shows as the sign § The message
-    protocol names — a worker that returns with a question that never
-    arrived as a message. Why no stop: a stop there would stop a run the
-    default serves.
+    questions under the default, and that shows as the question not
+    received that § The message protocol records — a worker that returns
+    with a question that never arrived as a message. Why no stop: a stop
+    there would stop a run the default serves.
   - `hold` or `refuse`: the stop naming the launch line and the file and
     line, the managed source, or the launch line's inline JSON, that set
     it. Why the source too: a managed value,
@@ -521,9 +521,10 @@ reminder to work without stopping), the run ends with the same message.
   notice reports. A missed value that holds the main session's own inbound
   shows instead as a worker that returns with its question under
   `## Question for the main session` although that question never arrived
-  as a message; the run answers it by the resume and records the sign
-  (§ The message protocol). Why read the files: three batches asked the
-  same question with the value already read from the user settings and no
+  as a message; the run answers it by the resume and records it as a
+  question not received (§ The message protocol). Why read the files:
+  three batches asked the same question with the value already read from
+  the user settings and no
   project or managed override found, and the user's answer was the one the
   files already gave. Why a question for an unreadable source, and not a
   guess: a value the main session cannot see may be `hold`, and a run that
@@ -596,8 +597,8 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 
 `_logs/<batch>-state.md` holds the settings line, the repository root, the
 pass-through values, where the inbound `accept` came from, or that no
-source sets the key (The start checks), and each sign of a hold on the
-main session's own inbound (§ The message protocol), the
+source sets the key (The start checks), and each question a worker
+returned with that never arrived as a message (§ The message protocol), the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
 questions answered, the rail observations each worker listed, the gates
@@ -622,7 +623,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
-inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; held at the main session: <tag>[, <tag>…]]
+inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[, <tag>…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
@@ -1131,23 +1132,25 @@ a skip at any effort; the post-check catches it at every effort.
   notice reports the worker's inbound, so this stop is the backstop for
   the worker's side only: a main session whose own inbound is held never
   receives the worker's question, sends no answer, and so gets no notice
-  (the next bullet gives the sign of that hold).
+  (the next bullet says what the worker's return then shows).
 - A worker that got no answer in thirty minutes has put its question under
   `## Question for the main session` in its final message and stopped. The
   answer goes to it as a resume under the step's next `<tag>-r<k>`: a
   prompt whose first line is `answer <tag>: <one line>` and whose body is
   the decision, counted as a resume. When that question never arrived as a
-  `question <tag>:` message from the worker, the return is the sign of a
-  hold on the main session's own inbound: the question is answered by the
-  resume all the same, the sign is recorded on the state file's `inbound:`
-  line (`held at the main session: <tag>`), and both reports name the
-  settings precedence above as the setting to change — the user report
-  among what needs the user, the reviewer report on its
-  `Follow-up candidates` line. It is not a stop. Why not a stop: the run
-  goes on through the resume, and a stop would hold an unattended run for
-  a setting the user can change after it. Why recorded: each held question
-  costs thirty minutes and a resume, and without the sign on record nothing
-  names the cause.
+  `question <tag>:` message from the worker, the question is answered by
+  the resume all the same and recorded as not received on the state
+  file's `inbound:` line (`question not received: <tag>`), and both
+  reports name the causes to check — the main session's own inbound,
+  under the settings precedence above, or a send that failed or was never
+  made — the user report among what needs the user, the reviewer report
+  on its `Follow-up candidates` line. It is not a stop. Why not a stop: the
+  run goes on through the resume, and a stop would hold an unattended run
+  for a cause the user can look into after it. Why recorded: each such
+  question costs thirty minutes and a resume, and without the record
+  nothing names where to look. Why the causes and not a hold: a held
+  inbound, a send that failed, and a send never made leave the same
+  return, and the record names each as a cause rather than claiming one.
 
 ### The verdict loop after S3b
 
@@ -1486,8 +1489,8 @@ that ruling is read.
 
 - `## User report` — the conversation's language, at most one page: what
   the batch built, the release commit, what needs the user (tag, push,
-  release; any stop or deferred item; a hold on the main session's own
-  inbound, with the settings precedence to change), and the cost. Then, under the
+  release; any stop or deferred item; a question not received, with the
+  causes to check), and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -2342,10 +2345,11 @@ outcome — and reads `none` when no worker skipped its gate. The
 outside it (§ The stop conditions, Outward actions): each outward action
 it did not take — an issue to file, a backlog item — and each finding a
 ruling deferred to a follow-up, with the clarification or the row it came
-from, and, when the state file's `inbound:` line records a hold on the
-main session's own inbound, that hold with its tags and the settings
-precedence to change (§ The message protocol); it reads `none` when there
-are none.
+from, and, when the state file's `inbound:` line records a question not
+received, that record with its tags and the causes to check — the main
+session's own inbound under the settings precedence, or a send that
+failed or was never made (§ The message protocol); it reads `none` when
+there are none.
 
 ## The gates
 
