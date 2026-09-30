@@ -371,7 +371,23 @@ Spec Step 1.1 — K-L5. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 4: SKILL.md — the record
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the clarification entry's ruler is written
+  `(ruled by the main session)` or `(ruled by the user)`, the form this
+  spec's own clarifications use, stated once in Phase 2's Constraints and
+  named at each place that describes an entry. The user report's rulings
+  list sits under the English heading
+  `### Main-session rulings — review before the tag and the push`, its
+  lines in the user's language, since the Writing rules keep report
+  headings in English. The reviewer report's indented line form is
+  `<clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits>`.
+- Changes/tradeoffs: `questions answered:` also records the user's answers
+  at a stop or a gate, marked `(user)`, and a point the main session raised
+  itself goes under the tag of the step it concerns. The
+  `Main-session rulings` count takes a ruling once where both the state
+  file and the spec record it.
 
 Depends on: Task 1-3
 

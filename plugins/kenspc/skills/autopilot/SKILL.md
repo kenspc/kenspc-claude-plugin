@@ -453,6 +453,14 @@ questions answered, the rail observations each worker listed, the gates
 a worker skipped and their outcome, the
 stops, the questions left open for a later step (The stop conditions), the
 clarification numbers recorded in the spec, and the next action.
+Every ruling is recorded under `questions answered:`, whoever made it — a
+worker's question, a choice on a confirmation, a point the main session
+raised itself (under the tag of the step it concerns), and an answer the
+user gave at a stop or a gate — each line ending with who ruled,
+`(main session)` or `(user)`. Why: the reviewer report's
+`Main-session rulings` line and the user report's rulings list are built
+from these lines, and a ruling without its ruler cannot be told from an
+answer the user gave.
 It is rewritten at every transition and re-read, with `<tag>.exit`, on
 every wake — a notice, a message, a user reply — before the run acts. Why:
 a wake starts a new turn whose only reliable memory is a file, and a long
@@ -469,7 +477,7 @@ sessions:
 models and efforts:
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 questions answered:
-  <tag>: <one line> → <one line>
+  <tag>: <one line> → <one line> (main session|user)
 rail observations:
   <tag>: <the worker's entry, one per line | none | not read (<reason>)>
 skipped gates:
@@ -569,8 +577,12 @@ FAIL is classified, and the zero-diff check has printed nothing.
 
 **Constraints**: the main session commits nothing but clarification entries
 in the spec, `docs(plans): record clarifications settled after <step>`; the
-workers make every other commit. Why: the commits are the workers' evidence,
-and a main session that edited code would be reviewing its own work.
+workers make every other commit. Each clarification entry names who ruled,
+`(ruled by the main session)` or `(ruled by the user)`, wherever this skill
+describes one. Why: the commits are the workers' evidence, and a main
+session that edited code would be reviewing its own work; why the ruler
+named: the spec is where the user reads a ruling before the tag and the
+push, and an entry without its ruler reads as the user's own decision.
 
 ### Launch, wait, return
 
@@ -823,9 +835,10 @@ test shows false would otherwise be built as written, or sent to a user
 who has taken the evidence-backed recommendation nearly every time; the
 list puts every such departure in front of the user before the tag.
 
-Every ruling is recorded: under the state file's `questions answered:`
-and as a clarification entry in the spec, committed as Phase 2's
-Constraints say. A worker still never rules itself: it asks the main
+Every ruling is recorded: under the state file's `questions answered:`,
+marked `(main session)`, and as a clarification entry in the spec that
+names the main session as the ruler, committed as Phase 2's Constraints
+say. A worker still never rules itself: it asks the main
 session (the preamble's § 1), which records every answer. Why: an answer
 a worker invents is recorded nowhere, so nobody reads it before the
 release, while the main session's answer is in the state file and the
@@ -844,11 +857,13 @@ from the spec, in one answer:
   words leave open;
 - a step without a task: "add a task for <step>";
 - a task outside the spec: "drop <task>", unless a spec step needs it,
-  which the main session rules and records;
+  which the main session rules and records in a clarification entry
+  naming it as the ruler;
 - a choice riding on the confirmation — a type, a shape, a name, or a
   behavior the worker proposes to pin, however the worker frames it: a
   detail, a task-level concretization, not a design change — ruled by the
-  main session and recorded, its ruling part of the answer.
+  main session and recorded, as a clarification entry naming the main
+  session as the ruler, its ruling part of the answer.
 
 It fails in two named ways: a mismatch answered `yes`, and a riding choice
 passed without a recorded ruling. Why: the framing is the worker's, not
@@ -950,7 +965,7 @@ S3b's Schema F verdict decides the next step. Passing: PASS, on to Phase 3.
 FAIL, or PARTIAL with HIGH rows deferred: each HIGH row and each row-3 or
 row-5 FAIL is classified by the main session as a plugin defect, fixed by
 an S5, or accepted as a deferral with
-a reason recorded as a clarification in the spec. One S5 may fix several
+a reason recorded as a clarification in the spec, naming who ruled. One S5 may fix several
 defects classified in the same round: its task block lists each defect
 with its row (The task blocks, S5), and it commits one defect per commit.
 Every S5 is followed by the narrowed review — `-s3c`, the next letter for
@@ -963,7 +978,8 @@ review reads only the commits the S5 made: it counts as a fix of it
 (stop condition 4) and goes to the next S5. The second narrowed
 review that still FAILs is the "guards red twice in a row" stop. DEFERRED
 MEDIUM and LOW rows are classified once — a fix in S5, or a roadmap
-candidate listed in the reviewer report — and recorded as a clarification.
+candidate listed in the reviewer report — and recorded as a clarification
+naming who ruled.
 Why: the round count is where the stop conditions put it, and a deferral
 without a recorded reason is a finding nobody owns. Why a narrowed review
 after every S5, a wording-only fix included: one S5 has fixed six defects
@@ -1125,7 +1141,8 @@ the batch's work → a corrected case (below), re-run in a new S4 session in
 its corrected form; an observation → recorded. The same
 defect still failing after two fixes of it is a stop, counted per defect
 as stop condition 4 counts. Every classification is a
-clarification entry in the spec, committed by the main session as
+clarification entry in the spec, naming who ruled, committed by the main
+session as
 `docs(plans): record clarifications settled after <step>`. Why: the record
 separates evidence from judgment — S4 records, the main session decides —
 and the spec's clarification section is where decisions made during
@@ -1146,8 +1163,8 @@ pass, and one commit per defect.
 2. a negative control: the corrected form fails on a deliberate break of
    what the case checks, with the output recorded.
 
-The ruling is a clarification in the spec carrying the case, the corrected
-form, and both pieces of evidence — paths or quoted output — committed as
+The ruling is a clarification in the spec, naming the main session as the
+ruler, carrying the case, the corrected form, and both pieces of evidence — paths or quoted output — committed as
 Phase 2's Constraints say. The `## Autopilot` section stays as Phase 0
 read it: a correction is a ruling, not a settings edit, and every later S4
 — the first run or an `-s4b` re-run — lists the case in its corrected form
@@ -1243,7 +1260,14 @@ release preparation was right.
 
 - `## User report` — the conversation's language, at most one page: what
   the batch built, the release commit, what needs the user (tag, push,
-  release; any stop or deferred item), and the cost.
+  release; any stop or deferred item), and the cost. Then, under the
+  heading `### Main-session rulings — review before the tag and the push`,
+  the rulings of the reviewer report's `Main-session rulings` line, one
+  line each in the user's language — the question, the ruling, and its
+  clarification — or `none`; the one-page limit does not count this list.
+  Why: the user reviews every ruling from the reports before anything
+  leaves the machine, and a limit that cut the list would cut the part the
+  user must read.
 - `## Reviewer report` — English, the fixed fields in this order (Templates
   § The reviewer report). The total-cost line reports the measured sum of
   the workers' last cumulative `total_cost_usd`, plus, in plugin mode, the
@@ -1940,6 +1964,8 @@ decisions the user has yet to see.
 - Range: <baseline sha> → <release sha, or the last commit>
 - Spec: git show <hash>:<path>
 - Design rulings and clarifications: <n> / <m> / <k>; beyond the letter: <list, or none>
+- Main-session rulings: <n> | none
+  <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
@@ -1954,6 +1980,16 @@ decisions the user has yet to see.
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
 ```
+
+The `Main-session rulings` line is built from the state file's
+`questions answered:` lines marked `(main session)` and the spec's
+clarification entries that name the main session as the ruler, one ruling
+counted once where both record it: `<n>` rulings, each on an indented line
+with its clarification, the tag or step, the question, the ruling, the
+reason, and the commits it produced — the clarification commit and any
+commit a worker made from it — and `none` when the main session ruled
+nothing. Why: it is the list the user reads before the tag and the push,
+so every ruling the run made without the user is on it.
 
 The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`
@@ -1988,8 +2024,8 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 
 ## Exit
 
-On a finish, the final message holds `## User report`, `## Reviewer report`,
-every default a session that cannot ask took in place of a question, then
+On a finish, the final message holds `## User report` — its
+`Main-session rulings` list included — `## Reviewer report`, every default a session that cannot ask took in place of a question, then
 the sentence that the tag, the push, and the release are the user's, and
 ends with `Autopilot finished — <baseline sha>..<last sha>` as its last
 line, as the stop line is the last line on a stop. Why the last line: a
