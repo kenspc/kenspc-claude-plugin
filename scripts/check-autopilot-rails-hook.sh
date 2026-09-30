@@ -63,9 +63,29 @@
 # Edit, and NotebookEdit, since the fixtures run the script directly and
 # would stay green under a matcher that dropped a tool.
 #
-# Exit code 0: the registration holds and every fixture decided as expected.
-# Exit code 1: the registration or a decision differs (each one is reported).
-# Exit code 2: missing hook file or hooks.json, or self-test fixture stale.
+# Beside it, main mode checks the heading and the phrase an unreadable-field
+# denial travels by. The literal `## Rail observations` must occur in the
+# hook's unreadable-field reason (its REASON_UNREADABLE= assignment), which
+# tells a worker where to list the denial; in the preamble template of
+# plugins/kenspc/skills/autopilot/SKILL.md (the fenced block under
+# `### The preamble`), which tells every worker to keep that section; and in
+# that skill's `### Launch, wait, return` section (up to the next `### `
+# heading), where the main session reads it at a worker's return. The phrase
+# `could not be read from the hook input` must occur in the hook, which
+# prints it in each unreadable-field reason, and in SKILL.md, whose stop
+# condition matches on it. Why: the hook, the worker's prompt, and the main
+# session meet at these two literals, and a rename in one carrier breaks the
+# path silently while every fixture still passes. A missing literal is
+# reported per carrier.
+#
+# Exit code 0: the registration holds, the heading and the phrase are in
+#              every carrier, and every fixture decided as expected.
+# Exit code 1: the registration, a carrier's literal, or a decision differs
+#              (each one is reported).
+# Exit code 2: missing hook file, hooks.json, or SKILL.md; no REASON_UNREADABLE=
+#              assignment in the hook, no fenced template under
+#              `### The preamble`, or no `### Launch, wait, return` section in
+#              SKILL.md; or self-test fixture stale.
 #
 # Same set -euo pipefail discipline and SCRIPT_DIR / REPO_ROOT derivation as
 # the other guards; bash 3.2, no associative arrays. Mutations use a literal
@@ -86,6 +106,16 @@
 #                  timed <| one only by a thin margin). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
+#                  It then copies SKILL.md beside the hook copy, runs the
+#                  heading check on the two unmodified copies (must pass),
+#                  and on five mutants, each of which must turn that check
+#                  red with the mutated carrier named in its output: the
+#                  heading dropped from the hook's unreadable-field reason,
+#                  from the preamble template, and from § Launch, wait,
+#                  return, and the phrase dropped from the hook and from
+#                  SKILL.md — every occurrence in the carrier's region. A
+#                  heading mutation that replaces nothing is exit 2. The
+#                  restored copies must pass again.
 
 set -euo pipefail
 
@@ -93,6 +123,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 HOOK_REL="plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh"
+SKILL_REL="plugins/kenspc/skills/autopilot/SKILL.md"
+HEADING="## Rail observations"
+PHRASE="could not be read from the hook input"
 HOOKS_JSON_REL="plugins/kenspc/hooks/hooks.json"
 if [[ -x /bin/bash ]]; then
     HOOK_BASH=/bin/bash
@@ -108,7 +141,7 @@ FX_HOME=$FX_BASE/home
 WORK=""
 cleanup() {
     [[ -n "${WORK:-}" && -d "$WORK" ]] || return 0
-    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/time.txt" "$WORK/link" "$WORK/real/deep" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp"
+    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/time.txt" "$WORK/link" "$WORK/real/deep" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp" "$WORK/hook/SKILL.md" "$WORK/hook/SKILL.md.tmp"
     rmdir "$WORK/real/a/b" "$WORK/real/a" "$WORK/real" "$WORK/hook" 2>/dev/null || true
     rmdir "$WORK" 2>/dev/null || true
 }
@@ -558,6 +591,73 @@ check_registration() {
     done
 }
 
+# check_heading <hook> <skill>: the heading `## Rail observations` in the
+# hook's REASON_UNREADABLE= assignment, in the preamble template of the
+# skill (the fenced block under `### The preamble`), and in its
+# `### Launch, wait, return` section; the phrase an unreadable-field reason
+# carries in the hook and in the skill. Returns 1 with each missing literal
+# reported per carrier, 2 when a file, the assignment, the template, or the
+# section cannot be found.
+check_heading() {
+    local hook="$1" skill="$2" reason preamble launch bad=0
+    if [[ ! -f "$skill" ]]; then
+        echo "ERROR: missing $skill" >&2
+        return 2
+    fi
+    reason=$(grep -E '^REASON_UNREADABLE=' "$hook" || true)
+    if [[ -z "$reason" ]]; then
+        echo "ERROR: no REASON_UNREADABLE= assignment in $hook" >&2
+        return 2
+    fi
+    preamble=$(awk '
+        { sub(/\r$/, "") }
+        /^### The preamble[ \t]*$/ { sec = 1; next }
+        sec && /^### / { exit }
+        sec && $0 == "````" { if (fence) { done = 1; exit } fence = 1; next }
+        sec && fence { print }
+        END { if (!done) exit 3 }' "$skill") || {
+        echo "ERROR: no fenced template under ### The preamble in $skill" >&2
+        return 2
+    }
+    launch=$(awk '
+        { sub(/\r$/, "") }
+        /^### Launch, wait, return[ \t]*$/ { sec = 1; found = 1; next }
+        sec && /^### / { exit }
+        sec { print }
+        END { if (!found) exit 3 }' "$skill") || {
+        echo "ERROR: no ### Launch, wait, return section in $skill" >&2
+        return 2
+    }
+    case "$reason" in
+        *"$HEADING"*) ;;
+        *) echo "MISSING '$HEADING' in the hook's unreadable-field reason (REASON_UNREADABLE= in $hook)" >&2; bad=1 ;;
+    esac
+    case "$preamble" in
+        *"$HEADING"*) ;;
+        *) echo "MISSING '$HEADING' in the preamble template (the fenced block under ### The preamble in $skill)" >&2; bad=1 ;;
+    esac
+    case "$launch" in
+        *"$HEADING"*) ;;
+        *) echo "MISSING '$HEADING' in ### Launch, wait, return of $skill" >&2; bad=1 ;;
+    esac
+    if ! grep -qF -- "$PHRASE" "$hook"; then
+        echo "MISSING '$PHRASE' in the hook $hook" >&2
+        bad=1
+    fi
+    if ! grep -qF -- "$PHRASE" "$skill"; then
+        echo "MISSING '$PHRASE' in the autopilot skill $skill" >&2
+        bad=1
+    fi
+    if [[ "$bad" -ne 0 ]]; then
+        echo "The hook tells a worker to list an unreadable-field denial under $HEADING, the" >&2
+        echo "preamble keeps that section in every worker's final message, and the main" >&2
+        echo "session reads it at the return and stops on '$PHRASE'. Restore the" >&2
+        echo "literal, or rename it in every carrier and in this guard together." >&2
+        return 1
+    fi
+    return 0
+}
+
 run_main_logic() {
     local hook="$REPO_ROOT/$HOOK_REL" json="$REPO_ROOT/$HOOKS_JSON_REL"
     if [[ ! -f "$hook" ]]; then
@@ -570,6 +670,8 @@ run_main_logic() {
     fi
     check_registration "$json" || return 1
     echo "OK    autopilot rails hook — registered on PreToolUse for Bash, Write, Edit, and NotebookEdit"
+    check_heading "$hook" "$REPO_ROOT/$SKILL_REL" || return $?
+    echo "OK    autopilot rails hook — '$HEADING' in the unreadable-field reason, the preamble template, and § Launch, wait, return; '$PHRASE' in the hook and the skill"
     make_work
     if run_fixtures "$hook"; then
         echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0; the timed commands in ${TIMED})"
@@ -598,6 +700,43 @@ replace_literal() {
         !done && (i = index($0, old)) { $0 = substr($0, 1, i - 1) new substr($0, i + length(old)); done = 1 }
         { print }
     ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+}
+
+# mutate_region <file> <start> <stop> <old> <new>: replaces every <old> on
+# the lines from the first that begins with <start> up to, not including,
+# the next line that begins with <stop> — the start line alone when <stop>
+# is empty, the whole file when <start> is empty. Status 2 when nothing was
+# replaced. The strings travel through the environment, as in
+# replace_literal.
+mutate_region() {
+    local file="$1" rc
+    START="$2" STOP="$3" OLD="$4" NEW="$5" awk '
+        BEGIN {
+            st = ENVIRON["START"]; sp = ENVIRON["STOP"]
+            old = ENVIRON["OLD"]; new = ENVIRON["NEW"]
+            state = (st == "") ? 1 : 0
+        }
+        {
+            if (state == 0 && index($0, st) == 1) state = 1
+            else if (state == 1 && st != "" && (sp == "" || index($0, sp) == 1)) state = 2
+            if (state == 1) {
+                out = ""; rest = $0
+                while ((i = index(rest, old)) > 0) {
+                    out = out substr(rest, 1, i - 1) new
+                    rest = substr(rest, i + length(old)); n++
+                }
+                $0 = out rest
+            }
+            print
+        }
+        END { if (!n) exit 3 }
+    ' "$file" > "$file.tmp" && rc=0 || rc=$?
+    if [[ "$rc" -ne 0 ]]; then
+        rm -f "$file.tmp"
+        echo "FAIL  self-test fixture stale: \"$4\" not found in the region of $file that begins with \"$2\"" >&2
+        return 2
+    fi
+    mv "$file.tmp" "$file"
 }
 
 run_self_test() {
@@ -667,6 +806,69 @@ run_self_test() {
     cp "$hook" "$copy"
     if ! run_fixtures "$copy"; then
         echo "FAIL  self-test restoration path: the restored copy failed $FAILS fixture(s), first: $FIRST_RED" >&2
+        return 1
+    fi
+
+    # The heading check: SKILL.md copied beside the hook copy, the two
+    # unmodified copies passing, then one mutant per carrier, each of which
+    # must turn the check red with its carrier named, then the restored
+    # copies passing again.
+    local skill="$REPO_ROOT/$SKILL_REL" skill_copy="$WORK/hook/SKILL.md"
+    local target start stop carrier
+    if [[ ! -f "$skill" ]]; then
+        echo "ERROR: missing $skill" >&2
+        return 2
+    fi
+    cp "$skill" "$skill_copy"
+    check_heading "$copy" "$skill_copy" 2> "$WORK/stderr.txt" && rc=0 || rc=$?
+    if [[ "$rc" -ne 0 ]]; then
+        echo "FAIL  self-test heading check positive path: expected exit 0 on the unmodified copies, got $rc" >&2
+        cat "$WORK/stderr.txt" >&2
+        return 1
+    fi
+    for name in heading-in-reason heading-in-preamble heading-in-return phrase-in-hook phrase-in-skill; do
+        case "$name" in
+            heading-in-reason)
+                target=$copy; start='REASON_UNREADABLE='; stop=''
+                old=$HEADING; new='## Rail notes'
+                carrier="the hook's unreadable-field reason" ;;
+            heading-in-preamble)
+                target=$skill_copy; start='### The preamble'; stop='### '
+                old=$HEADING; new='## Rail notes'
+                carrier="the preamble template" ;;
+            heading-in-return)
+                target=$skill_copy; start='### Launch, wait, return'; stop='### '
+                old=$HEADING; new='## Rail notes'
+                carrier="### Launch, wait, return" ;;
+            phrase-in-hook)
+                target=$copy; start=''; stop=''
+                old=$PHRASE; new='was unreadable in the hook input'
+                carrier="the hook" ;;
+            phrase-in-skill)
+                target=$skill_copy; start=''; stop=''
+                old=$PHRASE; new='was unreadable in the hook input'
+                carrier="the autopilot skill" ;;
+        esac
+        cp "$hook" "$copy"
+        cp "$skill" "$skill_copy"
+        mutate_region "$target" "$start" "$stop" "$old" "$new" || return 2
+        check_heading "$copy" "$skill_copy" 2> "$WORK/stderr.txt" && rc=0 || rc=$?
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test: the heading mutant '$name' gave exit $rc, expected 1" >&2
+            return 1
+        fi
+        if ! grep -F -- "MISSING" "$WORK/stderr.txt" | grep -qF -- "$carrier"; then
+            echo "FAIL  self-test: the heading mutant '$name' did not name $carrier" >&2
+            cat "$WORK/stderr.txt" >&2
+            return 1
+        fi
+        echo "OK    self-test heading mutant '$name' turned the heading check red, naming $carrier"
+    done
+    cp "$hook" "$copy"
+    cp "$skill" "$skill_copy"
+    check_heading "$copy" "$skill_copy" 2> "$WORK/stderr.txt" && rc=0 || rc=$?
+    if [[ "$rc" -ne 0 ]]; then
+        echo "FAIL  self-test heading check restoration path: expected exit 0 on the restored copies, got $rc" >&2
         return 1
     fi
 

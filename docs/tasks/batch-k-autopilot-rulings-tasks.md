@@ -940,7 +940,30 @@ Spec Step 2.3 — K-L8. File: `scripts/check-run-contract.sh`.
 
 ### Task 12: `check-autopilot-rails-hook.sh` — the heading guard
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: one function, `check_heading <hook> <skill>`, runs in main
+  mode after the registration check and in the self-test on copies. It
+  reads the hook's `REASON_UNREADABLE=` line with grep, the preamble
+  template as the lines between the first two ```` fences after
+  `### The preamble` (before the next `### ` heading), and § Launch, wait,
+  return up to the next `### ` heading; each region's absence is exit 2.
+  The self-test's heading mutants use a new `mutate_region` helper that
+  replaces every occurrence inside a region (the start line alone, a
+  section up to the next `### `, or the whole file) and exits 2 when it
+  replaced nothing, since the heading occurs several times in SKILL.md
+  and `replace_literal` requires exactly one. Each mutant must give exit 1
+  and a `MISSING` line naming its carrier.
+- Changes/tradeoffs: the SKILL.md copy lives at `$WORK/hook/SKILL.md` and
+  is removed by name in `cleanup` with its `.tmp`, no recursive `rm`; a
+  self-test run with `TMPDIR` pointed at a scratch directory left it empty.
+  The guard was itself mutation-checked under this run's scratch
+  (`scratch/task-implementer/3/`): the unmodified guard's self-test passed
+  (exit 0), and a mutant whose preamble case tested `$HEADING` instead of
+  the template failed with "the heading mutant 'heading-in-preamble' gave
+  exit 0, expected 1". `check-all.sh --self-test`: `guards run: 12`,
+  `self-tests run: 11`. The hook and `hooks.json` are unchanged.
 
 Depends on: Task 8
 
