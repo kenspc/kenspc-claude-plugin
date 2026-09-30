@@ -1553,8 +1553,10 @@ change only.
 
 Before answering a question from S6, the main session checks that the
 spec is still at HEAD and in the index, `git cat-file -e HEAD:<spec path>`
-and `git ls-files --error-unmatch <spec path>`, run from the repository
-root with the spec's repository-relative path, after the control
+and `git ls-files --error-unmatch ':/<spec path>'`, run from the repository
+root with the spec's repository-relative path — `:/` anchors the index
+check at the root, as `HEAD:` anchors the other, since the control tests
+only the `HEAD:` form — after the control
 `git cat-file -e <head>:<spec path>` with the state file's `head:` has
 succeeded; when either fails, the spec is gone, and the answer tells S6
 to leave the work the point decides undone and put the point in its
