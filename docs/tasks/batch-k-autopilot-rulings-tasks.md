@@ -227,7 +227,22 @@ Spec Step 1.1 — K-L1, K-L3, K-L4; K-C2, K-C4. File:
 
 ### Task 2: SKILL.md — S2's confirmation and the skipped-gate post-check
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the four confirmation answers are a bullet list, all given in
+  one answer, so a riding choice's ruling travels with the `yes` or the
+  add/drop lines rather than as a second message. The `skipped gates:`
+  entry form gains `resumed <tag>-r<k> to amend`, recorded when the resume
+  is launched; the second post-check's outcome is then recorded in the
+  usual forms. The paragraph replacing "A question the spec does not answer
+  is a stop" keeps a Why (the spec is the approved artifact; an open point
+  is the main session's to rule and record).
+- Changes/tradeoffs: the second-failure stop carries a Why of its own
+  (a worker that amended against the ruling and still missed it would miss
+  it again, and further resumes spend the caps), beyond the task's text.
+  The resume prompt's body is described as "the answer the confirmation
+  would have got". Stop 7 still mentions the post-check until Task 5.
 
 Depends on: Task 1
 

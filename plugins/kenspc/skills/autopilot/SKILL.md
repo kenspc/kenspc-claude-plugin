@@ -473,7 +473,7 @@ questions answered:
 rail observations:
   <tag>: <the worker's entry, one per line | none | not read (<reason>)>
 skipped gates:
-  <S2|S3> <tag>: <accepted as a behavior deviation | stop: <the mismatch or choice> | recorded>
+  <S2|S3> <tag>: <accepted as a behavior deviation | resumed <tag>-r<k> to amend | stop: <the mismatch or choice> | recorded>
 stops: <reason> (<time>)
 open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
@@ -835,31 +835,37 @@ spec, where the user reviews it before the tag and the push.
 
 S2 asks at generate-task's confirmation (`Confirm, or adjust tasks before
 writing?`) and S3 at task-implement's batch gate (`Proceed with automated
-implementation?`); both arrive as `question` messages. The confirmation is
-answered from the spec. Passing: `yes` when the task list matches the
-spec's steps — every step has a task, no task is outside the spec — and
-carries no choice the spec's words leave open. It fails in two named ways:
+implementation?`); both arrive as `question` messages, and the main session
+rules on both (§ How the main session rules). The confirmation is answered
+from the spec, in one answer:
 
-- A mismatch answered `yes`. A step without a task, or a task outside the
-  spec, is a question to the user, never `yes` on the user's behalf.
-- A choice riding on the confirmation answered `yes`. A type, a shape, a
-  name, or a behavior the worker proposes to pin — however it frames it: a
-  detail, a task-level concretization, not a design change — is answered
-  from the spec only when the spec's words rule out every other option the
-  worker lists; otherwise it is a question to the user, with the point
-  quoted. Why: the framing is the worker's, not the spec's. Two workers
-  have put one point the spec left unstated, the shape of a result's
-  entries, in two framings — one listed it among the open details, and it
-  went to the user; the other presented it as a concretization with its
-  own suggestion, and the main session confirmed it — so a rubric that
-  looked only at coverage let the framing decide who made the choice.
+- `yes` when the task list matches the spec's steps — every step has a
+  task, no task is outside the spec — and carries no choice the spec's
+  words leave open;
+- a step without a task: "add a task for <step>";
+- a task outside the spec: "drop <task>", unless a spec step needs it,
+  which the main session rules and records;
+- a choice riding on the confirmation — a type, a shape, a name, or a
+  behavior the worker proposes to pin, however the worker frames it: a
+  detail, a task-level concretization, not a design change — ruled by the
+  main session and recorded, its ruling part of the answer.
 
-A question the spec does not answer is a stop, with the question quoted. In
-a session that cannot ask (a system reminder to work without stopping), a
-question the spec answers is answered from the spec, and one it does not
-answer — a choice riding on the confirmation among them — ends the run with
-the question quoted. Why: the spec is the approved artifact, and an answer
-beyond it is a decision the user has not made.
+It fails in two named ways: a mismatch answered `yes`, and a riding choice
+passed without a recorded ruling. Why: the framing is the worker's, not
+the spec's. Two workers have put one point the spec left unstated, the
+shape of a result's entries, in two framings — one listed it among the
+open details, and it went to the user; the other presented it as a
+concretization with its own suggestion, and the main session confirmed it
+— so a rubric that looked only at coverage let the framing decide who made
+the choice. Sending every such choice to the main session, ruled and
+recorded, removes the framing question as sending every one to the user
+did, without a wait on the user for each.
+
+A question the spec does not answer is ruled by the main session, the same
+whether or not the session can ask. The batch gate (S3) is answered `yes`.
+Why: the spec is the approved artifact, and a point it leaves open is the
+main session's to rule and record; the batch gate follows once S2's task
+list has passed (below).
 
 **A skipped gate** is checked after the fact, at the step's return — the
 skipped-gate post-check — not prevented. An S2 that returns without having sent its confirmation
@@ -868,16 +874,30 @@ from S2's tag or its resumes, none in the state file's
 `questions answered:` — has the confirmation's own rubric above applied
 to the task document it committed: every step has a task, no task lies
 outside the spec, and no choice the spec's words leave open rides on it.
-A match is accepted and recorded as a behavior deviation, in the state
-file's `skipped gates:` section and on the reviewer report's
-`Skipped gates` line. No match, or a choice left open, is a stop of stop
-condition 7's kind, with the mismatch or the choice quoted. In a session
-that cannot ask (a system reminder to work without stopping), the run
-ends with it. Why checked and not prevented: an S2 at a lowered effort
-has skipped the confirmation and sent no question while the S2 workers at
-the pass-through effort asked, though the preamble told every one of them
-to ask; the committed task document is on disk to check with the same
-rubric the question would have met.
+A match, or rulings on its open choices that the committed document
+already follows, is accepted and recorded as a behavior deviation, in the
+state file's `skipped gates:` section and on the reviewer report's
+`Skipped gates` line. A mismatch, or an open choice whose ruling differs
+from the committed document, resumes S2 under its next `<tag>-r<k>` with a
+prompt whose first line is `answer <tag>: <one line>` and whose body is
+the ruling — the answer the confirmation would have got — to amend the
+task document and commit it; the resume counts as a resume under
+`Caps:`, and it is recorded under `skipped gates:` as
+`resumed <tag>-r<k> to amend`. The post-check then runs again on the
+amended document. A second failure — a mismatch, or a choice that still
+differs from its ruling — is a stop stated here, outside the numbered stop
+conditions, with the mismatch or the choice quoted. In a session that
+cannot ask (a system reminder to work without stopping), the run ends
+with it quoted. Why the resume: the committed document is on disk to
+amend, and the worker that wrote it amends it; a stop on the first
+mismatch sent the user a point the main session rules everywhere else.
+Why a stop on the second: a worker that amended its document against the
+ruling and still missed it would miss it again, and further resumes would
+spend the caps on the same miss. Why checked and not prevented: an S2 at
+a lowered effort has skipped the confirmation and sent no question while
+the S2 workers at the pass-through effort asked, though the preamble told
+every one of them to ask; the committed task document is on disk to check
+with the same rubric the question would have met.
 
 An S3 that returns without having asked task-implement's batch gate is
 recorded only, in the same section and line. Why: once S2's task list has
@@ -1964,7 +1984,8 @@ wording that closed it:
 - Phase 1 → Phase 2: the spec's commit hash in the state file.
 - Within Phase 2: each `<tag>.exit`; S2 → S3: the task document on disk,
   and, when S2 sent no confirmation question, the skipped-gate
-  post-check's match recorded;
+  post-check's match recorded — after the amendment, when a mismatch
+  resumed S2 to amend it;
   S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
   its `result` other than `BLOCKED`; S3b → Phase 3: its Schema F
   verdict and the empty zero-diff output.
