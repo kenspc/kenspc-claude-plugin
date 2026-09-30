@@ -1469,8 +1469,10 @@ on Windows.
   under `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects`, where Claude Code
   keeps transcripts when `CLAUDE_CONFIG_DIR` is set; the log stays under
   `~/.claude/kenspc` either way. It can log a false entry when a
-  headless session runs several turns, or when a session ends at a
-  confirmation prompt.
+  headless session runs several turns, when a session ends at a
+  confirmation prompt, or when `/kenspc-task-implement` is given a task
+  document with no TODO or IN PROGRESS task, which runs no review by
+  design.
 
 ## Requirements
 
