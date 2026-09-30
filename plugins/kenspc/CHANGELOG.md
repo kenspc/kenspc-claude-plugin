@@ -65,7 +65,12 @@ use by the next product-repository batch, whose reviewer report shows the
   clarification entry's text, which S6 commits into the spec alone before
   its release or removal commit, so the removal leaves the entry in the
   spec's history. The main session checks that S6's reply lists that
-  commit for every ruling; a point that arises after the removal
+  commit for every ruling, that each clarification commit comes before the
+  removal, and, after a removal, that the spec is gone from HEAD — a
+  failed check is recorded in both reports with the commits it names, not
+  a stop; before it answers a question from S6 it checks that the spec is
+  still at HEAD, and when it is gone the answer sends the point to S6's
+  reply. A point that arises after the removal
   goes in its reply and is ruled there, and a ruling without a
   clarification commit after the removal is listed in both reports as
   `no clarification commit (the spec was already removed)`, not a stop,

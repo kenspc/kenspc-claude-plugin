@@ -1512,12 +1512,32 @@ that ruling is read. Why the main session commits after an S6 that
 removed nothing: with no removal nothing is re-added, and with S6 ended
 none of its staged changes can be swept in (Phase 2's Constraints).
 
+Before answering a question from S6, the main session checks that the
+spec is still at HEAD, `git cat-file -e HEAD:<spec path>`; when it is
+gone, the answer tells S6 to put the point in its reply, where the main
+session rules it. At S6's return it also checks, with
+`git log --reverse --name-status <head>..HEAD` from the state file's
+`head:`, that each clarification commit comes before the commit that
+removes the spec, and, after a removal, that the spec is absent at HEAD
+(`git cat-file -e HEAD:<spec path>` fails). A failed check is not a stop:
+both reports record it with the commits it names — the user report among
+what needs the user, the reviewer report on its `Follow-up candidates`
+line. Why the check before an answer: an answer to a question S6 sent
+after its removal would tell it to commit an entry into the spec it
+removed, re-adding the file. Why the order and the absence at the return:
+a clarification committed after the removal re-adds the spec after the
+release commit, and a check that a commit is listed passes it. Why no
+stop: as for a ruling without its clarification commit, the stop
+conditions do not list a record gap the reports can name, and the user
+reads both reports before the tag.
+
 **The reports**, both in the final message:
 
 - `## User report` — the conversation's language, at most one page: what
   the batch built, the release commit, what needs the user (tag, push,
   release; any stop or deferred item; a question not received, with the
-  causes to check), and the cost. Then, under the
+  causes to check; a failed check at S6's return, with the commits it
+  names), and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -2379,7 +2399,8 @@ ruling deferred to a follow-up, with the clarification or the row it came
 from, and, when the state file's `inbound:` line records a question not
 received, that record with its tags and the causes to check — the main
 session's own inbound under the settings precedence, or a send that
-failed or was never made (§ The message protocol); it reads `none` when
+failed or was never made (§ The message protocol), and each failed check
+at S6's return, with the commits it names (Phase 4); it reads `none` when
 there are none.
 
 ## The gates
@@ -2465,9 +2486,9 @@ wording that closed it:
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit, after the clarification commit of each question
-  S6 asked, and the reports. A ruling that has no clarification commit is
-  not an absent artifact: it is recorded as Phase 4 says, and the run
-  finishes.
+  S6 asked, and the reports. A ruling that has no clarification commit,
+  or a failed check at S6's return, is not an absent artifact: it is
+  recorded as Phase 4 says, and the run finishes.
 
 An artifact absent after a return — no task document after S2, HEAD still
 where S3 started, the `head:` the state file recorded at its first launch (the

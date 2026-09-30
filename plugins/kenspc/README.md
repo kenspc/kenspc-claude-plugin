@@ -818,9 +818,14 @@ session asks every question before the commit that removes the spec —
 its clarification commits may come first — and a ruling on one
 is committed into the spec by that session, alone, before its release or
 removal commit, so the entry stays in the spec's history; the main
-session checks that its reply lists that commit for every ruling. A point
-that arises only after the removal goes in its reply, and the main
-session rules it there. A ruling without its clarification commit after
+session checks that its reply lists that commit for every ruling, that
+each clarification commit comes before the removal, and, after a removal,
+that the spec is gone from HEAD — a failed check is listed in both
+reports with the commits it names, not a stop. A point that arises only
+after the removal goes in its reply, and the main session rules it there;
+a question that reaches the main session after the removal is answered
+the same way, since the main session checks that the spec is still at
+HEAD before it answers. A ruling without its clarification commit after
 the removal is not a stop: both reports list it, marked
 `no clarification commit (the spec was already removed)`, since a
 clarification committed after the removal would re-add the spec. A
