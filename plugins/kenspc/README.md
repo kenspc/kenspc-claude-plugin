@@ -772,8 +772,8 @@ names, lists the denial under `## Rail observations`, naming the subagent
 that made the call, and goes on. A denial whose reason says a field of
 the hook input could not be read — the tool name, a Bash command, or a
 file-tool target — names no route, since the hook reads every later call
-the same way: it is not a breach either, and the worker lists it with its
-reason and ends, which puts a field a Claude Code release renamed in
+the same way: it is not a breach either, and the worker lists it with the
+hook's reason quoted as printed and ends, which puts a field a Claude Code release renamed in
 front of the main session at once: at that worker's return, an entry whose
 denial reason contains `could not be read from the hook input` stops the
 run, naming the field and the output of `claude --version`, since every

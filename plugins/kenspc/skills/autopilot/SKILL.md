@@ -1530,15 +1530,17 @@ tool, a script — is a breach. A denial whose
 reason says a field of the hook input could not be read — the tool name,
 a Bash command, or a file-tool target — names no route, since the hook
 reads every later call the same way: it is not a breach either, but list
-it with its reason under `## Rail observations` and end, whether you or a
-subagent met it.
+it under `## Rail observations` with the hook's reason quoted as printed —
+the main session stops the run on its exact words — and end, whether you
+or a subagent met it.
 
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
 the CUSTOM_INSTRUCTIONS of the agent dispatches made by the skills you
 run. Carry every rail observation a subagent reports — under
 `## Rail observations` or on a `Rail observations` line — into your own
-`## Rail observations`, naming the subagent.
+`## Rail observations`, naming the subagent and quoting a denial's reason
+as it gave it.
 
 Any breach is a stop: report it and end.
 
