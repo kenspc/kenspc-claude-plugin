@@ -284,7 +284,9 @@ Spec Step 1.1 — K-L5. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 **Acceptance criteria:**
 - Phase 3 states both pieces of evidence, the clarification's contents, the
   unchanged `## Autopilot` section, stop 7 (b) without both, and where the
-  evidence is gathered, with the Why.
+  evidence is gathered — a place that leaves the repository's working tree
+  and index unchanged, the negative control's deliberate break included —
+  with the Why.
 - Both S4 task blocks carry the corrected-form part and the bullets above
   them say when it is written.
 - The reviewer report template's `- Acceptance:` line holds
@@ -474,6 +476,12 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
   rule, the three outcomes, the state file's record, the question with the
   cannot-ask sentence opening "In a session that cannot ask (a system
   reminder to work without stopping),", and the backstop.
+- Read by the bullet, the case three batches asked about — `accept` in the
+  user settings file, and no project, local, or managed-settings file that
+  sets the key — goes on without the question, the state file recording the
+  user settings file and line; a source the main session cannot read raises
+  the question only on a condition the bullet states and the main session
+  can check.
 - Its Why names both URLs and `2026-09-30` and states nothing the two pages
   above do not state.
 - Read by the new rule, `- Acceptance (in the order listed, …):` is the
