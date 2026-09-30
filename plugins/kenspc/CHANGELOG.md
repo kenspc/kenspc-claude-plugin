@@ -145,9 +145,9 @@ use by the next product-repository batch, whose reviewer report shows the
   question itself, and to put a ruling on its review's findings into that
   run's `RUN_DIR/rulings.md`. § 3 adds that a script the worker writes and
   runs is its own writing, that reaching a denied effect by another
-  spelling is a breach, and that an environment listing prints names only
-  — a worker had printed the local messaging-socket token from one whose
-  redaction pattern missed it.
+  spelling, other than the route the denial names, is a breach, and that
+  an environment listing prints names only — a worker had printed the
+  local messaging-socket token from one whose redaction pattern missed it.
 
 ### Fixed
 
