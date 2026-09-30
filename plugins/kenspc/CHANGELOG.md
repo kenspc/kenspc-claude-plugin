@@ -145,7 +145,8 @@ use by the next product-repository batch, whose reviewer report shows the
 
 - **task-implement with no incomplete task.** A task document with no TODO
   or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a
-  `/kenspc-task-review <path>` line; nothing is asked, prepared,
+  `/kenspc-task-review <path>` line, and, when a task is BLOCKED, that it
+  runs again only once its Status is set back to TODO; nothing is asked, prepared,
   dispatched, reviewed, or rendered. A session given such a document had
   stopped before its batch gate with nothing in the skill saying to.
 - **The telemetry hook's transcript root.** `session-end-telemetry.sh`
