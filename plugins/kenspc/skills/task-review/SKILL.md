@@ -329,6 +329,35 @@ the release checklist finds in the trace.
 
 ### Step 5: Dispatch fix agent
 
+**Rulings on the findings.** A ruling on the reviewers' findings, given
+after they returned and before code-fixer is dispatched — in an
+interactive run, a message from the user received before this dispatch;
+in an autopilot worker, the main session's answer to the worker running
+the review — is written by this skill to `RUN_DIR/rulings.md` before the
+dispatch, from the ruling it holds when it reaches the dispatch. This step
+adds no pause and no question, and waits for no ruling. The file's first
+line names who ruled, `Ruled by: <the user | the main session <name>>`;
+then one entry per ruling, each naming one or more issue IDs from the
+reports:
+
+```
+- <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: DEFER — <reason>
+- <ID>[, <ID>…]: NOT APPLICABLE — <reason>
+```
+
+The CONTEXT block passes to code-fixer and regression-verifier unchanged,
+and a ruling never goes into `CUSTOM_INSTRUCTIONS`. With no ruling, no
+file is written and nothing changes. code-fixer and regression-verifier
+read the file when it exists; the five reviewers, which returned before it
+was written, do not. Why: a narrowed review once wrote a ruling into the
+`CUSTOM_INSTRUCTIONS` of code-fixer and regression-verifier, breaking the
+rule that both get the reviewers' CONTEXT unchanged; the run directory is
+the one path the orchestrator already passes, so a fixed file name inside
+it carries the ruling and no key is added. Why no pause: a pause would be
+a new gate in every review, while a ruling already in hand costs nothing
+to write down.
+
 Dispatch a single subagent:
 - Agent name: `code-fixer`
 - description: "Fix reported issues"
@@ -435,6 +464,9 @@ Schema A roll-up, code-fixer's reply, and Schema C are rendered in the run:
 | **Total**    | <n> | <n> | <n> |
 
 ## Fixes
+
+(When `RUN_DIR/rulings.md` exists, first one line naming the file and who
+ruled: `Rulings: <RUN_DIR>/rulings.md — ruled by <who>`.)
 
 (code-fixer's reply verbatim: the statistics line, the Per-angle Results
 table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, the

@@ -768,7 +768,20 @@ Spec Step 1.3 — K-L12; K-C4. File:
 
 ### Task 9: task-review and task-implement write `RUN_DIR/rulings.md`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the file's first line is `Ruled by: <the user | the main session <name>>`;
+  the three entry forms follow as given. task-review states the rule in
+  full as a bolded "Rulings on the findings" paragraph opening Step 5;
+  task-implement states when, by whom, the CONTEXT rule, and the entry
+  grammar, and points at task-review's Step 5 by its plugin path for the
+  rest. Schema F and Schema G each gain a conditional line at the top of
+  `## Fixes`: `Rulings: <RUN_DIR>/rulings.md — ruled by <who>`.
+- Changes/tradeoffs: a "Why no pause" sentence was added in task-review
+  (a pause would be a new gate in every review). All text sits outside the
+  `canonical:` blocks; check-canonical-dispatch, check-verdict-shared, and
+  check-run-contract exit 0.
 
 Spec Step 2.1 — K-L8; K-C9. Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 `plugins/kenspc/skills/task-implement/SKILL.md`.

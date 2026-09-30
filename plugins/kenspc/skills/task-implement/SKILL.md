@@ -404,6 +404,24 @@ this line, with the totals and the run directory filled in:
 
 `Reviewers returned — HIGH <h>, MEDIUM <m>, LOW <l> — <RUN_DIR>/angle-1.md … angle-5.md`
 
+A ruling on the reviewers' findings, given after they returned and before
+code-fixer is dispatched — in an interactive run, a message from the user
+received before that dispatch; in an autopilot worker, the main session's
+answer to the worker running this review — is written by this skill to
+`RUN_DIR/rulings.md` before the dispatch, from the ruling it holds when it
+reaches the dispatch, in the form Step 5 of
+`${CLAUDE_PLUGIN_ROOT}/skills/task-review/SKILL.md` (Rulings on the
+findings) gives: a first line naming who ruled, then one entry per ruling,
+`- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
+or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. This step adds no
+pause and no question, and waits for no ruling. The CONTEXT block passes
+unchanged, and a ruling never goes into `CUSTOM_INSTRUCTIONS`; with no
+ruling, no file is written and nothing changes. Why: as task-review's
+Step 5 says — a ruling written into the `CUSTOM_INSTRUCTIONS` of
+code-fixer and regression-verifier broke the rule that both get the
+reviewers' CONTEXT unchanged, and the run directory is the path both
+already read.
+
 Dispatch `code-fixer` in the foreground (`run_in_background: false`, as
 with the reviewers) with the CONTEXT block from Step 1, unchanged —
 code-fixer reads the 5 reports from RUN_DIR itself. The fix agent
@@ -490,6 +508,9 @@ in total; rendered here only.)
 | **Total**    | <n> | <n> | <n> |
 
 ## Fixes
+
+(When `RUN_DIR/rulings.md` exists, first one line naming the file and who
+ruled: `Rulings: <RUN_DIR>/rulings.md — ruled by <who>`.)
 
 (code-fixer's reply verbatim, rendered here only: the statistics line, the
 Per-angle Results table, the HIGH and MEDIUM rows with their Deferred Issues
