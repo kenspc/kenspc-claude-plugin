@@ -1042,7 +1042,36 @@ Spec Step 3.2 — K-L14. File: `plugins/kenspc/skills/task-implement/SKILL.md`.
 
 ### Task 14: the telemetry hook's transcript root
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: one line changed in code, `PROJECTS_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"`;
+  `LOG_DIR` and `LOG_FILE` are untouched (`git diff -U0` shows no `LOG_`
+  line). The header's Question 1 bullet names the new root, why (Claude
+  Code keeps its transcripts under `CLAUDE_CONFIG_DIR` when it is set, so
+  a lookup under `$HOME/.claude` alone finds none and the hook records
+  nothing), and that the log stays under `$HOME/.claude/kenspc`.
+- Changes/tradeoffs: the probe is a script under this run's scratch
+  (`scratch/task-implementer/4/telemetry-probe.sh`), run as
+  `bash .kenspc/runs/20260930-234108-batch-k-autopilot-rulings-tasks/scratch/task-implementer/4/telemetry-probe.sh "$PWD"`.
+  It makes one directory with `mktemp -d "$TMPDIR/kenspc-telemetry-probe.XXXXXX"`
+  (here `/var/folders/28/hztldwfs1ls4stzfgvj2qm900000gn/T//kenspc-telemetry-probe.Bg5lSF`),
+  a fresh `HOME` per case under it, `CLAUDE_CODE_SESSION_ID=00000000-probe-4000-8000-000000000001`,
+  and a transcript `projects/probe-project/<id>.jsonl` holding one user
+  record whose content opens `<command-message>kenspc:kenspc-task-implement`;
+  each case runs the hook with `env HOME=… [CLAUDE_CONFIG_DIR=…|-u CLAUDE_CONFIG_DIR] … bash <hook>`.
+  Output (each hook exit 0):
+  - case 1 (`CLAUDE_CONFIG_DIR` set, transcript under it): `records=1`,
+    `{"timestamp": "2026-10-01T00:02:36+08:00", "session_id": "00000000-probe-4000-8000-000000000001", "reason": "task-implement without task-review"}`;
+  - case 2 (`CLAUDE_CONFIG_DIR` unset, transcript under `<HOME>/.claude/projects`):
+    `records=1`, the same record;
+  - case 3, negative control (`CLAUDE_CONFIG_DIR` set, transcript only
+    under `<HOME>/.claude/projects`): `records=0 (no log …)`;
+  - case 4 (the hook at `8db589b`, from `git show`, on case 1's layout):
+    `records=0 (no log …)`, so the probe can fail.
+  The user's real `~/.claude/kenspc/missed-reviews.log` kept its size and
+  mtime (1015 bytes, Sep 26 17:17) before and after. The probe directory
+  under `$TMPDIR` is left in place (no recursive delete).
 
 Spec Step 3.3 — K-L15. File:
 `plugins/kenspc/hooks/scripts/session-end-telemetry.sh`.

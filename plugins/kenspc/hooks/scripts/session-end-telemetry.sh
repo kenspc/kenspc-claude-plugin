@@ -16,9 +16,14 @@
 #
 # Detection mechanism (v3.0.3 pre-implementation env probe outcome):
 #   - Question 1 — slash-command history source: scanning
-#     ${HOME}/.claude/projects/<encoded-project>/<session>.jsonl
+#     ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/<encoded-project>/<session>.jsonl
 #     (probe option (c); option (a) had no transcript-path env
-#     variable available in Windows Git Bash).
+#     variable available in Windows Git Bash). The transcript root is
+#     ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects: Claude Code keeps its
+#     transcripts under CLAUDE_CONFIG_DIR when it is set, so a lookup under
+#     $HOME/.claude alone finds none there and the hook records nothing.
+#     The log stays under $HOME/.claude/kenspc whatever CLAUDE_CONFIG_DIR
+#     says.
 #   - Question 2 — session ID source: ${CLAUDE_CODE_SESSION_ID}
 #     environment variable (stable UUID observed during probe).
 #     If unset, telemetry degrades to coarse-grained mode: the transcript
@@ -32,7 +37,7 @@ set -euo pipefail
 
 LOG_DIR="${HOME}/.claude/kenspc"
 LOG_FILE="${LOG_DIR}/missed-reviews.log"
-PROJECTS_DIR="${HOME}/.claude/projects"
+PROJECTS_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"
 
 # Best-effort session ID. Empty / unset is tolerated.
 session_id="${CLAUDE_CODE_SESSION_ID:-}"
