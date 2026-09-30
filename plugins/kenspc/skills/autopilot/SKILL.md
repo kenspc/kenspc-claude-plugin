@@ -1546,8 +1546,8 @@ gets no commit: the ruling's line under the reviewer report's
 printed, and both reports list it among what needs the user. Only when
 the spec is at HEAD and in the index and the status command prints
 nothing does it add the entry and commit the spec's path alone,
-`git commit -- <spec path>`, and then only when the spec at HEAD does not
-already hold the ruling's entry: an entry S6 committed in a commit the
+`git -C <repository root> commit -- <spec path>`, and then only when the
+spec at HEAD does not already hold the ruling's entry: an entry S6 committed in a commit the
 check above does not count — one that touched another file too, or one
 its reply left out — gets no second copy and no commit, and the check
 records the commit that added it,
@@ -1559,8 +1559,10 @@ the spec in two states a commit would carry under the clarification
 subject — a removal staged and not committed, at HEAD but not in the
 index, and an edit left in the index or the working tree, in both — and
 one status check finds both, while the main session commits none of S6's
-changes; it runs at the root and with the path the control vouched for,
-since it prints nothing for a path git does not know. Why before the
+changes; it and the commit run at the root and with the path the control
+vouched for, since the status command prints nothing for a path git does
+not know and the commit reads its path from the directory it runs in, so
+from any other directory it fails with the entry written. Why before the
 removal: the removal or release commit `git rm`s the spec — repo mode's
 instructions run after the removal, plugin mode's pre-flight after the
 release commit — so a clarification committed after it would re-add the
