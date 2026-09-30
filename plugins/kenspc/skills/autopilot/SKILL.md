@@ -1579,9 +1579,10 @@ Before answering a question from S6, the main session checks that the
 spec is still at HEAD and in the index,
 `git -C <repository root> cat-file -e HEAD:<spec path>` and
 `git -C <repository root> ls-files --error-unmatch -- <spec path>`, with
-the spec's repository-relative path, after the control
-`git -C <repository root> cat-file -e <head>:<spec path>` with the state
-file's `head:` has succeeded; when either fails, the spec is gone, and the
+the spec's repository-relative path, after the control has passed —
+`git -C <repository root> rev-parse --show-prefix` prints an empty line
+and `git -C <repository root> cat-file -e <head>:<spec path>` with the
+state file's `head:` succeeds; when either check fails, the spec is gone, and the
 answer tells S6 to leave the work the point decides undone and put the
 point in its reply, where the main session rules it. A control that fails
 means the command is wrong, not the spec gone: the main session corrects
@@ -1593,12 +1594,15 @@ removes the spec, and, after a removal, that the spec is absent at HEAD
 same control succeeds). Why the index and the control: a removal S6 has
 staged and not yet committed leaves the spec at HEAD but not in the index,
 and each check fails alike for an absent path, a path not in
-repository-relative form, and a root that is not the repository's, so a
+repository-relative form, and a root outside the repository, so a
 failure counts only beside a control that passed with the same root and
 path. Why `-C <repository root>` on all three: `ls-files` reads a path
 from the directory it runs in, where `HEAD:` reads it from the root, so a
 control of the `HEAD:` form vouches for the index check only when both
-run at the same root; and the index check's form passes no argument Git
+run at the same root and that root is the top level — from a
+subdirectory of the repository the `HEAD:` forms still pass while the
+index check fails, which is why the control also asks for an empty
+prefix; and the index check's form passes no argument Git
 Bash's path conversion could rewrite on Windows, as it may a
 `:/`-prefixed pathspec. A failed check is not a stop:
 the state file's `S6 return:` line and both reports record it with the
