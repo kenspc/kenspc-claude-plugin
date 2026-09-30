@@ -2084,7 +2084,8 @@ The defects, each as the reviewer or the acceptance recorded it:
 
 <k>. <ID> — <run dir, or the case and its record>: <one line>
    The finding: <the row, or the case's lines, quoted — for a ruled ID no
-   report lists, its `rulings.md` entry, with the matching row when one does>
+   report lists, its `rulings.md` entry, with the row of the finding it
+   meant when one matches>
    The case to make pass: <the check that failed, with its PASS criterion
    — a review check, a self-test, a command, an acceptance case>
 
