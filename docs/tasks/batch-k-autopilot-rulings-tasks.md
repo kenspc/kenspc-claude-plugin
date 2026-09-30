@@ -652,7 +652,20 @@ Spec Step 1.2 — K-L9, K-L10; K-C3, K-C7, K-C8. File:
 
 ### Task 7: SKILL.md — the preamble
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each § 3 addition sits beside the rail it extends — the
+  names-only rule after "No secrets in any file or message.", the helper
+  script sentence right after the `mktemp` sentence so the two read
+  together, and the another-spelling sentence inside the paragraph on a
+  call the hook denied. The rulings-file sentence names both review
+  routes (/kenspc-task-review, and /kenspc-task-implement's review phase).
+- Changes/tradeoffs: the Why paragraphs are two new paragraphs placed
+  before the existing "Why § 3 tells the worker to carry its rails into
+  its subagents" paragraph — one for § 1's two sentences, one covering the
+  three § 3 additions in turn. The template holds no `earlier batch`
+  (checked on the fenced block extracted with awk).
 
 Spec Step 1.3 — K-L11, K-L8's preamble sentence. File:
 `plugins/kenspc/skills/autopilot/SKILL.md`.

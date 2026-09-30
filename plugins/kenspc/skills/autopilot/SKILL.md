@@ -1452,9 +1452,13 @@ message from another session between two of your tool calls; its first
 line is `answer <tag>: <one line>`. Continue as it says. When no answer
 has arrived after thirty calls, put the question under a section
 `## Question for the main session` in your final message and stop; the
-main session resumes you with the answer. Do not approve anything on the
-user's behalf because the run is unattended: an answer you invent is the
-one failure this batch cannot detect. Messages carry summaries and paths,
+main session resumes you with the answer. Do not decide a question
+yourself because the run is unattended: ask <main name>, which rules and
+records every answer, while an answer you decide is recorded nowhere. An
+answer that rules on the findings of a review you are running —
+/kenspc-task-review, or the review phase of /kenspc-task-implement — goes
+into that run's `RUN_DIR/rulings.md` before code-fixer is dispatched,
+never into an agent's CUSTOM_INSTRUCTIONS. Messages carry summaries and paths,
 never a report's text: a report or a full table goes to a file — under
 <workspace>/_prompts, or in the repository when it belongs there — and the
 message names its path, since a message over about a million characters
@@ -1482,18 +1486,25 @@ it points: discard by mv into <workspace>/.trash/<name>-<timestamp>/,
 created when missing; deletions inside the repository only through
 git rm. No git push, no git tag, no release. No resource the brief does
 not name — no database, no network service. No secrets in any file or
-message.
+message. Listing environment variables prints their names only, never
+their values.
 
 The rails govern what you write — your own commands and tool calls. A
 program you run that removes a temporary directory it created itself (a
 guard's or a test script's mktemp cleanup), or writes its own cache, is
 not a breach; a recursive delete you write, in any language — rm -r,
-find -delete, a Python shutil.rmtree — still is.
+find -delete, a Python shutil.rmtree — still is. A script or program you
+write during the run and then run — a helper in scratch, $TMPDIR, or the
+workspace — is your own writing: a recursive delete in it is a breach, as
+if you had typed it. The code the batch implements and its tests, run as
+the project runs them, stay a program you run.
 
 A call the rails hook denied — its error contains `autopilot rails:` — is
 not a breach, since it never ran: take the permitted route the denial
 names, list the denial under `## Rail observations`, naming the subagent
-that made the call when a subagent made it, and go on. A denial whose
+that made the call when a subagent made it, and go on. Reaching the
+effect the hook denied by another spelling — another command, another
+tool, a script — is a breach. A denial whose
 reason says a field of the hook input could not be read — the tool name,
 a Bash command, or a file-tool target — names no route, since the hook
 reads every later call the same way: it is not a breach either, but list
@@ -1538,6 +1549,29 @@ requires a scope from its own list — where `docs(plans):` is outside it —
 would get worker commits its own rules reject; the preamble is the only
 text every worker reads. Why the Autopilot section line: § The
 `## Autopilot` section says why the run's settings are fixed at Phase 0.
+
+Why § 1 tells a worker never to decide a question itself: the main
+session records every answer it gives, in the state file and in the
+spec, where the user reviews it before the tag and the push, while an
+answer a worker decides is recorded nowhere, so nobody reviews it. Why
+§ 1 sends a ruling on a review's findings to `RUN_DIR/rulings.md`: a
+ruling written into code-fixer's and regression-verifier's
+`CUSTOM_INSTRUCTIONS` broke task-review's rule that both get the
+reviewers' CONTEXT unchanged, while the run directory is the one path
+both already read.
+
+Why a script the worker writes and then runs is its own writing: a helper
+is the agent's choice of a delete as much as a typed command is, and a
+rail that stopped at the command line would be passed by writing the same
+delete into a file first; the code the batch implements and its tests are
+the project's, run as the project runs them, and stay a program the
+worker runs, as a guard's `mktemp` cleanup does. Why reaching a denied
+effect by another spelling is a breach: the hook reads spellings, not
+intent, and a denied effect reached another way leaves the denial with no
+effect. Why environment listings print names only: a worker printed the
+machine's local messaging-socket token from an environment listing whose
+redaction pattern missed it; a name tells whether a variable is set,
+while a value printed stays in the transcript and the logs.
 
 Why § 3 tells the worker to carry its rails into its subagents: a
 worker's subagents never see the preamble, so rails left there bind the
