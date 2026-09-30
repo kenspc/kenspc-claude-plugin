@@ -1536,13 +1536,24 @@ ride in a plain commit, while a commit given a path carries that path's
 change only.
 
 Before answering a question from S6, the main session checks that the
-spec is still at HEAD, `git cat-file -e HEAD:<spec path>`; when it is
-gone, the answer tells S6 to leave the work the point decides undone and
-put the point in its reply, where the main session rules it. At S6's return it also checks, with
+spec is still at HEAD and in the index, `git cat-file -e HEAD:<spec path>`
+and `git ls-files --error-unmatch <spec path>`, run from the repository
+root with the spec's repository-relative path, after the control
+`git cat-file -e <head>:<spec path>` with the state file's `head:` has
+succeeded; when either fails, the spec is gone, and the answer tells S6
+to leave the work the point decides undone and put the point in its
+reply, where the main session rules it. A control that fails means the
+command is wrong, not the spec gone: the main session corrects the path
+or the directory and checks again. At S6's return it also checks, with
 `git log --reverse --name-status <head>..HEAD` from the state file's
 `head:`, that each clarification commit comes before the commit that
 removes the spec, and, after a removal, that the spec is absent at HEAD
-(`git cat-file -e HEAD:<spec path>` fails). A failed check is not a stop:
+(`git cat-file -e HEAD:<spec path>` fails where the same control
+succeeds). Why the index and the control: a removal S6 has staged and not
+yet committed leaves the spec at HEAD but not in the index, and
+`git cat-file -e` fails alike for an absent path, a path not in
+repository-relative form, and a directory outside the repository, so a
+failure counts only beside a control that passed. A failed check is not a stop:
 both reports record it with the commits it names — the user report among
 what needs the user, the reviewer report on its `Follow-up candidates`
 line. Why the check before an answer: an answer to a question S6 sent
