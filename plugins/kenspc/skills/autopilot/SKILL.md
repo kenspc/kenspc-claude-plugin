@@ -765,8 +765,9 @@ would make S6's `git rm` of a locally modified file fail; committed by S6
 before the removal, the entry stays in the spec's history, and the ruling
 keeps its four records. Why the main session commits after an S6 that
 removed nothing: neither reason holds then — there is no removal to
-re-add the spec, and a commit of the spec's path alone once S6 has ended
-sweeps in none of the changes S6 left staged.
+re-add the spec, and a commit of the spec's path alone once S6 has ended,
+made only when the status check finds the spec unchanged, sweeps in none
+of the changes S6 left.
 
 ### Launch, wait, return
 
@@ -1573,8 +1574,8 @@ do not list a record gap the reports can name, and a clarification
 committed after the removal would re-add the file; the reports are where
 that ruling is read. Why the main session commits after an S6 that
 removed nothing: with no removal nothing is re-added, and a commit of the
-spec's path alone once S6 has ended carries none of S6's changes (Phase
-2's Constraints). Why the spec's path alone: the index outlives S6, so a
+spec's path alone once S6 has ended, made only when the status command
+prints nothing, carries none of S6's changes (Phase 2's Constraints). Why the spec's path alone: the index outlives S6, so a
 change it staged and never committed — a commit its hook rejected — would
 ride in a plain commit, while a commit given a path carries that path's
 change only.
