@@ -753,7 +753,8 @@ the worker writes during the run and then runs — a helper in scratch,
 it is a breach as if typed, while the code the batch implements and its
 tests, run as the project runs them, stay a program it runs. Reaching an
 effect the rails hook denied by another spelling — another command,
-another tool, a script — is a breach. A worker that lists its environment
+another tool, a script — other than the route the denial names is a
+breach. A worker that lists its environment
 prints variable names only, never values, with `bash -c 'compgen -e'`,
 since `env` cut at the `=` still prints the further lines of a multi-line
 value. A worker's subagents

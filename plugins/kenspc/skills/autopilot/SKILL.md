@@ -1546,7 +1546,7 @@ not a breach, since it never ran: take the permitted route the denial
 names, list the denial under `## Rail observations`, naming the subagent
 that made the call when a subagent made it, and go on. Reaching the
 effect the hook denied by another spelling — another command, another
-tool, a script — is a breach. A denial whose
+tool, a script — other than the route the denial names is a breach. A denial whose
 reason says a field of the hook input could not be read — the tool name,
 a Bash command, or a file-tool target — names no route, since the hook
 reads every later call the same way: it is not a breach either, but list
