@@ -1003,7 +1003,19 @@ Spec Step 3.1 — K-L13; K-C4. File: `scripts/check-autopilot-rails-hook.sh`.
 
 ### Task 13: task-implement — a document with no incomplete task
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the branch is a bolded paragraph at the top of Step 3, after
+  a sentence defining incomplete as TODO or IN PROGRESS, and the batch
+  confirmation text now opens "Otherwise, present the incomplete tasks";
+  it names all seven points (the two counts, asks nothing, no run
+  directory, no dispatch, no review, no Schema G, the
+  `/kenspc-task-review <path>` line) and the run's end, with its Why.
+- Changes/tradeoffs: Phase 1's DONE list gained a first bullet for this
+  case (the Step 3 reply given, and none of the other points applies), and
+  Phase 2 opens with a sentence that such a run never reaches it. No text
+  inside a `canonical:` block changed.
 
 Spec Step 3.2 — K-L14. File: `plugins/kenspc/skills/task-implement/SKILL.md`.
 

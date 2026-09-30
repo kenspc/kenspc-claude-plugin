@@ -64,6 +64,9 @@ producing per-task commits and a Schema D summary.
 README, and config files; the task document itself.
 
 **DONE when**:
+- For a task document with no TODO or IN PROGRESS task: the Step 3 reply
+  has been given, and the run ends there — none of the points below
+  applies.
 - The run directory was prepared and created before the implementer's
   dispatch (Step 4).
 - Every incomplete task has been processed (DONE or BLOCKED) by the
@@ -103,8 +106,22 @@ batch confirmation.
 
 ### Step 3: Confirm with user
 
-Read the task document and identify all incomplete tasks. Present them to
-the user as a **batch list confirmation only**. The Step 3 surface is a
+Read the task document and identify all incomplete tasks — those marked
+TODO or IN PROGRESS.
+
+**No incomplete task.** When the document has no TODO or IN PROGRESS task,
+the reply gives the counts of its DONE and BLOCKED tasks and names
+`/kenspc-task-review <path>` for a review of the finished work, and the
+run ends there: it asks nothing, prepares no run directory, dispatches
+nothing, runs no review, and renders no Schema G. Why: a session given a
+document whose every task was DONE stopped before its batch gate and
+prepared no run directory, which nothing in this skill said to do; a gate
+with nothing to implement asks a question whose answer changes nothing,
+and a review of work already finished is task-review's, which the user can
+start with that command.
+
+Otherwise, present the incomplete tasks to the user as a **batch list
+confirmation only**. The Step 3 surface is a
 gate on the batch as a whole — do not pre-discuss any single task's
 implementation approach, file targets, or method-level changes here.
 That discussion belongs inside the implementer agent's per-task work,
@@ -296,7 +313,8 @@ them.)
 
 ## Phase 2: Automatic code review
 
-After Phase 1, check the implementation results:
+A run that ended at Phase 1 Step 3 on a document with no incomplete task
+never reaches this phase. After Phase 1, check the implementation results:
 - If at least one task was successfully implemented, proceed to the
   unconditional code review (Steps 1-4).
 - If every task in Schema D is BLOCKED, skip to Step 4 to render a Schema
