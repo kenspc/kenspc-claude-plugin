@@ -731,10 +731,22 @@ FAIL is classified, and the zero-diff check has printed nothing.
 in the spec, `docs(plans): record clarifications settled after <step>`; the
 workers make every other commit. Each clarification entry names who ruled,
 `(ruled by the main session)` or `(ruled by the user)`, wherever this skill
-describes one. Why: the commits are the workers' evidence, and a main
+describes one. Before S6 is launched, the main session commits every
+clarification still pending; a question S6 raises is answered with the text
+of its clarification entry, which S6 adds to the spec and commits alone,
+`docs(plans): record clarifications settled after S6`, before its other
+commits — the release or removal commit among them (Templates § The task
+blocks, S6). Why: the commits are the workers' evidence, and a main
 session that edited code would be reviewing its own work; why the ruler
 named: the spec is where the user reads a ruling before the tag and the
-push, and an entry without its ruler reads as the user's own decision.
+push, and an entry without its ruler reads as the user's own decision. Why
+S6 commits a ruling made while it runs: its release or removal commit
+`git rm`s the spec, so a clarification the main session committed after it
+would re-add the removed spec; a main-session commit while S6 is live could
+sweep S6's staged changes into it, and a main-session edit of the spec then
+would make S6's `git rm` of a locally modified file fail; committed by S6
+before the removal, the entry stays in the spec's history, and the ruling
+keeps its four records.
 
 ### Launch, wait, return
 
@@ -1962,6 +1974,10 @@ ID, `not fixed`, and why.
 ## Task: release preparation for batch <batch>
 
 The batch's commits are <baseline sha>..<HEAD sha>.
+A question you ask <main name> is answered with a clarification entry: add
+it to the clarifications section of <spec path> and commit the spec alone,
+`docs(plans): record clarifications settled after S6`, before your other
+commits.
 [Make one commit, `docs: remove batch <batch> plan and tasks`, that `git rm`s
 <spec path> and <task document path>[ and touches no version and no
 CHANGELOG].]
@@ -1989,8 +2005,11 @@ Reply with each commit's hash and subject.
 The batch's commits are <baseline sha>..<HEAD sha>. The repository's
 release checklist (docs/release-checklist.md, when it exists) and the
 release convention in the project's instruction files govern this task;
-read both first. Then, in one release commit in the repository's
-convention:
+read both first. A question you ask <main name> is answered with a
+clarification entry: add it to the clarifications section of <spec path>
+and commit the spec alone,
+`docs(plans): record clarifications settled after S6`, before the release
+commit. Then, in one release commit in the repository's convention:
 
 - the CHANGELOG's `— unreleased` heading gets today's date;
 - the plugin manifest's version becomes <Version:>;

@@ -58,7 +58,11 @@ use by the next product-repository batch, whose reviewer report shows the
   actions the run never takes mid-run (filing an issue, a backlog item)
   and findings a ruling deferred; the user report lists the rulings, one
   line each, under `### Main-session rulings — review before the tag and
-  the push`, outside its one-page limit.
+  the push`, outside its one-page limit. Before S6 is launched the main
+  session commits every pending clarification; a question S6 raises is
+  answered with its clarification entry's text, which S6 commits into the
+  spec alone before its release or removal commit, so the removal leaves
+  the entry in the spec's history.
 - **A corrected acceptance case (autopilot).** The main session may rule a
   corrected form of an `Acceptance:` case with two pieces of evidence: the
   case as written fails, or passes vacuously, for a reason outside the

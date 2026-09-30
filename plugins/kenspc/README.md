@@ -806,7 +806,11 @@ removed, the pre-flight run — with no tag and no push. At brief entry the
 design session commits the spec alone, `docs(plans): add batch <name> spec`,
 and the main session commits each ruling made during the run into the
 spec's clarifications section, each entry naming who ruled
-(`docs(plans): record clarifications settled after <step>`). Nothing is pushed, tagged, or released.
+(`docs(plans): record clarifications settled after <step>`), every one of
+them before the release preparation starts. A ruling on a question the
+release-preparation session asks is committed into the spec by that
+session, alone, before its release or removal commit, so the entry stays
+in the spec's history. Nothing is pushed, tagged, or released.
 
 **The two gates.** The run stops for you at the decisions on a brief's
 design table (a supplied spec counts as approved) and at the tag, push, and
