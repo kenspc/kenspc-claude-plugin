@@ -1275,8 +1275,10 @@ on Windows.
   sentence is also on the reviewer report's beyond-the-letter list, with
   its evidence named in the clarification. The batch's contract — a new
   dependency, an API or schema change, a file outside `Allowed files:` —
-  and the locked design stay yours: a way forward that needs either is a
-  stop.
+  and the locked design stay yours: a way forward that exists only by
+  changing either is a stop, while one that stays inside them — deferring
+  the finding as a follow-up, or leaving it as is — is taken and recorded
+  as a ruling, for you to review with the others.
 - **The first worker always passes the budget check.** Before the first
   worker the batch has no session cost to project from, so the check
   takes a sixth of the budget as the projected cost and 0 as spent; their
