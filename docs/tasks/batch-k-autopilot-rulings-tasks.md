@@ -722,7 +722,19 @@ Spec Step 1.3 — K-L11, K-L8's preamble sentence. File:
 
 ### Task 8: SKILL.md — stop condition 11
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the check sits in § Launch, wait, return right after the
+  paragraph that records each `## Rail observations` entry, and fires
+  "once the entry is recorded", so the state file keeps the entry under
+  `rail observations:` before the stop. Stop 11 in the numbered list
+  carries its Why after the dash, the list's own form.
+- Changes/tradeoffs: the return paragraph gained a short Why of its own
+  (the worker ended on that denial as § 3 tells it to, and the next worker
+  would meet the same one). The hook and `hooks.json` are unchanged
+  (`git diff 8db589b` over both prints nothing); the literal occurs 2 times
+  in SKILL.md and 3 in the hook.
 
 Spec Step 1.3 — K-L12; K-C4. File:
 `plugins/kenspc/skills/autopilot/SKILL.md`.

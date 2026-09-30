@@ -821,7 +821,14 @@ Every worker is one launch, one wait, one return.
   report's `Rail observations` line is built from. Why `not read` apart
   from `none`: a worker whose final message never arrived has observed
   nothing anyone knows of, and recorded as `none` it would read as a
-  worker that wrote nowhere else. At S2's and S3's
+  worker that wrote nowhere else. An entry under `## Rail observations`
+  that carries a denial whose reason contains
+  `could not be read from the hook input` is stop condition 11, once the
+  entry is recorded: the stop names the field — the name in parentheses in
+  the reason, `tool_name`, `tool_input.command`, or `tool_input.<key>` —
+  and gives the output of `claude --version`, run in this session's Bash.
+  Why at the return: the worker ended on that denial, as the preamble's
+  § 3 tells it to, and the next worker would meet the same one. At S2's and S3's
   return, check whether the step asked its gate (§ A worker's question at
   a gate, on a skipped gate).
 
@@ -2089,6 +2096,12 @@ the run ends with that message.
     `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort — a run
     that went on would launch its roles at a model or an effort nobody
     declared.
+11. A worker's `## Rail observations` entry that carries a denial whose
+    reason contains `could not be read from the hook input` (§ Launch,
+    wait, return, the return), named with the field in the reason's
+    parentheses and the output of `claude --version` — the rails hook no
+    longer reads the harness's input format, so every later worker would
+    end the same way.
 
 **A question only a later step needs.** A question of condition 7's kind —
 a way forward the main session cannot rule on — that the main session
