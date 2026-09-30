@@ -1466,9 +1466,15 @@ manifest — so a check run over the release commit would stop a run whose
 release preparation was right.
 
 At S6's return the main session checks that its reply lists a
-clarification commit, `docs(plans): record clarifications settled after S6`,
-for every ruling it answered to S6; both S6 task blocks ask for each
-commit's hash and subject, which is the check's input. S6 raises every
+clarification commit, `docs(plans): record clarifications settled after S6`
+in the repository's convention, for every ruling it answered to S6; both
+S6 task blocks ask for each commit's hash and subject, which is the check's
+input. A listed commit counts for a ruling when `git show <hash>` touches
+the spec alone and adds that ruling's entry, whatever its subject. Why the
+entry and not the subject: S6 adapts the subject to the repository's
+commit convention, and every clarification commit it makes carries the
+same subject, so a subject names neither the commit nor the ruling it
+carries. S6 raises every
 question before its first commit, and a point that arises only after it is
 not asked: S6 puts it in its reply, and the main session rules it there. A
 ruling answered to S6, or ruled from its reply, that has no clarification
