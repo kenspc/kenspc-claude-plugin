@@ -1102,7 +1102,8 @@ on Windows.
 - **Regressions and deferred issues in the verdict.** The verdict is FAIL
   when the fixes "introduced unresolved regressions", whatever a
   regression's severity, while "MEDIUM and LOW issues do not change the
-  verdict but appear in the report." The asymmetry is deliberate: a
+  verdict, except a ruled row whose action differs from its ruling
+  (above), but appear in the report." The asymmetry is deliberate: a
   regression is damage the review's own fixes did to code that worked before
   them, which the run's own changes caused and a revert of those fixes
   undoes; a deferred MEDIUM or LOW issue was in the reviewed code before any
