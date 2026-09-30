@@ -692,6 +692,59 @@ S5 carries K-C11 to K-C14 and K-C16 to K-C19, then the narrowed review:
   wording the locked design fixes). None is a one-line fix in an allowed
   file.
 
+Settled after S5 and its narrowed review (all ruled by the main session
+under Constraints, "Rulings for this run", 1 and 3; S5 fixed its eight
+defects in `e79fe17..c7bf00b`; the narrowed review's run directory
+`.kenspc/runs/20261001-014941-changes/`, verdict PASS, no HIGH, 4 LOW
+fixed `a51e4ea..874899b`, 4 MEDIUM and 5 LOW deferred). A second S5 carries
+K-C21 to K-C23, then a second narrowed review:
+
+- **K-C21** (narrowed review row 1, R1/E3/B1, DEFERRED MEDIUM, ruled by the
+  main session; to the second S5 — the second fix of K-C16's defect). S6
+  raises every question before its first commit, so the clarification it
+  commits lands before the removal or release commit in either mode; the
+  main session checks that S6's reply lists a clarification commit for
+  every ruling it answered to S6. The three places that still call S6's
+  work a single commit (the role table, Phase 4's Goal, the exit
+  transition) name the clarification commit too. Why this route: it keeps
+  K-C16's order and K-L7's four records, while making the removal S6's
+  last commit in both modes would change the documented order of S6's
+  commits in Phase 4, both S6 blocks, and the README.
+- **K-C22** (narrowed review row 2, E1, DEFERRED MEDIUM, ruled by the main
+  session; to the second S5). A ruled ID that no report lists keeps the
+  verdict from PASS, as a ruled row whose action differs does (K-C17):
+  both are a ruling not carried out. The premise holds: task-review's PASS
+  conditions do not include regression-verifier's row 1, so the
+  bookkeeping error it records there leaves PASS standing. The clause goes
+  beside K-C17's in both skills' verdict bullets, outside every canonical
+  block, and the autopilot's verdict loop classifies it as a ruled row.
+- **K-C23** (narrowed review row 3, E2, DEFERRED MEDIUM, ruled by the main
+  session; to the second S5 — the second fix of K-C11's defect). The sign
+  a worker's missing question gives does not over-claim: the record reads
+  that the question was not received, and names the causes to check — the
+  main session's own inbound under the settings precedence, or a send
+  that failed or was never made — rather than recording a hold. No
+  transcript read is added. Why: the reviewer's route would read an
+  undocumented transcript format for a send the record only needs to name
+  as a possible cause.
+- **K-C24** (narrowed review row 4, E4, DEFERRED MEDIUM, ruled by the main
+  session: not a defect, no change). K-C14 stands. The reviewer's route
+  would read `--permission-mode bypassPermissions` from the launch line;
+  this run's own main session disproves it: a background session whose
+  parent command line (`claude bg-spare …`) shows no permission flag while
+  it runs in bypassPermissions, so the check would have stopped a run the
+  default served. A main session not in that mode stays caught by the
+  sign K-C23 words.
+- **K-C25** (narrowed review rows 9-13, E5, E6, T2, T3, T4, DEFERRED LOW,
+  ruled by the main session under ruling 3). Follow-up candidates for the
+  user, listed in the reviewer report and not fixed: the unreadable-source
+  question's `no` mapped to a stop the default may serve (E5); the
+  could-not-land exception resting on code-fixer's own reason (E6); the
+  README's copy of the rulings grammar outside the new byte-identity check
+  (T2); no smoke assertion on the state file's inbound line (T3); no guard
+  or smoke row for the ruled-verdict rule and S6's clarification commit
+  (T4, with K-C20's T2). None is a one-line fix in an allowed file.
+
 ## Autopilot
 
 - Mode: plugin
