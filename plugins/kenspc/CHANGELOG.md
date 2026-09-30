@@ -9,13 +9,22 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.4.1 — unreleased
+## 4.4.1 — 2026-09-30
 
 Every commit the plugin makes follows the repository's commit convention,
 looked up the way init-project already did, and an autopilot run no longer
 stops on a question only a later step needs, or on which version of its
 own settings governs after a worker edited them. Guard counts are
 unchanged: `guards run: 12`, `self-tests run: 11`.
+
+No acceptance run and no smoke run were made for this release: the
+changes are accepted in use, and the pre-flight passed on the release
+tree. The autopilot fixes come from a repo-mode batch run in the Claude
+Code VS Code extension (2.1.284), whose main session waited about nine
+hours overnight on one question; its transcript showed the idle-notice
+wake working — each worker's notice arrived within a second of its
+`.exit` file, and the held one was delivered the moment the question was
+answered — so the extension needs no warning.
 
 ### Fixed
 
