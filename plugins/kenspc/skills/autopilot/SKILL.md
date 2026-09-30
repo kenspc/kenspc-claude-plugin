@@ -646,7 +646,7 @@ stops: <reason> (<time>)
 open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
 clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]][; no clarification commit (S6 left the spec changed): <tag>: <one line>[, <tag>: <one line>…]]
-S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone> | spec left changed: <the lines the status command printed>>[; …] | none
+S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone> | spec left changed: <the lines the status command printed, joined by " / ">>[; …] | none
 next: <the next action>
 ```
 
