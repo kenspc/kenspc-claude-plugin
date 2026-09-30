@@ -811,10 +811,17 @@ design session commits the spec alone, `docs(plans): add batch <name> spec`,
 and the main session commits each ruling made during the run into the
 spec's clarifications section, each entry naming who ruled
 (`docs(plans): record clarifications settled after <step>`), every one of
-them before the release preparation starts. A ruling on a question the
-release-preparation session asks is committed into the spec by that
-session, alone, before its release or removal commit, so the entry stays
-in the spec's history. Nothing is pushed, tagged, or released.
+them before the release preparation starts. The release-preparation
+session asks every question before its first commit, and a ruling on one
+is committed into the spec by that session, alone, before its release or
+removal commit, so the entry stays in the spec's history; the main
+session checks that its reply lists that commit for every ruling. A point
+that arises only after its first commit goes in its reply, and the main
+session rules it there. A ruling without its clarification commit is not
+a stop: both reports list it, marked
+`no clarification commit (the spec was already removed)`, since a
+clarification committed after the removal would re-add the spec. Nothing
+is pushed, tagged, or released.
 
 **The two gates.** The run stops for you at the decisions on a brief's
 design table (a supplied spec counts as approved) and at the tag, push, and

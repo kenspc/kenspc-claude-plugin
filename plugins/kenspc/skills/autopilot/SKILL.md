@@ -41,7 +41,7 @@ the sessions, and the two reports at the end are what the user reviews.
 | S3b | standalone review | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
 | S4 | acceptance | plugin mode: a seed-project acceptance with a record; repo mode: the `Acceptance:` commands |
 | S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified, `Fix <n> issues from this round: <ID>, <ID>, …` for several |
-| S6 | release preparation | one commit per mode (Phase 4) |
+| S6 | release preparation | one commit per mode (Phase 4), after a clarification commit for each question it asked |
 
 One role per session, and a session is never reused across roles: the
 session that proposes is not the one that decides, and the one that
@@ -733,7 +733,8 @@ in the spec, `docs(plans): record clarifications settled after <step>`; the
 workers make every other commit. Each clarification entry names who ruled,
 `(ruled by the main session)` or `(ruled by the user)`, wherever this skill
 describes one. Before S6 is launched, the main session commits every
-clarification still pending; a question S6 raises is answered with the text
+clarification still pending; S6 raises every question before its first
+commit, and a question it raises is answered with the text
 of its clarification entry, which S6 adds to the spec and commits alone,
 `docs(plans): record clarifications settled after S6`, before its other
 commits — the release or removal commit among them (Templates § The task
@@ -1406,7 +1407,8 @@ on record; an implementation cut to fit a budget is a different batch.
 
 ## Phase 4: Release preparation and reports
 
-**Goal**: S6's commit and the two reports.
+**Goal**: S6's commit, after the clarification commit of each question S6
+asked, and the two reports.
 
 **Inputs**: `Release preparation:`, `Version:`, the mode; the state file;
 `<batch>-costs.txt`; every worker's JSON.
@@ -1457,6 +1459,26 @@ design, paths a zero-diff list may name — a plugin repository's roadmap or
 manifest — so a check run over the release commit would stop a run whose
 release preparation was right.
 
+At S6's return the main session checks that its reply lists a
+clarification commit, `docs(plans): record clarifications settled after S6`,
+for every ruling it answered to S6; both S6 task blocks ask for each
+commit's hash and subject, which is the check's input. S6 raises every
+question before its first commit, and a point that arises only after it is
+not asked: S6 puts it in its reply, and the main session rules it there. A
+ruling answered to S6, or ruled from its reply, that has no clarification
+commit is not a stop: its line under the reviewer report's
+`Main-session rulings` says
+`no clarification commit (the spec was already removed)`, and the user
+report lists it among the rulings the user reviews before the tag and the
+push; the state file and both reports hold it. Why before the first
+commit: the removal or release commit `git rm`s the spec — repo mode's
+instructions run after the removal, plugin mode's pre-flight after the
+release commit — so a clarification committed after it would re-add the
+removed spec. Why no stop and no entry added later: the stop conditions
+do not list a record gap the reports can name, and a clarification
+committed after the removal would re-add the file; the reports are where
+that ruling is read.
+
 **The reports**, both in the final message:
 
 - `## User report` — the conversation's language, at most one page: what
@@ -1466,7 +1488,9 @@ release preparation was right.
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
-  clarification — or `none`; the one-page limit does not count this list.
+  clarification, or that it has no clarification commit because the spec
+  was already removed — or `none`; the one-page limit does not count this
+  list.
   Why: the user reviews every ruling from the reports before anything
   leaves the machine, and a limit that cut the list would cut the part the
   user must read.
@@ -1981,10 +2005,15 @@ ID, `not fixed`, and why.
 ## Task: release preparation for batch <batch>
 
 The batch's commits are <baseline sha>..<HEAD sha>.
-A question you ask <main name> is answered with a clarification entry: add
+Raise every question before your first commit. A question you ask
+<main name> is answered with a clarification entry: add
 it to the clarifications section of <spec path> and commit the spec alone,
 `docs(plans): record clarifications settled after S6`, before your other
-commits.
+commits. A point that arises only after your first commit is not asked: put
+it in your reply, and <main name> rules it there. Why: the removal commit,
+when this task makes one, `git rm`s the spec, and the instructions run
+after it, so a clarification committed after that commit would re-add the
+removed spec.
 [Make one commit, `docs: remove batch <batch> plan and tasks`, that `git rm`s
 <spec path> and <task document path>[ and touches no version and no
 CHANGELOG].]
@@ -2012,11 +2041,16 @@ Reply with each commit's hash and subject.
 The batch's commits are <baseline sha>..<HEAD sha>. The repository's
 release checklist (docs/release-checklist.md, when it exists) and the
 release convention in the project's instruction files govern this task;
-read both first. A question you ask <main name> is answered with a
+read both first. Raise every question before your first commit. A question
+you ask <main name> is answered with a
 clarification entry: add it to the clarifications section of <spec path>
 and commit the spec alone,
 `docs(plans): record clarifications settled after S6`, before the release
-commit. Then, in one release commit in the repository's convention:
+commit. A point that arises only after your first commit is not asked: put
+it in your reply, and <main name> rules it there. Why: the release commit
+`git rm`s the spec, and the pre-flight runs after it, so a clarification
+committed after that commit would re-add the removed spec. Then, in one
+release commit in the repository's convention:
 
 - the CHANGELOG's `— unreleased` heading gets today's date;
 - the plugin manifest's version becomes <Version:>;
@@ -2287,9 +2321,12 @@ clarification entries that name the main session as the ruler, one ruling
 counted once where both record it: `<n>` rulings, each on an indented line
 with its clarification, the tag or step, the question, the ruling, the
 reason, and the commits it produced — the clarification commit and any
-commit a worker made from it — and `none` when the main session ruled
-nothing. Why: it is the list the user reads before the tag and the push,
-so every ruling the run made without the user is on it.
+commit a worker made from it, or, for a ruling answered to S6 or ruled
+from its reply that has none,
+`no clarification commit (the spec was already removed)` (Phase 4) — and
+`none` when the main session ruled nothing. Why: it is the list the user
+reads before the tag and the push, so every ruling the run made without
+the user is on it.
 
 The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`
@@ -2389,7 +2426,8 @@ wording that closed it:
   verdict and the empty zero-diff output.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
-- The exit: S6's commit and the reports.
+- The exit: S6's commit, after the clarification commit of each question
+  S6 asked, and the reports.
 
 An artifact absent after a return — no task document after S2, HEAD still
 where S3 started, the `head:` the state file recorded at its first launch (the

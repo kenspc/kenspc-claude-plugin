@@ -59,10 +59,17 @@ use by the next product-repository batch, whose reviewer report shows the
   and findings a ruling deferred; the user report lists the rulings, one
   line each, under `### Main-session rulings — review before the tag and
   the push`, outside its one-page limit. Before S6 is launched the main
-  session commits every pending clarification; a question S6 raises is
-  answered with its clarification entry's text, which S6 commits into the
-  spec alone before its release or removal commit, so the removal leaves
-  the entry in the spec's history.
+  session commits every pending clarification; S6 raises every question
+  before its first commit, and a question it raises is answered with its
+  clarification entry's text, which S6 commits into the spec alone before
+  its release or removal commit, so the removal leaves the entry in the
+  spec's history. The main session checks that S6's reply lists that
+  commit for every ruling; a point that arises after S6's first commit
+  goes in its reply and is ruled there, and a ruling without a
+  clarification commit is listed in both reports as
+  `no clarification commit (the spec was already removed)`, not a stop,
+  since a clarification committed after the removal would re-add the
+  spec.
 - **A corrected acceptance case (autopilot).** The main session may rule a
   corrected form of an `Acceptance:` case with two pieces of evidence: the
   case as written fails, or passes vacuously, for a reason outside the
