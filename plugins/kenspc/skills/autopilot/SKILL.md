@@ -1273,8 +1273,10 @@ pass, and one commit per defect.
 1. the case as written fails, or passes vacuously, for a reason outside
    the batch's work — shown at the baseline, or a named tool behavior
    verified by running it;
-2. a negative control: the corrected form fails on a deliberate break of
-   what the case checks, with the output recorded.
+2. a negative control: the corrected form passes on the unbroken clone at
+   the HEAD S4 ran at, then fails on a deliberate break of what the case
+   checks, with both outputs recorded. A corrected form that does not pass
+   unbroken there is a control not made, not evidence.
 
 The ruling is a clarification in the spec, naming the main session as the
 ruler, carrying the case, the corrected form, and both pieces of evidence — paths or quoted output — committed as
@@ -1288,9 +1290,11 @@ The main session gathers the evidence outside the repository's working
 tree: in a clone under `$TMPDIR` or the workspace
 (`git clone <repository root> <dir>`, then
 `git -C <dir> checkout --detach <sha>` — the baseline for a failure shown
-there, the HEAD S4 ran at for the negative control), where it makes the
-deliberate break and runs both forms of the case. The clone is left where
-it is, or moved into the workspace's `.trash/`; it is never deleted with a
+there, the HEAD S4 ran at for the negative control), where it first
+restores the setup the case needs and a fresh clone lacks — installed
+dependencies, build output, as the project's instruction files give
+them — then makes the deliberate break and runs both forms of the case.
+The clone is left where it is, or moved into the workspace's `.trash/`; it is never deleted with a
 recursive `rm`. Why a clone: the main session commits nothing but
 clarification entries (Phase 2's Constraints), and a checkout of the
 baseline or a break made in the working tree would change the tree and
@@ -1305,7 +1309,9 @@ the commit before the batch, and a check that passed vacuously because a
 clone was never restored — and each time the main session had verified a
 corrected form before it asked. The first piece shows the case, not the
 batch, is what failed; the negative control keeps a correction from
-loosening a check until it passes. Why a ruling and not a settings edit:
+loosening a check until it passes, and its unbroken pass first keeps a
+clone that cannot run the command at all — no dependencies installed —
+from failing both runs and reading as a control. Why a ruling and not a settings edit:
 the section is the user's settings, fixed at Phase 0 (§ The `## Autopilot`
 section), and a clarification is where the user reads the correction
 with its evidence.

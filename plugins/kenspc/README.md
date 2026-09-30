@@ -847,9 +847,10 @@ the test runner, a failure word that matches a log line, a summary line
 the installed tool does not print — may be run in a corrected form the
 main session rules, when it has both pieces of evidence: the case as
 written fails, or passes vacuously, at the baseline or by a named tool
-behavior it ran, and the corrected form fails on a deliberate break of
-what the case checks. It gathers both in a clone under `$TMPDIR` or the
-workspace, never in your working tree. The ruling is a clarification
+behavior it ran, and the corrected form passes unbroken and then fails on
+a deliberate break of what the case checks. It gathers both in a clone
+under `$TMPDIR` or the workspace, with the case's setup (dependencies,
+build output) restored there, never in your working tree. The ruling is a clarification
 carrying the case, the corrected form, and both pieces of evidence; the
 `## Autopilot` section stays as the run read it, the acceptance session
 runs the corrected form, and the reviewer report's acceptance line says

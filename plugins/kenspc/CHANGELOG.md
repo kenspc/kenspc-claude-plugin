@@ -63,7 +63,8 @@ use by the next product-repository batch, whose reviewer report shows the
   corrected form of an `Acceptance:` case with two pieces of evidence: the
   case as written fails, or passes vacuously, for a reason outside the
   batch's work (at the baseline, or a named tool behavior run), and the
-  corrected form fails on a deliberate break of what it checks. The
+  corrected form passes unbroken and then fails on a deliberate break of
+  what it checks. The
   evidence is gathered in a clone under `$TMPDIR` or the workspace, never
   in the working tree; the ruling is a clarification, the `## Autopilot`
   section is unchanged, and S4 runs the corrected form, its line and the
