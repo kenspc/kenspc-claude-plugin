@@ -1429,7 +1429,8 @@ asked, and the two reports.
 `Autopilot finished — <baseline sha>..<last sha>`, and the reviewer report
 is also at `_logs/<batch>-report.md`.
 
-**Repo mode.** `Release preparation: default` — S6 makes one commit,
+**Repo mode.** `Release preparation: default` — S6 makes one commit, after
+the clarification commit of each question it asked (below),
 `docs: remove batch <name> plan and tasks`, that `git rm`s the batch's plan
 and task documents and touches no version and no CHANGELOG. `keep` — no S6;
 the documents stay. A list of instructions — S6 runs them as its task
