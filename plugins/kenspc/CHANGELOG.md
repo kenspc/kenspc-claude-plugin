@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.5.0 — unreleased
+## 4.5.0 — 2026-10-01
 
 An autopilot batch runs from its spec to its release preparation without
 waiting on the user between its two gates: the main session rules every
@@ -29,9 +29,10 @@ to the user — the Quality bar's "approves a worker's question on the
 user's behalf", the confirmation rubric, and stop condition 7 — which in
 practice made an open-ended third gate.
 
-No seeded acceptance was run for this release: the change is accepted in
-use by the next product-repository batch, whose reviewer report shows the
-`Main-session rulings` line and how many questions reached the user.
+No seeded acceptance and no smoke run were made for this release: the
+change is accepted in use by the next product-repository batch, whose
+reviewer report shows the `Main-session rulings` line and how many
+questions reached the user, and the pre-flight passed on the release tree.
 
 ### Added
 

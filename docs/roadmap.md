@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.5.0)
+## Next minor (4.6.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
