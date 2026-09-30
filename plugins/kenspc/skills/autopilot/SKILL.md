@@ -1229,6 +1229,7 @@ is refused.
 ## 6. Constraints
 
 <the spec's constraint sections by name>, and the project's instruction files.
+Commit messages: a subject this prompt gives is the default; write it in the project's commit convention — the one the repository writes down (in the project's instruction files or its CONTRIBUTING), or, failing that, the pattern its recent commit subjects consistently share.
 Allowed files: <the Allowed files: paths — the files this batch may change; a file outside them is a forbidden file>.
 Byte-identity exceptions: <the Byte-identity exceptions: text — the only byte-identity sections this batch may edit>.
 ````
@@ -1237,7 +1238,11 @@ The last two lines of § 6 are written when their fields are set and
 omitted when empty. Why in the preamble: it is the only text a worker
 reads, so a field that reaches no preamble binds no worker and trips no
 stop; the zero-diff check verifies the paths a batch must not touch, and
-these two fields bound what it may.
+these two fields bound what it may. Why § 6 carries the commit line: the
+task blocks give fixed subjects, and a repository whose convention
+requires a scope from its own list — where `docs(plans):` is outside it —
+would get worker commits its own rules reject; the preamble is the only
+text every worker reads.
 
 Why § 3 tells the worker to carry its rails into its subagents: a
 worker's subagents never see the preamble, so rails left there bind the
@@ -1810,6 +1815,12 @@ later run of the same batch reads where this one stopped.
 - Prompts, the spec, commit messages, and the reviewer report are in
   English. Why: the workers copy prompt text into commits and documents,
   and the repository's rules put those in English.
+- A commit subject this skill gives — in a task block, a stop message, or
+  the main session's clarification commit — is the default, written in the
+  project's commit convention: the one the repository writes down (in the
+  project's instruction files or its CONTRIBUTING), or, failing that, the
+  pattern its recent commit subjects consistently share. The preamble's
+  § 6 carries the rule to the workers (Templates § The preamble says why).
 - The user report and the conversation are in the user's language.
 - The fixed lines — the settings line, the launch and return lines, the
   question and answer first lines, the stop and finish lines, the report

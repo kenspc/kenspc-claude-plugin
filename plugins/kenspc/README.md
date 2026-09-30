@@ -460,7 +460,7 @@ review reuses the same directory (since 4.3.0):
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
-  to the commit conventions in your project's instruction files); in
+  to your repository's commit convention — see Known behavior); in
   `/kenspc-task-implement` that commit comes after you confirm the batch, so
   a declined batch commits nothing. The
   check asks git about a path inside the directory, so a CRLF `.gitignore`
@@ -1283,6 +1283,19 @@ on Windows.
   ran it, delete what it copied from AGENTS.md, and check that the
   `@AGENTS.md` line and the kenspc pointer line are still in CLAUDE.md,
   adding back whichever is missing.
+- **Commit messages follow your repository's convention.** Every commit
+  the skills and agents make — task-implementer's and code-fixer's, the
+  run directory's `.gitignore` commit, the document reviewers' baseline
+  commits, diagnose-bug's, the prototype's, init-project's, and the
+  autopilot's — is written in the convention your repository writes down
+  (in the project's instruction files or its CONTRIBUTING) or, failing
+  that, the pattern its recent commit subjects consistently share. The
+  subjects this README names (`docs: add task <name>`,
+  `docs(plans): add batch <name> spec`, …) are the defaults for a
+  repository with neither, which gets conventional commits. Before 4.4.1,
+  task-implementer and code-fixer always wrote conventional commits, and
+  the autopilot gave its subjects as they stand, so a repository whose
+  scopes are a fixed list got a `docs(plans):` subject outside it.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
   `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a

@@ -106,6 +106,10 @@ reproduction steps and the reason.
 **Inputs**: BUG; the project's instruction files, README, and config files,
 read silently first — they name the test framework, its file conventions,
 and the commit conventions; the code the bug runs through. The project's
+commit conventions are the ones the repository writes down (in the
+project's instruction files or its CONTRIBUTING), or, failing that, the
+pattern its recent commit subjects consistently share; the subjects given
+here are the default for a repository with neither. The project's
 instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
 `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
 `@`, whether or not Claude Code loaded them in this session. Before writing
@@ -281,8 +285,9 @@ work, which generate-plan's discovery exists for.
 document, for tier 3 a brief.
 
 **Inputs**: the filled record from Phase 2; the project's instruction files
-(document locations, commit conventions); the Doc-sync Task template in
-`${CLAUDE_PLUGIN_ROOT}/skills/generate-task/SKILL.md`; the brief template in
+(document locations) and commit conventions (Phase 1); the Doc-sync Task
+template in `${CLAUDE_PLUGIN_ROOT}/skills/generate-task/SKILL.md`; the
+brief template in
 `${CLAUDE_PLUGIN_ROOT}/skills/generate-brief/SKILL.md`.
 
 **DONE when**:

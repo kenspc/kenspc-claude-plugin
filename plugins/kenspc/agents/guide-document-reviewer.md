@@ -41,7 +41,9 @@ PREREQUISITES
    (`git ls-files --error-unmatch <GUIDE_PATH>` exits non-zero), commit it
    unchanged before any review fix: stage and commit only that file, with
    the message `docs: add guide <file name without extension>` adapted to
-   the commit conventions in the project's instruction files. If a commit hook
+   the project's commit convention — the one the repository writes down (in
+   the project's instruction files or its CONTRIBUTING), or, failing that,
+   the pattern its recent commit subjects consistently share. If a commit hook
    rejects it, stop and report the error. Why: each angle's fix then shows
    as its own diff against the document as written; without that baseline
    the first review commit carries the whole document and hides what the

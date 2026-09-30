@@ -9,6 +9,41 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.4.1 — unreleased
+
+Every commit the plugin makes follows the repository's commit convention,
+looked up the way init-project already did. Guard counts are unchanged:
+`guards run: 12`, `self-tests run: 11`.
+
+### Fixed
+
+- **Commit messages follow the repository's convention everywhere.** The
+  lookup is init-project's: the convention the repository writes down (in
+  the project's instruction files or its CONTRIBUTING), or, failing that,
+  the pattern its recent commit subjects consistently share; the subject a
+  skill or agent gives is the default for a repository with neither.
+  - `task-implementer` wrote conventional commits unconditionally ("Use
+    conventional commit format."), and `code-fixer` its fixes as
+    conventional commits; both now look the convention up first.
+  - The run directory's `.gitignore` commit (the `canonical:run-dir` block
+    in task-review and task-implement) and the three document reviewers'
+    baseline commits read the project's instruction files only; they now
+    read CONTRIBUTING and the history too.
+  - diagnose-bug and prototype adapted their subjects to "the project's
+    commit conventions" without saying where those are found; each now
+    defines them where it reads its inputs.
+  - The autopilot gave its subjects — `docs(plans): add batch <name> spec`,
+    the clarification, acceptance-record, and removal commits — with no
+    adaptation, and its workers see only their prompt. The preamble's
+    § 6 now carries the rule to every worker, and a writing rule covers
+    the main session's own commits and the subjects its stop messages
+    name. Found in a repo-mode batch on a repository whose AGENTS.md
+    requires a scope from a fixed list (`api`, `portal`, `docs`, `repo`):
+    `docs(plans):` is outside it, and the main session and the user had to
+    correct the subjects by hand.
+- **The plugin README** gains a Known behavior entry for the rule, and its
+  run-directory entry points at it.
+
 ## 4.4.0 — 2026-09-29
 
 init-project turns on the Claude Code plugins a new project's stacks need,

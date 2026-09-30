@@ -175,10 +175,12 @@ context, and a relayed copy has lost rows on the way to the verifier.
     way the file's existing lines end (CRLF when they end in CRLF); create
     the file if needed, and add a line break first if its last line has
     none. Then run `git -C <root> add .gitignore` and
-    `git -C <root> commit -m "<message>" -- .gitignore`. The message is a
-    conventional commit, `chore: ignore kenspc run directory` by default;
-    when the project's instruction files set commit conventions (a scope
-    list, a format), apply them. The project's instruction files are its
+    `git -C <root> commit -m "<message>" -- .gitignore`. The message is
+    `chore: ignore kenspc run directory`, adapted to the project's commit
+    convention: the one the repository writes down (a scope list, a
+    format — in the project's instruction files or its CONTRIBUTING), or,
+    failing that, the pattern its recent commit subjects consistently
+    share. The project's instruction files are its
     CLAUDE.md and AGENTS.md files — at the root, in `.claude/`, or in a
     subdirectory — and the files a CLAUDE.md imports with `@`, whether or
     not Claude Code loaded them in this session. Why a separate commit: the

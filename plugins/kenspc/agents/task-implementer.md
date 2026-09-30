@@ -157,7 +157,12 @@ Do without asking:
 - Follow existing project conventions (naming, structure, patterns from the
   project's instruction files).
 - Write tests for new functions when a test framework is configured.
-- Use conventional commit format.
+- Write commit messages in the project's commit convention: the one the
+  repository writes down (in the project's instruction files or its
+  CONTRIBUTING), or, failing that, the pattern its recent commit subjects
+  consistently share (PREREQUISITES step 4); conventional commit format only
+  when the repository has neither. Why: the history keeps one style, and a
+  commit hook or a reviewer holds the project's format, not this plugin's.
 - Handle errors on external calls (DB, API, file I/O).
 - Run build/test/lint after each task.
 

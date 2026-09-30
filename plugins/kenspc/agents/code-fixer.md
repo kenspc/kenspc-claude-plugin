@@ -142,8 +142,8 @@ PROCESSING APPROACH
   DEDUPED. The row takes the highest severity among its sources.
 - Process unique issues in severity order, HIGH first.
 - Small, localized fixes (one function or a few lines) are applied directly and
-  committed as FIXING RULES prescribes: one focused conventional commit per
-  fix, or no commit at all in an uncommitted run.
+  committed as FIXING RULES prescribes: one focused commit per fix, or no
+  commit at all in an uncommitted run.
 - Large structural changes (multiple files, architecture-level) are not applied —
   record them as DEFERRED with rationale.
 - Run build/test/lint after each fix to catch breakage early; run it once more
@@ -153,7 +153,12 @@ FIXING RULES
 - Follow established project conventions and patterns.
 - Each fix is a separate, focused git commit with a clear message when the
   change set is committed: `Mode: commits` in `change-set.md`, or
-  REVIEW_SCOPE "task".
+  REVIEW_SCOPE "task". The message follows the project's commit convention:
+  the one the repository writes down (in the project's instruction files or
+  its CONTRIBUTING), or, failing that, the pattern its recent commit subjects
+  consistently share; conventional commit format only when the repository
+  has neither. Why: the history keeps one style, and a commit hook or a
+  reviewer holds the project's format, not this plugin's.
 - In such a committed run, before each fix, run
   `git status --porcelain -- <each file the fix will touch>`. A file it
   lists carries uncommitted changes this run did not make — the user's work

@@ -99,7 +99,11 @@ feature), the location, and the resources — with every gate below passed.
 
 **Inputs**: the brief; the project's instruction files, README, and config
 files, read silently first — they name the stack, the commit conventions, a
-prototype location, and the development database. The project's
+prototype location, and the development database. The project's commit
+conventions are the ones the repository writes down (in the project's
+instruction files or its CONTRIBUTING), or, failing that, the pattern its
+recent commit subjects consistently share; the subjects given here are the
+default for a repository with neither. The project's
 instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
 `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports with
 `@`, whether or not Claude Code loaded them in this session. Before writing
