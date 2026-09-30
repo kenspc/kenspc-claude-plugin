@@ -119,9 +119,10 @@ use by the next product-repository batch, whose reviewer report shows the
   the post-check runs again, and a second failure is a stop.
 - **Phase 0 inbound check (autopilot).** When the launch line carries no
   `crossSessionInbound` accept, the main session reads the value from the
-  managed, user, and project settings files with the documented
-  precedence, going on with `accept` and recording where it came from;
-  `hold`, `refuse`, or no source that sets the key is a stop naming the
+  managed settings, the launch line's `--settings` (inline JSON or a file),
+  and the user and project settings files with the documented precedence,
+  going on with `accept` and recording where it came from; `hold`,
+  `refuse`, or no source that sets the key is a stop naming the
   launch line, where 4.4.1 asked whether a settings file accepted inbound
   messages. It asks only when a file cannot be read or parsed, a Windows
   policy value's read fails for a reason other than an absent key or
