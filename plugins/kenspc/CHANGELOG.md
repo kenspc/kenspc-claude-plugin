@@ -127,7 +127,12 @@ use by the next product-repository batch, whose reviewer report shows the
   policy value's read fails for a reason other than an absent key or
   value, a source sets a value other than `accept`, `hold`, or `refuse`,
   or the server-managed settings cache exists. Three batches had asked with
-  `accept` already in the user settings and no override.
+  `accept` already in the user settings and no override. The first
+  message's delivery notice stays the backstop for a worker's held inbound;
+  a hold on the main session's own, which sends no notice, shows as a
+  worker that returns with a question that never arrived as a message, and
+  is answered by the resume, recorded, and named with the settings
+  precedence in both reports.
 - **A label with a note (autopilot).** `- <Label> (<note>): <value>` reads
   as the known label; the `Acceptance:` note becomes a `Run notes:` line in
   both S4 task blocks, another field's note is named after the settings

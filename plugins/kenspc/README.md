@@ -582,8 +582,9 @@ fails for a reason other than an absent key or value, when a source sets a
 value other than `accept`, `hold`, or `refuse`, or when the
 server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists;
 a session that cannot ask ends naming the launch line. The first message's
-delivery notice still stops the run on a value the read missed (see Known
-behavior).
+delivery notice still stops the run on a value the read missed that holds a
+worker's inbound, and a hold on the main session's own inbound is recorded
+and named in the reports (see Known behavior).
 
 **The `## Autopilot` section.** The batch's settings are the last section
 of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
@@ -1262,9 +1263,14 @@ on Windows.
   counts them absent otherwise — a non-interactive run does not write that
   cache for settings that need approval — so the delivery notice is the
   backstop. A managed source the platform exposes somewhere the check does
-  not read is caught the same way. A worker whose question is
-  held runs into its thirty-minute wait and stops with the question in its
-  final message, and the skill resumes it with the answer.
+  not read is caught the same way. The notice reports the worker's inbound
+  only: a value that holds the main session's own inbound sends none, since
+  the worker's question never arrives and no answer is sent. The worker
+  runs into its thirty-minute wait and stops with the question in its final
+  message, and the skill resumes it with the answer; a question that never
+  arrived as a message is the sign of that hold, which the skill records,
+  naming the settings precedence in both reports for you to change. The
+  run does not stop for it.
 - **A main-session ruling can be wrong.** The autopilot's main session
   rules every point the spec leaves open, except the stop conditions,
   without asking you, and a ruling can be one you would not have made. Each
