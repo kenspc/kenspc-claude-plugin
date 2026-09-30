@@ -877,7 +877,8 @@ Every worker is one launch, one wait, one return.
   Before the next step, read the JSON's `result` for
   `## Question for the main session`: a return that carries it is the
   timed-out or unsent question (The message protocol), not a finished
-  step. Why: a worker that waited out its thirty minutes exits like one
+  step — except an S6 return after the commit that removes the spec,
+  whose point Phase 4 rules from the reply with no resume. Why: a worker that waited out its thirty minutes exits like one
   that finished, and its missing artifact would otherwise be found one step later. Read
   the same `result` for `## Rail observations` too, and record each entry
   under the state file's `rail observations:` section with the worker's
@@ -1146,7 +1147,8 @@ a skip at any effort; the post-check catches it at every effort.
   an error or a held or refused notice (the preamble's § 1), has put its
   question under
   `## Question for the main session` in its final message and stopped. The
-  answer goes to it as a resume under the step's next `<tag>-r<k>`: a
+  answer goes to it — to every worker but an S6 past the commit that
+  removes the spec (Phase 4) — as a resume under the step's next `<tag>-r<k>`: a
   prompt whose first line is `answer <tag>: <one line>` and whose body is
   the decision, counted as a resume. When that question never arrived as a
   `question <tag>:` message from the worker, the question is answered by
@@ -1504,7 +1506,11 @@ not asked: S6 leaves the work the point decides undone and names the
 point and that work in its reply, and the main session rules it there,
 lists the undone work among what needs the user in both reports — the
 user report's list, the reviewer report's `Follow-up candidates` line —
-and resumes no S6 for it. Why undone and no resume: work done on the
+and resumes no S6 for it. An S6 that returns after that commit with the
+point under `## Question for the main session` is read the same way: it
+is ruled from the reply, not answered by a resume, and it is recorded as
+a question not received only when S6 quotes an error or a notice its send
+got. Why undone and no resume: work done on the
 point before its ruling would be S6 ruling it, and any commit that
 carried the ruling now would come after the removal.
 After a removal, a ruling answered to S6, or ruled from its reply, that
