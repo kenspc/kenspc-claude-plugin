@@ -623,7 +623,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
-inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[, <tag>…]]
+inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
@@ -875,9 +875,9 @@ Every worker is one launch, one wait, one return.
   (Death and resume).
   Before the next step, read the JSON's `result` for
   `## Question for the main session`: a return that carries it is the
-  timed-out question (The message protocol), not a finished step. Why: a
-  worker that waited out its thirty minutes exits like one that finished,
-  and its missing artifact would otherwise be found one step later. Read
+  timed-out or unsent question (The message protocol), not a finished
+  step. Why: a worker that waited out its thirty minutes exits like one
+  that finished, and its missing artifact would otherwise be found one step later. Read
   the same `result` for `## Rail observations` too, and record each entry
   under the state file's `rail observations:` section with the worker's
   tag — `<tag>: none` when the heading is absent or empty, and
@@ -1141,7 +1141,9 @@ a skip at any effort; the post-check catches it at every effort.
   the worker's side only: a main session whose own inbound is held never
   receives the worker's question, sends no answer, and so gets no notice
   (the next bullet says what the worker's return then shows).
-- A worker that got no answer in thirty minutes has put its question under
+- A worker that got no answer in thirty minutes, or whose send returned
+  an error or a held or refused notice (the preamble's § 1), has put its
+  question under
   `## Question for the main session` in its final message and stopped. The
   answer goes to it as a resume under the step's next `<tag>-r<k>`: a
   prompt whose first line is `answer <tag>: <one line>` and whose body is
@@ -1152,13 +1154,19 @@ a skip at any effort; the post-check catches it at every effort.
   reports name the causes to check — the main session's own inbound,
   under the settings precedence above, or a send that failed or was never
   made — the user report among what needs the user, the reviewer report
-  on its `Follow-up candidates` line. It is not a stop. Why not a stop: the
+  on its `Follow-up candidates` line. When the worker's final message
+  quotes the error or the notice its send got, the record names that
+  cause in place of the list: the state file's entry reads
+  `question not received: <tag> (<the error or notice, quoted>)`, and
+  both reports name the quoted cause. It is not a stop. Why not a stop: the
   run goes on through the resume, and a stop would hold an unattended run
   for a cause the user can look into after it. Why recorded: each such
   question costs thirty minutes and a resume, and without the record
   nothing names where to look. Why the causes and not a hold: a held
   inbound, a send that failed, and a send never made leave the same
-  return, and the record names each as a cause rather than claiming one.
+  return, and the record names each as a cause rather than claiming one;
+  a worker that saw its send fail or be held has seen the cause, and its
+  quote is what the record names.
 
 ### The verdict loop after S3b
 
@@ -1542,9 +1550,9 @@ reads both reports before the tag.
 - `## User report` — the conversation's language, at most one page: what
   the batch built, the release commit, what needs the user (tag, push,
   release; any stop or deferred item; a question not received, with the
-  causes to check; a failed check at S6's return, with the commits it
-  names; work S6 left undone for a point raised after the removal), and
-  the cost. Then, under the
+  cause the worker quoted or the causes to check; a failed check at S6's
+  return, with the commits it names; work S6 left undone for a point
+  raised after the removal), and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -1632,7 +1640,10 @@ message from another session between two of your tool calls; its first
 line is `answer <tag>: <one line>`. Continue as it says. When no answer
 has arrived after thirty calls, put the question under a section
 `## Question for the main session` in your final message and stop; the
-main session resumes you with the answer. Do not decide a question
+main session resumes you with the answer. When the send returns an error,
+or a delivery notice says the message was held or refused, do not wait:
+put the question under `## Question for the main session` at once,
+quoting the error or the notice, and stop. Do not decide a question
 yourself because the run is unattended: ask <main name>, which rules and
 records every answer, while an answer you decide is recorded nowhere. An
 answer that rules on the findings of a review you are running —
@@ -1742,7 +1753,12 @@ answer a worker decides is recorded nowhere, so nobody reviews it. Why
 ruling written into code-fixer's and regression-verifier's
 `CUSTOM_INSTRUCTIONS` broke task-review's rule that both get the
 reviewers' CONTEXT unchanged, while the run directory is the one path
-both already read.
+both already read. Why § 1 has a worker whose send failed or was held
+stop at once, quoting what it saw: no answer comes to a send that failed
+or was held, so the thirty-minute wait only delays the resume that
+answers it, and the error or the notice is the one sign of the cause,
+seen by the worker alone — without it the record can only name the
+possible causes.
 
 Why a script the worker writes and then runs is its own writing: a helper
 is the agent's choice of a delete as much as a typed command is, and a
@@ -2408,7 +2424,8 @@ ruling deferred to a follow-up, with the clarification or the row it came
 from, and, when the state file's `inbound:` line records a question not
 received, that record with its tags and the causes to check — the main
 session's own inbound under the settings precedence, or a send that
-failed or was never made (§ The message protocol), and each failed check
+failed or was never made — or, for a tag whose worker quoted an error or
+a notice, that cause (§ The message protocol), and each failed check
 at S6's return, with the commits it names, and the work S6 left undone
 for a point raised after the removal (Phase 4); it reads `none` when
 there are none.

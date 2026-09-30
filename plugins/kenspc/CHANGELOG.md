@@ -172,7 +172,11 @@ use by the next product-repository batch, whose reviewer report shows the
   have run with no acceptance.
 - **The preamble (autopilot).** § 1 tells a worker never to decide a
   question itself, and to put a ruling on its review's findings into that
-  run's `RUN_DIR/rulings.md`. § 3 adds that a script the worker writes and
+  run's `RUN_DIR/rulings.md`; a worker whose send returns an error, or
+  gets a notice that the message was held or refused, puts the question
+  under `## Question for the main session` at once, quoting the error or
+  the notice, and stops, rather than waiting thirty minutes, and the
+  reports name that cause in place of the causes to check. § 3 adds that a script the worker writes and
   runs is its own writing, that reaching a denied effect by another
   spelling, other than the route the denial names, is a breach, and that
   an environment listing prints names only — a worker had printed the

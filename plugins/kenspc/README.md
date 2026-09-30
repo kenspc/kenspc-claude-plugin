@@ -593,7 +593,8 @@ a session that cannot ask ends naming the launch line. The first message's
 delivery notice still stops the run on a value the read missed that holds a
 worker's inbound, and a worker's question that never arrived as a message
 is recorded as not received, with the causes to check named in the
-reports (see Known behavior).
+reports — or the error or notice the worker quoted, when its send failed
+or was held (see Known behavior).
 
 **The `## Autopilot` section.** The batch's settings are the last section
 of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
@@ -1306,8 +1307,11 @@ on Windows.
   arrived as a message is recorded as not received, not as a hold: a send
   that failed, or one the worker never made, leaves the same return. Both
   reports name the causes to check — the main session's own inbound under
-  the settings precedence, or a send that failed or was never made. The
-  run does not stop for it.
+  the settings precedence, or a send that failed or was never made. A
+  worker whose send returns an error, or gets a notice that the message
+  was held or refused, does not wait: it stops at once with the question
+  in its final message, quoting the error or the notice, and the reports
+  name that cause instead of the list. The run does not stop for it.
 - **A main-session ruling can be wrong.** The autopilot's main session
   rules every point the spec leaves open, except the stop conditions,
   without asking you, and a ruling can be one you would not have made. Each
