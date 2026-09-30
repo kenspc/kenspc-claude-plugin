@@ -121,10 +121,12 @@ use by the next product-repository batch, whose reviewer report shows the
   `crossSessionInbound` accept, the main session reads the value from the
   managed settings, the launch line's `--settings` (inline JSON or a file),
   and the user and project settings files with the documented precedence,
-  going on with `accept` and recording where it came from; `hold`,
-  `refuse`, or no source that sets the key is a stop naming the
-  launch line, where 4.4.1 asked whether a settings file accepted inbound
-  messages. It asks only when a file cannot be read or parsed, a Windows
+  going on with `accept` and recording where it came from; `hold` or
+  `refuse` is a stop naming the launch line, where 4.4.1 asked whether a
+  settings file accepted inbound messages. With no source that sets the
+  key the run goes on under the documented default, which delivers a
+  message between sessions that bypass permission prompts, as the main
+  session and every worker do. It asks only when a file cannot be read or parsed, a Windows
   policy value's read fails for a reason other than an absent key or
   value, a source sets a value other than `accept`, `hold`, or `refuse`,
   or the server-managed settings cache exists. Three batches had asked with

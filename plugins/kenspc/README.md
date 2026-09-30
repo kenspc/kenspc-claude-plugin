@@ -573,9 +573,12 @@ settings (`$CLAUDE_CONFIG_DIR/settings.json`, else
 `.claude/settings.local.json` — with the documented precedence, a stricter
 project or local value winning. An effective `accept` goes on, the state
 file's `inbound:` line naming the file and line, or the managed source,
-it came from; `hold`, `refuse`, or no value at all stops the run, naming
-the launch line — and, for `hold` or `refuse`, the file, managed source, or inline JSON
-that set it. The
+it came from; `hold` or `refuse` stops the run, naming the launch line and
+the file, managed source, or inline JSON that set it. With no value at
+all, the run goes on under Claude Code's default, which delivers a message
+between two sessions that both bypass permission prompts — the main
+session started as above, and every worker — and the state file's
+`inbound:` line says so. The
 run asks whether a settings file accepts inbound messages only when a file
 exists that it cannot read or parse, when a read of a Windows policy value
 fails for a reason other than an absent key or value, when a source sets a

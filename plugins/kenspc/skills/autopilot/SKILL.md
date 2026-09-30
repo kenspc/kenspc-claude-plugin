@@ -484,15 +484,26 @@ reminder to work without stopping), the run ends with the same message.
   - `accept`: the run goes on, and the state file's `inbound:` line
     records the file and the line the value came from, or the managed
     source — a preferences file or a registry value, which has no line.
-  - `hold` or `refuse`, or no source that sets the key: the stop naming
-    the launch line — and, for `hold` or `refuse`, the file and line, the
-    managed source, or the launch line's inline JSON, that set it. Why the source too: a managed value,
+  - No source that sets the key: the run goes on under Claude Code's
+    default, and the state file's `inbound:` line reads
+    `the default: no source sets the key`. Why: the cross-session
+    messaging page, https://code.claude.com/docs/en/cross-session-messaging
+    § Control inbound messages (read 2026-10-01), says that when no value
+    applies, a session that bypasses permission prompts delivers a message
+    whose sender also bypasses them, and holds the rest; Prerequisites
+    start the main session in bypassPermissions and the driver starts
+    every worker so, so the default delivers every message of the run. A
+    main session started without bypass permissions holds its workers'
+    questions under the default, and that shows as the sign § The message
+    protocol names — a worker that returns with a question that never
+    arrived as a message. Why no stop: a stop there would stop a run the
+    default serves.
+  - `hold` or `refuse`: the stop naming the launch line and the file and
+    line, the managed source, or the launch line's inline JSON, that set
+    it. Why the source too: a managed value,
     and a stricter project or local one, outranks the launch line's
     `--settings`, so a relaunch with the launch line alone would change
-    nothing, and the check it then passes reads no file. Why no value is
-    a stop: when no file sets the key, the launch line Prerequisites
-    gives is what sets it, and without it no source is known to accept
-    inbound messages.
+    nothing, and the check it then passes reads no file.
   - A file that exists and cannot be read or parsed, or a source the main
     session cannot read — settings delivered from a server, which count as
     present when `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`
@@ -584,9 +595,9 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 ### The state file
 
 `_logs/<batch>-state.md` holds the settings line, the repository root, the
-pass-through values, where the inbound `accept` came from (The start
-checks) and each sign of a hold on the main session's own inbound (§ The
-message protocol), the
+pass-through values, where the inbound `accept` came from, or that no
+source sets the key (The start checks), and each sign of a hold on the
+main session's own inbound (§ The message protocol), the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
 questions answered, the rail observations each worker listed, the gates
@@ -611,7 +622,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
-inbound: accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer>[; held at the main session: <tag>[, <tag>…]]
+inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; held at the main session: <tag>[, <tag>…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
