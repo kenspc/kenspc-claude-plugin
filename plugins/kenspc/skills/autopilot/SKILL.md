@@ -1014,8 +1014,9 @@ list has passed (below).
 **A skipped gate** is checked after the fact, at the step's return — the
 skipped-gate post-check — not prevented. An S2 that returns without having sent its confirmation
 question — no `question <tag>:` carrying the task list's confirmation
-from S2's tag or its resumes, none in the state file's
-`questions answered:` — has the confirmation's own rubric above applied
+from S2's tag or its resumes, and no confirmation answer in the state
+file's `questions answered:`, where a ruling the post-check itself
+recorded is not one — has the confirmation's own rubric above applied
 to the task document it committed: every step has a task, no task lies
 outside the spec, and no choice the spec's words leave open rides on it.
 A match, or rulings on its open choices that the committed document
