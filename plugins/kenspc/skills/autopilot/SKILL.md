@@ -2030,8 +2030,8 @@ commit. Then, in one release commit in the repository's convention:
   <brief path>].
 
 [Run the checklist's pre-flight block; its two count lines go in your reply.]
-No tag, no push, no release: those are the user's. Reply with the commit
-hash[ and the two count lines].
+No tag, no push, no release: those are the user's. Reply with each
+commit's hash and subject[ and the two count lines].
 ````
 
 ### The driver
