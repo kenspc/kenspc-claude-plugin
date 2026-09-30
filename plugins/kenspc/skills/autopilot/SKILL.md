@@ -443,8 +443,12 @@ reminder to work without stopping), the run ends with the same message.
     pattern that matches nothing, or a shell error for it, means the file
     is absent — and in `C:\Program Files\ClaudeCode\`
     on Windows; on macOS, the `com.anthropic.claudecode` managed
-    preferences domain (`defaults read com.anthropic.claudecode`, a domain
-    that does not exist setting nothing); on Windows, the `Settings` value
+    preferences domain as a configuration profile installs it,
+    `/Library/Managed Preferences/com.anthropic.claudecode.plist` and
+    `/Library/Managed Preferences/<user>/com.anthropic.claudecode.plist`
+    (`plutil -p <file>`, a file that does not exist setting nothing) —
+    not `defaults read com.anthropic.claudecode`, which prints the user's
+    own domain rather than the managed layer; on Windows, the `Settings` value
     under `HKLM\SOFTWARE\Policies\ClaudeCode` and under
     `HKCU\SOFTWARE\Policies\ClaudeCode` (`reg query <key> /v Settings`).
     Among the managed sources, the strictest value any of them sets is
