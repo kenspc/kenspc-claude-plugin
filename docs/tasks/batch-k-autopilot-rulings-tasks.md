@@ -510,7 +510,29 @@ Spec Step 1.1 — K-L2; K-C1, K-C2, K-C4. File:
 
 ### Task 6: SKILL.md — Phase 0: inbound from the settings files, and a label with a note
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: no source that sets the key is the stop naming the launch
+  line, like `hold` — the pages carried in this document do not give the
+  key's default, and without the launch line no source is known to
+  accept. Among several managed sources the strictest value wins, which
+  is never looser than what Claude Code applies in either of the page's
+  two modes (highest-ranked source, or merged lock keys). The managed
+  sources are read with `defaults read com.anthropic.claudecode` on macOS
+  and `reg query <key> /v Settings` on Windows; a source the read misses
+  falls to the delivery-notice backstop, which the bullet names. The
+  Linux and WSL file is written `/etc/claude?code/managed-settings.json`
+  (K-C7) with a sentence naming the documented directory and why it is a
+  pattern. The state file's new field is
+  `inbound: accept from <the launch line | <file>:<line> | the user's answer>`.
+  The run-notes line in both S4 blocks is `[Run notes: <the Acceptance: field's note>]`.
+- Changes/tradeoffs: the old "Why a question and not a stop" sentence
+  went, replaced by Whys for the file read, the question on an unreadable
+  source, and no value; "Why checked before the first launch" is kept.
+  The Why cites the three pages dated 2026-09-30 with only the facts
+  carried in this task, plus one inference stated as such (the strictest
+  managed value is never looser). No network was used.
 
 Spec Step 1.2 — K-L9, K-L10; K-C3, K-C7, K-C8. File:
 `plugins/kenspc/skills/autopilot/SKILL.md`.

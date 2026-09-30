@@ -132,7 +132,9 @@ the first launch needs, checked before any session is paid for.
 HEAD, `git -c core.quotePath=false status --porcelain -uall`); `ListAgents`;
 the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`;
 `ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
-this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`.
+this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`; the settings
+files that can set `crossSessionInbound` — managed, user, and the
+project's (The start checks).
 
 **DONE when** the state file is written, the settings line (Templates
 § The settings line, ending with the pass-through values) its first line,
@@ -203,6 +205,18 @@ starts, and a user who wants a smaller budget writes the field.
 | `Prior specs:` | `<hash>^:<path>` entries, read with `git show` | empty |
 | `Workspace:` | a directory | `~/Projects/_smoke/` |
 | `Role settings:` | one sub-bullet per role, `- <role>: model <model>[, effort <level>]` or `- <role>: effort <level>`: `<role>` one of `S1`, `S2`, `S3`, `S3b`, `S4`, `S5`, `S6`; `<model>` one token with no whitespace and no comma, passed to `--model` as written; `<level>` one of `low`, `medium`, `high`, `xhigh`, `max` | empty — every role runs at the pass-through values |
+
+A label written with a note, `- <Label> (<note>): <value>`, is read as
+`- <Label>: <value>` when the label is known, and the note is carried with
+the field: for `Acceptance:`, as the run-notes line of both S4 task blocks
+(Templates § The task blocks); for any other field, named on the line
+after the settings line (Templates § The settings line). An unknown label
+with a note stays unknown: ignored and named, as any unknown label is.
+Why: a spec wrote its acceptance field as
+`Acceptance (in the order listed, …):`, and read strictly, an unknown
+label would have run the batch with no acceptance; the note carried the
+cases' run conditions, so it travels with the field rather than being
+dropped.
 
 `Role settings:` sets the model, the effort, or both for a role's workers
 — every session launched under that role's tags, re-runs and resumes
@@ -415,16 +429,106 @@ reminder to work without stopping), the run ends with the same message.
   gives the version requirement.
 - The command line `ps -o args= -p $PPID` prints (The wait path) carries
   `crossSessionInbound` with `accept` — the launch line's `--settings`
-  argument. When it does not, ask whether a settings file accepts inbound
-  messages for this session: `yes` continues, `no` is a stop naming the
-  launch line. In a session that cannot ask (a system reminder to work
-  without stopping), the run ends naming the launch line. Why a question
-  and not a stop: managed or user settings can set the value where the
-  command line does not show it. Why checked before the first launch: a
-  main session that holds inbound messages never sees a worker's question
-  — the worker waits its thirty minutes, stops with the question in its
-  final message, and is resumed with the answer — thirty minutes and a
-  resume per question, with no stop naming the cause.
+  argument. When it does not, the main session reads the value from the
+  settings files Claude Code reads it from. An absent file, key, or source
+  sets nothing.
+  - Managed settings: `managed-settings.json`, and the `*.json` files of a
+    `managed-settings.d/` directory beside it, in
+    `/Library/Application Support/ClaudeCode/` on macOS, on Linux and WSL
+    at `/etc/claude?code/managed-settings.json` (and the directory beside
+    it, `/etc/claude?code/managed-settings.d/`) — the pattern, run
+    unquoted, stands for the Linux and WSL directory the managed-settings
+    page names, and is written as a pattern because that directory's name,
+    written out, reads to this plugin's model-name check as a model ID; a
+    pattern that matches nothing, or a shell error for it, means the file
+    is absent — and in `C:\Program Files\ClaudeCode\`
+    on Windows; on macOS, the `com.anthropic.claudecode` managed
+    preferences domain (`defaults read com.anthropic.claudecode`, a domain
+    that does not exist setting nothing); on Windows, the `Settings` value
+    under `HKLM\SOFTWARE\Policies\ClaudeCode` and under
+    `HKCU\SOFTWARE\Policies\ClaudeCode` (`reg query <key> /v Settings`).
+    Among the managed sources, the strictest value any of them sets is
+    theirs.
+  - User settings: `"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"` —
+    `$CLAUDE_CONFIG_DIR/settings.json` when the variable is set, else
+    `~/.claude/settings.json`, written with `$HOME` for the reason § The
+    pass-through values gives for the transcript lookup.
+  - The project's `.claude/settings.json` and `.claude/settings.local.json`
+    at the repository root.
+
+  The precedence is the one § The message protocol states: the value of
+  the first source that sets the key — managed settings, then the launch
+  line's `--settings`, then user settings — and then a project or local
+  `hold` or `refuse` applies when it is stricter on the
+  `accept` < `hold` < `refuse` ladder, while a project or local value that
+  is not stricter is ignored. The effective value decides:
+  - `accept`: the run goes on, and the state file's `inbound:` line
+    records the file and the line the value came from.
+  - `hold` or `refuse`, or no source that sets the key: the stop naming
+    the launch line. Why no value is a stop: when no file sets the key,
+    the launch line Prerequisites gives is what sets it, and without it
+    no source is known to accept inbound messages.
+  - A file that exists and cannot be read or parsed, or a source the main
+    session cannot read — settings delivered from a server, which count as
+    present when `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`
+    exists and as absent when it does not: ask whether a settings file
+    accepts inbound messages for this session; `yes` continues, recorded
+    on the `inbound:` line as the user's answer, and `no` is the stop
+    naming the launch line. In a session that cannot ask (a system
+    reminder to work without stopping), the run ends naming the launch
+    line.
+
+  Whatever the check concludes, the stop on the first message's delivery
+  notice (§ The message protocol) stays the backstop for a value the read
+  missed — a source present with no local sign, or a managed source the
+  platform exposes elsewhere. Why read the files: three batches asked the
+  same question with the value already read from the user settings and no
+  project or managed override found, and the user's answer was the one the
+  files already gave. Why a question for an unreadable source, and not a
+  guess: a value the main session cannot see may be `hold`, and a run that
+  went on would learn it only at its first message. Why checked before the
+  first launch: a main session that holds inbound messages never sees a
+  worker's question — the worker waits its thirty minutes, stops with the
+  question in its final message, and is resumed with the answer — thirty
+  minutes and a resume per question, with no stop naming the cause.
+
+  The sources and their order are the documentation's, as read on
+  2026-09-30. https://code.claude.com/docs/en/settings gives the
+  precedence, highest first: managed settings; the command line
+  (`claude --settings`); project local (`.claude/settings.local.json`);
+  shared project (`.claude/settings.json`); user
+  (`~/.claude/settings.json`). It says `CLAUDE_CONFIG_DIR` keeps the
+  home-directory files elsewhere, settings included, and makes
+  `crossSessionInbound` an exception to managed precedence: a stricter
+  value from `.claude/settings.json` or `.claude/settings.local.json`, on
+  the `accept` < `hold` < `refuse` ladder, is honored over managed,
+  `--settings`, and user values, and a project or local value that is not
+  stricter is ignored. https://code.claude.com/docs/en/managed-settings
+  names the managed sources: the file source, `managed-settings.json` with
+  an optional `managed-settings.d/` directory beside it, in
+  `/Library/Application Support/ClaudeCode/` on macOS, the Linux and WSL
+  directory the pattern above stands for, and `C:\Program Files\ClaudeCode\`
+  on Windows (the legacy `C:\ProgramData\ClaudeCode\managed-settings.json`
+  is not read); MDM, the macOS `com.anthropic.claudecode` managed
+  preferences domain and the Windows value `Settings` under
+  `HKLM\SOFTWARE\Policies\ClaudeCode`; the user-writable
+  `HKCU\SOFTWARE\Policies\ClaudeCode` value of the same name; and
+  server-managed settings from the claude.ai console. It ranks them,
+  highest first, server-managed, MDM, the managed files
+  (`managed-settings.d/*.json` merged with `managed-settings.json`), the
+  HKCU key; by default Claude Code uses the highest-ranked source that
+  delivers at least one policy key and ignores the others, and
+  `crossSessionInbound` is among the lock keys, for which the strictest
+  value any source sets applies when the sources are merged — so taking
+  the strictest managed value is never looser than what Claude Code
+  applies. https://code.claude.com/docs/en/server-managed-settings,
+  cited for these facts alone, names the server-managed settings cache
+  `~/.claude/remote-settings.json` and keeps the delivered settings in the
+  configuration directory, `~/.claude` unless `CLAUDE_CONFIG_DIR` is set —
+  hence the lookup `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`
+  — and says a non-interactive run does not write the cache for settings
+  that need approval, which is why the delivery-notice stop stays the
+  backstop when the file is absent.
 - The workspace is writable.
 - An existing `_logs/<batch>-state.md` names this repository on its
   `repository:` line; one that names another is a stop naming both. Why:
@@ -446,7 +550,8 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 ### The state file
 
 `_logs/<batch>-state.md` holds the settings line, the repository root, the
-pass-through values, the
+pass-through values, where the inbound `accept` came from (The start
+checks), the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
 questions answered, the rail observations each worker listed, the gates
@@ -471,6 +576,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
+inbound: accept from <the launch line | <file>:<line> | the user's answer>
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
@@ -1564,7 +1670,9 @@ instruction come in the prompt that resumed you, under its first line
   session corrected (Phase 3, A corrected case) is listed in its corrected
   form, and its line gets the bracketed `in the corrected form` part,
   naming the clarification — on the first run and on an `-s4b` re-run
-  alike, so a re-run of a corrected case runs the corrected form. Why the nested
+  alike, so a re-run of a corrected case runs the corrected form. The
+  bracketed `Run notes:` line is written, on every run, when the
+  `Acceptance:` field carries a note (§ The `## Autopilot` section). Why the nested
   tags and the cap are spelled out: a nested launch
   under a worker's or a resume's tag is accepted once that worker has ended
   and overwrites its `.json`, `.session`, and `.pid`, which Phase 4 reads;
@@ -1593,6 +1701,8 @@ One case per run, in the order listed[, after a trial run of a seed to
 confirm the path under test is reachable]:
 
 <n>. <case> — PASS: <criterion>[ (optional)][ — in the corrected form (<clarification>)]
+
+[Run notes: <the Acceptance: field's note>]
 
 Every run is a headless session started through the driver copy, with the
 seed as its cwd and its prompt in a file:
@@ -1661,7 +1771,9 @@ FAIL, its cost.
   as its corrected command, and its line gets the bracketed
   `in the corrected form` part, naming the clarification — on the first run
   and on an `-s4b` re-run alike, so a re-run of a corrected case runs the
-  corrected form. With `Acceptance: none`, no S4 starts.
+  corrected form. The bracketed `Run notes:` line is written, on every
+  run, when the `Acceptance:` field carries a note (§ The `## Autopilot`
+  section). With `Acceptance: none`, no S4 starts.
 
 ````
 ## Task: acceptance for batch <batch>
@@ -1671,6 +1783,8 @@ that HEAD, in the repository. Run each of these, one per Bash call, in the
 order listed:
 
 <n>. <command> — PASS: <criterion>[ (optional)][ — in the corrected form (<clarification>)]
+
+[Run notes: <the Acceptance: field's note>]
 
 Reply with, for each command: the command, its exit code, and the last
 twenty lines of its output.
@@ -1875,8 +1989,10 @@ line: the user sees before any session is paid for which role runs at
 which model and effort, and which values a role gets where nothing is
 declared.
 
-A note on ignored labels, a `Version:` ignored in repo mode, or a
-`Zero diff:` path absent at the baseline follows on the next line.
+A note on ignored labels, a `Version:` ignored in repo mode, a
+`Zero diff:` path absent at the baseline, or the note a known label other
+than `Acceptance:` carries (§ The `## Autopilot` section) follows on the
+next line.
 
 The launch and return lines (Launch, wait, return) go the same way: in an
 interactive main session each is printed in the reply, on a line of its
@@ -2046,7 +2162,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | The argument is neither a brief nor a spec | Which it is | The run ends with the reason |
 | Several plugins and no `Plugin:` | Which plugin | The run ends with the reason |
 | A start check fails, or a settings stop — a value outside its grammar, `Role settings` included, or `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort | — (a stop with its reason) | The run ends with the same message |
-| The launch line shows no `crossSessionInbound` accept | Whether a settings file accepts inbound messages | The run ends naming the launch line |
+| The launch line shows no `crossSessionInbound` accept, and a settings file that exists cannot be read or parsed, or the server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists | Whether a settings file accepts inbound messages | The run ends naming the launch line |
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |
