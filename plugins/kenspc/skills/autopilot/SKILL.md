@@ -681,7 +681,8 @@ The flow:
    instruction: fill the `Ruling` column, set the status line to ruled,
    run the pointer-label grep, commit the spec alone as
    `docs(plans): add batch <name> spec`, reply with the hash, and stop.
-   When S1 has stopped on the timeout (The message protocol), the same text
+   When S1 has stopped on its question — the timeout, or a send that
+   failed or was held (The message protocol) — the same text
    is the body of the resume prompt, under its `answer <tag>:` first line.
 5. Record the hash S1 replies with in the state file.
 
@@ -1165,7 +1166,7 @@ a skip at any effort; the post-check catches it at every effort.
   both reports name the quoted cause. It is not a stop. Why not a stop: the
   run goes on through the resume, and a stop would hold an unattended run
   for a cause the user can look into after it. Why recorded: each such
-  question costs thirty minutes and a resume, and without the record
+  question costs up to thirty minutes and a resume, and without the record
   nothing names where to look. Why the causes and not a hold: a held
   inbound, a send that failed, and a send never made leave the same
   return, and the record names each as a cause rather than claiming one;
