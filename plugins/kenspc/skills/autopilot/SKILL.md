@@ -683,8 +683,8 @@ locked design as numbered points, the design table, out of scope,
 constraints, a `## Clarifications during implementation` section left
 empty, and `## Autopilot` copied from the brief. Why these: the entry kind
 is judged by the plan shape; task decomposition asks for a correct path
-when `## Implementation Steps` is missing — a question the spec cannot
-answer, so a stop after a paid session — and writes a Doc-sync task only
+when `## Implementation Steps` is missing — a question only a spec with
+that section answers, so a paid session spent before the gap shows — and writes a Doc-sync task only
 from a Documentation impact section; the preamble reads the locked design,
 out of scope, and constraints by section; and the main session commits its
 clarifications into the spec.
