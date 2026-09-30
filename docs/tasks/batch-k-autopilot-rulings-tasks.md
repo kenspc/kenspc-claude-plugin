@@ -91,8 +91,10 @@ Constraints for every task:
   repository's commit convention (its recent subjects: a conventional type
   with a scope, such as `fix(autopilot):` or `docs(plans):`).
 
-Dependency note: Task 5 depends on Tasks 1-4; Task 11 on Tasks 9 and 10;
-Task 12 on Task 8; Task 15 (Doc-sync) on Tasks 1-14. Tasks 1-8 all edit
+Dependency note: Task 2 depends on Task 1 (it points at the subsection
+Task 1 writes); Task 4 on Tasks 1-3 (it edits the clarification entries
+they describe); Task 5 on Tasks 1-4; Task 11 on Tasks 9 and 10; Task 12 on
+Task 8; Task 15 (Doc-sync) on Tasks 1-14. Tasks 1-8 all edit
 `plugins/kenspc/skills/autopilot/SKILL.md`, and Tasks 9 and 13 both edit
 `plugins/kenspc/skills/task-implement/SKILL.md`; they run in document order.
 
@@ -189,6 +191,8 @@ Spec Step 1.1 — K-L1, K-L3, K-L4; K-C2, K-C4. File:
 ### Task 2: SKILL.md — S2's confirmation and the skipped-gate post-check
 
 **Status:** TODO
+
+Depends on: Task 1
 
 Spec Step 1.1 — K-L6; K-C1. File:
 `plugins/kenspc/skills/autopilot/SKILL.md`.
@@ -298,6 +302,8 @@ Spec Step 1.1 — K-L5. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 ### Task 4: SKILL.md — the record
 
 **Status:** TODO
+
+Depends on: Task 1-3
 
 Spec Step 1.1 — K-L7. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
@@ -578,7 +584,9 @@ Spec Step 1.3 — K-L12; K-C4. File:
   literal is the hook's own).
 - The stop list runs 1-11, stop 11 as above with its Why; § Launch, wait,
   return states the check at the return.
-- `git diff 8db589b -- plugins/kenspc/hooks/` prints nothing.
+- `git diff 8db589b -- plugins/kenspc/hooks/hooks.json plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`
+  prints nothing (Task 14's edit of the telemetry hook, in the same
+  directory, is outside this check).
 - `bash scripts/check-all.sh` exits 0.
 
 ---
@@ -734,7 +742,9 @@ Spec Step 3.1 — K-L13; K-C4. File: `scripts/check-autopilot-rails-hook.sh`.
 - `bash scripts/check-autopilot-rails-hook.sh --self-test` exits 0, and its
   output names one red result per new mutant, five in all, each naming its
   carrier.
-- `git diff 8db589b -- plugins/kenspc/hooks/` prints nothing.
+- `git diff 8db589b -- plugins/kenspc/hooks/hooks.json plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`
+  prints nothing (Task 14's edit of the telemetry hook, in the same
+  directory, is outside this check).
 - `bash scripts/check-all.sh --self-test` exits 0 with `guards run: 12`
   and `self-tests run: 11`.
 
