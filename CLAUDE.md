@@ -446,8 +446,8 @@ written. `code-fixer` gives a ruled ID the ruling's action over FIXING
 PRIORITY (a FIX ruling's text bounds the fix, and a file it names is in
 its scope) and marks the row `ruled` after the em-dash, keeping the
 leading word so the statistics recount is unchanged; `regression-verifier`
-checks each ruled row's action against its ruling (row 1) and a FIX-ruled
-fix against the ruling's text (row 2). No key was added, and a ruling
+checks each ruled row's action against its ruling (VERIFICATION CHECKS
+item 1) and a FIX-ruled fix against the ruling's text (item 2). No key was added, and a ruling
 never goes into `CUSTOM_INSTRUCTIONS`: the CONTEXT block passes to both
 agents unchanged, the rule a narrowed review broke when it wrote a ruling
 there. The five reviewers do not read the file.
