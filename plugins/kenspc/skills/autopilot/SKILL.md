@@ -450,8 +450,11 @@ reminder to work without stopping), the run ends with the same message.
     not `defaults read com.anthropic.claudecode`, which prints the user's
     own domain rather than the managed layer; on Windows, the `Settings` value
     under `HKLM\SOFTWARE\Policies\ClaudeCode` and under
-    `HKCU\SOFTWARE\Policies\ClaudeCode` (`reg query <key> /v Settings`).
-    Among the managed sources, the strictest value any of them sets is
+    `HKCU\SOFTWARE\Policies\ClaudeCode` (`reg query <key> /v Settings`,
+    from Git Bash `MSYS_NO_PATHCONV=1 reg query <key> /v Settings`, since
+    Git Bash rewrites `/v` into a path and `reg` then fails on its syntax;
+    a read that fails for any reason other than an absent key or value is
+    a source the main session cannot read, below). Among the managed sources, the strictest value any of them sets is
     theirs.
   - The launch line's `--settings`, when the command line shows its
     argument as a path rather than inline JSON: the file at that path, the
