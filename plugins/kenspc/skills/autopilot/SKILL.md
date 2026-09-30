@@ -756,8 +756,8 @@ would make S6's `git rm` of a locally modified file fail; committed by S6
 before the removal, the entry stays in the spec's history, and the ruling
 keeps its four records. Why the main session commits after an S6 that
 removed nothing: neither reason holds then — there is no removal to
-re-add the spec, and no live S6 whose staged changes a commit could sweep
-in.
+re-add the spec, and a commit of the spec's path alone once S6 has ended
+sweeps in none of the changes S6 left staged.
 
 ### Launch, wait, return
 
@@ -1517,7 +1517,10 @@ nothing — a `Release preparation:` list that says `keep` — may ask at any
 point and commits each entry before it ends; a ruling answered to it, or
 ruled from its reply, that has no clarification commit when it ends, the
 main session commits itself once S6 has ended, in the same subject, and
-the check records that commit as the main session's. Why before the
+the check records that commit as the main session's: it adds the entry
+unless S6 left it written in the spec, and commits the spec's path alone,
+`git commit -- <spec path>`, while the spec is still at HEAD; a spec an
+instruction removed makes it a ruling after a removal (above). Why before the
 removal: the removal or release commit `git rm`s the spec — repo mode's
 instructions run after the removal, plugin mode's pre-flight after the
 release commit — so a clarification committed after it would re-add the
@@ -1525,8 +1528,12 @@ removed spec. Why no stop and no entry added later: the stop conditions
 do not list a record gap the reports can name, and a clarification
 committed after the removal would re-add the file; the reports are where
 that ruling is read. Why the main session commits after an S6 that
-removed nothing: with no removal nothing is re-added, and with S6 ended
-none of its staged changes can be swept in (Phase 2's Constraints).
+removed nothing: with no removal nothing is re-added, and a commit of the
+spec's path alone once S6 has ended carries none of S6's changes (Phase
+2's Constraints). Why the spec's path alone: the index outlives S6, so a
+change it staged and never committed — a commit its hook rejected — would
+ride in a plain commit, while a commit given a path carries that path's
+change only.
 
 Before answering a question from S6, the main session checks that the
 spec is still at HEAD, `git cat-file -e HEAD:<spec path>`; when it is
