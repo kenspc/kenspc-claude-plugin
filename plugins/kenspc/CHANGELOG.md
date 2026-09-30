@@ -82,6 +82,7 @@ use by the next product-repository batch, whose reviewer report shows the
   spec. An S6 that removes nothing (a `Release preparation:` list that
   says `keep`) may ask at any point, and a ruling it leaves without its
   clarification commit the main session commits once S6 has ended, when
+  the spec is still at HEAD and in the index and
   `git -C <repository root> status --porcelain -- <spec path>` prints
   nothing; a spec S6 left changed — a removal staged and not committed, or
   an edit — gets no commit, and both reports list the ruling as
