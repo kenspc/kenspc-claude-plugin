@@ -760,6 +760,59 @@ Constraints, "Rulings for this run", 1, on the second S5's question):
   removed file. Why: K-L2 lists no stop for a record gap, and the reports
   can name it; leaving the outcome unstated was the defect.
 
+Settled after the second narrowed review (all ruled by the main session
+under Constraints, "Rulings for this run", 1 and 3; the second S5 fixed its
+three defects in `b032844..5e21fbe`; the review's run directory
+`.kenspc/runs/20261001-022648-changes/`, verdict PASS, no HIGH, 6 fixed
+`53e74ba..8bf3859` and verified CLEAN, 4 MEDIUM and 2 LOW deferred). Stop
+condition 4 is not reached: the earlier fixes of the S6 route and of the
+missing-question sign were verified CLEAN, and rows 5 to 8 are new findings
+on the text those fixes added, not the same defect still failing. A third
+S5 carries K-C27 to K-C31, each the smallest wording that closes its row,
+then a third narrowed review; a finding there that the S6 route or the sign
+still fails is judged against stop 4.
+
+- **K-C27** (row 5, R1/E1/B4/E6, DEFERRED MEDIUM; to the third S5). The
+  cutoff is the commit that removes the spec, not S6's first commit: S6
+  raises every question before that commit, its own clarification commit
+  allowed first. When S6 removes nothing (a `Release preparation:` list
+  that says `keep`), S6 may ask at any point and commits the entry before
+  it ends. The marker `no clarification commit (the spec was already
+  removed)` is written only when a removal happened. This reads K-C21
+  beyond its letter, on the reviewers' evidence, and goes on
+  `beyond the letter`.
+- **K-C28** (row 6, E2/B3/T1/R4, DEFERRED MEDIUM; to the third S5). Before
+  answering a question from S6 the main session checks whether the spec is
+  still at HEAD (`git cat-file -e HEAD:<spec path>`); when it is gone, the
+  answer tells S6 to put the point in its reply. At S6's return the main
+  session also checks, with `git log --reverse <head>..HEAD`, that each
+  clarification commit comes before the commit that removes the spec, and
+  after a removal that the spec is absent at HEAD. A failed check is
+  recorded in both reports with the commits it names; it is not a stop.
+- **K-C29** (row 7, E3/B5, DEFERRED MEDIUM; to the third S5). A point that
+  arises after the removal: S6 leaves the work the point decides undone
+  and names it in its reply; the main session rules it, marks it as K-C26
+  says, and lists the undone work among what needs the user in both
+  reports. No resume of S6 for it.
+- **K-C30** (row 8, E4, DEFERRED MEDIUM; to the third S5). Preamble § 1: a
+  send that returns an error, or a delivery notice saying the message was
+  held or refused, puts the question under
+  `## Question for the main session` at once, quoting the error or the
+  notice, and the worker stops; the main session then records the cause
+  the worker named in place of the list of causes K-C23 gives. The rails
+  guard is rerun, since the preamble is one of its carriers.
+- **K-C31** (regression-verifier's three LOW observations; to the third S5
+  as one-line fixes in an allowed file). The Quality bar's Why no longer
+  says every ruling is committed as a clarification without S6's
+  exception; the S5 task block's finding placeholder names the
+  `rulings.md` entry for a ruled ID no report lists; the sentence in Phase
+  4 that sits between "S6 makes one commit" and the removal commit's
+  subject is reworded so neither subject reads as the other's.
+- **K-C32** (rows 11 and 12, T2 and T3, DEFERRED LOW; under ruling 3).
+  Follow-up candidates for the user: a guard for the rule that a ruled ID
+  no report lists holds the verdict from PASS, and one for S6's question
+  cutoff — both with the earlier guard candidates (K-C20's T2, K-C25's T4).
+
 ## Autopilot
 
 - Mode: plugin
