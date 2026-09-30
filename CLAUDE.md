@@ -497,7 +497,8 @@ skill's leftovers command, run
 `check-doc-sync-anchors.sh`. After editing a file that uses "the project's
 instruction files", or `shared/instruction-files.md`, run
 `check-instruction-files.sh`. After editing
-`hooks/scripts/autopilot-worker-rails.sh`, run
+`hooks/scripts/autopilot-worker-rails.sh`, or the autopilot `SKILL.md`'s
+preamble template, § Launch, wait, return, or stop conditions, run
 `check-autopilot-rails-hook.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
