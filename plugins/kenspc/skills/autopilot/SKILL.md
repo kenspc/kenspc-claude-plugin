@@ -431,7 +431,11 @@ reminder to work without stopping), the run ends with the same message.
   `crossSessionInbound` with `accept` — the launch line's `--settings`
   argument. When it does not, the main session reads the value from the
   settings files Claude Code reads it from. An absent file, key, or source
-  sets nothing.
+  sets nothing. A source whose value is not one of `accept`, `hold`, and
+  `refuse` — another spelling, another word, an empty string, `null` — is a
+  source the main session cannot read (below). Why: what Claude Code does
+  with such a value is not documented, and a value read as unset could
+  leave a lower source's `accept` in force over it.
   - Managed settings: `managed-settings.json`, and the `*.json` files of a
     `managed-settings.d/` directory beside it, in
     `/Library/Application Support/ClaudeCode/` on macOS, on Linux and WSL
@@ -2243,7 +2247,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | The argument is neither a brief nor a spec | Which it is | The run ends with the reason |
 | Several plugins and no `Plugin:` | Which plugin | The run ends with the reason |
 | A start check fails, or a settings stop — a value outside its grammar, `Role settings` included, or `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort | — (a stop with its reason) | The run ends with the same message |
-| The launch line shows no `crossSessionInbound` accept, and a settings file that exists cannot be read or parsed, a read of a Windows policy value fails for a reason other than an absent key or value, or the server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists | Whether a settings file accepts inbound messages | The run ends naming the launch line |
+| The launch line shows no `crossSessionInbound` accept, and a settings file that exists cannot be read or parsed, a read of a Windows policy value fails for a reason other than an absent key or value, a source sets a value other than `accept`, `hold`, or `refuse`, or the server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists | Whether a settings file accepts inbound messages | The run ends naming the launch line |
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |

@@ -578,7 +578,8 @@ the launch line — and, for `hold` or `refuse`, the file, managed source, or in
 that set it. The
 run asks whether a settings file accepts inbound messages only when a file
 exists that it cannot read or parse, when a read of a Windows policy value
-fails for a reason other than an absent key or value, or when the
+fails for a reason other than an absent key or value, when a source sets a
+value other than `accept`, `hold`, or `refuse`, or when the
 server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists;
 a session that cannot ask ends naming the launch line. The first message's
 delivery notice still stops the run on a value the read missed (see Known
