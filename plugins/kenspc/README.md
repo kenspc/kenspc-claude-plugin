@@ -835,8 +835,11 @@ the removal is not a stop: both reports list it, marked
 clarification committed after the removal would re-add the spec. A
 release preparation that removes nothing (a `Release preparation:` list
 that says `keep`) may ask at any point, and a ruling it leaves without its
-clarification commit the main session commits once it has ended. Nothing
-is pushed, tagged, or released.
+clarification commit the main session commits once it has ended, unless
+the session left the spec changed — a removal staged and not committed,
+or an edit — when both reports list the ruling, marked
+`no clarification commit (S6 left the spec changed)`, and the change
+among what needs you. Nothing is pushed, tagged, or released.
 
 **The two gates.** The run stops for you at the decisions on a brief's
 design table (a supplied spec counts as approved) and at the tag, push, and

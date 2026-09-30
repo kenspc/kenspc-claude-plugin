@@ -89,8 +89,8 @@ run that rules itself on a point a stop condition gives the user; and a
 ruling missing from the record. Why: the worker proposes and the main
 session rules, so the proposer and the ruler are two sessions; every
 ruling is recorded in the state file and committed as a clarification in
-the spec, or, when S6 had already removed the spec, marked so in both
-reports (Phase 4); and the tag, the push, and the release stay the user's, after
+the spec, or, when S6 had already removed the spec or left it changed,
+marked so in both reports (Phase 4); and the tag, the push, and the release stay the user's, after
 the reports, so a ruling is read before anything leaves the machine. A
 point a stop condition gives the user, ruled in the run, is a decision
 taken from the user, and a ruling the record does not hold is one the
@@ -643,8 +643,8 @@ skipped gates:
 stops: <reason> (<time>)
 open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
-clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]]
-S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone>>[; …] | none
+clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]][; no clarification commit (S6 left the spec changed): <tag>: <one line>[, <tag>: <one line>…]]
+S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone> | spec left changed: <the lines the status command printed>>[; …] | none
 next: <the next action>
 ```
 
@@ -748,8 +748,9 @@ of its clarification entry, which S6 adds to the spec and commits alone,
 `docs(plans): record clarifications settled after S6`, before that commit
 (Templates § The task blocks, S6). An S6 that removes nothing — a
 `Release preparation:` list that says `keep` — may ask at any point and
-commits each entry before it ends; an entry it left uncommitted, the main
-session commits once S6 has ended (Phase 4). Why: the commits are the
+commits each entry before it ends; a ruling it left without its
+clarification commit, the main session commits once S6 has ended, unless
+S6 left the spec changed (Phase 4). Why: the commits are the
 workers' evidence, and a main session that edited code would be
 reviewing its own work; why the ruler named: the spec is where the user
 reads a ruling before the tag and the push, and an entry without its
@@ -1533,10 +1534,25 @@ main session commits itself once S6 has ended, in the same subject, and
 the check records that commit as the main session's: once S6 has ended,
 and before it writes the entry, it runs the check and its control that it
 runs before answering S6 (below) afresh, never reusing an earlier result,
-and only when they find the spec at HEAD and in the index does it add the
-entry, unless S6 left it written in the spec, and commit the spec's path
-alone, `git commit -- <spec path>`; a spec an
-instruction removed makes it a ruling after a removal (above). Why before the
+then `git -C <repository root> status --porcelain -- <spec path>`. A spec
+absent at HEAD — an instruction removed it — makes it a ruling after a
+removal (above). A spec at HEAD that is missing from the index, or for
+which the status command prints anything — a removal S6 staged and did
+not commit, or an edit it left, staged or not, the entry among them —
+gets no commit: the ruling's line under the reviewer report's
+`Main-session rulings` says
+`no clarification commit (S6 left the spec changed)`, the state file's
+`S6 return:` line names the leftover with the lines the status command
+printed, and both reports list it among what needs the user. Only when
+the spec is at HEAD and in the index and the status command prints
+nothing does it add the entry and commit the spec's path alone,
+`git commit -- <spec path>`. Why the status check: an ended S6 can leave
+the spec in two states a commit would carry under the clarification
+subject — a removal staged and not committed, at HEAD but not in the
+index, and an edit left in the index or the working tree, in both — and
+one status check finds both, while the main session commits none of S6's
+changes; it runs at the root and with the path the control vouched for,
+since it prints nothing for a path git does not know. Why before the
 removal: the removal or release commit `git rm`s the spec — repo mode's
 instructions run after the removal, plugin mode's pre-flight after the
 release commit — so a clarification committed after it would re-add the
@@ -1596,13 +1612,14 @@ reads both reports before the tag.
   release; any stop or deferred item; a question not received, with the
   cause the worker quoted or the causes to check; a failed check at S6's
   return, with the commits it names; work S6 left undone for a point
-  raised after the removal), and the cost. Then, under the
+  raised after the removal; a change S6 left to the spec, with what the
+  status command printed), and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
   clarification, or that it has no clarification commit because the spec
-  was already removed — or `none`; the one-page limit does not count this
-  list.
+  was already removed or because S6 left the spec changed — or `none`; the
+  one-page limit does not count this list.
   Why: the user reviews every ruling from the reports before anything
   leaves the machine, and a limit that cut the list would cut the part the
   user must read.
@@ -2426,7 +2443,7 @@ decisions the user has yet to see.
 - Spec: git show <hash>:<path>
 - Design rulings and clarifications: <n> / <m> / <k>; beyond the letter: <list, or none>
 - Main-session rulings: <n> | none
-  <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed)>
+  <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed) | no clarification commit (S6 left the spec changed)>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
@@ -2451,7 +2468,9 @@ with its clarification, the tag or step, the question, the ruling, the
 reason, and the commits it produced — the clarification commit and any
 commit a worker made from it, or, for a ruling answered to S6 or ruled
 from its reply that has none after S6 removed the spec,
-`no clarification commit (the spec was already removed)` (Phase 4) — and
+`no clarification commit (the spec was already removed)`, and, for one
+that has none because an S6 that removed nothing left the spec changed,
+`no clarification commit (S6 left the spec changed)` (Phase 4) — and
 `none` when the main session ruled nothing. Why: it is the list the user
 reads before the tag and the push, so every ruling the run made without
 the user is on it.
@@ -2474,7 +2493,8 @@ failed or was never made — or, for a tag whose worker quoted an error or
 a notice, that cause (§ The message protocol). It also lists the state
 file's `S6 return:` entries other than `none`, whatever the `inbound:`
 line records — each failed check at S6's return, with the commits it
-names, and the work S6 left undone for a point raised after the removal
+names, the work S6 left undone for a point raised after the removal, and
+a change S6 left to the spec, with what the status command printed
 (Phase 4). The line reads `none` when there are none.
 
 ## The gates

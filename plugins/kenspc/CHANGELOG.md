@@ -81,7 +81,12 @@ use by the next product-repository batch, whose reviewer report shows the
   since a clarification committed after the removal would re-add the
   spec. An S6 that removes nothing (a `Release preparation:` list that
   says `keep`) may ask at any point, and a ruling it leaves without its
-  clarification commit the main session commits once S6 has ended.
+  clarification commit the main session commits once S6 has ended, when
+  `git -C <repository root> status --porcelain -- <spec path>` prints
+  nothing; a spec S6 left changed — a removal staged and not committed, or
+  an edit — gets no commit, and both reports list the ruling as
+  `no clarification commit (S6 left the spec changed)`, with the change
+  on the `S6 return:` line and among what needs the user.
 - **A corrected acceptance case (autopilot).** The main session may rule a
   corrected form of an `Acceptance:` case with two pieces of evidence: the
   case as written fails, or passes vacuously, for a reason outside the
