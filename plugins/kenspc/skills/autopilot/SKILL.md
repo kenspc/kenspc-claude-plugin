@@ -89,7 +89,8 @@ run that rules itself on a point a stop condition gives the user; and a
 ruling missing from the record. Why: the worker proposes and the main
 session rules, so the proposer and the ruler are two sessions; every
 ruling is recorded in the state file and committed as a clarification in
-the spec; and the tag, the push, and the release stay the user's, after
+the spec, or, when S6 had already removed the spec, marked so in both
+reports (Phase 4); and the tag, the push, and the release stay the user's, after
 the reports, so a ruling is read before anything leaves the machine. A
 point a stop condition gives the user, ruled in the run, is a decision
 taken from the user, and a ruling the record does not hold is one the
@@ -1443,11 +1444,11 @@ asked, and the two reports.
 `Autopilot finished — <baseline sha>..<last sha>`, and the reviewer report
 is also at `_logs/<batch>-report.md`.
 
-**Repo mode.** `Release preparation: default` — S6 makes one commit, after
-the clarification commit of each question it asked (below),
+**Repo mode.** `Release preparation: default` — S6 makes one commit,
 `docs: remove batch <name> plan and tasks`, that `git rm`s the batch's plan
-and task documents and touches no version and no CHANGELOG. `keep` — no S6;
-the documents stay. A list of instructions — S6 runs them as its task
+and task documents and touches no version and no CHANGELOG; the
+clarification commit of each question it asked comes before it (below).
+`keep` — no S6; the documents stay. A list of instructions — S6 runs them as its task
 block, after the default removal unless the list says `keep`.
 `Version: <string>` in repo mode is passed to S6 as an instruction to bump
 wherever the project's instruction files say versions live, and is otherwise
@@ -2055,7 +2056,8 @@ changes in no other way.]
 The defects, each as the reviewer or the acceptance recorded it:
 
 <k>. <ID> — <run dir, or the case and its record>: <one line>
-   The finding: <the row, or the case's lines, quoted>
+   The finding: <the row, or the case's lines, quoted — for a ruled ID no
+   report lists, its `rulings.md` entry, with the matching row when one does>
    The case to make pass: <the check that failed, with its PASS criterion
    — a review check, a self-test, a command, an acceptance case>
 
