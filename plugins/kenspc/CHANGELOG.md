@@ -12,9 +12,9 @@
 ## 4.5.0 — unreleased
 
 An autopilot batch runs from its spec to its release preparation without
-waiting on you between its two gates: the main session rules every point
-the spec leaves open, except the stop conditions, and records each ruling
-where you review it before the tag and the push. A ruling on a review's
+waiting on the user between its two gates: the main session rules every
+point the spec leaves open, except the stop conditions, and records each
+ruling where the user reviews it before the tag and the push. A ruling on a review's
 findings reaches code-fixer and regression-verifier through the run
 directory's new `rulings.md`, never through `CUSTOM_INSTRUCTIONS`. Phase 0
 stops asking the two questions every recent batch asked. Guard counts are
