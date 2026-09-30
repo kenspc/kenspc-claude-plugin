@@ -97,8 +97,10 @@ use by the next product-repository batch, whose reviewer report shows the
   mutations). `check-autopilot-rails-hook.sh` main mode checks that
   `## Rail observations` occurs in the hook's unreadable-field reason, the
   preamble template, and § Launch, wait, return, and that
-  `could not be read from the hook input` occurs in the hook and the
-  autopilot skill; its self-test adds five mutants, one per carrier.
+  `could not be read from the hook input` occurs in each of the hook's
+  unreadable-field reasons and in the autopilot skill's § Launch, wait,
+  return and stop conditions; its self-test adds six mutants, one per
+  carrier.
 
 ### Changed
 

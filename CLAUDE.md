@@ -730,7 +730,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   preamble template of `skills/autopilot/SKILL.md` (the fenced block under
   `### The preamble`), and in that skill's `### Launch, wait, return`, and
   that the phrase `could not be read from the hook input` occurs in the
-  hook and in `SKILL.md`, whose stop condition 11 matches on it — each
+  hook — each unreadable-field fixture asserting it in the reason the hook
+  printed — and in `SKILL.md`'s § Launch, wait, return and § The stop
+  conditions, where the main session and stop condition 11 match on it — each
   missing literal reported per carrier (exit 1), a missing `SKILL.md`,
   assignment, template, or section exit 2. The hook
   runs under `/bin/bash` when it exists. Its self-test turns five mutants red — the
@@ -741,10 +743,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   each `|` or `&`, which any fixture may catch: the quoted and escaped `<`
   or `>` fixtures do, and the timed `<|` fixture only by a margin too thin
   to require) — then runs the heading check on a copy of `SKILL.md` beside
-  the hook copy and turns it red with five more mutants, each named with
+  the hook copy and turns it red with six more mutants, each named with
   its carrier: the heading dropped from the hook's reason, the preamble
   template, and § Launch, wait, return, and the phrase dropped from the
-  hook and from `SKILL.md` (every occurrence in the carrier's region); a
+  hook, § Launch, wait, return, and § The stop conditions (every
+  occurrence in the carrier's region); a
   mutation that replaces nothing is exit 2 — and cleans up without a
   recursive `rm`.
 

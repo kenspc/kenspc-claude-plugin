@@ -72,11 +72,14 @@
 # that skill's `### Launch, wait, return` section (up to the next `### `
 # heading), where the main session reads it at a worker's return. The phrase
 # `could not be read from the hook input` must occur in the hook, which
-# prints it in each unreadable-field reason, and in SKILL.md, whose stop
-# condition matches on it. Why: the hook, the worker's prompt, and the main
-# session meet at these two literals, and a rename in one carrier breaks the
-# path silently while every fixture still passes. A missing literal is
-# reported per carrier.
+# prints it in each unreadable-field reason — each unreadable-field fixture
+# also asserts it in the reason the hook printed, so a reword of one field's
+# reason turns that fixture red — and in SKILL.md's § Launch, wait, return,
+# where the main session matches on it, and its `### The stop conditions`
+# section, whose stop condition 11 names it. Why: the hook, the worker's
+# prompt, and the main session meet at these two literals, and a rename in
+# one carrier breaks the path silently while every fixture still passes. A
+# missing literal is reported per carrier.
 #
 # Exit code 0: the registration holds, the heading and the phrase are in
 #              every carrier, and every fixture decided as expected.
@@ -84,8 +87,9 @@
 #              (each one is reported).
 # Exit code 2: missing hook file, hooks.json, or SKILL.md; no REASON_UNREADABLE=
 #              assignment in the hook, no fenced template under
-#              `### The preamble`, or no `### Launch, wait, return` section in
-#              SKILL.md; or self-test fixture stale.
+#              `### The preamble`, or no `### Launch, wait, return` or
+#              `### The stop conditions` section in SKILL.md; or self-test
+#              fixture stale.
 #
 # Same set -euo pipefail discipline and SCRIPT_DIR / REPO_ROOT derivation as
 # the other guards; bash 3.2, no associative arrays. Mutations use a literal
@@ -108,12 +112,13 @@
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 #                  It then copies SKILL.md beside the hook copy, runs the
 #                  heading check on the two unmodified copies (must pass),
-#                  and on five mutants, each of which must turn that check
+#                  and on six mutants, each of which must turn that check
 #                  red with the mutated carrier named in its output: the
 #                  heading dropped from the hook's unreadable-field reason,
 #                  from the preamble template, and from § Launch, wait,
-#                  return, and the phrase dropped from the hook and from
-#                  SKILL.md — every occurrence in the carrier's region. A
+#                  return, and the phrase dropped from the hook, from
+#                  § Launch, wait, return, and from § The stop conditions —
+#                  every occurrence in the carrier's region. A
 #                  heading mutation that replaces nothing is exit 2. The
 #                  restored copies must pass again.
 
@@ -272,10 +277,12 @@ fx() {
         ok=0
         GOT="deny without .trash in its reason, or saying '$UNREADABLE_NO_ROUTE'"
     fi
+    # Each unreadable-field reason must carry the phrase stop condition 11
+    # matches on, so a reword of one field's reason turns its fixture red.
     if [[ "$expect" == deny-unreadable && "$ok" -eq 1 ]] \
-        && [[ "$ERR" != *"$UNREADABLE_NO_ROUTE"* || "$ERR" != *"$UNREADABLE_REPORT"* || "$ERR" == *.trash* ]]; then
+        && [[ "$ERR" != *"$UNREADABLE_NO_ROUTE"* || "$ERR" != *"$UNREADABLE_REPORT"* || "$ERR" != *"$PHRASE"* || "$ERR" == *.trash* ]]; then
         ok=0
-        GOT="deny whose reason does not say '$UNREADABLE_NO_ROUTE' and '$UNREADABLE_REPORT', or names .trash"
+        GOT="deny whose reason does not say '$UNREADABLE_NO_ROUTE', '$UNREADABLE_REPORT', and '$PHRASE', or names .trash"
     fi
     # The autopilot preamble tells a worker to know a denial by this text in
     # its error, so a renamed prefix would leave that cue stale.
@@ -595,11 +602,12 @@ check_registration() {
 # hook's REASON_UNREADABLE= assignment, in the preamble template of the
 # skill (the fenced block under `### The preamble`), and in its
 # `### Launch, wait, return` section; the phrase an unreadable-field reason
-# carries in the hook and in the skill. Returns 1 with each missing literal
-# reported per carrier, 2 when a file, the assignment, the template, or the
+# carries in the hook, in that section, and in the skill's
+# `### The stop conditions` section. Returns 1 with each missing literal
+# reported per carrier, 2 when a file, the assignment, the template, or a
 # section cannot be found.
 check_heading() {
-    local hook="$1" skill="$2" reason preamble launch bad=0
+    local hook="$1" skill="$2" reason preamble launch stops bad=0
     if [[ ! -f "$skill" ]]; then
         echo "ERROR: missing $skill" >&2
         return 2
@@ -628,6 +636,15 @@ check_heading() {
         echo "ERROR: no ### Launch, wait, return section in $skill" >&2
         return 2
     }
+    stops=$(awk '
+        { sub(/\r$/, "") }
+        /^### The stop conditions[ \t]*$/ { sec = 1; found = 1; next }
+        sec && /^##+ / { exit }
+        sec { print }
+        END { if (!found) exit 3 }' "$skill") || {
+        echo "ERROR: no ### The stop conditions section in $skill" >&2
+        return 2
+    }
     case "$reason" in
         *"$HEADING"*) ;;
         *) echo "MISSING '$HEADING' in the hook's unreadable-field reason (REASON_UNREADABLE= in $hook)" >&2; bad=1 ;;
@@ -644,10 +661,14 @@ check_heading() {
         echo "MISSING '$PHRASE' in the hook $hook" >&2
         bad=1
     fi
-    if ! grep -qF -- "$PHRASE" "$skill"; then
-        echo "MISSING '$PHRASE' in the autopilot skill $skill" >&2
-        bad=1
-    fi
+    case "$launch" in
+        *"$PHRASE"*) ;;
+        *) echo "MISSING '$PHRASE' in ### Launch, wait, return of $skill" >&2; bad=1 ;;
+    esac
+    case "$stops" in
+        *"$PHRASE"*) ;;
+        *) echo "MISSING '$PHRASE' in ### The stop conditions of $skill" >&2; bad=1 ;;
+    esac
     if [[ "$bad" -ne 0 ]]; then
         echo "The hook tells a worker to list an unreadable-field denial under $HEADING, the" >&2
         echo "preamble keeps that section in every worker's final message, and the main" >&2
@@ -671,7 +692,7 @@ run_main_logic() {
     check_registration "$json" || return 1
     echo "OK    autopilot rails hook — registered on PreToolUse for Bash, Write, Edit, and NotebookEdit"
     check_heading "$hook" "$REPO_ROOT/$SKILL_REL" || return $?
-    echo "OK    autopilot rails hook — '$HEADING' in the unreadable-field reason, the preamble template, and § Launch, wait, return; '$PHRASE' in the hook and the skill"
+    echo "OK    autopilot rails hook — '$HEADING' in the unreadable-field reason, the preamble template, and § Launch, wait, return; '$PHRASE' in the hook, § Launch, wait, return, and § The stop conditions"
     make_work
     if run_fixtures "$hook"; then
         echo "OK    autopilot rails hook — every fixture decided as expected (${#D_LABEL[@]} denied fixtures, each also inert without the marker and with it 0; the timed commands in ${TIMED})"
@@ -826,7 +847,7 @@ run_self_test() {
         cat "$WORK/stderr.txt" >&2
         return 1
     fi
-    for name in heading-in-reason heading-in-preamble heading-in-return phrase-in-hook phrase-in-skill; do
+    for name in heading-in-reason heading-in-preamble heading-in-return phrase-in-hook phrase-in-return phrase-in-stops; do
         case "$name" in
             heading-in-reason)
                 target=$copy; start='REASON_UNREADABLE='; stop=''
@@ -844,10 +865,14 @@ run_self_test() {
                 target=$copy; start=''; stop=''
                 old=$PHRASE; new='was unreadable in the hook input'
                 carrier="the hook" ;;
-            phrase-in-skill)
-                target=$skill_copy; start=''; stop=''
+            phrase-in-return)
+                target=$skill_copy; start='### Launch, wait, return'; stop='### '
                 old=$PHRASE; new='was unreadable in the hook input'
-                carrier="the autopilot skill" ;;
+                carrier="### Launch, wait, return" ;;
+            phrase-in-stops)
+                target=$skill_copy; start='### The stop conditions'; stop='### '
+                old=$PHRASE; new='was unreadable in the hook input'
+                carrier="### The stop conditions" ;;
         esac
         cp "$hook" "$copy"
         cp "$skill" "$skill_copy"
