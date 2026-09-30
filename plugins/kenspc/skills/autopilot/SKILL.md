@@ -1490,7 +1490,13 @@ same subject, so a subject names neither the commit nor the ruling it
 carries. S6 raises every
 question before the commit that removes the spec — its own clarification
 commits may come first — and a point that arises only after that commit is
-not asked: S6 puts it in its reply, and the main session rules it there.
+not asked: S6 leaves the work the point decides undone and names the
+point and that work in its reply, and the main session rules it there,
+lists the undone work among what needs the user in both reports — the
+user report's list, the reviewer report's `Follow-up candidates` line —
+and resumes no S6 for it. Why undone and no resume: work done on the
+point before its ruling would be S6 ruling it, and any commit that
+carried the ruling now would come after the removal.
 After a removal, a ruling answered to S6, or ruled from its reply, that
 has no clarification commit is not a stop: its line under the reviewer
 report's `Main-session rulings` says
@@ -1514,8 +1520,8 @@ none of its staged changes can be swept in (Phase 2's Constraints).
 
 Before answering a question from S6, the main session checks that the
 spec is still at HEAD, `git cat-file -e HEAD:<spec path>`; when it is
-gone, the answer tells S6 to put the point in its reply, where the main
-session rules it. At S6's return it also checks, with
+gone, the answer tells S6 to leave the work the point decides undone and
+put the point in its reply, where the main session rules it. At S6's return it also checks, with
 `git log --reverse --name-status <head>..HEAD` from the state file's
 `head:`, that each clarification commit comes before the commit that
 removes the spec, and, after a removal, that the spec is absent at HEAD
@@ -1537,7 +1543,8 @@ reads both reports before the tag.
   the batch built, the release commit, what needs the user (tag, push,
   release; any stop or deferred item; a question not received, with the
   causes to check; a failed check at S6's return, with the commits it
-  names), and the cost. Then, under the
+  names; work S6 left undone for a point raised after the removal), and
+  the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -2065,7 +2072,8 @@ it to the clarifications section of <spec path> and commit the spec alone,
 `docs(plans): record clarifications settled after S6`[, before the removal
 commit below. Raise every question before that commit; your clarification
 commits may come first. A point that arises only after it is not asked:
-put it in your reply, and <main name> rules it there. Why: the removal
+leave the work it decides undone, and name the point and that work in
+your reply; <main name> rules it there. Why: the removal
 commit `git rm`s the spec, and the instructions run after it, so a
 clarification committed after that commit would re-add the removed
 spec][, before you end. This task removes nothing, so you may raise a
@@ -2103,8 +2111,9 @@ you ask <main name> is answered with a
 clarification entry: add it to the clarifications section of <spec path>
 and commit the spec alone,
 `docs(plans): record clarifications settled after S6`, before the release
-commit. A point that arises only after the release commit is not asked: put
-it in your reply, and <main name> rules it there. Why: the release commit
+commit. A point that arises only after the release commit is not asked:
+leave the work it decides undone, and name the point and that work in
+your reply; <main name> rules it there. Why: the release commit
 `git rm`s the spec, and the pre-flight runs after it, so a clarification
 committed after that commit would re-add the removed spec. Then, in one
 release commit in the repository's convention:
@@ -2400,7 +2409,8 @@ from, and, when the state file's `inbound:` line records a question not
 received, that record with its tags and the causes to check — the main
 session's own inbound under the settings precedence, or a send that
 failed or was never made (§ The message protocol), and each failed check
-at S6's return, with the commits it names (Phase 4); it reads `none` when
+at S6's return, with the commits it names, and the work S6 left undone
+for a point raised after the removal (Phase 4); it reads `none` when
 there are none.
 
 ## The gates

@@ -822,7 +822,9 @@ session checks that its reply lists that commit for every ruling, that
 each clarification commit comes before the removal, and, after a removal,
 that the spec is gone from HEAD — a failed check is listed in both
 reports with the commits it names, not a stop. A point that arises only
-after the removal goes in its reply, and the main session rules it there;
+after the removal goes in its reply, with the work it decides left undone,
+and the main session rules it there and lists that work in both reports
+among what needs you — the session is not resumed for it;
 a question that reaches the main session after the removal is answered
 the same way, since the main session checks that the spec is still at
 HEAD before it answers. A ruling without its clarification commit after

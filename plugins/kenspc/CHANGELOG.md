@@ -70,8 +70,10 @@ use by the next product-repository batch, whose reviewer report shows the
   failed check is recorded in both reports with the commits it names, not
   a stop; before it answers a question from S6 it checks that the spec is
   still at HEAD, and when it is gone the answer sends the point to S6's
-  reply. A point that arises after the removal
-  goes in its reply and is ruled there, and a ruling without a
+  reply. A point that arises after the removal goes in its reply, with
+  the work it decides left undone; it is ruled there, the undone work is
+  listed in both reports among what needs the user, and S6 is not resumed
+  for it; a ruling without a
   clarification commit after the removal is listed in both reports as
   `no clarification commit (the spec was already removed)`, not a stop,
   since a clarification committed after the removal would re-add the
