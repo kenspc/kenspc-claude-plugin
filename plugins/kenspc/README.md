@@ -836,8 +836,9 @@ No role gets an effort floor: it would be a plugin default, and it would
 not catch a skip at any effort. The reviewer report's `Skipped gates`
 line lists each skip with its step, tag, and outcome.
 
-A question the main session raises itself that only a later step needs
-does not stop the run where it arises: it is recorded as open for that
+A question the main session raises itself that it cannot rule on — a way
+forward only you can decide, of the kind the stops below name — and that
+only a later step needs does not stop the run where it arises: it is recorded as open for that
 step, the steps before it go on, and it becomes the stop only when that
 step is due and you have not answered it.
 
