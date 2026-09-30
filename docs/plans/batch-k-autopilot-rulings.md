@@ -813,6 +813,23 @@ still fails is judged against stop 4.
   no report lists holds the verdict from PASS, and one for S6's question
   cutoff — both with the earlier guard candidates (K-C20's T2, K-C25's T4).
 
+Settled during the third S5 (ruled by the main session under Constraints,
+"Rulings for this run", 1, on the third S5's question):
+
+- **K-C33** (the third S5's question on K-C27, ruled by the main session).
+  In a run where S6 removes nothing, a ruling S6 was answered that has no
+  clarification commit when S6 ends is committed by the main session once
+  S6 has ended, in the repository's convention for a clarification commit,
+  and the return check notes the main session made it. Why: with no
+  removal nothing is re-added, and with S6 ended no staged change can be
+  swept in — K-C16's two reasons against a main-session commit do not
+  apply — while K-L7's four records stay whole.
+- **K-C34** (the same question on K-C28 and K-C29, ruled by the main
+  session). A failed check at S6's return and the work S6 left undone go
+  on the reviewer report's `Follow-up candidates` line and in the user
+  report among what needs the user, following K-C23's precedent; no
+  template field is added.
+
 ## Autopilot
 
 - Mode: plugin
