@@ -427,7 +427,8 @@ After writing the file, reply with only:
   a line that is always present tells a run that checked from one that did
   not,
 - when `rulings.md` names an ID that no report lists, one line after the
-  statistics line, `Ruled IDs in no report: <ID>[, <ID>…]`; it is not
+  statistics line and after the uncommitted or `Doc-sync documents:` line
+  when one is written, `Ruled IDs in no report: <ID>[, <ID>…]`; it is not
   written to `schema-b.md`. Why: such an ID has no row to carry the
   ruling, and a ruling that matched nothing would otherwise vanish without
   a trace,
