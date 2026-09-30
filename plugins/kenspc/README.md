@@ -754,7 +754,9 @@ it is a breach as if typed, while the code the batch implements and its
 tests, run as the project runs them, stay a program it runs. Reaching an
 effect the rails hook denied by another spelling — another command,
 another tool, a script — is a breach. A worker that lists its environment
-prints variable names only, never values. A worker's subagents
+prints variable names only, never values, with `bash -c 'compgen -e'`,
+since `env` cut at the `=` still prints the further lines of a multi-line
+value. A worker's subagents
 never see its prompt, so the rails tell the worker to write them into
 every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
 dispatches its skills make. A dispatch that has no such key —

@@ -1527,7 +1527,9 @@ created when missing; deletions inside the repository only through
 git rm. No git push, no git tag, no release. No resource the brief does
 not name — no database, no network service. No secrets in any file or
 message. Listing environment variables prints their names only, never
-their values.
+their values: `bash -c 'compgen -e'` prints the names alone, while `env`
+or `printenv` cut at the `=` still prints every further line of a
+multi-line value.
 
 The rails govern what you write — your own commands and tool calls. A
 program you run that removes a temporary directory it created itself (a
@@ -1613,7 +1615,10 @@ intent, and a denied effect reached another way leaves the denial with no
 effect. Why environment listings print names only: a worker printed the
 machine's local messaging-socket token from an environment listing whose
 redaction pattern missed it; a name tells whether a variable is set,
-while a value printed stays in the transcript and the logs.
+while a value printed stays in the transcript and the logs. Why the
+method named: the obvious one, `env` cut at each line's `=`, prints the
+continuation lines of a multi-line value — a key or a credential held in
+one variable — as if they were names.
 
 Why § 3 tells the worker to carry its rails into its subagents: a
 worker's subagents never see the preamble, so rails left there bind the
