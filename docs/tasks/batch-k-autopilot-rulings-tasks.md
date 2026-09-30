@@ -304,7 +304,25 @@ Spec Step 1.1 — K-L6; K-C1. File:
 
 ### Task 3: SKILL.md — a corrected acceptance case
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the evidence is gathered in a clone under `$TMPDIR` or the
+  workspace (`git clone <repository root> <dir>`, then a detached checkout
+  of the baseline or of the HEAD S4 ran at), not a `git worktree`, since a
+  worktree writes into the repository's `.git` while a clone leaves the
+  working tree, the index, and `.git` as they are; the clone is left or
+  moved into `.trash/`, never removed with a recursive `rm`. The corrected
+  part is one bracket appended to each S4 block's case line,
+  `[ — in the corrected form (<clarification>)]`, written on the first run
+  and on an `-s4b` re-run alike.
+- Changes/tradeoffs: Phase 3's Classification gained a fourth outcome, "a
+  case broken for a reason outside the batch's work → a corrected case,
+  re-run in a new S4 session in its corrected form", so the new paragraph
+  is reachable from the classification the main session already makes;
+  and a second Why (a ruling, not a settings edit) beside the evidence
+  Why. The reviewer report's `Acceptance:` line carries the corrected part
+  as an optional bracket in its per-case form.
 
 Spec Step 1.1 — K-L5. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 

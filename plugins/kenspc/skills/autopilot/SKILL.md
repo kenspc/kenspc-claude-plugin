@@ -1120,7 +1120,9 @@ next letter for a later one) that runs only that case, while a defect the
 S5 left unfixed goes to the next S5, as The verdict loop after S3b says;
 a behavior
 deviation → a roadmap line drafted for the release commit (plugin mode) or
-a reviewer-report line (repo mode); an observation → recorded. The same
+a reviewer-report line (repo mode); a case broken for a reason outside
+the batch's work → a corrected case (below), re-run in a new S4 session in
+its corrected form; an observation → recorded. The same
 defect still failing after two fixes of it is a stop, counted per defect
 as stop condition 4 counts. Every classification is a
 clarification entry in the spec, committed by the main session as
@@ -1134,6 +1136,49 @@ would stop the same run at different points.
 
 S5's task block: each classified defect with its case, the check to make
 pass, and one commit per defect.
+
+**A corrected case.** The main session may rule a corrected form of an
+`Acceptance:` case when it has both pieces of evidence:
+
+1. the case as written fails, or passes vacuously, for a reason outside
+   the batch's work — shown at the baseline, or a named tool behavior
+   verified by running it;
+2. a negative control: the corrected form fails on a deliberate break of
+   what the case checks, with the output recorded.
+
+The ruling is a clarification in the spec carrying the case, the corrected
+form, and both pieces of evidence — paths or quoted output — committed as
+Phase 2's Constraints say. The `## Autopilot` section stays as Phase 0
+read it: a correction is a ruling, not a settings edit, and every later S4
+— the first run or an `-s4b` re-run — lists the case in its corrected form
+and names the clarification (Templates § The task blocks). Without both
+pieces of evidence, the correction is stop condition 7 (b).
+
+The main session gathers the evidence outside the repository's working
+tree: in a clone under `$TMPDIR` or the workspace
+(`git clone <repository root> <dir>`, then
+`git -C <dir> checkout --detach <sha>` — the baseline for a failure shown
+there, the HEAD S4 ran at for the negative control), where it makes the
+deliberate break and runs both forms of the case. The clone is left where
+it is, or moved into the workspace's `.trash/`; it is never deleted with a
+recursive `rm`. Why a clone: the main session commits nothing but
+clarification entries (Phase 2's Constraints), and a checkout of the
+baseline or a break made in the working tree would change the tree and
+the index the workers and the next step read — and a break left there by
+a stop would be swept into the next worker's commit.
+
+Why both pieces of evidence: four acceptance commands have broken for
+reasons outside a batch's work — a flag the package manager read instead
+of the test runner, a failure word that matched an application log line,
+a summary line the installed SDK does not print, so the command failed at
+the commit before the batch, and a check that passed vacuously because a
+clone was never restored — and each time the main session had verified a
+corrected form before it asked. The first piece shows the case, not the
+batch, is what failed; the negative control keeps a correction from
+loosening a check until it passes. Why a ruling and not a settings edit:
+the section is the user's settings, fixed at Phase 0 (§ The `## Autopilot`
+section), and a clarification is where the user reads the correction
+with its evidence.
 
 **The narrowing rule.** Cases marked `(optional)` may be cut when the budget
 check fails, in the order listed, with Not exercised recorded. An unmarked
@@ -1491,7 +1536,11 @@ instruction come in the prompt that resumed you, under its first line
   as they are in the launched prompt. The first run lists every case and
   gets the bracketed trial-run words and the first bracketed record
   paragraph; an `-s4b` re-run after an S5 fix (Phase 3) lists the one case
-  it re-runs and gets the second record paragraph instead. Why the nested
+  it re-runs and gets the second record paragraph instead. A case the main
+  session corrected (Phase 3, A corrected case) is listed in its corrected
+  form, and its line gets the bracketed `in the corrected form` part,
+  naming the clarification — on the first run and on an `-s4b` re-run
+  alike, so a re-run of a corrected case runs the corrected form. Why the nested
   tags and the cap are spelled out: a nested launch
   under a worker's or a resume's tag is accepted once that worker has ended
   and overwrites its `.json`, `.session`, and `.pid`, which Phase 4 reads;
@@ -1519,7 +1568,7 @@ that HEAD with the plugin at <plugin directory>. Seed projects live under
 One case per run, in the order listed[, after a trial run of a seed to
 confirm the path under test is reachable]:
 
-<n>. <case> — PASS: <criterion>[ (optional)]
+<n>. <case> — PASS: <criterion>[ (optional)][ — in the corrected form (<clarification>)]
 
 Every run is a headless session started through the driver copy, with the
 seed as its cwd and its prompt in a file:
@@ -1584,7 +1633,11 @@ FAIL, its cost.
   `head:`. The bracketed paragraphs are written when `Acceptance record:`
   names a path — the first on the first run, the second on an `-s4b`
   re-run after an S5 fix (Phase 3), which lists the one command it re-runs.
-  With `Acceptance: none`, no S4 starts.
+  A case the main session corrected (Phase 3, A corrected case) is listed
+  as its corrected command, and its line gets the bracketed
+  `in the corrected form` part, naming the clarification — on the first run
+  and on an `-s4b` re-run alike, so a re-run of a corrected case runs the
+  corrected form. With `Acceptance: none`, no S4 starts.
 
 ````
 ## Task: acceptance for batch <batch>
@@ -1593,7 +1646,7 @@ The batch's commits are <baseline sha>..<HEAD sha>; run the acceptance at
 that HEAD, in the repository. Run each of these, one per Bash call, in the
 order listed:
 
-<n>. <command> — PASS: <criterion>[ (optional)]
+<n>. <command> — PASS: <criterion>[ (optional)][ — in the corrected form (<clarification>)]
 
 Reply with, for each command: the command, its exit code, and the last
 twenty lines of its output.
@@ -1890,7 +1943,7 @@ decisions the user has yet to see.
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
-- Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
+- Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
