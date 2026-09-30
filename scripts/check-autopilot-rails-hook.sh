@@ -100,14 +100,19 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against five mutants,
+#                  unmodified copy (must pass), then against six mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
 #                  removed (the timed $( ) fixture, which must be the first
 #                  red), the last-character check removed (any fixture red:
 #                  the quoted and escaped < or > fixtures catch it, the
-#                  timed <| one only by a thin margin). Then the restored copy
+#                  timed <| one only by a thin margin), and the
+#                  unreadable-field phrase reworded in the Bash command's
+#                  reason alone (the "Bash with no readable command field"
+#                  fixture, which must be the first red, while the heading
+#                  check on the same copy stays green, since the other two
+#                  reasons still carry the phrase). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 #                  It then copies SKILL.md beside the hook copy, runs the
@@ -777,11 +782,13 @@ run_self_test() {
         return 1
     fi
 
-    # Five mutants, each a literal replacement in a fresh copy. The
+    # Six mutants, each a literal replacement in a fresh copy. The
     # constant-time push mutant copies every word collected so far on each
-    # push, and the last-character check mutant matches the whole word
-    # against [<>]$ on each | or &, as the hook once did.
-    for name in rm-detection root-check marker-check constant-time-push last-character-check; do
+    # push, the last-character check mutant matches the whole word
+    # against [<>]$ on each | or &, as the hook once did, and the
+    # command-reason-phrase mutant rewords the phrase in one of the three
+    # unreadable-field reasons, which only the fixture assertion catches.
+    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -798,6 +805,9 @@ run_self_test() {
             last-character-check)
                 old='nx == ">" || ltgt == i - 1'
                 new='nx == ">" || cur ~ /[<>]$/' ;;
+            command-reason-phrase)
+                old="the command of this Bash call $PHRASE"
+                new='the command of this Bash call was unreadable in the hook input' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?
@@ -815,10 +825,19 @@ run_self_test() {
         # fixture.
         case "$name" in
             constant-time-push) want=$SUBST_TIMED_LABEL ;;
+            command-reason-phrase) want="Bash with no readable command field" ;;
             *) want="" ;;
         esac
         if [[ -n "$want" && "$FIRST_RED" != "$want" ]]; then
             echo "FAIL  self-test: the mutant with the $name removed turned another fixture red first: $FIRST_RED" >&2
+            return 1
+        fi
+        # The file-wide heading check still finds the phrase in the other two
+        # reasons, so the fixture assertion is what caught this mutant.
+        if [[ "$name" == command-reason-phrase ]] \
+            && ! check_heading "$copy" "$REPO_ROOT/$SKILL_REL" 2> "$WORK/stderr.txt"; then
+            echo "FAIL  self-test: the heading check turned red on the $name mutant, so it does not show the fixture assertion caught it" >&2
+            cat "$WORK/stderr.txt" >&2
             return 1
         fi
         echo "OK    self-test mutant '$name removed' turned $FAILS fixture(s) red, first: $FIRST_RED"

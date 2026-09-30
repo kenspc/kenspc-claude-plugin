@@ -100,7 +100,7 @@ use by the next product-repository batch, whose reviewer report shows the
   `could not be read from the hook input` occurs in each of the hook's
   unreadable-field reasons and in the autopilot skill's § Launch, wait,
   return and stop conditions; its self-test adds six mutants, one per
-  carrier.
+  carrier, and a seventh that rewords the phrase in one reason alone.
 
 ### Changed
 

@@ -736,14 +736,17 @@ Project-level shell scripts live in `scripts/` at the repo root:
   conditions, where the main session and stop condition 11 match on it — each
   missing literal reported per carrier (exit 1), a missing `SKILL.md`,
   assignment, template, or section exit 2. The hook
-  runs under `/bin/bash` when it exists. Its self-test turns five mutants red — the
+  runs under `/bin/bash` when it exists. Its self-test turns six mutants red — the
   `rm` detection, the root check, and the marker check removed, the
   constant-time push removed (every word collected so far copied on each
   `$(`, which only the timed `$( )` fixture catches), and the
   last-character check removed (the whole word matched against `[<>]$` on
   each `|` or `&`, which any fixture may catch: the quoted and escaped `<`
   or `>` fixtures do, and the timed `<|` fixture only by a margin too thin
-  to require) — then runs the heading check on a copy of `SKILL.md` beside
+  to require), and the phrase reworded in the Bash command's
+  unreadable-field reason alone (which only that fixture's reason
+  assertion catches, the heading check staying green on the same copy)
+  — then runs the heading check on a copy of `SKILL.md` beside
   the hook copy and turns it red with six more mutants, each named with
   its carrier: the heading dropped from the hook's reason, the preamble
   template, and § Launch, wait, return, and the phrase dropped from the
