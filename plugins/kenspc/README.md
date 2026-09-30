@@ -814,7 +814,8 @@ design session commits the spec alone, `docs(plans): add batch <name> spec`,
 and the main session commits each ruling made during the run into the
 spec's clarifications section, each entry naming who ruled
 (`docs(plans): record clarifications settled after <step>`), every one of
-them before the release preparation starts. The release-preparation
+them before the release preparation starts but those made while it runs
+(below). The release-preparation
 session asks every question before the commit that removes the spec —
 its clarification commits may come first — and a ruling on one
 is committed into the spec by that session, alone, before its release or

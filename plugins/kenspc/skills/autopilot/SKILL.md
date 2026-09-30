@@ -41,7 +41,7 @@ the sessions, and the two reports at the end are what the user reviews.
 | S3b | standalone review | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
 | S4 | acceptance | plugin mode: a seed-project acceptance with a record; repo mode: the `Acceptance:` commands |
 | S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified, `Fix <n> issues from this round: <ID>, <ID>, …` for several |
-| S6 | release preparation | one commit per mode (Phase 4), after a clarification commit for each question it asked |
+| S6 | release preparation | one commit per mode (Phase 4), after a clarification commit for each question it asked — in any order when it removes nothing |
 
 One role per session, and a session is never reused across roles: the
 session that proposes is not the one that decides, and the one that
@@ -1435,7 +1435,8 @@ on record; an implementation cut to fit a budget is a different batch.
 ## Phase 4: Release preparation and reports
 
 **Goal**: S6's commit, after the clarification commit of each question S6
-asked, and the two reports.
+asked — in any order when S6 removes nothing (below) — and the two
+reports.
 
 **Inputs**: `Release preparation:`, `Version:`, the mode; the state file;
 `<batch>-costs.txt`; every worker's JSON.
@@ -2516,7 +2517,9 @@ wording that closed it:
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit, after the clarification commit of each question
   S6 asked, and the reports. A ruling that has no clarification commit,
-  or a failed check at S6's return, is not an absent artifact: it is
+  a failed check at S6's return, or, when S6 removed nothing, a
+  clarification commit after S6's other commits — S6's own, or the main
+  session's once S6 has ended — is not an absent artifact: it is
   recorded as Phase 4 says, and the run finishes.
 
 An artifact absent after a return — no task document after S2, HEAD still
