@@ -1271,8 +1271,9 @@ S5 left unfixed goes to the next S5, as The verdict loop after S3b says;
 a behavior
 deviation → a roadmap line drafted for the release commit (plugin mode) or
 a reviewer-report line (repo mode); a case broken for a reason outside
-the batch's work → a corrected case (below), re-run in a new S4 session in
-its corrected form; an observation → recorded. The same
+the batch's work → a corrected case (below), re-run in its corrected form
+in a new S4 session (`-s4b`, the next letter for a later one) that runs
+only that case; an observation → recorded. The same
 defect still failing after two fixes of it is a stop, counted per defect
 as stop condition 4 counts. Every classification is a
 clarification entry in the spec, naming who ruled, committed by the main
@@ -1735,8 +1736,9 @@ instruction come in the prompt that resumed you, under its first line
   `<prompt file>`, and `<cap>` are S4's to fill per nested launch and stay
   as they are in the launched prompt. The first run lists every case and
   gets the bracketed trial-run words and the first bracketed record
-  paragraph; an `-s4b` re-run after an S5 fix (Phase 3) lists the one case
-  it re-runs and gets the second record paragraph instead. A case the main
+  paragraph; an `-s4b` re-run — after an S5 fix, or of a corrected case
+  (Phase 3) — lists the one case it re-runs and gets the second record
+  paragraph instead. A case the main
   session corrected (Phase 3, A corrected case) is listed in its corrected
   form, and its line gets the bracketed `in the corrected form` part,
   naming the clarification — on the first run and on an `-s4b` re-run
@@ -1836,7 +1838,8 @@ FAIL, its cost.
   mode is `repo`; `<HEAD sha>` is HEAD at the launch, the state file's
   `head:`. The bracketed paragraphs are written when `Acceptance record:`
   names a path — the first on the first run, the second on an `-s4b`
-  re-run after an S5 fix (Phase 3), which lists the one command it re-runs.
+  re-run, after an S5 fix or of a corrected case (Phase 3), which lists the
+  one command it re-runs.
   A case the main session corrected (Phase 3, A corrected case) is listed
   as its corrected command, and its line gets the bracketed
   `in the corrected form` part, naming the clarification — on the first run
