@@ -745,6 +745,21 @@ K-C21 to K-C23, then a second narrowed review:
   or smoke row for the ruled-verdict rule and S6's clarification commit
   (T4, with K-C20's T2). None is a one-line fix in an allowed file.
 
+Settled during the second S5 (ruled by the main session under
+Constraints, "Rulings for this run", 1, on the second S5's question):
+
+- **K-C26** (the second S5's question on K-C21, ruled by the main
+  session). A point that arises only after S6's first commit is not asked:
+  S6 puts it in its reply and the main session rules it there. A ruling
+  answered to S6, or ruled from its reply, with no clarification commit is
+  not a stop: its `Main-session rulings` line says
+  `no clarification commit (the spec was already removed)`, and the user
+  report lists it among what the user reviews before the tag and the push;
+  the reports do not ask the user to add a spec entry, since a
+  clarification committed after the release commit would re-add the
+  removed file. Why: K-L2 lists no stop for a record gap, and the reports
+  can name it; leaving the outcome unstated was the defect.
+
 ## Autopilot
 
 - Mode: plugin
