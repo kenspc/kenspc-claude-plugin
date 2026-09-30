@@ -340,11 +340,13 @@ line names who ruled, `Ruled by: <the user | the main session <name>>`;
 then one entry per ruling, each naming one or more issue IDs from the
 reports:
 
+<!-- canonical:rulings-grammar:start -->
 ```
 - <ID>[, <ID>…]: FIX — <what to do>
 - <ID>[, <ID>…]: DEFER — <reason>
 - <ID>[, <ID>…]: NOT APPLICABLE — <reason>
 ```
+<!-- canonical:rulings-grammar:end -->
 
 The CONTEXT block passes to code-fixer and regression-verifier unchanged,
 and a ruling never goes into `CUSTOM_INSTRUCTIONS`. With no ruling, no

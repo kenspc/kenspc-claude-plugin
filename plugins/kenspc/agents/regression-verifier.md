@@ -91,12 +91,19 @@ Read from RUN_DIR:
 - `change-set.md` — in "changes" mode only: the change set under review, with
   its mode, base or range, diff command, and files.
 - `rulings.md` — only when it exists: a ruling on the findings, written by
-  the orchestrating skill before code-fixer ran. Its first line names who
-  ruled; then one entry per ruling, `- <ID>[, <ID>…]: FIX — <what to do>`,
-  `- <ID>[, <ID>…]: DEFER — <reason>`, or
-  `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. The CONTEXT block stays
+  the orchestrating skill before code-fixer ran. The CONTEXT block stays
   unchanged, so a ruling reaches you only through this file. When it is
-  absent, checks 1 and 2 are as written without it.
+  absent, checks 1 and 2 are as written without it. Its first line names
+  who ruled; then one entry per ruling, in one of these forms:
+
+<!-- canonical:rulings-grammar:start -->
+```
+- <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: DEFER — <reason>
+- <ID>[, <ID>…]: NOT APPLICABLE — <reason>
+```
+<!-- canonical:rulings-grammar:end -->
+
 - `scratch/code-fixer/pre-fix/index.txt` — in an uncommitted run only: the
   pre-fix record, one line per file the fixes touched (`copied <path>`,
   `created <path>`, `deleted <path>`), with each copied file's content

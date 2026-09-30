@@ -485,10 +485,14 @@ markers), the shared verdict-determination bullets (bounded by
 `<!-- canonical:verdict-shared:start/end -->` markers), and the run-directory
 preparation (bounded by `<!-- canonical:run-dir:start/end -->` markers). The
 Schema B statistics-line template (`<!-- canonical:stats-line:start/end -->`)
-is byte-identical across those two SKILLs and `code-fixer.md`.
+is byte-identical across those two SKILLs and `code-fixer.md`, and the
+`rulings.md` entry grammar (`<!-- canonical:rulings-grammar:start/end -->`)
+across those two SKILLs, `code-fixer.md`, and `regression-verifier.md` —
+task-review's Step 5 defines it, and a carrier that stops stating it
+points at that step by path and holds no copy.
 
-After editing any reviewer agent, `code-fixer.md`, or either of those two
-SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
+After editing any reviewer agent, `code-fixer.md`, `regression-verifier.md`,
+or either of those two SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
 `check-canonical-dispatch.sh`, `check-verdict-shared.sh`, or
 `check-run-contract.sh`. After editing the reviewer invariant sentence in
 the plugin README or this file, or the reviewers' ROLE, run
@@ -653,7 +657,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   holding a blank line (the v3.5.0 Windows failure), with global git config
   masked; the
   `canonical:stats-line` template is byte-identical in the two SKILLs and
-  `code-fixer.md`, and the worked Schema B example in `code-fixer.md`
+  `code-fixer.md`; the `canonical:rulings-grammar` block, the three
+  `rulings.md` entry forms, is byte-identical in the two SKILLs,
+  `code-fixer.md`, and `regression-verifier.md`, task-review's copy the
+  reference, its self-test rewording the DEFER entry in each of the four in
+  turn (check 7); and the worked Schema B example in `code-fixer.md`
   recounts — its Per-angle Results table and statistics line agree with its
   rows (primary Source ID counts under the row's action, the rest as
   DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`

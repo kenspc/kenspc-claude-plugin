@@ -432,10 +432,18 @@ answer to the worker running this review — is written by this skill to
 reaches the dispatch, in the form Step 5 of
 `${CLAUDE_PLUGIN_ROOT}/skills/task-review/SKILL.md` (Rulings on the
 findings) gives: a first line naming who ruled, then one entry per ruling,
-`- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
-or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. This step adds no
-pause and no question, and waits for no ruling. The CONTEXT block passes
-unchanged, and a ruling never goes into `CUSTOM_INSTRUCTIONS`; with no
+each in one of these forms:
+
+<!-- canonical:rulings-grammar:start -->
+```
+- <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: DEFER — <reason>
+- <ID>[, <ID>…]: NOT APPLICABLE — <reason>
+```
+<!-- canonical:rulings-grammar:end -->
+
+This step adds no pause and no question, and waits for no ruling. The
+CONTEXT block passes unchanged, and a ruling never goes into `CUSTOM_INSTRUCTIONS`; with no
 ruling, no file is written and nothing changes. Why: as task-review's
 Step 5 says — a ruling written into the `CUSTOM_INSTRUCTIONS` of
 code-fixer and regression-verifier broke the rule that both get the

@@ -96,9 +96,18 @@ description` columns, where `#` is an issue ID — the angle's letter (`R`, `E`,
 `Q`, `B`, `T`) and a sequence number, such as `B3`.
 
 When `RUN_DIR/rulings.md` exists, read it too. Its first line names who
-ruled; then one entry per ruling, each naming one or more issue IDs:
-`- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
-or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. The orchestrating skill
+ruled; then one entry per ruling, each naming one or more issue IDs, in
+one of these forms:
+
+<!-- canonical:rulings-grammar:start -->
+```
+- <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: DEFER — <reason>
+- <ID>[, <ID>…]: NOT APPLICABLE — <reason>
+```
+<!-- canonical:rulings-grammar:end -->
+
+The orchestrating skill
 writes it before dispatching you when it holds a ruling on the reviewers'
 findings; the CONTEXT block stays unchanged, so the ruling reaches you
 only through this file, never through CUSTOM_INSTRUCTIONS. When the file

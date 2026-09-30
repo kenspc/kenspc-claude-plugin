@@ -2,7 +2,7 @@
 # check-run-contract.sh
 #
 # Guards the run-directory contract that task-review and task-implement share
-# with code-fixer (v3.5.0). Six checks:
+# with code-fixer (v3.5.0). Seven checks:
 #
 #   1. The run-directory preparation block (bounded by
 #      `<!-- canonical:run-dir:start/end -->`) is byte-identical in
@@ -59,6 +59,14 @@
 #      step, and with an extracted reference, rewording the ROLE sentence
 #      fails every copy not yet updated. Normalizing makes re-wrapping and
 #      CLAUDE.md's list indentation irrelevant.
+#   7. The rulings.md entry grammar (bounded by
+#      `<!-- canonical:rulings-grammar:start/end -->`) is byte-identical in
+#      skills/task-review/SKILL.md, whose Step 5 defines it,
+#      skills/task-implement/SKILL.md, which writes the file too, and
+#      agents/code-fixer.md and agents/regression-verifier.md, which parse
+#      it. Check 5 holds only the file's name, so an action word reworded in
+#      one carrier would leave a skill writing rulings the agents read
+#      another way while every other check passes.
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
@@ -96,9 +104,11 @@
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on twenty-three mutations that
+#                  prefix classification), then on twenty-seven mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
-#                  run-dir block changed in one SKILL, the ignore probe
+#                  run-dir block changed in one SKILL, the rulings grammar's
+#                  DEFER entry reworded in each of its four carriers in turn
+#                  (check 7), the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
 #                  case, which only check 3 can catch), five recount
 #                  mutations that each leave exactly one rule to catch them
@@ -403,6 +413,11 @@ run_main_logic() {
     [[ "$rc" -ne 0 ]] && return "$rc"
     echo "OK    canonical:stats-line — identical in code-fixer, task-review, task-implement"
 
+    # Check 7: the rulings.md entry grammar, task-review's Step 5 the reference.
+    compare_block "canonical:rulings-grammar" "$review" "$implement" "$fixer" "$verifier" && rc=0 || rc=$?
+    [[ "$rc" -ne 0 ]] && return "$rc"
+    echo "OK    canonical:rulings-grammar — identical in task-review, task-implement, code-fixer, regression-verifier"
+
     local example_file
     example_file=$(mktemp)
     extract_block "$fixer" "example:schema-b" > "$example_file" && rc=0 || rc=$?
@@ -623,6 +638,13 @@ run_self_test() {
         "NOT APPLICABLE N, DEDUPED N" "NOT APPLICABLE N, MERGED N" || return $?
     mutate_and_expect "run-dir block" "$REVIEW_REL" \
         "- Scratch space:" "- Scratch area:" || return $?
+    # Check 7: one action word of the rulings grammar changed in each of its
+    # four carriers in turn, the reference included, so a carrier dropped
+    # from the comparison is caught too.
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$FIXER_REL" "$VERIFIER_REL"; do
+        mutate_and_expect "rulings grammar in $rel" "$rel" \
+            "- <ID>[, <ID>…]: DEFER — <reason>" "- <ID>[, <ID>…]: POSTPONE — <reason>" || return $?
+    done
     # The Windows case: the probe reverted to the bare directory in both
     # SKILLs, so the blocks stay identical and only the probe check can
     # catch it. If a future git stops parsing a blank CRLF line as an empty

@@ -100,8 +100,11 @@ use by the next product-repository batch, whose reviewer report shows the
   `CUSTOM_INSTRUCTIONS` of code-fixer and regression-verifier, breaking the
   rule that both get the reviewers' CONTEXT unchanged.
 - **Guards.** `check-run-contract.sh` check 5 requires `rulings.md` in its
-  four carriers, its self-test renaming it in each in turn (twenty-three
-  mutations). `check-autopilot-rails-hook.sh` main mode checks that
+  four carriers, its self-test renaming it in each in turn, and a new check
+  7 holds the file's entry grammar, marked
+  `<!-- canonical:rulings-grammar:start/end -->`, byte-identical in the same
+  four, its self-test rewording the DEFER entry in each in turn
+  (twenty-seven mutations). `check-autopilot-rails-hook.sh` main mode checks that
   `## Rail observations` occurs in the hook's unreadable-field reason, the
   preamble template, and § Launch, wait, return, and that
   `could not be read from the hook input` occurs in each of the hook's
