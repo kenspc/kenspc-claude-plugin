@@ -132,9 +132,10 @@ the first launch needs, checked before any session is paid for.
 HEAD, `git -c core.quotePath=false status --porcelain -uall`); `ListAgents`;
 the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`;
 `ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
-this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`; the settings
-files that can set `crossSessionInbound` — managed, user, and the
-project's (The start checks).
+this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`; the sources
+that can set `crossSessionInbound` — managed, the launch line's
+`--settings`, user, the project's, and the server-managed settings cache
+(The start checks).
 
 **DONE when** the state file is written, the settings line (Templates
 § The settings line, ending with the pass-through values) its first line,
