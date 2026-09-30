@@ -67,12 +67,14 @@ use by the next product-repository batch, whose reviewer report shows the
   spec's history. The main session checks that S6's reply lists that
   commit for every ruling, that each clarification commit comes before the
   removal, and, after a removal, that the spec is gone from HEAD — a
-  failed check is recorded in both reports with the commits it names, not
+  failed check is recorded on the state file's new `S6 return:` line and
+  in both reports with the commits it names, not
   a stop; before it answers a question from S6 it checks that the spec is
   still at HEAD, and when it is gone the answer sends the point to S6's
   reply. A point that arises after the removal goes in its reply, with
   the work it decides left undone; it is ruled there, the undone work is
-  listed in both reports among what needs the user, and S6 is not resumed
+  recorded on the same line and listed in both reports among what needs
+  the user, and S6 is not resumed
   for it; a ruling without a
   clarification commit after the removal is listed in both reports as
   `no clarification commit (the spec was already removed)`, not a stop,
