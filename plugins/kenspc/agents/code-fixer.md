@@ -292,7 +292,9 @@ A ruled ID — one `RUN_DIR/rulings.md` names — takes the ruling's action
 over the rules above: FIX → FIXED, DEFER → DEFERRED, NOT APPLICABLE → NOT
 APPLICABLE, whatever its severity or the size of the fix. A FIX ruling's
 text bounds the fix: do what it says and no more, and a file it names is in
-that fix's scope even when the change set does not list it. A DEFER or NOT
+that fix's scope even when the change set does not list it. The correction
+FIXING RULES requires in a listed Doc-sync document the fix made false is
+part of the fix, not more. A DEFER or NOT
 APPLICABLE ruling's reason is the row's reason, and a DEFERRED row still
 gets its Deferred Issues paragraph. IDs that carry different rulings are
 not merged into one row. A FIX ruling whose fix cannot land — its build /

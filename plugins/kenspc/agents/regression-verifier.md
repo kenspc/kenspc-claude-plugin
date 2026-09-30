@@ -139,7 +139,9 @@ VERIFICATION CHECKS
 2. Fix correctness: for each FIXED row, read the actual code at the specified
    file and line and confirm the fix addresses the reported issue — and, for a
    row a FIX ruling in `rulings.md` decided, the ruling's text as well: the
-   fix does what the ruling says and no more. If the fix is incorrect or
+   fix does what the ruling says and no more — a correction, in the fix's
+   commit, of a listed Doc-sync document the fix made false is part of the
+   fix, since code-fixer's rules require it. If the fix is incorrect or
    incomplete, flag it as INCORRECTLY FIXED. Why the ruling's text: it bounds
    the fix, so a fix that meets the report but not the ruling, or goes past
    it, is not the fix that was ruled.
