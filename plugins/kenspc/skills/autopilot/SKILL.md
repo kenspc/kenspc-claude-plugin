@@ -606,7 +606,10 @@ worker's requested and applied model and effort, the
 questions answered, the rail observations each worker listed, the gates
 a worker skipped and their outcome, the
 stops, the questions left open for a later step (The stop conditions), the
-clarification numbers recorded in the spec, and the next action.
+clarification numbers recorded in the spec, what S6's return left for the
+user — each failed check with the commits it names, and the work S6 left
+undone for a point raised after the removal (Phase 4) — and the next
+action.
 Every ruling is recorded under `questions answered:`, whoever made it — a
 worker's question, a choice on a confirmation, a point the main session
 raised itself (under the tag of the step it concerns), and an answer the
@@ -641,6 +644,7 @@ stops: <reason> (<time>)
 open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
 clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]]
+S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone>>[; …] | none
 next: <the next action>
 ```
 
@@ -2455,10 +2459,11 @@ from, and, when the state file's `inbound:` line records a question not
 received, that record with its tags and the causes to check — the main
 session's own inbound under the settings precedence, or a send that
 failed or was never made — or, for a tag whose worker quoted an error or
-a notice, that cause (§ The message protocol), and each failed check
-at S6's return, with the commits it names, and the work S6 left undone
-for a point raised after the removal (Phase 4); it reads `none` when
-there are none.
+a notice, that cause (§ The message protocol), and the state file's
+`S6 return:` entries other than `none` — each failed check at S6's
+return, with the commits it names, and the work S6 left undone for a
+point raised after the removal (Phase 4); it reads `none` when there are
+none.
 
 ## The gates
 
