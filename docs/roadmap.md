@@ -326,9 +326,6 @@ its number.
         (an unknown effort level, an unknown role, a role named twice, the
         effort before the model, and `CLAUDE_CODE_EFFORT_LEVEL` set beside
         a declared effort).
-    - The SessionEnd telemetry hook reads transcripts only under
-      `${HOME}/.claude/projects`, while the autopilot's transcript lookups
-      honor `$CLAUDE_CONFIG_DIR`; the hook was outside the batch's files.
 18. Whether an autopilot worker on Windows can run the rails hook. The
     worker rails hook (4.3.0) is a bash script, registered as
     `bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/autopilot-worker-rails.sh"`,
@@ -349,14 +346,7 @@ its number.
     root, which it then removed, although its RUN_DIR bullet puts probe and
     temporary files under `RUN_DIR/scratch/regression-verifier/`. The
     agent's text states the rule; the model did not follow it.
-20. `/kenspc-task-implement` states no branch for a task document with no
-    incomplete task. Step 3 presents the incomplete tasks, and Phase 2
-    covers "at least one DONE" and "every task BLOCKED". A session given an
-    all-DONE document stopped before its batch gate and prepared no run
-    directory, which is reasonable, but nothing in the skill says so
-    (`docs/dry-runs/batch-j-autopilot-reliability-acceptance.md`, F2, an
-    observation: a gap in the skill's text that predates 4.3.0).
-21. Autopilot rails follow-ups, which 4.3.0 left out (its reviews and
+20. Autopilot rails follow-ups, which 4.3.0 left out (its reviews and
     acceptance: the batch J spec's clarifications,
     `git show f671f2d:docs/plans/batch-j-autopilot-reliability.md`, and the
     acceptance record's Not exercised section,
@@ -366,23 +356,34 @@ its number.
       which the scanner misjudges because bash joins continued lines before
       it splits words, while the scanner reads one next character in
       several places; one shared "next character, skipping continuations"
-      read would cover the class. The hook's header and the plugin README's
-      Known behavior name the class among the hook's misses.
-    - Whether a worker's end on an unreadable-field denial is a
-      main-session stop of its own (today the run stops only when a later
-      transition finds an artifact missing, naming the artifact, not the
-      field), and the wording of the caveat on denials inside agents
-      without rails text beside it (an unreadable-field denial reaches the
-      worker in the subagent's reply).
+      read would cover the class, and so would joining every
+      backslash-newline pair before the scan, as bash does before it splits
+      words. The hook's header and the plugin README's Known behavior name
+      the class among the hook's misses.
+    - The wording of the caveat on denials inside agents without rails
+      text (an unreadable-field denial reaches the worker in the
+      subagent's reply).
     - Any failure of the hook's awk reported as an unreadable field: a
       missing awk denies every call, a killed one one command, and each
       wants its own reason.
-    - The `## Rail observations` heading is pinned on the hook side only;
-      no guard ties it to the preamble's heading and the one the main
-      session reads at a worker's return (the autopilot skill's § Launch,
-      wait, return).
     - Paths 4.3.0's acceptance did not exercise live: a preamble-carrying
       worker meeting a denial (list it and go on; for an unreadable field,
       list it and end), the rails carried into subagents' prompts and
       `CUSTOM_INSTRUCTIONS` with a subagent's observations carried back, and
       an S2's skipped gate reaching the post-check.
+21. Acceptance commands a plan writes are never run at the baseline before
+    the batch starts. In three repo-mode batches four commands broke for
+    reasons outside the batch's work — pnpm read a flag meant for the test
+    runner; a `Failed` grep matched an application log line; a per-assembly
+    summary line the installed .NET SDK does not print made the command
+    fail at the pre-batch commit; a check passed vacuously because a clone
+    was never restored. 4.5.0 lets the main session rule a corrected form
+    with evidence and a negative control, after S4 has failed; a dry run of
+    each command at the baseline, before the first launch, would find these
+    before any session is paid for.
+22. A narrowed review's own code-fixer can make an incomplete fix that fails
+    that same review. The narrowed review after an S5 runs task-review, whose
+    code-fixer may fix what its reviewers find; a fix it leaves incomplete
+    fails the review's verification and costs another S5 and another
+    narrowed review. Open: whether a narrowed review should fix at all, or
+    only report for the next S5.

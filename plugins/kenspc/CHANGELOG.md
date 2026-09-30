@@ -9,6 +9,144 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.5.0 — unreleased
+
+An autopilot batch runs from its spec to its release preparation without
+waiting on you between its two gates: the main session rules every point
+the spec leaves open, except the stop conditions, and records each ruling
+where you review it before the tag and the push. A ruling on a review's
+findings reaches code-fixer and regression-verifier through the run
+directory's new `rulings.md`, never through `CUSTOM_INSTRUCTIONS`. Phase 0
+stops asking the two questions every recent batch asked. Guard counts are
+unchanged: `guards run: 12`, `self-tests run: 11`.
+
+Why: three repo-mode batches asked the user 25 questions, and the user
+chose the main session's own recommendation 24 times; the waits held
+workers past their thirty minutes (36 and 95 minutes in one batch) and
+kept the user at the session for two and a half hours of question rounds
+in another. Three rules sent every point the spec's words did not settle
+to the user — the Quality bar's "approves a worker's question on the
+user's behalf", the confirmation rubric, and stop condition 7 — which in
+practice made an open-ended third gate.
+
+No seeded acceptance was run for this release: the change is accepted in
+use by the next product-repository batch, whose reviewer report shows the
+`Main-session rulings` line and how many questions reached the user.
+
+### Added
+
+- **The main session rules (autopilot).** A new Phase 2 section, How the
+  main session rules: a worker's question, a choice riding on a task-list
+  confirmation, a question the main session raises itself, a review row's
+  or an acceptance FAIL's classification, a deferred row's route, and a
+  corrected acceptance case are the main session's to rule, answered at
+  once, the same whether or not the session can ask. The order: the
+  spec's words; the locked design; the project's instruction files and
+  adjacent code; then the option easiest to reverse and closest to the
+  spec's scope. A worker's suggested answer is evidence, not a default. A
+  ruling may depart from a spec sentence — never a locked point — on
+  evidence (a test, a probe, a reviewer's reproduction, a documented tool
+  behavior), and goes on the reviewer report's `beyond the letter` list.
+  The user is asked only on a stop condition and at the two gates; Phase
+  0's questions about the run's inputs are part of the start.
+- **The record (autopilot).** The state file's `questions answered:` lines
+  end with who ruled, `(main session)` or `(user)`; every clarification
+  entry names who ruled; the reviewer report gains
+  `- Main-session rulings: <n> | none`, with one line per ruling (its
+  clarification, the tag or step, the question, the ruling, the reason,
+  the commits), and `- Follow-up candidates: <list | none>`, for outward
+  actions the run never takes mid-run (filing an issue, a backlog item)
+  and findings a ruling deferred; the user report lists the rulings, one
+  line each, under `### Main-session rulings — review before the tag and
+  the push`, outside its one-page limit.
+- **A corrected acceptance case (autopilot).** The main session may rule a
+  corrected form of an `Acceptance:` case with two pieces of evidence: the
+  case as written fails, or passes vacuously, for a reason outside the
+  batch's work (at the baseline, or a named tool behavior run), and the
+  corrected form fails on a deliberate break of what it checks. The
+  evidence is gathered in a clone under `$TMPDIR` or the workspace, never
+  in the working tree; the ruling is a clarification, the `## Autopilot`
+  section is unchanged, and S4 runs the corrected form, its line and the
+  reviewer report's acceptance line saying
+  `in the corrected form (<clarification>)`. Four acceptance commands had
+  broken this way in earlier batches.
+- **Stop condition 11 (autopilot).** At a worker's return, a
+  `## Rail observations` entry whose denial reason contains
+  `could not be read from the hook input` stops the run, naming the field
+  and the output of `claude --version`: the rails hook no longer reads the
+  harness's input format, so every later worker would end the same way.
+- **`RUN_DIR/rulings.md` (task-review, task-implement, code-fixer,
+  regression-verifier).** A ruling on the reviewers' findings held when
+  the orchestrator reaches the code-fixer dispatch — a message from the
+  user in an interactive run, the main session's answer in an autopilot
+  worker — is written before the dispatch: a first line naming who ruled,
+  then `- <ID>[, <ID>…]: FIX — <what to do>`, `DEFER — <reason>`, or
+  `NOT APPLICABLE — <reason>` entries. No pause, no question, and no file
+  without a ruling. code-fixer gives a ruled ID the ruling's action over
+  FIXING PRIORITY — a FIX ruling's text bounds the fix, a file it names is
+  in scope — and marks the row `ruled` after the em-dash, so the counts are
+  unchanged; its reply names a ruled ID no report lists.
+  regression-verifier checks each ruled row's action against its ruling
+  and a FIX-ruled fix against the ruling's text. Schema F and Schema G name
+  the file when it exists. Why: a narrowed review wrote a ruling into the
+  `CUSTOM_INSTRUCTIONS` of code-fixer and regression-verifier, breaking the
+  rule that both get the reviewers' CONTEXT unchanged.
+- **Guards.** `check-run-contract.sh` check 5 requires `rulings.md` in its
+  four carriers, its self-test renaming it in each in turn (twenty-three
+  mutations). `check-autopilot-rails-hook.sh` main mode checks that
+  `## Rail observations` occurs in the hook's unreadable-field reason, the
+  preamble template, and § Launch, wait, return, and that
+  `could not be read from the hook input` occurs in the hook and the
+  autopilot skill; its self-test adds five mutants, one per carrier.
+
+### Changed
+
+- **Stop condition 7 (autopilot)** is now a way forward the main session
+  cannot rule on: every option changes the batch's contract (a new
+  dependency, an API contract change, a schema or configuration change the
+  spec does not name, a file outside `Allowed files:` or on the zero-diff
+  list), or an acceptance case corrected without both pieces of evidence.
+  When one option stays inside the contract, the main session takes it and
+  records it.
+- **S2's confirmation and the skipped-gate post-check (autopilot).** The
+  confirmation is answered `yes`, "add a task for <step>", or "drop
+  <task>", and a riding choice is ruled and recorded. A post-check
+  mismatch, or a choice ruled otherwise than the committed document has
+  it, resumes S2 under `<tag>-r<k>` with the ruling to amend the document;
+  the post-check runs again, and a second failure is a stop.
+- **Phase 0 inbound check (autopilot).** When the launch line carries no
+  `crossSessionInbound` accept, the main session reads the value from the
+  managed, user, and project settings files with the documented
+  precedence, going on with `accept` and recording where it came from; it
+  asks only when a file cannot be read or parsed, or the server-managed
+  settings cache exists. Three batches had asked with `accept` already in
+  the user settings and no override.
+- **A label with a note (autopilot).** `- <Label> (<note>): <value>` reads
+  as the known label; the `Acceptance:` note becomes a `Run notes:` line in
+  both S4 task blocks, another field's note is named after the settings
+  line. A spec's `Acceptance (in the order listed, …):` would otherwise
+  have run with no acceptance.
+- **The preamble (autopilot).** § 1 tells a worker never to decide a
+  question itself, and to put a ruling on its review's findings into that
+  run's `RUN_DIR/rulings.md`. § 3 adds that a script the worker writes and
+  runs is its own writing, that reaching a denied effect by another
+  spelling is a breach, and that an environment listing prints names only
+  — a worker had printed the local messaging-socket token from one whose
+  redaction pattern missed it.
+
+### Fixed
+
+- **task-implement with no incomplete task.** A task document with no TODO
+  or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a
+  `/kenspc-task-review <path>` line; nothing is asked, prepared,
+  dispatched, reviewed, or rendered. A session given such a document had
+  stopped before its batch gate with nothing in the skill saying to.
+- **The telemetry hook's transcript root.** `session-end-telemetry.sh`
+  looks under `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects`, where Claude
+  Code keeps transcripts when `CLAUDE_CONFIG_DIR` is set; it found none
+  there before and recorded nothing. The log stays at
+  `~/.claude/kenspc/missed-reviews.log`.
+
 ## 4.4.1 — 2026-09-30
 
 Every commit the plugin makes follows the repository's commit convention,

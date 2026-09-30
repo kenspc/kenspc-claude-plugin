@@ -1111,7 +1111,47 @@ Spec Step 3.3 — K-L15. File:
 
 ### Task 15: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions (promotion outcomes, by the task that made each decision):
+  - Task 6, no source that sets `crossSessionInbound` is the stop naming
+    the launch line: promoted into `plugins/kenspc/README.md` § Autopilot
+    (the inbound paragraph after the launch line).
+  - Task 3, the corrected-case evidence gathered in a clone under
+    `$TMPDIR` or the workspace, never the working tree: promoted into
+    `plugins/kenspc/README.md` § Autopilot, "A corrected acceptance case".
+  - Task 4, the ruler written `(main session)` / `(user)` and the user
+    report's rulings heading: promoted into `plugins/kenspc/README.md`
+    § Autopilot, "The record", and the CHANGELOG entry.
+  - Task 5, `Follow-up candidates` also carrying findings a ruling deferred
+    to a follow-up: promoted into `plugins/kenspc/README.md` § Autopilot,
+    "The record".
+  - Task 10, IDs ruled differently are not merged, and a FIX ruling that
+    cannot land is DEFERRED and reported by regression-verifier: promoted
+    into `plugins/kenspc/README.md` § Run directory (the `rulings.md`
+    bullet).
+  - Task 12, the heading mutants replacing every occurrence in the
+    carrier's region: promoted into `CLAUDE.md` § Repository scripts/
+    (`check-autopilot-rails-hook.sh`).
+  - Local (left in the task document and git): Task 1's numbered order,
+    Task 2's single-answer form, Task 6's strictest-managed-value reading
+    and the `defaults read` / `reg query` reads, Task 7's placement of the
+    § 3 additions, Task 8's placement, Task 9's `Ruled by:` first line,
+    Task 11's constant and message, Task 13's paragraph placement, and
+    Task 14's one-line change. Needs a home: none.
+- Changes/tradeoffs: beyond the listed sections, `plugins/kenspc/README.md`'s
+  Skills table (task-implement and autopilot rows), its Recommended
+  Workflow step 5, and its Known behavior telemetry bullet (the transcript
+  root) were brought in line, since each stated the old behavior. The
+  roadmap's two new items are 21 and 22 after item 20 left and item 21
+  became 20; its `## Next minor (4.5.0)` heading is left to the release
+  preparation. The root `README.md` is unchanged: its autopilot row still
+  reads "two human gates", which holds. `check-all.sh` ends with
+  `guards run: 12` and `check-all.sh --self-test` with `self-tests run: 11`,
+  the counts CLAUDE.md and the release checklist state; the pointer grep
+  over the shipped paths prints nothing (positive control: 67 hits in the
+  spec).
 
 Depends on: Task 1-14
 

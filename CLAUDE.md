@@ -433,6 +433,25 @@ file and an `index.txt` naming every file the fixes touched — and
 working-tree diff, so the user's own hunks in the same file are never read
 as fix output.
 
+`rulings.md` (4.5.0) follows it. When the orchestrating skill holds a
+ruling on the reviewers' findings as it reaches the code-fixer dispatch —
+a message from the user received before that dispatch in an interactive
+run, or an autopilot main session's answer to the worker running the
+review — task-review (Step 5) or task-implement (Phase 2 Step 3) writes it
+to `RUN_DIR/rulings.md` before the dispatch: a first line naming who
+ruled, then one `- <ID>[, <ID>…]: FIX — <what to do>`,
+`DEFER — <reason>`, or `NOT APPLICABLE — <reason>` entry per ruling. The
+step adds no pause and no question, and with no ruling no file is
+written. `code-fixer` gives a ruled ID the ruling's action over FIXING
+PRIORITY (a FIX ruling's text bounds the fix, and a file it names is in
+its scope) and marks the row `ruled` after the em-dash, keeping the
+leading word so the statistics recount is unchanged; `regression-verifier`
+checks each ruled row's action against its ruling (row 1) and a FIX-ruled
+fix against the ruling's text (row 2). No key was added, and a ruling
+never goes into `CUSTOM_INSTRUCTIONS`: the CONTEXT block passes to both
+agents unchanged, the rule a narrowed review broke when it wrote a ruling
+there. The five reviewers do not read the file.
+
 #### Standalone safety classification
 
 - **Standalone-safe**: 5 review-angle agents (requirements, edge-case, quality,
@@ -638,8 +657,12 @@ Project-level shell scripts live in `scripts/` at the repo root:
   DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`
   counts as NOT APPLICABLE); and the literal `change-set.md` is named in
   `task-review/SKILL.md`, `code-fixer.md`, `regression-verifier.md`, and
-  `requirements-reviewer.md`, and the pre-fix record's `pre-fix/index.txt`
-  in `code-fixer.md` and `regression-verifier.md` (check 5;
+  `requirements-reviewer.md`, the pre-fix record's `pre-fix/index.txt`
+  in `code-fixer.md` and `regression-verifier.md`, and the rulings file's
+  `rulings.md` in `task-review/SKILL.md`, `task-implement/SKILL.md`,
+  `code-fixer.md`, and `regression-verifier.md`, each file that does not
+  name it reported, its self-test renaming it in each of the four in turn
+  (check 5;
   `check-review-agent-drift.sh` carries the first name to the other four
   reviewers); and the reviewer invariant sentence, extracted at run time
   from the ROLE section of `requirements-reviewer.md` and compared
@@ -701,7 +724,15 @@ Project-level shell scripts live in `scripts/` at the repo root:
   tool name, command, or path field, and every denied fixture again
   without the marker and with the marker `0`. Main mode also checks that
   `hooks.json` registers the hook under PreToolUse with a matcher naming
-  all four tools, since the fixtures run the script directly. The hook
+  all four tools, since the fixtures run the script directly; and (4.5.0)
+  that the literal `## Rail observations` occurs in the hook's
+  unreadable-field reason (its `REASON_UNREADABLE=` assignment), in the
+  preamble template of `skills/autopilot/SKILL.md` (the fenced block under
+  `### The preamble`), and in that skill's `### Launch, wait, return`, and
+  that the phrase `could not be read from the hook input` occurs in the
+  hook and in `SKILL.md`, whose stop condition 11 matches on it — each
+  missing literal reported per carrier (exit 1), a missing `SKILL.md`,
+  assignment, template, or section exit 2. The hook
   runs under `/bin/bash` when it exists. Its self-test turns five mutants red — the
   `rm` detection, the root check, and the marker check removed, the
   constant-time push removed (every word collected so far copied on each
@@ -709,7 +740,13 @@ Project-level shell scripts live in `scripts/` at the repo root:
   last-character check removed (the whole word matched against `[<>]$` on
   each `|` or `&`, which any fixture may catch: the quoted and escaped `<`
   or `>` fixtures do, and the timed `<|` fixture only by a margin too thin
-  to require) — and cleans up without a recursive `rm`.
+  to require) — then runs the heading check on a copy of `SKILL.md` beside
+  the hook copy and turns it red with five more mutants, each named with
+  its carrier: the heading dropped from the hook's reason, the preamble
+  template, and § Launch, wait, return, and the phrase dropped from the
+  hook and from `SKILL.md` (every occurrence in the carrier's region); a
+  mutation that replaces nothing is exit 2 — and cleans up without a
+  recursive `rm`.
 
 Eleven of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,

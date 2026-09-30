@@ -16,10 +16,10 @@ Skills activate automatically when Claude Code detects a matching task context.
 | generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. In a session that cannot ask, the run stops at the draft, printed in full, with no file written, no review, and no commit, until a later reply approves it. The plan written on approval is the draft as last printed in full, character for character; a change asked for at approval gets the full draft printed again, to approve. |
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files). |
 | diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
-| task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. |
+| task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. A task document with no TODO or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a `/kenspc-task-review <path>` line for reviewing the finished work, and nothing else runs. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
-| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review, acceptance, fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
+| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review, acceptance, fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports; between them your session rules every point the spec leaves open, except the stop conditions, and records each ruling for you to review before the tag. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
 
 ## Commands
 
@@ -235,7 +235,7 @@ Observed bug → /kenspc-diagnose → docs/tasks/*.md → /kenspc-task-implement
 2. **Decompose**: Use `/kenspc-task` to break the plan into fine-grained executable tasks
 3. **Implement**: Use `/kenspc-task-implement` to auto-implement all tasks
 4. **Review**: Runs automatically after implementation, or use `/kenspc-task-review` standalone
-5. **Autopilot (optional)**: or hand a spec or a brief to `/kenspc-autopilot`, which runs the chain from step 2 — or from a design session, at brief entry — to a release preparation unattended, stopping only at its two human gates (see [Autopilot](#autopilot))
+5. **Autopilot (optional)**: or hand a spec or a brief to `/kenspc-autopilot`, which runs the chain from step 2 — or from a design session, at brief entry — to a release preparation unattended, stopping for you only at its two human gates and on a stop condition, and ruling every other open point itself (see [Autopilot](#autopilot))
 
 **Setup path.** In a new directory, or a repository that has no `AGENTS.md` yet, start with `/kenspc-init`: it writes the files the other skills read — the Documents table the plan's Documentation impact is determined from, the commit convention, where the version lives — and marks what you did not answer `TBD(init): …`. See [Project setup](#project-setup).
 
@@ -440,6 +440,7 @@ review reuses the same directory (since 4.3.0):
 .kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
     change-set.md              # the change set under review (a review without a task document)
     angle-1.md … angle-5.md    # full report from each review angle
+    rulings.md                 # a ruling on the findings, when one was given before code-fixer ran
     schema-b.md                # code-fixer's full accountability list
     scratch/                   # probe and temporary files, one subdirectory per agent
         task-implementer/      # task-implementer's probes, copies, mutants, and runner configs
@@ -457,6 +458,31 @@ review reuses the same directory (since 4.3.0):
   line per step — the agent that returned, its counts or result, and the path
   of its report when it writes one — and the roll-up, code-fixer's reply, and
   the verification table appear once, in the final report.
+- `rulings.md` carries a ruling on the reviewers' findings to code-fixer and
+  regression-verifier. The orchestrating skill (task-review's Step 5, or
+  task-implement's review) writes it before it dispatches code-fixer, from
+  a ruling it already holds when it gets there — in an interactive run, a
+  message from you received before that dispatch; in an autopilot worker,
+  the main session's answer to the worker running the review. It adds no
+  pause and asks nothing: with no ruling, no file is written and nothing
+  changes. Its first line names who ruled, then one entry per ruling:
+  `- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
+  or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. code-fixer gives a ruled
+  ID the ruling's action over its severity rules — a FIX ruling's text
+  bounds the fix, and a file it names is in that fix's scope — keeps the
+  action's leading word, and marks the row `ruled` after the em-dash
+  (`DEFERRED — ruled`), so the counts are unchanged; its reply names a
+  ruled ID no report lists. IDs ruled differently are not merged into one
+  row, and a FIX ruling whose fix cannot land — its build, tests, or lint
+  fail, or the ruling cannot be carried out in the code as it stands — is
+  DEFERRED with the reason, which regression-verifier then reports as a
+  ruling not carried out. regression-verifier checks that each ruled ID
+  sits in a row whose action matches its ruling, reports a ruled ID no
+  report lists as a bookkeeping error, and checks a FIX-ruled fix against
+  the ruling's text as well as the report. The CONTEXT block the agents
+  get stays unchanged: a ruling never goes into `CUSTOM_INSTRUCTIONS`, and
+  the five reviewers, which returned before it was written, do not read it.
+  The final report names the file and who ruled when it exists.
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
@@ -518,8 +544,7 @@ unattended, one headless `claude -p` session per role: S2 `/kenspc-task`, S3
 batch's range, S4 acceptance, S5 a fix on demand, S6 the release
 preparation — and S1, a design session, at brief entry. Each is started
 through a driver script while your session (the main session) waits for
-it, answers the workers' questions from the spec, and classifies what they
-produce; the workers use the installed plugin in `repo` mode and the
+it, rules on the workers' questions, and classifies what they produce; the workers use the installed plugin in `repo` mode and the
 worktree's plugin (`--plugin-dir`) in `plugin` mode. One role per session,
 never reused: a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix are each a session
@@ -537,6 +562,24 @@ prints on its first line and records it. Bypass permissions and accepted
 inbound messages are what let a worker's question reach the main session
 without a prompt to approve it.
 
+When the launch line carries no `crossSessionInbound` accept, the run
+reads the value from the settings files Claude Code reads it from — the
+managed settings (the `managed-settings.json` file and its
+`managed-settings.d/` directory in the system directory for your platform,
+the macOS managed preferences domain, the Windows policy registry values),
+your user settings (`$CLAUDE_CONFIG_DIR/settings.json`, else
+`~/.claude/settings.json`), and the project's `.claude/settings.json` and
+`.claude/settings.local.json` — with the documented precedence, a stricter
+project or local value winning. An effective `accept` goes on, the state
+file's `inbound:` line naming the file and line it came from; `hold`,
+`refuse`, or no value at all stops the run, naming the launch line. The
+run asks whether a settings file accepts inbound messages only when a file
+exists that it cannot read or parse, or when the server-managed settings
+cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists;
+a session that cannot ask ends naming the launch line. The first message's
+delivery notice still stops the run on a value the read missed (see Known
+behavior).
+
 **The `## Autopilot` section.** The batch's settings are the last section
 of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
 `- <Label>: <value>` fields, in any order, labels in English whatever the
@@ -547,7 +590,12 @@ and names any label it does not know. The run reads the section once, at
 the start, and keeps those values: a worker's later edit to it — a review
 fix that adds acceptance cases, say — changes nothing for the run, and the
 reviewer report's `Settings edits` line lists it for you to carry into a
-later run or not. The seventeen labels and their defaults:
+later run or not. A known label written with a note,
+`- <Label> (<note>): <value>`, reads as the label: the note of
+`Acceptance (in the order listed, …):` becomes a `Run notes:` line in the
+acceptance session's prompt, and any other field's note is named on the
+line after the settings line; an unknown label with a note is still
+ignored and named. The seventeen labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -694,7 +742,14 @@ subagent writes — its own commands and tool calls: a program it runs that
 removes a temporary directory it created itself (a guard's or a test
 script's `mktemp` cleanup), or writes its own cache, is not a breach,
 while a recursive delete the agent writes, in any language (`rm -r`,
-`find -delete`, a Python `shutil.rmtree`), still is. A worker's subagents
+`find -delete`, a Python `shutil.rmtree`), still is. A script or program
+the worker writes during the run and then runs — a helper in scratch,
+`$TMPDIR`, or the workspace — is its own writing, so a recursive delete in
+it is a breach as if typed, while the code the batch implements and its
+tests, run as the project runs them, stay a program it runs. Reaching an
+effect the rails hook denied by another spelling — another command,
+another tool, a script — is a breach. A worker that lists its environment
+prints variable names only, never values. A worker's subagents
 never see its prompt, so the rails tell the worker to write them into
 every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
 dispatches its skills make. A dispatch that has no such key —
@@ -718,7 +773,10 @@ the hook input could not be read — the tool name, a Bash command, or a
 file-tool target — names no route, since the hook reads every later call
 the same way: it is not a breach either, and the worker lists it with its
 reason and ends, which puts a field a Claude Code release renamed in
-front of the main session at once. A denial in task-implementer or a
+front of the main session at once: at that worker's return, an entry whose
+denial reason contains `could not be read from the hook input` stops the
+run, naming the field and the output of `claude --version`, since every
+later worker would end the same way. A denial in task-implementer or a
 document reviewer, whose dispatch carries no rails text, is not listed:
 a worker sees only a subagent's reply, not its tool results. The hook is
 a best-effort guard (see Known behavior), and the rails text still binds.
@@ -734,30 +792,84 @@ the repository's release commit — the CHANGELOG heading dated, the manifest
 at `Version:`, the checklist and roadmap updated, the batch's documents
 removed, the pre-flight run — with no tag and no push. At brief entry the
 design session commits the spec alone, `docs(plans): add batch <name> spec`,
-and the main session commits each decision it makes during the run into the
-spec's clarifications section (`docs(plans): record clarifications settled
-after <step>`). Nothing is pushed, tagged, or released.
+and the main session commits each ruling made during the run into the
+spec's clarifications section, each entry naming who ruled
+(`docs(plans): record clarifications settled after <step>`). Nothing is pushed, tagged, or released.
 
 **The two gates.** The run stops for you at the decisions on a brief's
 design table (a supplied spec counts as approved) and at the tag, push, and
-release after the reports. Everything between is answered from the spec: a
-worker's confirmation is `yes` only when its task list matches the spec's
-steps and carries no choice the spec leaves open — a type, a shape, a
-name, or a behavior a worker proposes to pin, however it frames it, comes
-to you unless the spec's words rule out every other option it lists — and
-a question the spec does not answer is a stop, never an answer on your
-behalf. A question the main session raises itself that only a later step
-needs does not stop the run where it arises: it is recorded as open for
-that step, the steps before it go on, and it becomes the stop only when
-that step is due and you have not answered it. A gate a worker skips is checked afterwards, not prevented: an S2
-that returns without having sent its confirmation question has its
-committed task document checked with the same rubric — a match is
-accepted and recorded as a behavior deviation, a mismatch or a choice left
-open is a stop — and an S3 that skipped task-implement's batch gate is
-recorded only, since its answer is yes once S2's list has passed. No role
-gets an effort floor: it would be a plugin default, and it would not catch
-a skip at any effort. The reviewer report's `Skipped gates` line lists
-each skip with its step, tag, and outcome.
+release after the reports, and otherwise only on a stop condition. Phase
+0's questions about the run's inputs — no path, the entry kind, which
+plugin, an inbound setting it cannot read — are asked before the first
+launch, as part of the start. Every other point the spec leaves open is
+the main session's to rule: a worker's question, a choice riding on a
+task-list confirmation, a question it raises itself, a review row's or an
+acceptance FAIL's classification, a deferred row's route, and a corrected
+acceptance case. It answers a waiting worker at once and rules the same
+way whether or not it can ask you, by this order: the spec's words; the
+locked design; the project's instruction files and the patterns in
+adjacent code; then the option easiest to reverse and closest to the
+spec's scope. A worker's suggested answer is evidence, not a default, and
+the main session never stops for a preference between options that all
+stay inside the batch's contract. A ruling may depart from a sentence of
+the spec — never a locked point — when evidence shows the sentence wrong
+(a test, a probe, a reviewer's reproduction, a documented tool behavior);
+the clarification names the evidence, and the reviewer report lists the
+ruling as beyond the letter. A worker never rules itself: it asks the main
+session, which records every answer, while an answer a worker decided
+would be recorded nowhere.
+
+S2's task-list confirmation is answered `yes` when the list matches the
+spec's steps, "add a task for <step>" for a step with no task, and "drop
+<task>" for a task outside the spec unless a spec step needs it; a type,
+a shape, a name, or a behavior the worker proposes to pin, however it
+frames it, is ruled by the main session and recorded. A gate a worker
+skips is checked afterwards, not prevented: an S2 that returns without
+having sent its confirmation question has its committed task document
+checked with the same rubric. A match, or rulings the document already
+follows, is accepted and recorded as a behavior deviation; a mismatch, or
+an open choice ruled otherwise than the document has it, resumes S2 with
+the ruling to amend and commit the document, and the check runs again —
+a second failure is a stop. An S3 that skipped task-implement's batch
+gate is recorded only, since its answer is yes once S2's list has passed.
+No role gets an effort floor: it would be a plugin default, and it would
+not catch a skip at any effort. The reviewer report's `Skipped gates`
+line lists each skip with its step, tag, and outcome.
+
+A question the main session raises itself that only a later step needs
+does not stop the run where it arises: it is recorded as open for that
+step, the steps before it go on, and it becomes the stop only when that
+step is due and you have not answered it.
+
+**A corrected acceptance case.** An `Acceptance:` case broken for a reason
+outside the batch's work — a flag the package manager reads instead of
+the test runner, a failure word that matches a log line, a summary line
+the installed tool does not print — may be run in a corrected form the
+main session rules, when it has both pieces of evidence: the case as
+written fails, or passes vacuously, at the baseline or by a named tool
+behavior it ran, and the corrected form fails on a deliberate break of
+what the case checks. It gathers both in a clone under `$TMPDIR` or the
+workspace, never in your working tree. The ruling is a clarification
+carrying the case, the corrected form, and both pieces of evidence; the
+`## Autopilot` section stays as the run read it, the acceptance session
+runs the corrected form, and the reviewer report's acceptance line says
+`in the corrected form (<clarification>)`. Without both pieces of
+evidence, the correction is a stop.
+
+**The record.** Every ruling is recorded four ways: a
+`questions answered:` line in the state file ending with who ruled,
+`(main session)` or `(user)`; a clarification entry in the spec that names
+who ruled; the reviewer report's `Main-session rulings` line, with one
+line per ruling — its clarification, the tag or step, the question, the
+ruling, the reason, and the commits it produced; and a list in the user
+report, one line per ruling in your language, under a heading that says
+they are for you to review before the tag and the push — a list the
+report's one-page limit does not count. Actions that would leave the
+machine and that the run does not need in order to go on — filing an
+issue, adding a backlog item — are never taken and never asked mid-run:
+the reviewer report's `Follow-up candidates` line lists them, with the
+findings a ruling deferred to a follow-up, for you to decide after the
+reports.
 
 **Fixes.** A defect the main session classifies — a review row after S3b,
 or an acceptance FAIL — goes to an S5 fix session. One S5 may fix several
@@ -775,12 +887,24 @@ the budget exceeded (a question with the numbers); a safety-rail breach
 (see The rails: a write outside the repository, the workspace, `$TMPDIR`,
 the scratchpad, and `/tmp`; a recursive `rm` in any spelling — `rm -r`,
 `rm -rf`, `rm -fr`, `rm -R`; a `git push`, `git tag`, or release; a
-resource the brief does not name; a secret); a question neither the spec
-nor the locked design answers, the skipped-gate check's mismatch or open
-choice among them; a nested `claude -p` refused; the same step's session dead twice; a settings
-stop before the first launch, among them a `Role settings` entry outside
-its grammar and `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an
-effort (see Models and efforts). Every stop
+resource the brief does not name; a secret); a way forward the main
+session cannot rule on — every option changes the batch's contract (a new
+dependency, an API contract change, a database schema or configuration
+change the spec does not name, a file outside `Allowed files:` or on the
+zero-diff list) and none stays inside it, or an acceptance case corrected
+without both pieces of evidence; a nested `claude -p` refused; the same
+step's session dead twice; a settings stop before the first launch, among
+them a `Role settings` entry outside its grammar and
+`CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort (see Models
+and efforts); and a worker that ended on a denial whose reason says a
+field of the hook input could not be read (see The rails). When one
+option stays inside the contract — defer to a follow-up, leave as is — the
+main session takes it and records it instead of asking, and a ruling to
+leave a locked point as it stands and record the finding as a follow-up
+is its own, not a stop. Four stops are stated at their own steps: a driver
+that refuses a launch, an artifact absent after a return, an unmarked
+acceptance case that cannot be run, and the skipped-gate check failing a
+second time. Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file
 holds the next action.
 
@@ -801,17 +925,22 @@ implementation is never narrowed.
 
 **The reports.** The final message carries `## User report` — your
 language, at most one page: what the batch built, the release commit, what
-needs you, the cost — and `## Reviewer report` — English, fixed fields:
-batch and mode; baseline → release hash; the spec's `git show` command;
-design rulings and clarifications with the decisions that read the locked
-design beyond its letter; settings edits, each field a worker changed in
+needs you, the cost, then the main session's rulings for you to review
+before the tag and the push, which the page limit does not count — and
+`## Reviewer report` — English, fixed fields: batch and mode; baseline →
+release hash; the spec's `git show` command; design rulings and
+clarifications with the decisions that read the locked design beyond its
+letter and the rulings that departed from a spec sentence on evidence;
+main-session rulings, `<n> | none` with one line per ruling; settings edits, each field a worker changed in
 the `## Autopilot` section; files changed and the zero-diff result;
 byte-identity / guards / counts; acceptance, one line per case with its
-cost and result; models and efforts,
+cost and result, and `in the corrected form (<clarification>)` for a
+corrected case; models and efforts,
 `<n> workers, <k> mismatches, <j> not observed`
 (`<n> workers, mismatches: none, <j> not observed` when there are
 none) with one line per worker; total cost; Not exercised; rail
-observations; skipped gates; release-preparation state;
+observations; skipped gates; follow-up candidates; release-preparation
+state;
 sessions / messages / resumes / stops. The total-cost line is the measured
 sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode
 the acceptance cases' costs from the record (S4's nested sessions), plus
@@ -1115,9 +1244,28 @@ on Windows.
   local setting of `hold` or `refuse` applies over the workers' `--settings`
   accept when it is stricter. No probe message is sent at the start, so a
   held or refused first message shows as a delivery notice on that message;
-  the skill stops there, naming the precedence. A worker whose question is
+  the skill stops there, naming the precedence. The start check that reads
+  the settings files cannot read settings delivered from a server: it asks
+  about them only when the server-managed settings cache,
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`, exists, and
+  counts them absent otherwise — a non-interactive run does not write that
+  cache for settings that need approval — so the delivery notice is the
+  backstop. A managed source the platform exposes somewhere the check does
+  not read is caught the same way. A worker whose question is
   held runs into its thirty-minute wait and stops with the question in its
   final message, and the skill resumes it with the answer.
+- **A main-session ruling can be wrong.** The autopilot's main session
+  rules every point the spec leaves open, except the stop conditions,
+  without asking you, and a ruling can be one you would not have made. Each
+  is a committed clarification in the spec that names who ruled, a line on
+  the reviewer report's `Main-session rulings`, and a line in the user
+  report's list; review them before the tag and the push, since nothing
+  leaves the machine before you do. A ruling that departed from a spec
+  sentence is also on the reviewer report's beyond-the-letter list, with
+  its evidence named in the clarification. The batch's contract — a new
+  dependency, an API or schema change, a file outside `Allowed files:` —
+  and the locked design stay yours: a way forward that needs either is a
+  stop.
 - **The first worker always passes the budget check.** Before the first
   worker the batch has no session cost to project from, so the check
   takes a sixth of the budget as the projected cost and 0 as spent; their
@@ -1306,7 +1454,10 @@ on Windows.
   scopes are a fixed list got a `docs(plans):` subject outside it.
 - **Missed-review telemetry.** The SessionEnd hook logs sessions that ran
   `/kenspc-task-implement` without a review to
-  `~/.claude/kenspc/missed-reviews.log`. It can log a false entry when a
+  `~/.claude/kenspc/missed-reviews.log`. It finds the session's transcript
+  under `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects`, where Claude Code
+  keeps transcripts when `CLAUDE_CONFIG_DIR` is set; the log stays under
+  `~/.claude/kenspc` either way. It can log a false entry when a
   headless session runs several turns, or when a session ends at a
   confirmation prompt.
 
