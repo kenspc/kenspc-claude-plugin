@@ -1531,7 +1531,9 @@ ruled from its reply, that has no clarification commit when it ends, the
 main session commits itself once S6 has ended, in the same subject, and
 the check records that commit as the main session's: it adds the entry
 unless S6 left it written in the spec, and commits the spec's path alone,
-`git commit -- <spec path>`, while the spec is still at HEAD; a spec an
+`git commit -- <spec path>`, while the spec is still at HEAD and in the
+index, by the check and its control that it runs before answering S6
+(below); a spec an
 instruction removed makes it a ruling after a removal (above). Why before the
 removal: the removal or release commit `git rm`s the spec — repo mode's
 instructions run after the removal, plugin mode's pre-flight after the
