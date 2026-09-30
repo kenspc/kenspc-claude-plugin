@@ -456,9 +456,13 @@ reminder to work without stopping), the run ends with the same message.
     a read that fails for any reason other than an absent key or value is
     a source the main session cannot read, below). Among the managed sources, the strictest value any of them sets is
     theirs.
-  - The launch line's `--settings`, when the command line shows its
-    argument as a path rather than inline JSON: the file at that path, the
-    source the precedence below calls the launch line's `--settings`.
+  - The launch line's `--settings`: its inline JSON when the command line
+    shows the argument as JSON, or the file at that path when it shows a
+    path — the source the precedence below calls the launch line's
+    `--settings`. Why the inline JSON too: a `hold` or `refuse` there fails
+    the check above, and the precedence ranks it above user settings, so
+    a user `accept` read without it would let the run go on under a value
+    Claude Code does not apply.
   - User settings: `"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"` —
     `$CLAUDE_CONFIG_DIR/settings.json` when the variable is set, else
     `~/.claude/settings.json`, written with `$HOME` for the reason § The
@@ -476,8 +480,8 @@ reminder to work without stopping), the run ends with the same message.
     records the file and the line the value came from, or the managed
     source — a preferences file or a registry value, which has no line.
   - `hold` or `refuse`, or no source that sets the key: the stop naming
-    the launch line — and, for `hold` or `refuse`, the file and line, or
-    the managed source, that set it. Why the source too: a managed value,
+    the launch line — and, for `hold` or `refuse`, the file and line, the
+    managed source, or the launch line's inline JSON, that set it. Why the source too: a managed value,
     and a stricter project or local one, outranks the launch line's
     `--settings`, so a relaunch with the launch line alone would change
     nothing, and the check it then passes reads no file. Why no value is
