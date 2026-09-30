@@ -724,8 +724,9 @@ reviewable.
 **Inputs**: the spec (committed); the preamble; the driver copy; the state
 file.
 
-**DONE when** S3b's verdict is PASS, or every HIGH and every row-3 or row-5
-FAIL is classified, and the zero-diff check has printed nothing.
+**DONE when** S3b's verdict is PASS, or every HIGH row, every ruled row
+whose action differs from its ruling, and every row-3 or row-5 FAIL is
+classified, and the zero-diff check has printed nothing.
 
 **Constraints**: the main session commits nothing but clarification entries
 in the spec, `docs(plans): record clarifications settled after <step>`; the
@@ -1149,10 +1150,16 @@ a skip at any effort; the post-check catches it at every effort.
 ### The verdict loop after S3b
 
 S3b's Schema F verdict decides the next step. Passing: PASS, on to Phase 3.
-FAIL, or PARTIAL with HIGH rows deferred: each HIGH row and each row-3 or
-row-5 FAIL is classified by the main session as a plugin defect, fixed by
-an S5, or accepted as a deferral with
-a reason recorded as a clarification in the spec, naming who ruled. One S5 may fix several
+FAIL, or PARTIAL with HIGH rows deferred or with a ruled row whose action
+differs from its ruling (task-review's Verdict determination): each HIGH
+row, each such ruled row, and each row-3 or row-5 FAIL is classified by
+the main session as a plugin defect, fixed by an S5, or accepted as a
+deferral with
+a reason recorded as a clarification in the spec, naming who ruled. A
+ruled row is classified as a HIGH row is, whatever its severity. Why: a
+ruling the review did not carry out is a decision of the run's own that
+the review overrode, and read as a MEDIUM or LOW row it would be
+classified once and could go to a roadmap candidate unfixed. One S5 may fix several
 defects classified in the same round: its task block lists each defect
 with its row (The task blocks, S5), and it commits one defect per commit.
 Every S5 is followed by the narrowed review — `-s3c`, the next letter for

@@ -92,8 +92,11 @@ use by the next product-repository batch, whose reviewer report shows the
   in scope — and marks the row `ruled` after the em-dash, so the counts are
   unchanged; its reply names a ruled ID no report lists.
   regression-verifier checks each ruled row's action against its ruling
-  and a FIX-ruled fix against the ruling's text. Schema F and Schema G name
-  the file when it exists. Why: a narrowed review wrote a ruling into the
+  and a FIX-ruled fix against the ruling's text. A ruled row whose action
+  differs from its ruling keeps the verdict from PASS (PARTIAL), except a
+  FIX ruling deferred because its fix could not land, and the autopilot's
+  verdict loop after S3b classifies each such row as a HIGH row. Schema F
+  and Schema G name the file when it exists. Why: a narrowed review wrote a ruling into the
   `CUSTOM_INSTRUCTIONS` of code-fixer and regression-verifier, breaking the
   rule that both get the reviewers' CONTEXT unchanged.
 - **Guards.** `check-run-contract.sh` check 5 requires `rulings.md` in its

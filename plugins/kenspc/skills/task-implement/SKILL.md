@@ -598,7 +598,8 @@ reading that AGENTS.md.
 
 - **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
   PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
-  introduced by fix commits.
+  introduced by fix commits; no ruled row whose action differs from its
+  ruling (below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -620,6 +621,19 @@ reading that AGENTS.md.
   unresolved regressions.
 - **PARTIAL** — neither PASS nor FAIL applies cleanly; for example, HIGH
   issues are deferred with explicit rationale and the user must decide.
+- A ruled row whose action differs from its ruling — a row
+  `RUN_DIR/rulings.md` ruled FIX that is not FIXED, DEFER that is not
+  DEFERRED, or NOT APPLICABLE that is not NOT APPLICABLE, as
+  regression-verifier's row 1 names it — keeps the verdict from PASS:
+  PARTIAL, unless a FAIL condition holds, whatever the row's severity. The
+  exception is a FIX ruling code-fixer DEFERRED with the reason that its
+  fix could not land — its build / test / lint run failed, or the ruling's
+  text could not be carried out in the code as it stands — which stays a
+  deferral, counted by its severity like any other. Why: as task-review's
+  Verdict determination says — a ruling not carried out is a decision the
+  run overrode, and under a PASS it would reach the reader only in a row-1
+  Detail, while a fix that could not land changed nothing against the
+  ruling.
 - **BLOCKED** — every task in Schema D is BLOCKED; Code Review / Fixes /
   Verification sections are omitted from the report.
 

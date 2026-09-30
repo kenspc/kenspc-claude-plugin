@@ -496,7 +496,8 @@ Based on the regression verification results, declare a verdict:
 - **PASS** when all of: zero HIGH severity issues remain unresolved; zero
   INCORRECTLY FIXED items; build / tests / lint all PASS or `SPOT-CHECK`
   on row 3 (no-test-suite fallback); no regressions introduced by the fixes
-  (fix commits, or the uncommitted fixes of an `uncommitted` run).
+  (fix commits, or the uncommitted fixes of an `uncommitted` run); no ruled
+  row whose action differs from its ruling (PARTIAL, below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -520,8 +521,22 @@ Based on the regression verification results, declare a verdict:
 - **PARTIAL** when neither PASS nor FAIL applies cleanly — for example,
   HIGH issues are deferred with explicit rationale and the user must decide
   whether to accept.
+- A ruled row whose action differs from its ruling — a row
+  `RUN_DIR/rulings.md` ruled FIX that is not FIXED, DEFER that is not
+  DEFERRED, or NOT APPLICABLE that is not NOT APPLICABLE, as
+  regression-verifier's row 1 names it — keeps the verdict from PASS:
+  PARTIAL, unless a FAIL condition holds. The exception is a FIX ruling
+  code-fixer DEFERRED with the reason that its fix could not land — its
+  build / test / lint run failed, or the ruling's text could not be carried
+  out in the code as it stands — which stays a deferral, counted by its
+  severity like any other. Why: a ruling not carried out is a decision the
+  run overrode — a DEFER or NOT APPLICABLE ruling overridden by a FIXED row
+  changes code nobody ruled on — and under a PASS it would reach the reader
+  only in a row-1 Detail; a fix that could not land changed nothing
+  against the ruling, and code-fixer's rules send it back as a deferral.
 
-MEDIUM and LOW issues do not change the verdict but appear in the report.
+MEDIUM and LOW issues do not change the verdict, except a ruled row whose
+action differs from its ruling (above), but appear in the report.
 
 The Next steps bullets call out: deferred issues, regression failures,
 reviewer recommendations the user should act on, and whether re-running
