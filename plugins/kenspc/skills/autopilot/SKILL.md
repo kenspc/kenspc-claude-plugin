@@ -606,9 +606,11 @@ worker's requested and applied model and effort, the
 questions answered, the rail observations each worker listed, the gates
 a worker skipped and their outcome, the
 stops, the questions left open for a later step (The stop conditions), the
-clarification numbers recorded in the spec, what S6's return left for the
-user — each failed check with the commits it names, and the work S6 left
-undone for a point raised after the removal (Phase 4) — and the next
+clarification numbers recorded in the spec and the rulings that have no
+clarification commit, what S6's return left for the
+user — each failed check with the commits it names, the work S6 left
+undone for a point raised after the removal, and a change S6 left to the
+spec, with the lines the status command printed (Phase 4) — and the next
 action.
 Every ruling is recorded under `questions answered:`, whoever made it — a
 worker's question, a choice on a confirmation, a point the main session
