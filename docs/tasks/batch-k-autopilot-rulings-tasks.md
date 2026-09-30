@@ -461,6 +461,15 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
     strictest value any source sets applies when the sources are merged.
   No local cache path for server-managed settings, and no claim about what
   a non-interactive run writes.
+- **The Linux and WSL directory in `SKILL.md`.** `check-no-model-names.sh`
+  (on the spec's Zero diff list, so not edited) reads `claude-` followed by
+  a letter or digit as a model-ID prefix and strips only the exceptions it
+  lists, so the Linux and WSL directory above, written literally into
+  `SKILL.md`, fails `bash scripts/check-all.sh`. Write it in a form the main
+  session can run as written on Linux and WSL and that holds no `claude-`
+  followed by a letter or digit — for example the pattern
+  `/etc/claude?code/managed-settings.json` — with a sentence saying it
+  stands for the directory the managed-settings page names.
 - **State file template**: a field for where the inbound value came from
   (the name is the implementer's), and Phase 0's **Inputs** gains the
   settings files.
@@ -490,6 +499,10 @@ Spec Step 1.2 — K-L9, K-L10; K-C3. File:
   can check.
 - Its Why names both URLs and `2026-09-30` and states nothing the two pages
   above do not state.
+- `bash scripts/check-no-model-names.sh` exits 0 with the Linux and WSL
+  managed-settings file named in `SKILL.md` in a form the main session can
+  resolve there, and `git diff 8db589b -- scripts/check-no-model-names.sh`
+  prints nothing.
 - Read by the new rule, `- Acceptance (in the order listed, …):` is the
   `Acceptance:` field with the note `in the order listed, …`, and both S4
   task blocks carry the note line; an unknown label with a note is still
