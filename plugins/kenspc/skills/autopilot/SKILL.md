@@ -2243,7 +2243,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | The argument is neither a brief nor a spec | Which it is | The run ends with the reason |
 | Several plugins and no `Plugin:` | Which plugin | The run ends with the reason |
 | A start check fails, or a settings stop — a value outside its grammar, `Role settings` included, or `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort | — (a stop with its reason) | The run ends with the same message |
-| The launch line shows no `crossSessionInbound` accept, and a settings file that exists cannot be read or parsed, or the server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists | Whether a settings file accepts inbound messages | The run ends naming the launch line |
+| The launch line shows no `crossSessionInbound` accept, and a settings file that exists cannot be read or parsed, a read of a Windows policy value fails for a reason other than an absent key or value, or the server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists | Whether a settings file accepts inbound messages | The run ends naming the launch line |
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |

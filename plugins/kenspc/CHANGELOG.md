@@ -123,8 +123,9 @@ use by the next product-repository batch, whose reviewer report shows the
   precedence, going on with `accept` and recording where it came from;
   `hold`, `refuse`, or no source that sets the key is a stop naming the
   launch line, where 4.4.1 asked whether a settings file accepted inbound
-  messages. It asks only when a file cannot be read or parsed, or the
-  server-managed settings cache exists. Three batches had asked with
+  messages. It asks only when a file cannot be read or parsed, a Windows
+  policy value's read fails for a reason other than an absent key or
+  value, or the server-managed settings cache exists. Three batches had asked with
   `accept` already in the user settings and no override.
 - **A label with a note (autopilot).** `- <Label> (<note>): <value>` reads
   as the known label; the `Acceptance:` note becomes a `Run notes:` line in
