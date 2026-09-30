@@ -1546,7 +1546,15 @@ gets no commit: the ruling's line under the reviewer report's
 printed, and both reports list it among what needs the user. Only when
 the spec is at HEAD and in the index and the status command prints
 nothing does it add the entry and commit the spec's path alone,
-`git commit -- <spec path>`. Why the status check: an ended S6 can leave
+`git commit -- <spec path>`, and then only when the spec at HEAD does not
+already hold the ruling's entry: an entry S6 committed in a commit the
+check above does not count — one that touched another file too, or one
+its reply left out — gets no second copy and no commit, and the check
+records the commit that added it,
+`git -C <repository root> log --format=%h -S '<a line of the entry>' <head>..HEAD -- <spec path>`,
+as S6's. Why no second copy: a committed entry leaves the status command
+nothing to print, so the gate passes, and writing it again would commit
+the ruling twice. Why the status check: an ended S6 can leave
 the spec in two states a commit would carry under the clarification
 subject — a removal staged and not committed, at HEAD but not in the
 index, and an edit left in the index or the working tree, in both — and
