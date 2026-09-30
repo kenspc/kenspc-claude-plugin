@@ -469,9 +469,14 @@ reminder to work without stopping), the run ends with the same message.
   - `accept`: the run goes on, and the state file's `inbound:` line
     records the file and the line the value came from.
   - `hold` or `refuse`, or no source that sets the key: the stop naming
-    the launch line. Why no value is a stop: when no file sets the key,
-    the launch line Prerequisites gives is what sets it, and without it
-    no source is known to accept inbound messages.
+    the launch line — and, for `hold` or `refuse`, the file and line, or
+    the managed source, that set it. Why the source too: a managed value,
+    and a stricter project or local one, outranks the launch line's
+    `--settings`, so a relaunch with the launch line alone would change
+    nothing, and the check it then passes reads no file. Why no value is
+    a stop: when no file sets the key, the launch line Prerequisites
+    gives is what sets it, and without it no source is known to accept
+    inbound messages.
   - A file that exists and cannot be read or parsed, or a source the main
     session cannot read — settings delivered from a server, which count as
     present when `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`
