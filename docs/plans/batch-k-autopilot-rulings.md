@@ -641,6 +641,57 @@ verdict PASS, 20 fixed, 5 deferred, 2 not applicable):
   None is a one-line fix in an allowed file. R8's and B3's NOT APPLICABLE
   stand as code-fixer gave them.
 
+Settled after S3b (all ruled by the main session under Constraints,
+"Rulings for this run", 1 and 3; S3b's run directory
+`.kenspc/runs/20261001-005751-changes/`, verdict PASS, no HIGH, 14 fixed
+`44243f8..032d139`, 7 deferred; the zero-diff check printed nothing). One
+S5 carries K-C11 to K-C14 and K-C16 to K-C19, then the narrowed review:
+
+- **K-C16** (S3b row 4, R1, DEFERRED MEDIUM, ruled by the main session; to
+  the S5). A ruling made while S6 runs: before S6 is launched the main
+  session commits every pending clarification, as it does after each step;
+  a question S6 raises is answered with the clarification entry's text,
+  and S6 adds that entry to the spec and commits the spec alone, in the
+  repository's convention for a clarification commit, before its release
+  commit — so the release commit's `git rm` removes a committed spec and
+  the entry stays in history, the four-way record of K-L7 kept. `SKILL.md`
+  says so where Phase 2's Constraints name the main session's commits and
+  in the S6 task blocks. Why not the other routes: a main-session commit
+  while S6 is live could sweep S6's staged changes into it, and a record
+  kept only in the state file and the reports drops one of K-L7's four.
+- **K-C17** (S3b row 5, E2/B1, DEFERRED MEDIUM, ruled by the main session;
+  to the S5). A ruled row whose action differs from its ruling keeps the
+  verdict from PASS: PARTIAL in task-review's and task-implement's verdict
+  bullets, outside every canonical block — except a FIX ruling code-fixer
+  DEFERRED with the reason that its fix could not land, which stays a
+  deferral. The autopilot's § The verdict loop after S3b classifies each
+  such row as it classifies a HIGH row. The canonical blocks stay
+  byte-identical and unchanged (K-L8).
+- **K-C18** (S3b row 6, Q1, DEFERRED MEDIUM, ruled by the main session; to
+  the S5). The `rulings.md` entry grammar gets one guarded form: each
+  carrier that states it wraps it in `canonical:rulings-grammar` markers,
+  and `check-run-contract.sh` holds the marked regions byte-identical, with
+  a self-test mutation per carrier; a carrier may instead point at
+  task-review's Step 5 by path and hold no copy (the implementer's choice,
+  under "Delegated choices"). CLAUDE.md's Maintenance note and Repository
+  scripts/ entry follow. The guard counts stay `guards run: 12` and
+  `self-tests run: 11`: the check lives inside an existing guard.
+- **K-C19** (S3b's regression-verifier, row 5's two observations, LOW,
+  ruled by the main session; to the S5 as one-line fixes in an allowed
+  file). The 4.5.0 CHANGELOG's preamble bullet carries the exception for
+  the route a denial names; its Phase 0 inbound bullet names the launch
+  line's `--settings` (inline JSON or a file) among the sources — the same
+  line as K-C12, one fix.
+- **K-C20** (S3b rows 18-21, E3, E6, T2, B7, DEFERRED LOW, ruled by the
+  main session under ruling 3). Follow-up candidates for the user, listed
+  in the reviewer report and not fixed: S3's batch gate answered without
+  comparing the list to the ruled one (E3); a ruled ID with an unruled
+  duplicate (E6, pairs with K-C15's E7); smoke rows that do not exercise
+  the rulings path (T2); stop 11 naming the main session's
+  `claude --version` rather than the workers' executable (B7, whose
+  wording the locked design fixes). None is a one-line fix in an allowed
+  file.
+
 ## Autopilot
 
 - Mode: plugin
