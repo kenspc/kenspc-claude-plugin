@@ -489,7 +489,9 @@ is byte-identical across those two SKILLs and `code-fixer.md`, and the
 `rulings.md` entry grammar (`<!-- canonical:rulings-grammar:start/end -->`)
 across those two SKILLs, `code-fixer.md`, and `regression-verifier.md` —
 task-review's Step 5 defines it, and a carrier that stops stating it
-points at that step by path and holds no copy.
+points at that step by path and holds no copy, while
+`check-run-contract.sh`'s check 7 and its self-test drop that carrier in
+the same commit.
 
 After editing any reviewer agent, `code-fixer.md`, `regression-verifier.md`,
 or either of those two SKILLs, run the matching guard script — `check-review-agent-drift.sh`,
