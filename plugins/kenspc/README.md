@@ -1303,8 +1303,9 @@ on Windows.
   not read is caught the same way. The notice reports the worker's inbound
   only: a value that holds the main session's own inbound sends none, since
   the worker's question never arrives and no answer is sent. The worker
-  runs into its thirty-minute wait and stops with the question in its final
-  message, and the skill resumes it with the answer. A question that never
+  stops with the question in its final message — at once when its send
+  gets a held notice (below), after its thirty-minute wait otherwise — and
+  the skill resumes it with the answer. A question that never
   arrived as a message is recorded as not received, not as a hold: a send
   that failed, or one the worker never made, leaves the same return. Both
   reports name the causes to check — the main session's own inbound under

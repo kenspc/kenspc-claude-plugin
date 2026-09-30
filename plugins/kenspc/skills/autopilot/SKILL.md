@@ -531,8 +531,9 @@ reminder to work without stopping), the run ends with the same message.
   guess: a value the main session cannot see may be `hold`, and a run that
   went on would learn it only at its first message. Why checked before the
   first launch: a main session that holds inbound messages never sees a
-  worker's question — the worker waits its thirty minutes, stops with the
-  question in its final message, and is resumed with the answer — thirty
+  worker's question — the worker stops with the question in its final
+  message, at once when its send gets a held notice and after its thirty
+  minutes otherwise, and is resumed with the answer — up to thirty
   minutes and a resume per question, with no stop naming the cause.
 
   The sources and their order are the documentation's, as read on
