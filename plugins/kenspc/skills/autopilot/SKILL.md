@@ -2137,12 +2137,14 @@ run overnight — the steps between, which needed no answer, waited with it,
 and S3b's fixes then changed the list again, so the question answered in
 the morning had to be asked a second time.
 
-**Stops stated at their own steps.** Four stops sit outside the numbered
+**Stops stated at their own steps.** Five stops sit outside the numbered
 list, each stated where it happens, and end the run the same way: a
-driver that refuses a launch (§ Launch, wait, return), an artifact absent
-after a return (§ Phase transitions), an unmarked acceptance case that
-cannot be run (Phase 3's narrowing rule), and the skipped-gate
-post-check's second failure (§ A worker's question at a gate). Why listed
+driver that refuses a launch (§ Launch, wait, return), a delivery notice
+that the first message to a worker was held or refused (§ The message
+protocol), an artifact absent after a return (§ Phase transitions), an
+unmarked acceptance case that cannot be run (Phase 3's narrowing rule),
+and the skipped-gate post-check's second failure (§ A worker's question
+at a gate). Why listed
 here: a reader of the stop conditions finds every stop from this section,
 while each rule stays beside the step it governs.
 

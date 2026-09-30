@@ -904,8 +904,9 @@ field of the hook input could not be read (see The rails). When one
 option stays inside the contract — defer to a follow-up, leave as is — the
 main session takes it and records it instead of asking, and a ruling to
 leave a locked point as it stands and record the finding as a follow-up
-is its own, not a stop. Four stops are stated at their own steps: a driver
-that refuses a launch, an artifact absent after a return, an unmarked
+is its own, not a stop. Five stops are stated at their own steps: a driver
+that refuses a launch, a delivery notice that the first message to a
+worker was held or refused, an artifact absent after a return, an unmarked
 acceptance case that cannot be run, and the skipped-gate check failing a
 second time. Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file
