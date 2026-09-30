@@ -658,7 +658,7 @@ check_heading() {
         *) echo "MISSING '$HEADING' in ### Launch, wait, return of $skill" >&2; bad=1 ;;
     esac
     if ! grep -qF -- "$PHRASE" "$hook"; then
-        echo "MISSING '$PHRASE' in the hook $hook" >&2
+        echo "MISSING '$PHRASE' in the rails hook $hook" >&2
         bad=1
     fi
     case "$launch" in
@@ -864,7 +864,8 @@ run_self_test() {
             phrase-in-hook)
                 target=$copy; start=''; stop=''
                 old=$PHRASE; new='was unreadable in the hook input'
-                carrier="the hook" ;;
+                # Not "the hook", which the phrase itself contains.
+                carrier="the rails hook" ;;
             phrase-in-return)
                 target=$skill_copy; start='### Launch, wait, return'; stop='### '
                 old=$PHRASE; new='was unreadable in the hook input'
