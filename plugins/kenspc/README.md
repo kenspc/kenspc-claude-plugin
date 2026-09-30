@@ -572,9 +572,10 @@ settings (`$CLAUDE_CONFIG_DIR/settings.json`, else
 `~/.claude/settings.json`), and the project's `.claude/settings.json` and
 `.claude/settings.local.json` — with the documented precedence, a stricter
 project or local value winning. An effective `accept` goes on, the state
-file's `inbound:` line naming the file and line it came from; `hold`,
-`refuse`, or no value at all stops the run, naming the launch line — and,
-for `hold` or `refuse`, the file or managed source that set it. The
+file's `inbound:` line naming the file and line, or the managed source,
+it came from; `hold`, `refuse`, or no value at all stops the run, naming
+the launch line — and, for `hold` or `refuse`, the file or managed source
+that set it. The
 run asks whether a settings file accepts inbound messages only when a file
 exists that it cannot read or parse, or when the server-managed settings
 cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists;

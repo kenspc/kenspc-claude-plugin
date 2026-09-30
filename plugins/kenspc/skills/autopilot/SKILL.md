@@ -470,7 +470,8 @@ reminder to work without stopping), the run ends with the same message.
   `accept` < `hold` < `refuse` ladder, while a project or local value that
   is not stricter is ignored. The effective value decides:
   - `accept`: the run goes on, and the state file's `inbound:` line
-    records the file and the line the value came from.
+    records the file and the line the value came from, or the managed
+    source — a preferences file or a registry value, which has no line.
   - `hold` or `refuse`, or no source that sets the key: the stop naming
     the launch line — and, for `hold` or `refuse`, the file and line, or
     the managed source, that set it. Why the source too: a managed value,
@@ -588,7 +589,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
-inbound: accept from <the launch line | <file>:<line> | the user's answer>
+inbound: accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer>
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
