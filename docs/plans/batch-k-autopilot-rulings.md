@@ -893,6 +893,31 @@ index check still fails is stop 4.
   candidate: a guard for the `S6 return:` literal, with the earlier guard
   candidates.
 
+Settled after the fifth narrowed review (run directory
+`.kenspc/runs/20261001-035555-changes/`, verdict PASS, no HIGH, 7 fixed
+`6f40aed..2da3532` and verified CLEAN, 1 MEDIUM and 1 LOW deferred). The
+review found the keep-path gate still failing (E1/B1, a second copy of an
+entry committed; its code-fixer's `6f40aed` is the gate's third fix) and
+the spec index check's control still failing (T1/B5, fixed `af573f7`) —
+stop condition 4, by the rule recorded before K-C38. The main session
+stopped and asked the user.
+
+- **K-C41** (stop 4, ruled by the user: "按你的建议", the main session's
+  recommended option). HEAD `2da3532` is accepted as the fifth narrowed
+  review's regression-verifier verified it, and the run goes on to S6. Not
+  fixed in this batch, listed for the user as follow-up candidates in the
+  reviewer report: E2 (the main session's own keep-path commit has no
+  outcome when it fails); T4 (no guard for the keep-path gate's literals,
+  with the earlier guard candidates); the verifier's LOW notes — `log -S`
+  quoting that breaks on an entry line holding an apostrophe, a `.git`
+  directory given as the root passing the new control, and the README and
+  CHANGELOG summaries not naming the entry-already-at-HEAD case. `6f40aed`
+  reads K-C33 beyond its letter (it commits no second copy of an entry S6
+  already committed) and goes on `beyond the letter`. Why: the keep-path
+  gate runs only in repo mode with a `Release preparation:` list that says
+  `keep` and an S6 that was asked a question, which this batch never
+  exercises, and each review round had found new corners in it.
+
 ## Autopilot
 
 - Mode: plugin
