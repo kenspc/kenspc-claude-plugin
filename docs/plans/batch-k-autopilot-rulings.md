@@ -860,6 +860,39 @@ K-C35 and K-C36, then a fourth narrowed review.
   the main session answers rather than when S6 acts, which matters only
   for an S6 that breaks "wait in place". None is a one-line fix.
 
+Settled after the fourth narrowed review (all ruled by the main session
+under Constraints, "Rulings for this run", 1 and 3; the fourth S5 fixed
+K-C35 and K-C36 in `e8305ce..d5c8ac9`; the review's run directory
+`.kenspc/runs/20261001-032819-changes/`, verdict PARTIAL — no HIGH, 5 fixed
+`b61d1e8..4f0efb6`, row 5 FAIL on a suspected regression, 2 MEDIUM and
+1 LOW deferred). Stop condition 4 is not reached: the keep-path gate
+(K-C33, first fixed by K-C36) gets its second fix here, and the row-5
+regression is new. A fifth S5 carries K-C38 and K-C39, then a fifth
+narrowed review; a finding there that the keep-path gate or the spec's
+index check still fails is stop 4.
+
+- **K-C38** (row 5 FAIL, regression-verifier on `3ecfb9d`, suspected,
+  low confidence; classified as a plugin defect and sent to the fifth S5).
+  The spec's index check passes `':/<spec path>'`, an argument Git Bash's
+  path conversion may rewrite on Windows, where it cannot be verified from
+  this machine. The check is written without a `:/` argument instead —
+  `git -C <repository root> ls-files --error-unmatch -- <spec path>` —
+  everywhere it is stated, with its control. Why: the rewrite question
+  disappears rather than being answered, and the form is plain git on
+  every platform.
+- **K-C39** (rows 3 and 4, E2/B1 and E3, DEFERRED MEDIUM; to the fifth
+  S5). Before the main session writes a keep-path entry, after S6 has
+  ended, `git -C <repository root> status --porcelain -- <spec path>`
+  must print nothing. Anything printed — a removal S6 staged and did not
+  commit, or an edit it left — means no commit: the ruling's line carries
+  `no clarification commit (S6 left the spec changed)`, the `S6 return:`
+  line names the leftover, and both reports list it among what needs the
+  user. Why: one status check covers both states the review found, and
+  the main session commits none of S6's changes.
+- **K-C40** (row 8, T1, DEFERRED LOW; under ruling 3). Follow-up
+  candidate: a guard for the `S6 return:` literal, with the earlier guard
+  candidates.
+
 ## Autopilot
 
 - Mode: plugin
