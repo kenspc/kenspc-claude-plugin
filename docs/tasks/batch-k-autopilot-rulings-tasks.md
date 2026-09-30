@@ -830,7 +830,23 @@ Spec Step 2.1 — K-L8; K-C9. Files: `plugins/kenspc/skills/task-review/SKILL.md
 
 ### Task 10: code-fixer and regression-verifier read `rulings.md`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the ruling rule sits in code-fixer's FIXING PRIORITY as a
+  paragraph after the NOT APPLICABLE and DEFERRED paragraphs, since it
+  overrides the severity rules there. Two edge cases were settled in the
+  text: IDs that carry different rulings are not merged into one row, and a
+  FIX ruling whose fix cannot land is DEFERRED with the reason, which
+  regression-verifier's row 1 then reports as a ruling not carried out.
+  The unlisted-ID reply line is `Ruled IDs in no report: <ID>[, <ID>…]`,
+  after the statistics line and not written to `schema-b.md`.
+- Changes/tradeoffs: the worked Schema B example's row 2 now reads
+  `DEFERRED — ruled` (and its Deferred Issues note says so), with no count
+  change. Verified with `check-run-contract.sh --file` on the extracted
+  example (exit 0) and on a mutant where that row became `FIXED — ruled`
+  (exit 1), both under this run's scratch. The PREREQUISITE CHECK, the
+  stats-line block, and the code-craft blocks are unchanged.
 
 Spec Step 2.2 — K-L8. Files: `plugins/kenspc/agents/code-fixer.md`,
 `plugins/kenspc/agents/regression-verifier.md`.

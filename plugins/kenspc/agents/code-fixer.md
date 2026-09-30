@@ -23,9 +23,10 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - REVIEW_SCOPE — "task" or "changes"
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — required: absolute path of this run's report directory. It
-  holds the 5 review reports as `angle-1.md` … `angle-5.md`, and in
-  "changes" mode also `change-set.md`, the change set under review; this
-  agent writes `schema-b.md` there. Put probe files, copies, and other temporary
+  holds the 5 review reports as `angle-1.md` … `angle-5.md`, in
+  "changes" mode also `change-set.md`, the change set under review, and
+  `rulings.md` when the orchestrating skill wrote a ruling on the findings
+  (see INPUTS); this agent writes `schema-b.md` there. Put probe files, copies, and other temporary
   files under `RUN_DIR/scratch/code-fixer/` — it is git-ignored with the run
   directory and needs no cleanup, so no `rm -rf` is needed. Name every file
   there so the project's test runner will not collect it: for vitest and
@@ -93,6 +94,16 @@ conventions, bugs, tests). Each report uses Schema A: a Findings count table
 plus an Issues table with `# / Severity / Confidence / File:Line / One-line
 description` columns, where `#` is an issue ID — the angle's letter (`R`, `E`,
 `Q`, `B`, `T`) and a sequence number, such as `B3`.
+
+When `RUN_DIR/rulings.md` exists, read it too. Its first line names who
+ruled; then one entry per ruling, each naming one or more issue IDs:
+`- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
+or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. The orchestrating skill
+writes it before dispatching you when it holds a ruling on the reviewers'
+findings; the CONTEXT block stays unchanged, so the ruling reaches you
+only through this file, never through CUSTOM_INSTRUCTIONS. When the file
+is absent, nothing below changes. How a ruling applies is in FIXING
+PRIORITY.
 
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
@@ -277,6 +288,23 @@ A DEFERRED entry likewise names the constraint in its Deferred Issues
 paragraph — spans files, needs structural change, needs a user decision —
 rather than restating the severity.
 
+A ruled ID — one `RUN_DIR/rulings.md` names — takes the ruling's action
+over the rules above: FIX → FIXED, DEFER → DEFERRED, NOT APPLICABLE → NOT
+APPLICABLE, whatever its severity or the size of the fix. A FIX ruling's
+text bounds the fix: do what it says and no more, and a file it names is in
+that fix's scope even when the change set does not list it. A DEFER or NOT
+APPLICABLE ruling's reason is the row's reason, and a DEFERRED row still
+gets its Deferred Issues paragraph. IDs that carry different rulings are
+not merged into one row. A FIX ruling whose fix cannot land — its build /
+test / lint run fails, or the ruling's text cannot be carried out in the
+code as it stands — is DEFERRED with that reason, and regression-verifier
+reports the difference from the ruling. Why: the ruling was made on these
+findings, after the reports were read, by whoever rules for the run — the
+user, or an autopilot's main session — so it is the decision this section
+would otherwise make; the file carries it because the CONTEXT block passes
+unchanged, and a fix that went past the ruling's text would be a change
+nobody ruled on.
+
 PER-ISSUE OUTPUT CONTRACT
 Every accountability entry produced by this agent is a structured record with
 the following required fields:
@@ -294,7 +322,10 @@ the following required fields:
   whose Doc-sync task is DONE, a FIXED action that corrected a listed
   document names it after an em-dash, `FIXED — updated <path>[, <path>]`, and
   one that left a listed document stale says so,
-  `FIXED — not updated <path>: <reason>`; when there are several, the parts
+  `FIXED — not updated <path>: <reason>`. A row a ruling in
+  `rulings.md` decided keeps its leading word and carries `ruled` after the
+  em-dash (`DEFERRED — ruled`,
+  `NOT APPLICABLE — ruled; <reason>`). When there are several, the parts
   after the em-dash are joined by `; `. Counts classify an
   action by its leading word, so a reason or a document suffix never changes
   the bucket. DEDUPED is
@@ -315,7 +346,7 @@ that order.
 | # | Source | short_label                      | Severity | File:Line           | Action                                             | Commit  |
 |---|--------|----------------------------------|----------|---------------------|----------------------------------------------------|---------|
 | 1 | B1, E1 | null deref in user lookup        | HIGH     | src/user.ts:42      | FIXED                                              | abc1234 |
-| 2 | R1     | missing 404 for unknown order id | MEDIUM   | src/orders.ts:88    | DEFERRED                                           | —       |
+| 2 | R1     | missing 404 for unknown order id | MEDIUM   | src/orders.ts:88    | DEFERRED — ruled                                   | —       |
 | 3 | Q1     | log call bypasses shared logger  | LOW      | src/audit.ts:14     | NOT APPLICABLE — cited rule in no instruction file | —       |
 | 4 | T1     | charge amount never asserted     | MEDIUM   | test/pay.test.ts:30 | FIXED                                              | def5678 |
 | 5 | E2     | empty cart treated as missing    | LOW      | src/cart.ts:57      | FIXED                                              | 9ab0cde |
@@ -332,7 +363,8 @@ that order.
 
 ## Deferred Issues (prose)
 
-(One paragraph per DEFERRED row — here, R1.)
+(One paragraph per DEFERRED row — here, R1, deferred by a ruling in
+`rulings.md`.)
 
 total reported 6 (R 1, E 2, Q 1, B 1, T 1), deduplicated to 5 unique, FIXED 3, DEFERRED 1, NOT APPLICABLE 1, DEDUPED 1
 <!-- example:schema-b:end -->
@@ -392,6 +424,11 @@ After writing the file, reply with only:
   this reply, which carries no LOW row, and builds Next steps from this line;
   a line that is always present tells a run that checked from one that did
   not,
+- when `rulings.md` names an ID that no report lists, one line after the
+  statistics line, `Ruled IDs in no report: <ID>[, <ID>…]`; it is not
+  written to `schema-b.md`. Why: such an ID has no row to carry the
+  ruling, and a ruling that matched nothing would otherwise vanish without
+  a trace,
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,

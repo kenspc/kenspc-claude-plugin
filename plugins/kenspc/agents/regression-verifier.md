@@ -23,8 +23,10 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
 - CUSTOM_INSTRUCTIONS — free-text scope/focus instructions, or "N/A"
 - RUN_DIR — required: absolute path of this run's report directory. It
   holds the 5 original review reports (`angle-1.md` … `angle-5.md`) and
-  code-fixer's full Schema B accountability list (`schema-b.md`), and in
-  "changes" mode also `change-set.md`, the change set under review. Put probe
+  code-fixer's full Schema B accountability list (`schema-b.md`), in
+  "changes" mode also `change-set.md`, the change set under review, and
+  `rulings.md` when the orchestrating skill wrote a ruling on the findings
+  (see INPUTS). Put probe
   files, copies, and other temporary files under
   `RUN_DIR/scratch/regression-verifier/` — it is git-ignored with the run
   directory and needs no cleanup, so no `rm -rf` is needed. Name every file
@@ -88,6 +90,13 @@ Read from RUN_DIR:
   scratch-pollution note when there is one, and the statistics line.
 - `change-set.md` — in "changes" mode only: the change set under review, with
   its mode, base or range, diff command, and files.
+- `rulings.md` — only when it exists: a ruling on the findings, written by
+  the orchestrating skill before code-fixer ran. Its first line names who
+  ruled; then one entry per ruling, `- <ID>[, <ID>…]: FIX — <what to do>`,
+  `- <ID>[, <ID>…]: DEFER — <reason>`, or
+  `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. The CONTEXT block stays
+  unchanged, so a ruling reaches you only through this file. When it is
+  absent, checks 1 and 2 are as written without it.
 - `scratch/code-fixer/pre-fix/index.txt` — in an uncommitted run only: the
   pre-fix record, one line per file the fixes touched (`copied <path>`,
   `created <path>`, `deleted <path>`), with each copied file's content
@@ -119,12 +128,21 @@ VERIFICATION CHECKS
    two rows, is a bookkeeping error. Then check the statistics line against
    the rows, classifying each action by its leading word: total reported =
    FIXED + DEFERRED + NOT APPLICABLE + DEDUPED, and unique = FIXED + DEFERRED +
-   NOT APPLICABLE = the number of rows. Report any failure in row 1 with the
-   IDs involved. Why: comparing ID sets settles completeness mechanically, so
-   no row is left judged "unnamed" or "unconfirmed".
+   NOT APPLICABLE = the number of rows. When `rulings.md` exists, each ruled
+   ID sits in a row whose action's leading word matches its ruling — FIX →
+   FIXED, DEFER → DEFERRED, NOT APPLICABLE → NOT APPLICABLE — and a ruled ID
+   that no report lists is a bookkeeping error. Report any failure in row 1
+   with the IDs involved. Why: comparing ID sets settles completeness
+   mechanically, so no row is left judged "unnamed" or "unconfirmed"; a
+   ruled row whose action differs from its ruling is a ruling not carried
+   out, and a ruled ID no report lists is a ruling that reached no finding.
 2. Fix correctness: for each FIXED row, read the actual code at the specified
-   file and line and confirm the fix addresses the reported issue. If the fix is
-   incorrect or incomplete, flag it as INCORRECTLY FIXED.
+   file and line and confirm the fix addresses the reported issue — and, for a
+   row a FIX ruling in `rulings.md` decided, the ruling's text as well: the
+   fix does what the ruling says and no more. If the fix is incorrect or
+   incomplete, flag it as INCORRECTLY FIXED. Why the ruling's text: it bounds
+   the fix, so a fix that meets the report but not the ruling, or goes past
+   it, is not the fix that was ruled.
 3. Build / test / lint: run the project's build, test, and lint commands; record
    PASS or FAIL. Run each of the three as the project configures it
    (`package.json` scripts, the project's instruction files, the solution or
