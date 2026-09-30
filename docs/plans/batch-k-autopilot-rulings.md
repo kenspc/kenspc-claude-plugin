@@ -830,6 +830,36 @@ Settled during the third S5 (ruled by the main session under Constraints,
   report among what needs the user, following K-C23's precedent; no
   template field is added.
 
+Settled after the third narrowed review (all ruled by the main session
+under Constraints, "Rulings for this run", 1 and 3; the third S5 fixed its
+five defects in `355dbfb..5c01fbb`; the review's run directory
+`.kenspc/runs/20261001-030201-changes/`, verdict PASS, no HIGH, 9 fixed
+`8844d8d..3a38ede` and verified CLEAN, 1 MEDIUM and 1 LOW deferred). Stop
+condition 4 is not reached: the review found no earlier fix still failing,
+and its rows were new findings on the third S5's text. A fourth S5 carries
+K-C35 and K-C36, then a fourth narrowed review.
+
+- **K-C35** (row 6, E4, DEFERRED MEDIUM; to the fourth S5). K-C34's "no
+  template field is added" covers the reports, not the state file. The
+  reviewer report is built from the state file, so the state file template
+  gains one line for S6's return — the failed checks with the commits they
+  name, and the work S6 left undone for a point raised after the removal,
+  or `none` — and the `Follow-up candidates` line names it among its
+  sources.
+- **K-C36** (regression-verifier's observation on `5ec0a73` and
+  `902a4e7`, LOW, one clause in an allowed file; to the fourth S5). The
+  gate on the main session's keep-path clarification commit runs the same
+  HEAD-and-index check, with its control, that the main session runs
+  before answering S6, so a staged but uncommitted removal of the spec is
+  never committed under the clarification subject.
+- **K-C37** (row 11, T1, DEFERRED LOW, and the two partial-fix notes on
+  rows 3 and 9; under ruling 3). Follow-up candidates for the user: a
+  guard for the `## Question for the main session` literal (with K-C20,
+  K-C25, and K-C32's guard candidates); a quoted cause holding `,` or `)`
+  on the `inbound:` line, which nothing parses; the spec check running when
+  the main session answers rather than when S6 acts, which matters only
+  for an S6 that breaks "wait in place". None is a one-line fix.
+
 ## Autopilot
 
 - Mode: plugin
