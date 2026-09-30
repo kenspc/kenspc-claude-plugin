@@ -431,7 +431,24 @@ Spec Step 1.1 — K-L7. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 5: SKILL.md — the stop conditions and the gates table
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: § A question only a later step needs changed by one appositive
+  only ("— a way forward the main session cannot rule on —"). The
+  outward-actions rule and a list of the four stops stated at their own
+  steps are two bolded paragraphs after it, inside § The stop conditions,
+  so the numbered list keeps its 1-6 and 8-10 lines byte for byte (diffed
+  against `8db589b`). The `Follow-up candidates` line sits after
+  `Skipped gates` in the reviewer report and also carries findings a
+  ruling deferred to a follow-up (stop 7's "defer to a follow-up"). The
+  gates table keeps two rows for a worker's question (answered from the
+  spec; ruled and recorded), both asking nothing, and gains a stop 7 row.
+- Changes/tradeoffs: the "Any other stop condition" row now also names a
+  stop stated at its own step. Stop 7's Why names the contract as what the
+  user approved and only the user can widen. The grep of the acceptance
+  criteria hits four lines: the Quality bar, the new subsection, the
+  preamble's § 1 sentence, and the stop list's opening.
 
 Depends on: Task 1-4
 

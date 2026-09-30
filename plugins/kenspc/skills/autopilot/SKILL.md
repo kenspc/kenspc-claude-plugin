@@ -1914,10 +1914,22 @@ the run ends with that message.
 5. The session cap, the resume cap, or the budget exceeded — a question
    with the numbers.
 6. A rail breach — the worker has already reported it and ended.
-7. A question neither the spec nor the locked design answers — an answer
-   would be the main session's own; the skipped-gate post-check's
-   mismatch or open choice after an S2 that sent no confirmation question
-   is one (§ A worker's question at a gate).
+7. A way forward the main session cannot rule on — (a) every option
+   changes the batch's contract and none stays inside it: a new
+   dependency, an API contract change, a database schema or configuration
+   change the spec does not name, a change to a file outside
+   `Allowed files:` or on the zero-diff list; or (b) an acceptance case
+   corrected without both pieces of evidence (Phase 3, A corrected case).
+   When one option stays inside the contract — defer to a follow-up, leave
+   as is — the main session takes it and records it, and the question is
+   not asked. Reopening a locked point stays stop 1, and a ruling "leave
+   the locked point as it stands and record the finding as a follow-up" is
+   the main session's, not a stop. Why: the contract — the spec's scope,
+   its files, and what the project depends on — is what the user approved,
+   and only the user can widen it; a correction without its evidence may
+   be a check loosened until it passes; and a point with a way forward
+   inside the contract is one the order in § How the main session rules
+   settles, so a stop for it would be a third gate.
 8. A nested `claude -p` refused — the topology cannot be run here.
 9. The same step's session dead twice — a third resume replays the same
    failure.
@@ -1928,8 +1940,9 @@ the run ends with that message.
     that went on would launch its roles at a model or an effort nobody
     declared.
 
-**A question only a later step needs.** A question of condition 7's kind
-that the main session raises itself — not a worker's question, which its
+**A question only a later step needs.** A question of condition 7's kind —
+a way forward the main session cannot rule on — that the main session
+raises itself — not a worker's question, which its
 worker is waiting on — and whose answer no step before a later one needs
 stops nothing when it arises: the main session writes it under the state
 file's `open questions:` with that step, says so in its reply, and goes
@@ -1943,6 +1956,22 @@ raised while S3b ran, about which acceptance list S4 would run, stopped a
 run overnight — the steps between, which needed no answer, waited with it,
 and S3b's fixes then changed the list again, so the question answered in
 the morning had to be asked a second time.
+
+**Stops stated at their own steps.** Four stops sit outside the numbered
+list, each stated where it happens, and end the run the same way: a
+driver that refuses a launch (§ Launch, wait, return), an artifact absent
+after a return (§ Phase transitions), an unmarked acceptance case that
+cannot be run (Phase 3's narrowing rule), and the skipped-gate
+post-check's second failure (§ A worker's question at a gate). Why listed
+here: a reader of the stop conditions finds every stop from this section,
+while each rule stays beside the step it governs.
+
+**Outward actions.** An action that leaves the machine and that the run
+does not need in order to continue — filing an issue, adding a backlog
+item — is never taken and never asked mid-run: the reviewer report lists
+it on its `Follow-up candidates` line for the user. Why: such an action
+leaves the machine, and the user decides it after the reports, as the
+tag and the push.
 
 ### The decision hierarchy
 
@@ -1976,6 +2005,7 @@ decisions the user has yet to see.
 - Not exercised: <list, or none>
 - Rail observations: <list | none>
 - Skipped gates: <list | none>
+- Follow-up candidates: <list | none>
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
@@ -1997,7 +2027,12 @@ field. The `Rail observations` line lists the state file's
 `rail observations:` entries other than `none`, each as `<tag>: <entry>`,
 and reads `none` when there are none. The `Skipped gates` line lists the
 state file's `skipped gates:` entries — the step, its tag, and the
-outcome — and reads `none` when no worker skipped its gate.
+outcome — and reads `none` when no worker skipped its gate. The
+`Follow-up candidates` line lists what the run left for the user to take
+outside it (§ The stop conditions, Outward actions): each outward action
+it did not take — an issue to file, a backlog item — and each finding a
+ruling deferred to a follow-up, with the clarification or the row it came
+from; it reads `none` when there are none.
 
 ## The gates
 
@@ -2015,11 +2050,12 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |
 | Brief entry: S1's design table | A decision per row; "use your leans for the rest" accepted | Every row takes its lean; `lean adopted (the session could not ask)` per row; the reports say so row by row |
-| A worker's question the spec answers | — (answered from the spec) | Answered from the spec |
-| A worker's question the spec does not answer, a choice riding on a task-list confirmation included | The question, quoted | The run ends with the question quoted |
-| S2 returned without its confirmation question, and the post-check of its task document finds a mismatch or an open choice | The mismatch or the choice, quoted | The run ends with it quoted |
-| A question of stop condition 7's kind the main session raises that only a later step needs | Nothing until that step; then the question as it then stands | The run goes on and ends at that step with the question quoted |
-| Any other stop condition | How to go on | The run ends with the reason |
+| A worker's question the spec answers | — (the main session answers from the spec) | The same answer |
+| A worker's question the spec does not answer, a choice riding on a task-list confirmation included | — (the main session rules and records it, § How the main session rules) | The same ruling |
+| S2 returned without its confirmation question, and the post-check of its task document finds a mismatch, or an open choice whose ruling differs from the document | Nothing on the first failure: S2 is resumed under `<tag>-r<k>` with the ruling, to amend, and the post-check runs again; on a second failure, a stop with the mismatch or the choice quoted | The first failure the same; on a second, the run ends with it quoted |
+| Stop condition 7: (a) every option changes the batch's contract, none staying inside it; (b) an acceptance case corrected without both pieces of evidence | How to go on — (a) with the options, (b) with the case and the evidence missing | The run ends with the reason |
+| A question of stop condition 7's kind — a way forward the main session cannot rule on — the main session raises that only a later step needs | Nothing until that step; then the question as it then stands | The run goes on and ends at that step with the question quoted |
+| Any other stop condition, or a stop stated at its own step | How to go on | The run ends with the reason |
 | The final gate | Tag, push, release | The run ends with the two reports and the finish line |
 
 ## Exit
