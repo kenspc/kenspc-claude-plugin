@@ -638,7 +638,7 @@ skipped gates:
 stops: <reason> (<time>)
 open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
-clarifications recorded: <numbers>
+clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]]
 next: <the next action>
 ```
 
@@ -2316,7 +2316,7 @@ decisions the user has yet to see.
 - Spec: git show <hash>:<path>
 - Design rulings and clarifications: <n> / <m> / <k>; beyond the letter: <list, or none>
 - Main-session rulings: <n> | none
-  <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits>
+  <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed)>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
