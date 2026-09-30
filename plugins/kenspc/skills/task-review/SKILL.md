@@ -499,7 +499,8 @@ Based on the regression verification results, declare a verdict:
   INCORRECTLY FIXED items; build / tests / lint all PASS or `SPOT-CHECK`
   on row 3 (no-test-suite fallback); no regressions introduced by the fixes
   (fix commits, or the uncommitted fixes of an `uncommitted` run); no ruled
-  row whose action differs from its ruling (PARTIAL, below).
+  row whose action differs from its ruling, outside the exception for a fix
+  that could not land (PARTIAL, below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply

@@ -607,7 +607,7 @@ reading that AGENTS.md.
 - **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
   PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
   introduced by fix commits; no ruled row whose action differs from its
-  ruling (below).
+  ruling, outside the exception for a fix that could not land (below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
