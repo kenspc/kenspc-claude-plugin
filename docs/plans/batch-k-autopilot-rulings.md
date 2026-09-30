@@ -509,6 +509,79 @@ message.
 Numbered K-C<n>: pointers like the spec's other labels, written into no
 shipped file. Each names who ruled.
 
+Settled after S2 (all ruled by the main session under Constraints,
+"Rulings for this run", 1):
+
+- **K-C1** (S2's confirmation, ruled by the main session). The second
+  failure of the skipped-gate post-check is a stop stated at the post-check,
+  outside the numbered list, with the cannot-ask sentence; the gates table's
+  post-check row says so. Why: K-L2 fixes the numbered list's text, and the
+  skill already states unnumbered stops at their own steps.
+- **K-C2** (S2's confirmation, ruled by the main session). Phase 0's
+  questions about the run's inputs — no path, the entry kind, which plugin,
+  an inbound source the main session cannot read — stay as they stand, and
+  where `SKILL.md` says the main session asks the user only on a stop
+  condition and at the two gates, it also says these are asked before the
+  first launch as part of the start. Step 1.1's DONE is checked against
+  points raised once the run has started.
+- **K-C3** (S2's confirmation, ruled by the main session). K-L9's managed
+  settings facts are carried in the task document as read on 2026-09-30
+  from https://code.claude.com/docs/en/settings and
+  https://code.claude.com/docs/en/managed-settings, only what the pages
+  state; S3 uses no network. The main session re-read the managed-settings
+  page and confirmed the system directories, the macOS managed preferences
+  domain, the HKLM and HKCU keys, and `crossSessionInbound` among the lock
+  keys.
+- **K-C4** (S2's confirmation, ruled by the main session; delegated names
+  under Constraints, "Delegated choices"). The subsection "How the main
+  session rules" in Phase 2 before § A worker's question at a gate; the
+  reviewer-report line `- Follow-up candidates: <list | none>`; the shared
+  literal `could not be read from the hook input`, the hook's own text.
+- **K-C5** (Phase 0, ruled by the main session). The spec was untracked at
+  the start, which the installed 4.4.1 start checks make a stop naming the
+  commit to make first. The main session made that commit itself,
+  `8db589b docs(plans): add batch k autopilot-rulings spec`, and went on;
+  the baseline is that commit. Why: the stop's remedy is one mechanical
+  commit the skill names, the tree held nothing else, and the run was
+  handed over unattended.
+- **K-C6** (Phase 0, ruled by the main session, applying K-L9 before it
+  ships). The launch line carried no `crossSessionInbound`; the user
+  settings file sets `"crossSessionInbound": "accept"` (line 109), the
+  project sets none (`.claude/settings.local.json` only, without the key),
+  and no managed source exists (`/Library/Application Support/ClaudeCode/`
+  absent, no `com.anthropic.claudecode` defaults domain, no server-managed
+  cache file). The run went on without the question; the first message's
+  delivery notice stayed the backstop, and none came.
+- **K-C7** (S2's review, ruled by the main session). The Linux and WSL
+  managed-settings directory, written literally, fails
+  `check-no-model-names.sh`, which is on the Zero diff list; Task 6's
+  runnable pattern form with a sentence naming the documented directory is
+  accepted. Follow-up candidate for the user: add that directory to the
+  guard's exceptions in a later batch, so the path can be cited as written.
+- **K-C8** (S2's review, ruled by the main session). K-L9's "a source the
+  main session cannot read (settings delivered from a server)" counts as
+  present when the server-managed settings cache exists:
+  https://code.claude.com/docs/en/server-managed-settings (read
+  2026-09-30) names it `~/.claude/remote-settings.json` and says the
+  delivered settings are kept in the configuration directory, `~/.claude`
+  unless `CLAUDE_CONFIG_DIR` is set — so the lookup is
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`. That file
+  present: the question as K-L9 says. Absent: the source counts as absent,
+  and the delivery-notice stop stays the backstop — the same page says a
+  non-interactive run does not write the cache for settings that need
+  approval, which is why the backstop stays. Task 6 may cite this third
+  page for these facts only. Why: the task document's criterion requires a
+  condition the main session can check, and this file is the one local sign
+  the documentation names.
+- **K-C9** (S2's review, ruled by the main session). K-L8's "the user's
+  reply in an interactive run" adds no pause and no question: the
+  orchestrating skill writes `RUN_DIR/rulings.md` from a ruling it holds
+  when it reaches the code-fixer dispatch — in an interactive run, a
+  message from the user received before that dispatch — and the text
+  promises no pause for one. Follow-up candidate for the user: whether an
+  interactive task-review should offer a pause to rule on findings before
+  code-fixer runs, which would be a new gate.
+
 ## Autopilot
 
 - Mode: plugin
