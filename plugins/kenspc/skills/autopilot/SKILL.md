@@ -1510,7 +1510,8 @@ question before the commit that removes the spec — its own clarification
 commits may come first — and a point that arises only after that commit is
 not asked: S6 leaves the work the point decides undone and names the
 point and that work in its reply, and the main session rules it there,
-lists the undone work among what needs the user in both reports — the
+records the undone work on the state file's `S6 return:` line, lists it
+among what needs the user in both reports — the
 user report's list, the reviewer report's `Follow-up candidates` line —
 and resumes no S6 for it. An S6 that returns after that commit with the
 point under `## Question for the main session` is read the same way: it
@@ -1568,7 +1569,8 @@ yet committed leaves the spec at HEAD but not in the index, and
 `git cat-file -e` fails alike for an absent path, a path not in
 repository-relative form, and a directory outside the repository, so a
 failure counts only beside a control that passed. A failed check is not a stop:
-both reports record it with the commits it names — the user report among
+the state file's `S6 return:` line and both reports record it with the
+commits it names — the user report among
 what needs the user, the reviewer report on its `Follow-up candidates`
 line. Why the check before an answer: an answer to a question S6 sent
 after its removal would tell it to commit an entry into the spec it
