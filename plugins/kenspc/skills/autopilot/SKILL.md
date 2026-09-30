@@ -625,7 +625,7 @@ turn continue from the artifact rather than from the wording.
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
 pass-through: <model|not determined>/<effort|not determined>
-inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>…]]
+inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>[ (<the error or notice, quoted>)]…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
