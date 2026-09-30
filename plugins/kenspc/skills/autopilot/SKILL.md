@@ -207,6 +207,23 @@ plugin ships no default table and names no model, since a model name
 written into the plugin goes stale silently at the next model generation,
 while a spec is written for the models of its own day.
 
+The section is read once, in Phase 0, and the values read there govern the
+whole run. A later read of a field — Phase 3's `Acceptance:` cases, Phase
+4's `Release preparation:` instructions — reads the section as Phase 0 read
+it: in spec entry `git show <baseline>:<spec path>`, in brief entry the
+spec at S1's commit, which copies the brief's section. A worker's edit to
+the section changes nothing for this run. Before S6 is launched — or
+before the reports when no S6 starts — the main session compares the
+section at HEAD with that copy, and a difference goes on the reviewer
+report's `Settings edits` line, each field with the commit that changed
+it, for the user to carry into a later run or not; the preamble's § 6
+tells every worker the section is not theirs to edit. Why: the section is
+the user's settings, approved with the spec, and a worker that edits it
+moves the terms it is judged by — a review fix once took the acceptance
+list from 17 cases to 21, and the next review to 28. With no rule for
+which version governed, the main session had no answer and stopped to ask
+which list S4 would run, and the run waited overnight for the reply.
+
 ### The mode and the plugin directory
 
 The mode is `plugin` when the repository root holds
@@ -425,7 +442,8 @@ current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
 questions answered, the rail observations each worker listed, the gates
 a worker skipped and their outcome, the
-stops, the clarification numbers recorded in the spec, and the next action.
+stops, the questions left open for a later step (The stop conditions), the
+clarification numbers recorded in the spec, and the next action.
 It is rewritten at every transition and re-read, with `<tag>.exit`, on
 every wake — a notice, a message, a user reply — before the run acts. Why:
 a wake starts a new turn whose only reliable memory is a file, and a long
@@ -448,6 +466,8 @@ rail observations:
 skipped gates:
   <S2|S3> <tag>: <accepted as a behavior deviation | stop: <the mismatch or choice> | recorded>
 stops: <reason> (<time>)
+open questions:
+  <the step that needs the answer>: <the question, one line> (<time raised>)
 clarifications recorded: <numbers>
 next: <the next action>
 ```
@@ -950,7 +970,8 @@ continue.
 
 **Goal**: the acceptance run, and every FAIL classified.
 
-**Inputs**: the `Acceptance:` field; the S3b HEAD; the preamble; in plugin
+**Inputs**: the `Acceptance:` field as Phase 0 read it (§ The
+`## Autopilot` section); the S3b HEAD; the preamble; in plugin
 mode the plugin directory and the workspace for seeds.
 
 **DONE when** every case has a result in the state file and every FAIL a
@@ -1048,7 +1069,12 @@ block, after the default removal unless the list says `keep`.
 wherever the project's instruction files say versions live, and is otherwise
 ignored with a note after the settings line. Why: a product repository's
 CHANGELOG has a convention the plugin cannot know; the removal and no
-version is the default, and the field carries the rest.
+version is the default, and the field carries the rest. The bump rides in
+the removal commit, or in a commit of its own when the project's commit
+convention cannot name both in one subject. Why: a repository whose
+convention requires one scope from a fixed list has none that covers a
+commit touching the documents and an app's version file, and a subject
+naming one of them misstates the other.
 
 **Plugin mode.** The repository's release checklist
 (`docs/release-checklist.md` when it exists) and the release convention in
@@ -1230,6 +1256,7 @@ is refused.
 
 <the spec's constraint sections by name>, and the project's instruction files.
 Commit messages: a subject this prompt gives is the default; write it in the project's commit convention — the one the repository writes down (in the project's instruction files or its CONTRIBUTING), or, failing that, the pattern its recent commit subjects consistently share.
+Autopilot section: once <spec path> is committed, its `## Autopilot` section holds this run's settings, fixed for the run; leave it as it stands, and put a change it seems to need in your final message.
 Allowed files: <the Allowed files: paths — the files this batch may change; a file outside them is a forbidden file>.
 Byte-identity exceptions: <the Byte-identity exceptions: text — the only byte-identity sections this batch may edit>.
 ````
@@ -1242,7 +1269,8 @@ these two fields bound what it may. Why § 6 carries the commit line: the
 task blocks give fixed subjects, and a repository whose convention
 requires a scope from its own list — where `docs(plans):` is outside it —
 would get worker commits its own rules reject; the preamble is the only
-text every worker reads.
+text every worker reads. Why the Autopilot section line: § The
+`## Autopilot` section says why the run's settings are fixed at Phase 0.
 
 Why § 3 tells the worker to carry its rails into its subagents: a
 worker's subagents never see the preamble, so rails left there bind the
@@ -1536,7 +1564,8 @@ The batch's commits are <baseline sha>..<HEAD sha>.
 CHANGELOG].]
 [Version <Version:>: bump it where the project's instruction files say
 versions live, in the removal commit — in a commit of its own when this
-task makes none — and change nothing else.]
+task makes none, or when the project's commit convention cannot name the
+removal and the bump in one subject — and change nothing else.]
 [Then carry out these instructions, each committed in the repository's
 convention:
 <the Release preparation: sub-bullets>]
@@ -1729,6 +1758,22 @@ the run ends with that message.
     that went on would launch its roles at a model or an effort nobody
     declared.
 
+**A question only a later step needs.** A question of condition 7's kind
+that the main session raises itself — not a worker's question, which its
+worker is waiting on — and whose answer no step before a later one needs
+stops nothing when it arises: the main session writes it under the state
+file's `open questions:` with that step, says so in its reply, and goes
+on. An answer the user gives before then closes it. Before the main
+session launches that step it reads `open questions:`, and a question still
+open for the step is asked then, as the stop, in its form as it then
+stands, since the steps between may have changed it. In a session that
+cannot ask (a system reminder to work without stopping), the run likewise
+goes on and ends at that step with the question quoted. Why: a question
+raised while S3b ran, about which acceptance list S4 would run, stopped a
+run overnight — the steps between, which needed no answer, waited with it,
+and S3b's fixes then changed the list again, so the question answered in
+the morning had to be asked a second time.
+
 ### The decision hierarchy
 
 The locked design (immutable) > the design table's decisions (the main
@@ -1747,6 +1792,7 @@ the user has yet to see.
 - Range: <baseline sha> → <release sha, or the last commit>
 - Spec: git show <hash>:<path>
 - Design rulings and clarifications: <n> / <m> / <k>; beyond the letter: <list, or none>
+- Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result> | none named; S3b is the last check
@@ -1788,6 +1834,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | A worker's question the spec answers | — (answered from the spec) | Answered from the spec |
 | A worker's question the spec does not answer, a choice riding on a task-list confirmation included | The question, quoted | The run ends with the question quoted |
 | S2 returned without its confirmation question, and the post-check of its task document finds a mismatch or an open choice | The mismatch or the choice, quoted | The run ends with it quoted |
+| A question of stop condition 7's kind the main session raises that only a later step needs | Nothing until that step; then the question as it then stands | The run goes on and ends at that step with the question quoted |
 | Any other stop condition | How to go on | The run ends with the reason |
 | The final gate | Tag, push, release | The run ends with the two reports and the finish line |
 

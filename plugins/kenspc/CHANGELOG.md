@@ -12,8 +12,10 @@
 ## 4.4.1 — unreleased
 
 Every commit the plugin makes follows the repository's commit convention,
-looked up the way init-project already did. Guard counts are unchanged:
-`guards run: 12`, `self-tests run: 11`.
+looked up the way init-project already did, and an autopilot run no longer
+stops on a question only a later step needs, or on which version of its
+own settings governs after a worker edited them. Guard counts are
+unchanged: `guards run: 12`, `self-tests run: 11`.
 
 ### Fixed
 
@@ -41,8 +43,41 @@ looked up the way init-project already did. Guard counts are unchanged:
     requires a scope from a fixed list (`api`, `portal`, `docs`, `repo`):
     `docs(plans):` is outside it, and the main session and the user had to
     correct the subjects by hand.
-- **The plugin README** gains a Known behavior entry for the rule, and its
-  run-directory entry points at it.
+  - Repo-mode S6 put a `Version:` bump in the removal commit. It now takes
+    a commit of its own when the project's commit convention cannot name
+    the removal and the bump in one subject: a required scope from a fixed
+    list has none that covers the documents and an app's version file.
+- **The autopilot's `## Autopilot` section is fixed at Phase 0.** A later
+  read of a field — Phase 3's `Acceptance:` cases, Phase 4's
+  `Release preparation:` instructions — reads the section as Phase 0 read
+  it (`git show <baseline>:<spec path>`, or the spec at S1's commit in
+  brief entry), and a worker's edit to it changes nothing for the run.
+  Before S6 (or before the reports when no S6 starts) the main session
+  compares the section at HEAD with that copy, and the reviewer report's
+  new `Settings edits` line lists each field a worker changed, with the
+  commit. The preamble's § 6 tells every worker the section is not theirs
+  to edit. In the batch above, a review fix took the acceptance list from
+  17 cases to 21 and the next review to 28; with no rule for which version
+  governed, the main session asked which list S4 would run.
+- **A question only a later step needs no longer stops the run where it
+  arises.** A question of stop condition 7's kind that the main session
+  raises itself — not a worker's, which its worker waits on — goes under
+  the state file's new `open questions:` section with the step that needs
+  the answer, and the run goes on; it is asked, as the stop, before that
+  step is launched, in its form as it then stands, and an answer given
+  before then closes it. A session that cannot ask likewise goes on and
+  ends at that step. The gates table gains the row. In the batch above the
+  question was asked while S3b ran, about S4: the steps between waited
+  with it, and S3b's fixes changed the list, so it had to be asked again.
+
+### Changed
+
+- **The plugin README** gains a Known behavior entry for the commit rule,
+  and its run-directory entry points at it; the Autopilot section states
+  that the settings are read once, that a later-step question waits for
+  its step, and lists `Settings edits` among the reviewer report's fields.
+- **CLAUDE.md**'s Writing Rules for Skill Content gain the commit rule, so
+  a skill or agent that gives a subject says where the convention is found.
 
 ## 4.4.0 — 2026-09-29
 

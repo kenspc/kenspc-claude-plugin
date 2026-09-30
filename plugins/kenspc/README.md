@@ -543,7 +543,11 @@ of the brief (after `## Discovery Notes`) or of the spec: a bullet list of
 document's language. Every field has a default and none is required; the
 run writes its effective settings in one line before the first launch —
 into the state file, and, in an interactive main session, into its reply —
-and names any label it does not know. The seventeen labels and their defaults:
+and names any label it does not know. The run reads the section once, at
+the start, and keeps those values: a worker's later edit to it — a review
+fix that adds acceptance cases, say — changes nothing for the run, and the
+reviewer report's `Settings edits` line lists it for you to carry into a
+later run or not. The seventeen labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -742,7 +746,10 @@ steps and carries no choice the spec leaves open — a type, a shape, a
 name, or a behavior a worker proposes to pin, however it frames it, comes
 to you unless the spec's words rule out every other option it lists — and
 a question the spec does not answer is a stop, never an answer on your
-behalf. A gate a worker skips is checked afterwards, not prevented: an S2
+behalf. A question the main session raises itself that only a later step
+needs does not stop the run where it arises: it is recorded as open for
+that step, the steps before it go on, and it becomes the stop only when
+that step is due and you have not answered it. A gate a worker skips is checked afterwards, not prevented: an S2
 that returns without having sent its confirmation question has its
 committed task document checked with the same rubric — a match is
 accepted and recorded as a behavior deviation, a mismatch or a choice left
@@ -797,7 +804,8 @@ language, at most one page: what the batch built, the release commit, what
 needs you, the cost — and `## Reviewer report` — English, fixed fields:
 batch and mode; baseline → release hash; the spec's `git show` command;
 design rulings and clarifications with the decisions that read the locked
-design beyond its letter; files changed and the zero-diff result;
+design beyond its letter; settings edits, each field a worker changed in
+the `## Autopilot` section; files changed and the zero-diff result;
 byte-identity / guards / counts; acceptance, one line per case with its
 cost and result; models and efforts,
 `<n> workers, <k> mismatches, <j> not observed`
