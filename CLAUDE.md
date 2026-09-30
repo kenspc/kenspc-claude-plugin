@@ -334,7 +334,8 @@ written by the driver when the worker returns, is the completion artifact
 re-reads its state file (`_logs/<batch>-state.md` under the workspace) on
 every wake, and `--resume` only continues a worker that has ended — dead,
 ended by its cap, stopped on a question it got no answer to within
-thirty minutes, or an S2 whose committed task document the skipped-gate
+thirty minutes or whose send returned an error or a held or refused
+notice, or an S2 whose committed task document the skipped-gate
 post-check sends back to amend — never a live one; no agent, no CONTEXT key, no agent
 teams. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
