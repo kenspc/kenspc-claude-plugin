@@ -1114,7 +1114,7 @@ Spec Step 3.3 — K-L15. File:
 **Status:** DONE
 
 **Implementation notes:**
-- Decisions (promotion outcomes, by the task that made each decision):
+- Decisions: promotion outcomes, by the task that made each decision.
   - Task 6, no source that sets `crossSessionInbound` is the stop naming
     the launch line: promoted into `plugins/kenspc/README.md` § Autopilot
     (the inbound paragraph after the launch line).
