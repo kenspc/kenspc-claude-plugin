@@ -111,8 +111,10 @@ TODO or IN PROGRESS.
 
 **No incomplete task.** When the document has no TODO or IN PROGRESS task,
 the reply gives the counts of its DONE and BLOCKED tasks and names
-`/kenspc-task-review <path>` for a review of the finished work, and the
-run ends there: it asks nothing, prepares no run directory, dispatches
+`/kenspc-task-review <path>` for a review of the finished work — and,
+when a task is BLOCKED, says that a BLOCKED task runs again only once its
+Status is set back to TODO, the unblock step its note gives, since a
+review cannot build it — and the run ends there: it asks nothing, prepares no run directory, dispatches
 nothing, runs no review, and renders no Schema G. Why: a session given a
 document whose every task was DONE stopped before its batch gate and
 prepared no run directory, which nothing in this skill said to do; a gate
