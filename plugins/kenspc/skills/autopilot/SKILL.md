@@ -2464,11 +2464,11 @@ from, and, when the state file's `inbound:` line records a question not
 received, that record with its tags and the causes to check — the main
 session's own inbound under the settings precedence, or a send that
 failed or was never made — or, for a tag whose worker quoted an error or
-a notice, that cause (§ The message protocol), and the state file's
-`S6 return:` entries other than `none` — each failed check at S6's
-return, with the commits it names, and the work S6 left undone for a
-point raised after the removal (Phase 4); it reads `none` when there are
-none.
+a notice, that cause (§ The message protocol). It also lists the state
+file's `S6 return:` entries other than `none`, whatever the `inbound:`
+line records — each failed check at S6's return, with the commits it
+names, and the work S6 left undone for a point raised after the removal
+(Phase 4). The line reads `none` when there are none.
 
 ## The gates
 
