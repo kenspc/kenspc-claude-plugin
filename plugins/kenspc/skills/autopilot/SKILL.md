@@ -551,7 +551,11 @@ reminder to work without stopping), the run ends with the same message.
   `crossSessionInbound` is among the lock keys, for which the strictest
   value any source sets applies when the sources are merged — so taking
   the strictest managed value is never looser than what Claude Code
-  applies. https://code.claude.com/docs/en/server-managed-settings,
+  applies. Of the macOS facts, the `com.anthropic.claudecode` domain is
+  the managed-settings page's, while the two plist paths under
+  `/Library/Managed Preferences/` are not in Claude Code's documentation:
+  they are where macOS installs a configuration profile's managed
+  preferences. https://code.claude.com/docs/en/server-managed-settings,
   cited for these facts alone, names the server-managed settings cache
   `~/.claude/remote-settings.json` and keeps the delivered settings in the
   configuration directory, `~/.claude` unless `CLAUDE_CONFIG_DIR` is set —
