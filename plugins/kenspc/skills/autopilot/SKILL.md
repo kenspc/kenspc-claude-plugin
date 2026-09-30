@@ -735,22 +735,28 @@ in the spec, `docs(plans): record clarifications settled after <step>`; the
 workers make every other commit. Each clarification entry names who ruled,
 `(ruled by the main session)` or `(ruled by the user)`, wherever this skill
 describes one. Before S6 is launched, the main session commits every
-clarification still pending; S6 raises every question before its first
-commit, and a question it raises is answered with the text
+clarification still pending; S6 raises every question before the commit
+that removes the spec, and a question it raises is answered with the text
 of its clarification entry, which S6 adds to the spec and commits alone,
-`docs(plans): record clarifications settled after S6`, before its other
-commits — the release or removal commit among them (Templates § The task
-blocks, S6). Why: the commits are the workers' evidence, and a main
-session that edited code would be reviewing its own work; why the ruler
-named: the spec is where the user reads a ruling before the tag and the
-push, and an entry without its ruler reads as the user's own decision. Why
-S6 commits a ruling made while it runs: its release or removal commit
+`docs(plans): record clarifications settled after S6`, before that commit
+(Templates § The task blocks, S6). An S6 that removes nothing — a
+`Release preparation:` list that says `keep` — may ask at any point and
+commits each entry before it ends; an entry it left uncommitted, the main
+session commits once S6 has ended (Phase 4). Why: the commits are the
+workers' evidence, and a main session that edited code would be
+reviewing its own work; why the ruler named: the spec is where the user
+reads a ruling before the tag and the push, and an entry without its
+ruler reads as the user's own decision. Why S6 commits a ruling made
+while it runs: its release or removal commit
 `git rm`s the spec, so a clarification the main session committed after it
 would re-add the removed spec; a main-session commit while S6 is live could
 sweep S6's staged changes into it, and a main-session edit of the spec then
 would make S6's `git rm` of a locally modified file fail; committed by S6
 before the removal, the entry stays in the spec's history, and the ruling
-keeps its four records.
+keeps its four records. Why the main session commits after an S6 that
+removed nothing: neither reason holds then — there is no removal to
+re-add the spec, and no live S6 whose staged changes a commit could sweep
+in.
 
 ### Launch, wait, return
 
@@ -1014,12 +1020,12 @@ Every ruling is recorded: under the state file's `questions answered:`,
 marked `(main session)`, and as a clarification entry in the spec that
 names the main session as the ruler, committed as Phase 2's Constraints
 say — except a ruling answered to S6, or ruled from its reply, that has no
-clarification commit, which is recorded as Phase 4 says and never
-committed after S6. A worker still never rules itself: it asks the main
-session (the preamble's § 1), which records every answer. Why: an answer
-a worker invents is recorded nowhere, so nobody reads it before the
-release, while the main session's answer is in the state file and the
-spec, where the user reviews it before the tag and the push.
+clarification commit after S6 removed the spec, which is recorded as
+Phase 4 says and never committed after the removal. A worker still never
+rules itself: it asks the main session (the preamble's § 1), which
+records every answer. Why: an answer a worker invents is recorded
+nowhere, so nobody reads it before the release, while the main
+session's answer is in the state file and the spec, where the user reviews it before the tag and the push.
 
 ### A worker's question at a gate
 
@@ -1482,21 +1488,29 @@ entry and not the subject: S6 adapts the subject to the repository's
 commit convention, and every clarification commit it makes carries the
 same subject, so a subject names neither the commit nor the ruling it
 carries. S6 raises every
-question before its first commit, and a point that arises only after it is
-not asked: S6 puts it in its reply, and the main session rules it there. A
-ruling answered to S6, or ruled from its reply, that has no clarification
-commit is not a stop: its line under the reviewer report's
-`Main-session rulings` says
+question before the commit that removes the spec — its own clarification
+commits may come first — and a point that arises only after that commit is
+not asked: S6 puts it in its reply, and the main session rules it there.
+After a removal, a ruling answered to S6, or ruled from its reply, that
+has no clarification commit is not a stop: its line under the reviewer
+report's `Main-session rulings` says
 `no clarification commit (the spec was already removed)`, and the user
 report lists it among the rulings the user reviews before the tag and the
-push; the state file and both reports hold it. Why before the first
-commit: the removal or release commit `git rm`s the spec — repo mode's
+push; the state file and both reports hold it. An S6 that removes
+nothing — a `Release preparation:` list that says `keep` — may ask at any
+point and commits each entry before it ends; a ruling answered to it, or
+ruled from its reply, that has no clarification commit when it ends, the
+main session commits itself once S6 has ended, in the same subject, and
+the check records that commit as the main session's. Why before the
+removal: the removal or release commit `git rm`s the spec — repo mode's
 instructions run after the removal, plugin mode's pre-flight after the
 release commit — so a clarification committed after it would re-add the
 removed spec. Why no stop and no entry added later: the stop conditions
 do not list a record gap the reports can name, and a clarification
 committed after the removal would re-add the file; the reports are where
-that ruling is read.
+that ruling is read. Why the main session commits after an S6 that
+removed nothing: with no removal nothing is re-added, and with S6 ended
+none of its staged changes can be swept in (Phase 2's Constraints).
 
 **The reports**, both in the final message:
 
@@ -2018,21 +2032,24 @@ ID, `not fixed`, and why.
   `Version:` is set in repo mode, the instructions when
   `Release preparation:` is a list. With the bare `keep`, no S6 starts; a
   list that says `keep` starts S6 for its instructions alone, with no
-  removal (Phase 4).
+  removal (Phase 4). The question paragraph's first bracketed ending is
+  written with the removal paragraph, its second when the list says
+  `keep`.
 
 ````
 ## Task: release preparation for batch <batch>
 
 The batch's commits are <baseline sha>..<HEAD sha>.
-Raise every question before your first commit. A question you ask
-<main name> is answered with a clarification entry: add
+A question you ask <main name> is answered with a clarification entry: add
 it to the clarifications section of <spec path> and commit the spec alone,
-`docs(plans): record clarifications settled after S6`, before your other
-commits. A point that arises only after your first commit is not asked: put
-it in your reply, and <main name> rules it there. Why: the removal commit,
-when this task makes one, `git rm`s the spec, and the instructions run
-after it, so a clarification committed after that commit would re-add the
-removed spec.
+`docs(plans): record clarifications settled after S6`[, before the removal
+commit below. Raise every question before that commit; your clarification
+commits may come first. A point that arises only after it is not asked:
+put it in your reply, and <main name> rules it there. Why: the removal
+commit `git rm`s the spec, and the instructions run after it, so a
+clarification committed after that commit would re-add the removed
+spec][, before you end. This task removes nothing, so you may raise a
+question at any point].
 [Make one commit, `docs: remove batch <batch> plan and tasks`, that `git rm`s
 <spec path> and <task document path>[ and touches no version and no
 CHANGELOG].]
@@ -2060,12 +2077,13 @@ Reply with each commit's hash and subject.
 The batch's commits are <baseline sha>..<HEAD sha>. The repository's
 release checklist (docs/release-checklist.md, when it exists) and the
 release convention in the project's instruction files govern this task;
-read both first. Raise every question before your first commit. A question
+read both first. Raise every question before the release commit; your
+clarification commits may come first. A question
 you ask <main name> is answered with a
 clarification entry: add it to the clarifications section of <spec path>
 and commit the spec alone,
 `docs(plans): record clarifications settled after S6`, before the release
-commit. A point that arises only after your first commit is not asked: put
+commit. A point that arises only after the release commit is not asked: put
 it in your reply, and <main name> rules it there. Why: the release commit
 `git rm`s the spec, and the pre-flight runs after it, so a clarification
 committed after that commit would re-add the removed spec. Then, in one
@@ -2341,7 +2359,7 @@ counted once where both record it: `<n>` rulings, each on an indented line
 with its clarification, the tag or step, the question, the ruling, the
 reason, and the commits it produced — the clarification commit and any
 commit a worker made from it, or, for a ruling answered to S6 or ruled
-from its reply that has none,
+from its reply that has none after S6 removed the spec,
 `no clarification commit (the spec was already removed)` (Phase 4) — and
 `none` when the main session ruled nothing. Why: it is the list the user
 reads before the tag and the push, so every ruling the run made without

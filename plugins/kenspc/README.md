@@ -814,15 +814,19 @@ and the main session commits each ruling made during the run into the
 spec's clarifications section, each entry naming who ruled
 (`docs(plans): record clarifications settled after <step>`), every one of
 them before the release preparation starts. The release-preparation
-session asks every question before its first commit, and a ruling on one
+session asks every question before the commit that removes the spec —
+its clarification commits may come first — and a ruling on one
 is committed into the spec by that session, alone, before its release or
 removal commit, so the entry stays in the spec's history; the main
 session checks that its reply lists that commit for every ruling. A point
-that arises only after its first commit goes in its reply, and the main
-session rules it there. A ruling without its clarification commit is not
-a stop: both reports list it, marked
+that arises only after the removal goes in its reply, and the main
+session rules it there. A ruling without its clarification commit after
+the removal is not a stop: both reports list it, marked
 `no clarification commit (the spec was already removed)`, since a
-clarification committed after the removal would re-add the spec. Nothing
+clarification committed after the removal would re-add the spec. A
+release preparation that removes nothing (a `Release preparation:` list
+that says `keep`) may ask at any point, and a ruling it leaves without its
+clarification commit the main session commits once it has ended. Nothing
 is pushed, tagged, or released.
 
 **The two gates.** The run stops for you at the decisions on a brief's
@@ -890,8 +894,9 @@ evidence, the correction is a stop.
 **The record.** Every ruling is recorded four ways: a
 `questions answered:` line in the state file ending with who ruled,
 `(main session)` or `(user)`; a clarification entry in the spec that names
-who ruled, except for a ruling the release preparation left without its
-clarification commit, which both reports mark instead (above); the
+who ruled, except for a ruling left without its clarification commit
+after the release preparation removed the spec, which both reports mark
+instead (above); the
 reviewer report's `Main-session rulings` line, with one
 line per ruling — its clarification, the tag or step, the question, the
 ruling, the reason, and the commits it produced; and a list in the user
@@ -1300,8 +1305,8 @@ on Windows.
   rules every point the spec leaves open, except the stop conditions,
   without asking you, and a ruling can be one you would not have made. Each
   is a committed clarification in the spec that names who ruled (or, for
-  a ruling the release preparation left without one, marked so in both
-  reports), a line on the reviewer report's `Main-session rulings`, and a line in the user
+  a ruling left without one after the release preparation removed the
+  spec, marked so in both reports), a line on the reviewer report's `Main-session rulings`, and a line in the user
   report's list; review them before the tag and the push, since nothing
   leaves the machine before you do. A ruling that departed from a spec
   sentence is also on the reviewer report's beyond-the-letter list, with
