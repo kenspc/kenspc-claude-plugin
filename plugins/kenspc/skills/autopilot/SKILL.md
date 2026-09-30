@@ -2434,7 +2434,9 @@ wording that closed it:
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit, after the clarification commit of each question
-  S6 asked, and the reports.
+  S6 asked, and the reports. A ruling that has no clarification commit is
+  not an absent artifact: it is recorded as Phase 4 says, and the run
+  finishes.
 
 An artifact absent after a return — no task document after S2, HEAD still
 where S3 started, the `head:` the state file recorded at its first launch (the
