@@ -500,7 +500,8 @@ Based on the regression verification results, declare a verdict:
   on row 3 (no-test-suite fallback); no regressions introduced by the fixes
   (fix commits, or the uncommitted fixes of an `uncommitted` run); no ruled
   row whose action differs from its ruling, outside the exception for a fix
-  that could not land (PARTIAL, below).
+  that could not land, and no ruled ID that no report lists (PARTIAL,
+  below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -537,6 +538,14 @@ Based on the regression verification results, declare a verdict:
   changes code nobody ruled on — and under a PASS it would reach the reader
   only in a row-1 Detail; a fix that could not land changed nothing
   against the ruling, and code-fixer's rules send it back as a deferral.
+- A ruled ID that no report lists — an ID `RUN_DIR/rulings.md` names that
+  no reviewer's Issues table holds, which regression-verifier's row 1
+  names as a bookkeeping error and code-fixer's reply names — keeps the
+  verdict from PASS as a ruled row whose action differs does: PARTIAL,
+  unless a FAIL condition holds. Why: it is a ruling not carried out as
+  well — a mistyped ID leaves the finding it meant to rule decided by
+  code-fixer's own rules — and under a PASS it would reach the reader only
+  in a row-1 Detail.
 
 MEDIUM and LOW issues do not change the verdict, except a ruled row whose
 action differs from its ruling (above), but appear in the report.

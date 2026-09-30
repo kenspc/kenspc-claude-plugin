@@ -725,8 +725,9 @@ reviewable.
 file.
 
 **DONE when** S3b's verdict is PASS, or every HIGH row, every ruled row
-whose action differs from its ruling, and every row-3 or row-5 FAIL is
-classified, and the zero-diff check has printed nothing.
+whose action differs from its ruling, every ruled ID that no report lists,
+and every row-3 or row-5 FAIL is classified, and the zero-diff check has
+printed nothing.
 
 **Constraints**: the main session commits nothing but clarification entries
 in the spec, `docs(plans): record clarifications settled after <step>`; the
@@ -1156,7 +1157,9 @@ differs from its ruling (task-review's Verdict determination): each HIGH
 row, each such ruled row, and each row-3 or row-5 FAIL is classified by
 the main session as a plugin defect, fixed by an S5, or accepted as a
 deferral with
-a reason recorded as a clarification in the spec, naming who ruled. Each
+a reason recorded as a clarification in the spec, naming who ruled. A
+ruled ID that no report lists keeps the verdict from PASS the same way and
+is classified as such a ruled row. Each
 such ruled row is classified as a HIGH row is, whatever its severity. Why: a
 ruling the review did not carry out is a decision of the run's own that
 the review overrode, and read as a MEDIUM or LOW row it would be

@@ -485,8 +485,9 @@ review reuses the same directory (since 4.3.0):
   The final report names the file and who ruled when it exists. A ruled
   row whose action differs from its ruling keeps the verdict from PASS
   (PARTIAL, whatever its severity), except a FIX ruling deferred because
-  its fix could not land, which stays a deferral; the autopilot classifies
-  each such row as it classifies a HIGH row.
+  its fix could not land, which stays a deferral. A ruled ID no report
+  lists keeps it from PASS the same way. The autopilot classifies each
+  such row, and each such ID, as it classifies a HIGH row.
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted

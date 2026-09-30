@@ -607,7 +607,8 @@ reading that AGENTS.md.
 - **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
   PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
   introduced by fix commits; no ruled row whose action differs from its
-  ruling, outside the exception for a fix that could not land (below).
+  ruling, outside the exception for a fix that could not land, and no ruled
+  ID that no report lists (below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -642,6 +643,13 @@ reading that AGENTS.md.
   run overrode, and under a PASS it would reach the reader only in a row-1
   Detail, while a fix that could not land changed nothing against the
   ruling.
+- A ruled ID that no report lists — an ID `RUN_DIR/rulings.md` names that
+  no reviewer's Issues table holds, which regression-verifier's row 1
+  names as a bookkeeping error and code-fixer's reply names — keeps the
+  verdict from PASS as a ruled row whose action differs does: PARTIAL,
+  unless a FAIL condition holds. Why: as task-review's Verdict
+  determination says — it is a ruling not carried out as well, and under a
+  PASS it would reach the reader only in a row-1 Detail.
 - **BLOCKED** — every task in Schema D is BLOCKED; Code Review / Fixes /
   Verification sections are omitted from the report.
 
