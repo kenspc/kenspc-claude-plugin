@@ -453,6 +453,9 @@ reminder to work without stopping), the run ends with the same message.
     `HKCU\SOFTWARE\Policies\ClaudeCode` (`reg query <key> /v Settings`).
     Among the managed sources, the strictest value any of them sets is
     theirs.
+  - The launch line's `--settings`, when the command line shows its
+    argument as a path rather than inline JSON: the file at that path, the
+    source the precedence below calls the launch line's `--settings`.
   - User settings: `"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"` —
     `$CLAUDE_CONFIG_DIR/settings.json` when the variable is set, else
     `~/.claude/settings.json`, written with `$HOME` for the reason § The

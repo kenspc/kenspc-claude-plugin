@@ -567,7 +567,8 @@ reads the value from the settings files Claude Code reads it from — the
 managed settings (the `managed-settings.json` file and its
 `managed-settings.d/` directory in the system directory for your platform,
 the macOS managed preferences domain, the Windows policy registry values),
-your user settings (`$CLAUDE_CONFIG_DIR/settings.json`, else
+the file the launch line's `--settings` names when it is a path, your user
+settings (`$CLAUDE_CONFIG_DIR/settings.json`, else
 `~/.claude/settings.json`), and the project's `.claude/settings.json` and
 `.claude/settings.local.json` — with the documented precedence, a stricter
 project or local value winning. An effective `accept` goes on, the state
