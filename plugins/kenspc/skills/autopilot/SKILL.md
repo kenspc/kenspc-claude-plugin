@@ -1013,7 +1013,9 @@ list puts every such departure in front of the user before the tag.
 Every ruling is recorded: under the state file's `questions answered:`,
 marked `(main session)`, and as a clarification entry in the spec that
 names the main session as the ruler, committed as Phase 2's Constraints
-say. A worker still never rules itself: it asks the main
+say — except a ruling answered to S6, or ruled from its reply, that has no
+clarification commit, which is recorded as Phase 4 says and never
+committed after S6. A worker still never rules itself: it asks the main
 session (the preamble's § 1), which records every answer. Why: an answer
 a worker invents is recorded nowhere, so nobody reads it before the
 release, while the main session's answer is in the state file and the

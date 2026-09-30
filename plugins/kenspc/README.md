@@ -890,7 +890,9 @@ evidence, the correction is a stop.
 **The record.** Every ruling is recorded four ways: a
 `questions answered:` line in the state file ending with who ruled,
 `(main session)` or `(user)`; a clarification entry in the spec that names
-who ruled; the reviewer report's `Main-session rulings` line, with one
+who ruled, except for a ruling the release preparation left without its
+clarification commit, which both reports mark instead (above); the
+reviewer report's `Main-session rulings` line, with one
 line per ruling — its clarification, the tag or step, the question, the
 ruling, the reason, and the commits it produced; and a list in the user
 report, one line per ruling in your language, under a heading that says
@@ -1297,8 +1299,9 @@ on Windows.
 - **A main-session ruling can be wrong.** The autopilot's main session
   rules every point the spec leaves open, except the stop conditions,
   without asking you, and a ruling can be one you would not have made. Each
-  is a committed clarification in the spec that names who ruled, a line on
-  the reviewer report's `Main-session rulings`, and a line in the user
+  is a committed clarification in the spec that names who ruled (or, for
+  a ruling the release preparation left without one, marked so in both
+  reports), a line on the reviewer report's `Main-session rulings`, and a line in the user
   report's list; review them before the tag and the push, since nothing
   leaves the machine before you do. A ruling that departed from a spec
   sentence is also on the reviewer report's beyond-the-letter list, with
