@@ -78,13 +78,22 @@ Avoid triggering this skill when the user:
 
 A useful run reaches the release preparation with every step's evidence on
 disk — the spec committed, the task document, the commits, the run
-directories, the record — asks the user only at the two gates, and stops
-rather than guess on anything the locked design or the spec does not
-answer. It fails the bar in two named ways: a run that narrows the
-implementation to fit its budget, and a run that approves a worker's
-question on the user's behalf. Why: an unattended run is trusted for what
-it did not decide alone; an answer it invented is the one failure nobody
-sees until the release.
+directories, the record — asks the user only on a stop condition and at
+the two gates, and has the main session rule every other point the spec
+leaves open, each ruling recorded (Phase 2 § How the main session rules).
+Phase 0's questions about the run's inputs — no path, the entry kind,
+which plugin, an inbound setting the main session cannot read — are asked
+before the first launch, as part of the start. It fails the bar in three
+named ways: a run that narrows the implementation to fit its budget; a
+run that rules itself on a point a stop condition gives the user; and a
+ruling missing from the record. Why: the worker proposes and the main
+session rules, so the proposer and the ruler are two sessions; every
+ruling is recorded in the state file and committed as a clarification in
+the spec; and the tag, the push, and the release stay the user's, after
+the reports, so a ruling is read before anything leaves the machine. A
+point a stop condition gives the user, ruled in the run, is a decision
+taken from the user, and a ruling the record does not hold is one the
+user cannot read before the tag.
 
 ## Prerequisites
 
@@ -762,6 +771,66 @@ Every worker is one launch, one wait, one return.
   records what it could read and a reviewer judges a mismatch, while a
   stop would rest the batch on a format the harness may change.
 
+### How the main session rules
+
+Every point the spec leaves open is the main session's to rule: a
+worker's question, a choice riding on a task-list confirmation (§ A
+worker's question at a gate), a question the main session raises itself,
+a review row's or an acceptance FAIL's classification (§ The verdict loop
+after S3b, Phase 3's Classification), a deferred row's route, and a
+corrected acceptance case (Phase 3). It answers a waiting worker at once,
+in the `answer <tag>:` form (§ The message protocol). It asks the user
+only on a stop condition (Templates § The stop conditions) and at the two
+gates; Phase 0's questions about the run's inputs — no path, the entry
+kind, which plugin, an inbound setting it cannot read — are asked before
+the first launch, as part of the start. Its ruling is the same whether or
+not the session can ask. Why: in three batches the user was asked 25
+questions and chose the main session's own recommendation 24 times, while
+each wait held a worker past its thirty minutes — 36 and 95 minutes in
+one batch, two and a half hours of question rounds in another; a real
+spec never settles every name and detail, so sending every open point to
+the user made an open-ended third gate. Why the same ruling in a session
+that cannot ask: the ruling rests on the order below, not on whether
+someone is there to take it over, so a run reads the same attended or
+not.
+
+The order it rules by:
+
+1. the spec's words;
+2. the locked design;
+3. the project's instruction files and the patterns in adjacent code;
+4. then the option easiest to reverse and closest to the spec's scope.
+
+A worker's suggested answer is evidence, not a default. The main session
+never stops for a preference between options that all stay inside the
+batch's contract: it picks by the order and records why. Why this order:
+the spec and the locked design are what the user approved, the
+instruction files and the adjacent code are the project's own rules, and
+of what is left, the option easiest to reverse costs least when the user
+reads the ruling and disagrees, while the one closest to the spec's scope
+keeps a ruling from widening the batch. Why a suggested answer is not a
+default: it comes from the session whose work the ruling bounds, and a
+default taken from it would make the proposer the ruler. Why no stop for
+a preference: a preference among options inside the contract is what the
+order settles, and a stop for one is the third gate again.
+
+A ruling may depart from a sentence of the spec — never from a locked
+point, whose reopening is stop condition 1 — when evidence shows the
+sentence wrong: a test, a probe, a reviewer's reproduction, a documented
+tool behavior. The clarification names the evidence, and the ruling goes
+on the reviewer report's `beyond the letter` list. Why: a spec sentence a
+test shows false would otherwise be built as written, or sent to a user
+who has taken the evidence-backed recommendation nearly every time; the
+list puts every such departure in front of the user before the tag.
+
+Every ruling is recorded: under the state file's `questions answered:`
+and as a clarification entry in the spec, committed as Phase 2's
+Constraints say. A worker still never rules itself: it asks the main
+session (the preamble's § 1), which records every answer. Why: an answer
+a worker invents is recorded nowhere, so nobody reads it before the
+release, while the main session's answer is in the state file and the
+spec, where the user reviews it before the tag and the push.
+
 ### A worker's question at a gate
 
 S2 asks at generate-task's confirmation (`Confirm, or adjust tasks before
@@ -830,9 +899,12 @@ a skip at any effort; the post-check catches it at every effort.
   `question <tag>: <one line>` and whose body gives the context, the
   options, and its suggested answer.
 - The answer is one message whose first line is `answer <tag>: <one line>`
-  and whose body is the decision, quoting nothing the worker sent. Why: the
-  first line is what the transcript search finds, and the suggested answer
-  is what makes the decision a one-line reply.
+  and whose body is the decision, quoting nothing the worker sent. The main
+  session sends it at once, ruled as § How the main session rules says,
+  without asking the user. Why: the first line is what the transcript
+  search finds, and the suggested answer is what makes the decision a
+  one-line reply; why at once: the worker waits in place, and a wait past
+  its thirty minutes ends it with the question and costs a resume.
 - Questions are answered in arrival order; one worker is live at a time in
   this topology. A message from any other session — a user-level hook's —
   is recorded as an observation in the state file and not answered.
@@ -1655,8 +1727,9 @@ subagent's tool call too, and its deny holds in a bypassPermissions
 session.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:
 every worker asks by message, as the preamble says, and a worker told to
-work without stopping would answer its own questions, which the quality
-bar names as the failed run. Why
+work without stopping would answer its own questions, and those rulings
+would be recorded nowhere — a ruling missing from the record, which the
+quality bar names as a failed run. Why
 the session id is written before the start: the transcript path and the
 resume id are known even when the worker dies before its JSON lands. Why
 `<tag>.exit` and no completion message: `.exit` is written by the driver
@@ -1778,10 +1851,12 @@ the morning had to be asked a second time.
 
 The locked design (immutable) > the design table's decisions (the main
 session, within the lock; the user at brief entry) > clarifications during
-implementation (the main session; recorded in the spec and committed).
-A decision that reads a locked point beyond its letter is reported in the
-reviewer report. Why: the reviewer learns from the report which decisions
-the user has yet to see.
+implementation (the main session's, ruled as Phase 2 § How the main
+session rules says; recorded in the spec and committed). A decision that
+reads a locked point beyond its letter, and a ruling that departs from a
+sentence of the spec on evidence, go on the reviewer report's
+`beyond the letter` list. Why: the reviewer learns from the report which
+decisions the user has yet to see.
 
 ### The reviewer report
 

@@ -132,7 +132,23 @@ The batch's baseline is `8db589b`, the spec's commit.
 
 ### Task 1: SKILL.md — who rules, and how
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the new subsection states the order as a numbered list (four
+  steps) so later text can point at "the order"; the recording sentence
+  (state file's `questions answered:` and a spec clarification) sits in the
+  subsection now and Task 4 adds who ruled. The Quality bar drops the old
+  "stops rather than guess on anything the locked design or the spec does
+  not answer" clause, since it contradicted the main session ruling open
+  points. The Phase 0 input questions are named both in the Quality bar and
+  in the subsection (K-C2), with "an inbound setting the main session
+  cannot read" as the fourth.
+- Changes/tradeoffs: the message protocol's answer bullet gained a "why at
+  once" (a wait past thirty minutes ends the worker and costs a resume),
+  beyond the task's "answers at once". The gate section's old "a question
+  the spec does not answer is a stop", stop 7, and the gates table still
+  send points to the user until Tasks 2 and 5 rewrite them.
 
 Spec Step 1.1 — K-L1, K-L3, K-L4; K-C2, K-C4. File:
 `plugins/kenspc/skills/autopilot/SKILL.md`.
