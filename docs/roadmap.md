@@ -387,3 +387,62 @@ its number.
     fails the review's verification and costs another S5 and another
     narrowed review. Open: whether a narrowed review should fix at all, or
     only report for the next S5.
+23. Autopilot rulings follow-ups, which 4.5.0 left out (its review rounds;
+    the batch K spec's clarifications,
+    `git show d1406e9:docs/plans/batch-k-autopilot-rulings.md`):
+    - The main session's own keep-path clarification commit has no outcome
+      when `git commit` fails — a hook, a stale index lock, a signing
+      failure — and the next ruling's status check then reads the entry it
+      left as a change S6 made. The one MEDIUM the last review deferred.
+    - `git log -S '<a line of the entry>'` in the S6 return check breaks
+      its quoting on an entry line that holds an apostrophe.
+    - S3's batch gate is answered without comparing the task list it
+      carries with the list S2's confirmation ruled.
+    - Stop condition 11 names the main session's `claude --version`, not
+      the executable `AUTOPILOT_CLAUDE` names for the workers.
+    - Phase 0's question for an inbound source the main session cannot read
+      maps `no` to a stop, where the documented default may still deliver.
+    - The README and CHANGELOG summaries of the keep-path gate do not name
+      the case of an entry already at HEAD.
+24. `rulings.md` follow-ups, which 4.5.0 left out:
+    - Whether an interactive task-review pauses, once the reviewers return,
+      for the user to rule before code-fixer runs — a new gate; until it is
+      decided, a ruling that arrives after the code-fixer dispatch has no
+      stated outcome.
+    - An entry outside the grammar — an unknown action word, no ID, no
+      first line naming who ruled, one ID ruled two ways — has no stated
+      outcome in code-fixer or regression-verifier.
+    - A ruled ID whose duplicate carries no ruling: merged into the ruled
+      row or kept apart, stated in code-fixer and mirrored in
+      regression-verifier's check 1.
+    - The could-not-land exception to the ruled-row verdict rule rests on
+      code-fixer's own reason, which regression-verifier does not check.
+    - The plugin README's copy of the entry grammar sits outside
+      `check-run-contract.sh`'s byte-identity check on the four carriers.
+25. A task whose `**Status:**` is none of TODO, IN PROGRESS, DONE, or
+    BLOCKED falls into no bucket in task-implement's Phase 1 Step 3, while
+    task-implementer reads "incomplete" loosely, so a hand-edited status can
+    end as finished work that was never built. The fix spans
+    `task-implement/SKILL.md` and `agents/task-implementer.md`: Step 3 names
+    every unrecognized status in its reply, and task-implementer reads
+    incomplete as exactly TODO or IN PROGRESS.
+26. Guards and smoke rows 4.5.0's new rules lack:
+    - a test of the telemetry hook's transcript root under
+      `CLAUDE_CONFIG_DIR` — one record with the transcript under
+      `$CLAUDE_CONFIG_DIR/projects`, none with it only under
+      `$HOME/.claude/projects` — a new guard, so the pinned guard count
+      moves;
+    - smoke rows 6 and 7 exercising a ruling through `rulings.md` (a plain
+      review leaves none; a ruled review shows the `ruled` Action and the
+      `Rulings:` line), and an assertion on the state file's `inbound:`
+      line;
+    - guards holding the literals `## Question for the main session`,
+      `S6 return:`, and the keep-path gate's marker, the rule that a ruled
+      ID no report lists keeps the verdict from PASS, and S6's question
+      cutoff.
+27. `check-no-model-names.sh` reads the Linux and WSL managed-settings
+    directory, `/etc/claude-code/`, as a model ID, so the autopilot skill
+    writes it as the pattern `/etc/claude?code/`. An exception for that
+    directory, beside the ones the guard keeps for
+    `claude-plugins-official` and the `instructionFiles` values, would let
+    the skill cite it as the documentation writes it.
