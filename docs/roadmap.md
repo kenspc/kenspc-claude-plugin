@@ -446,3 +446,23 @@ its number.
     directory, beside the ones the guard keeps for
     `claude-plugins-official` and the `instructionFiles` values, would let
     the skill cite it as the documentation writes it.
+28. The "session that cannot ask" sentence in the four skills that predate
+    it. The writing rule (CLAUDE.md § Writing Rules for Skill Content) has
+    every question a skill stops on state what a session that cannot ask
+    does instead; task-implement, task-review, generate-task, and
+    generate-guide carry no such sentence. Each stop needs its outcome
+    decided first, so this is a plan, not a wording pass:
+    - task-implement's batch confirmation — proceed, or end with the plan
+      it would have confirmed;
+    - a missing argument or an unreadable path in task-review,
+      generate-task, and generate-guide, and task-review's shallow-clone
+      stop that asks for a range;
+    - generate-task's task-list confirmation and its conflict check
+      (overwrite, create alongside, or cancel), and generate-guide's
+      overwrite-or-new prompt.
+    An autopilot worker is unaffected: its preamble sends such a point to
+    the main session, so the gap is a headless run of one of these skills
+    outside the autopilot. The October 2026 audit that found it also
+    reported stops without the sentence in generate-brief and
+    generate-plan, outside the ones those two skills already cover; they
+    were not checked line by line and are confirmed in the same plan.
