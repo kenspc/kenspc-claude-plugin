@@ -9,6 +9,35 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.5.1 — unreleased
+
+Wording fixes from an audit of the plugin's skill, agent, and shared files
+against the repository's own writing rules. This entry extends as items
+land; the date is filled at release.
+
+### Changed
+
+- **generate-brief's default language yields to the user.** The brief is
+  still written in the language of the Discovery conversation, now "unless
+  the user asks for another language", as the defaults of generate-plan,
+  generate-guide, and init-project already yield for their documents. Why:
+  a user whose own instructions ask for documents in one language had no
+  stated precedence between that instruction and the skill's default.
+
+### Fixed
+
+- **The three document reviewers carry no depth adverb.** `Review the
+  current angle thoroughly.` in the PROCESSING APPROACH of
+  `plan-document-reviewer`, `task-document-reviewer`, and
+  `guide-document-reviewer` is now `Review the current angle.` Why:
+  reasoning depth follows the session's effort level, not inline directive
+  words (the writing rule since v3.5), and these three agents have no
+  `effort:` field, so the adverb changed nothing.
+- **discovery-framework no longer ties its clarity assessment to the
+  calling skill's `effort:` setting.** generate-brief, one of its two
+  callers, has no `effort:` field and follows the session's effort, as
+  every file without the field has since v3.5.
+
 ## 4.5.0 — 2026-10-01
 
 An autopilot batch runs from its spec to its release preparation without

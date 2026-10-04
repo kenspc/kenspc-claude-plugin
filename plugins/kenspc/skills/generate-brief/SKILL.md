@@ -221,7 +221,8 @@ insufficient; the field's presence is the anchor.]
 
 - **Why**: the brief is the input to downstream planning. Specificity now
   prevents the plan from solving the wrong problem.
-- Default language: match the user's language during Discovery.
+- Default language: match the user's language during Discovery, unless the
+  user asks for another language.
 - Be specific and concrete. "Improve performance" is not an Outcome; "API
   p95 under 200ms during checkout" is.
 - Do not invent dimensions not actually discussed. If Stakes was inferred

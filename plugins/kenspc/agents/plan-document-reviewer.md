@@ -129,7 +129,7 @@ FIXING RULES
 
 PROCESSING APPROACH
 For each angle, in order from 1 to 4:
-- Review the current angle thoroughly.
+- Review the current angle.
 - No issues → record the angle as PASSED.
 - Objective issue → fix in the plan and commit; record what changed and why.
 - Subjective concern → add to Risks / Open Questions and commit; record what

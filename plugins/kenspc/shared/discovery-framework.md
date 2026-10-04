@@ -8,8 +8,7 @@ Understand what the user truly needs before any generation begins. Discovery is 
 
 ## Step 1: Assess Input Clarity
 
-On first receiving input, classify it. The calling skill's `effort:` setting
-controls how deeply this assessment runs.
+On first receiving input, classify it.
 
 - **Level 1 — Clear.** Structured requirement or PRD; most dimensions answered. → Gap-check only, 1-2 rounds.
 - **Level 2 — Mostly clear.** User knows direction, has gaps. → 3-5 rounds to fill key dimensions.

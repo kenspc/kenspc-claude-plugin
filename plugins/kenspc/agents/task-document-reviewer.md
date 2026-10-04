@@ -161,7 +161,7 @@ into a task):
 
 PROCESSING APPROACH
 For each angle, in order:
-- Review the current angle thoroughly.
+- Review the current angle.
 - No issues → record the angle as PASSED.
 - Task-level issue → fix in the task document and commit; record what
   changed and why.
