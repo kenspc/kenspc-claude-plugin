@@ -9,11 +9,17 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.5.1 — unreleased
+## 4.5.1 — 2026-10-04
 
-Wording fixes from an audit of the plugin's skill, agent, and shared files
-against the repository's own writing rules. This entry extends as items
-land; the date is filled at release.
+Three wording fixes from an audit of the plugin's skill, agent, and shared
+files against the repository's own writing rules: the three document
+reviewers lose a depth adverb, discovery-framework a stale sentence about
+`effort:`, and generate-brief's default language now yields to the user's
+request. Guard counts are unchanged: `guards run: 12`, `self-tests run: 11`.
+
+No acceptance run and no smoke run were made for this release: the changes
+are four sentences of prompt text, accepted in use, and the pre-flight
+passed on the release tree.
 
 ### Changed
 
