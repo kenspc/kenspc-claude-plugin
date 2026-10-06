@@ -9,6 +9,28 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.5.2 — 2026-10-06
+
+generate-plan follows the session's effort: its `effort: xhigh` frontmatter
+is removed, and `task-implementer` and `code-fixer` are the only two files
+that override the session. Guard counts are unchanged: `guards run: 12`,
+`self-tests run: 11`.
+
+No acceptance run and no smoke run were made for this release: the change
+is one frontmatter line, and the pre-flight passed on the release tree.
+
+### Changed
+
+- **generate-plan follows the session's effort.** Its `effort: xhigh`
+  frontmatter is removed, so the skill runs at the session's effort as the
+  other nine skills do, and `task-implementer` and `code-fixer` are the
+  only two files that override the session. Why: the override acted only
+  in a session set below `xhigh`, and the depth of a plan is the session
+  setting's to decide, as it is for every other skill. The README's Effort
+  levels section, CLAUDE.md's rationale, the release checklist's
+  effort-override diff, and `plugin.json`'s description now record the two
+  remaining overrides.
+
 ## 4.5.1 — 2026-10-04
 
 Three wording fixes from an audit of the plugin's skill, agent, and shared

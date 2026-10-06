@@ -205,17 +205,17 @@ it only where the work under-executes or is hard to validate
 [Choosing the right effort level in Claude Code](https://academy.claude.com/tutorials/choosing-the-right-effort-level-in-claude-code);
 last reviewed 2026-09-29).
 
-Three files override the session:
+Two files override the session:
 
 | File | Effort | Why |
 |---|---|---|
 | `agents/task-implementer.md` | `high` | Unattended long-horizon implementation — nobody is watching to catch a run that stops short or skips verification |
 | `agents/code-fixer.md` | `high` | Unattended deduplication and fix / build / test loops across all five review reports |
-| `skills/generate-plan/SKILL.md` | `xhigh` | Multi-round draft/challenge; plan cost amortizes over every downstream task |
 
 The two agents run one level above the generation's default effort
 (`medium` at the 2026-09-29 review; `xhigh` through 4.2.x), and move with
-it when a later generation's default does.
+it when a later generation's default does. `generate-plan` ran at `xhigh`
+through 4.5.1; since 4.5.2 it follows the session like every other skill.
 
 When a session runs at `xhigh`/`max`, set a large max-output-token budget
 so the model has room to think and act across its subagents and tool calls
@@ -1533,7 +1533,7 @@ on Windows.
 
 **Required:**
 - Claude Code v2.1.0+ (the version line that supports the `effort:`
-  frontmatter on SKILL.md and agent .md files; required for the three
+  frontmatter on SKILL.md and agent .md files; required for the two
   effort overrides listed under [Effort levels](#effort-levels)).
 - `/kenspc-autopilot` needs `Claude Code v2.1.271 or later`: cross-session
   messaging, the idle-notice subscription (`notify_when_idle`), the own-name
@@ -1547,10 +1547,9 @@ on Windows.
 - The `claude` command on the PATH, for `/kenspc-init`'s plugin step.
   Without it the skill enables no plugin, and its final message says so.
 - A session that allows a generous max-output-token budget —
-  `generate-plan` runs at `xhigh`, the two unattended agents at `high`, and
-  every other skill and agent at your session's effort, `xhigh` or `max`
-  when you set it; the model needs room to think and act across its
-  subagents and tool calls.
+  the two unattended agents run at `high`, and every other skill and agent
+  at your session's effort, `xhigh` or `max` when you set it; the model
+  needs room to think and act across its subagents and tool calls.
 
 ## Reference Documents
 

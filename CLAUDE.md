@@ -372,7 +372,7 @@ against the Claude 5 generation 2026-09-29 — at each release, confirm
 the override rationale below still holds (see the release checklist).
 
 The `effort:` frontmatter in each file is authoritative — this prose
-records the rationale, not a second copy of the values. Three files
+records the rationale, not a second copy of the values. Two files
 override the session:
 
 - `task-implementer` (`high`) — unattended long-horizon implementation.
@@ -382,19 +382,20 @@ override the session:
 - `code-fixer` (`high`) — also unattended: deduplication across five
   reports and a fix / build / test loop per finding, with no user
   checkpoint before regression-verifier runs.
-- `generate-plan` (`xhigh`) — multi-round draft/challenge across project
-  context; plan cost amortizes over downstream tasks (`max` through
-  v3.4.x).
 
 The two agents sit one level above the generation's default effort,
 `medium` at the maintainer's 2026-09-29 review: their unattended work
 needs more than the default, and one level is the margin the maintainer
 chose (4.3.0; `xhigh` through 4.2.x). A generation whose default moves is
-the review's cue to move them with it. `generate-plan` keeps `xhigh`,
-since a plan's cost amortizes over every task built from it.
+the review's cue to move them with it. `generate-plan` ran at `xhigh`
+through 4.5.1 (`max` through v3.4.x), on the reasoning that a plan's cost
+amortizes over every task built from it; 4.5.2 dropped the override so the
+skill follows the session like the other nine, since the override acted
+only in a session set below `xhigh`, and the depth of a plan is the
+session setting's to decide.
 
 Everything else — the 5 review-angle agents, `regression-verifier`, the
-3 document reviewers, and the nine other skills — runs at the session's
+3 document reviewers, and all ten skills — runs at the session's
 effort. When a session runs at `xhigh`/`max`, set a large
 max-output-token budget so the model has room to think and act across
 subagents and tool calls (this is a session/API-config concern, not a
@@ -529,7 +530,7 @@ The autopilot's workspace lives outside the repository — `~/Projects/_smoke/` 
 ### Writing Rules for Skill Content
 
 - Use rationale-anchored business rules (Rule 2): frame each rule as "Why: ..." prose rather than command-style imperatives, so the model follows the intent of the rule, not just its letter
-- Reasoning depth follows the session's effort level, with `effort:` frontmatter overrides only where a file needs more (currently three), not inline directive tokens
+- Reasoning depth follows the session's effort level, with `effort:` frontmatter overrides only where a file needs more (currently two), not inline directive tokens
 - Review summaries must list every change with the reason (what changed and why)
 - Stack-agnostic: read project config files to detect tech stack, never assume a specific framework
 - No plugin default language for task documents: `generate-task` writes the task document in the plan document's language unless the user asks otherwise, and only text carried into code artifacts follows `task-implementer`'s CODE ARTIFACTS LANGUAGE rule. A default of the plugin's own was ruled out when the rule was added (v3.6.0); the implementer copies task text into commits and documents, so the document's language is the user's choice, made with the plan. init-project's generated project files are a separate default, not an exception to this rule: English unless the user asks otherwise, with the reason written in the skill (they are read by agents and by team members who join later), while its conversation runs in the language its first message names — the user's (4.1.0)

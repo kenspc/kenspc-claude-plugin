@@ -13,11 +13,10 @@ Run from the repository root:
 (
 set -e
 
-# Effort overrides — exactly these three files declare effort:, generate-plan
-# at xhigh and the two unattended agents at high; every other skill and
-# agent follows the session (diff exits 1 on any drift)
+# Effort overrides — exactly these two files declare effort:, the two
+# unattended agents at high; every skill and every other agent follows the
+# session (diff exits 1 on any drift)
 diff <(grep -H '^effort:' plugins/kenspc/skills/*/SKILL.md plugins/kenspc/agents/*.md) - <<'EOF'
-plugins/kenspc/skills/generate-plan/SKILL.md:effort: xhigh
 plugins/kenspc/agents/code-fixer.md:effort: high
 plugins/kenspc/agents/task-implementer.md:effort: high
 EOF
@@ -49,10 +48,10 @@ checklist.
 
 ## Docs currency (manual)
 
-CLAUDE.md (§ Subagent Review Architecture) records why three files
-override the session's effort — `generate-plan` at `xhigh`,
-`task-implementer` and `code-fixer` at `high`, one level above the
-generation's default effort — and carries a "last reviewed" date against
+CLAUDE.md (§ Subagent Review Architecture) records why two files
+override the session's effort — `task-implementer` and `code-fixer` at
+`high`, one level above the generation's default effort — and carries a
+"last reviewed" date against
 Anthropic's effort guidance. Confirm each override's rationale still holds
 for the current Claude generation, and that the two agents still sit one
 level above its default — move them when the default moves, and drop an
