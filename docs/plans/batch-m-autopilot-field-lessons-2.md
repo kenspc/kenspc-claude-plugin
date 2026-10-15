@@ -417,7 +417,10 @@ and its Why; § The verdict loop after S3b; the S3b task block),
   round's replies and names `schema-c-1.md`.
 - code-fixer reads a `## Round 2` section when it exists: it carries out
   only that section's entries, updates its rows in place, and keeps every
-  row. regression-verifier checks the second round's rows against that
+  row; for each `V` ID a round-2 entry names, it adds a row whose Source is
+  that ID, taking the regression's file, line, and description from the
+  Detail of `schema-c-1.md`, which it reads for that purpose.
+  regression-verifier checks the second round's rows against that
   section, takes an `F` row as code-fixer's own and a `V` row as listed by
   `schema-c-1.md`.
 - Autopilot preamble § 1: a worker asks for a ruling on a review's
@@ -520,21 +523,33 @@ the three conditions.
 
 ### Step 6: S3b `auto` and BLOCKED tasks
 
-Files: `skills/autopilot/SKILL.md` (§ The `## Autopilot` section's table
-and the settings stop; Phase 2's goal and DONE line; § The verdict loop
-after S3b; Phase 3's inputs and the `Acceptance: none` line; § Phase
-transitions; the S5 task block; the reviewer and user reports; the
-settings line).
+Files: `skills/autopilot/SKILL.md` (§ The `## Autopilot` section's table;
+§ The start checks' `Standalone review: off` bullet, which becomes the
+settings stop for `off` or `auto` in plugin mode; the role table at the
+top and the paragraph after it; Phase 2's goal and DONE line; § The
+verdict loop after S3b; § The zero-diff check; Phase 3's inputs, DONE
+line, and Repo mode paragraph; Phase 4's zero-diff paragraph; § Phase
+transitions; the S5 task block; the reviewer report's Acceptance and
+`Sessions:` lines and the user report; the settings line).
 
 - `auto` as stated, with its trigger read from S3's Schema G; the
   `Standalone review:` report line; the `none named; S3 is the last check`
   line used whenever S3b did not run.
+- Every sentence that ties S3b's absence to `Standalone review: off` —
+  the places listed under Files, found with
+  `grep -n 'Standalone review' skills/autopilot/SKILL.md` — reads instead
+  "when S3b does not run (`off`, or `auto` not triggered)"; the `Sessions:`
+  line `S3b: off (Standalone review: off)` names the value and, for
+  `auto`, that it was not triggered.
 - BLOCKED tasks read from the committed task document at S3's return and
   classified in the verdict loop; the S5 task block's form for a task;
   both reports name each BLOCKED task.
 
 Acceptance: guards green; the table's `Standalone review:` row reads
-`on`, `off`, or `auto`; § Phase transitions names `auto`; the verdict loop
+`on`, `off`, or `auto`; every sentence of `SKILL.md` that holds
+`Standalone review: off` names `auto` too (checked by reading each line
+`grep -n 'Standalone review: off'` prints, in its sentence); § Phase
+transitions names `auto`; the verdict loop
 names BLOCKED tasks; a read of § Phase transitions with `auto` and a
 PASS-and-nothing-deferred S3 reaches Phase 3 without S3b, and with a
 deferred MEDIUM reaches S3b (checked by reading, recorded in the step's
@@ -542,13 +557,20 @@ commit body).
 
 ### Step 7: The runtime walk (S4w)
 
-Files: `skills/autopilot/SKILL.md` (the `## Autopilot` table: `Walk:` and
-`Role settings:`; § The start checks; Phase 3; Templates § The task
-blocks: an S4w block; § The stop conditions' list of stops stated at their
-own steps; § The gates; § Budget and caps; the reviewer and user reports;
-§ Phase transitions), and `skills/autopilot/scripts/run.sh` and `run.ps1`
-only when Step 1's record shows the walk worker needs a flag (then
-`run.sh --self-test` and the `pwsh` parse of `run.ps1` stay green).
+Files: `skills/autopilot/SKILL.md` (the role table at the top: an S4w
+row; the `## Autopilot` table: `Walk:` and `Role settings:`; § The
+workspace: `_logs/<batch>-walk/` in the tree; § The start checks; § The
+state file: the walk's record; Phase 3; Templates § The task blocks: an
+S4w block, and the S5 block naming a walk FAIL among its sources; § The
+stop conditions' list of stops stated at their own steps; § The gates;
+§ Budget and caps; the reviewer and user reports; § Phase transitions),
+and `skills/autopilot/scripts/run.sh` and `run.ps1` only when Step 1's
+record shows the walk worker needs a flag. Then each driver passes the
+flag only for an S4w launch and its resumes, as the environment variable
+the skill sets says, and each driver's `--self-test` gains a launch with
+the variable set, asserting the flag is passed, and one without it,
+asserting it is not; `run.sh --self-test` and
+`pwsh -NoProfile -File run.ps1 --self-test` stay green.
 
 - Every rule in the Technical Approach's walk section, with the tool order
   and the check commands taken from Step 1's record.
@@ -656,23 +678,37 @@ step adds a guard file); `claude plugin validate --strict .` and
 
 ## Documentation impact
 
-- `plugins/kenspc/README.md` — § Autopilot: the S4w role and `Walk:`, the
-  `auto` value, BLOCKED classification, benign breaches, the second round
-  in a worker's review; § Run directory: `suite-run.md`, `schema-c-1.md`,
-  the `## Round 2` section of `rulings.md`; the task-review description:
-  the second round, the shared suite run, the tree check; § Agents:
-  code-fixer's `F` rows and regression-verifier's `V` IDs; § Known
-  behavior: the hook's redirection, `gh`, and remote-git denials and its
-  remaining misses, the Claude in Chrome and Playwright order. Steps 2–7.
+- `plugins/kenspc/README.md` — § Skills: the autopilot row (the walk
+  session among the roles, and S3b skipped by `off` or an untriggered
+  `auto`); § Autopilot: the S4w role and `Walk:`, the `auto` value,
+  BLOCKED classification, benign breaches, the second round in a worker's
+  review, and the count of stops stated at their own steps (seven);
+  § Run directory: `suite-run.md`, `schema-c-1.md`, the `## Round 2`
+  section of `rulings.md`, and its copy of the entry grammar (the DEFER
+  tail on FIX, and what happens to an entry outside the grammar); the
+  task-review description: the second round, the shared suite run, the
+  tree check; § Agents: code-fixer's `F` rows and regression-verifier's
+  `V` IDs; § Known behavior: the hook's redirection, `gh`, and remote-git
+  denials and its remaining misses, the Claude in Chrome and Playwright
+  order; and, only when Step 7 adds a driver flag, the driver's
+  description of its environment. Steps 2–7.
 - `CLAUDE.md` — the hook paragraph (redirections, GitHub, remote git), the
-  autopilot sessions paragraph (S4w; `auto`), § Maintenance note (the
-  `canonical:second-round` block), § CONTEXT block contract (the files
-  `suite-run.md`, `schema-c-1.md`, the round-2 section, the `F` and `V`
-  IDs), § Repository scripts/ (the new checks in `check-run-contract.sh`
-  and the new fixtures and mutants in `check-autopilot-rails-hook.sh`).
-  Steps 2–7.
-- `plugins/kenspc/CHANGELOG.md` — a 4.7.0 entry for every step, the
-  default-on walk and its start check named as a change to existing specs.
+  autopilot sessions paragraph (S4w; `auto`), § Subagent Review
+  Architecture's Parallel MapReduce paragraphs (the shared suite run and
+  the tree check around Phase 1, the second round after Phase 3, and the
+  run-directory files the orchestrator now writes), § Maintenance note
+  (the `canonical:second-round` block), § CONTEXT block contract (the
+  files `suite-run.md`, `schema-c-1.md`, the round-2 section, the `F` and
+  `V` IDs, and the `rulings.md` paragraph's copy of the entry forms, which
+  gains the DEFER tail), § Non-Goals (the autopilot paragraph's "the three
+  sessions hold whenever S3b runs", which now covers `auto`, and the walk
+  session as a further role), § Repository scripts/ (the new checks in
+  `check-run-contract.sh` and the new fixtures and mutants in
+  `check-autopilot-rails-hook.sh`). Steps 2–7.
+- `plugins/kenspc/CHANGELOG.md` — a `## 4.7.0 — unreleased` heading, as
+  4.6.0's entry stood until its release commit, with an entry for every
+  step, the default-on walk and its start check named as a change to
+  existing specs.
 - `docs/release-checklist.md` — row 11's seed spec gains `Walk: off`; row
   14 gains a redirection outside the roots and a `gh` call, each denied
   live. Steps 4 and 7.
@@ -683,7 +719,8 @@ step adds a guard file); `claude plugin validate --strict .` and
   batches with `auto`, the comparison, the rule for returning to `on`).
   Steps 2–7.
 - `README.md` — N/A for this document: the autopilot row's summary ("one
-  headless session per role … two human gates") still holds.
+  headless session per role … two human gates") still holds, and so do the
+  task-review and task-implement rows.
 - `docs/dry-runs/README.md` — N/A for this document: the label convention
   is unchanged.
 - `plugins/kenspc/references/plan-document-example.md`,
