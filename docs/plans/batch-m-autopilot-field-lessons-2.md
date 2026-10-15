@@ -393,8 +393,10 @@ has no tool. Steps 2 to 6 do not depend on the probe and go on.
 
 ### Step 2: The second fix round and the rulings grammar
 
-Files: `skills/task-review/SKILL.md` (Step 5, a new step between Steps 6
-and 7, Step 7 and its Verdict determination), `skills/task-implement/SKILL.md`
+Files: `skills/task-review/SKILL.md` (Step 5; a new step after Step 6
+for the second round, which makes the Schema F step Step 8, the skill's
+own references to it following; that step and its Verdict
+determination), `skills/task-implement/SKILL.md`
 (Phase 2 Step 3, Step 4), `agents/code-fixer.md`,
 `agents/regression-verifier.md`, `skills/autopilot/SKILL.md` (preamble § 1
 and its Why; § The verdict loop after S3b; the S3b task block),
@@ -477,8 +479,11 @@ Schema G), the five review-angle agents (one shared section),
   the suite run. It gains, after the agent list, the comparison, made once
   all five have returned — a re-dispatched reviewer included — and before
   code-fixer is dispatched: a changed tracked file stops the review naming
-  the files, with the no-ask sentence, and no restore; a new untracked file
-  stops nothing. Why inside the block: `check-canonical-dispatch.sh` then
+  the files, and no restore. The stop asks the user one question — go on
+  to code-fixer with the tree as the user then leaves it, or end the
+  review here; in a session that cannot ask, the run ends with the files
+  named; in an autopilot worker, the question goes to the main session
+  (preamble § 1). A new untracked file stops nothing. Why inside the block: `check-canonical-dispatch.sh` then
   holds both halves of the check identical in the two skills. Outside the
   block, each skill's final report (Schema F, Schema G) names a new
   untracked file in its Next steps.
@@ -493,7 +498,11 @@ Schema G), the five review-angle agents (one shared section),
 
 Acceptance: guards green, self-tests green;
 `check-canonical-dispatch.sh` and `check-review-agent-drift.sh` pass with
-the new text, and each fails on a copy where one carrier lacks it.
+the new text, and each exits 1 when run in a scratch clone of the
+repository under `$TMPDIR` in which the new text is deleted from one
+carrier (`task-implement/SKILL.md` for the first, `bug-reviewer.md` for
+the second); the clone is left in `$TMPDIR`, never removed with a
+recursive `rm`.
 
 ### Step 4: The rails hook — redirections, GitHub, remote git
 
@@ -513,8 +522,10 @@ Files: `hooks/scripts/autopilot-worker-rails.sh` (scanner and header),
   (unjudged), `echo 'a > /etc/x'`, a heredoc body holding `> /etc/x`,
   `git clone /local/repo d`, `git status`, `grep gh f`, `command -v gh`,
   `which gh`; a timed fixture of
-  a command holding 8000 redirections under the length cap, denied or
-  allowed in under 2.5 seconds as the existing timed fixtures are; every
+  a command holding 8000 redirections to a relative target in the
+  repository (`>a `, about 24 KB, so the command stays under the 64 KB
+  cap and is scanned rather than denied unscanned) and then `> /etc/x`,
+  denied in under 2.5 seconds as the existing timed fixtures are; every
   denied fixture again without the marker. Two new self-test mutants: the
   redirection check removed, the `gh` check removed.
 - Preamble § 3 names GitHub and remote git and the route; the header's
@@ -527,8 +538,9 @@ seconds.
 
 ### Step 5: Benign breaches ruled by the main session
 
-Files: `skills/autopilot/SKILL.md` (§ How the main session rules, or a
-subsection beside § Launch, wait, return's return; § The state file; stop
+Files: `skills/autopilot/SKILL.md` (a new subsection
+`### A breach the main session rules benign`, placed after § How the main
+session rules, whose rulings it extends; § The state file; stop
 condition 6; the reviewer report and the user report; § The gates).
 
 - The three conditions, the `.trash/` move, the record under
@@ -536,6 +548,8 @@ condition 6; the reviewer report and the user report; § The gates).
   <one line>` counted as a resume, the `Breaches ruled benign:` report
   line, and stop condition 6 narrowed to a breach the main session cannot
   rule benign.
+- Whether the ruling is also a clarification entry, as the maintainer
+  rules Open Question 3, stated in the new subsection.
 
 Acceptance: guards green; `grep -q 'breaches ruled:'` and
 `grep -q 'Breaches ruled benign:'` in `SKILL.md`; stop condition 6 names
@@ -629,7 +643,7 @@ and the task block the main session writes from this checkout, and from
 the driver copy it takes from this checkout, which is what the cases
 judge. Record in `docs/dry-runs/batch-m-walk-acceptance.md`
 (Setup, Cases, Findings, Observations, Not exercised, Summary), committed
-alone. Cases:
+alone (`docs: add batch m walk acceptance record`). Cases:
 
 1. `Walk: on` — S4w lists the flow it chose, `walk.md` and screenshots
    under the workspace, a PASS, the servers it started stopped and the
