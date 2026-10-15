@@ -19,7 +19,9 @@
 # parentheses, an `(optional)`
 # case, a description case, a continuation line, `Acceptance: none`, no
 # section, no field, inline text on the label line, an empty field, a code
-# span that does not end the text, an unclosed code span; a path
+# span that does not end the text, an unclosed code span, a deeper-indented
+# bullet, a second ## Autopilot section, a CRLF spec, the wrong arguments, an
+# unreadable spec; a path
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
@@ -98,6 +100,22 @@ EOF
 
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n- Acceptance: none\n' > "$FX/spec-none.md"
 
+cat > "$FX/spec-more.md" <<'EOF'
+## Autopilot
+
+- Acceptance:
+  - run the suite — PASS: green
+    - with the cache cleared
+  - `echo z` — PASS: exit 0
+
+## Autopilot
+
+- Acceptance:
+  - `echo not-read` — PASS: exit 0
+EOF
+
+printf '## Autopilot\r\n\r\n- Acceptance:\r\n  - `echo a` — PASS: exit 0\r\n' > "$FX/spec-crlf.md"
+
 cat > "$FX/spec-spans.md" <<'EOF'
 ## Autopilot
 
@@ -109,6 +127,7 @@ printf '# Spec\n\n## Implementation Steps\n\n- Acceptance: none\n' > "$FX/spec-n
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance: run the suite\n- Budget: USD 10\n' > "$FX/spec-inline.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance:\n- Budget: USD 10\n' > "$FX/spec-emptyfield.md"
+printf '## Autopilot\n\n- Budget: USD 10\n\n## Notes\n\n## Autopilot\n\n- Acceptance: none\n' > "$FX/spec-secondsection.md"
 
 # A repository whose baseline holds six files; one commit after it changes
 # the file whose name holds a space, xy.txt, which the glob x[y].txt would
@@ -201,6 +220,33 @@ run_checks() {
     expect_content "$out/01.case" '`npm test` passes, then `npm run lint`'
     expect_content "$out/02.case" '`echo x'
 
+    # A deeper-indented bullet is a continuation of its case, and a second
+    # ## Autopilot section's field is not read.
+    out="$WORK/out-$runs-more"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-more.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: more fixture exited $rc, expected 0"
+    [[ "$stdout" == "commands: 1, cases: 1" ]] || fail "extract: more fixture printed [$stdout], expected [commands: 1, cases: 1]"
+    listing=$(cd "$out" 2>/dev/null && ls | tr '\n' ' ') || listing="(no out dir)"
+    [[ "$listing" == "01.case 02.cmd " ]] || fail "extract: more fixture wrote [$listing]"
+    expect_content "$out/02.cmd" 'echo z'
+
+    # A spec with CRLF line ends: the command carries no carriage return.
+    out="$WORK/out-$runs-crlf"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-crlf.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: CRLF fixture exited $rc, expected 0"
+    [[ "$stdout" == "commands: 1, cases: 0" ]] || fail "extract: CRLF fixture printed [$stdout]"
+    expect_content "$out/01.cmd" 'echo a'
+
+    # The wrong arguments, and a spec that cannot be read: exit 2.
+    rc=0
+    bash "$ex" "$FX/spec-none.md" >/dev/null 2>&1 || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: one argument exited $rc, expected 2"
+    rc=0
+    bash "$ex" "$FX/no-such-spec.md" "$WORK/out-$runs-unreadable" >/dev/null 2>&1 || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: an unreadable spec exited $rc, expected 2"
+
     # Acceptance: none.
     out="$WORK/out-$runs-none"
     rc=0
@@ -210,10 +256,11 @@ run_checks() {
     listing=$(cd "$out" 2>/dev/null && ls -A | tr '\n' ' ') || listing="(no out dir)"
     [[ -z "$listing" ]] || fail "extract: none fixture wrote [$listing]"
 
-    # No section, no field, inline text on the label line, and an empty
-    # field: exit 2 with a reason on stderr, and no file written.
+    # No section, no field, inline text on the label line, an empty field,
+    # and a field only in a second ## Autopilot section: exit 2 with a reason
+    # on stderr, and no file written.
     local spec
-    for spec in spec-nosection spec-nofield spec-inline spec-emptyfield; do
+    for spec in spec-nosection spec-nofield spec-inline spec-emptyfield spec-secondsection; do
         out="$WORK/out-$runs-$spec"
         rc=0
         bash "$ex" "$FX/$spec.md" "$out" >/dev/null 2>"$WORK/err" || rc=$?
