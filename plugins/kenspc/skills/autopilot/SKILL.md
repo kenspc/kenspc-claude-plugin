@@ -647,7 +647,7 @@ pass-through: <model|not determined>/<effort|not determined>
 inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>[ (<the error or notice, quoted>)]…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 sessions:
-  <tag>  <session id>  USD <cost>  <success|subtype|dead|running>
+  <tag>  <session id>  USD <cost>  <success|subtype|dead|usage-limit|running>
 models and efforts:
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 questions answered:
@@ -887,7 +887,7 @@ Every worker is one launch, one wait, one return.
   wait snippet, one tool call of about a minute per iteration, until
   `<tag>.exit` exists or the pid is gone.
 - **The return.** In an interactive main session, print
-  `S<n> returned — exit <code>, cost USD <c>, <success|subtype> — <json path>`
+  `S<n> returned — exit <code>, cost USD <c>, <success|subtype|usage-limit> — <json path>`
   from `<tag>.exit` and `<tag>.json`, as a line of its own in this
   session's reply, as the launch line is — there the state file does not
   stand in for it (Templates § The settings line says why); in a headless
@@ -901,6 +901,14 @@ Every worker is one launch, one wait, one return.
   `cost USD unknown` and `no result` in the subtype's place, gets no costs
   line, since a `0` there would read as a free session, and counts as dead
   (Death and resume).
+  A JSON with `is_error: true` is not a success, whatever its subtype: the
+  return line gives `is_error` in the subtype's place when the subtype is
+  `success`, and the return counts as dead — except a usage-limit end, one
+  whose `result` names a usage or session limit with a reset time, which
+  the return line and the state file give as `usage-limit` and which is
+  resumed after the reset, not as a death (Death and resume). Why: a worker
+  ended by its session limit returned the subtype `success` with
+  `is_error: true`, and read by the subtype alone it was a finished step.
   Before the next step, read the JSON's `result` for
   `## Question for the main session`: a return that carries it is the
   timed-out or unsent question (The message protocol), not a finished
@@ -1325,16 +1333,40 @@ Before each launch:
 ### Death and resume
 
 A step's session is dead when its pid is gone and `<tag>.exit` is absent
-ten seconds later, or when its JSON is empty, not JSON, or of a subtype
-other than `success`. It is
+ten seconds later, or when its JSON is empty, not JSON, of a subtype
+other than `success`, or carries `is_error: true` whatever its subtype —
+except a usage-limit end (below). It is
 resumed once, under the step's next `<tag>-r<k>`, with the continue prompt
 `Continue the task in your prompt from where you stopped; your last message was cut short.`;
 a second death of the same step is a stop. A live pid is never killed and
 never judged hung: when asked, the main session reports the pid, the size
-of `<tag>.err`, the mtime of the transcript named by `<tag>.session`, and
-`git log -1 --format=%ct` in the worker's cwd. Why: a test suite or a long
+of `<tag>.err`, the mtime of the transcript named by `<tag>.session`,
+`git log -1 --format=%ct` in the worker's cwd, and, on macOS, the last
+sleep and wake lines of `pmset -g log`. Why: a test suite or a long
 implementation is silent for longer than any timeout a prompt would pick,
-and a killed worker leaves a half-applied task.
+and a killed worker leaves a half-applied task. Why the sleep log: a
+worker that sat silent for three hours was a Mac asleep on battery, read
+afterwards from that log, and it had been killed before that was known.
+
+**A usage-limit end.** A JSON with `is_error: true` whose `result` names a
+usage or session limit with a reset time — `You've hit your session limit
+· resets 12am (<zone>)` — is a usage-limit end: not a death, so it does not
+count toward the dead-twice stop; the state file records it as
+`usage-limit`. The step is resumed under its next `<tag>-r<k>` with the
+continue prompt after the named reset, and the resume counts under
+`Caps:`. The main session, headless or interactive, never waits through
+the reset by polling: when one of its tools can schedule a wake-up of this
+session, it schedules one after the named reset and ends its turn;
+otherwise it stops with `Autopilot stopped: usage limit, resets <time>`,
+naming the step and the resume that continues it, `<tag>-r<k>`. In a
+session that cannot ask (a system reminder to work without stopping), the
+run ends with that message. The turn after the reset — the wake-up, or
+the user's word — makes the resume. Why not a death: the worker did not
+fail, its account's limit ended it, and a resume after the reset
+continues it, while counted as a death a second limit in the same step
+would stop the run. Why no polling: the workers run under the main
+session's own account, so the limit that ended a worker can refuse the
+main session's turns too, and a poll is a turn.
 
 A worker ended by its cap — a JSON subtype other than `success` that
 names the budget — is the budget stop, and counts as the step's first
@@ -2574,14 +2606,15 @@ run overnight — the steps between, which needed no answer, waited with it,
 and S3b's fixes then changed the list again, so the question answered in
 the morning had to be asked a second time.
 
-**Stops stated at their own steps.** Five stops sit outside the numbered
+**Stops stated at their own steps.** Six stops sit outside the numbered
 list, each stated where it happens, and end the run the same way: a
 driver that refuses a launch (§ Launch, wait, return), a delivery notice
 that the first message to a worker was held or refused (§ The message
 protocol), an artifact absent after a return (§ Phase transitions), an
 unmarked acceptance case that cannot be run (Phase 3's narrowing rule),
-and the skipped-gate post-check's second failure (§ A worker's question
-at a gate). Why listed
+the skipped-gate post-check's second failure (§ A worker's question
+at a gate), and a usage-limit end when no tool of the main session can
+schedule its wake-up after the reset (§ Death and resume). Why listed
 here: a reader of the stop conditions finds every stop from this section,
 while each rule stays beside the step it governs.
 

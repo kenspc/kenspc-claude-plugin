@@ -403,7 +403,24 @@ implementation session).
 
 ### Task 9: `is_error`, the usage-limit end, and the sleep log
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the usage-limit end got its own paragraph in § Death and
+  resume, `**A usage-limit end.**`, beside the cap paragraph, holding the
+  resume, the no-polling rule, the stop, its cannot-ask sentence, and the
+  Why; the return points there. A JSON with `is_error: true` that is not a
+  usage-limit end counts as dead (the death rule now lists it), and the
+  return line shows `is_error` in the subtype's place when the subtype is
+  `success`, so the printed line never reads `success` for it. The return
+  line's placeholder gained `usage-limit` beside the state file's status
+  word. The gates table was left as it stands: its row "Any other stop
+  condition, or a stop stated at its own step" already covers the new
+  stop, with the same cannot-ask outcome.
+- Changes/tradeoffs: the sleep-log addition carries its own Why sentence
+  (a worker silent for three hours was a sleeping Mac, killed before that
+  was known). The quoted limit message uses `<zone>` in place of the
+  observed time zone.
 
 Implement plan Step 6 in `plugins/kenspc/skills/autopilot/SKILL.md`
 (§ Launch, wait, return, the return; § Death and resume; § The state
