@@ -525,7 +525,9 @@ instruction files", or `shared/instruction-files.md`, run
 `check-instruction-files.sh`. After editing
 `hooks/scripts/autopilot-worker-rails.sh`, or the autopilot `SKILL.md`'s
 preamble template, § Launch, wait, return, or stop conditions, run
-`check-autopilot-rails-hook.sh`. What each
+`check-autopilot-rails-hook.sh`. After editing
+`skills/autopilot/scripts/extract-acceptance.sh` or `zero-diff.sh`, run
+`check-autopilot-scripts.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -807,8 +809,7 @@ Project-level shell scripts live in `scripts/` at the repo root:
   mutant that changes nothing is exit 2. Why the scripts have a guard:
   each replaced a step every main session wrote by hand and got wrong — a
   stray backtick at each end of extracted commands, and a zero-diff check
-  whose paths arrived as one zsh word and compared nothing. Run it after
-  editing either script.
+  whose paths arrived as one zsh word and compared nothing.
 
 Twelve of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
