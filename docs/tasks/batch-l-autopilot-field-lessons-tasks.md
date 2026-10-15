@@ -592,7 +592,21 @@ names the slices. Step 5's fixed lines `Implementation phase complete.` and
 
 ### Task 13: generate-plan writes and checks `## Autopilot`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the rule is one more element in Step 1's list, `**Autopilot**`,
+  marked "only when the user asks", since the element list is where the
+  plan's sections are defined and the step's "include only what applies"
+  already frames the others. The label check allows a parenthesized note
+  after a known label, as the autopilot's own grammar reads one. The
+  grammar is named by path and never copied, so `Run facts:` (Task 2) and
+  `Standalone review:` (Task 10) reach plans through the autopilot's
+  table.
+- Changes/tradeoffs: the three checks are stated as made "before the
+  draft is printed", the print Step 2 makes, so the user approves a draft
+  that already passed them. No cannot-ask branch was needed, since the
+  rule asks nothing.
 
 Depends on: Task 2
 
