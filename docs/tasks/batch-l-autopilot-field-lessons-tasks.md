@@ -28,7 +28,8 @@ Rules for every task, from the plan's Implementation Steps:
   `the largest single-session cost of this batch` is split that way today).
 - Commits stay local on `main`; no push, no tag, no version bump.
 
-Dependency note: Task 5 depends on Tasks 3 and 4; Task 6 on Task 3; Task 7
+Dependency note: Task 5 depends on Tasks 3 and 4; Task 6 on Tasks 3 and 4
+(its Phase 0 copies both scripts); Task 7
 on Tasks 4 and 6; Task 10 on Task 7; Task 12 on Task 11; Task 13 on Task 2;
 Task 15 on Task 13; Task 16 on Tasks 1-15.
 
@@ -181,7 +182,7 @@ other than the trap's removal of its own `mktemp` directory.
 
 **Status:** TODO
 
-Depends on: Task 3
+Depends on: Task 3, 4
 
 Implement the S4 part of plan Step 4 in
 `plugins/kenspc/skills/autopilot/SKILL.md` (Phase 0 § The workspace, the
