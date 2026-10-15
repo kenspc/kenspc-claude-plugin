@@ -2348,7 +2348,8 @@ changes in no other way.]
 ````
 
 - **S5** — a fix, launched from a classified defect: a Schema F row after
-  S3b (Phase 2), or an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
+  S3b, or a row of S3's review with `Standalone review: off` (Phase 2), or
+  an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
   name the finding — the row's issue ID and the review's run directory, or
   the case's number and the record's path (plugin mode) or S4's reply (repo
   mode); `<one line>` is the finding in one sentence. One S5 may carry
