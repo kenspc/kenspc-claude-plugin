@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.6.0)
+## Next minor (4.7.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -466,97 +466,7 @@ its number.
     reported stops without the sentence in generate-brief and
     generate-plan, outside the ones those two skills already cover; they
     were not checked line by line and are confirmed in the same plan.
-29. Autopilot preamble additions made by hand in every repo-mode batch. The
-    33 dayaku-crm batches (29 Sep to 14 Oct 2026, up to 4.5.2; each
-    batch's `<batch>-state.md` and `<batch>-report.md` under
-    `~/Projects/_smoke/_logs/`, only on the maintainer's Mac) had their
-    main sessions add these to the preamble template; the template could
-    carry them:
-    - A worker and its subagents write nothing under `~/.claude`, by a file
-      tool or a shell command, and a lesson worth keeping goes under
-      `## Lessons for the main session` in the worker's final message. A
-      worker's own harness tells it to save memories in the project's
-      folder under `~/.claude`: in portal-shell-tenants the hook denied the
-      Write of a note, a Bash append to that folder's `MEMORY.md` ran, and
-      the run stopped on the breach. The harness's own over-long tool
-      results under `~/.claude/projects/…/tool-results/` are named as the
-      harness's writes (portal-service-locations).
-    - § 6 quotes the plan's constraints word for word, and § 3 alone holds
-      the rails: a departure from a constraint is listed under
-      `## Rail observations` and stops nothing. A summary wider than the
-      plan made a task-document reviewer change a task against the plan's
-      exact script (staging-deploy); the plan's `mktemp -d` line, copied
-      into a review agent's rails paragraph, made it call a `$TMPDIR/x`
-      write a breach and stop with its review incomplete
-      (scheduling-board).
-    - A task block never narrows § 3's rails, and the rails a worker passes
-      to code-fixer and regression-verifier allow what those two must do.
-      A narrowed review's worker wrote "write only under RUN_DIR, no
-      commit" into every agent's `CUSTOM_INSTRUCTIONS`, so code-fixer could
-      not fix and the verifier skipped the build; the verdict came back
-      PARTIAL and cost another S5 and narrowed review (reschedule-pages).
-      In scheduling-board the worker reworded the reviewers' rails per role
-      for the fixer and the verifier, against task-review's rule that they
-      get the reviewers' CONTEXT unchanged.
-30. S4's commands taken from the plan exactly. S4's repo-mode block lists
-    the commands in its prompt and says "Run each of these, one per Bash
-    call". Since portal-shell-tenants every dayaku-crm main session
-    replaced that by hand: the commands are extracted by script from
-    `git show <baseline>:<plan>` into one file each, compared with `cmp`
-    against the main session's own extraction beside a control that
-    differs, and run from the file; the extraction takes the text between
-    the double backticks as it stands (four of therapist-pages' 60 commands
-    came out with a stray backtick at each end until compared); and an
-    inspection command carries no redirect (scheduling-board's S4 wrote
-    `> "$TMPDIR/../nothing"`, outside every root). Two more from the same
-    runs:
-    - S4's reply asks for the last twenty lines of each command's output,
-      and commands that print nothing when they pass leave a table of exit
-      codes, so the main sessions read the logs and clones on disk
-      themselves (tenants-api, participant-import). The reply could name
-      the evidence each command leaves.
-    - The zero-diff check is one `git diff` line over the listed paths.
-      Twice a main session passed the list as one zsh word and the check
-      compared nothing until a control showed it (account-invitation;
-      therapist-pages, 62 paths). Shipped as a script that takes one
-      argument per path and prints a control, it cannot pass silently.
-    Observed: all 33 S4 runs passed every command on their first run. The
-    baseline dry run of the acceptance commands (the item on acceptance
-    commands never run at the baseline, above) belongs with this one.
-31. The autopilot budget's projection. Projected is the largest
-    single-session cost so far, so after a USD 70 to 120 implementation
-    session every later launch, a USD 1 release preparation included, is
-    judged against it. Across the 33 batches S3 averaged USD 46, S3b 26,
-    S2 7.5, S4 2, and S6 0.85 a session. In portal-shell-tenants a USD 1 S6
-    needed USD 70 of headroom; participants-portal had its budget raised
-    and assignment-api had the line passed over by a ruling, and the
-    dayaku-crm plans after it say in their `## Autopilot` that the line may
-    be passed within the budget. Open: project the next launch at its own
-    role's largest cost so far, or at a per-role default before that role
-    has run, keeping the hard cap.
-32. Run facts and suite gates in `## Autopilot`. A `Run facts:` field for
-    measured facts of the machine that bind every worker and are not the
-    plan's constraints, which the main sessions wrote into § 6 by hand
-    since participants-api: one run of a heavy suite at a time (more than
-    about two `dotnet test` runs at once exhausted the Mac's local ports,
-    and tests failed on `Can't assign requested address`; dayaku-crm issue
-    #95), a `$TMPDIR` shared with another track, a test double for a probe
-    that would send email. A suite that waits for another session's go
-    must say who asks: the `kenspc:*` subagents have no message tool, so in
-    portal-fixes regression-verifier marked its suite row FAIL and the
-    worker ran the suite itself. The rule that worked has the worker ask
-    and name the go in the dispatch of the agent that runs the suite.
-33. A worker ended by the usage limit, and a sleeping Mac. A worker ended
-    by the five-hour usage limit (therapists-portal's S3, 23:08) counts
-    today as a death: one resume, then stop condition 9. The user ruled in
-    that run that such an end is resumed after the reset and does not count
-    toward the dead-twice stop; the skill could say so. A worker that looks
-    stalled may be a sleeping machine: booking-portal's S2 stalled
-    00:20 to 03:29 because the Mac was in clamshell sleep on battery, read
-    afterwards from `pmset -g log`, and the main session had killed it
-    before that was known. The skill could have the main session read the
-    sleep log (on macOS) before it rules a worker stuck.
-34. A second fix round, and when a ruling reaches code-fixer. task-review
+29. A second fix round, and when a ruling reaches code-fixer. task-review
     and task-implement's review have one code-fixer pass. A second round
     was needed in five batches in a row (tenants-api, portal-shell-tenants,
     portal-service-locations, participants-api, participants-portal), each
@@ -584,13 +494,7 @@ its number.
       (user-guide).
     The item on a narrowed review's own code-fixer and the `rulings.md`
     follow-ups above are the same area; one plan should settle the three.
-35. task-implement slicing a large task document. One task-implementer
-    could not hold participants-api's 33-task document: it ended on
-    `Prompt is too long` after 22 tasks and returned no summary, and the
-    worker rebuilt its table from `git log` and dispatched the rest in two
-    slices, which worked. task-implement could slice a large document from
-    the start and merge the slices' Schema D.
-36. Heavy commands across parallel reviewers. Each reviewer of a parallel
+30. Heavy commands across parallel reviewers. Each reviewer of a parallel
     review may run the repository's test suite; five at once exhausted the
     Mac's local ports in participants-api, and tests failed on connection
     errors that read like findings (dayaku-crm issue #95). Neither review
@@ -601,20 +505,7 @@ its number.
     dayaku-crm issue #205), and code-fixer made mutants in place on tracked
     files, restored before its commit (portal-fixes, reschedule-pages),
     where its rule puts a mutant on a copy.
-37. generate-plan and the `## Autopilot` section. generate-plan does not
-    mention `## Autopilot` or its grammar, so each dayaku-crm plan prompt
-    spelled the grammar out by hand, and plans still broke it: a
-    `Budget: USD 300` followed by a sentence (participant-import), and a
-    `Release preparation:` list that fixes its own commit order against
-    the S6 template, which makes the removal first — reconciled by hand in
-    every batch since email-outbox. Open: generate-plan writes the section
-    from its grammar, named by path to the autopilot skill's, and checks it
-    before approval; and the S6 template and the list agree on who orders
-    the commits. A second gap from the same plans: the approved plan is
-    written by generating the printed draft again, which once drifted
-    (seven of 355 lines), so the plan sessions extracted the approved draft
-    from the transcript instead.
-38. Rails gaps and benign breaches met in the dayaku-crm batches, beside
+31. Rails gaps and benign breaches met in the dayaku-crm batches, beside
     the rails follow-ups above:
     - The hook does not judge a write made through Bash (its header lists
       redirections, `cp`, `mv`, and `tee` among its misses): a redirect to
@@ -629,7 +520,7 @@ its number.
       project code tried sends towards a reserved test name
       (participants-api), a `docker exec pg18 true` (notifications-api).
       Open: which breaches the main session may rule and record.
-39. S3b on a condition in repo mode. The autopilot keeps the
+32. S3b on a condition in repo mode. The autopilot keeps the
     implementation, the standalone review, and the acceptance in separate
     sessions for two reasons: a session that reviews its own work reads its
     own intent into the code, and a session that edited the plugin still
@@ -648,7 +539,8 @@ its number.
     decision (15 Oct 2026): S3b runs on a condition in repo mode and stays
     unconditional in plugin mode; S4 stays, being cheap (USD 2 a batch)
     and the one check taken from the plan's text on the finished batch.
-    Open:
+    4.6.0 shipped the switch alone, `Standalone review: off` in repo mode,
+    default `on`. Open:
     - The condition. Candidates: the implementation review reported a HIGH
       or deferred a MEDIUM or above; the batch has more than a set number
       of tasks; the plan marks the batch as touching security, a data
@@ -660,7 +552,7 @@ its number.
     - With S3b optional, the standalone review reading the implementation
       review's rulings (the second-fix-round item above) matters only when
       S3b runs.
-40. A runtime walk, which a batch can turn off. Several follow-up issues
+33. A runtime walk, which a batch can turn off. Several follow-up issues
     of the dayaku-crm batches were found after the run by walking the app,
     which neither review nor S4 does: scheduling-board's
     standalone review inferred from the code that a date typed into the
@@ -677,3 +569,25 @@ its number.
     with another track (two tracks' walks had to take turns in
     participants-portal), and the project's rule on real data (dayaku-crm
     walks synthetic data only).
+34. A task S3 leaves BLOCKED, when its review is otherwise clean. S3's
+    Schema G verdict is PARTIAL when a task is BLOCKED and no HIGH row is
+    deferred, and the autopilot's verdict loop has no branch for that case:
+    with `Standalone review: off` S3's verdict enters the loop and falls
+    through it, and with S3b running S3 → S3b goes on for any verdict but
+    BLOCKED while S3b's Schema F ignores task statuses. A batch with a
+    BLOCKED task can then reach acceptance and release preparation without
+    the task being named. The choices, deferred by 4.6.0's review (B4 in
+    `.kenspc/runs/20261015-204543-batch-l-autopilot-field-lessons-tasks/schema-b.md`,
+    git-ignored, only in the maintainer's macOS checkout): classify such a
+    task as a HIGH row is classified (an S5 or a recorded deferral), make it
+    a stop, or name it in the reports while the run goes on; written once,
+    in § The verdict loop after S3b or § Phase transitions, so it covers
+    both values of the switch.
+35. S4 runs each extracted command with `<shell> <file>` (4.6.0), outside
+    the Bash tool's shell snapshot, so a command that relied on a function
+    or an alias the tool's shell defines behaves differently there (the
+    Bash tool's `grep` is a function that runs ugrep, which a command file
+    run by `zsh` does not see). Deferred by 4.6.0's review as B11, LOW (the
+    same `schema-b.md`): state the difference in the S4 block, or settle
+    whether the commands run with the interpreter only or the tool's whole
+    environment.

@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.6.0 — unreleased
+## 4.6.0 — 2026-10-15
 
 The autopilot carries the remedies its product-repository batches applied
 by hand to every prompt: the preamble keeps workers out of `~/.claude` and
@@ -30,7 +30,9 @@ No headless acceptance run was made for this batch: the first
 product-repository batch run on the next installed version is the live
 check of the autopilot changes, and the next `/kenspc-plan` run and the
 first task document with more than 12 incomplete tasks exercise the
-generate-plan and task-implement changes.
+generate-plan and task-implement changes. No smoke run was made either;
+the batch's five-angle review passed (24 of 27 findings fixed, both HIGH
+among them), and the pre-flight passed on the release tree.
 
 ### Added
 
