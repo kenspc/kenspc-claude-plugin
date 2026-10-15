@@ -667,7 +667,27 @@ same case.
 
 ### Task 15: generate-plan keeps the draft in a file
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the draft-file rule replaced Step 2's "Present the draft in
+  conversation. Do not write it to a file yet." constraint, since Step 2
+  is where the first print happens; Step 3 item 1 (the output location)
+  now runs at that first print, and its conflict check counts a leftover
+  `<name>.draft.md` as a file at the target path. Approval is a `mv` of
+  the draft file to `<name>.md`, item 3, with nothing else written. The
+  "names the draft file as the user's to keep or delete" rule is its own
+  paragraph after the cannot-ask branch, covering a run that ends without
+  approval whether or not it can ask, with the plan's Risks reason (an
+  untracked file stops the autopilot's clean-tree check and is swept into
+  a commit that stages everything).
+- Changes/tradeoffs: Step 3's opening "Write only when …" now says the
+  write is the rename, and the resumed-approval sentence renames the
+  draft file that run's last message printed. With the cannot-ask suffix
+  rule, the draft file is `<name>-<n>.draft.md`. `In a session that cannot
+  ask`, joined-line count: 5 before, 5 after. End-of-batch checks:
+  `check-all.sh --self-test` printed `guards run: 13` and
+  `self-tests run: 12`; both `claude plugin validate --strict` runs passed.
 
 Depends on: Task 13
 

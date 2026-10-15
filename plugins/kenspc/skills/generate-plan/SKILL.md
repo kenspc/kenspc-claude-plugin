@@ -348,68 +348,89 @@ addresses every challenge raised so far.
   the best option or just the first one that came to mind. Check whether the
   plan is actually executable as written. Propose specific improvements, not
   vague concerns.
-- Present the draft in conversation. Do not write it to a file yet.
+- Keep the draft in a file from its first print:
+  `<plans dir>/<name>.draft.md`, the location resolved as Step 3 item 1
+  resolves it, its conflict check included, a `<name>.draft.md` an earlier
+  run left counting as a file at the target path. Every print reads that
+  file in full and prints it; a revision edits the file and prints it
+  again. Why: Step 3 renames this file on approval, so what was printed is
+  what is written.
 
 This draft-challenge cycle may repeat multiple times. Revise the plan based
 on each round of feedback and self-critique.
 
 ### Step 3: Write to file
 
-Write only when the user explicitly approves the plan.
+Write the plan — rename the draft file — only when the user explicitly
+approves the plan.
 
 In a session that cannot ask (a system reminder to work without stopping),
-the run still stops here. Its last message holds the complete draft — every
-section of the draft after self-challenge, none elided or summarized — then
+the run still stops here. Its last message prints the draft file in full —
+every section of the draft after self-challenge, none elided or
+summarized — then
 the line `Plan not written: awaiting approval.`, and says how to go on:
 reply in this session approving the draft or asking for changes (a headless
 run resumes it with `claude -p --resume <session id> "<reply>"`), or run
-`/kenspc-plan` again in a session that can ask. Nothing is written,
-`plan-document-reviewer` is not dispatched, and nothing is committed. A
+`/kenspc-plan` again in a session that can ask. Nothing but the draft file
+is written, `plan-document-reviewer` is not dispatched, and nothing is
+committed. A
 later reply that approves the draft is the approval — in a headless run, the
 reply of the session that resumes this one — and this step then runs as
 written. Why: the written plan is the approved plan — Phase 3's reviewer
 commits it and generate-task decomposes it as agreed — so a run that writes
 it without approval makes the user's decision; and under a reminder to work
 without stopping, with no branch at this stop, an unapproved plan has been
-written, reviewed, and committed on the current branch. The line stays in
+written, reviewed, and committed on the current branch — the draft file
+is neither reviewed nor committed. The line stays in
 English in any conversation language, so a driving session can test for it.
+
+A run that ends without approval, in a session that can ask or not, names
+the draft file in its final message as the user's to keep or delete. Why:
+the file is untracked, and an untracked file is not inert — the
+autopilot's clean-tree start check stops on it, and a commit that stages
+everything sweeps it in.
 
 On approval:
 
-The approval covers the draft last printed in full — every section, none
-elided or summarized — and the file is that draft, character for character:
-no rewording, a pronoun included, no reformatting, and no change to an
-escape or a special character (an escape stays the characters that spell
-it). A change after that print — one the self-challenge finds, one shown
-only as a revised section, one the approving reply itself asks for, or a
-request for another language (item 2) — is made to the draft, which is
-printed again in full and approved again before anything is written. In a
+The approval covers the draft file last printed in full — every section,
+none elided or summarized — and approval renames that file to `<name>.md`;
+no other write follows. A change after that print — one the
+self-challenge finds, one shown only as a revised section, one the
+approving reply itself asks for, or a request for another language
+(item 2) — is made to the draft file, which is printed again in full and
+approved again before the rename. In a
 session that cannot ask (a system reminder to work without stopping), that
 print ends with `Plan not written: awaiting approval.` and the run stops
-again, and an approval given on resume writes the draft that run's last
-message printed. Why: the written plan is the approved plan — Phase 3's
+again, and an approval given on resume renames the draft file that run's
+last message printed. Why: the written plan is the approved plan — Phase 3's
 reviewer commits it unchanged before its first fix, and generate-task
 decomposes it — so an edit made after approval, however small, reaches the
-repository as approved when the user never saw it. A plan written after an
-approval has differed from the draft approved in the same session in seven
-of 355 lines: pronouns reworded, a Documentation impact line reformatted,
-and an escape written as the character it stands for.
+repository as approved when the user never saw it. A plan generated again
+after an approval has differed from the draft approved in the same session
+in seven of 355 lines: pronouns reworded, a Documentation impact line
+reformatted, and an escape written as the character it stands for. Written
+from its first print and renamed on approval, the file is the approved
+text by construction.
 
-1. Determine the output location:
+1. Determine the output location — at the draft's first print (Step 2),
+   since the draft file lives there:
    a. If the project's instruction files specify a documentation or plans
       directory, use it.
    b. Otherwise, use `docs/plans/` (create if it does not exist).
-   c. If a file already exists at the target path, ask the user whether to
+   c. If a file already exists at the target path — a `<name>.draft.md`
+      an earlier run left counts as one — ask the user whether to
       overwrite or create a new file. In a session that cannot ask (a
       system reminder to work without stopping), create the file alongside
       with the first numeric suffix no file has (`<name>-2.md`, then
-      `<name>-3.md`, …) and say so in the final message, naming the file.
+      `<name>-3.md`, …; the draft file is then `<name>-<n>.draft.md`) and
+      say so in the final message, naming the file.
       Why: an overwrite nobody chose can destroy a plan the user kept, and
       an earlier run of this branch may have left `<name>-2.md` already.
 2. The document language is the draft's, set by Step 1's writing rules when
    it was drafted; a request for another language at approval is a change,
    handled as above.
-3. Write the plan to the file: the approved draft, as printed.
+3. Rename the draft file to the plan's path, `<name>.draft.md` to
+   `<name>.md` (`mv`); write nothing else.
 
 After writing, proceed to Phase 3.
 
