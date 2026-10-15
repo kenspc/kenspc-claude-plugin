@@ -1977,7 +1977,9 @@ A gate a run fact or the specification sets on a command — another session's g
 The Allowed files, Byte-identity exceptions, and Run facts lines of § 6
 are written when their fields are set and omitted when empty; the Run
 facts line is the three lines above, its sub-bullets as the field holds
-them. Why in the preamble: it is the only text a worker
+them. With `Run facts:` empty, the third of those lines, the gate, is
+still written when the specification sets a gate on a command, since a
+gate the spec alone sets would otherwise reach no worker. Why in the preamble: it is the only text a worker
 reads, so a field that reaches no preamble binds no worker and trips no
 stop; the zero-diff check verifies the paths a batch must not touch, and
 the Allowed files and Byte-identity exceptions fields bound what it may.
