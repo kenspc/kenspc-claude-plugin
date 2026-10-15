@@ -20,7 +20,7 @@
 # begins and ends with a space and is not all spaces (the CommonMark rule,
 # so `` printf '`x`' `` gives printf '`x`'). A sub-bullet's continuation
 # lines are joined to it with one space. The field's label may carry a
-# note, `- Acceptance (<note>):`.
+# note, `- Acceptance (<note>):`, parentheses inside the note included.
 #
 # Output and exit codes
 #   0  prints "commands: <n>, cases: <m>"; `Acceptance: none` writes no file
@@ -102,10 +102,10 @@ insec && (/^# / || /^## /) {
 }
 !insec { next }
 !infield {
-  if (!found && $0 ~ /^- Acceptance( \([^)]*\))?:/) {
+  if (!found && $0 ~ /^- Acceptance( \(.*\))?:/) {
     found = 1; infield = 1
     v = $0
-    sub(/^- Acceptance( \([^)]*\))?:/, "", v)
+    sub(/^- Acceptance( \(.*\))?:/, "", v)
     inlinev = rtrim(ltrim(v))
   }
   next

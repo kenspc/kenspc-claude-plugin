@@ -15,7 +15,8 @@
 # zero-diff check whose paths arrived as one word and compared nothing. This
 # guard runs the scripts against fixtures built in a mktemp -d directory —
 # single and double backticks, a backtick inside a double-backtick span, spans
-# with and without the padding spaces, a label with a note, an `(optional)`
+# with and without the padding spaces, a label with a note holding
+# parentheses, an `(optional)`
 # case, a description case, a continuation line, `Acceptance: none`, no
 # section, no field, inline text on the label line, an empty field, a code
 # span that does not end the text, an unclosed code span; a path
@@ -78,7 +79,7 @@ cat > "$FX/spec-cases.md" <<'EOF'
 ## Autopilot
 
 - Budget: USD 10
-- Acceptance (in the order listed, one at a time):
+- Acceptance (in the order listed (one at a time)):
   - `echo a` — PASS: exit 0
   - `` printf '`x`' `` — PASS: exit 0
   - ``echo b`` — PASS: exit 0
