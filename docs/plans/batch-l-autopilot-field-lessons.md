@@ -148,25 +148,30 @@ new `plugins/kenspc/skills/autopilot/scripts/zero-diff.sh`, new
 
 - `extract-acceptance.sh <spec file> <out dir>`: reads the `## Autopilot`
   section, finds the `Acceptance:` field (a label with a parenthesized note
-  included), and writes one file per sub-bullet: `<nn>.cmd` holding the
+  included), and writes one file per sub-bullet, `<nn>` being its
+  position in the field as two digits from `01`: `<nn>.cmd` holding the
   command when the text before ` — PASS: ` is one code span, `<nn>.case`
-  holding the text otherwise. The command is the text between the code
+  holding that text otherwise. The command is the text between the code
   span's backtick runs as it stands, except that one space is removed from
   each end when it both begins and ends with a space and is not all spaces
   (the CommonMark rule); continuation lines are joined with one space. It
-  prints `commands: <n>, cases: <m>` and exits 0; a section or field it
-  cannot find is exit 2 with the reason on stderr.
+  prints `commands: <n>, cases: <m>` and exits 0; `Acceptance: none`
+  writes no file, prints `commands: 0, cases: 0`, and exits 0; a section
+  or field it cannot find is exit 2 with the reason on stderr.
 - `zero-diff.sh <baseline> <paths file>`: reads one path per line (blank
   lines skipped), names each path absent at the baseline on stderr, runs
   `git diff --stat <baseline> HEAD --` over the paths as an array, prints
   `compared: <n> paths` before the stat, and exits 0 when the stat is
-  empty, 1 when it is not, 2 on a usage error.
+  empty, 1 when it is not, 2 on a usage error. A paths file with no path
+  in it, once blank lines are skipped, is a usage error: `git diff` with
+  no path after `--` compares the whole tree.
 - `check-autopilot-scripts.sh` runs both against fixtures in a temp
   directory: single and double backticks, a backtick inside a
   double-backtick span, spans with and without the padding spaces, a
   label with a note, an `(optional)` case, a description case, a
   continuation line; a path with a space, a changed path, an unchanged
-  path, a path absent at the baseline, an empty paths file. `--self-test`
+  path, a path absent at the baseline, an empty paths file (exit 2),
+  `Acceptance: none` (`commands: 0, cases: 0`). `--self-test`
   turns it red with mutants (padding stripping removed; continuation
   joining removed; the paths read as one word) and green again on the
   originals. Bash 3.2 compatible, no recursive `rm` in cleanup beyond a
@@ -199,11 +204,16 @@ blocks, S4 repo mode; § The reviewer report; § Phase transitions).
   that `commands:` equals the number of command cases it reads in the
   field.
 - The S4 repo-mode block lists each case as "the command in
-  `<file>`" with its PASS criterion; the worker runs the extraction copy itself into
-  its own directory, shows `cmp` equal for every file beside one control
-  file that differs, and runs each with `<shell> <file>`, `<shell>` being
-  the shell the main session's own Bash tool runs (`ps -p $$ -o comm=`),
-  written into the block. An inspection command carries no redirect.
+  `<file>`" with its PASS criterion; the worker runs the extraction copy
+  itself, on `_prompts/<batch>-spec.md`, into
+  `<workspace>/_prompts/<batch>-<tag>-cmds/`, shows `cmp` equal for every
+  file against the main session's, and shows one `cmp` of two files that
+  differ reporting the difference, so the comparison is seen able to fail;
+  it then runs each with `<shell> <file>`, `<shell>` being the shell the
+  main session's own Bash tool runs (`ps -p $$ -o comm=`), written into the
+  block. The block tells the worker that a command it adds to inspect a
+  result (reading a log, listing a directory) carries no redirect, since a
+  redirect to a path outside the roots is a breach.
 - A case the extraction writes as `<nn>.case` (a description, not one
   code span) is listed with its text, as today. A corrected case (Phase 3,
   A corrected case) is listed as the file `<nn>.corrected.cmd`, which the
@@ -238,22 +248,24 @@ green.
 
 ### Step 5: Budget projection per role (item 31)
 
-Files: `plugins/kenspc/skills/autopilot/SKILL.md` (§ Budget and caps; the
-gates table row for the budget).
+Files: `plugins/kenspc/skills/autopilot/SKILL.md` (§ Budget and caps).
+The gates table's budget row keeps its wording: it names projected
+without defining it.
 
 - Projected becomes the largest cost so far of a session of the role about
   to launch — S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6,
   each with its resumes and re-runs — or the budget divided by six before
   that role's first session. A plugin-mode S4's cost is its own session's
   plus the trial's and the cases' costs from its record, as spent counts
-  them, since its own JSON holds none of its nested sessions. The hard cap (`--max-budget-usd` with the
-  remaining amount) is unchanged. The Why states the failure: a USD 1
-  release preparation judged against a USD 70 implementation session.
+  them, since its own JSON holds none of its nested sessions. The hard
+  cap (`--max-budget-usd` with the remaining amount) is unchanged. The Why
+  states the failure: a USD 1 release preparation judged against a USD 70
+  implementation session.
 
 Acceptance: § Budget and caps no longer holds `the largest single-session
 cost of this batch`; it holds `of the role about to launch`; the
-`--max-budget-usd` bullet is
-unchanged (`git diff` of that bullet empty).
+`--max-budget-usd` bullet is unchanged (`git diff` from the step's start
+changes no line of the bullet that opens `Every launch passes`).
 
 ### Step 6: Usage-limit end, `is_error`, and the sleep log (item 33)
 
@@ -313,8 +325,9 @@ line; Phase 4's zero-diff re-run; the settings line; the reviewer report;
   mode S3's review is already five fresh subagents, and the second reason
   for separate sessions — a session that edited the plugin still runs the
   text it started with — holds only in plugin mode.
-- The settings line shows the value; the reviewer report states
-  `S3b: off (Standalone review: off)` when it did not run.
+- The settings line gains `standalone review <on|off>` after `release
+  preparation`; the reviewer report's `Sessions:` list carries the line
+  `S3b: off (Standalone review: off)` in S3b's place when it did not run.
 
 Acceptance: the table holds a `Standalone review:` row; § The start checks
 names the plugin-mode stop; § The verdict loop names Schema G for the
@@ -328,13 +341,15 @@ RECEIVE, OBJECTIVE, DONE CRITERIA, the processing loop, Schema D);
 `plugins/kenspc/skills/task-implement/SKILL.md` (Phase 1's DONE line,
 Steps 2, 4, 5; Phase 2 Step 4's Schema G `## Implementation` section).
 
-- task-implementer: optional `TASK_LIMIT` — implement at most that many
-  incomplete tasks, in document order, then return Schema D for them; a
-  task left for a later slice keeps its status. Without the key, every
-  incomplete task, as today.
+- task-implementer: optional `TASK_LIMIT` — give a final status (DONE or
+  BLOCKED, a dependency block included) to at most that many incomplete
+  (TODO or IN PROGRESS) tasks, in document order, then return Schema D for
+  them; a task left for a later slice keeps its status. Without the key,
+  every incomplete task, as today.
 - task-implement: with more than 12 incomplete tasks, Step 4 dispatches
   slices with `TASK_LIMIT: 12`, one after another, re-reading the document
-  between them, until no incomplete task is left or a slice completes none;
+  between them, until no TODO or IN PROGRESS task is left or a slice
+  returns with no task's status changed;
   Step 5 renders one Schema D merged from the slices' rows and prose
   sections, rows in document order, and Schema G's `## Implementation`
   carries that merged Schema D. The batch confirmation (Step 3) is
@@ -424,9 +439,10 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 ## Risks and Mitigations
 
 - **The autopilot SKILL.md grows (2,625 lines today), and every main
-  session reads it.** Mitigation: each addition replaces text where it can
-  (the S4 block, the projection sentence), and the Why paragraphs state
-  the failure in one sentence each.
+  session reads it.** Mitigation: three additions replace text rather than
+  add to it (the S4 repo-mode block's run and reply lines, Phase 3's
+  repo-mode paragraph, the projection sentence), and each Why states the
+  failure in one sentence.
 - **`is_error` read as a failure changes the return for runs that ended
   that way and were read as success.** Intended; the CHANGELOG names it.
 - **The draft file can be left behind.** It is untracked, and an untracked
