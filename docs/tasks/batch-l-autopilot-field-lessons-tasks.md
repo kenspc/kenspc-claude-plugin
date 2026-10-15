@@ -221,7 +221,28 @@ arrived as one word compared nothing).
 
 ### Task 5: `check-autopilot-scripts.sh` guard
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: main mode and the self-test share one `run_checks` function
+  that takes the two script paths, so each mutant runs the same
+  assertions the main mode does; the self-test copies the scripts into
+  the `mktemp -d` directory and writes each mutant as a `sed` output to a
+  separate file (never in place), and a mutant whose program changes
+  nothing is exit 2 (fixture stale), as the other guards treat a mutation
+  that does not apply. The mutants: the extractor's padding line deleted,
+  its continuation line deleted, and zero-diff.sh's `"${paths[@]}"` in the
+  `git diff` call replaced by `"${paths[*]}"`. Git runs with `HOME`,
+  `XDG_CONFIG_HOME`, and `GIT_CONFIG_NOSYSTEM` masked, as
+  `check-run-contract.sh` does, so a user's signing or hook setting cannot
+  break a fixture commit. The scripts run as `bash <script>`, so a copy
+  needs no exec bit.
+- Changes/tradeoffs: beyond the listed fixtures, the guard also checks
+  that the extractor ignores an `Acceptance:` line outside the section,
+  that it writes exactly the expected file set, that no-section and
+  no-field give a reason on stderr, and that `- Acceptance record:` ends
+  the field. Each mutant red: padding 2 assertions, continuation 3, one
+  word 2.
 
 Depends on: Task 3, 4
 
