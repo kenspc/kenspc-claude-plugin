@@ -700,6 +700,14 @@ step adds a guard file); `claude plugin validate --strict .` and
   signed-in sessions, including staging. Mitigation: local URLs only, tabs
   of its own, the user's other tabs untouched, no sign-in with a real
   account; Playwright as the fallback.
+- **The walk acceptance's USD 40 cap may not hold.** Cases 1, 2, and 4 of
+  Step 8 each run a whole repo-mode batch (S2, S3 with its review, S6, and
+  S4w in cases 1 and 4); release-checklist row 11 puts one such batch on a
+  one-task seed at USD 10–20 with S3b, so three without it can approach
+  the cap before the walk's own cost. Mitigation: none in the plan beyond
+  the recorded costs; the maintainer may raise the cap, or let case 2 rest
+  on row 11's next smoke run, whose seed writes `Walk: off` and so
+  exercises the same path.
 - **A headless worker may not reach Claude in Chrome.** Step 1 settles it
   before Step 7 is written; if it cannot, the walk uses Playwright alone.
 - **Default-on walk changes existing specs.** A repo-mode spec with no
