@@ -181,7 +181,23 @@ extractor went wrong on backtick delimiting).
 
 ### Task 4: `zero-diff.sh`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the script changes to the repository's top level before it
+  runs git, so `git cat-file -e <baseline>:<path>` and the `git diff`
+  pathspecs read every path from the same root whatever directory it is
+  run from; the paths file is read before that, relative to the caller's
+  directory. A line holding only whitespace counts as blank, and a
+  trailing `\r` is stripped, so a CRLF paths file works.
+- Changes/tradeoffs: beyond the spec, exit 2 also covers an unreadable
+  paths file, a cwd outside a git repository, a baseline that is not a
+  commit, and a failing `git diff`, so a git error never reads as an empty
+  stat. Verified by a probe in a scratch repository (an unchanged path and
+  a path with a space: `compared: 2 paths`, exit 0; after a commit to the
+  spaced path: exit 1 with the stat naming it; an empty and a blank-only
+  paths file: exit 2; a path absent at the baseline named on stderr); the
+  guard that holds this behavior is Task 5's.
 
 Create `plugins/kenspc/skills/autopilot/scripts/zero-diff.sh`
 (`#!/bin/bash`, executable, bash 3.2 compatible) as plan Step 3's second

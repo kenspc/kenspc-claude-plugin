@@ -1,0 +1,87 @@
+#!/bin/bash
+# zero-diff.sh — the autopilot skill's zero-diff check. Compares the paths a
+# batch promised not to touch between the baseline and HEAD.
+#
+# Usage
+#   zero-diff.sh <baseline> <paths file>
+#
+#   <baseline>    the batch's baseline commit
+#   <paths file>  one repository-relative path per line (the `Zero diff:`
+#                 paths, which the main session writes to
+#                 _prompts/<batch>-zero-diff.txt); blank lines are skipped
+#
+# Run inside the repository; the paths are read from its top level.
+#
+# Output and exit codes
+#   Each path absent at the baseline is named on stderr. Then
+#   "compared: <n> paths" is printed, n being the number of paths read,
+#   followed by `git diff --stat <baseline> HEAD -- <paths>`.
+#   0  the stat is empty: no listed path changed
+#   1  the stat is not empty: it names the changed paths
+#   2  a usage error — the wrong arguments, an unreadable paths file, a
+#      paths file with no path once blank lines are skipped, a baseline
+#      that is not a commit, or a git command that fails; the reason goes
+#      to stderr
+#
+# Why this script: a zero-diff check typed as one shell line passed its
+# paths as one word under zsh, so git compared a single path that matched
+# nothing and printed nothing — a pass with nothing compared. Here the
+# paths travel as an array, one argument each, and the count printed
+# before the stat shows how many were compared. A paths file with no path
+# is refused because `git diff` with no path after `--` compares the whole
+# tree.
+#
+# Runs under the bash 3.2 macOS ships: no bash 4 feature.
+
+set -u
+
+if [ "$#" -ne 2 ]; then
+  echo "usage: zero-diff.sh <baseline> <paths file>" >&2
+  exit 2
+fi
+baseline=$1
+list=$2
+
+if [ ! -f "$list" ] || [ ! -r "$list" ]; then
+  echo "zero-diff.sh: cannot read the paths file: $list" >&2
+  exit 2
+fi
+
+paths=()
+while IFS= read -r line || [ -n "$line" ]; do
+  line=${line%$'\r'}
+  case $line in
+    *[![:space:]]*) paths[${#paths[@]}]=$line ;;
+  esac
+done < "$list"
+
+if [ "${#paths[@]}" -eq 0 ]; then
+  echo "zero-diff.sh: the paths file holds no path: $list" >&2
+  exit 2
+fi
+
+if ! top=$(git rev-parse --show-toplevel 2>/dev/null) || ! cd -- "$top"; then
+  echo "zero-diff.sh: not inside a git repository" >&2
+  exit 2
+fi
+if ! git rev-parse --verify --quiet "${baseline}^{commit}" >/dev/null; then
+  echo "zero-diff.sh: the baseline is not a commit: $baseline" >&2
+  exit 2
+fi
+
+for p in "${paths[@]}"; do
+  if ! git cat-file -e "${baseline}:${p}" 2>/dev/null; then
+    echo "zero-diff.sh: absent at the baseline: $p" >&2
+  fi
+done
+
+echo "compared: ${#paths[@]} paths"
+if ! stat=$(git diff --stat "$baseline" HEAD -- "${paths[@]}"); then
+  echo "zero-diff.sh: git diff failed" >&2
+  exit 2
+fi
+if [ -n "$stat" ]; then
+  printf '%s\n' "$stat"
+  exit 1
+fi
+exit 0
