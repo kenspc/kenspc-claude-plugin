@@ -329,7 +329,22 @@ block. All as the plan's Step 4 bullets state them.
 
 ### Task 7: The zero-diff check uses the script
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: exit 1, exit 2, and a `compared:` count that differs from
+  the field are all the zero-diff check's one existing stop (the one that
+  named the paths), each naming what it saw — the changed paths, the
+  script's reason, or both counts — so no stop is added. The main session
+  writes `_prompts/<batch>-zero-diff.txt` before the first launch, beside
+  the existing baseline resolution, and runs the script from the
+  repository root. The reviewer report's field became
+  `zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>`
+  and reports the run before S6.
+- Changes/tradeoffs: Phase 2's DONE line also names the case of an empty
+  `Zero diff:` field, which "printed nothing" covered vacuously before
+  and an exit code does not. Phase 4's re-run says its exit code and count
+  are read as § The zero-diff check reads them.
 
 Depends on: Task 4, 6
 

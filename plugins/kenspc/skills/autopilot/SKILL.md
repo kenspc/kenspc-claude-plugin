@@ -752,8 +752,9 @@ file.
 
 **DONE when** S3b's verdict is PASS, or every HIGH row, every ruled row
 whose action differs from its ruling, every ruled ID that no report lists,
-and every row-3 or row-5 FAIL is classified, and the zero-diff check has
-printed nothing.
+and every row-3 or row-5 FAIL is classified, and the zero-diff check's
+exit code is 0, its `compared:` count equal to the field's (§ The
+zero-diff check) — or `Zero diff:` is empty.
 
 **Constraints**: the main session commits nothing but clarification entries
 in the spec, `docs(plans): record clarifications settled after <step>`; the
@@ -1245,9 +1246,21 @@ review has seen until the narrowed one runs.
 
 ### The zero-diff check
 
-After S3b, `git diff --stat <baseline> HEAD -- <Zero diff paths>` prints
-nothing; anything printed is a stop naming the paths. With `Zero diff:`
-empty there is no check. Before the first launch, each path is resolved
+After S3b, the main session runs the script copy from the repository
+root, `bash <workspace>/_prompts/<batch>-zero-diff.sh <baseline> <workspace>/_prompts/<batch>-zero-diff.txt`,
+the `Zero diff:` paths written to `_prompts/<batch>-zero-diff.txt` one per
+line before the first launch, and checks that the `compared:` count it
+prints equals the number of paths in the field. Exit 0 with that count
+passes; exit 1 — the stat names a changed path — is a stop naming the
+paths the stat names, and exit 2 or a count that differs is the same stop,
+naming the script's reason or both counts. With `Zero diff:`
+empty there is no check. Why the script and the count: a check typed as
+one shell line passed its paths as one word under zsh, so git compared one
+path that matched nothing and printed nothing — a pass with nothing
+compared, twice, until a control showed it; the script passes each path as
+its own argument, and a `compared:` count that differs from the field
+shows a list that did not arrive whole. Why the exit code and not the
+output: the script always prints its `compared:` line. Before the first launch, each path is resolved
 against the baseline, `git cat-file -e <baseline>:<path>`; a path absent
 there is named on the line after the settings line and in the report's
 zero-diff field. Why the check: the paths a batch promised not to touch
@@ -1544,7 +1557,9 @@ stack-agnostic in form — the checklist and the project's instruction files
 are read — and the repository's own procedure in substance.
 
 The zero-diff check runs again before S6 is launched, over
-`<baseline>..HEAD` as it then stands, and not after S6's commit. Why
+`<baseline>..HEAD` as it then stands, and not after S6's commit; its exit
+code and `compared:` count are read as § The zero-diff check reads them,
+and the reviewer report's `zero diff:` field reports this run. Why
 before: S4 and S5 commit after the check that follows S3b, so their commits
 need one of their own; and in plugin mode the release commit edits, by
 design, paths a zero-diff list may name — a plugin repository's roadmap or
@@ -2593,7 +2608,7 @@ decisions the user has yet to see.
 - Main-session rulings: <n> | none
   <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed) | no clarification commit (S6 left the spec changed)>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
-- Files changed: <list>; zero diff: <nothing printed | the paths>[; absent at the baseline: <paths>]
+- Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
@@ -2727,7 +2742,8 @@ wording that closed it:
   resumed S2 to amend it;
   S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
   its `result` other than `BLOCKED`; S3b → Phase 3: its Schema F
-  verdict and the empty zero-diff output.
+  verdict and the zero-diff check's exit 0 with its `compared:` count
+  equal to the field's.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit, after the clarification commit of each question
