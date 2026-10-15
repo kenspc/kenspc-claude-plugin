@@ -271,7 +271,30 @@ other than the trap's removal of its own `mktemp` directory.
 
 ### Task 6: S4 runs the extracted commands
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: a `commands:` count that differs from the main session's own
+  reading of the field, an extraction that exits non-zero, and an S4
+  reply that reports a differing `cmp` are all read as the existing stop
+  for an acceptance case that cannot be run (Phase 3's narrowing rule)
+  rather than a new stop — the plan says to check the count but not what a
+  mismatch does, and a new stop would have changed the count of stops
+  stated at their own steps that Task 9 sets to six. The S4 worker runs
+  nothing when a file differs, since a command whose file differs from
+  the main session's is not the one the spec names. `<shell>` drops a
+  leading `-`, since `ps -p $$ -o comm=` prints `-zsh` for a login shell.
+  With a single extracted file, the able-to-fail `cmp` compares it against
+  a copy under `$TMPDIR` with a line appended. A corrected case got its
+  own line form in the block (`the command in <nn>.corrected.cmd … — in
+  the corrected form (<clarification>)`) in place of a bracketed suffix.
+- Changes/tradeoffs: the workspace tree in Phase 0 lists the two script
+  copies, `<batch>-spec.md`, and `<batch>-s4-cmds/`; Phase 0's Inputs and
+  Constraints name the copies. The corrected-case paragraph in Phase 3
+  says where the main session writes `<nn>.corrected.cmd`. The S4 reply
+  also carries the `cmp` lines, so the comparison is on the record. Why
+  sentences were added for the files, the evidence by path, the shell,
+  and the no-redirect rule.
 
 Depends on: Task 3, 4
 

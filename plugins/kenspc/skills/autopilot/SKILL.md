@@ -131,7 +131,8 @@ the first launch needs, checked before any session is paid for.
 
 **Inputs**: the argument file; the repository (`git rev-parse --show-toplevel`,
 HEAD, `git -c core.quotePath=false status --porcelain -uall`); `ListAgents`;
-the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`;
+the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh` and
+the two scripts beside it;
 `ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
 this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`; the sources
 that can set `crossSessionInbound` — managed, the launch line's
@@ -149,7 +150,8 @@ carry the line. Why: nothing downstream reads a headless session's reply
 (Templates § The settings line).
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
-the driver copy, its self-test files, the state file — and nothing into the
+the driver copy, its self-test files, the two script copies, the state
+file — and nothing into the
 repository. Why: every failing check is a stop, and a stop before the first
 launch leaves the repository as the run found it.
 
@@ -271,8 +273,11 @@ the whole tree; `$TMPDIR` is for anything else.
 
 ```
 <workspace>/
-  _prompts/     the copied driver <batch>-run.sh, <batch>-preamble.md,
-                <batch>-<tag>-task.md, and the assembled <batch>-<tag>.md
+  _prompts/     the copied driver <batch>-run.sh and scripts
+                <batch>-extract-acceptance.sh, <batch>-zero-diff.sh,
+                <batch>-preamble.md, <batch>-<tag>-task.md, the assembled
+                <batch>-<tag>.md, and S4's <batch>-spec.md and
+                <batch>-s4-cmds/ (repo mode)
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
                 <batch>-state.md  <batch>-report.md
@@ -294,6 +299,13 @@ empty: the self-test launches whatever the variable names, and a value
 exported for the workers — a `claude` outside `PATH` — would stand in for
 the stub: paid sessions at every start, then a stop on the flag check,
 since the real executable echoes nothing to stderr.
+
+The two scripts beside the driver are copied with it:
+`extract-acceptance.sh` to `_prompts/<batch>-extract-acceptance.sh` and
+`zero-diff.sh` to `_prompts/<batch>-zero-diff.sh`. Why: for the reason the
+driver is copied — a plugin-mode S3 may edit the shipped scripts, and a
+running batch keeps the text it started with — and so S4 runs the same
+copy as the main session, by the workspace path its task block names.
 
 ### The batch name, the tags, and the main session's name
 
@@ -1352,13 +1364,38 @@ nested sessions with the driver form of the wait snippet. Why the trial
 run: a seed that cannot reach the step under test hides that step behind
 its own failure.
 
-**Repo mode.** An S4 worker runs each `Acceptance:` command at the S3b HEAD
-in the repository, one command per Bash call, and replies with each
-command, its exit code, and the last twenty lines of its output; the
-results go into the reviewer report's acceptance lines. No file is written
+**Repo mode.** Before S4's first launch the main session saves the spec
+as Phase 0 read the section — `git show <baseline>:<spec path>` in spec
+entry, `git show <S1 hash>:<spec path>` in brief entry — to
+`_prompts/<batch>-spec.md`, runs
+`bash _prompts/<batch>-extract-acceptance.sh _prompts/<batch>-spec.md _prompts/<batch>-s4-cmds`,
+and checks that the `commands:` count it prints equals the number of
+command cases it reads in the field — the sub-bullets whose text before
+` — PASS: ` is one code span. A different count, or an exit other than 0,
+is the stop for a case that cannot be run (the narrowing rule below),
+naming both counts or the script's reason. An S4 worker then runs each case at the S3b
+HEAD in the repository: it extracts the commands again with the same copy
+into `<workspace>/_prompts/<batch>-<tag>-cmds/`, shows `cmp` equal for
+every file against the main session's and one `cmp` of two files that
+differ reporting the difference — a file that differs runs nothing, and
+the reply that reports it is the same stop — runs each command with
+`<shell> <file>`,
+and replies with each command's file, its exit code, and the evidence it
+leaves — the files, logs, or clones it writes, by path; the results go
+into the reviewer report's acceptance lines. `<shell>` is the shell the
+main session's own Bash tool runs, `ps -p $$ -o comm=` with a leading `-`
+dropped, written into the block. Why the files: four commands of one
+batch came out of a main session's own extraction with a stray backtick at
+each end until a comparison caught them, so the extraction is one shipped
+script, run twice and compared, with the comparison shown able to fail.
+Why the evidence by path: commands that print nothing when they pass left
+a table of exit codes, and the main session read their logs and clones
+on disk itself. Why the main session's shell: the acceptance commands are
+written and checked in the shell the main session runs, and run under
+another they can read differently. No file is written
 into the repository unless `Acceptance record:` names a path; then S4's
-task block also tells it to write the same lines — each command, its exit
-code, the last twenty lines — to that path and commit the file alone,
+task block also tells it to write the same lines — each command's file,
+its exit code, the evidence by path — to that path and commit the file alone,
 `docs: add batch <name> acceptance record`, and an `-s4b` re-run rewrites
 its case's lines there in a commit of its own,
 `docs: update batch <name> acceptance record`. With
@@ -1415,7 +1452,11 @@ ruler, carrying the case, the corrected form, and both pieces of evidence — pa
 Phase 2's Constraints say. The `## Autopilot` section stays as Phase 0
 read it: a correction is a ruling, not a settings edit, and every later S4
 — the first run or an `-s4b` re-run — lists the case in its corrected form
-and names the clarification (Templates § The task blocks). Without both
+and names the clarification (Templates § The task blocks). In repo mode
+the main session writes the corrected command to the file
+`_prompts/<batch>-s4-cmds/<nn>.corrected.cmd`, `<nn>` the case's
+position, beside the extracted files, and S4 runs that file; it stays out
+of S4's `cmp`, since no extraction from the spec produces it. Without both
 pieces of evidence, the correction is stop condition 7 (b).
 
 The main session gathers the evidence outside the repository's working
@@ -2140,35 +2181,65 @@ FAIL, its cost.
 
 - **S4, repo mode** — Phase 3, when `Acceptance:` names commands and the
   mode is `repo`; `<HEAD sha>` is HEAD at the launch, the state file's
-  `head:`. The bracketed paragraphs are written when `Acceptance record:`
+  `head:`; `<tag>` is S4's own tag; `<shell>` is the shell the main
+  session's own Bash tool runs (Phase 3, Repo mode). Each case is listed
+  by the file the main session's extraction wrote for it: a `<nn>.cmd` as
+  "the command in `<nn>.cmd`" with its PASS criterion, and a `<nn>.case` —
+  a description, not one code span — with its text, as the field holds it.
+  The bracketed paragraphs are written when `Acceptance record:`
   names a path — the first on the first run, the second on an `-s4b`
   re-run, after an S5 fix or of a corrected case (Phase 3), which lists the
-  one command it re-runs.
+  one case it re-runs.
   A case the main session corrected (Phase 3, A corrected case) is listed
-  as its corrected command, and its line gets the bracketed
-  `in the corrected form` part, naming the clarification — on the first run
+  as the file `<nn>.corrected.cmd`, in the second line form, whose
+  `in the corrected form` part names the clarification — on the first run
   and on an `-s4b` re-run alike, so a re-run of a corrected case runs the
   corrected form. The bracketed `Run notes:` line is written, on every
   run, when the `Acceptance:` field carries a note (§ The `## Autopilot`
-  section). With `Acceptance: none`, no S4 starts.
+  section). With `Acceptance: none`, no S4 starts. Why no redirect on an
+  inspection command: an S4 that read a result through a redirect to a
+  path outside every root breached the rails with a command the case
+  never named.
 
 ````
 ## Task: acceptance for batch <batch>
 
 The batch's commits are <baseline sha>..<HEAD sha>; run the acceptance at
-that HEAD, in the repository. Run each of these, one per Bash call, in the
-order listed:
+that HEAD, in the repository. The commands are in files, written by
+<workspace>/_prompts/<batch>-extract-acceptance.sh from
+<workspace>/_prompts/<batch>-spec.md into
+<workspace>/_prompts/<batch>-s4-cmds/. First extract them again yourself,
+with the same copy, into a directory of your own:
 
-<n>. <command> — PASS: <criterion>[ (optional)][ — in the corrected form (<clarification>)]
+    bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-<tag>-cmds
+
+For every file it writes, show `cmp` reporting it equal to the file of the
+same name in <workspace>/_prompts/<batch>-s4-cmds/, then show one `cmp` of
+two files that differ reporting the difference — two of the files, or,
+with one file, that file against a copy under $TMPDIR with a line
+appended — so the comparison is seen able to fail. When a file differs,
+run nothing and reply with the cmp output.
+
+Then run each case, in the order listed, a command as `<shell> <file>`,
+the file being in <workspace>/_prompts/<batch>-s4-cmds/:
+
+<n>. the command in `<nn>.cmd` — PASS: <criterion>[ (optional)]
+<n>. the command in `<nn>.corrected.cmd` — PASS: <criterion>[ (optional)] — in the corrected form (<clarification>)
+<n>. <the case's text> — PASS: <criterion>[ (optional)]
 
 [Run notes: <the Acceptance: field's note>]
 
-Reply with, for each command: the command, its exit code, and the last
-twenty lines of its output.
+A command you add to inspect a result — reading a log, listing a
+directory — carries no redirect: a redirect to a path outside the
+locations § 3 names is a breach.
+
+Reply with the cmp lines, then, for each case: its file, its exit code,
+and the evidence it leaves — the files, logs, or clones it writes, by
+path.
 [Write the same lines to <Acceptance record: path> and commit that file
 alone, `docs: add batch <batch> acceptance record`; the repository changes
 in no other way.]
-[Replace command <n>'s lines in <Acceptance record: path> with the same
+[Replace case <n>'s lines in <Acceptance record: path> with the same
 lines from this run, leaving the others as they are, and commit that file
 alone, `docs: update batch <batch> acceptance record`; the repository
 changes in no other way.]
