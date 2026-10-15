@@ -1449,9 +1449,12 @@ the script's reason. Why both counts: the script ends the field at the
 first line that starts in column 0, so a case line wrapped there drops
 every case after it, and a dropped description changes only `cases:`. An S4 worker then runs each case at the S3b
 HEAD — S3's with `Standalone review: off` — in the repository: it extracts the commands again with the same copy
-into `<workspace>/_prompts/<batch>-<tag>-cmds/`, shows `cmp` equal for
+into `<workspace>/_prompts/<batch>-<tag>-cmds/`, its extraction exiting 0
+with the same file names as the main session's, `<nn>.corrected.cmd`
+aside, shows `cmp` equal for
 every file against the main session's and one `cmp` of two files that
-differ reporting the difference — a file that differs runs nothing, and
+differ reporting the difference — a failed extraction, a file set that
+differs, or a file that differs runs nothing, and
 the reply that reports it is the same stop — runs each command with
 `<shell> <file>`,
 and replies with each command's file, its exit code, and the evidence it
@@ -1461,7 +1464,9 @@ main session's own Bash tool runs, `ps -p $$ -o comm=` with a leading `-`
 dropped, written into the block. Why the files: four commands of one
 batch came out of a main session's own extraction with a stray backtick at
 each end until a comparison caught them, so the extraction is one shipped
-script, run twice and compared, with the comparison shown able to fail.
+script, run twice and compared, with the comparison shown able to fail;
+and S4's own extraction exits 0 with the same file names, since one that
+failed or wrote fewer files leaves nothing to compare and would pass.
 Why the evidence by path: commands that print nothing when they pass left
 a table of exit codes, and the main session read their logs and clones
 on disk itself. Why the main session's shell: the acceptance commands are
@@ -2298,12 +2303,15 @@ with the same copy, into a directory of your own:
 
     bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-<tag>-cmds
 
+It must exit 0, and show `ls` of both directories naming the same files,
+any `<nn>.corrected.cmd` in <workspace>/_prompts/<batch>-s4-cmds/ aside.
 For every file it writes, show `cmp` reporting it equal to the file of the
 same name in <workspace>/_prompts/<batch>-s4-cmds/, then show one `cmp` of
 two files that differ reporting the difference — two of the files, or,
 with one file, that file against a copy under $TMPDIR with a line
-appended — so the comparison is seen able to fail. When a file differs,
-run nothing and reply with the cmp output.
+appended — so the comparison is seen able to fail. When the extraction
+exits non-zero, the file names differ, or a file differs, run nothing and
+reply with its output, the listings, or the cmp output.
 
 Then run each case, in the order listed, a command as `<shell> <file>`,
 the file being in <workspace>/_prompts/<batch>-s4-cmds/:
