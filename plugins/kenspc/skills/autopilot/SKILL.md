@@ -2247,10 +2247,12 @@ one Bash call per iteration, LOGS being <workspace>/_logs and TAG the
 nested tag, until <nested tag>.exit exists; the session's cost is
 total_cost_usd in <nested tag>.json. A driver copy that exits non-zero has
 started nothing, so no wait follows; a nested pid, in <nested tag>.pid,
-gone with no <nested tag>.exit ten seconds later is a dead session. Either
-ends that run — the trial or the case — as a FAIL whose reason, the
-driver's stderr message or the death, goes in the record and in your
-reply.
+gone with no <nested tag>.exit ten seconds later is a dead session; and a
+<nested tag>.json with "is_error": true is an error return, whatever its
+subtype — a usage-limit end when its result names a usage or session
+limit with a reset time. Each ends that run — the trial or the case — as a
+FAIL whose reason, the driver's stderr message, the death, or the error
+return with its result quoted, goes in the record and in your reply.
 
 [Write the record to docs/dry-runs/<batch>-acceptance.md with these
 sections in this order: Setup, Independence, Cases, Findings, Observations,
