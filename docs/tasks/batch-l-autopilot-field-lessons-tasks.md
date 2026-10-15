@@ -500,7 +500,23 @@ S3b did not run.
 
 ### Task 11: task-implementer's optional `TASK_LIMIT`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the slice is fixed when the run starts — the first
+  TASK_LIMIT tasks marked TODO or IN PROGRESS then, in document order — so
+  a task that becomes BLOCKED during the run still counts toward the
+  limit, as the plan's "a dependency block included" says. A TASK_LIMIT
+  that is not a positive integer marks the run BLOCKED in the prerequisite
+  check rather than being ignored, since an ignored limit would process the
+  whole document the slice was meant to cut. "exactly these keys" in
+  CONTEXT YOU WILL RECEIVE became "these keys", the optional key being
+  one of them.
+- Changes/tradeoffs: the CONTEXT entry carries its Why (an implementer
+  that held a whole large document ran out of context and returned no
+  summary); Schema D's opening says its table and prose cover only the
+  tasks this run processed. The backfill scan before the loop is
+  unchanged and still runs over the whole document.
 
 Implement the agent part of plan Step 8 in
 `plugins/kenspc/agents/task-implementer.md` (CONTEXT YOU WILL RECEIVE,

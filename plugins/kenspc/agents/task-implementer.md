@@ -11,7 +11,9 @@ PREREQUISITE CHECK
 1. If TASK_FILE or RUN_DIR is missing from the CONTEXT block, output:
      "task-implementer requires a TASK_FILE and a RUN_DIR in CONTEXT. Invoke
      /kenspc-task-implement instead of using this agent directly."
-   Then stop.
+   Then stop. TASK_LIMIT is optional, and its absence is not a failure; a
+   TASK_LIMIT that is not a positive integer marks the run as BLOCKED with
+   the reason "TASK_LIMIT is not a positive integer: <value>" and stops.
 
 2. If the file at TASK_FILE does not exist or cannot be opened, mark the
    run as BLOCKED with the reason "TASK_FILE not found or unreadable: <path>"
@@ -38,13 +40,21 @@ PREREQUISITE CHECK
    BLOCKED with the reason and stop.
 
 CONTEXT YOU WILL RECEIVE
-The dispatching skill provides a CONTEXT block with exactly these keys:
+The dispatching skill provides a CONTEXT block with these keys:
 - TASK_FILE — path to a task document
 - RUN_DIR — absolute path of the run directory task-implement prepared
   before dispatching you; your scratch space is under it (SCRATCH SPACE)
+- TASK_LIMIT (optional) — a positive integer: give a final status (DONE or
+  BLOCKED, a dependency block included) to at most that many incomplete
+  (TODO or IN PROGRESS) tasks, in document order, then return Schema D for
+  them; a task left for a later slice keeps its status. Without the key,
+  every incomplete task is processed. Why: task-implement dispatches a
+  large task document in slices, since one implementer that held a whole
+  large document ran out of context partway and returned no summary.
 
 OBJECTIVE
-Read the task document for full context. Implement incomplete tasks in order.
+Read the task document for full context. Implement incomplete tasks in order
+— with TASK_LIMIT, the first TASK_LIMIT of them.
 Track every task you complete so you can report them at the end.
 
 PREREQUISITES
@@ -61,6 +71,9 @@ PREREQUISITES
 DONE CRITERIA
 - Every incomplete task has a final status (DONE or BLOCKED) recorded in the
   task document, with both code and the status update in the same git commit.
+  With TASK_LIMIT, the incomplete tasks are those within the limit: the
+  first TASK_LIMIT tasks marked TODO or IN PROGRESS when the run starts, in
+  document order; the ones after them keep their status.
 - Every processed task has its `**Implementation notes:**` block persisted in the
   task document before the next task starts — for a DONE task in the same
   code+status commit; for a BLOCKED task in its own commit that stages only the
@@ -87,7 +100,10 @@ recovered, record `Decisions: not recoverable (block lost before persistence)`
 rather than fabricating one. This keeps the roll-up faithful when a re-run
 resumes after a stall.
 
-For each incomplete task, in document order:
+For each incomplete task, in document order — with TASK_LIMIT, stop once
+that many tasks have a final status, counting a task BLOCKED by its
+`Depends on` line, and leave every later task's status and text as they
+are:
 - Before implementing the task, read its `Depends on` line, if it has one. The
   line names a single task (`Task 1`), a range (`Task 1-5`, meaning Tasks 1
   through 5), or a comma-separated list. A named task that this document does
@@ -289,7 +305,9 @@ needs a home with its suggested destination; under `Changes/tradeoffs:`, as
 for any task.
 
 OUTPUT FORMAT (Schema D)
-When all tasks are processed, render a per-task table followed by prose sections.
+When all tasks are processed — with TASK_LIMIT, the tasks within the limit —
+render a per-task table followed by prose sections. The table and the prose
+cover the tasks this run processed, not the ones left for a later slice.
 
 ## Tasks
 
