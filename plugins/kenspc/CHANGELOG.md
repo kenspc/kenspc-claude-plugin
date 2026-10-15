@@ -58,7 +58,7 @@ generate-plan and task-implement changes.
   description case, a continuation line, `Acceptance: none`; a path with a
   space, changed, unchanged, and absent paths, paths with a space before
   or after them, a path holding glob characters, a paths file with CRLF
-  line ends, an empty paths file —
+  line ends, a long changed path named in full, an empty paths file —
   and its `--self-test` turns it red
   with three mutants of copies (padding
   stripping removed, continuation joining removed, the paths read as one

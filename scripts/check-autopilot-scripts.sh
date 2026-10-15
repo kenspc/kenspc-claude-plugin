@@ -22,8 +22,8 @@
 # span that does not end the text, an unclosed code span; a path
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
-# characters, a paths file with CRLF line ends, an empty paths file — and
-# asserts each outcome.
+# characters, a paths file with CRLF line ends, a long changed path, an empty
+# paths file — and asserts each outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -110,9 +110,9 @@ printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance: run the suite\n- Budget: USD 10\n' > "$FX/spec-inline.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance:\n- Budget: USD 10\n' > "$FX/spec-emptyfield.md"
 
-# A repository whose baseline holds five files; one commit after it changes
-# the file whose name holds a space and xy.txt, which the glob x[y].txt would
-# match.
+# A repository whose baseline holds six files; one commit after it changes
+# the file whose name holds a space, xy.txt, which the glob x[y].txt would
+# match, and a file whose path is longer than a default stat line shows.
 REPO="$FX/repo"
 git init -q "$REPO"
 git -C "$REPO" config user.email guard@example.invalid
@@ -123,11 +123,15 @@ printf 'b\n' > "$REPO/with space.txt"
 printf 'c\n' > "$REPO/c.txt"
 printf 'x\n' > "$REPO/x[y].txt"
 printf 'y\n' > "$REPO/xy.txt"
+LONG="deeply/nested/directory/structure/for/the/stat/width/a-rather-long-file-name.txt"
+mkdir -p "$REPO/$(dirname "$LONG")"
+printf 'l\n' > "$REPO/$LONG"
 git -C "$REPO" add -A
 git -C "$REPO" commit -q -m baseline
 BASE=$(git -C "$REPO" rev-parse HEAD)
 printf 'b2\n' >> "$REPO/with space.txt"
 printf 'y2\n' >> "$REPO/xy.txt"
+printf 'l2\n' >> "$REPO/$LONG"
 git -C "$REPO" commit -q -am change
 
 printf 'a.txt\nc.txt\n' > "$FX/paths-unchanged.txt"
@@ -135,6 +139,7 @@ printf 'a.txt\n\nwith space.txt\n' > "$FX/paths-changed.txt"
 printf 'absent.txt\na.txt\n' > "$FX/paths-absent.txt"
 printf ' with space.txt\na.txt \n' > "$FX/paths-padded.txt"
 printf 'x[y].txt\n' > "$FX/paths-glob.txt"
+printf '%s\n' "$LONG" > "$FX/paths-long.txt"
 printf 'a.txt\r\nwith space.txt\r\n' > "$FX/paths-crlf.txt"
 : > "$FX/paths-empty.txt"
 
@@ -258,6 +263,12 @@ run_checks() {
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-glob.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "zero-diff: glob-character path exited $rc, expected 0"
     [[ "$stdout" == "compared: 1 paths" ]] || fail "zero-diff: glob-character path printed [$stdout]"
+
+    # zero-diff: a changed long path is named in full, not shortened to .../
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-long.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: long path exited $rc, expected 1"
+    printf '%s\n' "$stdout" | grep -qF " $LONG " || fail "zero-diff: the stat does not name the long path in full"
 
     # zero-diff: a path absent at the baseline is named on stderr.
     rc=0
