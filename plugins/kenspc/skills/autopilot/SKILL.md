@@ -1450,7 +1450,9 @@ the script's reason. Why both counts: the script ends the field at the
 first line that starts in column 0, so a case line wrapped there drops
 every case after it, and a dropped description changes only `cases:`. An S4 worker then runs each case at the S3b
 HEAD — S3's with `Standalone review: off` — in the repository: it extracts the commands again with the same copy
-into `<workspace>/_prompts/<batch>-<tag>-cmds/`, its extraction exiting 0
+into `<workspace>/_prompts/<batch>-<tag>-recheck/` — not a `-cmds` name,
+since a tag holds the batch name and `<batch>-<tag>-cmds` written with it
+once is the main session's own directory — its extraction exiting 0
 with the same file names as the main session's, `<nn>.corrected.cmd`
 aside, shows `cmp` equal for
 every file against the main session's and one `cmp` of two files that
@@ -2304,7 +2306,7 @@ that HEAD, in the repository. The commands are in files, written by
 <workspace>/_prompts/<batch>-s4-cmds/. First extract them again yourself,
 with the same copy, into a directory of your own:
 
-    bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-<tag>-cmds
+    bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-<tag>-recheck
 
 It must exit 0, and show `ls` of both directories naming the same files,
 any `<nn>.corrected.cmd` in <workspace>/_prompts/<batch>-s4-cmds/ aside.
