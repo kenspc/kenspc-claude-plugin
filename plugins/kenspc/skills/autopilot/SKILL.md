@@ -1440,9 +1440,9 @@ its own failure.
 
 **Repo mode.** Before S4's first launch the main session saves the spec
 as Phase 0 read the section — `git show <baseline>:<spec path>` in spec
-entry, `git show <S1 hash>:<spec path>` in brief entry — to
-`_prompts/<batch>-spec.md`, runs
-`bash _prompts/<batch>-extract-acceptance.sh _prompts/<batch>-spec.md _prompts/<batch>-s4-cmds`,
+entry, `git show <S1 hash>:<spec path>` in brief entry, run in the
+repository — to `<workspace>/_prompts/<batch>-spec.md`, runs
+`bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-s4-cmds`,
 and checks that the `commands:` and `cases:` counts it prints equal the
 numbers of command cases and of other cases it reads in the field — a
 command case being a sub-bullet whose text before ` — PASS: ` is one code
