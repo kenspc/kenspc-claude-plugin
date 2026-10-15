@@ -330,6 +330,10 @@ Each step changes the files it names and nothing else, and ends with
 `bash scripts/check-all.sh` green. The steps run in the order numbered.
 Step 7 depends on Step 1 (its tool order and checks come from the probe)
 and on Step 6 (it edits the Phase 3 and verdict-loop text Step 6 leaves).
+Step 8, the walk acceptance, depends on Step 7. Step 9, the Doc-sync step,
+comes last, after every step that changes what the documents describe —
+the place generate-task gives a Doc-sync task and task-document-reviewer
+checks it holds.
 Steps 2, 3, 5, 6, and 7 edit `skills/autopilot/SKILL.md`, and Step 2 and
 Step 3 both edit `task-review/SKILL.md` and `task-implement/SKILL.md`, so
 each step edits the text as the earlier steps left it and keeps their
@@ -350,8 +354,11 @@ the Playwright MCP as configured in the user's settings. Output:
 
 Launch headless sessions through a copy of `run.sh` (so they run as a
 worker runs: `bypassPermissions`, the marker set) on a throwaway seed
-under `~/Projects/_smoke/`, a static page served on `127.0.0.1`, and
-record for each tool:
+under `~/Projects/_smoke/`, a static page served on `127.0.0.1`.
+`run.sh` passes a fixed flag set and no caller-supplied flag, so a launch
+with `--chrome` uses a second probe copy with the flag added to its
+`args=(…)` line; the shipped `run.sh` is not edited in this step. Record
+for each tool:
 
 1. whether its tools are present in the worker session, and with which
    flags (`--chrome` or none);
@@ -366,7 +373,10 @@ record for each tool:
 Acceptance: the record holds the four items for both tools, each check
 shown returning both answers; the total cost is at most USD 5. When a
 headless worker cannot use Claude in Chrome, the record says so with the
-error, and Step 7 writes Playwright alone.
+error, and Step 7 writes Playwright alone. When a headless worker can use
+neither tool, the record says so with both errors, and Steps 7 and 8 do not
+start until the maintainer has ruled on the record: the walk as designed
+has no tool. Steps 2 to 6 do not depend on the probe and go on.
 
 ### Step 2: The second fix round and the rulings grammar
 
@@ -553,23 +563,18 @@ Acceptance: guards green; `check-no-model-names.sh` green; the table holds
 checks holds the tool check; the task block holds the local-only, own-tabs,
 password, port, and listener rules.
 
-### Step 8: Documentation (Doc-sync)
-
-Files: the documents in Documentation impact.
-
-Acceptance: each listed document says what the steps built; the
-release-checklist's pinned guard and self-test counts match
-`bash scripts/check-all.sh --self-test` (unchanged at 13 and 12, since no
-step adds a guard file); `claude plugin validate --strict .` and
-`claude plugin validate --strict ./plugins/kenspc` pass.
-
-### Step 9: Walk acceptance on a seed
+### Step 8: Walk acceptance on a seed
 
 Run the walk headless on a throwaway repo-mode seed under
 `~/Projects/_smoke/` (a small web app on `127.0.0.1` with one page, a
 one-task spec that changes that page, `Acceptance: none`,
 `Standalone review: off`), with this checkout's plugin
-(`--plugin-dir`). Record in `docs/dry-runs/batch-m-walk-acceptance.md`
+(`--plugin-dir`) in the main session. In repo mode the workers run the
+installed plugin (4.6.0; installing is out of scope), so S2 and S3 run the
+old skills and the old rails hook; S4w's behavior comes from the preamble
+and the task block the main session writes from this checkout, and from
+the driver copy it takes from this checkout, which is what the cases
+judge. Record in `docs/dry-runs/batch-m-walk-acceptance.md`
 (Setup, Cases, Findings, Observations, Not exercised, Summary), committed
 alone. Cases:
 
@@ -587,6 +592,16 @@ Acceptance: the four cases PASS as written, with their costs recorded;
 total at most USD 40. The other changes are accepted in use, in the next
 dayaku-crm batches, as 4.5.0 was.
 
+### Step 9: Documentation (Doc-sync)
+
+Files: the documents in Documentation impact.
+
+Acceptance: each listed document says what the steps built; the
+release-checklist's pinned guard and self-test counts match
+`bash scripts/check-all.sh --self-test` (unchanged at 13 and 12, since no
+step adds a guard file); `claude plugin validate --strict .` and
+`claude plugin validate --strict ./plugins/kenspc` pass.
+
 ## Testing Strategy
 
 - Every guard in main mode and with `--self-test`
@@ -596,7 +611,7 @@ dayaku-crm batches, as 4.5.0 was.
 - `claude plugin validate --strict` on the marketplace and the plugin.
 - The hook's timed fixtures under half its timeout, under the CPU limit the
   guard already sets.
-- Step 1's probe and Step 9's seed acceptance for the walk, the one new
+- Step 1's probe and Step 8's seed acceptance for the walk, the one new
   session type.
 - In use: the second round, `auto`, BLOCKED classification, and benign
   breaches in the next dayaku-crm batches; their reports' new lines
