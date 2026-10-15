@@ -229,7 +229,15 @@ decision rests on.
   section and resumes the worker under `<tag>-r<k>` with
   `answer <tag>: breach ruled benign — <one line>`, counted as a resume.
   The reviewer report gains a `Breaches ruled benign:` line and the user
-  report lists each, so the user reads them before the tag. Any other
+  report lists each, so the user reads them before the tag. The ruling is
+  also recorded as every other ruling is (§ How the main session rules):
+  under `questions answered:`, marked `(main session)`, and as a
+  clarification entry in the spec naming the main session as the ruler,
+  committed as Phase 2's Constraints say (the maintainer's ruling, 15 Oct
+  2026). Why both: the rule that every ruling is a clarification then
+  holds without an exception, and the spec is where the user reads every
+  ruling before the tag; the new section and line keep the breaches
+  findable as a class. Any other
   breach stays stop condition 6. The roadmap's cases fall as follows: a
   reviewer's probe towards a reserved test name that sent nothing off the
   machine, `docker exec pg18 true`, and the `$TMPDIR/..` file are benign;
@@ -548,12 +556,17 @@ condition 6; the reviewer report and the user report; § The gates).
   <one line>` counted as a resume, the `Breaches ruled benign:` report
   line, and stop condition 6 narrowed to a breach the main session cannot
   rule benign.
-- Whether the ruling is also a clarification entry, as the maintainer
-  rules Open Question 3, stated in the new subsection.
+- The new subsection states that a benign-breach ruling is recorded as
+  every other ruling is — under `questions answered:`, marked
+  `(main session)`, and as a clarification entry in the spec naming the
+  main session as the ruler — in addition to `breaches ruled:` and the
+  `Breaches ruled benign:` line, so it reads with § How the main session
+  rules and makes no exception to it.
 
 Acceptance: guards green; `grep -q 'breaches ruled:'` and
 `grep -q 'Breaches ruled benign:'` in `SKILL.md`; stop condition 6 names
-the three conditions.
+the three conditions; the new subsection names the clarification entry
+and `questions answered:` as records of a benign-breach ruling.
 
 ### Step 6: S3b `auto` and BLOCKED tasks
 
@@ -790,14 +803,3 @@ step adds a guard file); `claude plugin validate --strict .` and
    can and writes Playwright alone when it cannot.
 2. Whether `auto` becomes the default. The trial of five batches decides
    it, in a later release.
-3. Whether a benign-breach ruling is also a clarification entry in the
-   spec. The autopilot skill's § How the main session rules records every
-   ruling under `questions answered:` and as a clarification entry naming
-   the main session, which lands on the reviewer report's
-   `Main-session rulings` line; the Technical Approach records a benign
-   breach under `breaches ruled:` and on the `Breaches ruled benign:` line
-   only. Two readings fit: the breach ruling rules no point of the spec, so
-   the new section and line are its whole record; or it is a ruling like
-   any other and gets both records. Step 5 states which, in § How the main
-   session rules, so the two sections do not contradict each other. The
-   reviewer has not chosen: the maintainer rules it before Step 5.
