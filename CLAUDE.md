@@ -792,7 +792,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   extractor, single and double backticks, a backtick inside a
   double-backtick span, spans with and without the padding spaces, a label
   with a note, an `(optional)` case, a description case, a continuation
-  line, `Acceptance: none`, no section, and no field, each file's content
+  line, `Acceptance: none`, no section, no field, inline text on the label
+  line, and an empty field, each file's content
   and the printed counts asserted; for the zero-diff script, a path with a
   space, a changed path, an unchanged path, a path absent at the baseline,
   paths with a space before or after them, a path holding glob characters,

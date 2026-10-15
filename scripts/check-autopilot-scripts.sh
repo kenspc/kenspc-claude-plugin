@@ -17,9 +17,10 @@
 # single and double backticks, a backtick inside a double-backtick span, spans
 # with and without the padding spaces, a label with a note, an `(optional)`
 # case, a description case, a continuation line, `Acceptance: none`, no
-# section, no field; a path with a space, a changed path, an unchanged path, a
-# path absent at the baseline, paths with a space before or after them, a path
-# holding glob characters, an empty paths file — and asserts each outcome.
+# section, no field, inline text on the label line, an empty field; a path
+# with a space, a changed path, an unchanged path, a path absent at the
+# baseline, paths with a space before or after them, a path holding glob
+# characters, an empty paths file — and asserts each outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -95,6 +96,8 @@ EOF
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n- Acceptance: none\n' > "$FX/spec-none.md"
 printf '# Spec\n\n## Implementation Steps\n\n- Acceptance: none\n' > "$FX/spec-nosection.md"
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
+printf '# Spec\n\n## Autopilot\n\n- Acceptance: run the suite\n- Budget: USD 10\n' > "$FX/spec-inline.md"
+printf '# Spec\n\n## Autopilot\n\n- Acceptance:\n- Budget: USD 10\n' > "$FX/spec-emptyfield.md"
 
 # A repository whose baseline holds five files; one commit after it changes
 # the file whose name holds a space and xy.txt, which the glob x[y].txt would
@@ -180,14 +183,17 @@ run_checks() {
     listing=$(cd "$out" 2>/dev/null && ls -A | tr '\n' ' ') || listing="(no out dir)"
     [[ -z "$listing" ]] || fail "extract: none fixture wrote [$listing]"
 
-    # No section, and no field: exit 2 with a reason on stderr.
+    # No section, no field, inline text on the label line, and an empty
+    # field: exit 2 with a reason on stderr, and no file written.
     local spec
-    for spec in spec-nosection spec-nofield; do
+    for spec in spec-nosection spec-nofield spec-inline spec-emptyfield; do
         out="$WORK/out-$runs-$spec"
         rc=0
         bash "$ex" "$FX/$spec.md" "$out" >/dev/null 2>"$WORK/err" || rc=$?
         [[ "$rc" -eq 2 ]] || fail "extract: $spec exited $rc, expected 2"
         [[ -s "$WORK/err" ]] || fail "extract: $spec gave no reason on stderr"
+        listing=$(cd "$out" 2>/dev/null && ls -A | tr '\n' ' ') || listing=""
+        [[ -z "$listing" ]] || fail "extract: $spec wrote [$listing]"
     done
 
     # zero-diff: unchanged paths.
