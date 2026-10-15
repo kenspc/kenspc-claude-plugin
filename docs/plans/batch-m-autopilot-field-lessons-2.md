@@ -75,16 +75,21 @@ decision rests on.
   its implementation review and four in its standalone review); why a
   ruling: a second pass with no ruling would only repeat code-fixer's own
   choices.
-- **Mechanics, as attendance-api ran them by hand.** The orchestrator saves
-  regression-verifier's first reply to `RUN_DIR/schema-c-1.md`, appends a
-  section `## Round 2` to `RUN_DIR/rulings.md` (creating the file, first
-  line naming who ruled, when there was no first-round ruling), and
-  dispatches code-fixer and regression-verifier again — fresh dispatches,
-  not resumed agents, with the CONTEXT block unchanged. code-fixer reads
-  the round-2 section, updates its rows of `schema-b.md` in place, keeps
-  every row, and adds rows for the round's `F` and `V` IDs. Why fresh: a
-  resumed subagent ran in the background in portal-service-locations, and
-  a headless worker had to wait on it by hand.
+- **Mechanics, as attendance-api ran them by hand.** In every review, as
+  soon as regression-verifier's first reply returns, the orchestrator saves
+  it to `RUN_DIR/schema-c-1.md`, ruling or not. When it then holds a ruling
+  given after code-fixer's first dispatch, it appends a section
+  `## Round 2` to `RUN_DIR/rulings.md` (creating the file, first line
+  naming who ruled, when there was no first-round ruling), and dispatches
+  code-fixer and regression-verifier again — fresh dispatches, not resumed
+  agents, with the CONTEXT block unchanged. code-fixer reads the round-2
+  section, updates its rows of `schema-b.md` in place, keeps every row,
+  and adds rows for the round's `F` and `V` IDs. Why fresh: a resumed
+  subagent ran in the background in portal-service-locations, and a
+  headless worker had to wait on it by hand. Why saved in every review: a
+  worker's question names `schema-c-1.md` before any ruling exists (below),
+  and the `V` IDs a ruling names are read from it; the save is one file
+  write and asks nothing.
 - **One text for both skills.** The second-round step is a new canonical
   block, `<!-- canonical:second-round:start/end -->`, byte-identical in
   `task-review/SKILL.md` and `task-implement/SKILL.md`, held by a new check
@@ -105,9 +110,13 @@ decision rests on.
   Issues prose. An entry that names a group of IDs covers every clause of
   every row it names, one sentence per clause. An entry outside the
   grammar — an unknown action word, no ID, no first line naming who ruled,
-  one ID in two entries — is not carried out: code-fixer names it in its
+  one ID in two entries of the same round (the entries before
+  `## Round 2`, or those after it) — is not carried out: code-fixer names it in its
   reply, regression-verifier's row 1 names it, and the verdict is at most
-  PARTIAL, as for a ruled ID no report lists. A ruled ID's duplicate that
+  PARTIAL, as for a ruled ID no report lists. An ID ruled in round 1 and
+  again under `## Round 2` is not two entries: the round-2 entry replaces
+  the round-1 entry for that ID, and regression-verifier's check 1 judges
+  its row against the round-2 entry. A ruled ID's duplicate that
   carries no ruling is merged into the ruled row and takes its ruling.
   Why the tail rather than a second entry: one ID keeps one entry and one
   action, so the recount and regression-verifier's check 1 stay as they
@@ -274,7 +283,11 @@ decision rests on.
   re-run `-s4wb`, the next letter for a later one), runs once S4's FAILs
   are classified and their re-runs have passed, or after the
   `Acceptance: none` record — so it walks the code the batch will release.
-  `Role settings:` accepts `S4w`.
+  `Role settings:` accepts `S4w`. The tag rules read `-s4w` and
+  `-s4w<letter>` as S4w ahead of the rule that reads `-s4<letter>` as an S4
+  re-run, and S4's own re-run letters skip `w`. Why: `-s4w` has the form
+  `-s4<letter>`, so read by today's rule a walk would take S4's role
+  settings, and S4's re-run after `-s4v` would take the walk's tag.
 - **The field `Walk:`.** `on` (the default in repo mode): S4w picks the
   flows a user of the app takes that the batch changed, from the spec's
   steps, and lists the flows it chose in its reply. `off`: no S4w. Or
@@ -392,10 +405,12 @@ and its Why; § The verdict loop after S3b; the S3b task block),
   the block: an entry naming a group covers every clause of every named
   row, one sentence per clause; an entry outside the grammar (unknown
   action word, no ID, no first line naming who ruled, one ID in two
-  entries) is not carried out, named in code-fixer's reply and
-  regression-verifier's row 1, and keeps the verdict from PASS; a ruled
-  ID's unruled duplicate is merged into the ruled row and takes its
-  ruling. code-fixer and regression-verifier state their side of each.
+  entries of the same round) is not carried out, named in code-fixer's
+  reply and regression-verifier's row 1, and keeps the verdict from PASS;
+  a round-2 entry for an ID ruled in round 1 replaces that entry and is
+  not a second entry; a ruled ID's unruled duplicate is merged into the
+  ruled row and takes its ruling. code-fixer and regression-verifier state
+  their side of each.
 - code-fixer records a defect no report lists as a row with Source
   `F<n>`, DEFERRED, `no report lists it` as the reason; regression-verifier
   names a regression it finds `V<n>` in its Schema C Detail. The
@@ -403,9 +418,10 @@ and its Why; § The verdict loop after S3b; the S3b task block),
   code-fixer's worked Schema B example gains one `F` row so the recount
   covers it.
 - The new `canonical:second-round` block, byte-identical in the two
-  skills: when the orchestrator holds a ruling given after code-fixer's
-  first dispatch, it saves regression-verifier's reply to
-  `RUN_DIR/schema-c-1.md`, appends `## Round 2` with the round's entries to
+  skills: in every review, as soon as regression-verifier's first reply
+  returns, the orchestrator saves it to `RUN_DIR/schema-c-1.md`; when it
+  then holds a ruling given after code-fixer's first dispatch, it appends
+  `## Round 2` with the round's entries to
   `RUN_DIR/rulings.md` (creating the file with its first line when there
   is none), dispatches code-fixer and then regression-verifier afresh with
   the CONTEXT block unchanged, prints
@@ -449,8 +465,8 @@ and `regression-verifier.md`.
 ### Step 3: The shared suite run and the tree check
 
 Files: `skills/task-review/SKILL.md` and `skills/task-implement/SKILL.md`
-(the canonical dispatch block, and each skill's step after the five
-return), the five review-angle agents (one shared section),
+(the canonical dispatch block, and the Next steps of Schema F and
+Schema G), the five review-angle agents (one shared section),
 `scripts/check-run-contract.sh` (check 5).
 
 - The canonical dispatch block gains, before the dispatch: run the
@@ -458,10 +474,14 @@ return), the five review-angle agents (one shared section),
   exit code, duration, log path under `RUN_DIR/scratch/orchestrator/`);
   record the tree state (`git status --porcelain=v1 -uall`, a hash of
   `git diff HEAD --binary`) under `RUN_DIR/scratch/orchestrator/`, after
-  the suite run. Each skill's step after the five return compares the tree
-  state: a changed tracked file stops the review before code-fixer naming
+  the suite run. It gains, after the agent list, the comparison, made once
+  all five have returned — a re-dispatched reviewer included — and before
+  code-fixer is dispatched: a changed tracked file stops the review naming
   the files, with the no-ask sentence, and no restore; a new untracked file
-  is named in the final report's Next steps and stops nothing.
+  stops nothing. Why inside the block: `check-canonical-dispatch.sh` then
+  holds both halves of the check identical in the two skills. Outside the
+  block, each skill's final report (Schema F, Schema G) names a new
+  untracked file in its Next steps.
 - The five reviewers' PREREQUISITES section, which
   `check-review-agent-drift.sh` holds identical and whose item 1 already
   names the build and test commands, gains a new item: with `RUN_DIR`, read `suite-run.md`, never
@@ -559,7 +579,10 @@ commit body).
 
 Files: `skills/autopilot/SKILL.md` (the role table at the top: an S4w
 row; the `## Autopilot` table: `Walk:` and `Role settings:`; § The
-workspace: `_logs/<batch>-walk/` in the tree; § The start checks; § The
+workspace: `_logs/<batch>-walk/` in the tree; § The batch name, the tags,
+and the main session's name: `-s4w` and its re-runs, S4's re-run letters
+skipping `w`; § Launch, wait, return: the re-run tag's role, `-s4w` and
+`-s4w<letter>` read as S4w before `-s4<letter>`; § The start checks; § The
 state file: the walk's record; Phase 3; Templates § The task blocks: an
 S4w block, and the S5 block naming a walk FAIL among its sources; § The
 stop conditions' list of stops stated at their own steps; § The gates;
@@ -579,9 +602,17 @@ asserting it is not; `run.sh --self-test` and
   or `cut by budget` record.
 - The stops stated at their own steps become seven, the walk tool's
   absence at S4w's start among them.
+- The `Acceptance: none` record, `none named; S3b is the last check` (S3
+  when S3b did not run), is no longer true once a walk follows it: when
+  S4w walked, the reviewer report's Acceptance line reads
+  `none named; S3b is the last review, the walk follows` (S3 likewise);
+  with `Walk: off`, or a walk recorded `nothing to walk`, `not walked`, or
+  `cut by budget`, it stays as it is. The state file's record, written
+  before S4w starts, is unchanged.
 
 Acceptance: guards green; `check-no-model-names.sh` green; the table holds
-`Walk:` with its three forms and `S4w` in `Role settings:`; § The start
+`Walk:` with its three forms and `S4w` in `Role settings:`; § Launch,
+wait, return reads `-s4w` and `-s4wb` as S4w and `-s4b` as S4; § The start
 checks holds the tool check; the task block holds the local-only, own-tabs,
 password, port, and listener rules.
 
@@ -652,8 +683,8 @@ step adds a guard file); `claude plugin validate --strict .` and
   a stop.
 - **A batch costs more.** The walk adds a session and a second round adds
   a code-fixer and a verifier. Mitigation: the second round runs only on a
-  ruling and at most once; the walk can be turned off and is cut first by
-  the budget; the shared suite run replaces up to five full suites with
+  ruling and at most once; the walk can be turned off, and a failed budget
+  check before S4w cuts it as an `(optional)` acceptance case is cut; the shared suite run replaces up to five full suites with
   one; `auto` saves S3b's cost (USD 26.5 a batch on average) in every
   batch it does not trigger. The trial's reports carry each session's cost.
 - **The hook denies work it should allow, or slows.** Mitigation: only
@@ -712,12 +743,15 @@ step adds a guard file); `claude plugin validate --strict .` and
 - `docs/release-checklist.md` — row 11's seed spec gains `Walk: off`; row
   14 gains a redirection outside the roots and a `gh` call, each denied
   live. Steps 4 and 7.
-- `docs/roadmap.md` — five of the six items, and the item on a narrowed
-  review's own code-fixer, leave the file; "`rulings.md` follow-ups" keeps the
-  interactive pause, the could-not-land exception, and the README copy;
-  "S3b on a condition in repo mode" stays, rewritten as the trial (five
-  batches with `auto`, the comparison, the rule for returning to `on`).
-  Steps 2–7.
+- `docs/roadmap.md` — "S3b on a condition in repo mode" is rewritten as
+  the trial (five batches with `auto`, the comparison, the rule for
+  returning to `on`), which is planned work and stays. Step 6. The items
+  this batch settles — the other five of the six, the item on a narrowed
+  review's own code-fixer, and three points of "`rulings.md` follow-ups"
+  (which keeps the interactive pause, the could-not-land exception, and
+  the README copy) — leave at the release, not in this batch: the file's
+  own rule is that an item leaves when it ships, any release is out of
+  scope here, and 4.6.0's items left in its release commit.
 - `README.md` — N/A for this document: the autopilot row's summary ("one
   headless session per role … two human gates") still holds, and so do the
   task-review and task-implement rows.
@@ -734,3 +768,14 @@ step adds a guard file); `claude plugin validate --strict .` and
    can and writes Playwright alone when it cannot.
 2. Whether `auto` becomes the default. The trial of five batches decides
    it, in a later release.
+3. Whether a benign-breach ruling is also a clarification entry in the
+   spec. The autopilot skill's § How the main session rules records every
+   ruling under `questions answered:` and as a clarification entry naming
+   the main session, which lands on the reviewer report's
+   `Main-session rulings` line; the Technical Approach records a benign
+   breach under `breaches ruled:` and on the `Breaches ruled benign:` line
+   only. Two readings fit: the breach ruling rules no point of the spec, so
+   the new section and line are its whole record; or it is a ruling like
+   any other and gets both records. Step 5 states which, in § How the main
+   session rules, so the two sections do not contradict each other. The
+   reviewer has not chosen: the maintainer rules it before Step 5.
