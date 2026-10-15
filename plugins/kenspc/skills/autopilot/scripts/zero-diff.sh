@@ -16,7 +16,8 @@
 # Output and exit codes
 #   Each path absent at the baseline is named on stderr. Then
 #   "compared: <n> paths" is printed, n being the number of paths read,
-#   followed by `git diff --stat <baseline> HEAD -- <paths>`.
+#   followed by `git diff --stat <baseline> HEAD -- <paths>`, each path read
+#   literally (--literal-pathspecs), so `app/[id]/page.tsx` is not a glob.
 #   0  the stat is empty: no listed path changed
 #   1  the stat is not empty: it names the changed paths
 #   2  a usage error — the wrong arguments, an unreadable paths file, a
@@ -81,7 +82,7 @@ for p in "${paths[@]}"; do
 done
 
 echo "compared: ${#paths[@]} paths"
-if ! stat=$(git diff --stat "$baseline" HEAD -- "${paths[@]}"); then
+if ! stat=$(git --literal-pathspecs diff --stat "$baseline" HEAD -- "${paths[@]}"); then
   echo "zero-diff.sh: git diff failed" >&2
   exit 2
 fi

@@ -18,8 +18,8 @@
 # with and without the padding spaces, a label with a note, an `(optional)`
 # case, a description case, a continuation line, `Acceptance: none`, no
 # section, no field; a path with a space, a changed path, an unchanged path, a
-# path absent at the baseline, paths with a space before or after them, an
-# empty paths file — and asserts each outcome.
+# path absent at the baseline, paths with a space before or after them, a path
+# holding glob characters, an empty paths file — and asserts each outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -96,8 +96,9 @@ printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n- Acceptance: none\n' > "$FX
 printf '# Spec\n\n## Implementation Steps\n\n- Acceptance: none\n' > "$FX/spec-nosection.md"
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
 
-# A repository whose baseline holds three files; one commit after it changes
-# the file whose name holds a space.
+# A repository whose baseline holds five files; one commit after it changes
+# the file whose name holds a space and xy.txt, which the glob x[y].txt would
+# match.
 REPO="$FX/repo"
 git init -q "$REPO"
 git -C "$REPO" config user.email guard@example.invalid
@@ -106,16 +107,20 @@ git -C "$REPO" config commit.gpgsign false
 printf 'a\n' > "$REPO/a.txt"
 printf 'b\n' > "$REPO/with space.txt"
 printf 'c\n' > "$REPO/c.txt"
+printf 'x\n' > "$REPO/x[y].txt"
+printf 'y\n' > "$REPO/xy.txt"
 git -C "$REPO" add -A
 git -C "$REPO" commit -q -m baseline
 BASE=$(git -C "$REPO" rev-parse HEAD)
 printf 'b2\n' >> "$REPO/with space.txt"
+printf 'y2\n' >> "$REPO/xy.txt"
 git -C "$REPO" commit -q -am change
 
 printf 'a.txt\nc.txt\n' > "$FX/paths-unchanged.txt"
 printf 'a.txt\n\nwith space.txt\n' > "$FX/paths-changed.txt"
 printf 'absent.txt\na.txt\n' > "$FX/paths-absent.txt"
 printf ' with space.txt\na.txt \n' > "$FX/paths-padded.txt"
+printf 'x[y].txt\n' > "$FX/paths-glob.txt"
 : > "$FX/paths-empty.txt"
 
 # --- Checks -------------------------------------------------------------------
@@ -209,6 +214,13 @@ run_checks() {
         || fail "zero-diff: padded paths' first line is not [compared: 2 paths]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the padded changed path"
     [[ ! -s "$WORK/err" ]] || fail "zero-diff: padded paths wrote to stderr: $(cat "$WORK/err")"
+
+    # zero-diff: an unchanged path holding glob characters is read literally,
+    # so the changed xy.txt it would match as a glob is not compared.
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-glob.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "zero-diff: glob-character path exited $rc, expected 0"
+    [[ "$stdout" == "compared: 1 paths" ]] || fail "zero-diff: glob-character path printed [$stdout]"
 
     # zero-diff: a path absent at the baseline is named on stderr.
     rc=0
