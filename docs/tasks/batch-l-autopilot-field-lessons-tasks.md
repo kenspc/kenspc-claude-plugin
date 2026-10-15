@@ -126,7 +126,31 @@ that the go is named in the dispatch of the agent that runs the command.
 
 ### Task 3: `extract-acceptance.sh`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the parsing is one awk program (the macOS awk, no gawk
+  extension) behind a bash wrapper that checks the arguments, since awk
+  walks the code span's backtick runs character by character more simply
+  than bash 3.2 does. A code span closes at the first later run of exactly
+  the opening run's length (CommonMark); the text is one span only when
+  that run ends the text. Sub-bullets are the lines at the first
+  sub-bullet's indentation; deeper-indented lines, bullets included, are
+  continuation lines, so a nested list does not split a case. Each file
+  ends in a newline. A field whose value is neither `none` nor a list of
+  sub-bullets (text on the label line, or an empty field) is exit 2 too —
+  read as zero cases, a field the parser failed to read would pass as one
+  with nothing to run.
+- Changes/tradeoffs: beyond the spec, exit 2 also covers an unreadable
+  spec file and an out dir that cannot be created; a CRLF spec is read
+  with the `\r` stripped; only the first `## Autopilot` section is read.
+  The out dir is created before the parse, so a failed run may leave it
+  empty (no file is written in it). Files from an earlier run in the same
+  out dir are overwritten, not removed — the main session and S4 extract
+  into fresh directories. Verified by a probe on a scratch spec
+  (single/double backticks, a backtick inside a double-backtick span, a
+  continuation line, a description case, a field note, `none`, no section,
+  no field); the guard that holds this behavior is Task 5's.
 
 Create `plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh`
 (`#!/bin/bash`, executable, bash 3.2 compatible, no model name) as plan
