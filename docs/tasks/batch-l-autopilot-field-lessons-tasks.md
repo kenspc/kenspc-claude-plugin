@@ -369,7 +369,16 @@ stat names.
 
 ### Task 8: Budget projection per role
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the role list is written into the sentence as the plan gives
+  it (the narrowed reviews one group of their own, apart from S3b), and
+  the plugin-mode S4 cost reuses spent's wording ("the trial's and the
+  cases' costs from its record"), so the two never count S4 differently.
+- Changes/tradeoffs: none — the gates table's budget row and the
+  `Every launch passes` bullet are unchanged (diffed against the task's
+  start).
 
 Implement plan Step 5 in `plugins/kenspc/skills/autopilot/SKILL.md`
 (§ Budget and caps): projected is the largest cost so far of a session of

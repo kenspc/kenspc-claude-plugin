@@ -1285,16 +1285,23 @@ Before each launch:
   acceptance line and its total-cost line, and adds nothing to spent, as
   an unreadable JSON does (The return); a `0` there would read as a free
   case.
-  Projected = the largest
-  single-session cost of this batch so far, or the budget divided by six
-  before the first session. When spent + projected > budget, stop and ask
+  Projected = the largest cost so far of a session of the role about to
+  launch — S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6,
+  each with its resumes and re-runs — or the budget divided by six before
+  that role's first session. A plugin-mode S4's cost is its own session's
+  plus the trial's and the cases' costs from its record, as spent counts
+  them, since its own JSON holds none of its nested sessions. When
+  spent + projected > budget, stop and ask
   "raise the budget to how much?" with spent, projected, and the remaining
   steps; the answer sets the budget for the rest of the run and is recorded
   in the state file and the reports, not in the brief. In a session that
   cannot ask (a system reminder to work without stopping), the run ends with
   those numbers. Why: per-step estimates drift with every model generation
   and would be numbers hard-coded in a prompt; the batch's own sessions are
-  the only evidence in the run.
+  the only evidence in the run. Why per role: projected at the largest
+  session of the whole batch, a USD 1 release preparation was judged
+  against a USD 70 implementation session and needed that much headroom,
+  while a role's own sessions are what its next session resembles.
 - Every launch passes `--max-budget-usd` with the remaining amount — the
   budget minus spent — through `AUTOPILOT_BUDGET_USD`. A resume passes the
   same remaining amount, computed the same way: the ended session's last
