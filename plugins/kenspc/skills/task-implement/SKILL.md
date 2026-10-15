@@ -268,7 +268,12 @@ dispatch carries `TASK_LIMIT: 12` in its CONTEXT block, the slices run one
 after another, and the task document is read again after each slice
 returns. Dispatch the next slice while a TODO or IN PROGRESS task is left;
 stop when none is left, or when a slice returns with no task's status
-changed, since another would meet the same tasks the same way. Every slice
+changed, since another would meet the same tasks the same way. A task
+still TODO or IN PROGRESS after that stop was never run: Step 5's update
+names it, and it keeps the verdict from PASS. Why: the merged Schema D
+holds only the tasks the slices gave a status, so a task left unrun would
+otherwise appear nowhere and PASS would read as the whole document done.
+Every slice
 reuses the same RUN_DIR, and the batch confirmation (Step 3) is asked once,
 for the whole batch. Why 12: one implementer that held a 33-task document
 ended on `Prompt is too long` after 22 tasks and returned no summary, and
@@ -299,6 +304,7 @@ Then present a brief progress update to the user:
 Implementation phase complete.
 - Completed: N tasks (Task X, Task Y, ...)
 - Blocked: N tasks (Task Z: [brief reason], ...)
+- Not run: N tasks (Task W, ...) — only when the slices stopped with tasks left
 Proceeding to code review.
 ```
 
@@ -630,7 +636,8 @@ reading that AGENTS.md.
 
 #### Verdict determination
 
-- **PASS** — every task DONE; zero HIGH unresolved; build / tests / lint
+- **PASS** — every task DONE, none left unrun by the slices (Phase 1
+  Step 4); zero HIGH unresolved; build / tests / lint
   PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
   introduced by fix commits; no ruled row whose action differs from its
   ruling, outside the exception for a fix that could not land, and no ruled
@@ -680,6 +687,7 @@ reading that AGENTS.md.
   Verification sections are omitted from the report.
 
 The Next steps bullets must give the user enough detail to act on every
-HIGH or MEDIUM DEFERRED, BLOCKED, or unresolved item without reading the
+HIGH or MEDIUM DEFERRED, BLOCKED, or unresolved item, and every task the
+slices left unrun, without reading the
 review reports or commit history; LOW deferred items stay one path away in
 schema-b.md.
