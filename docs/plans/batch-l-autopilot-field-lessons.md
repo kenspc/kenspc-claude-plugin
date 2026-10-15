@@ -434,6 +434,13 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
   it, and a commit that stages everything sweeps it in. Mitigation: a run
   without approval names it in its final message as the user's to keep or
   delete.
+- **The main session shares the usage limit its worker hit.** The workers
+  run under the same account as the main session, so a limit that ends a
+  worker may end the main session's next turn too; a headless main session
+  that waits by polling makes a model turn per poll, and an interactive
+  one's scheduled wake-up is a turn as well. Step 6's wait then holds only
+  when the main session's own turns are not limited. Mitigation: none in
+  this plan; Open Questions 3.
 - **A guard literal moved by an edit.** Mitigation: the guards named in
   each step's acceptance run after it.
 
@@ -474,3 +481,9 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 2. Whether S4's commands should run under the shell the main session's Bash
    tool uses or under a shell the spec names; this plan takes the former,
    which matches how the by-hand runs worked on macOS.
+3. Whether step 6's wait for the reset can run in a main session that the
+   same usage limit stops: whether a headless main session should end with
+   the reset time and a resume command instead of polling, as the
+   interactive one does when it cannot schedule a wake-up. The
+   therapists-portal run, where the main session resumed the worker by
+   hand, is the one data point.
