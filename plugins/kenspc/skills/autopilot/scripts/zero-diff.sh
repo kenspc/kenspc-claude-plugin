@@ -8,7 +8,8 @@
 #   <baseline>    the batch's baseline commit
 #   <paths file>  one repository-relative path per line (the `Zero diff:`
 #                 paths, which the main session writes to
-#                 _prompts/<batch>-zero-diff.txt); blank lines are skipped
+#                 _prompts/<batch>-zero-diff.txt); each line is trimmed at
+#                 both ends, and blank lines are skipped
 #
 # Run inside the repository; the paths are read from its top level.
 #
@@ -50,6 +51,10 @@ fi
 paths=()
 while IFS= read -r line || [ -n "$line" ]; do
   line=${line%$'\r'}
+  # Trim each end: a path split from a comma-separated field keeps the
+  # space after the comma, and as written it would match nothing.
+  line=${line#"${line%%[![:space:]]*}"}
+  line=${line%"${line##*[![:space:]]}"}
   case $line in
     *[![:space:]]*) paths[${#paths[@]}]=$line ;;
   esac

@@ -56,8 +56,9 @@ generate-plan and task-implement changes.
   backticks, a backtick inside a double-backtick span, spans with and
   without padding, a label with a note, an `(optional)` case, a
   description case, a continuation line, `Acceptance: none`; a path with a
-  space, changed, unchanged, and absent paths, an empty paths file — and
-  its `--self-test` turns it red with three mutants of copies (padding
+  space, changed, unchanged, and absent paths, paths with a space before
+  or after them, an empty paths file — and its `--self-test` turns it red
+  with three mutants of copies (padding
   stripping removed, continuation joining removed, the paths read as one
   word).
 - **`Run facts:` (autopilot).** A new `## Autopilot` field for measured

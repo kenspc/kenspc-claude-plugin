@@ -795,9 +795,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   line, `Acceptance: none`, no section, and no field, each file's content
   and the printed counts asserted; for the zero-diff script, a path with a
   space, a changed path, an unchanged path, a path absent at the baseline,
-  and an empty paths file, each exit code and the `compared:` line
-  asserted. Its self-test copies both scripts and turns the guard red with
-  three mutants written to separate files with `sed` — the padding
+  paths with a space before or after them, and an empty paths file, each
+  exit code and the `compared:` line asserted. Its self-test copies both
+  scripts and turns the guard red with three mutants written to separate
+  files with `sed` — the padding
   stripping removed, the continuation joining removed, and the paths
   passed to `git diff` as one word — then green on the unmutated copies; a
   mutant that changes nothing is exit 2. Why the scripts have a guard:

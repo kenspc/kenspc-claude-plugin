@@ -18,7 +18,8 @@
 # with and without the padding spaces, a label with a note, an `(optional)`
 # case, a description case, a continuation line, `Acceptance: none`, no
 # section, no field; a path with a space, a changed path, an unchanged path, a
-# path absent at the baseline, an empty paths file — and asserts each outcome.
+# path absent at the baseline, paths with a space before or after them, an
+# empty paths file — and asserts each outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -114,6 +115,7 @@ git -C "$REPO" commit -q -am change
 printf 'a.txt\nc.txt\n' > "$FX/paths-unchanged.txt"
 printf 'a.txt\n\nwith space.txt\n' > "$FX/paths-changed.txt"
 printf 'absent.txt\na.txt\n' > "$FX/paths-absent.txt"
+printf ' with space.txt\na.txt \n' > "$FX/paths-padded.txt"
 : > "$FX/paths-empty.txt"
 
 # --- Checks -------------------------------------------------------------------
@@ -197,6 +199,16 @@ run_checks() {
     [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
         || fail "zero-diff: changed path's first line is not [compared: 2 paths]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the changed path"
+
+    # zero-diff: a path with a space before it, as a split on a comma leaves
+    # it, and one with a space after it are trimmed and compared.
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-padded.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: padded paths exited $rc, expected 1"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
+        || fail "zero-diff: padded paths' first line is not [compared: 2 paths]"
+    printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the padded changed path"
+    [[ ! -s "$WORK/err" ]] || fail "zero-diff: padded paths wrote to stderr: $(cat "$WORK/err")"
 
     # zero-diff: a path absent at the baseline is named on stderr.
     rc=0
