@@ -803,8 +803,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   and the printed counts asserted; for the zero-diff script, a path with a
   space, a changed path, an unchanged path, a path absent at the baseline,
   paths with a space before or after them, a path holding glob characters,
-  a paths file with CRLF line ends, a long changed path named in full, and
-  an empty paths file, each
+  a paths file with CRLF line ends, a long changed path named in full, an
+  empty paths file, one of whitespace-only lines, a baseline that is not a
+  commit, a last line without a newline, and a run from a subdirectory, each
   exit code and the `compared:` line asserted. Its self-test copies both
   scripts and turns the guard red with three mutants written to separate
   files with `sed` — the padding

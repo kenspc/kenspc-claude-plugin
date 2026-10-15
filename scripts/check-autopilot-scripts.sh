@@ -25,7 +25,9 @@
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
-# paths file — and asserts each outcome.
+# paths file, one of whitespace-only lines, a baseline that is not a commit, a
+# last line without a newline, a run from a subdirectory — and asserts each
+# outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -161,6 +163,8 @@ printf 'x[y].txt\n' > "$FX/paths-glob.txt"
 printf '%s\n' "$LONG" > "$FX/paths-long.txt"
 printf 'a.txt\r\nwith space.txt\r\n' > "$FX/paths-crlf.txt"
 : > "$FX/paths-empty.txt"
+printf '  \n\t\n' > "$FX/paths-blank.txt"
+printf 'a.txt\nwith space.txt' > "$FX/paths-nonewline.txt"
 
 # --- Checks -------------------------------------------------------------------
 
@@ -324,10 +328,26 @@ run_checks() {
     grep -qF 'absent.txt' "$WORK/err" || fail "zero-diff: the absent path is not named on stderr"
     [[ "$stdout" == "compared: 2 paths" ]] || fail "zero-diff: absent path printed [$stdout]"
 
-    # zero-diff: an empty paths file is a usage error.
+    # zero-diff: an empty paths file, one of whitespace-only lines, and a
+    # baseline that is not a commit are usage errors.
     rc=0
     (cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-empty.txt") >/dev/null 2>&1 || rc=$?
     [[ "$rc" -eq 2 ]] || fail "zero-diff: empty paths file exited $rc, expected 2"
+    rc=0
+    (cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-blank.txt") >/dev/null 2>&1 || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "zero-diff: whitespace-only paths file exited $rc, expected 2"
+    rc=0
+    (cd "$REPO" && bash "$zd" no-such-commit "$FX/paths-unchanged.txt") >/dev/null 2>&1 || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "zero-diff: a baseline that is not a commit exited $rc, expected 2"
+
+    # zero-diff: a last line without a newline is read, and a run from a
+    # subdirectory reads the paths from the top level.
+    rc=0
+    stdout=$(cd "$REPO/deeply" && bash "$zd" "$BASE" "$FX/paths-nonewline.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: no final newline, from a subdirectory, exited $rc, expected 1"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
+        || fail "zero-diff: no final newline, from a subdirectory: first line is not [compared: 2 paths]"
+    printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: from a subdirectory, the stat does not name the changed path"
 
     return 0
 }
