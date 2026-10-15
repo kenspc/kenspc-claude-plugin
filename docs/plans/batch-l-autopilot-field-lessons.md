@@ -278,15 +278,20 @@ conditions, Stops stated at their own steps).
 - One whose result names a usage or session limit with a reset time is a
   usage-limit end: not a death, so it does not count toward the dead-twice
   stop; the step is resumed under its next `-r<k>` after the named reset,
-  and the resume counts under `Caps:`. A headless main session waits by
-  polling; an interactive one schedules its own wake-up after the reset
-  when one of its tools can schedule a wake-up of the session, and
-  otherwise stops with the reset time as its reason, with the
-  sentence for a session that cannot ask (the run ends with that message).
+  and the resume counts under `Caps:`. The main session, headless or
+  interactive, does not wait through the reset by polling: when one of its
+  tools can schedule a wake-up of the session, it schedules one after the
+  named reset and ends its turn; otherwise it stops with
+  `Autopilot stopped: usage limit, resets <time>` naming the step and the
+  resume that continues it, with the sentence for a session that cannot
+  ask (the run ends with that message). The turn after the reset — the
+  wake-up, or the user's word — makes the resume. Why: the workers run
+  under the main session's own account, so the limit that ended a worker
+  can refuse the main session's turns too, and a poll is a turn.
 - The state file's `sessions:` status words gain `usage-limit`, written
   for such an end in place of `dead` or the subtype.
-- The new stop (an interactive main session with no tool to schedule its
-  wake-up) is stated at its own step, so § The stop conditions' "Five
+- The new stop (a main session with no tool to schedule its wake-up) is
+  stated at its own step, so § The stop conditions' "Five
   stops sit outside the numbered list" becomes six and names it, and the
   gates table's row for a stop stated at its own step covers it.
 - The report the main session gives when asked about a live worker adds,
@@ -426,8 +431,8 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
   `claude plugin validate --strict ./plugins/kenspc`.
 - Step 3's guard holds the two scripts' behavior; its self-test proves the
   guard can fail.
-- No headless acceptance run in this batch: no release follows it, and the
-  admin-pages batch runs on the installed 4.5.2. The first dayaku-crm batch
+- No headless acceptance run in this batch: no release follows it, so the
+  installed version stays 4.5.2. The first dayaku-crm batch
   run on the next installed version is the live check of steps 1, 2, 4,
   5, 6, and 7, and of step 9's S6 half when its `Release preparation:`
   list makes the removal; the release that ships this batch decides whether
@@ -454,10 +459,11 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 - **The main session shares the usage limit its worker hit.** The workers
   run under the same account as the main session, so a limit that ends a
   worker may end the main session's next turn too; a headless main session
-  that waits by polling makes a model turn per poll, and an interactive
-  one's scheduled wake-up is a turn as well. Step 6's wait then holds only
-  when the main session's own turns are not limited. Mitigation: none in
-  this plan; Open Questions 3.
+  that waits by polling makes a model turn per poll. Mitigation (the
+  user's decision on the reviewed plan's Open Question 3, 15 Oct 2026):
+  step 6 never polls through the reset; the main session schedules one
+  wake-up after it or stops with the reset time, so its only turn falls
+  after the reset.
 - **A guard literal moved by an edit.** Mitigation: the guards named in
   each step's acceptance run after it.
 
@@ -498,9 +504,3 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 2. Whether S4's commands should run under the shell the main session's Bash
    tool uses or under a shell the spec names; this plan takes the former,
    which matches how the by-hand runs worked on macOS.
-3. Whether step 6's wait for the reset can run in a main session that the
-   same usage limit stops: whether a headless main session should end with
-   the reset time and a resume command instead of polling, as the
-   interactive one does when it cannot schedule a wake-up. The
-   therapists-portal run, where the main session resumed the worker by
-   hand, is the one data point.
