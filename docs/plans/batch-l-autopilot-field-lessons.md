@@ -75,8 +75,9 @@ Each step changes the files it names and nothing else, and ends with
 `bash scripts/check-all.sh` green. The steps run in the order numbered.
 Steps 1, 2, 4, 5, 6, 7, and 9 all edit `skills/autopilot/SKILL.md`, and
 several share a section — steps 1 and 2 the preamble's § 6, steps 1 and 6
-§ Launch, wait, return (the return), steps 1 and 7 the reviewer report,
-steps 4 and 7 § The zero-diff check, Phase 3, and § Phase transitions — so
+§ Launch, wait, return (the return) and § The state file, steps 1, 4, and
+7 the reviewer report, steps 4 and 7 Phase 2's DONE line, § The zero-diff
+check, Phase 3, Phase 4's zero-diff re-run, and § Phase transitions — so
 each step edits the text as the earlier steps left it and keeps their
 additions. Step 4 depends on step 3 (it copies the scripts step 3
 creates); step 9 depends on step 2 (it names the `Run facts:` field in the
