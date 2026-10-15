@@ -82,6 +82,10 @@ additions. Step 4 depends on step 3 (it copies the scripts step 3
 creates); step 9 depends on step 2 (it names the `Run facts:` field in the
 grammar it writes).
 
+Every rule a step adds to a skill or an agent carries its Why in the
+file's form, the failure stated in its own words and not cited as a
+dry-run record (CLAUDE.md, Writing Rules for Skill Content).
+
 ### Step 1: Preamble additions (item 29)
 
 Files: `plugins/kenspc/skills/autopilot/SKILL.md` (Templates § The
@@ -183,8 +187,10 @@ blocks, S4 repo mode; § The reviewer report; § Phase transitions).
 
 - Phase 0 copies both scripts beside the driver copy, as
   `_prompts/<batch>-extract-acceptance.sh` and `_prompts/<batch>-zero-diff.sh`,
-  for the reason the driver is copied: a worker reaches the workspace, not
-  the plugin's cache.
+  for the reason the driver is copied — a plugin-mode S3 may edit the
+  shipped scripts, and a running batch keeps the text it started with —
+  and so the S4 worker runs the same copy as the main session, by the
+  workspace path its block names.
 - Phase 3, repo mode: before S4's first launch the main session runs the
   extraction copy on the spec as Phase 0 read the section —
   `git show <baseline>:<spec path>` in spec entry, the spec at S1's commit
@@ -423,8 +429,11 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
   the failure in one sentence each.
 - **`is_error` read as a failure changes the return for runs that ended
   that way and were read as success.** Intended; the CHANGELOG names it.
-- **The draft file can be left behind.** Mitigation: a run without approval
-  names it; it is untracked, so nothing commits it unseen.
+- **The draft file can be left behind.** It is untracked, and an untracked
+  file is not inert here: the autopilot's clean-tree start check stops on
+  it, and a commit that stages everything sweeps it in. Mitigation: a run
+  without approval names it in its final message as the user's to keep or
+  delete.
 - **A guard literal moved by an edit.** Mitigation: the guards named in
   each step's acceptance run after it.
 
