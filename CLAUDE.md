@@ -61,7 +61,9 @@ plugins/kenspc/
 │       ├── SKILL.md
 │       └── scripts/
 │           ├── run.sh           # Bash driver for the autopilot's headless sessions; the first scripts/ under a skill, and check-no-model-names.sh scans it
-│           └── run.ps1          # PowerShell mirror of run.sh (pwsh 7.3 or later), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
+│           ├── run.ps1          # PowerShell mirror of run.sh (pwsh 7.3 or later), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
+│           ├── extract-acceptance.sh  # Writes each Acceptance: case of a spec's ## Autopilot section to <nn>.cmd or <nn>.case; copied per batch, run by the main session and S4
+│           └── zero-diff.sh     # The zero-diff check: git diff --stat over a paths file, one argument per path, with a compared: count; copied per batch
 ├── README.md
 └── LICENSE
 ```
@@ -72,7 +74,7 @@ plugins/kenspc/
 
 Each skill lives in `skills/<skill-name>/` with:
 - `SKILL.md` — skill definition with YAML frontmatter (`name`, `description`, `version`, `argument-hint`) followed by structured phases/modes
-- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's two drivers, `run.sh` and its PowerShell mirror `run.ps1`, which `check-no-model-names.sh` scans with the rest of `skills/`
+- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's: its two drivers, `run.sh` and its PowerShell mirror `run.ps1`, and its two helper scripts, `extract-acceptance.sh` and `zero-diff.sh` (4.6.0), which `check-autopilot-scripts.sh` holds; `check-no-model-names.sh` scans all four with the rest of `skills/`
 - `templates/` (optional) — files the skill reads by path and fills in (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/templates/<file>`); today only init-project's, one `.tmpl` file per document it writes. A template is never named `CLAUDE.md` or `AGENTS.md`, since a session working in this repository would load a `CLAUDE.md` as a memory file, and an `AGENTS.md` too wherever Claude Code reads AGENTS.md itself (its `claude-md-and-agents-md` mode), and `check-no-model-names.sh` scans templates with the rest of `skills/`
 
 Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
@@ -323,7 +325,9 @@ The autopilot skill runs one batch of this plugin's own chain unattended
 through one headless `claude -p` session per role — S1 design (brief entry
 only), S2 task decomposition (`/kenspc-task`), S3 implementation
 (`/kenspc-task-implement`), S3b standalone review (`/kenspc-task-review`
-over the batch's range), S4 acceptance, S5 fix on demand, S6 release
+over the batch's range; it runs unless `Standalone review: off` in repo
+mode, 4.6.0, where S3's Schema G verdict and its review's rows take its
+place in the verdict loop), S4 acceptance, S5 fix on demand, S6 release
 preparation — each started through the driver script that ships with the
 skill (`skills/autopilot/scripts/run.sh`) and is copied per batch, with
 `--name <tag>` and `crossSessionInbound: accept`. Questions and answers
@@ -333,7 +337,8 @@ written by the driver when the worker returns, is the completion artifact
 — a transition never rests on a notice's wording. The main session
 re-reads its state file (`_logs/<batch>-state.md` under the workspace) on
 every wake, and `--resume` only continues a worker that has ended — dead,
-ended by its cap, stopped on a question it got no answer to within
+ended by its cap, ended by the usage limit (resumed after the reset, not
+counted as a death; 4.6.0), stopped on a question it got no answer to within
 thirty minutes or whose send returned an error or a held or refused
 notice, or an S2 whose committed task document the skipped-gate
 post-check sends back to amend — never a live one; no agent, no CONTEXT key, no agent
@@ -416,6 +421,18 @@ probes, copies, mutants, and runner configs under
 there, never on a tracked file. It replaces the earlier `REVIEW_REPORTS` and
 `ACCOUNTABILITY_LIST` keys: the file names inside the run directory are
 fixed, so one path is the only value the orchestrator has to get right.
+
+`TASK_LIMIT` (4.6.0) is an optional key of `task-implementer`: a positive
+integer that caps how many TODO or IN PROGRESS tasks, in document order,
+one dispatch gives a final status (a dependency block included); a task
+left for a later slice keeps its status, a value that is not a positive
+integer is a BLOCKED run, and without the key every incomplete task is
+processed. `task-implement` adds `TASK_LIMIT: 12` to the dispatch when a
+document has more than 12 incomplete tasks, dispatching slices one after
+another in the same run directory until no TODO or IN PROGRESS task is
+left or a slice changes no task's status, and merges the slices' Schema D.
+Why 12: one implementer ended on `Prompt is too long` after 22 tasks of a
+33-task document and returned no summary.
 
 `change-set.md` (v3.7) follows the same reasoning. With REVIEW_SCOPE
 "changes", the orchestrating skill computes the change set once, with
@@ -521,7 +538,7 @@ The prototype skill references the same block the same way: its prototype's file
 
 The Open Questions entry grammar — the status words, the labels and their order, the answered and unsettled forms — is written once, in generate-brief's Writing rules for the brief, and generate-plan and the prototype skill point at it by path. The one piece the prototype skill repeats is the Prototype line (``Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>` ``), byte-identical to generate-brief's, so a change to that line in `generate-brief/SKILL.md` updates `prototype/SKILL.md` in the same commit. `check-doc-sync-anchors.sh` holds this line in both files, beside the `needs prototype` status word across the three.
 
-The autopilot skill uses no agent teams: one role per headless session, and a session is never reused across roles. A session that reviews its own work reads its own intent into the code, and a session that edited the plugin still runs the text it started with — skills and agents load at session start — so the implementer, the reviewer, and the acceptor are three sessions, and a fix is a fourth.
+The autopilot skill uses no agent teams: one role per headless session, and a session is never reused across roles. A session that reviews its own work reads its own intent into the code, and a session that edited the plugin still runs the text it started with — skills and agents load at session start — so the implementer, the reviewer, and the acceptor are three sessions, and a fix is a fourth. In repo mode with `Standalone review: off` (4.6.0) the reviewer session does not run and S3's own review — five fresh subagents — stands in for it; the three sessions hold whenever S3b runs, and always in plugin mode, where the field is a settings stop.
 
 The autopilot's driver posts no completion message on the cross-session messaging socket. The socket documents only its auth line, and its message line format is undocumented; a driver that guessed the format would break silently on a release. `<tag>.exit`, written by the driver when the worker returns, is the completion artifact, and the idle notice is only the wake that tells the main session to read it.
 
@@ -767,13 +784,35 @@ Project-level shell scripts live in `scripts/` at the repo root:
   occurrence in the carrier's region); a
   mutation that replaces nothing is exit 2 — and cleans up without a
   recursive `rm`.
+- `check-autopilot-scripts.sh` — guards the autopilot's two helper
+  scripts (4.6.0), `skills/autopilot/scripts/extract-acceptance.sh` and
+  `zero-diff.sh`, by running them against fixtures built in its own
+  `mktemp -d` directory, removed by its EXIT trap (the only recursive
+  `rm`), with git's global and system configuration masked: for the
+  extractor, single and double backticks, a backtick inside a
+  double-backtick span, spans with and without the padding spaces, a label
+  with a note, an `(optional)` case, a description case, a continuation
+  line, `Acceptance: none`, no section, and no field, each file's content
+  and the printed counts asserted; for the zero-diff script, a path with a
+  space, a changed path, an unchanged path, a path absent at the baseline,
+  and an empty paths file, each exit code and the `compared:` line
+  asserted. Its self-test copies both scripts and turns the guard red with
+  three mutants written to separate files with `sed` — the padding
+  stripping removed, the continuation joining removed, and the paths
+  passed to `git diff` as one word — then green on the unmutated copies; a
+  mutant that changes nothing is exit 2. Why the scripts have a guard:
+  each replaced a step every main session wrote by hand and got wrong — a
+  stray backtick at each end of extracted commands, and a zero-diff check
+  whose paths arrived as one zsh word and compared nothing. Run it after
+  editing either script.
 
-Eleven of the guards (`check-canonical-dispatch.sh`,
+Twelve of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
 `check-quality-reviewer-bullet-structure.sh`,
 `check-notes-format-sync.sh`, `check-doc-sync-anchors.sh`,
 `check-no-model-names.sh`, `check-run-contract.sh`, `check-json.sh`,
-`check-instruction-files.sh`, `check-autopilot-rails-hook.sh`) also
+`check-instruction-files.sh`, `check-autopilot-rails-hook.sh`,
+`check-autopilot-scripts.sh`) also
 accept a `--self-test` flag
 that runs
 a mutation regression fixture in a temp workdir (positive path, negative

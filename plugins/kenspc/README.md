@@ -13,13 +13,13 @@ Skills activate automatically when Claude Code detects a matching task context.
 | init-project | Sets a project up for the kenspc chain in one run: an empty directory (after `git init`, first branch `main`), a directory of files once you confirm it is the project, a new app inside another repository (its `AGENTS.md` and `CLAUDE.md` pair only, and its stack's plugins on your yes), or an existing repository, where it writes only what is missing. Interviews you in five skippable rounds — project; shape and stack; UI; delivery; collaboration — reading the commands from the files rather than asking; offers to scaffold each app with its stack's official generator and, with no remote, to create a private GitHub repository. Offers to turn on the Claude Code plugins the stacks need — each language's LSP plugin, and `microsoft-docs` for .NET or Azure — in the project's `.claude/settings.json`, naming any language server missing from your PATH. Writes `AGENTS.md` as the index (commands, hard rules including two safety rules, a Documents table, workflow), a `CLAUDE.md` that imports it, and topic documents under `docs/`, marking what you did not answer `TBD(init): …`; runs its checks, asks you to confirm the file list, and commits. A rerun fills only the `TBD(init):` markers you answer. See [Project setup](#project-setup). No review phase: its mechanical checks and your confirmation of the file list are the gate. |
 | generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. The brief always carries an Open Questions section: each question the discussion could not settle, marked `open` or `needs prototype` (with `Settled by:`, the result that would settle it), or `none` when nothing is open; the next-step suggestion names `/kenspc-prototype` for each `needs prototype` entry before `/kenspc-plan`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
 | prototype | Answers one open question from a brief with a throwaway prototype — logic, UI, or a feature slice. Before the prototype's first file is written, sends its frame as a message of its own — the question, the result that settles it, the kind, the location, and the resources, among them any tracked file an in-app prototype modifies — then builds the smallest thing that settles it (under `prototypes/<slug>/` by default), runs it, and commits it (`chore: add prototype <slug>`); writes the answer, the evidence, and the commit hash into the brief's entry; then removes the prototype in the next commit (`chore: remove prototype <slug>`). A location conflict, a connection your development configuration does not name, a new table or column on the development database, an in-app UI prototype's location and uncommitted files, an entry that already holds an answer, named or taken when none is named (prototype it again?), and a named entry whose status word the skill does not recognize (prototype it, or stop) are each asked about; for either entry, a "stop" or a "no" leaves the brief unchanged, and a session that cannot ask stops the same way, its last message opening with the frame. When the answer is your judgment (how a UI reads), the skill shows you the prototype after the add commit and waits for your verdict; a session that cannot ask commits and removes it and leaves the entry `needs prototype`, with what to look at and how. No review phase: the prototype is discarded, and its answer is reviewed where a plan uses it. |
-| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. In a session that cannot ask, the run stops at the draft, printed in full, with no file written, no review, and no commit, until a later reply approves it. The plan written on approval is the draft as last printed in full, character for character; a change asked for at approval gets the full draft printed again, to approve. |
+| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. The draft lives in a file, `<name>.draft.md` beside where the plan goes, from its first print: every print reads that file in full, a revision edits it, and approval renames it to the plan, so the written plan is the approved text by construction; a change asked for at approval gets the full draft printed again, to approve. In a session that cannot ask, the run stops at the draft, printed in full, with nothing but the draft file written, no review, and no commit, until a later reply approves it; a run that ends without approval names the draft file as yours to keep or delete. Asked for a plan to run under `/kenspc-autopilot`, it ends the plan with an `## Autopilot` section written to the autopilot's grammar, read from that skill by path, and checks every label, `Budget:` as exactly `USD <n>`, and every `Acceptance:` case for ` — PASS: ` before the print. |
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files). |
 | diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
-| task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. Automatically runs task-review on completion with a consolidated final report. A task document with no TODO or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a `/kenspc-task-review <path>` line for reviewing the finished work — with a BLOCKED task, also that it runs again only once its Status is set back to TODO — and nothing else runs. |
+| task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. A document with more than 12 incomplete tasks is implemented in slices of 12 — one batch confirmation, one implementer dispatch per slice, and one merged summary. Automatically runs task-review on completion with a consolidated final report. A task document with no TODO or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a `/kenspc-task-review <path>` line for reviewing the finished work — with a BLOCKED task, also that it runs again only once its Status is set back to TODO — and nothing else runs. |
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
-| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents, after a clarification commit for each question the release-preparation session asked) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review, acceptance, fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports; between them your session rules every point the spec leaves open, except the stop conditions, and records each ruling for you to review before the tag. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
+| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents, after a clarification commit for each question the release-preparation session asked) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review (which `Standalone review: off` skips in `repo` mode), acceptance, fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports; between them your session rules every point the spec leaves open, except the stop conditions, and records each ruling for you to review before the tag. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
 
 ## Commands
 
@@ -553,7 +553,11 @@ it, rules on the workers' questions, and classifies what they produce; the worke
 worktree's plugin (`--plugin-dir`) in `plugin` mode. One role per session,
 never reused: a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix are each a session
-of their own.
+of their own. In `repo` mode, `Standalone review: off` skips S3b: S3's own
+review — five fresh subagents — stands in for it, its verdict and rows
+entering the verdict loop in S3b's place, since the reason a plugin edit
+needs a fresh session does not apply there. In `plugin` mode the field is
+a settings stop.
 
 Start the main session with the name the workers will address:
 
@@ -611,7 +615,7 @@ later run or not. A known label written with a note,
 `Acceptance (in the order listed, …):` becomes a `Run notes:` line in the
 acceptance session's prompt, and any other field's note is named on the
 line after the settings line; an unknown label with a note is still
-ignored and named. The seventeen labels and their defaults:
+ignored and named. The nineteen labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -625,6 +629,13 @@ ignored and named. The seventeen labels and their defaults:
 - `Allowed files:` paths, one per line or comma-separated — empty
 - `Zero diff:` paths the batch promises not to touch — empty, no check
 - `Byte-identity exceptions:` free text — empty
+- `Run facts:` sub-bullets of free text — measured facts of the machine
+  that bind every worker and are not the spec's constraints, such as one
+  heavy test suite at a time — empty. Each worker's prompt carries them,
+  with the rule that a gate one of them or the spec sets on a command
+  (another session's go before a full suite) is asked by the worker
+  itself, since the plugin's subagents have no message tool, and that the
+  go is named in the dispatch of the agent that runs the command
 - `Acceptance:` `none`, or one sub-bullet per case: a command or a case
   description, its PASS criterion after ` — PASS: `, and `(optional)` at the
   end of a case that may be cut — `none`
@@ -632,6 +643,8 @@ ignored and named. The seventeen labels and their defaults:
   unset, nothing written into the repository
 - `Release preparation:` `default`, `keep`, or sub-bullets of instructions
   — `default`
+- `Standalone review:` `on` or `off` — `on`; `off` skips S3b in `repo`
+  mode and is a settings stop in `plugin` mode
 - `Must read:` paths every worker reads first — empty
 - `Challenge seeds:` sub-bullets the design session argues against — empty
 - `Prior specs:` `<hash>^:<path>` entries, read with `git show` — empty
@@ -720,7 +733,9 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
 
 ```
 <workspace>/
-    _prompts/      the copied driver <batch>-run.sh, the preamble, the task blocks, the assembled prompts
+    _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh and
+                   <batch>-zero-diff.sh, the preamble, the task blocks, the assembled prompts,
+                   and in repo mode S4's <batch>-spec.md and extracted <batch>-s4-cmds/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
     <batch>-*      seed projects (plugin mode)
@@ -753,7 +768,17 @@ is a breach, and so is a recursive `rm` in any spelling, wherever it
 points: a worker discards by `mv` into the workspace's
 `.trash/<name>-<timestamp>/` and deletes inside the repository only
 through `git rm`. No `git push`, `git tag`, or release; no resource the
-brief does not name; no secrets. The rails govern what a worker or a
+brief does not name; no secrets. Nothing under `~/.claude`, by a file tool
+or a shell command — a memory note included: a lesson worth keeping goes
+under `## Lessons for the main session` in the worker's final message,
+which the main session records in the state file and on the reviewer
+report's `Worker lessons` line; the harness's own over-long tool results
+under `~/.claude/projects/…/tool-results/` are not a breach. These are
+the only rails: a departure from one of the spec's constraints is listed
+under `## Rail observations` and stops nothing, and the rails a worker
+writes into a subagent prompt or an agent's `CUSTOM_INSTRUCTIONS` are the
+same rails, never narrower, so code-fixer may edit and commit and
+regression-verifier may build and run the suite. The rails govern what a worker or a
 subagent writes — its own commands and tool calls: a program it runs that
 removes a temporary directory it created itself (a guard's or a test
 script's `mktemp` cleanup), or writes its own cache, is not a breach,
@@ -805,7 +830,10 @@ a best-effort guard (see Known behavior), and the rails text still binds.
 `Release preparation: default`, one removal commit,
 `docs: remove batch <name> plan and tasks`, that `git rm`s the batch's plan
 and task documents and touches no version and no CHANGELOG (`keep` leaves
-them; a list of instructions runs after the removal). In `plugin` mode: the
+them; a list of instructions runs after the removal — unless one of its
+instructions makes the removal commit itself, a `git rm` of the spec and
+the task document, when the list's order governs and a `Version:` one of
+its commits sets is set there alone). In `plugin` mode: the
 same, plus the acceptance record `docs/dry-runs/<batch>-acceptance.md` and
 the repository's release commit — the CHANGELOG heading dated, the manifest
 at `Version:`, the checklist and roadmap updated, the batch's documents
@@ -901,7 +929,36 @@ carrying the case, the corrected form, and both pieces of evidence; the
 `## Autopilot` section stays as the run read it, the acceptance session
 runs the corrected form, and the reviewer report's acceptance line says
 `in the corrected form (<clarification>)`. Without both pieces of
-evidence, the correction is a stop.
+evidence, the correction is a stop. In `repo` mode the main session writes
+the corrected command to `<nn>.corrected.cmd` beside the extracted files
+(below), and the acceptance session runs that file.
+
+**Acceptance commands and the zero-diff check (`repo` mode).** The
+acceptance commands are taken from the spec by a script, not retyped:
+before S4's first launch the main session saves the spec as the run read
+its settings to `_prompts/<batch>-spec.md` and runs the copied
+`extract-acceptance.sh` on it, which writes each `Acceptance:` case to
+`<nn>.cmd` — the text of its one code span as it stands, one padding space
+removed from each end when both are there — or, for a case description,
+`<nn>.case`, and prints `commands: <n>, cases: <m>`; the main session
+checks that count against its own reading of the field. S4 extracts the
+commands again into a directory of its own, shows `cmp` equal for every
+file and one `cmp` of two differing files reporting the difference, runs
+each command as `<shell> <file>` in the shell your session's Bash tool
+runs, adds no redirect to a command it writes to inspect a result, and
+replies with each command's exit code and the evidence it leaves — the
+files, logs, or clones it writes, by path. A count that differs, an
+extraction that fails, or a file that differs is the stop for an
+acceptance case that cannot be run. The zero-diff check runs the copied
+`zero-diff.sh` over the `Zero diff:` paths, written one per line to
+`_prompts/<batch>-zero-diff.txt`: it passes each path to `git diff --stat`
+as its own argument, prints `compared: <n> paths` before the stat, and
+exits 0 when nothing changed and 1 when something did; the check passes on
+exit 0 with that count equal to the field's, and anything else stops the
+run naming what it saw. Each main session once wrote its own extractor
+and zero-diff call, and both went wrong: commands with a stray backtick at
+each end, and a check whose paths arrived as one word and compared
+nothing.
 
 **The record.** Every ruling is recorded four ways: a
 `questions answered:` line in the state file ending with who ruled,
@@ -921,14 +978,30 @@ the reviewer report's `Follow-up candidates` line lists them, with the
 findings a ruling deferred to a follow-up, for you to decide after the
 reports.
 
-**Fixes.** A defect the main session classifies — a review row after S3b,
-or an acceptance FAIL — goes to an S5 fix session. One S5 may fix several
+**Fixes.** A defect the main session classifies — a review row after S3b
+(after S3, with `Standalone review: off`), or an acceptance FAIL — goes to
+an S5 fix session. One S5 may fix several
 defects classified in the same round, one commit per defect. Every S5 is
 followed by a narrowed review (`-s3c`, then `-s3d`, …) over the range from
 HEAD at its first launch to its last commit, a wording-only fix included, before
 any acceptance case is re-run. A defect an S5 leaves without a commit still
 stands, whatever that review says, and goes to the next S5, counted as a
 fix of it.
+
+**Usage limits.** A worker's JSON with `is_error: true` is not a success,
+whatever its subtype. One whose result names a usage or session limit with
+a reset time is a usage-limit end: not a death, so it does not count
+toward the dead-twice stop; the state file records it as `usage-limit`,
+and the step is resumed after the reset under its next `-r<k>`, counted
+as a resume. The main session never waits through the reset by polling,
+since the limit can refuse its own turns too and a poll is a turn: it
+schedules one wake-up after the reset when one of its tools can, and
+otherwise stops with `Autopilot stopped: usage limit, resets <time>`,
+naming the step and the resume that continues it. Asked about a live
+worker, the main session reports, besides the pid and the logs' sizes and
+times, the last sleep and wake lines of `pmset -g log` on macOS — a worker
+that looks stalled may be a sleeping machine — and never kills a live
+pid.
 
 **Stops.** Reopening a locked design point; a forbidden section or file
 touched; guards red twice in a row; the same defect still failing after
@@ -951,19 +1024,23 @@ field of the hook input could not be read (see The rails). When one
 option stays inside the contract — defer to a follow-up, leave as is — the
 main session takes it and records it instead of asking, and a ruling to
 leave a locked point as it stands and record the finding as a follow-up
-is its own, not a stop. Five stops are stated at their own steps: a driver
+is its own, not a stop. Six stops are stated at their own steps: a driver
 that refuses a launch, a delivery notice that the first message to a
 worker was held or refused, an artifact absent after a return, an unmarked
-acceptance case that cannot be run, and the skipped-gate check failing a
-second time. Every stop
+acceptance case that cannot be run, the skipped-gate check failing a
+second time, and a usage-limit end when the main session has no tool to
+schedule its own wake-up after the reset. Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file
 holds the next action.
 
 **Budget.** `USD 200` by default, `16 sessions, 8 resumes` as caps. Before
 each launch the run checks spent (the sum of the sessions' last cumulative
 costs and, in `plugin` mode, the acceptance cases' costs from the record)
-plus projected (the largest session so far, or budget ÷ 6 before the
-first) against the budget and asks "raise the budget to how much?" when it
+plus projected (the largest session so far of the role about to launch —
+S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6, each with its
+resumes and re-runs — or budget ÷ 6 before that role's first session, so
+a cheap release preparation is not judged against the implementation
+session) against the budget and asks "raise the budget to how much?" when it
 would be exceeded; every worker is started with `--max-budget-usd` set to
 the remaining amount, so a runaway session cannot spend past the batch. A
 worker ended by its cap is resumed once you raise the budget, with the new
@@ -983,16 +1060,18 @@ release hash; the spec's `git show` command; design rulings and
 clarifications with the decisions that read the locked design beyond its
 letter and the rulings that departed from a spec sentence on evidence;
 main-session rulings, `<n> | none` with one line per ruling; settings edits, each field a worker changed in
-the `## Autopilot` section; files changed and the zero-diff result;
+the `## Autopilot` section; files changed and the zero-diff result (the
+`compared:` count, the exit code, and any path the stat names);
 byte-identity / guards / counts; acceptance, one line per case with its
 cost and result, and `in the corrected form (<clarification>)` for a
 corrected case; models and efforts,
 `<n> workers, <k> mismatches, <j> not observed`
 (`<n> workers, mismatches: none, <j> not observed` when there are
 none) with one line per worker; total cost; Not exercised; rail
-observations; skipped gates; follow-up candidates; release-preparation
-state;
-sessions / messages / resumes / stops. The total-cost line is the measured
+observations; worker lessons; skipped gates; follow-up candidates;
+release-preparation state;
+sessions / messages / resumes / stops, with `S3b: off (Standalone review: off)`
+in S3b's place when it did not run. The total-cost line is the measured
 sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode
 the acceptance cases' costs from the record (S4's nested sessions), plus
 the main session's own cost as an estimate, labeled so: its turn count × the mean
@@ -1002,7 +1081,11 @@ to `_logs/<batch>-report.md`, and the final message ends with
 `Autopilot finished — <baseline sha>..<last sha>`.
 
 **The drivers.** `run.sh` (`skills/autopilot/scripts/run.sh`) ships with the
-skill and is copied per batch to `_prompts/<batch>-run.sh`; it starts each
+skill and is copied per batch to `_prompts/<batch>-run.sh`, with the two
+scripts beside it, `extract-acceptance.sh` and `zero-diff.sh`, copied to
+`_prompts/<batch>-extract-acceptance.sh` and `_prompts/<batch>-zero-diff.sh`
+— a running batch keeps the text it started with even when a `plugin`-mode
+implementation edits them; it starts each
 worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
 `--permission-mode bypassPermissions`, `--output-format json`, a session id
 written to `<tag>.session` before the process starts, and — when the
@@ -1335,7 +1418,10 @@ on Windows.
 - **The first worker always passes the budget check.** Before the first
   worker the batch has no session cost to project from, so the check
   takes a sixth of the budget as the projected cost and 0 as spent; their
-  sum never exceeds the budget, and the first worker always starts. Its
+  sum never exceeds the budget, and the first worker always starts. Since
+  4.6.0 every role's first session is projected the same way, at a sixth
+  of the budget, and each later session at the largest cost so far of its
+  own role. Its
   `--max-budget-usd` cap is the whole budget, which bounds what it can
   spend. A budget too small for the batch therefore stops the run at the
   earliest before the second worker, never before the first — the cap ends

@@ -719,7 +719,40 @@ becomes that the file is the approved text by construction.
 
 ### Task 16: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promoted — T3's exit 2 for a field that is neither `none`
+  nor a list of sub-bullets, into `plugins/kenspc/CHANGELOG.md` (Added);
+  T5's mutants written to separate files with `sed`, the masked git
+  configuration, and exit 2 for a mutant that changes nothing, into
+  `CLAUDE.md` § Repository scripts/ (the new guard's entry); T6's reading
+  of a differing count, a failed extraction, or a differing `cmp` as the
+  stop for a case that cannot be run, into `plugins/kenspc/README.md`
+  (Acceptance commands and the zero-diff check) and the CHANGELOG; T7's
+  one zero-diff stop for exit 1, exit 2, or a differing count, into the
+  README; T9's reading of a non-limit `is_error: true` return as a death,
+  with `is_error` on the return line, into the CHANGELOG (Fixed); T11's
+  BLOCKED run for a TASK_LIMIT that is not a positive integer, into
+  `CLAUDE.md` § CONTEXT block contract and the CHANGELOG; T12's slices
+  sharing one run directory, into `CLAUDE.md` § CONTEXT block contract,
+  the CHANGELOG, and the README's task-implement row; T15's leftover
+  `<name>.draft.md` counted as a conflict and the draft file named as the
+  user's to keep or delete, into the README's generate-plan row and the
+  CHANGELOG. Local — T1's lessons recording, T2's three-line Run facts
+  template, T4's change to the top level, T6's shell `-` stripping and
+  single-file control, T8's role list wording, T10's reading of S3's
+  verdict by task-implement's own Verdict determination, T13's note
+  allowance, T14's `<the removal commit>` placeholder: each explains a
+  choice inside the file it was made in. Needs a home: none.
+- Changes/tradeoffs: the README gained two paragraphs in the Autopilot
+  section, "Acceptance commands and the zero-diff check (`repo` mode)" and
+  "Usage limits", since no existing paragraph described either; the
+  CLAUDE.md guard entry ends with "Run it after editing either script"
+  rather than an edit to § Maintenance note, which the task does not list.
+  CLAUDE.md's File Structure line now names all four scripts under
+  `skills/autopilot/scripts/`. The release checklist changed only its two
+  pinned counts.
 
 Depends on: Task 1-15
 

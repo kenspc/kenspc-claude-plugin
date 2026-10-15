@@ -9,6 +9,197 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.6.0 — unreleased
+
+The autopilot carries the remedies its product-repository batches applied
+by hand to every prompt: the preamble keeps workers out of `~/.claude` and
+holds the rails in § 3 alone, a `Run facts:` field reaches every worker,
+S4 runs its acceptance commands from files a shipped script extracts, the
+zero-diff check runs through a shipped script that cannot compare nothing
+silently, the budget projects each launch from its own role, a worker
+ended by the usage limit is resumed after the reset rather than counted as
+a death, a `Standalone review:` switch lets S3's review stand in for S3b
+in repo mode, and a `Release preparation:` list that makes the removal
+commit governs S6's order. task-implement dispatches a document of more
+than 12 incomplete tasks in slices, and generate-plan writes an
+`## Autopilot` section on request and keeps its draft in a file. Guard
+counts: `guards run: 13`, `self-tests run: 12` (the new
+`check-autopilot-scripts.sh`).
+
+No headless acceptance run was made for this batch: the first
+product-repository batch run on the next installed version is the live
+check of the autopilot changes, and the next `/kenspc-plan` run and the
+first task document with more than 12 incomplete tasks exercise the
+generate-plan and task-implement changes.
+
+### Added
+
+- **`extract-acceptance.sh` and `zero-diff.sh` (autopilot).** Two scripts
+  ship beside the driver under `skills/autopilot/scripts/`, and Phase 0
+  copies them per batch as `_prompts/<batch>-extract-acceptance.sh` and
+  `_prompts/<batch>-zero-diff.sh`, for the reason the driver is copied.
+  `extract-acceptance.sh <spec file> <out dir>` writes each `Acceptance:`
+  case to `<nn>.cmd` (one code span, its padding stripped by the
+  CommonMark rule, continuation lines joined) or `<nn>.case` (a
+  description) and prints `commands: <n>, cases: <m>`; a missing section
+  or field, or a field that is neither `none` nor a list of sub-bullets,
+  is exit 2. `zero-diff.sh <baseline> <paths file>` passes each path as
+  its own argument to `git diff --stat <baseline> HEAD --`, names a path
+  absent at the baseline on stderr, prints `compared: <n> paths`, and
+  exits 0 (no change), 1 (a change), or 2 (a usage error, an empty paths
+  file among them). Why: each main session wrote its own extractor and
+  zero-diff call, and both went wrong as prose — four of one batch's 60
+  commands came out with a stray backtick at each end, and a zero-diff
+  check whose paths arrived as one zsh word compared nothing, twice.
+- **`check-autopilot-scripts.sh`.** A thirteenth guard runs both scripts
+  against fixtures in its own `mktemp -d` directory — single and double
+  backticks, a backtick inside a double-backtick span, spans with and
+  without padding, a label with a note, an `(optional)` case, a
+  description case, a continuation line, `Acceptance: none`; a path with a
+  space, changed, unchanged, and absent paths, an empty paths file — and
+  its `--self-test` turns it red with three mutants of copies (padding
+  stripping removed, continuation joining removed, the paths read as one
+  word).
+- **`Run facts:` (autopilot).** A new `## Autopilot` field for measured
+  facts of the machine that bind every worker and are not the spec's
+  constraints (one heavy suite at a time, a shared `$TMPDIR`); the
+  preamble's § 6 carries it as a `Run facts:` line when set, with the rule
+  that a gate a run fact or the spec sets on a command — another session's
+  go before a full suite — is asked by the worker itself with SendMessage,
+  since the `kenspc:*` subagents have no message tool, and that the go is
+  named in the dispatch of the agent that runs the command. Why: a
+  regression-verifier told to wait for a go had no tool to ask with,
+  marked its suite row FAIL, and the worker ran the suite itself.
+- **`Standalone review:` (autopilot).** A new field, `on` or `off`,
+  default `on`. With `off` in repo mode no S3b is launched: S3's Schema G
+  verdict and its review's rows enter the verdict loop in S3b's place, the
+  zero-diff check runs after S3, `Acceptance: none` records
+  `none named; S3 is the last check`, and the reviewer report's
+  `Sessions:` list carries `S3b: off (Standalone review: off)`; S5 and the
+  narrowed reviews are unchanged. `off` in plugin mode is a settings stop.
+  The settings line gains `standalone review <on|off>`. Why: in repo mode
+  S3's review is already five fresh subagents, and the other reason for a
+  separate review session — a session that edited the plugin still runs
+  the text it started with — holds only in plugin mode. The condition
+  under which S3b runs, and the trial before the default changes, are
+  left for later.
+- **Worker lessons (autopilot).** A worker puts a lesson worth keeping
+  under `## Lessons for the main session` in its final message; the
+  return records each entry with the worker's tag under the state file's
+  new `worker lessons:` section, and the reviewer report gains a
+  `Worker lessons:` line, `none` when empty.
+- **A usage-limit end (autopilot).** A JSON with `is_error: true` whose
+  result names a usage or session limit with a reset time is a usage-limit
+  end — not a death, so it does not count toward the dead-twice stop —
+  recorded with the new status word `usage-limit` and resumed under the
+  step's next `-r<k>` after the reset, counted under `Caps:`. The main
+  session never polls through the reset: it schedules one wake-up after
+  it when one of its tools can, and otherwise stops with
+  `Autopilot stopped: usage limit, resets <time>`, a sixth stop stated at
+  its own step. Why: the workers run under the main session's own
+  account, so the limit that ended a worker can refuse the main session's
+  turns too, and a poll is a turn.
+- **The sleep log (autopilot).** The report on a live worker adds, on
+  macOS, the last sleep and wake lines of `pmset -g log`; a live pid is
+  still never killed. Why: a worker silent for three hours was a sleeping
+  Mac, and it was killed before that was known.
+- **`TASK_LIMIT` and slices (task-implementer, task-implement).**
+  task-implementer accepts an optional `TASK_LIMIT`: it gives a final
+  status to at most that many TODO or IN PROGRESS tasks, in document
+  order, a dependency block included, and returns Schema D for them; a
+  task left for a later slice keeps its status, and a value that is not a
+  positive integer is a BLOCKED run. task-implement dispatches a document
+  of more than 12 incomplete tasks in slices with `TASK_LIMIT: 12`, one
+  after another in the same run directory, re-reading the document
+  between them, until no TODO or IN PROGRESS task is left or a slice
+  changes no task's status; it asks the batch confirmation once and
+  renders one Schema D merged from the slices, which Schema G's
+  `## Implementation` carries. Why 12: one implementer ended on
+  `Prompt is too long` after 22 tasks of a 33-task document and returned
+  no summary.
+- **`## Autopilot` in a plan (generate-plan).** When the user asks for the
+  plan to run under `/kenspc-autopilot` or for an `## Autopilot` section,
+  the plan's last section is `## Autopilot`, written to the grammar in the
+  autopilot skill's § The `## Autopilot` section, read by path at run
+  time; before the draft is printed, every label is checked against that
+  table, `Budget:` as exactly `USD <n>`, and every `Acceptance:` sub-bullet
+  for ` — PASS: `. Why: plans written without the grammar broke it — a
+  `Budget: USD 300` followed by a sentence.
+
+### Changed
+
+- **The preamble's rails (autopilot).** § 3 says a worker and its
+  subagents write nothing under `~/.claude`, by a file tool or a shell
+  command, the harness's own over-long tool results under
+  `~/.claude/projects/…/tool-results/` being the harness's; and
+  `Only § 3 holds rails.` — a departure from a § 6 constraint is listed
+  under `## Rail observations` and stops nothing, and the rails a worker
+  writes into a subagent prompt or an agent's `CUSTOM_INSTRUCTIONS` are
+  § 3 as written, never narrower, so code-fixer may edit and commit and
+  regression-verifier may build and run the suite. § 6's constraint line
+  quotes the spec's sentence where it states a constraint in the
+  preamble's own words. Why: a worker appended a memory note to
+  `MEMORY.md` under `~/.claude` through Bash and the run stopped; a review
+  agent given a spec's `mktemp -d` line as a rail stopped with its review
+  incomplete; and agents given "no commit" in their rails left a review
+  PARTIAL.
+- **S4 runs its commands from files (autopilot, repo mode).** Before S4's
+  first launch the main session saves the spec as Phase 0 read it to
+  `_prompts/<batch>-spec.md`, extracts the commands into
+  `_prompts/<batch>-s4-cmds/`, and checks the `commands:` count against
+  its own reading of the field. The S4 block lists "the command in
+  `<nn>.cmd`" per case; the worker extracts again into its own directory,
+  shows `cmp` equal for every file and one `cmp` of two differing files,
+  runs each with `<shell> <file>` (the main session's own shell), adds no
+  redirect to an inspection command, and replies with each command's exit
+  code and the evidence it leaves, by path, in place of the last twenty
+  lines of output. A corrected case is the file `<nn>.corrected.cmd`,
+  kept out of the `cmp`. A count that differs, an extraction that fails,
+  or a differing file is the stop for an acceptance case that cannot be
+  run.
+- **The zero-diff check runs through `zero-diff.sh` (autopilot).** The
+  `Zero diff:` paths go one per line into `_prompts/<batch>-zero-diff.txt`;
+  the check passes on exit 0 with `compared:` equal to the field's count,
+  and Phase 2's DONE line, § Phase transitions, Phase 4's re-run before S6,
+  and the reviewer report's `zero diff:` field (now the `compared:` count,
+  the exit code, and the paths the stat names) read the exit code where
+  they read "printed nothing".
+- **The budget projects per role (autopilot).** Projected is the largest
+  cost so far of a session of the role about to launch — S1, S2, S3, S3b,
+  the narrowed reviews together, S4, S5, S6, each with its resumes and
+  re-runs, a plugin-mode S4 with its nested sessions' costs — or the
+  budget divided by six before that role's first session. The hard cap is
+  unchanged. Why: a USD 1 release preparation was judged against a USD 70
+  implementation session.
+- **A `Release preparation:` list that makes the removal governs S6's
+  order (autopilot).** When one of the list's sub-bullets makes the
+  removal commit (`git rm` of the spec and the task document), S6 writes
+  no default removal, its questions come before the list's removal
+  commit, and a `Version:` one of the list's commits sets is set there
+  and nowhere else. Why: such lists were reconciled by hand with the
+  removal-first template in every batch that wrote one.
+- **generate-plan keeps its draft in a file.** From its first print the
+  draft lives at `<plans dir>/<name>.draft.md` (the output location and
+  its conflict check resolved then, a leftover `<name>.draft.md` counting
+  as a file at the target path); every print reads that file in full, a
+  revision edits it, and approval renames it to `<name>.md` with no other
+  write. A session that cannot ask prints the draft file and stops, with
+  nothing but the draft file written; a run that ends without approval
+  names the draft file as the user's to keep or delete. Why: a plan
+  generated again after approval once differed from the approved draft in
+  seven of 355 lines; renamed on approval, the file is the approved text
+  by construction.
+
+### Fixed
+
+- **A return with `is_error: true` is not a success (autopilot).** The
+  autopilot read a return as a death only when its subtype was not
+  `success`, so a JSON with subtype `success` and `is_error: true` — the
+  shape of a worker ended by its session limit — read as a finished step.
+  Such a return is now a death, or a usage-limit end when its result
+  names a limit with a reset time, and the return line shows `is_error`
+  in the subtype's place.
+
 ## 4.5.2 — 2026-10-06
 
 generate-plan follows the session's effort: its `effort: xhigh` frontmatter
