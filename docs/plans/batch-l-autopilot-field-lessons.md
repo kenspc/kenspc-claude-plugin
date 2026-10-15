@@ -69,10 +69,15 @@ success; the main session caught it by hand.
 ## Implementation Steps
 
 Each step changes the files it names and nothing else, and ends with
-`bash scripts/check-all.sh` green. Steps 1, 2, 5, 6, and 7 edit
-`skills/autopilot/SKILL.md` in separate sections and depend on nothing;
-step 4 depends on step 3; step 9 depends on step 2 (it names the
-`Run facts:` field in the grammar it writes).
+`bash scripts/check-all.sh` green. The steps run in the order numbered.
+Steps 1, 2, 4, 5, 6, 7, and 9 all edit `skills/autopilot/SKILL.md`, and
+several share a section — steps 1 and 2 the preamble's § 6, steps 1 and 6
+§ Launch, wait, return (the return), steps 1 and 7 the reviewer report,
+steps 4 and 7 § The zero-diff check, Phase 3, and § Phase transitions — so
+each step edits the text as the earlier steps left it and keeps their
+additions. Step 4 depends on step 3 (it copies the scripts step 3
+creates); step 9 depends on step 2 (it names the `Run facts:` field in the
+grammar it writes).
 
 ### Step 1: Preamble additions (item 29)
 
@@ -164,17 +169,21 @@ each mutant red; `bash scripts/check-all.sh` prints `guards run: 13`;
 ### Step 4: S4 and the zero-diff check use the scripts (item 30, skill)
 
 Depends on step 3. Files: `plugins/kenspc/skills/autopilot/SKILL.md`
-(Phase 0's driver copy; Phase 3; § The zero-diff check; Templates § The
-task blocks, S4 repo mode).
+(Phase 0 § The workspace, the driver copy; Phase 2's DONE line; Phase 3;
+§ The zero-diff check; Phase 4's zero-diff re-run; Templates § The task
+blocks, S4 repo mode; § The reviewer report; § Phase transitions).
 
 - Phase 0 copies both scripts beside the driver copy, as
   `_prompts/<batch>-extract-acceptance.sh` and `_prompts/<batch>-zero-diff.sh`,
   for the reason the driver is copied: a worker reaches the workspace, not
   the plugin's cache.
 - Phase 3, repo mode: before S4's first launch the main session runs the
-  extraction copy on `git show <baseline>:<spec path>` (saved to a file
-  under `_prompts/`) into `_prompts/<batch>-s4-cmds/` and checks that
-  `commands:` equals the number of command cases it reads in the field.
+  extraction copy on the spec as Phase 0 read the section —
+  `git show <baseline>:<spec path>` in spec entry, the spec at S1's commit
+  (`git show <S1 hash>:<spec path>`) in brief entry — saved to
+  `_prompts/<batch>-spec.md`, into `_prompts/<batch>-s4-cmds/`, and checks
+  that `commands:` equals the number of command cases it reads in the
+  field.
 - The S4 repo-mode block lists each case as "the command in
   `<file>`" with its PASS criterion; the worker runs the extraction copy itself into
   its own directory, shows `cmp` equal for every file beside one control
@@ -187,10 +196,19 @@ task blocks, S4 repo mode).
 - § The zero-diff check calls `zero-diff.sh` with the `Zero diff:` paths
   written one per line to `_prompts/<batch>-zero-diff.txt`, and checks
   that `compared:` equals the number of paths in the field.
+- The script always prints its `compared:` line, so every place that reads
+  the check as "printed nothing" reads its exit code instead: Phase 2's
+  DONE line (`the zero-diff check has printed nothing`), § Phase
+  transitions (`the empty zero-diff output`), Phase 4's re-run before S6,
+  and the reviewer report's `zero diff: <nothing printed | the paths>`
+  field, which reports the `compared:` count and the paths the stat names
+  in place of `nothing printed`.
 
 Acceptance: `grep -q '<batch>-extract-acceptance.sh'` and
 `grep -q '<batch>-zero-diff.sh'` in SKILL.md; the S4 repo-mode block no longer holds `one per Bash call`
-nor `last twenty lines`; `bash scripts/check-autopilot-rails-hook.sh`
+nor `last twenty lines`; SKILL.md no longer holds `zero diff: <nothing
+printed` nor `empty zero-diff output`, and Phase 2's DONE line names the
+zero-diff check's exit code; `bash scripts/check-autopilot-rails-hook.sh`
 green.
 
 ### Step 5: Budget projection per role (item 31)
