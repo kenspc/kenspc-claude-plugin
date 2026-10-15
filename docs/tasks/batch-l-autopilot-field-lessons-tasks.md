@@ -19,6 +19,13 @@ Rules for every task, from the plan's Implementation Steps:
   each edits the text as the earlier tasks left it and keeps their
   additions.
 - Every task ends with `bash scripts/check-all.sh` green.
+- A criterion that a file holds, or no longer holds, a phrase is checked on
+  the file with its line breaks joined, e.g.
+  `tr '\n' ' ' < FILE | tr -s ' ' | grep -cF '<phrase>'`, not with a line
+  grep: these files wrap prose at about 75 columns, so a phrase split
+  across two lines is invisible to a line grep, and a "no longer holds"
+  check would pass with the phrase still there (the autopilot's
+  `the largest single-session cost of this batch` is split that way today).
 - Commits stay local on `main`; no push, no tag, no version bump.
 
 Dependency note: Task 5 depends on Tasks 3 and 4; Task 6 on Task 3; Task 7
@@ -183,12 +190,14 @@ copies both scripts beside the driver copy as
 `_prompts/<batch>-extract-acceptance.sh` and `_prompts/<batch>-zero-diff.sh`;
 Phase 3 (repo mode) extracts the commands from the spec as Phase 0 read
 the section, saved to `_prompts/<batch>-spec.md`, into
-`_prompts/<batch>-s4-cmds/`, and checks the `commands:` count; the S4
+`_prompts/<batch>-s4-cmds/`, and checks that the printed `commands:` count
+equals the number of command cases it reads in the field; the S4
 repo-mode block lists "the command in `<file>`" per case, has the worker
 re-extract into `<workspace>/_prompts/<batch>-<tag>-cmds/`, `cmp` every
 file against the main session's plus one `cmp` of two differing files,
-run each with `<shell> <file>`, and add no redirect to an inspection
-command; a `.case` is listed with its text; a corrected case is the file
+run each with `<shell> <file>` (`<shell>` the shell the main session's own
+Bash tool runs, `ps -p $$ -o comm=`, written into the block), and add no
+redirect to an inspection command; a `.case` is listed with its text; a corrected case is the file
 `<nn>.corrected.cmd`, kept out of the `cmp`; the reply gives each
 command's exit code and the evidence it leaves, by path. Phase 3's
 repo-mode paragraph and its `Acceptance record:` sentences change with the
@@ -245,7 +254,9 @@ implementation session).
 **Acceptance criteria:**
 - § Budget and caps no longer holds
   `the largest single-session cost of this batch` and holds
-  `of the role about to launch`.
+  `of the role about to launch`, both checked with line breaks joined: the
+  first phrase spans two lines before this task, so a line grep finds it
+  absent already and the check could not fail.
 - `git diff` from the task's start changes no line of the bullet that
   opens `Every launch passes`.
 
@@ -261,12 +272,16 @@ file's status words; § The stop conditions, Stops stated at their own
 steps; the gates table's row for stops stated at their own step): a JSON
 with `is_error: true` is not a success, whatever its subtype; one whose
 result names a usage or session limit with a reset time is a usage-limit
-end — not a death, resumed under the next `-r<k>` after the reset,
-counted under `Caps:`; the main session, headless or interactive, never
-polls through the reset: it schedules one wake-up after the reset when one
-of its tools can, and otherwise stops with
-`Autopilot stopped: usage limit, resets <time>` naming the step and its
-resume, with the cannot-ask sentence; the status word `usage-limit`;
+end — not a death, so it does not count toward the dead-twice stop;
+resumed under the next `-r<k>` after the reset, counted under `Caps:`; the
+main session, headless or interactive, never polls through the reset: it
+schedules one wake-up after the reset when one of its tools can, and
+otherwise stops with `Autopilot stopped: usage limit, resets <time>`
+naming the step and its resume, with the cannot-ask sentence; the turn
+after the reset (the wake-up, or the user's word) makes the resume; the
+Why: the workers run under the main session's own account, so the limit
+that ended a worker can refuse the main session's turns too, and a poll is
+a turn; the status word `usage-limit`;
 "Five stops sit outside the numbered list" becomes six and names the new
 stop; the live-worker report adds, on macOS, the last sleep and wake lines
 of `pmset -g log`, and a live pid is still never killed.
@@ -349,12 +364,19 @@ Step 5 renders one Schema D merged from the slices (rows in document
 order, prose sections joined), and Schema G's `## Implementation` carries
 it; the batch confirmation is asked once; the constant 12 and its reason
 (an implementer ended on `Prompt is too long` after 22 tasks) are stated
-in the step. Step 5's fixed lines `Implementation phase complete.` and
+in the step; Phase 1's DONE line reads "every incomplete task" as every
+incomplete task within `TASK_LIMIT` for a slice; Step 2's CONTEXT block
+shows the `TASK_LIMIT` key a slice's dispatch adds; and Step 4's sentence
+"The subagent implements all incomplete tasks within its own context"
+names the slices. Step 5's fixed lines `Implementation phase complete.` and
 `Proceeding to code review.` stay as written.
 
 **Acceptance criteria:**
 - The SKILL.md holds `TASK_LIMIT: 12` and the stop condition for the
   slices.
+- Phase 1's DONE line names the `TASK_LIMIT` reading for a slice, Step 2's
+  CONTEXT block holds a `TASK_LIMIT` line, and Step 4's
+  `implements all incomplete tasks` sentence names the slices.
 - `bash scripts/check-canonical-dispatch.sh`,
   `bash scripts/check-verdict-shared.sh`, and
   `bash scripts/check-run-contract.sh` exit 0.
@@ -430,8 +452,14 @@ becomes that the file is the approved text by construction.
 **Acceptance criteria:**
 - The SKILL.md holds `.draft.md`.
 - It holds neither `Do not write it to a file yet` nor `Nothing is written,`.
-- `grep -c 'In a session that cannot ask'` is not lower than before the
-  task.
+- The count of `In a session that cannot ask`, with line breaks joined, is
+  not lower than before the task (5 when this document was written; a line
+  grep counts 3, since two occurrences are split across lines).
+- End-of-batch checks (the plan's Testing Strategy), run here because this
+  is the last implementation task: `bash scripts/check-all.sh --self-test`
+  prints `guards run: 13` and ends with `self-tests run: 12`;
+  `claude plugin validate --strict .` and
+  `claude plugin validate --strict ./plugins/kenspc` exit 0.
 
 ---
 
@@ -462,7 +490,9 @@ no other file):
   autopilot Non-Goals line on three sessions, which holds in repo mode only
   while S3b runs (Steps 3, 6, 7, 8).
 - `plugins/kenspc/CHANGELOG.md` — a `## 4.6.0 — unreleased` heading with
-  Added, Changed, and Fixed entries for every step (Steps 1 to 10).
+  Added, Changed, and Fixed entries for every step; Step 6's entry names
+  that a return with `is_error: true` and subtype `success`, read as a
+  success before, is no longer one (the plan's Risks) (Steps 1 to 10).
 - `docs/release-checklist.md` — the pinned counts `guards run: 13` and
   `self-tests run: 12` (Step 3).
 
