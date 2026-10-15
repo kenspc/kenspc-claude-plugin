@@ -734,8 +734,8 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
 ```
 <workspace>/
     _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh and
-                   <batch>-zero-diff.sh, the preamble, the task blocks, the assembled prompts,
-                   and in repo mode S4's <batch>-spec.md and extracted <batch>-s4-cmds/
+                   <batch>-zero-diff.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
+                   blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md and extracted <batch>-s4-cmds/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
     <batch>-*      seed projects (plugin mode)

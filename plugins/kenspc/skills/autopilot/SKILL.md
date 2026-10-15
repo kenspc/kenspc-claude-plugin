@@ -156,8 +156,8 @@ carry the line. Why: nothing downstream reads a headless session's reply
 (Templates § The settings line).
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
-the driver copy, its self-test files, the two script copies, the state
-file — and nothing into the
+the driver copy, its self-test files, the two script copies, the
+`Zero diff:` paths file, the state file — and nothing into the
 repository. Why: every failing check is a stop, and a stop before the first
 launch leaves the repository as the run found it.
 
@@ -282,8 +282,8 @@ the whole tree; `$TMPDIR` is for anything else.
 <workspace>/
   _prompts/     the copied driver <batch>-run.sh and scripts
                 <batch>-extract-acceptance.sh, <batch>-zero-diff.sh,
-                <batch>-preamble.md, <batch>-<tag>-task.md, the assembled
-                <batch>-<tag>.md, and S4's <batch>-spec.md and
+                <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
+                the assembled <batch>-<tag>.md, and S4's <batch>-spec.md and
                 <batch>-s4-cmds/ (repo mode)
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
