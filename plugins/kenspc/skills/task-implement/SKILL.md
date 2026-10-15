@@ -70,8 +70,12 @@ README, and config files; the task document itself.
 - The run directory was prepared and created before the implementer's
   dispatch (Step 4).
 - Every incomplete task has been processed (DONE or BLOCKED) by the
-  implementer agent.
-- The implementer agent has returned a Schema D summary.
+  implementer agent — for a slice dispatched with `TASK_LIMIT` (Step 4),
+  every incomplete task within its limit, and the slices run until no
+  TODO or IN PROGRESS task is left or a slice returns with no task's
+  status changed.
+- The implementer agent has returned a Schema D summary — every slice its
+  own, merged into one in Step 5.
 - The user has been shown a brief progress update before Phase 2 starts.
 
 ### Step 1: Validate input document
@@ -99,10 +103,13 @@ Build a structured CONTEXT block to pass to the implementer agent:
 CONTEXT
 - TASK_FILE: <path to the task document from $ARGUMENTS>
 - RUN_DIR: <absolute run directory>
+- TASK_LIMIT: 12
 ```
 
 `RUN_DIR` is filled in Step 4, which prepares the run directory after the
-batch confirmation.
+batch confirmation. The `TASK_LIMIT` line is added only to a slice's
+dispatch, when the document has more than 12 incomplete tasks (Step 4);
+otherwise the block carries the first two keys alone.
 
 ### Step 3: Confirm with user
 
@@ -251,11 +258,29 @@ Then dispatch a subagent using the Agent tool:
   the agent when it exits.
 
 The subagent implements all incomplete tasks within its own context and
-returns a Schema D summary. No state file is written by the orchestrator.
+returns a Schema D summary — a slice's subagent, the incomplete tasks
+within its `TASK_LIMIT` (below). No state file is written by the
+orchestrator.
+
+**Slices.** When the document has more than 12 incomplete tasks — TODO or
+IN PROGRESS, counted in Step 3 — dispatch the implementer in slices: each
+dispatch carries `TASK_LIMIT: 12` in its CONTEXT block, the slices run one
+after another, and the task document is read again after each slice
+returns. Dispatch the next slice while a TODO or IN PROGRESS task is left;
+stop when none is left, or when a slice returns with no task's status
+changed, since another would meet the same tasks the same way. Every slice
+reuses the same RUN_DIR, and the batch confirmation (Step 3) is asked once,
+for the whole batch. Why 12: one implementer that held a 33-task document
+ended on `Prompt is too long` after 22 tasks and returned no summary, and
+a slice must leave room for the review fixes and notes each task adds; the
+value is this one constant.
 
 ### Step 5: Render Schema D and brief progress update
 
-Render the implementer's Schema D table verbatim:
+Render the implementer's Schema D table verbatim — after slices, one
+Schema D merged from them: their rows in one table in document order, and
+each prose section the slices' entries joined under one heading
+(`## Decisions needing a home` reads `none` only when every slice's does):
 
 | # | Task ID | Status   | Files Touched | Commit  |
 |---|---------|----------|---------------|---------|
@@ -519,7 +544,8 @@ Render the final consolidated report using Schema G:
 ```
 ## Implementation
 
-(Schema D verbatim, including its `## Decisions needing a home` section.)
+(Schema D verbatim, including its `## Decisions needing a home` section —
+after slices, the merged Schema D of Phase 1 Step 5.)
 
 ## Code Review
 

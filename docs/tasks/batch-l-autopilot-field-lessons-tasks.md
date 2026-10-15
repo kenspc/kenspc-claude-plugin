@@ -539,7 +539,23 @@ The agent's prerequisite check accepts the key's absence.
 
 ### Task 12: task-implement dispatches slices of 12
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the slicing rule is a `**Slices.**` paragraph in Step 4,
+  after the dispatch, holding the threshold (more than 12 incomplete
+  tasks, counted in Step 3), the stop condition, the reused RUN_DIR, the
+  single batch confirmation, and the constant's Why. Step 2's CONTEXT
+  block shows `- TASK_LIMIT: 12` with a sentence that the line is added
+  only to a slice's dispatch. The merged Schema D joins each prose section
+  under one heading, and `## Decisions needing a home` reads `none` only
+  when every slice's does, so a slice's entry is never hidden by
+  another's `none`.
+- Changes/tradeoffs: every slice reuses the one RUN_DIR prepared in
+  Step 4 (not stated in the plan; a second run directory would split
+  task-implementer's scratch and give Phase 2 two directories). The
+  canonical blocks are untouched, and the two fixed Step 5 lines occur as
+  before (3 each, joined-line count, before and after).
 
 Depends on: Task 11
 
