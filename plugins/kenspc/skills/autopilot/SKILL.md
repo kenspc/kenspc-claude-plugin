@@ -1312,8 +1312,9 @@ Before each launch:
   case.
   Projected = the largest cost so far of a session of the role about to
   launch — S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6,
-  each with its resumes and re-runs — or the budget divided by six before
-  that role's first session. A plugin-mode S4's cost is its own session's
+  each with its resumes and re-runs — or the budget divided by six while
+  no session of that role has a known cost: before its first session, or
+  when each one's JSON was unreadable (The return). A plugin-mode S4's cost is its own session's
   plus the trial's and the cases' costs from its record, as spent counts
   them, since its own JSON holds none of its nested sessions. When
   spent + projected > budget, stop and ask

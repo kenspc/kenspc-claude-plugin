@@ -1038,7 +1038,8 @@ each launch the run checks spent (the sum of the sessions' last cumulative
 costs and, in `plugin` mode, the acceptance cases' costs from the record)
 plus projected (the largest session so far of the role about to launch —
 S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6, each with its
-resumes and re-runs — or budget ÷ 6 before that role's first session, so
+resumes and re-runs — or budget ÷ 6 while no session of that role has a
+known cost, so
 a cheap release preparation is not judged against the implementation
 session) against the budget and asks "raise the budget to how much?" when it
 would be exceeded; every worker is started with `--max-budget-usd` set to
@@ -1420,8 +1421,8 @@ on Windows.
   takes a sixth of the budget as the projected cost and 0 as spent; their
   sum never exceeds the budget, and the first worker always starts. Since
   4.6.0 every role's first session is projected the same way, at a sixth
-  of the budget, and each later session at the largest cost so far of its
-  own role. Its
+  of the budget, and each later session at the largest known cost so far
+  of its own role, or a sixth while none is known. Its
   `--max-budget-usd` cap is the whole budget, which bounds what it can
   spend. A budget too small for the batch therefore stops the run at the
   earliest before the second worker, never before the first — the cap ends

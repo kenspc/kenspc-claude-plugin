@@ -170,7 +170,7 @@ generate-plan and task-implement changes.
   cost so far of a session of the role about to launch — S1, S2, S3, S3b,
   the narrowed reviews together, S4, S5, S6, each with its resumes and
   re-runs, a plugin-mode S4 with its nested sessions' costs — or the
-  budget divided by six before that role's first session. The hard cap is
+  budget divided by six while no session of that role has a known cost. The hard cap is
   unchanged. Why: a USD 1 release preparation was judged against a USD 70
   implementation session.
 - **A `Release preparation:` list that makes the removal governs S6's
