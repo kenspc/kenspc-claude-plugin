@@ -38,7 +38,7 @@ the sessions, and the two reports at the end are what the user reviews.
 | S1 | design (brief entry only) | a design prompt: drafts the spec with its decision table, sends the table, finalizes and commits the spec after the decisions |
 | S2 | task decomposition | `/kenspc-task <spec path>` |
 | S3 | implementation | `/kenspc-task-implement <task document path>` |
-| S3b | standalone review | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
+| S3b | standalone review — runs unless `Standalone review: off` in repo mode | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
 | S4 | acceptance | plugin mode: a seed-project acceptance with a record; repo mode: the `Acceptance:` commands |
 | S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified, `Fix <n> issues from this round: <ID>, <ID>, …` for several |
 | S6 | release preparation | one commit per mode (Phase 4), after a clarification commit for each question it asked — in any order when it removes nothing |
@@ -49,6 +49,12 @@ implements is not the one that accepts. Why: a session that reviews its own
 work reads its own intent into the code, and a session that edited the
 plugin still runs the text it started with — skills and agents load at
 session start, so a plugin edit is visible only to the next session.
+
+S3b runs unless `Standalone review: off` in repo mode. Why the switch, and
+in repo mode only: S3's own review is already five fresh subagents, so the
+first reason is mostly met inside S3, while the second — a session that
+edited the plugin still runs the text it started with — holds only in
+plugin mode, where S3b stays unconditional.
 
 ## Trigger Phrases
 
@@ -205,6 +211,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Acceptance:` | `none`, or one sub-bullet per case: a command or a case description, its PASS criterion after ` — PASS: `, and `(optional)` at the end of a case that may be cut | `none` |
 | `Acceptance record:` | a path (repo mode) the S4 results are written to | unset |
 | `Release preparation:` | `default`, `keep`, or sub-bullets of instructions | `default` |
+| `Standalone review:` | `on` or `off` (`off` in repo mode only) | `on` |
 | `Must read:` | paths every worker reads first | empty |
 | `Challenge seeds:` | sub-bullets S1 argues against | empty |
 | `Prior specs:` | `<hash>^:<path>` entries, read with `git show` | empty |
@@ -408,6 +415,11 @@ reminder to work without stopping), the run ends with the same message.
   the settings stop, naming the field and the value. Why a stop and not
   the default: the field is one the user wrote, and a run that read it as
   absent would spend the default budget the user meant to lower.
+- `Standalone review: off` is set only in repo mode; in plugin mode it is
+  the settings stop, naming `Standalone review`. Why: a plugin-mode S3
+  edits the plugin while its own review runs the plugin's text from
+  before those edits, so only a fresh session, S3b, reviews with the
+  edited plugin.
 - `Role settings:` is in its grammar: every sub-bullet names a known role,
   no role appears twice, and every part matches the table — `model` and
   one token, `effort` and one of the five levels, the model first when both
@@ -745,12 +757,14 @@ reviewable.
 
 ## Phase 2: Build
 
-**Goal**: the batch implemented and reviewed — S2, S3, S3b in order.
+**Goal**: the batch implemented and reviewed — S2, S3, S3b in order; with
+`Standalone review: off` (repo mode), S2 and S3, and no S3b is launched.
 
 **Inputs**: the spec (committed); the preamble; the driver copy; the state
 file.
 
-**DONE when** S3b's verdict is PASS, or every HIGH row, every ruled row
+**DONE when** S3b's verdict is PASS — with `Standalone review: off`, S3's
+Schema G verdict — or every HIGH row, every ruled row
 whose action differs from its ruling, every ruled ID that no report lists,
 and every row-3 or row-5 FAIL is classified, and the zero-diff check's
 exit code is 0, its `compared:` count equal to the field's (§ The
@@ -1214,7 +1228,10 @@ a skip at any effort; the post-check catches it at every effort.
 
 ### The verdict loop after S3b
 
-S3b's Schema F verdict decides the next step. Passing: PASS, on to Phase 3.
+S3b's Schema F verdict decides the next step. With `Standalone review: off`
+(repo mode), no S3b runs, and S3's Schema G verdict and the rows of its
+review enter this loop in S3b's place, read by task-implement's Verdict
+determination; S5 and the narrowed reviews are unchanged. Passing: PASS, on to Phase 3.
 FAIL, or PARTIAL with HIGH rows deferred or with a ruled row whose action
 differs from its ruling (task-review's Verdict determination): each HIGH
 row, each such ruled row, and each row-3 or row-5 FAIL is classified by
@@ -1254,7 +1271,7 @@ review has seen until the narrowed one runs.
 
 ### The zero-diff check
 
-After S3b, the main session runs the script copy from the repository
+After S3b — after S3 with `Standalone review: off` — the main session runs the script copy from the repository
 root, `bash <workspace>/_prompts/<batch>-zero-diff.sh <baseline> <workspace>/_prompts/<batch>-zero-diff.txt`,
 the `Zero diff:` paths written to `_prompts/<batch>-zero-diff.txt` one per
 line before the first launch, and checks that the `compared:` count it
@@ -1387,12 +1404,14 @@ continue.
 **Goal**: the acceptance run, and every FAIL classified.
 
 **Inputs**: the `Acceptance:` field as Phase 0 read it (§ The
-`## Autopilot` section); the S3b HEAD; the preamble; in plugin
+`## Autopilot` section); the S3b HEAD — S3's with `Standalone review:
+off`; the preamble; in plugin
 mode the plugin directory and the workspace for seeds.
 
 **DONE when** every case has a result in the state file and every FAIL a
 class, or `Acceptance: none` has been recorded as
-`none named; S3b is the last check`.
+`none named; S3b is the last check` — `none named; S3 is the last check`
+with `Standalone review: off`.
 
 **Plugin mode.** S4 runs a seed-project acceptance: a trial run of a seed
 first, to confirm the path under test is reachable, then one case per run,
@@ -1426,7 +1445,7 @@ command cases it reads in the field — the sub-bullets whose text before
 ` — PASS: ` is one code span. A different count, or an exit other than 0,
 is the stop for a case that cannot be run (the narrowing rule below),
 naming both counts or the script's reason. An S4 worker then runs each case at the S3b
-HEAD in the repository: it extracts the commands again with the same copy
+HEAD — S3's with `Standalone review: off` — in the repository: it extracts the commands again with the same copy
 into `<workspace>/_prompts/<batch>-<tag>-cmds/`, shows `cmp` equal for
 every file against the main session's and one `cmp` of two files that
 differ reporting the difference — a file that differs runs nothing, and
@@ -1452,7 +1471,8 @@ its exit code, the evidence by path — to that path and commit the file alone,
 its case's lines there in a commit of its own,
 `docs: update batch <name> acceptance record`. With
 `Acceptance: none`, no S4 session starts and the report's acceptance line
-reads `none named; S3b is the last check`. Why: a product repository has no
+reads `none named; S3b is the last check`, or `none named; S3 is the last
+check` with `Standalone review: off`. Why: a product repository has no
 place for a record the plugin invented, and the report is where the user
 reads the run; where the user names a path, S4 is the session that ran the
 commands, a worker may write into the repository, and a file left
@@ -1599,7 +1619,8 @@ The zero-diff check runs again before S6 is launched, over
 `<baseline>..HEAD` as it then stands, and not after S6's commit; its exit
 code and `compared:` count are read as § The zero-diff check reads them,
 and the reviewer report's `zero diff:` field reports this run. Why
-before: S4 and S5 commit after the check that follows S3b, so their commits
+before: S4 and S5 commit after the check that follows S3b — S3 with
+`Standalone review: off` — so their commits
 need one of their own; and in plugin mode the release commit edits, by
 design, paths a zero-diff list may name — a plugin repository's roadmap or
 manifest — so a check run over the release commit would stop a run whose
@@ -2505,7 +2526,7 @@ reply text, where the state file's copy does not stand in for the
 printed one:
 
 ```
-Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
+Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
 ```
 
 The roles list names each role `Role settings:` declares, in the field's
@@ -2650,7 +2671,7 @@ decisions the user has yet to see.
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
-- Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check
+- Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
@@ -2662,6 +2683,7 @@ decisions the user has yet to see.
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
+  [S3b: off (Standalone review: off)]
 ```
 
 The `Main-session rulings` line is built from the state file's
@@ -2701,7 +2723,9 @@ file's `S6 return:` entries other than `none`, whatever the `inbound:`
 line records — each failed check at S6's return, with the commits it
 names, the work S6 left undone for a point raised after the removal, and
 a change S6 left to the spec, with what the status command printed
-(Phase 4). The line reads `none` when there are none.
+(Phase 4). The line reads `none` when there are none. The `Sessions:`
+list carries the line `S3b: off (Standalone review: off)` in S3b's place
+when S3b did not run.
 
 ## The gates
 
@@ -2783,7 +2807,10 @@ wording that closed it:
   S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
   its `result` other than `BLOCKED`; S3b → Phase 3: its Schema F
   verdict and the zero-diff check's exit 0 with its `compared:` count
-  equal to the field's.
+  equal to the field's. With `Standalone review: off` (repo mode) there
+  is no S3b: S3 → Phase 3 on S3's `.exit`, the HEAD it left, its Schema G
+  verdict in its `result` other than `BLOCKED`, read by the verdict loop
+  in S3b's place, and the zero-diff check's result after S3.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit, after the clarification commit of each question

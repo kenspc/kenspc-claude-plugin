@@ -455,7 +455,24 @@ of `pmset -g log`, and a live pid is still never killed.
 
 ### Task 10: `Standalone review:` switch
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: S3's Schema G verdict, in S3b's place, is read by
+  task-implement's own Verdict determination, since the two skills'
+  verdicts are defined in their own files. The role table's S3b row names
+  the condition in its Role cell, and the Why went into a new short
+  paragraph under the table's existing one, so the "one role per session"
+  paragraph stays as written. The plugin-mode settings stop is a start
+  check of its own, naming `Standalone review`, with a Why: a plugin-mode
+  S3's review runs the plugin's text from before its edits. The reviewer
+  report's Acceptance line gained `none named; S3 is the last check` as a
+  third alternative, and its `Sessions:` list a bracketed
+  `[S3b: off (Standalone review: off)]` line with a sentence under the
+  template saying when it is written.
+- Changes/tradeoffs: Phase 2's Goal also names the `off` case. The
+  narrowed review after an S5 keeps its `-s3c` tag and its S3b role
+  settings with S3b off, unchanged as the plan says.
 
 Depends on: Task 7
 
