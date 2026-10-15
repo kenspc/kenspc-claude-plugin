@@ -1440,11 +1440,14 @@ as Phase 0 read the section — `git show <baseline>:<spec path>` in spec
 entry, `git show <S1 hash>:<spec path>` in brief entry — to
 `_prompts/<batch>-spec.md`, runs
 `bash _prompts/<batch>-extract-acceptance.sh _prompts/<batch>-spec.md _prompts/<batch>-s4-cmds`,
-and checks that the `commands:` count it prints equals the number of
-command cases it reads in the field — the sub-bullets whose text before
-` — PASS: ` is one code span. A different count, or an exit other than 0,
-is the stop for a case that cannot be run (the narrowing rule below),
-naming both counts or the script's reason. An S4 worker then runs each case at the S3b
+and checks that the `commands:` and `cases:` counts it prints equal the
+numbers of command cases and of other cases it reads in the field — a
+command case being a sub-bullet whose text before ` — PASS: ` is one code
+span. A count that differs, or an exit other than 0, is the stop for a
+case that cannot be run (the narrowing rule below), naming the counts or
+the script's reason. Why both counts: the script ends the field at the
+first line that starts in column 0, so a case line wrapped there drops
+every case after it, and a dropped description changes only `cases:`. An S4 worker then runs each case at the S3b
 HEAD — S3's with `Standalone review: off` — in the repository: it extracts the commands again with the same copy
 into `<workspace>/_prompts/<batch>-<tag>-cmds/`, shows `cmp` equal for
 every file against the main session's and one `cmp` of two files that

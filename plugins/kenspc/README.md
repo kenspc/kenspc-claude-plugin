@@ -941,7 +941,7 @@ its settings to `_prompts/<batch>-spec.md` and runs the copied
 `<nn>.cmd` — the text of its one code span as it stands, one padding space
 removed from each end when both are there — or, for a case description,
 `<nn>.case`, and prints `commands: <n>, cases: <m>`; the main session
-checks that count against its own reading of the field. S4 extracts the
+checks both counts against its own reading of the field. S4 extracts the
 commands again into a directory of its own, shows `cmp` equal for every
 file and one `cmp` of two differing files reporting the difference, runs
 each command as `<shell> <file>` in the shell your session's Bash tool

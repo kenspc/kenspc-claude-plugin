@@ -148,7 +148,7 @@ generate-plan and task-implement changes.
 - **S4 runs its commands from files (autopilot, repo mode).** Before S4's
   first launch the main session saves the spec as Phase 0 read it to
   `_prompts/<batch>-spec.md`, extracts the commands into
-  `_prompts/<batch>-s4-cmds/`, and checks the `commands:` count against
+  `_prompts/<batch>-s4-cmds/`, and checks the `commands:` and `cases:` counts against
   its own reading of the field. The S4 block lists "the command in
   `<nn>.cmd`" per case; the worker extracts again into its own directory,
   shows `cmp` equal for every file and one `cmp` of two differing files,
