@@ -199,6 +199,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Allowed files:` | paths, one per line or comma-separated | empty |
 | `Zero diff:` | paths for the zero-diff check | empty — no zero-diff check |
 | `Byte-identity exceptions:` | free text | empty |
+| `Run facts:` | sub-bullets of free text: measured facts of the machine that bind every worker and are not the spec's constraints (one heavy suite at a time, a shared `$TMPDIR`) | empty |
 | `Acceptance:` | `none`, or one sub-bullet per case: a command or a case description, its PASS criterion after ` — PASS: `, and `(optional)` at the end of a case that may be cut | `none` |
 | `Acceptance record:` | a path (repo mode) the S4 results are written to | unset |
 | `Release preparation:` | `default`, `keep`, or sub-bullets of instructions | `default` |
@@ -1832,13 +1833,26 @@ Commit messages: a subject this prompt gives is the default; write it in the pro
 Autopilot section: once <spec path> is committed, its `## Autopilot` section holds this run's settings, fixed for the run; leave it as it stands, and put a change it seems to need in your final message.
 Allowed files: <the Allowed files: paths — the files this batch may change; a file outside them is a forbidden file>.
 Byte-identity exceptions: <the Byte-identity exceptions: text — the only byte-identity sections this batch may edit>.
+Run facts: measured facts of this machine that bind you and every subagent you dispatch:
+<the Run facts: sub-bullets, as written>
+A gate a run fact or the specification sets on a command — another session's go before a full suite — is yours to ask, with SendMessage, since the kenspc:* subagents have no message tool; name the go in the dispatch of the agent that runs the command.
 ````
 
-The last two lines of § 6 are written when their fields are set and
-omitted when empty. Why in the preamble: it is the only text a worker
+The Allowed files, Byte-identity exceptions, and Run facts lines of § 6
+are written when their fields are set and omitted when empty; the Run
+facts line is the three lines above, its sub-bullets as the field holds
+them. Why in the preamble: it is the only text a worker
 reads, so a field that reaches no preamble binds no worker and trips no
 stop; the zero-diff check verifies the paths a batch must not touch, and
-these two fields bound what it may. Why § 6 carries the commit line: the
+the Allowed files and Byte-identity exceptions fields bound what it may.
+Why run facts apart from the constraints: a fact of the machine — more
+than about two heavy test suites at once exhausting its local ports, so
+that tests fail on connection errors — binds every worker of every batch
+on it, while the spec's constraints are the batch's own. Why the worker
+asks for a gate itself: a regression-verifier told to wait for another
+session's go before the suite had no tool to ask with, marked its suite
+row FAIL, and the worker ran the suite itself; a go named in the
+dispatch is one the agent can act on. Why § 6 carries the commit line: the
 task blocks give fixed subjects, and a repository whose convention
 requires a scope from its own list — where `docs(plans):` is outside it —
 would get worker commits its own rules reject; the preamble is the only

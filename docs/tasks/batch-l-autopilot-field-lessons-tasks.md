@@ -88,7 +88,21 @@ the return; § The state file; the reviewer report template):
 
 ### Task 2: `Run facts:` field and suite gates
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the `Run facts:` line in § 6 is three template lines — a
+  heading sentence, the sub-bullets as written, and the gate sentence —
+  since the field's value is a list and the other § 6 field lines are
+  single lines. The note under the template now names the three optional
+  lines (Allowed files, Byte-identity exceptions, Run facts) instead of
+  "the last two lines", which would have become wrong.
+- Changes/tradeoffs: the table row's value cell gives two examples (one
+  heavy suite at a time, a shared `$TMPDIR`) from the roadmap item, so a
+  writer of the field can tell a run fact from a constraint. The gate
+  sentence sits in the Run facts line as the plan says, so a gate the spec
+  alone sets reaches the worker only when `Run facts:` is set — accepted
+  as the plan states it.
 
 Implement plan Step 2 in `plugins/kenspc/skills/autopilot/SKILL.md`
 (§ The `## Autopilot` section table; Templates § The preamble § 6 and the
