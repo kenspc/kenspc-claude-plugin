@@ -1373,9 +1373,11 @@ count toward the dead-twice stop; the state file records it as
 `usage-limit`. The step is resumed under its next `<tag>-r<k>` with the
 continue prompt after the named reset, and the resume counts under
 `Caps:`. The main session, headless or interactive, never waits through
-the reset by polling: when one of its tools can schedule a wake-up of this
-session, it schedules one after the named reset and ends its turn;
-otherwise it stops with `Autopilot stopped: usage limit, resets <time>`,
+the reset by polling: an interactive main session, when one of its tools
+can schedule a wake-up of this session, schedules one after the named
+reset and ends its turn; otherwise — a headless main session always, since
+a headless session that ends its turn exits and no wake-up reaches it
+(§ The wait path) — it stops with `Autopilot stopped: usage limit, resets <time>`,
 naming the step and the resume that continues it, `<tag>-r<k>`. In a
 session that cannot ask (a system reminder to work without stopping), the
 run ends with that message. The turn after the reset — the wake-up, or
@@ -2664,8 +2666,8 @@ that the first message to a worker was held or refused (§ The message
 protocol), an artifact absent after a return (§ Phase transitions), an
 unmarked acceptance case that cannot be run (Phase 3's narrowing rule),
 the skipped-gate post-check's second failure (§ A worker's question
-at a gate), and a usage-limit end when no tool of the main session can
-schedule its wake-up after the reset (§ Death and resume). Why listed
+at a gate), and a usage-limit end when the main session is headless or no tool of
+it can schedule its wake-up after the reset (§ Death and resume). Why listed
 here: a reader of the stop conditions finds every stop from this section,
 while each rule stays beside the step it governs.
 

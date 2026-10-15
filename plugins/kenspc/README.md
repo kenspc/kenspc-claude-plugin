@@ -994,10 +994,10 @@ a reset time is a usage-limit end: not a death, so it does not count
 toward the dead-twice stop; the state file records it as `usage-limit`,
 and the step is resumed after the reset under its next `-r<k>`, counted
 as a resume. The main session never waits through the reset by polling,
-since the limit can refuse its own turns too and a poll is a turn: it
-schedules one wake-up after the reset when one of its tools can, and
-otherwise stops with `Autopilot stopped: usage limit, resets <time>`,
-naming the step and the resume that continues it. Asked about a live
+since the limit can refuse its own turns too and a poll is a turn: an
+interactive main session schedules one wake-up after the reset when one of
+its tools can, and otherwise — a headless one always — it stops with
+`Autopilot stopped: usage limit, resets <time>`, naming the step and the resume that continues it. Asked about a live
 worker, the main session reports, besides the pid and the logs' sizes and
 times, the last sleep and wake lines of `pmset -g log` on macOS — a worker
 that looks stalled may be a sleeping machine — and never kills a live
@@ -1028,8 +1028,8 @@ is its own, not a stop. Six stops are stated at their own steps: a driver
 that refuses a launch, a delivery notice that the first message to a
 worker was held or refused, an artifact absent after a return, an unmarked
 acceptance case that cannot be run, the skipped-gate check failing a
-second time, and a usage-limit end when the main session has no tool to
-schedule its own wake-up after the reset. Every stop
+second time, and a usage-limit end when the main session is headless or
+has no tool to schedule its own wake-up after the reset. Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file
 holds the next action.
 

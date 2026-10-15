@@ -95,8 +95,9 @@ generate-plan and task-implement changes.
   end — not a death, so it does not count toward the dead-twice stop —
   recorded with the new status word `usage-limit` and resumed under the
   step's next `-r<k>` after the reset, counted under `Caps:`. The main
-  session never polls through the reset: it schedules one wake-up after
-  it when one of its tools can, and otherwise stops with
+  session never polls through the reset: an interactive one schedules
+  one wake-up after it when one of its tools can, and otherwise — a
+  headless one always — it stops with
   `Autopilot stopped: usage limit, resets <time>`, a sixth stop stated at
   its own step. Why: the workers run under the main session's own
   account, so the limit that ended a worker can refuse the main session's
