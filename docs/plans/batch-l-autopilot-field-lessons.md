@@ -15,7 +15,10 @@ task-implement's slicing of a large task document; generate-plan's
 
 Out of scope: roadmap items 34 (second fix round), 36 (heavy commands
 across parallel reviewers), 38 (rails gaps), and 40 (runtime walk), which
-need design decisions of their own; any release, version bump, tag, or
+need design decisions of their own; of item 30, the baseline dry run of
+the acceptance commands (item 21); of item 39, the condition under which
+S3b runs and the trial before the default changes — this plan builds the
+switch alone, default `on`; any release, version bump, tag, or
 push; installing the plugin. The commits stay local on `main`.
 
 ## Background / Context
@@ -82,8 +85,8 @@ grammar it writes).
 ### Step 1: Preamble additions (item 29)
 
 Files: `plugins/kenspc/skills/autopilot/SKILL.md` (Templates § The
-preamble, its Why paragraphs; § Launch, wait, return, the return; the
-reviewer report template).
+preamble, its Why paragraphs; § Launch, wait, return, the return; § The
+state file; the reviewer report template).
 
 - § 3 gains: a worker and its subagents write nothing under `~/.claude`,
   by a file tool or a shell command; a lesson worth keeping goes under
@@ -97,14 +100,19 @@ reviewer report template).
   may edit and commit and regression-verifier may build and run the suite.
 - § 6's template line for the constraint sections says a constraint stated
   in the preamble's own words quotes the spec's sentence.
-- The return reads `## Lessons for the main session` and the reviewer
-  report gains a `Worker lessons:` line listing each, by tag.
+- The return reads `## Lessons for the main session` and records each
+  entry under a new `worker lessons:` section of the state file, with the
+  worker's tag, as it records `## Rail observations`; the reviewer report
+  gains a `Worker lessons:` line built from that section, listing each by
+  tag, `none` when it is empty. Why the state file: the reviewer report's
+  lines are built from it, since a long batch compacts the conversation.
 - Each addition gets a Why sentence in the paragraphs under the template,
   in the file's form, stating the failure in its own words (no dry-run
   citation).
 
 Acceptance: `grep -c 'Lessons for the main session' SKILL.md` ≥ 3 (§ 3,
-the return, the report line); `grep -q 'Worker lessons:'`; the literal
+the return, the Why); `grep -q 'Worker lessons:'`; the state file's
+template holds `worker lessons:`; the literal
 `Only § 3 holds rails.` occurs in the preamble template;
 `bash scripts/check-autopilot-rails-hook.sh` green (it holds the
 `## Rail observations` literal in the template).
@@ -190,9 +198,19 @@ blocks, S4 repo mode; § The reviewer report; § Phase transitions).
   file that differs, and runs each with `<shell> <file>`, `<shell>` being
   the shell the main session's own Bash tool runs (`ps -p $$ -o comm=`),
   written into the block. An inspection command carries no redirect.
+- A case the extraction writes as `<nn>.case` (a description, not one
+  code span) is listed with its text, as today. A corrected case (Phase 3,
+  A corrected case) is listed as the file `<nn>.corrected.cmd`, which the
+  main session writes from the clarification's corrected form beside the
+  extracted files; it stays out of the worker's `cmp` comparison, since no
+  extraction from the spec produces it, and its line names the
+  clarification as today.
 - The reply asks, per command, for its exit code and the evidence it
   leaves (the files, logs, or clones it writes, by path) in place of the
-  last twenty lines of output.
+  last twenty lines of output. Phase 3's repo-mode paragraph, which states
+  the same run and reply (`one command per Bash call`, `the last twenty
+  lines`), and its `Acceptance record:` sentences, which write the same
+  lines to the record, change with the block.
 - § The zero-diff check calls `zero-diff.sh` with the `Zero diff:` paths
   written one per line to `_prompts/<batch>-zero-diff.txt`, and checks
   that `compared:` equals the number of paths in the field.
@@ -205,8 +223,9 @@ blocks, S4 repo mode; § The reviewer report; § Phase transitions).
   in place of `nothing printed`.
 
 Acceptance: `grep -q '<batch>-extract-acceptance.sh'` and
-`grep -q '<batch>-zero-diff.sh'` in SKILL.md; the S4 repo-mode block no longer holds `one per Bash call`
-nor `last twenty lines`; SKILL.md no longer holds `zero diff: <nothing
+`grep -q '<batch>-zero-diff.sh'` in SKILL.md; SKILL.md no longer holds
+`one per Bash call`, `one command per Bash call`, nor `twenty lines`;
+`grep -q 'corrected.cmd'` in SKILL.md; SKILL.md no longer holds `zero diff: <nothing
 printed` nor `empty zero-diff output`, and Phase 2's DONE line names the
 zero-diff check's exit code; `bash scripts/check-autopilot-rails-hook.sh`
 green.
@@ -217,9 +236,11 @@ Files: `plugins/kenspc/skills/autopilot/SKILL.md` (§ Budget and caps; the
 gates table row for the budget).
 
 - Projected becomes the largest cost so far of a session of the role about
-  to launch — S2, S3, S3b, the narrowed reviews together, S4, S5, S6, each
-  with its resumes and re-runs — or the budget divided by six before that
-  role's first session. The hard cap (`--max-budget-usd` with the
+  to launch — S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6,
+  each with its resumes and re-runs — or the budget divided by six before
+  that role's first session. A plugin-mode S4's cost is its own session's
+  plus the trial's and the cases' costs from its record, as spent counts
+  them, since its own JSON holds none of its nested sessions. The hard cap (`--max-budget-usd` with the
   remaining amount) is unchanged. The Why states the failure: a USD 1
   release preparation judged against a USD 70 implementation session.
 
@@ -231,7 +252,8 @@ unchanged (`git diff` of that bullet empty).
 ### Step 6: Usage-limit end, `is_error`, and the sleep log (item 33)
 
 Files: `plugins/kenspc/skills/autopilot/SKILL.md` (§ Launch, wait, return,
-the return; § Death and resume; the state file's status words).
+the return; § Death and resume; the state file's status words; § The stop
+conditions, Stops stated at their own steps).
 
 - A JSON with `is_error: true` is not a success, whatever its subtype.
 - One whose result names a usage or session limit with a reset time is a
@@ -242,6 +264,12 @@ the return; § Death and resume; the state file's status words).
   when one of its tools can schedule a wake-up of the session, and
   otherwise stops with the reset time as its reason, with the
   sentence for a session that cannot ask (the run ends with that message).
+- The state file's `sessions:` status words gain `usage-limit`, written
+  for such an end in place of `dead` or the subtype.
+- The new stop (an interactive main session with no tool to schedule its
+  wake-up) is stated at its own step, so § The stop conditions' "Five
+  stops sit outside the numbered list" becomes six and names it, and the
+  gates table's row for a stop stated at its own step covers it.
 - The report the main session gives when asked about a live worker adds,
   on macOS, the last sleep and wake lines of `pmset -g log`. A live pid is
   still never killed.
@@ -249,31 +277,50 @@ the return; § Death and resume; the state file's status words).
 Acceptance: `grep -q 'is_error'` in § Death and resume and in the return;
 the phrase `usage-limit end` occurs in both; the new stop carries the
 `In a session that cannot ask (a system reminder to work without
-stopping)` opening; `pmset -g log` occurs once.
+stopping)` opening; `pmset -g log` occurs once; SKILL.md no longer holds
+`Five stops sit outside`; the state file template's `sessions:` line
+holds `usage-limit`.
 
 ### Step 7: `Standalone review:` switch (item 39)
 
-Files: `plugins/kenspc/skills/autopilot/SKILL.md` (§ The `## Autopilot`
-section table; § The start checks; Phase 2; § The verdict loop after S3b;
-the settings line; the reviewer report).
+Files: `plugins/kenspc/skills/autopilot/SKILL.md` (the role table at the
+top and its Why paragraph; § The `## Autopilot` section table; § The start
+checks; Phase 2; § The verdict loop after S3b; § The zero-diff check;
+Phase 3's Inputs, DONE line, repo-mode paragraph, and `Acceptance: none`
+line; Phase 4's zero-diff re-run; the settings line; the reviewer report;
+§ Phase transitions).
 
 - New row: `Standalone review:` — `on` or `off`, default `on`.
 - `off` in plugin mode is a settings stop naming the field.
 - `off` in repo mode: Phase 2 launches no S3b; S3's Schema G verdict and
   its review's rows enter the verdict loop in S3b's place; the zero-diff
   check runs after S3; S5 and the narrowed reviews are unchanged.
+- Every passage that names S3b as the step before Phase 3 names S3 for
+  the `off` case: Phase 3 runs S4 at S3's HEAD (`the S3b HEAD`),
+  `Acceptance: none` records `none named; S3 is the last check` (in Phase
+  3 and on the reviewer report's Acceptance line), Phase 4's zero-diff
+  Why (`the check that follows S3b`) names the check after S3, and § Phase
+  transitions gives S3 → Phase 3 on S3's Schema G verdict and the
+  zero-diff check's result.
+- The role table's S3b row and the Why paragraph under it say S3b runs
+  unless `Standalone review: off` in repo mode, with the reason: in repo
+  mode S3's review is already five fresh subagents, and the second reason
+  for separate sessions — a session that edited the plugin still runs the
+  text it started with — holds only in plugin mode.
 - The settings line shows the value; the reviewer report states
   `S3b: off (Standalone review: off)` when it did not run.
 
 Acceptance: the table holds a `Standalone review:` row; § The start checks
 names the plugin-mode stop; § The verdict loop names Schema G for the
-`off` case; Phase 2's DONE line covers both cases.
+`off` case; Phase 2's DONE line covers both cases; `grep -q 'S3 is the
+last check'` in SKILL.md; § Phase transitions names the `off` case.
 
 ### Step 8: task-implement slices a large document (item 35)
 
 Files: `plugins/kenspc/agents/task-implementer.md` (CONTEXT YOU WILL
-RECEIVE, OBJECTIVE, the processing loop, Schema D); `plugins/kenspc/skills/task-implement/SKILL.md`
-(Phase 1 Steps 2, 4, 5).
+RECEIVE, OBJECTIVE, DONE CRITERIA, the processing loop, Schema D);
+`plugins/kenspc/skills/task-implement/SKILL.md` (Phase 1's DONE line,
+Steps 2, 4, 5; Phase 2 Step 4's Schema G `## Implementation` section).
 
 - task-implementer: optional `TASK_LIMIT` — implement at most that many
   incomplete tasks, in document order, then return Schema D for them; a
@@ -283,9 +330,14 @@ RECEIVE, OBJECTIVE, the processing loop, Schema D); `plugins/kenspc/skills/task-
   slices with `TASK_LIMIT: 12`, one after another, re-reading the document
   between them, until no incomplete task is left or a slice completes none;
   Step 5 renders one Schema D merged from the slices' rows and prose
-  sections, rows in document order. The batch confirmation (Step 3) is
+  sections, rows in document order, and Schema G's `## Implementation`
+  carries that merged Schema D. The batch confirmation (Step 3) is
   asked once for the whole batch. Why the constant and its value are stated
   in the step.
+- task-implementer's DONE CRITERIA and task-implement's Phase 1 DONE line
+  read "every incomplete task" as every incomplete task within
+  `TASK_LIMIT` for a slice, and Step 4's "implements all incomplete tasks"
+  sentence names the slices.
 
 Acceptance: `grep -q 'TASK_LIMIT'` in both files; task-implementer's
 CONTEXT section lists it as optional; `bash scripts/check-all.sh` green
@@ -296,7 +348,8 @@ CONTEXT section lists it as optional; `bash scripts/check-all.sh` green
 
 Depends on step 2. Files: `plugins/kenspc/skills/generate-plan/SKILL.md`
 (Phase 2 Step 1 elements); `plugins/kenspc/skills/autopilot/SKILL.md`
-(Templates § The task blocks, S6 removal block and its notes).
+(Phase 4's Repo mode paragraph; Templates § The task blocks, S6 removal
+block and its notes).
 
 - generate-plan: when the user asks for the plan to run under
   `/kenspc-autopilot` or for an `## Autopilot` section, the plan's last
@@ -310,7 +363,9 @@ Depends on step 2. Files: `plugins/kenspc/skills/generate-plan/SKILL.md`
   makes the removal commit (`git rm` of the spec and the task document)
   governs the order: the removal paragraph is not written, the question
   paragraph names the list's removal commit, and a `Version:` set by one of
-  the list's commits is set there and nowhere else.
+  the list's commits is set there and nowhere else. Phase 4's Repo mode
+  paragraph (`after the default removal unless the list says keep`, and
+  the bump riding in the removal commit) states the same case.
 
 Acceptance: `grep -q '## Autopilot'` in generate-plan's SKILL.md;
 autopilot's S6 notes name the case of a list that makes the removal;
@@ -324,16 +379,21 @@ and 3).
 
 - The draft is written from its first print to `<plans dir>/<name>.draft.md`
   (the output location resolved as Step 3 resolves it, the conflict check
-  included), and every print reads that file in full. A revision edits the
+  included, and a `<name>.draft.md` an earlier run left counted as a file
+  at the target path), and every print reads that file in full. A revision edits the
   file and prints it again. Approval renames the file to `<name>.md`; no
   other write follows. A run that ends without approval names the draft
   file in its final message as the user's to keep or delete. The
-  session-that-cannot-ask branch prints the draft file and stops as today.
+  session-that-cannot-ask branch prints the draft file and stops as today;
+  its `Nothing is written` sentence becomes "nothing but the draft file is
+  written", and its Why (an unapproved plan written, reviewed, and
+  committed) still holds, since the draft file is neither reviewed nor
+  committed.
 - The Why replaces the seven-of-355-lines evidence sentence's conclusion:
   the file is the approved text by construction.
 
 Acceptance: generate-plan's SKILL.md holds `.draft.md`; it no longer holds
-`Do not write it to a file yet`; the cannot-ask sentence at Step 3 is
+`Do not write it to a file yet` nor `Nothing is written,`; the cannot-ask sentence at Step 3 is
 kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 
 ## Testing Strategy
@@ -347,8 +407,13 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 - No headless acceptance run in this batch: no release follows it, and the
   admin-pages batch runs on the installed 4.5.2. The first dayaku-crm batch
   run on the next installed version is the live check of steps 1, 2, 4,
-  5, 6, and 7; the release that ships this batch decides whether a seeded
-  acceptance is also needed.
+  5, 6, and 7, and of step 9's S6 half when its `Release preparation:`
+  list makes the removal; the release that ships this batch decides whether
+  a seeded acceptance is also needed.
+- Steps 8 and 10, and step 9's generate-plan half, have no live check in
+  this batch beyond their acceptance greps: the next `/kenspc-plan` run
+  exercises steps 9 and 10, and the first task document with more than 12
+  incomplete tasks exercises step 8.
 
 ## Risks and Mitigations
 
@@ -373,15 +438,24 @@ kept (`grep -c 'In a session that cannot ask'` unchanged or higher).
 - `CLAUDE.md` — Plugin Directory Layout and File Structure (the two new
   scripts under `skills/autopilot/scripts/`); Repository scripts/ (the new
   guard, and the counts: thirteen guards, twelve with a self-test); CONTEXT
-  block contract (`TASK_LIMIT`). Steps 3, 8.
+  block contract (`TASK_LIMIT`); Subagent Review Architecture § Sessions,
+  not agents (autopilot) (S3b runs unless `Standalone review: off` in repo
+  mode; `--resume` also continues a worker ended by the usage limit);
+  Non-Goals (the autopilot paragraph's "the implementer, the reviewer, and
+  the acceptor are three sessions", which holds in repo mode only while
+  S3b runs). Steps 3, 6, 7, 8.
 - `plugins/kenspc/CHANGELOG.md` — a `## 4.6.0 — unreleased` heading with
   Added, Changed, and Fixed entries for every step. Steps 1 to 10.
 - `docs/release-checklist.md` — the pinned counts `guards run: 13` and
   `self-tests run: 12`. Step 3.
 - `docs/roadmap.md` — N/A for this document: its items leave it when they
-  ship, at the release, not in this batch.
+  ship, at the release, not in this batch; items 30 and 39 then leave only
+  in part (Objective, Out of scope).
 - `README.md` — N/A for this document: no skill's one-line summary
   changes.
+- `plugins/kenspc/references/plan-document-example.md` — N/A for this
+  document: step 9's `## Autopilot` section is written only when the user
+  asks for it, and the example plan is not an autopilot plan.
 
 ## Open Questions
 
