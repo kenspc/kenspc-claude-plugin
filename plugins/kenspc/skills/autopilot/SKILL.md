@@ -1585,7 +1585,14 @@ is also at `_logs/<batch>-report.md`.
 and task documents and touches no version and no CHANGELOG; the
 clarification commit of each question it asked comes before it (below).
 `keep` — no S6; the documents stay. A list of instructions — S6 runs them as its task
-block, after the default removal unless the list says `keep`.
+block, after the default removal unless the list says `keep`. A list one
+of whose sub-bullets makes the removal commit itself — a `git rm` of the
+spec and the task document — governs the order: S6 makes no default
+removal, its questions come before the list's removal commit, and a
+`Version:` that one of the list's commits sets is set there and nowhere
+else. Why: a list that fixed its own commit order against the removal-first
+default was reconciled by hand in every batch that wrote one, and the
+default removal beside it would remove the documents a second time.
 `Version: <string>` in repo mode is passed to S6 as an instruction to bump
 wherever the project's instruction files say versions live, and is otherwise
 ignored with a note after the settings line. Why: a product repository's
@@ -2356,14 +2363,21 @@ ID, `not fixed`, and why.
 - **S6, the removal commit** — Phase 4: repo mode with
   `Release preparation: default` or a list of instructions, and plugin mode
   with `Version: none`. The removal paragraph is written unless the list
-  says `keep`, its `and touches no version and no CHANGELOG` words when
+  says `keep` or one of its sub-bullets makes the removal commit (a
+  `git rm` of the spec and the task document), its
+  `and touches no version and no CHANGELOG` words when
   `Version:` is `none`; the Version line is written instead when
-  `Version:` is set in repo mode, the instructions when
+  `Version:` is set in repo mode — and not when one of the list's commits
+  sets the version, which is then set there and nowhere else — the
+  instructions when
   `Release preparation:` is a list. With the bare `keep`, no S6 starts; a
   list that says `keep` starts S6 for its instructions alone, with no
   removal (Phase 4). The question paragraph's first bracketed ending is
-  written with the removal paragraph, its second when the list says
-  `keep`.
+  written whenever S6 removes the spec, `<the removal commit>` being
+  `the removal commit below` with the removal paragraph and
+  `the removal commit the instructions below make` when the list makes it;
+  its second when the list says `keep`. Why the list's removal governs:
+  Phase 4, Repo mode.
 
 ````
 ## Task: release preparation for batch <batch>
@@ -2371,12 +2385,12 @@ ID, `not fixed`, and why.
 The batch's commits are <baseline sha>..<HEAD sha>.
 A question you ask <main name> is answered with a clarification entry: add
 it to the clarifications section of <spec path> and commit the spec alone,
-`docs(plans): record clarifications settled after S6`[, before the removal
-commit below. Raise every question before that commit; your clarification
+`docs(plans): record clarifications settled after S6`[, before
+<the removal commit>. Raise every question before that commit; your clarification
 commits may come first. A point that arises only after it is not asked:
 leave the work it decides undone, and name the point and that work in
 your reply; <main name> rules it there. Why: the removal
-commit `git rm`s the spec, and the instructions run after it, so a
+commit `git rm`s the spec, so a
 clarification committed after that commit would re-add the removed
 spec][, before you end. This task removes nothing, so you may raise a
 question at any point].

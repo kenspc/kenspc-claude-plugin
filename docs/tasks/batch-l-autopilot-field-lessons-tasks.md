@@ -630,7 +630,22 @@ for ` — PASS: `, fixing a failure in the draft before the print.
 
 ### Task 14: S6 follows a Release preparation list that makes the removal
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the question paragraph's first bracketed ending now names
+  `<the removal commit>`, a placeholder the S6 notes fill — `the removal
+  commit below` with the removal paragraph, `the removal commit the
+  instructions below make` when the list makes it — rather than a third
+  bracketed ending that would repeat the paragraph. Its Why no longer
+  says "the instructions run after it", which is false when the list makes
+  the removal. The Why for the list's order is written once, in Phase 4's
+  Repo mode paragraph, and the S6 notes point there.
+- Changes/tradeoffs: the S6 notes also say the Version line is not
+  written when one of the list's commits sets the version. The Why cites
+  the failure in its own words (a list whose commit order fought the
+  removal-first default, reconciled by hand in every batch that wrote one;
+  a default removal beside it would remove the documents twice).
 
 Implement the autopilot part of plan Step 9 in
 `plugins/kenspc/skills/autopilot/SKILL.md` (Phase 4's Repo mode paragraph;
