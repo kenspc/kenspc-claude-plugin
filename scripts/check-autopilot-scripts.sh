@@ -21,7 +21,8 @@
 # span that does not end the text, an unclosed code span; a path
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
-# characters, an empty paths file — and asserts each outcome.
+# characters, a paths file with CRLF line ends, an empty paths file — and
+# asserts each outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -133,6 +134,7 @@ printf 'a.txt\n\nwith space.txt\n' > "$FX/paths-changed.txt"
 printf 'absent.txt\na.txt\n' > "$FX/paths-absent.txt"
 printf ' with space.txt\na.txt \n' > "$FX/paths-padded.txt"
 printf 'x[y].txt\n' > "$FX/paths-glob.txt"
+printf 'a.txt\r\nwith space.txt\r\n' > "$FX/paths-crlf.txt"
 : > "$FX/paths-empty.txt"
 
 # --- Checks -------------------------------------------------------------------
@@ -239,6 +241,15 @@ run_checks() {
         || fail "zero-diff: padded paths' first line is not [compared: 2 paths]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the padded changed path"
     [[ ! -s "$WORK/err" ]] || fail "zero-diff: padded paths wrote to stderr: $(cat "$WORK/err")"
+
+    # zero-diff: a paths file with CRLF line ends compares the paths without
+    # the carriage return, so the changed path is found.
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-crlf.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: CRLF paths exited $rc, expected 1"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
+        || fail "zero-diff: CRLF paths' first line is not [compared: 2 paths]"
+    printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the changed path of the CRLF list"
 
     # zero-diff: an unchanged path holding glob characters is read literally,
     # so the changed xy.txt it would match as a glob is not compared.

@@ -57,7 +57,8 @@ generate-plan and task-implement changes.
   without padding, a label with a note, an `(optional)` case, a
   description case, a continuation line, `Acceptance: none`; a path with a
   space, changed, unchanged, and absent paths, paths with a space before
-  or after them, a path holding glob characters, an empty paths file —
+  or after them, a path holding glob characters, a paths file with CRLF
+  line ends, an empty paths file —
   and its `--self-test` turns it red
   with three mutants of copies (padding
   stripping removed, continuation joining removed, the paths read as one
