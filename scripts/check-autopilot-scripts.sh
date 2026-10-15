@@ -17,7 +17,8 @@
 # single and double backticks, a backtick inside a double-backtick span, spans
 # with and without the padding spaces, a label with a note, an `(optional)`
 # case, a description case, a continuation line, `Acceptance: none`, no
-# section, no field, inline text on the label line, an empty field; a path
+# section, no field, inline text on the label line, an empty field, a code
+# span that does not end the text, an unclosed code span; a path
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
 # characters, an empty paths file — and asserts each outcome.
@@ -94,6 +95,14 @@ cat > "$FX/spec-cases.md" <<'EOF'
 EOF
 
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n- Acceptance: none\n' > "$FX/spec-none.md"
+
+cat > "$FX/spec-spans.md" <<'EOF'
+## Autopilot
+
+- Acceptance:
+  - `npm test` passes, then `npm run lint` — PASS: exit 0
+  - `echo x — PASS: ok
+EOF
 printf '# Spec\n\n## Implementation Steps\n\n- Acceptance: none\n' > "$FX/spec-nosection.md"
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance: run the suite\n- Budget: USD 10\n' > "$FX/spec-inline.md"
@@ -173,6 +182,16 @@ run_checks() {
     expect_content "$out/06.cmd" 'echo one two'
     expect_content "$out/07.cmd" 'echo e'
     expect_content "$out/08.case" 'run it by hand'
+
+    # A code span that does not end the text, and one never closed: each is
+    # a case description, never a truncated command.
+    out="$WORK/out-$runs-spans"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-spans.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: spans fixture exited $rc, expected 0"
+    [[ "$stdout" == "commands: 0, cases: 2" ]] || fail "extract: spans fixture printed [$stdout], expected [commands: 0, cases: 2]"
+    expect_content "$out/01.case" '`npm test` passes, then `npm run lint`'
+    expect_content "$out/02.case" '`echo x'
 
     # Acceptance: none.
     out="$WORK/out-$runs-none"
