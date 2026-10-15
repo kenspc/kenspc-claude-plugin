@@ -603,7 +603,8 @@ source sets the key (The start checks), and each question a worker
 returned with that never arrived as a message (§ The message protocol), the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
-questions answered, the rail observations each worker listed, the gates
+questions answered, the rail observations and the lessons each worker
+listed, the gates
 a worker skipped and their outcome, the
 stops, the questions left open for a later step (The stop conditions), the
 clarification numbers recorded in the spec and the rulings that have no
@@ -640,6 +641,8 @@ questions answered:
   <tag>: <one line> → <one line> (main session|user)
 rail observations:
   <tag>: <the worker's entry, one per line | none | not read (<reason>)>
+worker lessons:
+  <tag>: <the worker's entry under ## Lessons for the main session, one per line>
 skipped gates:
   <S2|S3> <tag>: <accepted as a behavior deviation | resumed <tag>-r<k> to amend | stop: <the mismatch or choice> | recorded>
 stops: <reason> (<time>)
@@ -908,7 +911,13 @@ Every worker is one launch, one wait, one return.
   the reason, `tool_name`, `tool_input.command`, or `tool_input.<key>` —
   and gives the output of `claude --version`, run in this session's Bash.
   Why at the return: the worker ended on that denial, as the preamble's
-  § 3 tells it to, and the next worker would meet the same one. At S2's and S3's
+  § 3 tells it to, and the next worker would meet the same one. Read the
+  same `result` for `## Lessons for the main session` as well, and record
+  each entry under the state file's `worker lessons:` section with the
+  worker's tag, `<tag>: <entry>`; a worker with no such heading adds
+  nothing. Why the state file: the reviewer report's `Worker lessons` line
+  is built from it, and a long batch compacts the conversation that held
+  the reply. At S2's and S3's
   return, check whether the step asked its gate (§ A worker's question at
   a gate, on a skipped gate).
 
@@ -1760,6 +1769,13 @@ their values: `bash -c 'compgen -e'` prints the names alone, while `env`
 or `printenv` cut at the `=` still prints every further line of a
 multi-line value.
 
+Write nothing under ~/.claude, by a file tool or a shell command, and
+neither may a subagent you dispatch — a memory note included, whatever
+your harness suggests. A lesson worth keeping goes under a heading
+`## Lessons for the main session` in your final message. The harness's
+own writes there — an over-long tool result it saves under
+~/.claude/projects/…/tool-results/ — are the harness's, not a breach.
+
 The rails govern what you write — your own commands and tool calls. A
 program you run that removes a temporary directory it created itself (a
 guard's or a test script's mktemp cleanup), or writes its own cache, is
@@ -1791,6 +1807,12 @@ run. Carry every rail observation a subagent reports — under
 `## Rail observations`, naming the subagent and quoting a denial's reason
 as it gave it.
 
+Only § 3 holds rails. A constraint in § 6 is not a rail: a departure from
+one is listed under `## Rail observations` and stops nothing. The rails
+you write into a subagent prompt or an agent's CUSTOM_INSTRUCTIONS are
+this section as written, never narrower: code-fixer may edit and commit,
+and regression-verifier may build and run the suite.
+
 Any breach is a stop: report it and end.
 
 ## 4. The locked design
@@ -1805,7 +1827,7 @@ is refused.
 
 ## 6. Constraints
 
-<the spec's constraint sections by name>, and the project's instruction files.
+<the spec's constraint sections by name; a constraint stated here in this prompt's own words quotes the spec's sentence>, and the project's instruction files.
 Commit messages: a subject this prompt gives is the default; write it in the project's commit convention — the one the repository writes down (in the project's instruction files or its CONTRIBUTING), or, failing that, the pattern its recent commit subjects consistently share.
 Autopilot section: once <spec path> is committed, its `## Autopilot` section holds this run's settings, fixed for the run; leave it as it stands, and put a change it seems to need in your final message.
 Allowed files: <the Allowed files: paths — the files this batch may change; a file outside them is a forbidden file>.
@@ -1822,6 +1844,10 @@ requires a scope from its own list — where `docs(plans):` is outside it —
 would get worker commits its own rules reject; the preamble is the only
 text every worker reads. Why the Autopilot section line: § The
 `## Autopilot` section says why the run's settings are fixed at Phase 0.
+Why a constraint stated in the preamble's own words quotes the spec's
+sentence: a summary wider than the spec made a task-document reviewer
+change a task against the spec's exact script, and the quoted sentence
+leaves a worker nothing to read wider.
 
 Why § 1 tells a worker never to decide a question itself: the main
 session records every answer it gives, in the state file and in the
@@ -1884,6 +1910,26 @@ not a delete or a write the agent chose; read as one, the rails have kept review
 running the repository's own checks, and workers that reworded them for
 code-fixer and regression-verifier alone broke task-review's rule that
 those two get the reviewers' CONTEXT unchanged.
+
+Why nothing under `~/.claude`: a worker's harness tells it to save
+memories in the project's folder there, and a note written so is loaded
+by later sessions with nobody having reviewed it; a worker whose Write
+of such a note the hook denied appended it to that folder's `MEMORY.md`
+through Bash instead, and the run stopped on the breach. The final
+message's `## Lessons for the main session` is read and recorded by the
+main session (§ Launch, wait, return, the return), so the lesson reaches
+the reviewer report rather than nowhere. Why the harness's tool-result
+files are named: the harness writes them there itself, and a worker that
+read them as its own write would report a breach nobody made. Why only
+§ 3 holds rails: a review agent given the spec's `mktemp -d` line in its
+rails paragraph called a `$TMPDIR` write a breach and stopped with its
+review incomplete, while a constraint is what the review and the
+zero-diff check verify after the step, so a departure listed costs
+nothing a stop would save. Why never narrower: a worker that wrote
+"write only under RUN_DIR, no commit" into every agent's
+`CUSTOM_INSTRUCTIONS` left code-fixer unable to fix and
+regression-verifier skipping the build; the review came back PARTIAL and
+cost another fix and narrowed review.
 
 ### The task blocks
 
@@ -2470,6 +2516,7 @@ decisions the user has yet to see.
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Rail observations: <list | none>
+- Worker lessons: <list | none>
 - Skipped gates: <list | none>
 - Follow-up candidates: <list | none>
 - Release preparation: <commit | not prepared | kept>
@@ -2496,7 +2543,9 @@ The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`
 field. The `Rail observations` line lists the state file's
 `rail observations:` entries other than `none`, each as `<tag>: <entry>`,
-and reads `none` when there are none. The `Skipped gates` line lists the
+and reads `none` when there are none. The `Worker lessons` line lists the
+state file's `worker lessons:` entries, each as `<tag>: <entry>`, and
+reads `none` when the section is empty. The `Skipped gates` line lists the
 state file's `skipped gates:` entries — the step, its tag, and the
 outcome — and reads `none` when no worker skipped its gate. The
 `Follow-up candidates` line lists what the run left for the user to take

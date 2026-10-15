@@ -37,7 +37,23 @@ Task 15 on Task 13; Task 16 on Tasks 1-15.
 
 ### Task 1: Preamble additions
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: a worker whose final message has no
+  `## Lessons for the main session` heading adds nothing to the state
+  file's `worker lessons:` section (no `<tag>: none` entry, unlike
+  `rail observations:`), and the reviewer report's `Worker lessons:` line
+  reads `none` when the section is empty — a missing lesson carries no
+  safety meaning, so the `none` / `not read` distinction the rail
+  observations need was not copied. The § 6 quoting rule went into the
+  constraint line's placeholder itself, since that placeholder is what the
+  main session fills. The Why sentences were grouped in one new paragraph
+  after the § 3 Why paragraphs, plus one sentence on the § 6 notes
+  paragraph.
+- Changes/tradeoffs: the `~/.claude` paragraph also names "a memory note
+  included, whatever your harness suggests", since the harness's own
+  memory instruction is what led a worker there; otherwise as specified.
 
 Implement plan Step 1 in `plugins/kenspc/skills/autopilot/SKILL.md`
 (Templates § The preamble and its Why paragraphs; § Launch, wait, return,
