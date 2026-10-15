@@ -2839,10 +2839,12 @@ wording that closed it:
   S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
   its `result` other than `BLOCKED`; S3b → Phase 3: its Schema F
   verdict and the zero-diff check's exit 0 with its `compared:` count
-  equal to the field's. With `Standalone review: off` (repo mode) there
+  equal to the field's, or `Zero diff:` empty, which has no check. With
+  `Standalone review: off` (repo mode) there
   is no S3b: S3 → Phase 3 on S3's `.exit`, the HEAD it left, its Schema G
   verdict in its `result` other than `BLOCKED`, read by the verdict loop
-  in S3b's place, and the zero-diff check's result after S3.
+  in S3b's place, and the zero-diff check's result after S3, or
+  `Zero diff:` empty.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded.
 - The exit: S6's commit, after the clarification commit of each question
