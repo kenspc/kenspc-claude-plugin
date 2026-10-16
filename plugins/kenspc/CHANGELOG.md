@@ -55,7 +55,8 @@ in the next product-repository batches.
   APPLICABLE on a row the first round FIXED takes that fix back first: a
   `git revert --no-commit` committed under the project's convention, or,
   when the revert conflicts, `git revert --abort` and a hand edit in a
-  commit of its own; a fix that cannot be taken back — the index holds
+  commit of its own, and in an uncommitted run a hand edit with no commit;
+  a fix that cannot be taken back — the index holds
   staged changes, a file of its commit has uncommitted changes, the hand
   edit would undo another fix, or the take-back fails build, test, or
   lint — stays, its row reading

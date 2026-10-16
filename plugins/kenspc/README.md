@@ -557,7 +557,8 @@ review reuses the same directory (since 4.3.0):
   that entry. A round-2 DEFER or NOT APPLICABLE on a row the first round
   FIXED takes that fix back first — `git revert --no-commit` on a clean
   index, committed under your commit convention, or an edit by hand when
-  the revert conflicts — and regression-verifier checks the fix is gone; a
+  the revert conflicts; in an uncommitted review, always an edit by hand,
+  with no commit — and regression-verifier checks the fix is gone; a
   fix that cannot be taken back (such as staged changes of yours in the
   index, or a failed build, test, or lint run) stays, its row
   `FIXED — ruled; not reverted: <reason>`, which keeps the verdict from
