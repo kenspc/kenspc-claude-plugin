@@ -42,7 +42,21 @@
 #       target that cannot be read from the input is denied too;
 #   (c) a Bash input longer than BASH_INPUT_CAP bytes (64 KB), unscanned:
 #       the scan's time grows with the square of the command's length, and
-#       a run that outlasts the hook's timeout denies nothing.
+#       a run that outlasts the hook's timeout denies nothing;
+#   (d) a Bash command with a redirection — >, >>, >|, &>, &>>, and the
+#       same after a file-descriptor number (2>) — whose target lies outside
+#       every root, by the root check (b) uses. The target is read after a
+#       leading ~ (unquoted), $HOME, ${HOME}, $TMPDIR, or ${TMPDIR} is
+#       expanded from the hook's environment, resolved against the input's
+#       cwd when relative, with . and .. collapsed as written. Not judged: a
+#       target holding any other expansion, a command substitution, a glob
+#       or a brace, or single-quoted text; /dev/null, /dev/stdout,
+#       /dev/stderr, /dev/tty, and /dev/fd/<n> are allowed; a duplication
+#       (2>&1) has no target; a > inside quotes, escaped, or in a heredoc
+#       body is no redirection. Why redirections: both writes outside the
+#       roots that workers made through Bash were redirections, one to a
+#       file beside $TMPDIR and one appending to a memory file under
+#       ~/.claude.
 # An input whose tool_name cannot be read, or a Bash input whose
 # tool_input.command cannot be read, is denied as well: were a Claude Code
 # release to rename either field, the calls would stop loudly rather than
@@ -65,7 +79,9 @@
 # a shell on stdin (bash <<EOF, sh -s), eval, and a
 # trap body (trap 'rm -rf "$d"' EXIT, a quoted argument run at exit),
 # interpreter-level deletes (python, node, perl), git clean, and writes
-# through Bash (redirections, cp, mv, tee); also rm reached through a
+# through Bash other than a redirection (cp, mv, tee, an interpreter's own
+# writes); a redirection whose relative target follows a cd earlier in the
+# same command, read against the input's cwd; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
 # ($'\x72m', kept as written), rm after a redirection written before the command
 # name (2>/dev/null rm -rf d), other wrappers (timeout, nice), commands inside an
@@ -77,7 +93,8 @@
 # hook reads one next character, and paths that are not POSIX absolute
 # (a Windows drive-letter path is not judged); and a file-tool target that
 # is itself a symbolic link, dangling or not, pointing outside every root,
-# since only the links of the target's ancestors are resolved.
+# since only the links of the target's ancestors are resolved. A > inside
+# [[ ]] or (( )), a comparison there, is read as a redirection and judged.
 #
 # Bash 3.2 (the one macOS ships): no associative arrays, no bash 4
 # expansions; POSIX tools only (awk; no jq), as remind-plan-skill.sh.
@@ -135,8 +152,9 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 '
 
 # RM_AWK prints "<rm word> <flag>" for the first recursive rm at a command
-# position in tool_input.command, and nothing otherwise; it exits 3 when
-# there is no command to read. A small shell
+# position in tool_input.command, and nothing otherwise; when it finds none,
+# it then prints, one per line after a line break, each redirection target
+# it judges (redir() below); it exits 3 when there is no command to read. A small shell
 # tokenizer: single and double quotes, $'...' (a backslash escapes the next
 # character, which is kept as written) and $"...", backslash escapes, comments,
 # separators, $( ) and backtick substitutions (the enclosing command's words
@@ -147,8 +165,8 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # commands: skipped to the end, they would hide an rm that follows. sq
 # holds the single quote.
 RM_AWK=$JSON_AWK'
-function flush() { if (inw) { nw++; w[nw] = cur }; cur = ""; inw = 0 }
-function endcmd() { flush(); if (nw > base && found == "") check(); nw = base }
+function flush() { if (inw) { nw++; w[nw] = cur; wq[nw] = cq; wd[nw] = cd }; cur = ""; inw = 0; cq = 0; cd = 0 }
+function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; nw = base }
 # bname splits on / rather than sub(/.*\//, ...): the awk macOS ships
 # retries that regex from every position of a word with no slash, which
 # made a 64 KB command word take about 15 seconds.
@@ -200,13 +218,70 @@ function check(   i, wr, j, a, r) {
 # seconds at the length cap.
 function push(ret, cl) {
   sp++; sret[sp] = ret; scl[sp] = cl; sbase[sp] = base
-  scur[sp] = cur; sinw[sp] = inw
-  base = nw; cur = ""; inw = 0; st = "N"
+  scur[sp] = cur; sinw[sp] = inw; scq[sp] = cq; scd[sp] = cd
+  base = nw; cur = ""; inw = 0; cq = 0; cd = 0; st = "N"
 }
 function pop() {
   endcmd()
   base = sbase[sp]
-  cur = scur[sp]; inw = sinw[sp]; st = sret[sp]; sp--
+  cur = scur[sp]; inw = sinw[sp]; cq = scq[sp]; cd = scd[sp]; st = sret[sp]; sp--
+}
+# redir() reads the redirections among the words of a command. An unquoted
+# > is kept in its word as \002, so a > that was quoted or escaped is no
+# operator here: >, >>, >|, and the same after &, or after a file-descriptor
+# number, take the rest of the word as their target, or the next word when
+# the rest is empty; a > followed by & is a duplication (2>&1) or a target
+# the hook does not judge (>& file).
+function redir(   k, x, p, t, q, d) {
+  for (k = base + 1; k <= nw; k++) {
+    x = w[k]; q = wq[k]; d = wd[k]
+    while ((p = index(x, "\002")) > 0) {
+      t = substr(x, p + 1)
+      if (substr(t, 1, 1) == "\002" || substr(t, 1, 1) == "|") t = substr(t, 2)
+      if (substr(t, 1, 1) == "&") { x = substr(t, 2); continue }
+      if (t == "" && k < nw) { k++; t = w[k]; q = wq[k]; d = wd[k] }
+      p = index(t, "\002")
+      if (p > 0) { x = substr(t, p); t = substr(t, 1, p - 1) } else x = ""
+      target(t, q, d)
+    }
+  }
+}
+# lead(t, s): t begins with s, followed by the end or a /.
+function lead(t, s) { return index(t, s) == 1 && (length(t) == length(s) || substr(t, length(s) + 1, 1) == "/") }
+# collapse(p): the absolute path p with . and .. collapsed as written.
+function collapse(p,   n, a, i, m, s, out) {
+  n = split(p, a, "/"); m = 0
+  for (i = 1; i <= n; i++) {
+    if (a[i] == "" || a[i] == ".") continue
+    if (a[i] == "..") { if (m > 0) m--; continue }
+    s[++m] = a[i]
+  }
+  out = ""
+  for (i = 1; i <= m; i++) out = out "/" s[i]
+  return (out == "") ? "/" : out
+}
+# target(t, q, d): records a redirection target the hook judges, once, as
+# "<absolute path><tab><target as written>". Not judged: a word with
+# single-quoted text, an expansion other than a leading ~ (unquoted),
+# $HOME, ${HOME}, $TMPDIR, or ${TMPDIR} (set), a substitution, a glob or a
+# brace, and a relative target with no absolute cwd. The terminal and
+# descriptor files are no write.
+function target(t, q, d,   o, v, r) {
+  if (t == "" || q || t ~ /[\t\n]/) return
+  if (t ~ /^\/dev\/(null|stdout|stderr|tty)$/ || t ~ /^\/dev\/fd\/[0-9]+$/) return
+  o = t; v = "\001"
+  if (!d && (t == "~" || index(t, "~/") == 1)) { v = home; r = substr(t, 2) }
+  else if (lead(t, "$HOME")) { v = home; r = substr(t, 6) }
+  else if (lead(t, "${HOME}")) { v = home; r = substr(t, 8) }
+  else if (lead(t, "$TMPDIR")) { v = tmpd; r = substr(t, 8) }
+  else if (lead(t, "${TMPDIR}")) { v = tmpd; r = substr(t, 10) }
+  else r = t
+  if (v == "") return
+  if (r ~ /[$`*?[{]/) return
+  if (v != "\001") t = v r
+  if (t !~ /^\//) { if (cwd !~ /^\//) return; t = cwd "/" t }
+  t = collapse(t)
+  if (!(t in tseen)) { tseen[t] = 1; nt++; tl[nt] = t "\t" o }
 }
 function heredoc_op(c, i,   strip, d, ch) {
   flush(); strip = 0
@@ -264,7 +339,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; nh = 0; ltgt = -1
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }
@@ -289,11 +364,11 @@ function scan(c,   n, i, ch, nx) {
     # it: bash joins the lines before it splits words, so >\<newline>& is
     # still >&, and the & or | after it stays in the word.
     if (ch == "\\") { if (nx != "\n") { cur = cur nx; inw = 1 } else if (ltgt == i - 1) ltgt = i + 1; i += 2; continue }
-    if (ch == sq) { st = "S"; inw = 1; i++; continue }
-    if (ch == "\"") { st = "D"; inw = 1; i++; continue }
+    if (ch == sq) { st = "S"; inw = 1; cq = 1; i++; continue }
+    if (ch == "\"") { st = "D"; inw = 1; cd = 1; i++; continue }
     if (ch == "#" && !inw) { while (i <= n && substr(c, i, 1) != "\n") i++; continue }
-    if (ch == "$" && nx == sq) { st = "A"; inw = 1; i += 2; continue }
-    if (ch == "$" && nx == "\"") { st = "D"; inw = 1; i += 2; continue }
+    if (ch == "$" && nx == sq) { st = "A"; inw = 1; cq = 1; i += 2; continue }
+    if (ch == "$" && nx == "\"") { st = "D"; inw = 1; cd = 1; i += 2; continue }
     if (ch == "$" && nx == "(") { cur = cur "$()"; inw = 1; push("N", ")"); i += 2; continue }
     if (ch == "`") {
       if (sp > 0 && scl[sp] == "`") { pop(); i++; continue }
@@ -314,7 +389,7 @@ function scan(c,   n, i, ch, nx) {
     if ((ch == "&" || ch == "|") && (nx == ">" || ltgt == i - 1)) { cur = cur ch; inw = 1; i++; continue }
     if (ch == ";" || ch == "&" || ch == "|") { endcmd(); i++; continue }
     if (ch == "<" || ch == ">") ltgt = i
-    cur = cur ch; inw = 1; i++
+    cur = cur ((ch == ">") ? "\002" : ch); inw = 1; i++
   }
   endcmd()
   while (sp > 0 && found == "") pop()
@@ -322,8 +397,11 @@ function scan(c,   n, i, ch, nx) {
 END {
   c = jstr(buf, "command")
   if (c == "\001") exit 3
-  found = ""; scan(c)
-  if (found != "") printf "%s", found
+  home = ENVIRON["HOME"]; tmpd = ENVIRON["TMPDIR"]
+  cwd = jstr(buf, "cwd"); if (cwd == "\001") cwd = ENVIRON["PWD"]
+  found = ""; nt = 0; scan(c)
+  printf "%s", found
+  if (found == "") for (k = 1; k <= nt; k++) printf "\n%s", tl[k]
 }
 '
 
@@ -341,6 +419,10 @@ REASON_UNREADABLE="No permitted route applies: the hook reads every such call th
 # subshells, one word of <| or <& pairs, the shapes
 # check-autopilot-rails-hook.sh times — takes 0.3 to 0.6 seconds.
 BASH_INPUT_CAP=65536
+
+NL='
+'
+TAB='	'
 
 # deny <reason> [<tail>]: the tail is the permitted route unless given.
 deny() {
@@ -391,7 +473,32 @@ resolve() {
   RESOLVED=$out
 }
 
+# in_roots <resolved path>: status 0 when the path lies inside a root of
+# KENSPC_AUTOPILOT_WRITE_ROOTS, by whole path components, each root
+# resolved as resolve() resolves a target; a root entry that is not
+# absolute is skipped.
+in_roots() {
+  local p=$1 rest=$roots root
+  while [ -n "$rest" ]; do
+    root=${rest%%|*}
+    case $rest in
+      *"|"*) rest=${rest#*|} ;;
+      *) rest="" ;;
+    esac
+    case $root in
+      /*) ;;
+      *) continue ;;
+    esac
+    resolve "$root"
+    case $p in
+      "$RESOLVED"|"$RESOLVED"/*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
 input=$(cat)
+roots=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}
 tool=$(field tool_name) \
   || deny "the tool name could not be read from the hook input (tool_name), so the call is denied in an autopilot worker" "$REASON_UNREADABLE"
 
@@ -402,7 +509,29 @@ case $tool in
       || deny "this Bash call's hook input is $((bytes)) bytes, over the $BASH_INPUT_CAP the hook scans within its timeout, so it is denied in an autopilot worker; write long content with the Write tool, or split the command"
     found=$(printf '%s' "$input" | awk -v sq="'" "$RM_AWK") \
       || deny "the command of this Bash call could not be read from the hook input (tool_input.command), so it is denied in an autopilot worker" "$REASON_UNREADABLE"
+    # The scan prints the recursive rm it found, then, when there is none,
+    # one line per redirection target it judges: the target collapsed to an
+    # absolute path, a tab, the target as written.
+    targets=""
+    case $found in
+      *"$NL"*) targets=${found#*"$NL"}; found=${found%%"$NL"*} ;;
+    esac
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"
+    # Split by parameter expansion, not read from a heredoc: bash 3.2 writes
+    # a heredoc to a temporary file, and where it cannot, the loop would
+    # read nothing and judge no target.
+    while [ -n "$targets" ]; do
+      line=${targets%%"$NL"*}
+      case $targets in
+        *"$NL"*) targets=${targets#*"$NL"} ;;
+        *) targets="" ;;
+      esac
+      [ -n "$line" ] || continue
+      resolve "${line%%"$TAB"*}"
+      rt=$RESOLVED
+      in_roots "$rt" \
+        || deny "this Bash call redirects output outside the rails' write roots, which is denied in an autopilot worker: ${line#*"$TAB"} resolves to ${rt:-/}, outside ${roots:-no roots (KENSPC_AUTOPILOT_WRITE_ROOTS is empty)}"
+    done
     exit 0
     ;;
   Write|Edit) key=file_path ;;
@@ -437,22 +566,6 @@ esac
 resolve "$path"
 resolved_target=$RESOLVED
 
-roots=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}
-rest=$roots
-while [ -n "$rest" ]; do
-  root=${rest%%|*}
-  case $rest in
-    *"|"*) rest=${rest#*|} ;;
-    *) rest="" ;;
-  esac
-  case $root in
-    /*) ;;
-    *) continue ;;
-  esac
-  resolve "$root"
-  case $resolved_target in
-    "$RESOLVED"|"$RESOLVED"/*) exit 0 ;;
-  esac
-done
+in_roots "$resolved_target" && exit 0
 
 deny "this $tool call writes outside the rails' write roots, which is denied in an autopilot worker: $target resolves to ${resolved_target:-/}, outside ${roots:-no roots (KENSPC_AUTOPILOT_WRITE_ROOTS is empty)}"

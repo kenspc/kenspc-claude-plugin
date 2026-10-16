@@ -39,14 +39,22 @@
 # beginning with ~, ~/, or a space, read as Claude Code reads it, with HOME
 # set to a fixture path; a Windows drive-letter path, not judged (allowed);
 # a sibling that shares a root's prefix (denied); no roots with the marker
-# set, and root entries that are not absolute (denied); an input whose tool
+# set, and root entries that are not absolute (denied); redirections whose
+# target lies outside the roots — > "$TMPDIR/../x", >> ~/.claude/x,
+# 2> /etc/x, and &> ../outside from the repository root (denied) — and
+# those the hook must not deny: > /dev/null, 2>&1, > "$TMPDIR/x",
+# > out.txt in the repository, > "$OTHER/x" (not judged), a > inside single
+# quotes, and a > in a heredoc body (allowed), with the hook's $TMPDIR set
+# to a fixture path the redirection fixtures' roots hold; an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
 # Bash input over the hook's length cap
 # (denied) and one under it (allowed); a command of many $( )
 # substitutions under the cap, then rm -rf, a long command word with no
-# slash, then rm -rf, and a word of many <| pairs, then rm -rf, each denied
-# in under half the hook's 5-second timeout (timed); and every denied fixture again
+# slash, then rm -rf, a word of many <| pairs, then rm -rf, and 8000
+# redirections to a relative target in the repository, then one to /etc,
+# each denied in under half the hook's 5-second timeout (timed); and every
+# denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
@@ -100,7 +108,7 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against six mutants,
+#                  unmodified copy (must pass), then against seven mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
@@ -112,7 +120,8 @@
 #                  reason alone (the "Bash with no readable command field"
 #                  fixture, which must be the first red, while the heading
 #                  check on the same copy stays green, since the other two
-#                  reasons still carry the phrase). Then the restored copy
+#                  reasons still carry the phrase), and the redirection check
+#                  removed (any fixture red). Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 #                  It then copies SKILL.md beside the hook copy, runs the
@@ -147,6 +156,10 @@ FX_BASE=/kenspc-rails-fixture
 FX_REPO=$FX_BASE/repo
 FX_WS=$FX_BASE/workspace
 FX_HOME=$FX_BASE/home
+# The hook's $TMPDIR in every fixture, a root of the redirection fixtures'
+# roots, so that $TMPDIR/.. lies outside every root on every machine,
+# whatever the guard's own TMPDIR is.
+FX_TMPDIR=$FX_BASE/tmpdir/
 
 WORK=""
 cleanup() {
@@ -232,7 +245,7 @@ decide() {
     RC=0
     OUT=$(
         unset KENSPC_AUTOPILOT_WORKER KENSPC_AUTOPILOT_WRITE_ROOTS
-        export HOME="$FX_HOME"
+        export HOME="$FX_HOME" TMPDIR="$FX_TMPDIR"
         if [[ "$marker" != "-" ]]; then export KENSPC_AUTOPILOT_WORKER="$marker"; fi
         export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
         if [[ -n "$cpu" ]]; then ulimit -t "$cpu" 2>/dev/null || true; fi
@@ -314,8 +327,9 @@ fx_deny() {
     D_LABEL[$n]=$label; D_ROOTS[$n]=$roots; D_TOOL[$n]=$tool; D_CWD[$n]=$cwd; D_PAYLOAD[$n]=$payload
 }
 
-# fx_timed <hook> <label> <limit> <payload>: a Bash command whose recursive
-# rm is expected denied, with the marker set, in under <limit> seconds of
+# fx_timed <hook> <label> <limit> <payload> [<reason> [<roots>]]: a Bash
+# command expected denied for <reason> (default: its recursive rm), with
+# the marker set and <roots> (default: the driver's), in under <limit> seconds of
 # wall-clock time; recorded for the replays as fx_deny records. Why a time:
 # a hook run that outlasts the hook's 5-second timeout (hooks.json) denies
 # nothing, so a slow deny is an allow. The hook runs under a CPU limit of
@@ -323,15 +337,15 @@ fx_deny() {
 # would take; a run the limit cuts off is red on its time, and on its reason
 # too, since its killed awk makes the hook deny the command as unreadable.
 fx_timed() {
-    local hook="$1" label="$2" limit="$3" payload="$4" why="" n input secs TIMEFORMAT=%R
+    local hook="$1" label="$2" limit="$3" payload="$4" reason="${5:-recursive rm}" roots="${6:-$FX_ROOTS}" why="" n input secs TIMEFORMAT=%R
     input=$(make_input Bash "$FX_REPO" "$payload")
-    { time decide "$hook" 1 "$FX_ROOTS" "$input" 5 ; } 2> "$WORK/time.txt"
+    { time decide "$hook" 1 "$roots" "$input" 5 ; } 2> "$WORK/time.txt"
     secs=$(cat "$WORK/time.txt")
     TIMED="${TIMED:+$TIMED and }${secs}s"
     if ! awk -v e="$secs" -v l="$limit" 'BEGIN { exit !(e + 0 < l + 0) }'; then
         why="decided in ${secs}s, not under ${limit}s"
-    elif [[ "$GOT" != deny || "$ERR" != "autopilot rails: "* || "$ERR" != *"recursive rm"* || "$ERR" != *.trash* ]]; then
-        why="expected its recursive rm denied, got $GOT (exit $RC, stdout '$OUT', stderr '$ERR')"
+    elif [[ "$GOT" != deny || "$ERR" != "autopilot rails: "* || "$ERR" != *"$reason"* || "$ERR" != *.trash* ]]; then
+        why="expected it denied for '$reason', got $GOT (exit $RC, stdout '$OUT', stderr '$ERR')"
     fi
     if [[ -n "$why" ]]; then
         FAILS=$((FAILS + 1))
@@ -341,7 +355,7 @@ fx_timed() {
         fi
     fi
     n=${#D_LABEL[@]}
-    D_LABEL[$n]=$label; D_ROOTS[$n]=$FX_ROOTS; D_TOOL[$n]=Bash; D_CWD[$n]=$FX_REPO; D_PAYLOAD[$n]=$payload
+    D_LABEL[$n]=$label; D_ROOTS[$n]=$roots; D_TOOL[$n]=Bash; D_CWD[$n]=$FX_REPO; D_PAYLOAD[$n]=$payload
 }
 
 # run_fixtures <hook>: every fixture; returns 1 when any decision differs.
@@ -472,6 +486,27 @@ run_fixtures() {
     fx_deny "$hook" "rm position after | following a single-quoted <" "$r" Bash "$FX_REPO" "echo 'a<'|rm -rf build"
     fx_deny "$hook" "rm position after | following an escaped >" "$r" Bash "$FX_REPO" 'echo a\>|rm -rf build'
     fx_deny "$hook" "rm position after & following a double-quoted >" "$r" Bash "$FX_REPO" 'echo "->"&rm -rf build'
+
+    # Redirection targets, judged by the root check the file tools get once
+    # a leading ~, $HOME, ${HOME}, $TMPDIR, or ${TMPDIR} is expanded and .
+    # and .. are collapsed as written; the roots hold the hook's $TMPDIR.
+    rr="$FX_REPO|$FX_WS|$FX_TMPDIR|/tmp|/private/tmp"
+    fx_deny "$hook" "a > to \$TMPDIR/.. outside the roots" "$rr" Bash "$FX_REPO" 'echo x > "$TMPDIR/../x"'
+    fx_deny "$hook" "a >> to ~/.claude outside the roots" "$rr" Bash "$FX_REPO" 'echo x >> ~/.claude/x'
+    fx_deny "$hook" "a 2> to /etc outside the roots" "$rr" Bash "$FX_REPO" 'echo x 2> /etc/x'
+    fx_deny "$hook" "a &> to ../outside from the repository root" "$rr" Bash "$FX_REPO" 'echo x &> ../outside'
+    fx "$hook" "a > to /dev/null" allow 1 "$rr" Bash "$FX_REPO" 'echo x > /dev/null'
+    fx "$hook" "a 2>&1 duplication, no target" allow 1 "$rr" Bash "$FX_REPO" 'ls 2>&1'
+    fx "$hook" "a > to \$TMPDIR inside the roots" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "$TMPDIR/x"'
+    fx "$hook" "a > to a relative file in the repository" allow 1 "$rr" Bash "$FX_REPO" 'echo x > out.txt'
+    fx "$hook" "a > to another expansion, not judged" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "$OTHER/x"'
+    fx "$hook" "a > inside single quotes, no redirection" allow 1 "$rr" Bash "$FX_REPO" "echo 'a > /etc/x'"
+    fx "$hook" "a > in a heredoc body, no redirection" allow 1 "$rr" Bash "$FX_REPO" $'cat <<EOF > notes.txt\na > /etc/x\nEOF'
+    # 8000 redirections to a relative target in the repository (about
+    # 24 KB, under the cap, so it is scanned), then one to /etc, decided in
+    # under half the hook's timeout.
+    t=$(awk 'BEGIN { for (i = 0; i < 8000; i++) printf ">a " }')
+    fx_timed "$hook" "8000 redirections inside the repository, then one to /etc, decided in time" 2.5 "echo $t> /etc/x" "redirects output outside" "$rr"
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
@@ -782,13 +817,13 @@ run_self_test() {
         return 1
     fi
 
-    # Six mutants, each a literal replacement in a fresh copy. The
+    # Seven mutants, each a literal replacement in a fresh copy. The
     # constant-time push mutant copies every word collected so far on each
     # push, the last-character check mutant matches the whole word
     # against [<>]$ on each | or &, as the hook once did, and the
     # command-reason-phrase mutant rewords the phrase in one of the three
     # unreadable-field reasons, which only the fixture assertion catches.
-    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase; do
+    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -808,6 +843,9 @@ run_self_test() {
             command-reason-phrase)
                 old="the command of this Bash call $PHRASE"
                 new='the command of this Bash call was unreadable in the hook input' ;;
+            redirection-check)
+                old='|| deny "this Bash call redirects output outside'
+                new='|| : "this Bash call redirects output outside' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?

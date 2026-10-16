@@ -470,7 +470,39 @@ receiving one identical edit.
 
 ### Task 7: The rails hook judges redirection targets
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the scanner keeps an unquoted `>` in its word as the byte
+  `\002`, so a `>` that was quoted, escaped, or in a heredoc body is never
+  an operator, and the existing rm check is unchanged (it reads no `>`).
+  Each word carries two flags, single-quoted text (target not judged) and
+  double-quoted text (no `~` expansion, as in bash). The awk scan expands
+  the leading `~`/`$HOME`/`${HOME}`/`$TMPDIR`/`${TMPDIR}` from the hook's
+  environment, joins the JSON cwd, collapses `.`/`..`, dedupes, and
+  prints the targets after the rm line; the shell then resolves each with
+  the same `resolve()` and a new `in_roots()` the file-tool check now
+  shares, so the redirection and file-tool checks are one root check. The
+  shell splits the target list by parameter expansion rather than reading
+  a heredoc, since bash 3.2 writes a heredoc to a temporary file and a
+  failure there would judge no target. A `>&` is a duplication or a target
+  not judged. The guard sets the hook's `$TMPDIR` to a fixture path for
+  every fixture and lists it among the redirection fixtures' roots, so
+  `$TMPDIR/..` lies outside every root on any machine (where TMPDIR sits
+  under /tmp, the real one's parent would be a root).
+- Changes/tradeoffs: the header's misses list now says "writes through
+  Bash other than a redirection (cp, mv, tee, an interpreter's own
+  writes)" and adds a relative target after a `cd` in the same command
+  (read against the input's cwd); it also records a known false deny: a
+  `>` inside `[[ ]]` or `(( ))` is judged as a redirection. The deny
+  reason for a redirection is its own sentence ("this Bash call redirects
+  output outside the rails' write roots") with the file tools' route; the
+  self-test's new seventh mutant replaces that deny and turned 5 fixtures
+  red. The timed fixture measured 0.112 s. `fx_timed` gained optional
+  reason and roots arguments. Not in this task's files: the autopilot
+  skill's § The driver still says the hook "misses … writes through Bash";
+  Task 8 edits only preamble § 3 there, so that sentence is left for the
+  Doc-sync pass or a follow-up.
 
 Implement plan Step 4, its redirection part (Technical Approach § Rails,
 "The hook judges redirection targets"). Files:
