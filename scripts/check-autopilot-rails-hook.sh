@@ -251,7 +251,7 @@ decide() {
     RC=0
     OUT=$(
         unset KENSPC_AUTOPILOT_WORKER KENSPC_AUTOPILOT_WRITE_ROOTS
-        export HOME="$FX_HOME" TMPDIR="$FX_TMPDIR"
+        export HOME="$FX_HOME" TMPDIR="$FX_TMPDIR" USER=kenspc-fixture
         if [[ "$marker" != "-" ]]; then export KENSPC_AUTOPILOT_WORKER="$marker"; fi
         export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
         if [[ -n "$cpu" ]]; then ulimit -t "$cpu" 2>/dev/null || true; fi
@@ -519,6 +519,12 @@ run_fixtures() {
     # A single-quoted target is literal, judged as written.
     fx_deny "$hook" "a > to a single-quoted /etc target" "$rr" Bash "$FX_REPO" "echo x > '/etc/x'"
     fx "$hook" "a > to a single-quoted relative file in the repository" allow 1 "$rr" Bash "$FX_REPO" "echo x > 'out.txt'"
+    # >& with a word other than a descriptor number writes to that word;
+    # ~name of the hook user is that user's home.
+    fx_deny "$hook" "a >& to /etc outside the roots" "$rr" Bash "$FX_REPO" 'echo x >& /etc/x'
+    fx_deny "$hook" "a 1>& to /etc outside the roots, no space" "$rr" Bash "$FX_REPO" 'echo x 1>&/etc/x'
+    fx "$hook" "a >&2 duplication, no target" allow 1 "$rr" Bash "$FX_REPO" 'echo x >&2'
+    fx_deny "$hook" "a >> to ~<user>/.claude outside the roots" "$rr" Bash "$FX_REPO" 'echo x >> ~kenspc-fixture/.claude/x'
     fx "$hook" "a > to /dev/null" allow 1 "$rr" Bash "$FX_REPO" 'echo x > /dev/null'
     fx "$hook" "a 2>&1 duplication, no target" allow 1 "$rr" Bash "$FX_REPO" 'ls 2>&1'
     fx "$hook" "a > to \$TMPDIR inside the roots" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "$TMPDIR/x"'

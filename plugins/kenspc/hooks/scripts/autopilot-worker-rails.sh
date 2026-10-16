@@ -45,21 +45,23 @@
 #   (c) a Bash input longer than BASH_INPUT_CAP bytes (64 KB), unscanned:
 #       the scan's time grows with the square of the command's length, and
 #       a run that outlasts the hook's timeout denies nothing;
-#   (d) a Bash command with a redirection — >, >>, >|, &>, &>>, and the
-#       same after a file-descriptor number (2>) — whose target lies outside
-#       every root, by the root check (b) uses. The target is read after a
-#       leading ~ (unquoted), $HOME, ${HOME}, $TMPDIR, or ${TMPDIR} is
-#       expanded from the hook's environment, resolved against the input's
-#       cwd when relative, with . and .. collapsed as written. Not judged: a
-#       target holding any other expansion, a command substitution, a glob
-#       or a brace, or single-quoted text with a leading ~ or a $ in it
+#   (d) a Bash command with a redirection — >, >>, >|, &>, &>>, the same
+#       after a file-descriptor number (2>), and >& followed by a word other
+#       than a descriptor number or -, which writes to that word — whose
+#       target lies outside every root, by the root check (b) uses. The
+#       target is read after a leading ~ or ~$USER (unquoted), $HOME,
+#       ${HOME}, $TMPDIR, or ${TMPDIR} is expanded from the hook's
+#       environment, resolved against the input's cwd when relative, with .
+#       and .. collapsed as written. Not judged: a target holding any other
+#       expansion (a ~ naming another user too), a command substitution, a
+#       glob or a brace, or single-quoted text with a leading ~ or a $ in it
 #       (other single-quoted text is literal and judged); /dev/null,
 #       /dev/stdout, /dev/stderr, /dev/tty, and /dev/fd/<n> are allowed; a
-#       duplication (2>&1) has no target; a > inside quotes, escaped, or in
-#       a heredoc body is no redirection. Why redirections: both writes outside the
-#       roots that workers made through Bash were redirections, one to a
-#       file beside $TMPDIR and one appending to a memory file under
-#       ~/.claude;
+#       duplication or a close (2>&1, >&-) has no target; a > inside
+#       quotes, escaped, or in a heredoc body is no redirection. Why
+#       redirections: both writes outside the roots that workers made
+#       through Bash were redirections, one to a file beside $TMPDIR and one
+#       appending to a memory file under ~/.claude;
 #   (e) gh at a command position (command -v gh, type gh, and which gh,
 #       which do not run it, are allowed), and git — its global options
 #       -C <path>, -c <name>=<value>, --git-dir=, --work-tree=, and
@@ -280,15 +282,21 @@ function pop() {
 # > is kept in its word as \002, so a > that was quoted or escaped is no
 # operator here: >, >>, >|, and the same after &, or after a file-descriptor
 # number, take the rest of the word as their target, or the next word when
-# the rest is empty; a > followed by & is a duplication (2>&1) or a target
-# the hook does not judge (>& file).
-function redir(   k, x, p, t, q, d) {
+# the rest is empty; a > followed by & and a descriptor number or - is a
+# duplication or a close (2>&1, >&-), with no target, while >& followed by
+# any other word writes stdout and stderr to that word, as &> does.
+function redir(   k, x, p, t, q, d, u) {
   for (k = base + 1; k <= nw; k++) {
     x = w[k]; q = wq[k]; d = wd[k]
     while ((p = index(x, "\002")) > 0) {
       t = substr(x, p + 1)
       if (substr(t, 1, 1) == "\002" || substr(t, 1, 1) == "|") t = substr(t, 2)
-      if (substr(t, 1, 1) == "&") { x = substr(t, 2); continue }
+      if (substr(t, 1, 1) == "&") {
+        t = substr(t, 2); p = index(t, "\002")
+        u = (p > 0) ? substr(t, 1, p - 1) : t
+        if (u == "" && p == 0 && k < nw) u = w[k + 1]
+        if (u ~ /^([0-9]+-?|-)$/) { x = t; continue }
+      }
       if (t == "" && k < nw) { k++; t = w[k]; q = wq[k]; d = wd[k] }
       p = index(t, "\002")
       if (p > 0) { x = substr(t, p); t = substr(t, 1, p - 1) } else x = ""
@@ -318,13 +326,20 @@ function collapse(p,   n, a, i, m, s, out) {
 # kept), and a relative target with no absolute cwd. Other single-quoted
 # text is literal and judged as written. The terminal and descriptor
 # files are no write.
-function target(t, q, d,   o, v, r) {
+function target(t, q, d,   o, v, r, u) {
   if (t == "" || t ~ /[\t\n]/) return
   if (t ~ /^\/dev\/(null|stdout|stderr|tty)$/ || t ~ /^\/dev\/fd\/[0-9]+$/) return
   if (q && index(t, "~") == 1) return
   o = t; v = "\001"
   if (q) r = t
   else if (!d && (t == "~" || index(t, "~/") == 1)) { v = home; r = substr(t, 2) }
+  else if (!d && index(t, "~") == 1) {
+    # ~name is the home of the user name: judged for the hook user, whose
+    # home is known, and not judged for any other name (~+ and ~- too).
+    u = substr(t, 2); sub(/\/.*/, "", u)
+    if (u == "" || u != user) return
+    v = home; r = substr(t, length(u) + 2)
+  }
   else if (lead(t, "$HOME")) { v = home; r = substr(t, 6) }
   else if (lead(t, "${HOME}")) { v = home; r = substr(t, 8) }
   else if (lead(t, "$TMPDIR")) { v = tmpd; r = substr(t, 8) }
@@ -456,7 +471,7 @@ function scan(c,   n, i, ch, nx) {
 END {
   c = jstr(buf, "command")
   if (c == "\001") exit 3
-  home = ENVIRON["HOME"]; tmpd = ENVIRON["TMPDIR"]
+  home = ENVIRON["HOME"]; tmpd = ENVIRON["TMPDIR"]; user = ENVIRON["USER"]
   cwd = jstr(buf, "cwd"); if (cwd == "\001") cwd = ENVIRON["PWD"]
   found = ""; nt = 0; scan(c)
   printf "%s", found
