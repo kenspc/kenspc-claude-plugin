@@ -47,8 +47,8 @@
 # ("hi">>~/.claude/x, 'done'>/etc/x), a single-quoted > '/etc/x',
 # >& /etc/x, 1>&/etc/x, and >> ~<user>/.claude/x for the hook's user
 # (denied) — and those the hook must not deny:
-# > /dev/null, 2>&1, >&2, > "$TMPDIR/x", > out.txt and > 'out.txt' in the
-# repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
+# > /dev/null, > /dev/stderr, > /dev/fd/3, 2>&1, >&2, > "$TMPDIR/x",
+# > out.txt, > 'out.txt', and > "~/x" in the repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
 # in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture
 # path the redirection fixtures' roots hold and its $USER to a fixture
 # name; gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
@@ -544,6 +544,9 @@ run_fixtures() {
     fx "$hook" "a >&2 duplication, no target" allow 1 "$rr" Bash "$FX_REPO" 'echo x >&2'
     fx_deny "$hook" "a >> to ~<user>/.claude outside the roots" "$rr" Bash "$FX_REPO" 'echo x >> ~kenspc-fixture/.claude/x'
     fx "$hook" "a > to /dev/null" allow 1 "$rr" Bash "$FX_REPO" 'echo x > /dev/null'
+    fx "$hook" "a > to /dev/stderr" allow 1 "$rr" Bash "$FX_REPO" 'echo x > /dev/stderr'
+    fx "$hook" "a > to /dev/fd/3" allow 1 "$rr" Bash "$FX_REPO" 'echo x > /dev/fd/3'
+    fx "$hook" "a > to a double-quoted ~/x, a file in the repository" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "~/x"'
     fx "$hook" "a 2>&1 duplication, no target" allow 1 "$rr" Bash "$FX_REPO" 'ls 2>&1'
     fx "$hook" "a > to \$TMPDIR inside the roots" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "$TMPDIR/x"'
     fx "$hook" "a > to a relative file in the repository" allow 1 "$rr" Bash "$FX_REPO" 'echo x > out.txt'

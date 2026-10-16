@@ -874,8 +874,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   target after quoted text in the same
   word (`"hi">>~/.claude/x`, `'done'>/etc/x`), a single-quoted
   `> '/etc/x'`, `>& /etc/x`, `1>&/etc/x`, and `>> ~<user>/.claude/x` for
-  the hook's user; allowed: `> /dev/null`, `2>&1`, `>&2`,
-  `> "$TMPDIR/x"`, `> out.txt` in the repository, `> "$OTHER/x"` (not
+  the hook's user; allowed: `> /dev/null`, `> /dev/stderr`, `> /dev/fd/3`,
+  `2>&1`, `>&2`, `> "$TMPDIR/x"`, `> out.txt` and a double-quoted
+  `> "~/x"` in the repository, `> "$OTHER/x"` (not
   judged), a single-quoted `> 'out.txt'`, a `>` inside single quotes,
   and a `>` in a heredoc body, with
   the hook's `$TMPDIR` set to a fixture path the redirection fixtures'
