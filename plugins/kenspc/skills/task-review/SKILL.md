@@ -297,9 +297,10 @@ errors read like findings; one run before the dispatch serves all five,
 and each reviewer reads the file instead of running the suite (its
 PREREQUISITES).
 
-Then record the tree state under `RUN_DIR/scratch/orchestrator/1/`: the
-output of `git status --porcelain=v1 -uall`, a hash of
-`git diff HEAD --binary` (`git diff HEAD --binary | git hash-object --stdin`),
+Then record the tree state in `tree-before.txt`, in the directory that
+holds the suite logs: the output of `git status --porcelain=v1 -uall`, a
+hash of `git diff HEAD --binary`
+(`git diff HEAD --binary | git hash-object --stdin`),
 and the content hash of each tracked path the status lists
 (`git hash-object -- <path>`, for each path that exists). Why after the
 suite run: a suite that writes into the tree would otherwise read as a
@@ -326,7 +327,9 @@ agent.
 
 **After the five return: the tree check.** Once all five have returned —
 a re-dispatched reviewer included — and before code-fixer is dispatched,
-record the tree state again the same way and compare it with the first.
+record the tree state again the same way, in `tree-after.txt` beside the
+first, and compare the two. Why two names: a second record written to
+the first's paths would overwrite the state it is compared with.
 A tracked file whose status line or content hash changed, or a changed
 hash of `git diff HEAD --binary`, stops the review before code-fixer,
 naming the files; nothing is restored. The stop asks one question: go on
