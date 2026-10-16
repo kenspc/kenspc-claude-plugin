@@ -140,13 +140,18 @@ where it was, and edit the fix back out by hand instead, in a commit of its
 own, keeping the other fixes in the same lines. In an uncommitted run,
 take it back by editing the fix back out — not by restoring the pre-fix
 copy, which would also undo the other fixes and the user's hunks in that
-file. When the fix cannot be taken back, in either run — the index check
-exits non-zero, since the index then holds staged changes this run did
-not make, a file of the row's commit has uncommitted changes, or the hand
-edit cannot remove the fix without undoing another row's fix — leave the
-fix in place: the row keeps FIXED, adds `not reverted — <reason>` after
-its em-dash, and its Deferred Issues paragraph says the ruling asked for
-the code without this fix and why it is still there. Once the fix is out, the row's Commit cell reads `—`, and its reason
+file. Run build / test / lint on a take-back before it is committed, or
+in an uncommitted run once it is made, as after a fix; when the run fails,
+undo the take-back — `git revert --abort` for a revert, the edit made back
+for a hand edit. When the fix cannot be taken back, in either run — the
+index check exits non-zero, since the index then holds staged changes
+this run did not make, a file of the row's commit has uncommitted changes,
+the hand edit cannot remove the fix without undoing another row's fix, or
+the take-back's build / test / lint run fails — leave the fix in place:
+the row keeps FIXED, adds `not reverted — <reason>` after its em-dash, and
+its Deferred Issues paragraph says the ruling asked for the code without
+this fix and why it is still there. Once the fix is out, the row's Commit
+cell reads `—`, and its reason
 names the commit that took the fix back, if any. Why: a row that says
 DEFERRED over a fix still in the code reads as a change no row accounts
 for, and the ruling asked for the code without it. Why abort on a
@@ -161,7 +166,9 @@ commit convention. Why the index check: `--no-commit` skips git's own
 refusal to revert over staged changes, so the commit of its own would
 carry the user's staged work under this run's message, and
 `git revert --abort` would discard it from the index and the working tree,
-in files the revert never touched. Reply as
+in files the revert never touched. Why build / test / lint on a
+take-back: a revert that applies cleanly can still remove code a later
+fix calls. Reply as
 OUTPUT FORMAT gives, for the whole updated file. Why in
 place: the second round's file is the one the verdict reads, and a row
 dropped from it would be an issue no longer accounted for.

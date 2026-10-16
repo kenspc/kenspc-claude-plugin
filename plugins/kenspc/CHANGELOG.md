@@ -56,8 +56,9 @@ in the next product-repository batches.
   `git revert --no-commit` committed under the project's convention, or,
   when the revert conflicts, `git revert --abort` and a hand edit in a
   commit of its own; a fix that cannot be taken back — the index holds
-  staged changes, a file of its commit has uncommitted changes, or the
-  hand edit would undo another fix — stays, its row
+  staged changes, a file of its commit has uncommitted changes, the hand
+  edit would undo another fix, or the take-back fails build, test, or
+  lint — stays, its row
   FIXED with `not reverted — <reason>`, which keeps
   the verdict from PASS. At most one second
   round per review; with no ruling held, no second round and no question.
