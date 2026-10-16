@@ -554,7 +554,14 @@ review reuses the same directory (since 4.3.0):
   round-2 entries, updates `schema-b.md` in place keeping every row, and
   adds a row for each `V` ID a round-2 entry names, taken from
   `schema-c-1.md`; a round-2 entry for an ID ruled in round 1 replaces
-  that entry. The progress lines read `code-fixer returned (round 2) — …`
+  that entry. A round-2 DEFER or NOT APPLICABLE on a row the first round
+  FIXED takes that fix back first — `git revert --no-commit` on a clean
+  index, committed under your commit convention, or an edit by hand when
+  the revert conflicts — and regression-verifier checks the fix is gone; a
+  fix that cannot be taken back (such as staged changes of yours in the
+  index, or a failed build, test, or lint run) stays, its row
+  `FIXED — ruled; not reverted: <reason>`, which keeps the verdict from
+  PASS. The progress lines read `code-fixer returned (round 2) — …`
   and `regression-verifier returned (round 2) — …`, the verdict is read
   from the second round, and the final report renders its replies and
   names `schema-c-1.md` for the first round's. A review runs at most one
