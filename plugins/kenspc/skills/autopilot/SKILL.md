@@ -1752,7 +1752,7 @@ walk: <reason>` when the batch has no user interface, and
 stays held — neither is a failure or a stop, and the state file's `walk:`
 line records it; `walk tool unavailable` when S4w's own check of the
 Playwright tools finds them missing, which is a stop stated here, naming
-`Walk: off` as the way on — in a session that cannot ask (a system
+`Walk: off` as the way on. In a session that cannot ask (a system
 reminder to work without stopping), the run ends with the same message.
 A port held by a process S4w did not start arrives as its question, and
 the main session rules wait — S4w re-checks the port every 10 minutes, for
