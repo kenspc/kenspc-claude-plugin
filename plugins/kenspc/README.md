@@ -927,8 +927,10 @@ still reports it and ends. The main session may then rule the breach
 benign, when all three hold — each checked against the worker's report
 and the disk, not on the worker's word: no secret was written or sent; it
 is not a recursive `rm`, a push, a tag, or a release; and it changed no
-state outside the write roots, or the only such change is a file holding
-no secret, which the main session moves into the workspace's `.trash/`.
+state outside the write roots, or the only such change is a file the
+breach created, holding no secret, which the main session moves into the
+workspace's `.trash/` (a file that existed before and was changed fails
+it).
 It records the breach under the state file's `breaches ruled:` section
 with the evidence for each condition, and resumes the worker under the
 step's next `<tag>-r<k>` with `answer <tag>: breach ruled benign — <one line>`,

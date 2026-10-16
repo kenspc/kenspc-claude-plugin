@@ -1136,8 +1136,12 @@ worker's word alone:
 1. no secret was written or sent;
 2. it is not a recursive `rm`, a push, a tag, or a release;
 3. it changed no state outside the write roots, or the only such change is
-   a file holding no secret, which the main session moves into the
-   workspace's `.trash/<name>-<timestamp>/`.
+   a file the breach created, holding no secret, which the main session
+   moves into the workspace's `.trash/<name>-<timestamp>/`. A file that
+   existed before the breach and was changed — appended to, overwritten —
+   fails this condition. Why: moving it would take the user's own file
+   away from where it belongs, and the change inside it is not the main
+   session's to undo.
 
 Then it records the breach under the state file's `breaches ruled:`
 section — the tag, the breach as the worker reported it, the evidence for
@@ -2933,8 +2937,9 @@ the run ends with that message.
 6. A rail breach the main session cannot rule benign — the worker has
    already reported it and ended. A breach that wrote or sent no secret,
    is not a recursive `rm`, a push, a tag, or a release, and changed no
-   state outside the write roots, or only a file holding no secret, which
-   the main session moves into the workspace's `.trash/`, is ruled benign
+   state outside the write roots, or only a file it created holding no
+   secret, which the main session moves into the workspace's `.trash/`,
+   is ruled benign
    and the worker resumed instead (§ A breach the main session rules
    benign).
 7. A way forward the main session cannot rule on — (a) every option

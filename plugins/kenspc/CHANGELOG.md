@@ -99,8 +99,8 @@ in the next product-repository batches.
   reports it and ends; the main session may rule the breach benign when
   no secret was written or sent, it is not a recursive `rm`, a push, a
   tag, or a release, and it changed no state outside the write roots — or
-  only a file holding no secret, which the main session moves into the
-  workspace's `.trash/` — each checked against the report and the disk. It
+  only a file the breach created, holding no secret, which the main
+  session moves into the workspace's `.trash/` — each checked against the report and the disk. It
   records the breach under the state file's new `breaches ruled:`
   section, resumes the worker under `<tag>-r<k>` with
   `answer <tag>: breach ruled benign — <one line>` (counted as a resume),

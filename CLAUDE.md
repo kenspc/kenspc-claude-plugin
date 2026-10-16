@@ -386,7 +386,7 @@ notice, an S2 whose committed task document the skipped-gate
 post-check sends back to amend, or a worker that ended on a rail breach
 the main session rules benign (no secret written or sent; no recursive
 `rm`, push, tag, or release; no state changed outside the write roots but
-a file holding no secret, moved into `.trash/`; 4.7.0) — never a live one; no agent, no CONTEXT key, no agent
+a file the breach created holding no secret, moved into `.trash/`; 4.7.0) — never a live one; no agent, no CONTEXT key, no agent
 teams. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix each need a session
