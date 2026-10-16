@@ -128,7 +128,16 @@ the regression's file, line, description, and severity from the Detail of
 `RUN_DIR/schema-c-1.md`, regression-verifier's first-round reply, which
 you read for that purpose; a `V` ID that file does not name is a ruled ID
 that no report lists. An `F` row a round-2 entry names is updated like any
-other row. Reply as OUTPUT FORMAT gives, for the whole updated file. Why in
+other row. A round-2 DEFER or NOT APPLICABLE entry on a row the first round
+FIXED takes that fix back before the row changes: in a committed run, a
+`git revert --no-edit` of the row's commit, a commit of its own, under the
+dirty-file rule of FIXING RULES; in an uncommitted run, by editing the fix
+back out — not by restoring the pre-fix copy, which would also undo the
+other fixes and the user's hunks in that file. The row's Commit cell then
+reads `—`, and its reason names the revert commit, if any. Why: a row that
+says DEFERRED over a fix still in the code reads as a change no row
+accounts for, and the ruling asked for the code without it. Reply as
+OUTPUT FORMAT gives, for the whole updated file. Why in
 place: the second round's file is the one the verdict reads, and a row
 dropped from it would be an issue no longer accounted for.
 
