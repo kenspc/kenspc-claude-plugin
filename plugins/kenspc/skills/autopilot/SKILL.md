@@ -2644,8 +2644,12 @@ Rules for the walk:
 - A test account's password is read at run time from the file the
   project keeps it in, inside the page or a script you run; it never
   appears in a tool call's input, a message, or your reply.
-- Before you start a server, check each port it needs:
-  `lsof -ti tcp:<port> -sTCP:LISTEN` prints nothing for a free port. A port held by
+- Before you start a server, check that `command -v lsof` prints a path;
+  when it prints nothing, start nothing and end the walk
+  `not walked: lsof not found`, since without lsof a held port reads as
+  free and no process you started can be found to stop. Then check each
+  port it needs: `lsof -ti tcp:<port> -sTCP:LISTEN` prints nothing for a
+  free port. A port held by
   a process you did not start: send <main name> one question naming the
   port and the process, and wait as § 1 says. The answer is wait — check
   the port again every 10 minutes, for at most 60 minutes — or skip,
