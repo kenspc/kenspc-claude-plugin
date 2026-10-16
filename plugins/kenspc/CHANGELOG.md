@@ -9,7 +9,17 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.8.1 — unreleased
+## 4.8.1 — 2026-10-16
+
+An autopilot spec that keeps scripts in fenced code blocks of its
+`## Autopilot` section no longer stops the batch at acceptance: the
+acceptance extractor skips fenced blocks, and in repo mode the run now
+tries the extraction before its first paid session, so a spec the script
+misreads stops before anything is spent. No new agent, command, CONTEXT
+key, or `## Autopilot` field, and every skill keeps `version: 3.0.0`. The
+pre-flight passed on the release tree; no smoke run was made, since no
+smoke row reaches the extractor, and the trial extraction has not yet run
+inside a real batch.
 
 ### Fixed
 
