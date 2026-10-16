@@ -133,12 +133,14 @@ FIXED takes that fix back before the row changes. In a committed run,
 check the index with `git diff --cached --quiet`, and when it exits 0,
 `git revert --no-commit <the row's commit>`, then a commit of its own whose
 subject follows the commit convention FIXING RULES gives, under the
-dirty-file rule of FIXING RULES. When the revert stops on a conflict, run
+dirty-file rule of FIXING RULES: a file it lists is left untouched, but
+the row is not DEFERRED for it. When the revert stops on a conflict, run
 `git revert --abort`, which, with the index clean, returns the tree to
 where it was, and edit the fix back out by hand instead, in a commit of its
 own, keeping the other fixes in the same lines. When the fix cannot be
 taken back — the index check exits non-zero, since the index then holds
-staged changes this run did not make, or the hand edit cannot remove the
+staged changes this run did not make, a file of the row's commit has
+uncommitted changes, or the hand edit cannot remove the
 fix without undoing another row's fix — leave the fix in
 place: the row keeps FIXED, adds `not reverted — <reason>` after its
 em-dash, and its Deferred Issues paragraph says the ruling asked for the
