@@ -390,7 +390,34 @@ and its Why; § The verdict loop after S3b; the S3b task block).
 
 ### Task 6: The shared suite run and the tree check around the reviewers
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the tree state records, beside `git status --porcelain=v1
+  -uall` and the hash of `git diff HEAD --binary`, the content hash of
+  each tracked path the status lists (`git hash-object -- <path>`). Why:
+  a file already changed before the review keeps its status line when a
+  reviewer changes it again, and the diff's hash alone could say that
+  something changed but not name the file, which the stop must do. The
+  suite logs and tree-state files go in `scratch/orchestrator/1/`
+  (`suite-<k>.log`), named outside any runner's collection pattern;
+  `suite-run.md` with no test command says so on one line. In an
+  autopilot worker the block says the question goes to the main session
+  "as every question there does", since the canonical block is shared
+  with interactive task-review and cannot cite the preamble by section.
+  A reviewer given RUN_DIR without `suite-run.md` says so in its report
+  and still runs no full suite.
+- Changes/tradeoffs: check 5 gained a `suite-run.md` loop over task-review,
+  task-implement, and requirements-reviewer, and the self-test a rename
+  of it in each of the three in turn (33 → 36 exit-1 mutations); the
+  header describes it beside check 8's file-name note rather than in
+  check 5's own paragraph. The scratch-clone acceptance check ran in a
+  clone under this run's scratch directory (`scratch/task-implementer/2/clone`)
+  rather than `$TMPDIR`, since the implementer writes nothing to a system
+  temporary directory: with the new dispatch text deleted from
+  task-implement, `check-canonical-dispatch.sh` exited 1; with item 5
+  deleted from bug-reviewer, `check-review-agent-drift.sh` exited 1; both
+  exited 0 on the unmutated clone. The clone is left in place.
 
 Implement plan Step 3 (Technical Approach § Heavy commands across parallel
 reviewers). Files: `plugins/kenspc/skills/task-review/SKILL.md`,

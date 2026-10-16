@@ -79,7 +79,11 @@
 #      a rule reworded in one skill would leave the two reviews running
 #      different rounds. Check 5 also holds the name `schema-c-1.md` in both
 #      skills, which save the file, and in agents/code-fixer.md and
-#      agents/regression-verifier.md, which read it in a second round.
+#      agents/regression-verifier.md, which read it in a second round; and
+#      the name `suite-run.md` in both skills, which write the shared suite
+#      run before the reviewers' dispatch, and in
+#      agents/requirements-reviewer.md, which reads it
+#      (check-review-agent-drift.sh carries it to the other four reviewers).
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
@@ -95,8 +99,8 @@
 # Exit code 0: all checks pass.
 # Exit code 1: a block diverges, the ignore probe answers wrongly, the
 #              recount disagrees, a file does not name change-set.md,
-#              pre-fix/index.txt, rulings.md, or schema-c-1.md where check 5
-#              requires it,
+#              pre-fix/index.txt, rulings.md, schema-c-1.md, or suite-run.md
+#              where check 5 requires it,
 #              or a copy of the reviewer invariant sentence does not contain
 #              the reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
@@ -116,12 +120,13 @@
 #                  and CLAUDE.md) into a temp workdir, confirms
 #                  `change-set.md` is present in the four files check 5
 #                  reads, `pre-fix/index.txt` in its two, `rulings.md` and
-#                  `schema-c-1.md` in their four each, and the reviewer
+#                  `schema-c-1.md` in their four each, `suite-run.md` in
+#                  its three, and the reviewer
 #                  invariant sentence's start line once in the copied
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on thirty-three mutations that
+#                  prefix classification), then on thirty-six mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the rulings grammar's
 #                  DEFER entry reworded in each of its four carriers in turn
@@ -143,7 +148,9 @@
 #                  in turn (every occurrence, through the same replace-all
 #                  helper), the first-round Schema C file name
 #                  `schema-c-1.md` removed from each of its four carriers in
-#                  turn the same way, and
+#                  turn the same way, the suite-run file name `suite-run.md`
+#                  removed from each of its three carriers in turn the same
+#                  way, and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
@@ -178,6 +185,7 @@ CHANGE_SET_NAME="change-set.md"
 PRE_FIX_INDEX="pre-fix/index.txt"
 RULINGS_NAME="rulings.md"
 SCHEMA_C1_NAME="schema-c-1.md"
+SUITE_RUN_NAME="suite-run.md"
 INVARIANT_START="Each reviewer is read-only on the working tree"
 
 # Print the lines strictly between the start and end markers of <name>.
@@ -480,13 +488,20 @@ run_main_logic() {
             missing=1
         fi
     done
+    for f in "$review" "$implement" "$reviewer"; do
+        if ! grep -qF -- "$SUITE_RUN_NAME" "$f"; then
+            echo "MISSING '$SUITE_RUN_NAME' in $f" >&2
+            missing=1
+        fi
+    done
     if [[ "$missing" -ne 0 ]]; then
         echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
         echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
         echo "regression-verifier; task-review and task-implement write a ruling on the" >&2
         echo "findings to RUN_DIR/$RULINGS_NAME, and code-fixer and regression-verifier read it;" >&2
         echo "both skills save regression-verifier's first reply to RUN_DIR/$SCHEMA_C1_NAME," >&2
-        echo "which code-fixer and regression-verifier read in a second round." >&2
+        echo "which code-fixer and regression-verifier read in a second round; both skills" >&2
+        echo "write the shared suite run to RUN_DIR/$SUITE_RUN_NAME, which the reviewers read." >&2
         echo "Restore the name, or rename it in every carrier and in this guard together." >&2
         return 1
     fi
@@ -494,6 +509,7 @@ run_main_logic() {
     echo "OK    $PRE_FIX_INDEX — named in code-fixer, regression-verifier"
     echo "OK    $RULINGS_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
     echo "OK    $SCHEMA_C1_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
+    echo "OK    $SUITE_RUN_NAME — named in task-review, task-implement, requirements-reviewer"
 
     # Check 6: the reviewer invariant sentence in its three copies.
     local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
@@ -603,6 +619,12 @@ run_self_test() {
         fi
         if ! grep -qF -- "$SCHEMA_C1_NAME" "$WORK/$rel"; then
             echo "FAIL  self-test fixture stale: '$SCHEMA_C1_NAME' not found in $rel" >&2
+            return 2
+        fi
+    done
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$REVIEWER_REL"; do
+        if ! grep -qF -- "$SUITE_RUN_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$SUITE_RUN_NAME' not found in $rel" >&2
             return 2
         fi
     done
@@ -775,6 +797,21 @@ run_self_test() {
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
         if [[ "$rc" -ne 1 ]]; then
             echo "FAIL  self-test schema-c-1 name mutation in $rel: expected exit 1, got $rc" >&2
+            return 1
+        fi
+    done
+    # The shared suite run's file name, renamed in each of its three
+    # carriers in turn, every occurrence.
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$REVIEWER_REL"; do
+        replace_all_literal "$WORK/$rel" "$SUITE_RUN_NAME" "suite-log.md"
+        if grep -qF -- "$SUITE_RUN_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test: suite-run mutation did not apply ('$SUITE_RUN_NAME' still in $rel)" >&2
+            return 2
+        fi
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        cp "$REPO_ROOT/$rel" "$WORK/$rel"
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test suite-run name mutation in $rel: expected exit 1, got $rc" >&2
             return 1
         fi
     done

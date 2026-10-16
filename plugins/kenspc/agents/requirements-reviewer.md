@@ -118,6 +118,17 @@ PREREQUISITES
    Why: five reviewers that each derive the set from git have reviewed five
    slightly different sets; one file written once is the same set for all.
 4. Identify the files and functions that were added or modified.
+5. With RUN_DIR, read `RUN_DIR/suite-run.md`: the orchestrator ran the
+   project's test commands once before the five reviewers were dispatched,
+   and the file gives each command, its exit code, its duration, and its
+   log's path. Never run the project's full test command yourself; run a
+   named test file, or a mutation check under your scratch directory, one
+   command at a time. If RUN_DIR is given and `suite-run.md` is not in it,
+   say so in your report and still run no full suite. Without RUN_DIR
+   (standalone), run tests as before. Why: five reviewers running the full
+   suite at once exhausted the machine's local ports, and the connection
+   errors read like findings; the one run before the dispatch serves all
+   five.
 
 CUSTOM INSTRUCTIONS
 If the CONTEXT block's CUSTOM_INSTRUCTIONS value is not "N/A", apply them to narrow

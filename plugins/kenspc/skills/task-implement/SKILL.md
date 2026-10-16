@@ -420,6 +420,31 @@ Dispatch even when:
 The orchestrator's job in this phase is to dispatch and aggregate — not to
 pre-filter findings.
 
+**Before the dispatch: one suite run, then the tree state.** Run the
+project's test commands once — the commands the project's instruction
+files give for the parts the change set touches, found as
+regression-verifier finds its build, test, and lint commands — one at a
+time, each command's output in a log under `RUN_DIR/scratch/orchestrator/`
+(`scratch/orchestrator/1/suite-<k>.log` on the first attempt). Then write
+`RUN_DIR/suite-run.md`: one line per command — the command, its exit
+code, its duration, and its log's path — or one line saying the project
+gives no test command. A failing command is recorded, not acted on: the
+reviewers read the file as evidence. Why: five reviewers each running the
+full suite at once exhausted the machine's local ports, and the connection
+errors read like findings; one run before the dispatch serves all five,
+and each reviewer reads the file instead of running the suite (its
+PREREQUISITES).
+
+Then record the tree state under `RUN_DIR/scratch/orchestrator/1/`: the
+output of `git status --porcelain=v1 -uall`, a hash of
+`git diff HEAD --binary` (`git diff HEAD --binary | git hash-object --stdin`),
+and the content hash of each tracked path the status lists
+(`git hash-object -- <path>`, for each path that exists). Why after the
+suite run: a suite that writes into the tree would otherwise read as a
+reviewer's change. Why the per-path hashes: a file already changed before
+the review keeps its status line when a reviewer changes it again, and
+the diff's hash alone would say that something changed but not where.
+
 Dispatch **5 subagents in a single message** using the Agent tool, one for
 each review angle, every call with `run_in_background: false`. Foreground
 calls sent in one message still run in parallel, and the next step reads all
@@ -436,6 +461,27 @@ agent.
 - Agent name: `quality-reviewer`, description: "Review: code quality"
 - Agent name: `bug-reviewer`, description: "Review: bug hunting"
 - Agent name: `test-reviewer`, description: "Review: test coverage"
+
+**After the five return: the tree check.** Once all five have returned —
+a re-dispatched reviewer included — and before code-fixer is dispatched,
+record the tree state again the same way and compare it with the first.
+A tracked file whose status line or content hash changed, or a changed
+hash of `git diff HEAD --binary`, stops the review before code-fixer,
+naming the files; nothing is restored. The stop asks one question: go on
+to code-fixer with the tree as the user then leaves it, or end the review
+here. In a session that cannot ask (a system reminder to work without
+stopping), the run ends with the files named. In an autopilot worker, the
+question goes to the main session, as every question there does. An
+unchanged tree, and a tree whose only change is a new untracked file,
+stops nothing and asks no question; the final report's Next steps names a
+new untracked file. Why a stop: a reviewer's command once overwrote a
+tracked test file — a flag took the next word as its output file — and
+code-fixer would have fixed the tree as it found it. Why no restore: in
+an `uncommitted` review the tree holds the user's own changes, and with
+five reviewers in parallel nothing tells which one wrote what. Why only a
+tracked file stops it: a test a reviewer runs may leave an output file,
+which costs the user nothing to see in the report, while a changed
+tracked file is the user's code.
 <!-- canonical:dispatch:end -->
 
 After all 5 agents return, verify each one delivered: its reply carries a
@@ -669,8 +715,10 @@ land after the Doc-sync task, and code-fixer corrects the listed documents
 in the fix commits; this bullet is where the user sees which ones changed,
 or that none needed to, and a missing line means code-fixer did not meet
 its contract, so the correction may not have run — a missing statistics
-line is no reason to silence the one bullet that reports it. When
-regression-verifier's test-row Detail names
+line is no reason to silence the one bullet that reports it. When the
+tree check after the reviewers (Step 2) found a new untracked file, one
+bullet names each such file for the user to keep or remove; the plugin
+deletes nothing itself. When regression-verifier's test-row Detail names
 files under `.kenspc/` that the test run collected and that passed, one
 bullet names them as the Detail does and asks the user to delete them —
 runs are never deleted and the plugin deletes nothing itself, so a collected
