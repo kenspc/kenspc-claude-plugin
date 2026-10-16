@@ -51,11 +51,13 @@
 # repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
 # in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture
 # path the redirection fixtures' roots hold and its $USER to a fixture
-# name; gh issue view 1, git -C . fetch, git push, git -P push, git --git-dir .git fetch,
-# git --no-optional-locks fetch, and a git clone of an https URL or of a
-# user@host:path source (denied, the reason's route to ask the main
-# session), and git clone of a local path, git status,
-# git --git-dir .git status, grep gh f,
+# name; gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
+# git pull, git ls-remote origin, git remote update, git -c x.y=z push,
+# git --no-pager fetch, git --git-dir=.git fetch, git -P push,
+# git --git-dir .git fetch, git --no-optional-locks fetch, and a git clone
+# of an https URL (also after --depth 1) or of a user@host:path source
+# (denied, the reason's route to ask the main session), and git clone of
+# a local path, git status, git --git-dir .git status, type gh, grep gh f,
 # command -v gh, and which gh (allowed); an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
@@ -576,6 +578,17 @@ run_fixtures() {
     fx_deny "$hook" "git --git-dir .git fetch, the space form" "$r" Bash "$FX_REPO" 'git --git-dir .git fetch' deny-ask
     fx_deny "$hook" "git --no-optional-locks fetch" "$r" Bash "$FX_REPO" 'git --no-optional-locks fetch' deny-ask
     fx "$hook" "git --git-dir .git status" allow 1 "$r" Bash "$FX_REPO" 'git --git-dir .git status'
+    # The other remote subcommands, the option skips the hook names, a
+    # clone with an option before its URL, and gh after a wrapper.
+    fx_deny "$hook" "git pull" "$r" Bash "$FX_REPO" 'git pull' deny-ask
+    fx_deny "$hook" "git ls-remote origin" "$r" Bash "$FX_REPO" 'git ls-remote origin' deny-ask
+    fx_deny "$hook" "git remote update" "$r" Bash "$FX_REPO" 'git remote update' deny-ask
+    fx_deny "$hook" "git -c x.y=z push" "$r" Bash "$FX_REPO" 'git -c x.y=z push' deny-ask
+    fx_deny "$hook" "git --no-pager fetch" "$r" Bash "$FX_REPO" 'git --no-pager fetch' deny-ask
+    fx_deny "$hook" "git --git-dir=.git fetch" "$r" Bash "$FX_REPO" 'git --git-dir=.git fetch' deny-ask
+    fx_deny "$hook" "git clone --depth 1 of an https URL" "$r" Bash "$FX_REPO" 'git clone --depth 1 https://example.test/r.git d' deny-ask
+    fx_deny "$hook" "sudo gh issue view" "$r" Bash "$FX_REPO" 'sudo gh issue view 1' deny-ask
+    fx "$hook" "type gh" allow 1 "$r" Bash "$FX_REPO" 'type gh'
     fx "$hook" "git clone of a local path" allow 1 "$r" Bash "$FX_REPO" 'git clone /local/repo d'
     fx "$hook" "git status" allow 1 "$r" Bash "$FX_REPO" 'git status'
     fx "$hook" "grep gh f, gh as an argument" allow 1 "$r" Bash "$FX_REPO" 'grep gh f'
