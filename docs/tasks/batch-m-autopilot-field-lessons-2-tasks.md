@@ -66,7 +66,26 @@ and Task 16 after it, since its `Depends on` names Task 15.
 
 ### Task 1: Probe the browser tools in a headless worker
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: run by the main session after the user confirmed Chrome was
+  ready (16 Oct 2026). A headless `claude -p --chrome` worker could not
+  reach Claude in Chrome ("Browser extension is not connected") while the
+  desktop session saw the browser connected under the same account; the
+  cause is not determined (record, Conclusion). So Tasks 12 and 13 write
+  the Playwright MCP alone, with the start check
+  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'`
+  (exit 0 usable, exit 1 not), and Task 14 needs no driver flag. The
+  Playwright MCP writes screenshots only under its output directory and the
+  session's working directory, so a walk worker copies them into the
+  workspace. Record: `docs/dry-runs/batch-m-walk-probe.md` (bbf3239).
+- Changes/tradeoffs: a second Chrome launch (`batchm-probe-ch2`) called the
+  tab-context tool even after the empty browser list, to rule out a probe
+  that stopped too early; the "not usable" Playwright answer of the check
+  command was shown with `CLAUDE_CONFIG_DIR` pointed at an empty directory,
+  and the worker-side negative with `--strict-mcp-config`. Four launches,
+  USD 1.1622 in all.
 
 Implement plan Step 1. Output: `docs/dry-runs/batch-m-walk-probe.md`,
 committed alone (`docs: add batch m walk probe record`).
