@@ -172,7 +172,9 @@ VERIFICATION CHECKS
    A row a round-2 DEFER or NOT APPLICABLE entry names, whose reason reads
    `first-round fix <hash>; taken back in <hash>`, must hold the code
    without that first-round fix: from the repository root,
-   `git show <first-round hash> | git apply --check -v` exits 0 with no
+   `git show --format= --no-color --no-ext-diff --src-prefix=a/ --dst-prefix=b/ <first-round hash> | git apply --check -v`
+   (the flags keep a user's diff settings, such as `diff.noprefix`, from
+   making every patch fail to apply) exits 0 with no
    hunk reported at an offset only when every hunk's pre-fix lines are
    back where the fix found them, which is the fix taken back. Exit 0
    alone is not: `git apply` finds a hunk's pre-fix lines anywhere in the
