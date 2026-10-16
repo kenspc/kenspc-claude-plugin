@@ -41,15 +41,17 @@
 # a sibling that shares a root's prefix (denied); no roots with the marker
 # set, and root entries that are not absolute (denied); redirections whose
 # target lies outside the roots — > "$TMPDIR/../x", >> ~/.claude/x,
-# 2> /etc/x, and &> ../outside from the repository root, a target after
-# quoted text in the same word ("hi">>~/.claude/x, 'done'>/etc/x), a
-# single-quoted > '/etc/x', >& /etc/x, 1>&/etc/x, and >> ~<user>/.claude/x
-# for the hook's user (denied) — and those the hook must not deny:
+# 2> /etc/x, and &> ../outside from the repository root, > $HOME/.claude/x,
+# >> ${HOME}/.claude/x, > ${TMPDIR}/../x, >| /etc/x, &>> /etc/x, a glued
+# 2>/etc/x, a target after quoted text in the same word
+# ("hi">>~/.claude/x, 'done'>/etc/x), a single-quoted > '/etc/x',
+# >& /etc/x, 1>&/etc/x, and >> ~<user>/.claude/x for the hook's user
+# (denied) — and those the hook must not deny:
 # > /dev/null, 2>&1, >&2, > "$TMPDIR/x", > out.txt and > 'out.txt' in the
 # repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
-# in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture path
-# the redirection fixtures' roots hold and its $USER to a fixture name; gh issue view 1,
-# git -C . fetch, git push, git -P push, git --git-dir .git fetch,
+# in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture
+# path the redirection fixtures' roots hold and its $USER to a fixture
+# name; gh issue view 1, git -C . fetch, git push, git -P push, git --git-dir .git fetch,
 # git --no-optional-locks fetch, and a git clone of an https URL or of a
 # user@host:path source (denied, the reason's route to ask the main
 # session), and git clone of a local path, git status,
@@ -520,6 +522,13 @@ run_fixtures() {
     fx_deny "$hook" "a >> to ~/.claude outside the roots" "$rr" Bash "$FX_REPO" 'echo x >> ~/.claude/x'
     fx_deny "$hook" "a 2> to /etc outside the roots" "$rr" Bash "$FX_REPO" 'echo x 2> /etc/x'
     fx_deny "$hook" "a &> to ../outside from the repository root" "$rr" Bash "$FX_REPO" 'echo x &> ../outside'
+    # The other expansions and operators the hook lists.
+    fx_deny "$hook" "a > to \$HOME/.claude outside the roots" "$rr" Bash "$FX_REPO" 'echo x > $HOME/.claude/x'
+    fx_deny "$hook" "a >> to \${HOME}/.claude outside the roots" "$rr" Bash "$FX_REPO" 'echo x >> ${HOME}/.claude/x'
+    fx_deny "$hook" "a > to \${TMPDIR}/.. outside the roots" "$rr" Bash "$FX_REPO" 'echo x > ${TMPDIR}/../x'
+    fx_deny "$hook" "a >| to /etc outside the roots" "$rr" Bash "$FX_REPO" 'echo x >| /etc/x'
+    fx_deny "$hook" "a &>> to /etc outside the roots" "$rr" Bash "$FX_REPO" 'echo x &>> /etc/x'
+    fx_deny "$hook" "a 2> glued to /etc outside the roots" "$rr" Bash "$FX_REPO" 'echo x 2>/etc/x'
     # Quoted text before an unspaced > leaves its target unquoted.
     fx_deny "$hook" "a >> to ~/.claude after double-quoted text in the word" "$rr" Bash "$FX_REPO" 'echo "hi">>~/.claude/x'
     fx_deny "$hook" "a > to /etc after single-quoted text in the word" "$rr" Bash "$FX_REPO" "echo 'done'>/etc/x"
