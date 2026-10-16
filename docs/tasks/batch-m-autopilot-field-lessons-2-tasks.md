@@ -719,7 +719,21 @@ settings line).
 
 ### Task 11: BLOCKED tasks classified in the verdict loop
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: an S5 that implements a BLOCKED task sets the task's
+  `**Status:**` to DONE in its own commit, so the task document says what
+  was built before S6 removes it; its S5 entry quotes the task's section,
+  its `- Blocked:` line, and takes the task's acceptance criteria as the
+  case to make pass. Each BLOCKED-task S5 is counted per task as stop
+  condition 4 counts a defect, and is followed by the narrowed review as
+  every S5 is. The state file gained a `blocked tasks:` section, the
+  source of the reviewer report's new `BLOCKED tasks:` line.
+- Changes/tradeoffs: the paragraph sits in § The verdict loop after S3b
+  before the second-round paragraph Task 5 added, so it covers `on`,
+  `off`, and `auto` in one place. The S5 bullet's `<ID>`/`<run dir>`
+  gained the task form (`Task <n>` and the task document's path).
 
 Depends on: Task 10
 

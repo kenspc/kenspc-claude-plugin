@@ -668,6 +668,8 @@ questions answered:
   <tag>: <one line> → <one line> (main session|user)
 rail observations:
   <tag>: <the worker's entry, one per line | none | not read (<reason>)>
+blocked tasks:
+  Task <n>: <one line> → <S5 <tag> | deferred (clarification <number>) | stop 7 (a)>
 breaches ruled:
   <tag>: <the breach, one line> → benign: <the evidence for the three conditions>[; moved <path> to <workspace>/.trash/<name>-<timestamp>/] (resumed <tag>-r<k>)
 worker lessons:
@@ -1326,6 +1328,22 @@ of a round, two of them in wording only, and those two reached the next
 step with no review after them; a change of any size is a change no
 review has seen until the narrowed one runs.
 
+**BLOCKED tasks.** At S3's return the main session reads every task's
+status from the committed task document, whatever `Standalone review:`
+says — `on`, `off`, or `auto` — and classifies each BLOCKED task as a HIGH
+row is: an S5 that implements it, its task block quoting the task and its
+BLOCKED note (Templates § The task blocks, S5), followed by the narrowed
+review as every S5 is, and counted per task as stop condition 4 counts a
+defect; or a deferral recorded as a clarification in the spec naming who
+ruled. A block that needs a change outside the batch's contract — a new
+dependency, an API contract change, a database schema change the spec
+does not name — is stop condition 7 (a), as any such option is. The state
+file's `blocked tasks:` section records each one and its classification,
+and both reports name them. Why: S3b's Schema F does not read task
+statuses, and S3's PARTIAL had no branch of its own, so a batch with a
+task not built could reach acceptance and release preparation without the
+task being named anywhere the user reads.
+
 S3b's verdict, and a narrowed review's, is read after its second fix round
 when one ran (task-review's Step 7): the worker running the review sends
 one question once regression-verifier returns HAS ISSUES or the verdict is
@@ -1854,7 +1872,8 @@ reads both reports before the tag.
   return, with the commits it names; work S6 left undone for a point
   raised after the removal; a change S6 left to the spec, with what the
   status command printed; each breach the main session ruled benign, with
-  the breach and the ruling), whether the standalone review ran — with
+  the breach and the ruling; each task S3 left BLOCKED, with its
+  classification), whether the standalone review ran — with
   `auto`, its trigger or that it was not triggered — and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
@@ -2469,11 +2488,17 @@ changes in no other way.]
 ````
 
 - **S5** — a fix, launched from a classified defect: a Schema F row after
-  S3b, or a row of S3's review when S3b does not run (`Standalone review: off`, or `auto` not triggered) (Phase 2), or
+  S3b, or a row of S3's review when S3b does not run (`Standalone review: off`, or `auto` not triggered) (Phase 2), a
+  task S3 left BLOCKED (§ The verdict loop after S3b), or
   an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
-  name the finding — the row's issue ID and the review's run directory, or
+  name the finding — the row's issue ID and the review's run directory, the
+  task's number (`Task <n>`) and the task document's path, or
   the case's number and the record's path (plugin mode) or S4's reply (repo
-  mode); `<one line>` is the finding in one sentence. One S5 may carry
+  mode); `<one line>` is the finding in one sentence. A BLOCKED task's
+  entry takes the second form below, quoting the task and its BLOCKED
+  note, and its commit sets the task's `**Status:**` to DONE. Why: the
+  note says what stopped the implementer, which the S5 must get past, and
+  the task document then says what was built. One S5 may carry
   several defects classified in the same round, one numbered entry each.
   `<heading>`, the block's first line, is its own heading: for one defect
   `Fix issue <ID> from run <run dir>: <one line>`, and for several
@@ -2493,6 +2518,11 @@ The defects, each as the reviewer or the acceptance recorded it:
    meant when one matches>
    The case to make pass: <the check that failed, with its PASS criterion
    — a review check, a self-test, a command, an acceptance case>
+<k>. Task <n> — BLOCKED in <task document path>: <one line>
+   The task: <the task's section, quoted>
+   Its BLOCKED note: <the task's `- Blocked:` line, quoted>
+   The case to make pass: <the task's acceptance criteria>; set its
+   `**Status:**` to DONE in the same commit
 
 Fix each defect[ inside the allowed files], run the checks the project's
 instruction files name for a change of this kind, and commit each fix
@@ -2835,6 +2865,7 @@ decisions the user has yet to see.
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check
 - Standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>
+- BLOCKED tasks: <Task <n>: <one line> — <fixed by S5 <tag>, <commit> | deferred (<clarification>)>; … | none>
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
@@ -2898,7 +2929,9 @@ whether S3b ran — `ran` with `on`, `ran (<trigger>)` with `auto`, the
 trigger being S3's verdict or its deferred HIGH or MEDIUM rows, and
 `not run (off)` or `not run (auto: <S3's verdict, nothing HIGH or MEDIUM deferred>)`
 — so a trial of `auto` reads from the reports; the Acceptance line's
-`none named; S3 is the last check` is used whenever S3b did not run.
+`none named; S3 is the last check` is used whenever S3b did not run. The
+`BLOCKED tasks` line lists the state file's `blocked tasks:` entries, each
+with its classification, and reads `none` when S3 left none.
 
 ## The gates
 
