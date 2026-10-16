@@ -1372,9 +1372,13 @@ ruled. A block that needs a change outside the batch's contract — a new
 dependency, an API contract change, a database schema change the spec
 does not name — is stop condition 7 (a), as any such option is. The state
 file's `blocked tasks:` section records each one and its classification,
-and both reports name them. Once every BLOCKED task is classified, and the
-narrowed review after each S5 for one has passed, a verdict that is
-PARTIAL for BLOCKED tasks alone passes as PASS does, on to Phase 3. Why:
+and both reports name them. A task S3 left TODO or IN PROGRESS — a slice
+that changed no task's status, an implementer that stopped — counts as a
+BLOCKED task here and wherever this skill names one, its status quoted in
+place of its BLOCKED note: it too is a task not built. Once every BLOCKED
+task is classified, and the narrowed review after each S5 for one has
+passed, a verdict that is PARTIAL for BLOCKED tasks alone passes as PASS
+does, on to Phase 3. Why:
 S3b's Schema F does not read task statuses, and S3's PARTIAL had no branch
 of its own, so a batch with a task not built could reach acceptance and
 release preparation without the task being named anywhere the user reads,
