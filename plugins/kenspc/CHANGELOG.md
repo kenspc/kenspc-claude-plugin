@@ -189,8 +189,8 @@ in the next product-repository batches.
   row; check 7's grammar holds the four forms (27 → 36 exit-1 mutations).
   `check-autopilot-rails-hook.sh` gains the redirection fixtures (denied:
   `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, `&> ../outside`,
-  `"hi">>~/.claude/x`, `'done'>/etc/x`;
-  allowed: `> /dev/null`, `2>&1`, `> "$TMPDIR/x"`, `> out.txt`,
+  `"hi">>~/.claude/x`, `'done'>/etc/x`, `> '/etc/x'`;
+  allowed: `> /dev/null`, `2>&1`, `> "$TMPDIR/x"`, `> out.txt`, `> 'out.txt'`,
   `> "$OTHER/x"`, a quoted `>`, a heredoc `>`), a timed fixture of 8000
   redirections then `> /etc/x` (0.112 s measured), the `gh` and remote-git
   fixtures with a `deny-ask` expectation, and two self-test mutants (the
@@ -221,7 +221,9 @@ in the next product-repository batches.
   `..` collapsed (relative targets against the input's cwd), lies outside
   every write root is denied by the root check the file tools get, with
   their route. A target holding any other expansion, a command
-  substitution, a glob, or single-quoted text is not judged;
+  substitution, or a glob, or single-quoted text that begins with `~` or
+  holds a `$`, is not judged (other single-quoted text is literal and
+  judged);
   `/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/tty`, and
   `/dev/fd/<n>` are allowed; `2>&1` has no target; a `>` in quotes or a
   heredoc body is no redirection. The header's misses keep `tee`, `cp`,

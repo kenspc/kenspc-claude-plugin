@@ -867,9 +867,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   tool name, command, or path field, redirections (4.7.0) — denied:
   `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, and `&> ../outside`
   from the repository root, and a target after quoted text in the same
-  word (`"hi">>~/.claude/x`, `'done'>/etc/x`); allowed: `> /dev/null`, `2>&1`,
+  word (`"hi">>~/.claude/x`, `'done'>/etc/x`), and a single-quoted
+  `> '/etc/x'`; allowed: `> /dev/null`, `2>&1`,
   `> "$TMPDIR/x"`, `> out.txt` in the repository, `> "$OTHER/x"` (not
-  judged), a `>` inside single quotes, and a `>` in a heredoc body, with
+  judged), a single-quoted `> 'out.txt'`, a `>` inside single quotes,
+  and a `>` in a heredoc body, with
   the hook's `$TMPDIR` set to a fixture path the redirection fixtures'
   roots hold, so `$TMPDIR/..` lies outside every root on any machine —
   `gh` and remote git (4.7.0) — denied: `gh issue view 1`,

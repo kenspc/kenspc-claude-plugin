@@ -1647,8 +1647,9 @@ on Windows.
   call. A redirection's target is judged after a leading `~`, `$HOME`,
   `${HOME}`, `$TMPDIR`, or `${TMPDIR}` is expanded and `.` and `..` are
   collapsed, a relative target against the call's working directory; a
-  target holding any other expansion, a command substitution, a glob, or
-  single-quoted text is not judged, `/dev/null`, `/dev/stdout`,
+  target holding any other expansion, a command substitution, or a glob,
+  or single-quoted text that begins with `~` or holds a `$`, is not judged
+  (other single-quoted text is literal and judged), `/dev/null`, `/dev/stdout`,
   `/dev/stderr`, `/dev/tty`, and `/dev/fd/<n>` are allowed, `2>&1` is no
   target, and a `>` inside quotes or a heredoc body is no redirection.
   `gh` is denied at a command position, wrappers such as `sudo` and

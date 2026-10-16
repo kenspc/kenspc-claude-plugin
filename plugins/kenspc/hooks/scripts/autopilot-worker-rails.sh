@@ -52,10 +52,11 @@
 #       expanded from the hook's environment, resolved against the input's
 #       cwd when relative, with . and .. collapsed as written. Not judged: a
 #       target holding any other expansion, a command substitution, a glob
-#       or a brace, or single-quoted text; /dev/null, /dev/stdout,
-#       /dev/stderr, /dev/tty, and /dev/fd/<n> are allowed; a duplication
-#       (2>&1) has no target; a > inside quotes, escaped, or in a heredoc
-#       body is no redirection. Why redirections: both writes outside the
+#       or a brace, or single-quoted text with a leading ~ or a $ in it
+#       (other single-quoted text is literal and judged); /dev/null,
+#       /dev/stdout, /dev/stderr, /dev/tty, and /dev/fd/<n> are allowed; a
+#       duplication (2>&1) has no target; a > inside quotes, escaped, or in
+#       a heredoc body is no redirection. Why redirections: both writes outside the
 #       roots that workers made through Bash were redirections, one to a
 #       file beside $TMPDIR and one appending to a memory file under
 #       ~/.claude;
@@ -310,16 +311,20 @@ function collapse(p,   n, a, i, m, s, out) {
   return (out == "") ? "/" : out
 }
 # target(t, q, d): records a redirection target the hook judges, once, as
-# "<absolute path><tab><target as written>". Not judged: a word with
-# single-quoted text, an expansion other than a leading ~ (unquoted),
-# $HOME, ${HOME}, $TMPDIR, or ${TMPDIR} (set), a substitution, a glob or a
-# brace, and a relative target with no absolute cwd. The terminal and
-# descriptor files are no write.
+# "<absolute path><tab><target as written>". Not judged: an expansion
+# other than a leading ~ (unquoted), $HOME, ${HOME}, $TMPDIR, or ${TMPDIR}
+# (set), a substitution, a glob or a brace, a target with single-quoted
+# text that begins with ~ or holds a $ (which part was quoted is not
+# kept), and a relative target with no absolute cwd. Other single-quoted
+# text is literal and judged as written. The terminal and descriptor
+# files are no write.
 function target(t, q, d,   o, v, r) {
-  if (t == "" || q || t ~ /[\t\n]/) return
+  if (t == "" || t ~ /[\t\n]/) return
   if (t ~ /^\/dev\/(null|stdout|stderr|tty)$/ || t ~ /^\/dev\/fd\/[0-9]+$/) return
+  if (q && index(t, "~") == 1) return
   o = t; v = "\001"
-  if (!d && (t == "~" || index(t, "~/") == 1)) { v = home; r = substr(t, 2) }
+  if (q) r = t
+  else if (!d && (t == "~" || index(t, "~/") == 1)) { v = home; r = substr(t, 2) }
   else if (lead(t, "$HOME")) { v = home; r = substr(t, 6) }
   else if (lead(t, "${HOME}")) { v = home; r = substr(t, 8) }
   else if (lead(t, "$TMPDIR")) { v = tmpd; r = substr(t, 8) }

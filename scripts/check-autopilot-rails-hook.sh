@@ -516,6 +516,9 @@ run_fixtures() {
     # Quoted text before an unspaced > leaves its target unquoted.
     fx_deny "$hook" "a >> to ~/.claude after double-quoted text in the word" "$rr" Bash "$FX_REPO" 'echo "hi">>~/.claude/x'
     fx_deny "$hook" "a > to /etc after single-quoted text in the word" "$rr" Bash "$FX_REPO" "echo 'done'>/etc/x"
+    # A single-quoted target is literal, judged as written.
+    fx_deny "$hook" "a > to a single-quoted /etc target" "$rr" Bash "$FX_REPO" "echo x > '/etc/x'"
+    fx "$hook" "a > to a single-quoted relative file in the repository" allow 1 "$rr" Bash "$FX_REPO" "echo x > 'out.txt'"
     fx "$hook" "a > to /dev/null" allow 1 "$rr" Bash "$FX_REPO" 'echo x > /dev/null'
     fx "$hook" "a 2>&1 duplication, no target" allow 1 "$rr" Bash "$FX_REPO" 'ls 2>&1'
     fx "$hook" "a > to \$TMPDIR inside the roots" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "$TMPDIR/x"'
