@@ -147,7 +147,8 @@ context, and a relayed copy has lost rows on the way to the verifier.
   task-implementer in `scratch/task-implementer/`, code-fixer in
   `scratch/code-fixer/`, regression-verifier in
   `scratch/regression-verifier/`, and the orchestrating session itself in
-  `scratch/orchestrator/` when it runs a probe of its own. Every file there
+  `scratch/orchestrator/` — the suite logs and the tree state before the
+  reviewers, and any probe of its own. Every file there
   is named so the project's test runner does not collect it: for vitest and
   jest with their default patterns, no `.test.` or `.spec.` segment in a
   file name, no file named `test.*` or `spec.*`, no `__tests__` directory,
