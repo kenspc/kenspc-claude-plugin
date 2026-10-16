@@ -9,6 +9,57 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.8.0 — unreleased
+
+### Added
+
+- **A finished batch removes its own temp entries (autopilot).** The
+  acceptance commands' clones and builds — about 1 GB and 41,000 files
+  each, one or more per case and per re-run — stayed in `$TMPDIR` after the
+  batch, and nothing removed them; on macOS the boot-time cleanup of that
+  folder then held the login screen for minutes. Before the driver's
+  self-test the main session now records the temp folder on the state
+  file's new `temp:` line and its entries in `_logs/<batch>-tmp-before.txt`;
+  after the release preparation, and before the reports, it lists the
+  batch's own new entries with a new read-only script and removes each one
+  with `rm -rf`, every path written out and checked to lie below the
+  temp folder, then checked gone — no `--`, which a trash-moving `rm`
+  wrapper refused in a rehearsal on the maintainer's Mac, removing
+  nothing; every path is absolute, so none reads as an option. An entry the reports cite as evidence for
+  an item that needs the user is kept, and a removal that fails is no stop;
+  both are named with their paths on the reviewer report's new
+  `Temp entries` line and in the user report. A stopped run removes
+  nothing, and its stop message names the temp folder and the before list.
+  The skill does not override a machine's `rm`, so where it moves files to
+  the trash the removal stays recoverable.
+- **`temp-candidates.sh` (autopilot).** Copied per batch to
+  `_prompts/<batch>-temp-candidates.sh`. `--snapshot <temp folder> <before list>`
+  writes the folder's top-level names; the sweep,
+  `<temp folder> <before list> <cmds dir|-> <root>...`, prints
+  `<path><TAB><reason>` for each entry that is new, no symbolic link, the
+  user's own, and the batch's by one piece of evidence — the driver
+  self-test's `autopilot-selftest.*` directory (`self-test`), a name
+  starting with a prefix a `*.cmd` file of the batch's extracted acceptance
+  commands writes under `$TMPDIR` (`prefix <p>-`), or a clone whose origin
+  resolves to the repository root or a plugin-mode seed (`clone of <root>`)
+  — then `candidates: <n>, left: <k>`. It deletes nothing. Two tracks share
+  one temp folder, so nothing is listed on its name or age alone, and an
+  entry older than the batch never is. A probe on 2026-10-16 is why the
+  driver does not instead give each batch a `TMPDIR` of its own: macOS's
+  `mktemp -d` without a template ignores `TMPDIR`, so the plain `tmp.*`
+  clones of older specs would still land in the shared folder.
+  `check-autopilot-scripts.sh` now holds it too, with fixtures for the
+  snapshot and the sweep and three more self-test mutants (the before-list
+  filter, the origin comparison, and the symlink exclusion each removed).
+  Guard counts are unchanged: `guards run: 13`, `self-tests run: 12`.
+
+### Changed
+
+- **The main session's evidence clones (autopilot).** A clone the main
+  session makes under `$TMPDIR` for a corrected case is now removed with
+  the batch's other temp entries at the end, instead of being left in
+  place; it is still never removed with a recursive `rm` before then.
+
 ## 4.7.0 — 2026-10-16
 
 The second slice of the autopilot's field lessons. A review runs one

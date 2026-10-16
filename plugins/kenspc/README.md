@@ -830,14 +830,15 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
 
 ```
 <workspace>/
-    _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh and
-                   <batch>-zero-diff.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
+    _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh,
+                   <batch>-zero-diff.sh, and <batch>-temp-candidates.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
                    blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md and extracted <batch>-s4-cmds/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
+                   <batch>-tmp-before.txt  <batch>-tmp-candidates.txt  the temp folder before and after
                    <batch>-walk/  S4w's walk.md and its screenshots
     <batch>-*      seed projects (plugin mode)
-    .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing is removed with a recursive rm
+    .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing here is removed with a recursive rm
 ```
 
 `<tag>.exit`, written by the driver when a worker returns, is the
@@ -1292,10 +1293,32 @@ cost per turn across the batch's workers, the basis stated on the line
 to `_logs/<batch>-report.md`, and the final message ends with
 `Autopilot finished — <baseline sha>..<last sha>`.
 
+**The batch's temp entries.** The acceptance commands' clones and builds,
+about 1 GB and 41,000 files each, stay in the temp folder (`$TMPDIR`)
+across the batch's sessions on purpose, since each step reads what the one
+before it left there. A finished batch removes them. Before the driver's
+self-test the main session records the temp folder's entries with the
+copied `temp-candidates.sh --snapshot`; after the release preparation, and
+before the reports, the script lists each entry that is new since then, no
+symbolic link, yours, and the batch's by evidence — the driver self-test's
+directory, a name starting with a prefix the batch's acceptance commands
+write under `$TMPDIR` (`${TMPDIR%/}/bka-XXXXXX` gives `bka-`), or a clone
+of the repository (or, in `plugin` mode, of a seed). It deletes nothing;
+the main session removes each listed entry with `rm -rf`, every path
+written out, and checks each one gone. Another track's entries in the same
+temp folder, and anything there before the batch, are never listed. An
+entry the reports cite as evidence for something that needs you is kept
+and named with its path, and so is a removal that failed, on the reviewer
+report's `Temp entries` line and in the user report. A stopped run removes
+nothing: a later run may need the entries, and the stop message names the
+temp folder and the before list. Where your `rm` moves files to the trash,
+the removal goes there too.
+
 **The drivers.** `run.sh` (`skills/autopilot/scripts/run.sh`) ships with the
-skill and is copied per batch to `_prompts/<batch>-run.sh`, with the two
-scripts beside it, `extract-acceptance.sh` and `zero-diff.sh`, copied to
-`_prompts/<batch>-extract-acceptance.sh` and `_prompts/<batch>-zero-diff.sh`
+skill and is copied per batch to `_prompts/<batch>-run.sh`, with the three
+scripts beside it, `extract-acceptance.sh`, `zero-diff.sh`, and
+`temp-candidates.sh`, copied to `_prompts/<batch>-extract-acceptance.sh`,
+`_prompts/<batch>-zero-diff.sh`, and `_prompts/<batch>-temp-candidates.sh`
 — a running batch keeps the text it started with even when a `plugin`-mode
 implementation edits them; it starts each
 worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,

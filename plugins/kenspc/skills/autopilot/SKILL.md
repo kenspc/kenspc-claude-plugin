@@ -140,7 +140,7 @@ the first launch needs, checked before any session is paid for.
 **Inputs**: the argument file; the repository (`git rev-parse --show-toplevel`,
 HEAD, `git -c core.quotePath=false status --porcelain -uall`); `ListAgents`;
 the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh` and
-the two scripts beside it;
+the three scripts beside it;
 `ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
 this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`; the sources
 that can set `crossSessionInbound` — managed, the launch line's
@@ -158,9 +158,9 @@ carry the line. Why: nothing downstream reads a headless session's reply
 (Templates § The settings line).
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
-the driver copy, its self-test files, the two script copies, the
-`Zero diff:` paths file, the state file — and nothing into the
-repository. Why: every failing check is a stop, and a stop before the first
+the driver copy, its self-test files, the three script copies, the
+temp folder's before list, the `Zero diff:` paths file, the state file —
+and nothing into the repository. Why: every failing check is a stop, and a stop before the first
 launch leaves the repository as the run found it.
 
 ### The entry kind
@@ -285,12 +285,13 @@ the whole tree; `$TMPDIR` is for anything else.
 <workspace>/
   _prompts/     the copied driver <batch>-run.sh and scripts
                 <batch>-extract-acceptance.sh, <batch>-zero-diff.sh,
-                <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
+                <batch>-temp-candidates.sh, <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
                 the assembled <batch>-<tag>.md, and S4's <batch>-spec.md and
                 <batch>-s4-cmds/ (repo mode)
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
                 <batch>-state.md  <batch>-report.md
+                <batch>-tmp-before.txt  <batch>-tmp-candidates.txt
                 <batch>-walk/   S4w's walk.md and its screenshots
   <batch>-*     seed projects (plugin mode)
   .trash/       discarded directories, moved here as <name>-<timestamp>/
@@ -311,12 +312,23 @@ exported for the workers — a `claude` outside `PATH` — would stand in for
 the stub: paid sessions at every start, then a stop on the flag check,
 since the real executable echoes nothing to stderr.
 
-The two scripts beside the driver are copied with it:
-`extract-acceptance.sh` to `_prompts/<batch>-extract-acceptance.sh` and
-`zero-diff.sh` to `_prompts/<batch>-zero-diff.sh`. Why: for the reason the
+The three scripts beside the driver are copied with it:
+`extract-acceptance.sh` to `_prompts/<batch>-extract-acceptance.sh`,
+`zero-diff.sh` to `_prompts/<batch>-zero-diff.sh`, and
+`temp-candidates.sh` to `_prompts/<batch>-temp-candidates.sh`. Why: for the reason the
 driver is copied — a plugin-mode S3 may edit the shipped scripts, and a
 running batch keeps the text it started with — and so S4 runs the same
 copy as the main session, by the workspace path its task block names.
+
+Before the driver's self-test, and so before anything of the batch is
+written there, the main session records the temp folder — `${TMPDIR:-/tmp}`
+with any trailing `/` removed, as this session's Bash prints it — on the
+state file's `temp:` line, and its entries with
+`bash <workspace>/_prompts/<batch>-temp-candidates.sh --snapshot <temp folder> <workspace>/_logs/<batch>-tmp-before.txt`,
+its `entries:` count on the same line. Phase 4 reads both to remove the
+batch's own entries there (The batch's temp entries). Why before the
+self-test: the self-test leaves a directory of its own in the temp folder,
+and an entry recorded before the batch is never the batch's to remove.
 
 ### The batch name, the tags, and the main session's name
 
@@ -655,7 +667,7 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 ### The state file
 
 `_logs/<batch>-state.md` holds the settings line, the repository root, the
-pass-through values, where the inbound `accept` came from, or that no
+temp folder and its before list, the pass-through values, where the inbound `accept` came from, or that no
 source sets the key (The start checks), and each question a worker
 returned with that never arrived as a message (§ The message protocol), the
 current step and its tag, whether the standalone review ran and why,
@@ -689,6 +701,7 @@ turn continue from the artifact rather than from the wording.
 ```
 Autopilot settings — …                      (the settings line)
 main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<hash> once committed)
+temp: <temp folder> — before: <workspace>/_logs/<batch>-tmp-before.txt (<n> entries)[; removed <n>, kept <k>, not removed <j> — <workspace>/_logs/<batch>-tmp-candidates.txt]
 pass-through: <model|not determined>/<effort|not determined>
 inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>[ (<the error or notice, quoted>)]…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
@@ -1705,7 +1718,8 @@ of S4's `cmp`, since no extraction from the spec produces it. Without both
 pieces of evidence, the correction is stop condition 7 (b).
 
 The main session gathers the evidence outside the repository's working
-tree: in a clone under `$TMPDIR` or the workspace
+tree: in a clone under `$TMPDIR` — which Phase 4 removes with the batch's
+other temp entries — or the workspace
 (`git clone <repository root> <dir>`, then
 `git -C <dir> checkout --detach <sha>` — the baseline for a failure shown
 there, the HEAD S4 ran at for the negative control), where it first
@@ -1713,7 +1727,7 @@ restores the setup the case needs and a fresh clone lacks — installed
 dependencies, build output, as the project's instruction files give
 them — then makes the deliberate break and runs both forms of the case.
 The clone is left where it is, or moved into the workspace's `.trash/`; it is never deleted with a
-recursive `rm`. Why a clone: the main session commits nothing but
+recursive `rm` before Phase 4 (The batch's temp entries). Why a clone: the main session commits nothing but
 clarification entries (Phase 2's Constraints), and a checkout of the
 baseline or a break made in the working tree would change the tree and
 the index the workers and the next step read — and a break left there by
@@ -1788,15 +1802,17 @@ kill by name or by port alone stops it too.
 ## Phase 4: Release preparation and reports
 
 **Goal**: S6's commit, after the clarification commit of each question S6
-asked — in any order when S6 removes nothing (below) — and the two
-reports.
+asked — in any order when S6 removes nothing (below) — the batch's temp
+entries removed, and the two reports.
 
-**Inputs**: `Release preparation:`, `Version:`, the mode; the state file;
+**Inputs**: `Release preparation:`, `Version:`, the mode; the state file,
+its `temp:` line included, and the before list it names;
 `<batch>-costs.txt`; every worker's JSON.
 
 **DONE when** the final message carries both reports and ends with
-`Autopilot finished — <baseline sha>..<last sha>`, and the reviewer report
-is also at `_logs/<batch>-report.md`.
+`Autopilot finished — <baseline sha>..<last sha>`, the reviewer report
+is also at `_logs/<batch>-report.md`, and the state file's `temp:` line
+carries the removal's counts.
 
 **Repo mode.** `Release preparation: default` — S6 makes one commit,
 `docs: remove batch <name> plan and tasks`, that `git rm`s the batch's plan
@@ -1972,6 +1988,53 @@ stop: as for a ruling without its clarification commit, the stop
 conditions do not list a record gap the reports can name, and the user
 reads both reports before the tag.
 
+**The batch's temp entries.** Once S6 has returned and the checks above
+are recorded — or, when no S6 starts, once the last step's record is
+written — and before the reports, the main session runs
+`bash <workspace>/_prompts/<batch>-temp-candidates.sh <temp folder> <workspace>/_logs/<batch>-tmp-before.txt <cmds dir> <repository root>[ <seed>…]`
+with the temp folder from the state file's `temp:` line; as the cmds dir,
+`<workspace>/_prompts/<batch>-s4-cmds` when Phase 3 extracted commands
+there, and `-` otherwise; after the root, in plugin mode, each seed project
+`<workspace>/<batch>-*`. Its output is saved to
+`<workspace>/_logs/<batch>-tmp-candidates.txt`. Each entry it lists is the
+batch's: new since the before list, no symbolic link, the user's own, and
+the self-test's directory, named by a prefix the batch's acceptance
+commands write under the temp folder, or a clone of the repository or a
+seed; the reason column says which. An entry the reports cite as evidence
+for an item that needs the user — a FAIL classified a behavior deviation,
+a deferred item — is kept, and both reports name it with its path and that
+item. The rest are removed with `rm -rf`, each path written out as the
+script printed it, single-quoted, several to a call, and each checked
+first to begin with the temp folder and a `/` and to name an entry below
+it — never a variable, a glob, or a command substitution in its place;
+the call's timeout allows for an `rm` that moves to the trash, about seven
+seconds per GB. Each path is then checked absent: `[ -e <path> ]` and
+`[ -L <path> ]` both fail. A removal that fails or is refused is not a
+stop: the path and the error go on the reviewer report's `Temp entries`
+line and among what needs the user in the user report. The new entries the
+script counts as `left:` are not the batch's and are left untouched. The
+counts go on the state file's `temp:` line. On a stop nothing is removed,
+and the stop message names the temp folder and the before list (Exit).
+
+Why: the batch's clones and builds — about 1 GB and 41,000 files each, one
+or more per acceptance case and per re-run — were kept across the batch's
+sessions on purpose and removed by nobody, until the operating system's
+boot-time cleanup of the temp folder held the login screen for minutes.
+Why the main session, at the end: an entry one step makes, the next one
+reads — S4's clones are its evidence, which the main session reads on disk
+— so no worker can tell when an entry is done with, and the workers' rails
+forbid a recursive `rm`; once S6 has returned no step is left, while a
+stopped run may be continued. Why a script lists and the main session
+removes: two batches share one temp folder, so an entry is the batch's only
+on evidence — new since the start, and named by the batch's commands or
+cloned from its repository — never on its name or age alone; and a removal
+written out path by path cannot become a removal of the temp folder itself
+through a variable that expanded to nothing. Why plain `rm`: where a
+machine's `rm` moves files to the trash, the removal stays recoverable, and
+the skill does not override that. Why no `--`: such a wrapper refused it
+as an unknown option and removed nothing, and every path the script prints
+begins with `/`, so none can be read as an option.
+
 **The reports**, both in the final message:
 
 - `## User report` — the conversation's language, at most one page: what
@@ -1982,7 +2045,8 @@ reads both reports before the tag.
   raised after the removal; a change S6 left to the spec, with what the
   status command printed; each breach the main session ruled benign, with
   the breach and the ruling; each task S3 left BLOCKED, with its
-  classification), whether the standalone review ran — with
+  classification; each temp entry kept or not removed, with its path),
+  whether the standalone review ran — with
   `auto`, its trigger or that it was not triggered — the walk's result,
   and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
@@ -3071,6 +3135,7 @@ decisions the user has yet to see.
 - Skipped gates: <list | none>
 - Follow-up candidates: <list | none>
 - Release preparation: <commit | not prepared | kept>
+- Temp entries: removed <n> of <m> listed, <k> new entries not the batch's left[; kept: <path> — <the item it is evidence for>; …][; not removed: <path> — <the error>; …]
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
   [S3b: not run (Standalone review: off | Standalone review: auto, not triggered)]
@@ -3135,7 +3200,10 @@ or a walk recorded `nothing to walk`, `not walked`, or
 `Walk` line is the state file's `walk:` line, with each FAIL's
 classification. The
 `BLOCKED tasks` line lists the state file's `blocked tasks:` entries, each
-with its classification, and reads `none` when S3 left none.
+with its classification, and reads `none` when S3 left none. The
+`Temp entries` line carries the state file's `temp:` counts — `<m>` the
+script's `candidates:`, `<k>` its `left:` — with each entry kept or not
+removed (Phase 4, The batch's temp entries).
 
 ## The gates
 
@@ -3173,11 +3241,16 @@ line, as the stop line is the last line on a stop. Why the last line: a
 reader, and a grep over the trace, look for a run's end marker on the
 final message's last line, and a sentence after it would hide it from
 both. The skill tags nothing, pushes nothing, and deletes nothing outside
-`git rm` in a worker's commit. Why: the second human gate is the release,
-and a run that took it would have had one gate.
+`git rm` in a worker's commit and the main session's removal of the
+batch's own temp entries (Phase 4, The batch's temp entries). Why: the
+second human gate is the release, and a run that took it would have had
+one gate; the temp entries leave nothing the user would review, and every
+one removed is listed in `_logs/<batch>-tmp-candidates.txt`.
 
 On a stop, the final message names the step and its tag, what is on disk
-(the state file, the last session's files, the commits so far), what the
+(the state file, the last session's files, the commits so far, and the
+batch's temp entries, left in place for a later run: the state file's
+`temp:` line names the temp folder and the before list), what the
 user can do — answer, raise a number, fix and re-run — and ends with
 `Autopilot stopped: <reason>`. The state file holds the next action, so a
 later run of the same batch reads where this one stopped.

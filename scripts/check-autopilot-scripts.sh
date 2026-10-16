@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 # check-autopilot-scripts.sh
 #
-# Behavior guard for the two helper scripts the autopilot skill ships beside
-# its driver:
+# Behavior guard for the three helper scripts the autopilot skill ships
+# beside its driver:
 #
 #   1. plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh
 #        writes each `Acceptance:` case of a spec's `## Autopilot` section to
 #        <nn>.cmd (one code span) or <nn>.case (a description)
 #   2. plugins/kenspc/skills/autopilot/scripts/zero-diff.sh
 #        compares a list of paths between a baseline and HEAD
+#   3. plugins/kenspc/skills/autopilot/scripts/temp-candidates.sh
+#        snapshots a temp folder, and lists the batch's own new entries in it
 #
-# Both replaced steps every main session used to write by hand, and both went
-# wrong that way: commands extracted with a stray backtick at each end, and a
-# zero-diff check whose paths arrived as one word and compared nothing. This
-# guard runs the scripts against fixtures built in a mktemp -d directory —
+# The first two replaced steps every main session used to write by hand, and
+# both went wrong that way: commands extracted with a stray backtick at each
+# end, and a zero-diff check whose paths arrived as one word and compared
+# nothing. The third decides what the main session removes with a recursive
+# rm, so a rule that drifts toward listing too much must turn the guard red:
+# its fixtures hold entries made before the batch, another repository's
+# clone, another track's prefix, and a symlink, none of which may be listed.
+# This guard runs the scripts against fixtures built in a mktemp -d directory —
 # single and double backticks, a backtick inside a double-backtick span, spans
 # with and without the padding spaces, a label with a note holding
 # parentheses, an `(optional)`
@@ -26,8 +32,9 @@
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
 # paths file, one of whitespace-only lines, a baseline that is not a commit, a
-# last line without a newline, a run from a subdirectory — and asserts each
-# outcome.
+# last line without a newline, a run from a subdirectory; a temp folder and its
+# before list, a cmds dir, the repository, another repository, and a seed for
+# the sweep — and asserts each outcome.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -35,12 +42,14 @@
 #              apply (the fixture is stale).
 #
 # Optional flag:
-#   --self-test    Copies both scripts into the temp directory and turns the
-#                  guard red with three mutants of the copies — the padding
+#   --self-test    Copies the three scripts into the temp directory and turns
+#                  the guard red with six mutants of the copies — the padding
 #                  stripping removed from the extractor, its continuation
-#                  joining removed, and zero-diff.sh's paths passed to git diff
-#                  as one word — each of which must make the guard exit 1,
-#                  then green again on the unmutated copies.
+#                  joining removed, zero-diff.sh's paths passed to git diff
+#                  as one word, and temp-candidates.sh's before-list filter,
+#                  origin comparison, and symlink exclusion each removed —
+#                  each of which must make the guard exit 1, then green again
+#                  on the unmutated copies.
 #
 # Runs under the bash 3.2 macOS ships. The only recursive rm is the EXIT
 # trap's removal of the guard's own mktemp directory. Git runs with the
@@ -54,8 +63,9 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCRIPTS="$REPO_ROOT/plugins/kenspc/skills/autopilot/scripts"
 EXTRACT_SRC="$SCRIPTS/extract-acceptance.sh"
 ZERO_SRC="$SCRIPTS/zero-diff.sh"
+TEMP_SRC="$SCRIPTS/temp-candidates.sh"
 
-for f in "$EXTRACT_SRC" "$ZERO_SRC"; do
+for f in "$EXTRACT_SRC" "$ZERO_SRC" "$TEMP_SRC"; do
     if [[ ! -f "$f" ]]; then
         echo "ERROR: missing script $f" >&2
         exit 2
@@ -166,6 +176,76 @@ printf 'a.txt\r\nwith space.txt\r\n' > "$FX/paths-crlf.txt"
 printf '  \n\t\n' > "$FX/paths-blank.txt"
 printf 'a.txt\nwith space.txt' > "$FX/paths-nonewline.txt"
 
+# A temp folder for temp-candidates.sh. Its before-state holds a hidden
+# entry, an unrelated directory, and, made before the batch, an entry with
+# the batch's prefix and a clone of the repository — neither may be listed.
+# The cmds dir names three prefixes, one per spelling of the variable, and
+# another track's prefix (crp-) appears in none of them.
+TMPF="$FX/tmp"
+mkdir -p "$TMPF/old-dir" "$TMPF/.hidden" "$TMPF/bka-OLD123" "$TMPF/tmp.OLDOLDOLD1"
+git clone -q "$REPO" "$TMPF/tmp.OLDOLDOLD1/r"
+CMDS="$FX/s4-cmds"
+mkdir -p "$CMDS"
+printf '%s\n' 'D="$(mktemp -d "${TMPDIR%/}/bka-XXXXXX")" && git clone -q . "$D/r"' > "$CMDS/01.cmd"
+printf '%s\n' 'echo x > "$TMPDIR/pim-lock"' > "$CMDS/02.cmd"
+printf '%s\n' 'touch "${TMPDIR}/zz-x"' > "$CMDS/03.corrected.cmd"
+printf '%s\n' 'the case names ${TMPDIR%/}/nope- in a description' > "$CMDS/04.case"
+OTHER="$FX/other-repo"
+git init -q "$OTHER"
+git -C "$OTHER" -c user.email=g@example.invalid -c user.name=g commit -q --allow-empty -m other
+SEED="$FX/seed"
+git init -q "$SEED"
+git -C "$SEED" -c user.email=g@example.invalid -c user.name=g commit -q --allow-empty -m seed
+ln -s "$REPO" "$FX/repo-link"
+REPOP=$(cd "$REPO" && pwd -P)
+SEEDP=$(cd "$SEED" && pwd -P)
+
+# make_new_entries: the entries a batch makes after the snapshot — its own,
+# by each piece of evidence, and three that are not its own.
+make_new_entries() {
+    mkdir -p "$TMPF/autopilot-selftest.AbCdEf" "$TMPF/bka-AbC123" "$TMPF/bka-with space" \
+        "$TMPF/tmp.NEWNEWNEW1" "$TMPF/tmp.LINKED1234" "$TMPF/tmp.SEED123456" \
+        "$TMPF/tmp.OTHER12345" "$TMPF/crp-XYZ123"
+    git clone -q "$REPO" "$TMPF/bka-AbC123/r"
+    printf 'log\n' > "$TMPF/bka-run.log"
+    printf 'lock\n' > "$TMPF/pim-lock"
+    printf 'x\n' > "$TMPF/zz-x"
+    # A clone of `.`, which records <repo>/. as its origin.
+    (cd "$REPO" && git clone -q . "$TMPF/tmp.NEWNEWNEW1/r")
+    git clone -q "$REPO" "$TMPF/tmp.SELF123456"
+    git clone -q "$FX/repo-link" "$TMPF/tmp.LINKED1234/r"
+    git clone -q "$SEED" "$TMPF/tmp.SEED123456/r"
+    git clone -q "$OTHER" "$TMPF/tmp.OTHER12345/r"
+    ln -s "$TMPF/old-dir" "$TMPF/bka-link"
+    # Named only by a .case file, which is a description, not a command.
+    mkdir -p "$TMPF/nope-y"
+}
+
+# The before list, written here rather than by the script under test.
+printf '%s\n' .hidden bka-OLD123 old-dir tmp.OLDOLDOLD1 > "$FX/temp-before.txt"
+make_new_entries
+
+# A folder for --snapshot: a hidden entry, a name with a space, a symlink.
+SNAP="$FX/snap"
+mkdir -p "$SNAP/a dir" "$SNAP/.dot"
+printf 'f\n' > "$SNAP/file"
+ln -s "$SNAP/file" "$SNAP/link"
+printf '%s\n' '.dot' 'a dir' 'file' 'link' > "$FX/snap-expected.txt"
+
+# The listing the sweep must print, sorted, without the count line.
+{
+    printf '%s\t%s\n' "$TMPF/autopilot-selftest.AbCdEf" "self-test"
+    printf '%s\t%s\n' "$TMPF/bka-AbC123" "prefix bka-"
+    printf '%s\t%s\n' "$TMPF/bka-run.log" "prefix bka-"
+    printf '%s\t%s\n' "$TMPF/bka-with space" "prefix bka-"
+    printf '%s\t%s\n' "$TMPF/pim-lock" "prefix pim-"
+    printf '%s\t%s\n' "$TMPF/tmp.LINKED1234" "clone of $REPOP"
+    printf '%s\t%s\n' "$TMPF/tmp.NEWNEWNEW1" "clone of $REPOP"
+    printf '%s\t%s\n' "$TMPF/tmp.SEED123456" "clone of $SEEDP"
+    printf '%s\t%s\n' "$TMPF/tmp.SELF123456" "clone of $REPOP"
+    printf '%s\t%s\n' "$TMPF/zz-x" "prefix zz-"
+} | LC_ALL=C sort > "$FX/temp-expected.txt"
+
 # --- Checks -------------------------------------------------------------------
 
 failures=0
@@ -189,10 +269,10 @@ expect_content() {
     fi
 }
 
-# run_checks <extract script> <zero-diff script>
+# run_checks <extract script> <zero-diff script> <temp-candidates script>
 # Sets $failures to the number of assertions that failed.
 run_checks() {
-    local ex=$1 zd=$2 out rc listing
+    local ex=$1 zd=$2 tc=$3 out rc listing
     failures=0
     runs=$((runs + 1))
 
@@ -349,6 +429,57 @@ run_checks() {
         || fail "zero-diff: no final newline, from a subdirectory: first line is not [compared: 2 paths]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: from a subdirectory, the stat does not name the changed path"
 
+    # temp-candidates: --snapshot records every top-level name, the hidden
+    # one, the one with a space, and the symlink included.
+    rc=0
+    stdout=$(bash "$tc" --snapshot "$SNAP" "$WORK/snap-$runs.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "temp-candidates: --snapshot exited $rc, expected 0 ($(cat "$WORK/err"))"
+    [[ "$stdout" == "entries: 4" ]] || fail "temp-candidates: --snapshot printed [$stdout], expected [entries: 4]"
+    if [[ -f "$WORK/snap-$runs.txt" ]]; then
+        LC_ALL=C sort "$WORK/snap-$runs.txt" > "$WORK/snap-sorted"
+        LC_ALL=C sort "$FX/snap-expected.txt" > "$WORK/snap-want"
+        cmp -s "$WORK/snap-want" "$WORK/snap-sorted" \
+            || fail "temp-candidates: --snapshot wrote [$(tr '\n' '|' < "$WORK/snap-sorted")]"
+    else
+        fail "temp-candidates: --snapshot wrote no before list"
+    fi
+
+    # temp-candidates: the sweep lists exactly the batch's new entries — by
+    # the self-test name, by each prefix spelling (a corrected command
+    # included), and as clones of the repository (a clone of `.`, a clone
+    # that is the entry itself, a clone made through a symlink) or of a
+    # seed — and leaves the other repository's clone, another track's
+    # prefix, a symlink, a prefix only a .case file names, and every entry
+    # of the before list.
+    rc=0
+    stdout=$(bash "$tc" "$TMPF" "$FX/temp-before.txt" "$CMDS" "$REPO" "$SEED" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "temp-candidates: the sweep exited $rc, expected 0 ($(cat "$WORK/err"))"
+    [[ "$(printf '%s\n' "$stdout" | tail -n 1)" == "candidates: 10, left: 4" ]] \
+        || fail "temp-candidates: the sweep's last line is [$(printf '%s\n' "$stdout" | tail -n 1)], expected [candidates: 10, left: 4]"
+    printf '%s\n' "$stdout" | sed '$d' | LC_ALL=C sort > "$WORK/temp-got"
+    cmp -s "$FX/temp-expected.txt" "$WORK/temp-got" \
+        || fail "temp-candidates: the sweep listed [$(tr '\t\n' ' |' < "$WORK/temp-got")]"
+
+    # temp-candidates: with no cmds dir no prefix is read, so the prefixed
+    # entries that are no clone are left, and the clones are still listed.
+    rc=0
+    stdout=$(bash "$tc" "$TMPF" "$FX/temp-before.txt" - "$REPO" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "temp-candidates: the sweep without a cmds dir exited $rc, expected 0"
+    [[ "$(printf '%s\n' "$stdout" | tail -n 1)" == "candidates: 5, left: 9" ]] \
+        || fail "temp-candidates: without a cmds dir the last line is [$(printf '%s\n' "$stdout" | tail -n 1)], expected [candidates: 5, left: 9]"
+
+    # temp-candidates: usage errors exit 2 with a reason on stderr.
+    local args
+    for args in "--snapshot $TMPF" "$TMPF $FX/temp-before.txt $CMDS" "relative $FX/temp-before.txt - $REPO" \
+                "/ $FX/temp-before.txt - $REPO" "$TMPF $FX/no-such-before.txt - $REPO" \
+                "$TMPF $FX/temp-before.txt $FX/no-such-cmds $REPO" "$TMPF $FX/temp-before.txt - $FX/no-such-root"; do
+        rc=0
+        # shellcheck disable=SC2086
+        bash "$tc" $args >/dev/null 2>"$WORK/err" || rc=$?
+        [[ "$rc" -eq 2 ]] || fail "temp-candidates: [$args] exited $rc, expected 2"
+        [[ -s "$WORK/err" ]] || fail "temp-candidates: [$args] gave no reason on stderr"
+    done
+
     return 0
 }
 
@@ -366,12 +497,13 @@ mutate() {
 }
 
 run_self_test() {
-    local ex="$WORK/extract-acceptance.sh" zd="$WORK/zero-diff.sh"
-    local m_ex="$WORK/extract-mutant.sh" m_zd="$WORK/zero-diff-mutant.sh"
+    local ex="$WORK/extract-acceptance.sh" zd="$WORK/zero-diff.sh" tc="$WORK/temp-candidates.sh"
+    local m_ex="$WORK/extract-mutant.sh" m_zd="$WORK/zero-diff-mutant.sh" m_tc="$WORK/temp-candidates-mutant.sh"
     cp "$EXTRACT_SRC" "$ex"
     cp "$ZERO_SRC" "$zd"
+    cp "$TEMP_SRC" "$tc"
 
-    run_checks "$ex" "$zd" 2>/dev/null
+    run_checks "$ex" "$zd" "$tc" 2>/dev/null
     if [[ "$failures" -ne 0 ]]; then
         echo "FAIL  self-test positive path: $failures assertions failed on the unmutated copies" >&2
         return 1
@@ -381,23 +513,42 @@ run_self_test() {
     # Mutant 1: the padding stripping removed.
     name="padding stripping removed"
     mutate "$ex" "$m_ex" '/inner = substr(inner, 2, length(inner) - 2)/d' "$name"
-    run_checks "$m_ex" "$zd" 2>/dev/null
+    run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 2: the continuation joining removed.
     name="continuation joining removed"
     mutate "$ex" "$m_ex" '/if (have) cur = cur " " line/d' "$name"
-    run_checks "$m_ex" "$zd" 2>/dev/null
+    run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 3: the paths passed to git diff as one word.
     name="paths read as one word"
     mutate "$zd" "$m_zd" 's/HEAD -- "\${paths\[@\]}"/HEAD -- "${paths[*]}"/' "$name"
-    run_checks "$ex" "$m_zd" 2>/dev/null
+    run_checks "$ex" "$m_zd" "$tc" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 4: the before list no longer filters, so entries older than the
+    # batch are listed.
+    name="before-list filter removed"
+    mutate "$tc" "$m_tc" 's/if grep -qxF -- "\$name" "\$before"; then/if false; then/' "$name"
+    run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 5: any clone counts, whatever its origin.
+    name="origin comparison removed"
+    mutate "$tc" "$m_tc" 's/if \[ "\$p" = "\$r" \]; then/if :; then/' "$name"
+    run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 6: a symbolic link is judged by what it points to.
+    name="symlink exclusion removed"
+    mutate "$tc" "$m_tc" 's/if \[ ! -L "\$e" \] && \[ -O "\$e" \]; then/if [ -O "$e" ]; then/' "$name"
+    run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Restoration path: green again on the unmutated copies.
-    run_checks "$ex" "$zd" 2>/dev/null
+    run_checks "$ex" "$zd" "$tc" 2>/dev/null
     if [[ "$failures" -ne 0 ]]; then
         echo "FAIL  self-test restoration path: $failures assertions failed on the unmutated copies" >&2
         return 1
@@ -416,10 +567,10 @@ if [[ "${1:-}" == "--self-test" ]]; then
     exit "$rc"
 fi
 
-run_checks "$EXTRACT_SRC" "$ZERO_SRC"
+run_checks "$EXTRACT_SRC" "$ZERO_SRC" "$TEMP_SRC"
 if [[ "$failures" -ne 0 ]]; then
     echo "autopilot-scripts — $failures assertions failed" >&2
     exit 1
 fi
-echo "OK    autopilot-scripts — extract-acceptance.sh and zero-diff.sh behave as their fixtures expect"
+echo "OK    autopilot-scripts — extract-acceptance.sh, zero-diff.sh, and temp-candidates.sh behave as their fixtures expect"
 exit 0

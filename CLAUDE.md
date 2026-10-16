@@ -63,7 +63,8 @@ plugins/kenspc/
 │           ├── run.sh           # Bash driver for the autopilot's headless sessions; the first scripts/ under a skill, and check-no-model-names.sh scans it
 │           ├── run.ps1          # PowerShell mirror of run.sh (pwsh 7.3 or later), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
 │           ├── extract-acceptance.sh  # Writes each Acceptance: case of a spec's ## Autopilot section to <nn>.cmd or <nn>.case; copied per batch, run by the main session and S4
-│           └── zero-diff.sh     # The zero-diff check: git diff --stat over a paths file, one argument per path, with a compared: count; copied per batch
+│           ├── zero-diff.sh     # The zero-diff check: git diff --stat over a paths file, one argument per path, with a compared: count; copied per batch
+│           └── temp-candidates.sh  # Read-only: snapshots the temp folder before a batch, and at its end lists the batch's own new entries with their evidence; copied per batch
 ├── README.md
 └── LICENSE
 ```
@@ -74,7 +75,7 @@ plugins/kenspc/
 
 Each skill lives in `skills/<skill-name>/` with:
 - `SKILL.md` — skill definition with YAML frontmatter (`name`, `description`, `version`, `argument-hint`) followed by structured phases/modes
-- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's: its two drivers, `run.sh` and its PowerShell mirror `run.ps1`, and its two helper scripts, `extract-acceptance.sh` and `zero-diff.sh` (4.6.0), which `check-autopilot-scripts.sh` holds; `check-no-model-names.sh` scans all four with the rest of `skills/`
+- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's: its two drivers, `run.sh` and its PowerShell mirror `run.ps1`, and its three helper scripts, `extract-acceptance.sh` and `zero-diff.sh` (4.6.0) and `temp-candidates.sh` (4.8.0), which `check-autopilot-scripts.sh` holds; `check-no-model-names.sh` scans all five with the rest of `skills/`
 - `templates/` (optional) — files the skill reads by path and fills in (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/templates/<file>`); today only init-project's, one `.tmpl` file per document it writes. A template is never named `CLAUDE.md` or `AGENTS.md`, since a session working in this repository would load a `CLAUDE.md` as a memory file, and an `AGENTS.md` too wherever Claude Code reads AGENTS.md itself (its `claude-md-and-agents-md` mode), and `check-no-model-names.sh` scans templates with the rest of `skills/`
 
 Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
@@ -388,7 +389,14 @@ post-check sends back to amend, or a worker that ended on a rail breach
 the main session rules benign (no secret written or sent; no recursive
 `rm`, push, tag, or release; no state changed outside the write roots but
 a file the breach created holding no secret, moved into `.trash/`; 4.7.0) — never a live one; no agent, no CONTEXT key, no agent
-teams. The roles are sessions rather than
+teams. A finished batch removes its own entries from the temp folder
+(4.8.0): the main session snapshots the folder before the driver's
+self-test, and after the release preparation removes, path by path, each
+new entry `temp-candidates.sh` lists as the batch's by evidence — the
+self-test's directory, a prefix the acceptance commands write under
+`$TMPDIR`, or a clone of the repository or a seed — since two tracks share
+the folder and the workers' rails forbid a recursive `rm`; a stopped run
+removes nothing. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix each need a session
 of their own; the workers run the installed plugin, or in plugin mode the
@@ -615,8 +623,8 @@ instruction files", or `shared/instruction-files.md`, run
 `hooks/scripts/autopilot-worker-rails.sh`, or the autopilot `SKILL.md`'s
 preamble template, § Launch, wait, return, or stop conditions, run
 `check-autopilot-rails-hook.sh`. After editing
-`skills/autopilot/scripts/extract-acceptance.sh` or `zero-diff.sh`, run
-`check-autopilot-scripts.sh`. What each
+`skills/autopilot/scripts/extract-acceptance.sh`, `zero-diff.sh`, or
+`temp-candidates.sh`, run `check-autopilot-scripts.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -928,9 +936,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   occurrence in the carrier's region); a
   mutation that replaces nothing is exit 2 — and cleans up without a
   recursive `rm`.
-- `check-autopilot-scripts.sh` — guards the autopilot's two helper
-  scripts (4.6.0), `skills/autopilot/scripts/extract-acceptance.sh` and
-  `zero-diff.sh`, by running them against fixtures built in its own
+- `check-autopilot-scripts.sh` — guards the autopilot's three helper
+  scripts, `skills/autopilot/scripts/extract-acceptance.sh` and
+  `zero-diff.sh` (4.6.0) and `temp-candidates.sh` (4.8.0), by running them against fixtures built in its own
   `mktemp -d` directory, removed by its EXIT trap (the only recursive
   `rm`), with git's global and system configuration masked: for the
   extractor, single and double backticks, a backtick inside a
@@ -946,15 +954,28 @@ Project-level shell scripts live in `scripts/` at the repo root:
   a paths file with CRLF line ends, a long changed path named in full, an
   empty paths file, one of whitespace-only lines, a baseline that is not a
   commit, a last line without a newline, and a run from a subdirectory, each
-  exit code and the `compared:` line asserted. Its self-test copies both
-  scripts and turns the guard red with three mutants written to separate
-  files with `sed` — the padding
-  stripping removed, the continuation joining removed, and the paths
-  passed to `git diff` as one word — then green on the unmutated copies; a
+  exit code and the `compared:` line asserted; for the temp-folder script,
+  `--snapshot` over a hidden entry, a name with a space, and a symlink, and
+  a sweep over a fixture temp folder whose before list holds a prefixed
+  entry and a repository clone made before the batch, which must not be
+  listed, while the self-test's directory, entries named by each of the
+  three `$TMPDIR` spellings in the cmds dir (a `.corrected.cmd` included),
+  and clones of the repository — of `.`, the entry itself, one made
+  through a symlink — and of a seed must be, and another repository's
+  clone, another track's prefix, a symlink, and a prefix only a `.case`
+  file names must be left; the same sweep with no cmds dir; and seven usage
+  errors, the listing and the `candidates:` line asserted. Its self-test
+  copies the three scripts and turns the guard red with six mutants written
+  to separate files with `sed` — the padding stripping removed, the
+  continuation joining removed, the paths passed to `git diff` as one
+  word, the before-list filter removed, the origin comparison removed, and
+  the symlink exclusion removed — then green on the unmutated copies; a
   mutant that changes nothing is exit 2. Why the scripts have a guard:
-  each replaced a step every main session wrote by hand and got wrong — a
-  stray backtick at each end of extracted commands, and a zero-diff check
-  whose paths arrived as one zsh word and compared nothing.
+  the first two each replaced a step every main session wrote by hand and
+  got wrong — a stray backtick at each end of extracted commands, and a
+  zero-diff check whose paths arrived as one zsh word and compared
+  nothing — and the third decides what a recursive `rm` removes, where a
+  rule that drifts toward listing too much fails silently.
 
 Twelve of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,
