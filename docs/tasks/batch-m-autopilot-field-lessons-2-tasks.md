@@ -53,8 +53,14 @@ Rules for every task, from the plan's Implementation Steps:
 
 Dependency note: Task 3 depends on Task 2; Task 4 on Tasks 2 and 3; Task 5
 on Task 4; Task 8 on Task 7; Task 11 on Task 10; Task 12 on Tasks 1 and
-10; Task 13 on Tasks 11 and 12; Task 14 on Tasks 1 and 12; Task 15 on
-Tasks 12-14; Task 16 on Tasks 1-15.
+10; Task 13 on Tasks 11 and 12; Task 14 on Tasks 1, 12, and 13 (it sets
+its variable in the S4w launch Task 13 writes); Task 15 on Tasks 12-14;
+Task 16 on Tasks 1-15.
+
+Run order for the two main-session tasks: Task 1 runs before the
+implementer is dispatched, so Tasks 12-14 find it DONE rather than
+BLOCKED by the dependency gate; Task 15 runs once Tasks 12-14 are DONE,
+and Task 16 after it, since its `Depends on` names Task 15.
 
 ## Tasks
 
@@ -628,7 +634,7 @@ own steps; § The gates; § Budget and caps; the reviewer and user reports;
 
 **Status:** TODO
 
-Depends on: Task 1, Task 12
+Depends on: Task 1, Task 12, Task 13
 
 Implement plan Step 7's driver part. Files, only when a flag is needed:
 `plugins/kenspc/skills/autopilot/scripts/run.sh`,
