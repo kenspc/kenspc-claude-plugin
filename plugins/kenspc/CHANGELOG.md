@@ -9,7 +9,18 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.8.0 — unreleased
+## 4.8.0 — 2026-10-16
+
+A finished autopilot batch now removes the clones and builds it left in
+the temp folder, which had piled up across batches until the macOS
+boot-time cleanup of that folder held the login screen for minutes. No new
+agent, command, or CONTEXT key, no new `## Autopilot` field, and every
+skill keeps `version: 3.0.0`; what changes for a user is that the main
+session runs one more step after the release preparation, its result on
+the reviewer report's new `Temp entries` line. The pre-flight passed on
+the release tree; no smoke run was made, and the removal has not yet run
+inside a real batch — a rehearsal on the maintainer's Mac exercised the
+snapshot, the sweep, and the removal on the real temp folder.
 
 ### Added
 
