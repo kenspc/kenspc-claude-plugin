@@ -183,7 +183,11 @@ VERIFICATION CHECKS
    the current file, and a hunk whose added lines are still there, or
    whose removed lines are not back — other than lines a later fix of this
    run changed — is a failure of row 1, naming the row and the hunk; a
-   fix that only deleted lines has no added line to find. A reason reading
+   fix that only deleted lines has no added line to find. A first-round
+   hash that names no commit (`git rev-parse --verify <hash>^{commit}`
+   fails), or a commit whose patch holds no hunk to read, such as a binary
+   file's, is a failure of row 1 too: a check with nothing to compare
+   cannot fail. A reason reading
    `first-round fix uncommitted; taken back by hand` is checked by reading
    the row's file at its line against the finding: code that still holds
    the change the first round made is a failure of row 1. Why: a take-back
