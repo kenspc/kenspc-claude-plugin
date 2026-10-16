@@ -911,7 +911,17 @@ own steps; § The gates; § Budget and caps; the reviewer and user reports;
 
 ### Task 14: The driver flag for S4w, when one is needed
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: `no driver flag needed`. Task 1's record
+  (`docs/dry-runs/batch-m-walk-probe.md`, Conclusion, first bullet) shows a
+  headless worker reaches the Playwright MCP from the user's configuration
+  with no extra flag, and Task 12 wrote the Playwright MCP alone, so no
+  driver passes a walk-specific flag. Done by the main session.
+- Changes/tradeoffs: none — no file changed;
+  `git diff --quiet 1688503 HEAD -- plugins/kenspc/skills/autopilot/scripts/`
+  exits 0.
 
 Depends on: Task 1, Task 12, Task 13
 
