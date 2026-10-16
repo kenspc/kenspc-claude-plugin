@@ -128,7 +128,25 @@ Playwright MCP:
 
 ### Task 2: Rulings grammar — DEFER tail, outside-grammar entries, duplicates, clauses
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the tail form sits second in the grammar block, right after
+  the plain FIX form, so check 7's self-test literal (the DEFER entry)
+  still occurs on one line of each carrier. An entry outside the grammar
+  is not carried out as a whole — both entries naming one duplicated ID,
+  and every entry of a file whose first line names nobody — and its IDs
+  fall back to code-fixer's own rules; code-fixer names it in a new reply
+  line, `Rulings outside the grammar: <entry> (<what is wrong>)…`, beside
+  the existing `Ruled IDs in no report:` line, and regression-verifier
+  fails row 1 for it whether or not code-fixer named it. task-implement
+  points at task-review's Step 5 for the tail, group, outside-grammar, and
+  duplicate rules rather than carrying a second copy of the prose.
+- Changes/tradeoffs: check 7 gained no new logic — the tail is held by the
+  byte-identity comparison, and only its header now names the four forms;
+  removing the tail from all four carriers at once would still pass. The
+  round-2 replacement rule (a round-2 entry replaces round 1's for the same
+  ID) is left to Task 4, which adds the `## Round 2` section.
 
 Implement plan Step 2, its first bullet (Technical Approach § A second fix
 round, the "Rulings grammar" bullet). Files:

@@ -102,6 +102,7 @@ one of these forms:
 <!-- canonical:rulings-grammar:start -->
 ```
 - <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: FIX — <what to do>; DEFER rest — <reason>
 - <ID>[, <ID>…]: DEFER — <reason>
 - <ID>[, <ID>…]: NOT APPLICABLE — <reason>
 ```
@@ -316,6 +317,25 @@ would otherwise make; the file carries it because the CONTEXT block passes
 unchanged, and a fix that went past the ruling's text would be a change
 nobody ruled on.
 
+A FIX entry with the tail `; DEFER rest — <reason>` makes its row FIXED,
+bounded by the FIX text alone; the part of the findings the FIX text does
+not cover is deferred, and you write it, with the tail's reason, into a
+paragraph for that row in the Deferred Issues prose, though the row is not
+DEFERRED. An entry that names a group of IDs rules every clause of every
+row it names, one sentence per clause; carry out each sentence on its
+clause. An entry outside the grammar is not carried out: an action word
+other than FIX, DEFER, or NOT APPLICABLE, no ID, a file whose first line
+names nobody who ruled (then none of its entries), and both entries that
+name one ID within the same round (the entries before a `## Round 2`
+heading, or those after it). Its IDs are decided by the rules above as if
+it were absent, and your reply names the entry (see OUTPUT FORMAT). An ID
+no ruling names that you merge, as a duplicate of the same finding, into a
+row a ruling decides takes that row's ruling, and the row stays `ruled`.
+Why: one ID keeps one entry and one action under the tail, so the recount
+holds; an entry read past its grammar is a guess at a ruling nobody wrote
+down, which would read as ruled; and a duplicate is the same finding, so
+leaving it to these rules would decide one finding two ways.
+
 PER-ISSUE OUTPUT CONTRACT
 Every accountability entry produced by this agent is a structured record with
 the following required fields:
@@ -392,7 +412,8 @@ APPLICABLE reason never moves a count.
 
 Deferred Issues (prose): for each DEFERRED row, one short paragraph: which
 issue (by ID), why deferred, suggested follow-up (concrete steps,
-prerequisites, risk if untreated).
+prerequisites, risk if untreated). A FIXED row whose FIX ruling carries a
+`; DEFER rest — <reason>` tail gets one too, for the deferred part.
 
 Scratch-pollution note (optional): one short paragraph, written only when the
 project's build, test, or lint command, run as the project configures it,
@@ -441,6 +462,12 @@ After writing the file, reply with only:
   written to `schema-b.md`. Why: such an ID has no row to carry the
   ruling, and a ruling that matched nothing would otherwise vanish without
   a trace,
+- when `rulings.md` holds an entry outside its grammar (FIXING PRIORITY),
+  one line after the lines above,
+  `Rulings outside the grammar: <entry> (<what is wrong>)[; <entry> (<what is wrong>)…]`,
+  each entry quoted as the file has it; it is not written to
+  `schema-b.md`. Why: such an entry was not carried out, and only this
+  line tells the orchestrator and the reader so,
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,

@@ -60,7 +60,9 @@
 #      fails every copy not yet updated. Normalizing makes re-wrapping and
 #      CLAUDE.md's list indentation irrelevant.
 #   7. The rulings.md entry grammar (bounded by
-#      `<!-- canonical:rulings-grammar:start/end -->`) is byte-identical in
+#      `<!-- canonical:rulings-grammar:start/end -->`), its four entry forms
+#      — FIX, FIX with the `; DEFER rest — <reason>` tail, DEFER, and NOT
+#      APPLICABLE — is byte-identical in
 #      skills/task-review/SKILL.md, whose Step 5 defines it,
 #      skills/task-implement/SKILL.md, which writes the file too, and
 #      agents/code-fixer.md and agents/regression-verifier.md, which parse

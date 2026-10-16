@@ -99,6 +99,7 @@ Read from RUN_DIR:
 <!-- canonical:rulings-grammar:start -->
 ```
 - <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: FIX — <what to do>; DEFER rest — <reason>
 - <ID>[, <ID>…]: DEFER — <reason>
 - <ID>[, <ID>…]: NOT APPLICABLE — <reason>
 ```
@@ -138,14 +139,27 @@ VERIFICATION CHECKS
    NOT APPLICABLE = the number of rows. When `rulings.md` exists, each ruled
    ID sits in a row whose action's leading word matches its ruling — FIX →
    FIXED, DEFER → DEFERRED, NOT APPLICABLE → NOT APPLICABLE — and a ruled ID
-   that no report lists is a bookkeeping error. Report any failure in row 1
-   with the IDs involved. Why: comparing ID sets settles completeness
-   mechanically, so no row is left judged "unnamed" or "unconfirmed"; a
-   ruled row whose action differs from its ruling is a ruling not carried
-   out, and a ruled ID no report lists is a ruling that reached no finding.
+   that no report lists is a bookkeeping error. A FIX entry with the tail
+   `; DEFER rest — <reason>` matches FIXED, and the row has a Deferred
+   Issues paragraph for the deferred part. An ID no ruling names that
+   code-fixer merged into a ruled row, as a duplicate of the same finding,
+   takes that row's ruling and is checked against it. An entry outside the
+   grammar — an action word other than FIX, DEFER, or NOT APPLICABLE, no
+   ID, every entry of a file whose first line names nobody who ruled, or
+   either of two entries naming one ID within the same round (the entries
+   before a `## Round 2` heading, or those after it) — was not carried
+   out: its IDs are checked as unruled, and the entry is a failure of row 1
+   whether code-fixer's reply named it or not. Report any failure in row 1
+   with the IDs or entries involved. Why: comparing ID sets settles
+   completeness mechanically, so no row is left judged "unnamed" or
+   "unconfirmed"; a ruled row whose action differs from its ruling is a
+   ruling not carried out, a ruled ID no report lists is a ruling that
+   reached no finding, and an entry outside the grammar is a ruling the run
+   could not read, which only row 1 brings to the verdict.
 2. Fix correctness: for each FIXED row, read the actual code at the specified
    file and line and confirm the fix addresses the reported issue — and, for a
-   row a FIX ruling in `rulings.md` decided, the ruling's text as well: the
+   row a FIX ruling in `rulings.md` decided, the ruling's text as well — its
+   FIX text alone when the entry carries a `; DEFER rest — <reason>` tail: the
    fix does what the ruling says and no more — a correction, in the fix's
    commit, of a listed Doc-sync document the fix made false is part of the
    fix, since code-fixer's rules require it. If the fix is incorrect or

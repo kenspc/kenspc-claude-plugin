@@ -462,12 +462,15 @@ answer to the worker running this review — is written by this skill to
 `RUN_DIR/rulings.md` before the dispatch, from the ruling it holds when it
 reaches the dispatch, in the form Step 5 of
 `${CLAUDE_PLUGIN_ROOT}/skills/task-review/SKILL.md` (Rulings on the
-findings) gives: a first line naming who ruled, then one entry per ruling,
-each in one of these forms:
+findings) gives, and under its rules for the `; DEFER rest — <reason>`
+tail, an entry naming a group, an entry outside the grammar, and a ruled
+ID's unruled duplicate: a first line naming who ruled, then one entry per
+ruling, each in one of these forms:
 
 <!-- canonical:rulings-grammar:start -->
 ```
 - <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: FIX — <what to do>; DEFER rest — <reason>
 - <ID>[, <ID>…]: DEFER — <reason>
 - <ID>[, <ID>…]: NOT APPLICABLE — <reason>
 ```
@@ -640,8 +643,9 @@ reading that AGENTS.md.
   Step 4); zero HIGH unresolved; build / tests / lint
   PASS or `SPOT-CHECK` on row 3 (no-test-suite fallback); no regressions
   introduced by fix commits; no ruled row whose action differs from its
-  ruling, outside the exception for a fix that could not land, and no ruled
-  ID that no report lists (below).
+  ruling, outside the exception for a fix that could not land, no ruled
+  ID that no report lists, and no entry of `RUN_DIR/rulings.md` outside
+  its grammar (below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -683,6 +687,14 @@ reading that AGENTS.md.
   unless a FAIL condition holds. Why: as task-review's Verdict
   determination says — it is a ruling not carried out as well, and under a
   PASS it would reach the reader only in a row-1 Detail.
+- An entry outside the grammar — an entry of `RUN_DIR/rulings.md` that
+  task-review's Step 5 says is not carried out (an unknown action word, no
+  ID, no first line naming who ruled, one ID in two entries of the same
+  round), which regression-verifier's row 1 names and code-fixer's reply
+  names — keeps the verdict from PASS as a ruled ID that no report lists
+  does: PARTIAL, unless a FAIL condition holds. Why: as task-review's
+  Verdict determination says — it is a ruling not carried out too, and
+  under a PASS it would reach the reader only in a row-1 Detail.
 - **BLOCKED** — every task in Schema D is BLOCKED; Code Review / Fixes /
   Verification sections are omitted from the report.
 

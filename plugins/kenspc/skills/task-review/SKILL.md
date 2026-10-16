@@ -343,10 +343,41 @@ reports:
 <!-- canonical:rulings-grammar:start -->
 ```
 - <ID>[, <ID>…]: FIX — <what to do>
+- <ID>[, <ID>…]: FIX — <what to do>; DEFER rest — <reason>
 - <ID>[, <ID>…]: DEFER — <reason>
 - <ID>[, <ID>…]: NOT APPLICABLE — <reason>
 ```
 <!-- canonical:rulings-grammar:end -->
+
+The tail `; DEFER rest — <reason>` on a FIX entry defers the part of the
+findings its FIX text does not cover: the row's action stays FIXED,
+regression-verifier checks the fix against the FIX text, and code-fixer
+writes the deferred part, with its reason, into the row's paragraph of the
+Deferred Issues prose. Why a tail rather than a second entry: one ID keeps
+one entry and one action, so code-fixer's recount and regression-verifier's
+check 1 stay as they are.
+
+An entry that names a group of IDs covers every clause of every row it
+names, and its text gives one sentence per clause. Why: a group often
+merges findings that each ask for something different, and a clause no
+sentence covers is left to code-fixer's own rules while the row reads as
+ruled.
+
+An entry outside the grammar is not carried out: an entry with an action
+word other than the three above, an entry that names no ID, every entry of
+a file whose first line names nobody who ruled, and both entries that name
+the same ID within one round — the entries before a `## Round 2` heading,
+or those after it. code-fixer names each such entry in its reply,
+regression-verifier's row 1 names it, and it keeps the verdict from PASS
+(at most PARTIAL, as for a ruled ID that no report lists; Verdict
+determination). A ruled ID's duplicate that carries no ruling — an ID that
+code-fixer merges into a ruled row because it reports the same finding —
+is merged into the ruled row and takes its ruling. Why: an entry read
+past its grammar is a guess at a ruling nobody wrote down, and one ID
+ruled two ways leaves no ruling to follow, so either one decided by
+code-fixer would read as ruled; an unruled duplicate is the same finding,
+and leaving it to code-fixer's own rules would decide one finding two
+ways.
 
 The CONTEXT block passes to code-fixer and regression-verifier unchanged,
 and a ruling never goes into `CUSTOM_INSTRUCTIONS`. With no ruling, no
@@ -500,8 +531,8 @@ Based on the regression verification results, declare a verdict:
   on row 3 (no-test-suite fallback); no regressions introduced by the fixes
   (fix commits, or the uncommitted fixes of an `uncommitted` run); no ruled
   row whose action differs from its ruling, outside the exception for a fix
-  that could not land, and no ruled ID that no report lists (PARTIAL,
-  below).
+  that could not land, no ruled ID that no report lists, and no entry of
+  `RUN_DIR/rulings.md` outside its grammar (PARTIAL, below).
 <!-- canonical:verdict-shared:start -->
 - `SPOT-CHECK` from regression-verifier (no test suite available) is
   treated as neutral — it does not force FAIL; PASS may still apply
@@ -546,6 +577,13 @@ Based on the regression verification results, declare a verdict:
   well — a mistyped ID leaves the finding it meant to rule decided by
   code-fixer's own rules — and under a PASS it would reach the reader only
   in a row-1 Detail.
+- An entry outside the grammar — an entry of `RUN_DIR/rulings.md` that
+  Step 5 says is not carried out (an unknown action word, no ID, no first
+  line naming who ruled, one ID in two entries of the same round), which
+  regression-verifier's row 1 names and code-fixer's reply names — keeps
+  the verdict from PASS as a ruled ID that no report lists does: PARTIAL,
+  unless a FAIL condition holds. Why: it is a ruling not carried out too,
+  and under a PASS it would reach the reader only in a row-1 Detail.
 
 MEDIUM and LOW issues do not change the verdict, except a ruled row whose
 action differs from its ruling (above), but appear in the report.
