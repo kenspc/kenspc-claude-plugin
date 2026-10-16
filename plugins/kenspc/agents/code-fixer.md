@@ -150,9 +150,13 @@ the hand edit cannot remove the fix without undoing another row's fix, or
 the take-back's build / test / lint run fails — leave the fix in place:
 its action reads `FIXED — ruled; not reverted: <reason>`, and
 its Deferred Issues paragraph says the ruling asked for the code without
-this fix and why it is still there. Once the fix is out, the row's Commit
-cell reads `—`, and its reason
-names the commit that took the fix back, if any. Why: a row that says
+this fix and why it is still there; its Commit cell keeps the first-round
+commit. Once the fix is out, the row's Commit cell reads `—`, and its
+reason names the first-round fix and what took it back:
+`first-round fix <hash>; taken back in <hash>`, or, in an uncommitted run,
+`first-round fix uncommitted; taken back by hand`. Why the first-round
+hash: regression-verifier checks the fix is gone by applying that commit
+again, and the Commit cell no longer holds it. Why: a row that says
 DEFERRED over a fix still in the code reads as a change no row accounts
 for, and the ruling asked for the code without it. Why abort on a
 conflict: a revert left half done leaves conflict markers in the tree,

@@ -169,6 +169,22 @@ VERIFICATION CHECKS
    replaces the first. A `V<n>` ID that `schema-c-1.md`'s Detail names is
    listed by that file, like an ID a report lists, and is not a bookkeeping
    error; a `V` ID it does not name is a ruled ID that no report lists.
+   A row a round-2 DEFER or NOT APPLICABLE entry names, whose reason reads
+   `first-round fix <hash>; taken back in <hash>`, must hold the code
+   without that first-round fix: from the repository root,
+   `git show <first-round hash> | git apply --check` exits 0 only when
+   every hunk's pre-fix lines are back, which is the fix taken back. A
+   non-zero exit is not yet a failure, since a later fix may have changed
+   the same lines: read each hunk of `git show <first-round hash>` against
+   the current file, and a hunk whose added lines are still there is a
+   failure of row 1, naming the row and the hunk. A reason reading
+   `first-round fix uncommitted; taken back by hand` is checked by reading
+   the row's file at its line against the finding: code that still holds
+   the change the first round made is a failure of row 1. Why: a take-back
+   made by hand can leave part of a fix in the code under a row whose
+   action matches its ruling, which the action check alone passes, and
+   the run could then end PASS over code the ruling asked to be without
+   the fix.
 2. Fix correctness: for each FIXED row, read the actual code at the specified
    file and line and confirm the fix addresses the reported issue — and, for a
    row a FIX ruling in `rulings.md` decided, the ruling's text as well — its

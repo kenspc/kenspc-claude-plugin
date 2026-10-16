@@ -60,7 +60,11 @@ in the next product-repository batches.
   edit would undo another fix, or the take-back fails build, test, or
   lint — stays, its row reading
   `FIXED — ruled; not reverted: <reason>`, which keeps
-  the verdict from PASS. At most one second
+  the verdict from PASS. A row taken back names the first-round fix in its
+  reason (`first-round fix <hash>; taken back in <hash>`), and
+  regression-verifier's row 1 checks the fix is gone with
+  `git show <hash> | git apply --check`, reading each hunk when a later fix
+  changed the same lines. At most one second
   round per review; with no ruling held, no second round and no question.
   The step is a new canonical block, `canonical:second-round`,
   byte-identical in task-review's new Step 7 (Schema F moves to Step 8)
