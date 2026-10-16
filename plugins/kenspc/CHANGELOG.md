@@ -51,7 +51,13 @@ in the next product-repository batches.
   round-2 entries and updates `schema-b.md` in place, a round-2 entry
   replaces a round-1 entry for the same ID, the progress lines carry
   `(round 2)`, and the verdict and the final report come from the second
-  round, which names `schema-c-1.md` for the first. At most one second
+  round, which names `schema-c-1.md` for the first. A round-2 DEFER or NOT
+  APPLICABLE on a row the first round FIXED takes that fix back first: a
+  `git revert --no-commit` committed under the project's convention, or,
+  when the revert conflicts, `git revert --abort` and a hand edit in a
+  commit of its own; a fix that cannot be taken back without undoing
+  another stays, its row FIXED with `not reverted — <reason>`, which keeps
+  the verdict from PASS. At most one second
   round per review; with no ruling held, no second round and no question.
   The step is a new canonical block, `canonical:second-round`,
   byte-identical in task-review's new Step 7 (Schema F moves to Step 8)

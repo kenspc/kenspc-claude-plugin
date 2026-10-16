@@ -129,14 +129,31 @@ the regression's file, line, description, and severity from the Detail of
 you read for that purpose; a `V` ID that file does not name is a ruled ID
 that no report lists. An `F` row a round-2 entry names is updated like any
 other row. A round-2 DEFER or NOT APPLICABLE entry on a row the first round
-FIXED takes that fix back before the row changes: in a committed run, a
-`git revert --no-edit` of the row's commit, a commit of its own, under the
-dirty-file rule of FIXING RULES; in an uncommitted run, by editing the fix
-back out — not by restoring the pre-fix copy, which would also undo the
-other fixes and the user's hunks in that file. The row's Commit cell then
-reads `—`, and its reason names the revert commit, if any. Why: a row that
-says DEFERRED over a fix still in the code reads as a change no row
-accounts for, and the ruling asked for the code without it. Reply as
+FIXED takes that fix back before the row changes. In a committed run,
+`git revert --no-commit <the row's commit>`, then a commit of its own whose
+subject follows the commit convention FIXING RULES gives, under the
+dirty-file rule of FIXING RULES. When the revert stops on a conflict, run
+`git revert --abort`, which returns the tree to where it was, and edit the
+fix back out by hand instead, in a commit of its own, keeping the other
+fixes in the same lines. When neither takes the fix back — the hand edit
+cannot remove it without undoing another row's fix — leave the fix in
+place: the row keeps FIXED, adds `not reverted — <reason>` after its
+em-dash, and its Deferred Issues paragraph says the ruling asked for the
+code without this fix and why it is still there. In an uncommitted run,
+take it back by editing the fix back out — not by restoring the pre-fix
+copy, which would also undo the other fixes and the user's hunks in that
+file. Once the fix is out, the row's Commit cell reads `—`, and its reason
+names the commit that took the fix back, if any. Why: a row that says
+DEFERRED over a fix still in the code reads as a change no row accounts
+for, and the ruling asked for the code without it. Why abort on a
+conflict: a revert left half done leaves conflict markers in the tree,
+which the next fix and regression-verifier's build would read as the
+run's own work, and the fix commits of one run often touch the same
+paragraphs. Why a fix left in place stays FIXED: the row then says what
+the code holds, and as a ruled row whose action differs from its ruling it
+keeps the verdict from PASS, so the user sees it. Why `--no-commit`: git's
+own revert subject, `Revert "<subject>"`, does not follow a project's
+commit convention. Reply as
 OUTPUT FORMAT gives, for the whole updated file. Why in
 place: the second round's file is the one the verdict reads, and a row
 dropped from it would be an issue no longer accounted for.
