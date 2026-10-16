@@ -152,7 +152,8 @@ its action reads `FIXED — ruled; not reverted: <reason>`, and
 its Deferred Issues paragraph says the ruling asked for the code without
 this fix and why it is still there; its Commit cell keeps the first-round
 commit. Once the fix is out, the row's Commit cell reads `—`, and its
-reason names the first-round fix and what took it back:
+action names, right after `ruled`, the first-round fix and what took it
+back:
 `first-round fix <hash>; taken back in <hash>`, or, in an uncommitted run,
 `first-round fix uncommitted; taken back by hand`. Why the first-round
 hash: regression-verifier checks the fix is gone by applying that commit
@@ -429,7 +430,10 @@ the following required fields:
   em-dash (`DEFERRED — ruled`,
   `NOT APPLICABLE — ruled; <reason>`). A first-round fix a round-2 DEFER or
   NOT APPLICABLE could not take back reads
-  `FIXED — ruled; not reverted: <reason>` (INPUTS). When there are
+  `FIXED — ruled; not reverted: <reason>` (INPUTS); one taken back reads
+  `DEFERRED — ruled; first-round fix <hash>; taken back in <hash>`, or
+  `first-round fix uncommitted; taken back by hand` in an uncommitted run,
+  a NOT APPLICABLE row's reason following it. When there are
   several, the parts after the em-dash are joined by `; `. Counts classify an
   action by its leading word, so a reason or a document suffix never changes
   the bucket. DEDUPED is
