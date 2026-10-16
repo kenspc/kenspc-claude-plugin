@@ -137,17 +137,16 @@ dirty-file rule of FIXING RULES: a file it lists is left untouched, but
 the row is not DEFERRED for it. When the revert stops on a conflict, run
 `git revert --abort`, which, with the index clean, returns the tree to
 where it was, and edit the fix back out by hand instead, in a commit of its
-own, keeping the other fixes in the same lines. When the fix cannot be
-taken back — the index check exits non-zero, since the index then holds
-staged changes this run did not make, a file of the row's commit has
-uncommitted changes, or the hand edit cannot remove the
-fix without undoing another row's fix — leave the fix in
-place: the row keeps FIXED, adds `not reverted — <reason>` after its
-em-dash, and its Deferred Issues paragraph says the ruling asked for the
-code without this fix and why it is still there. In an uncommitted run,
+own, keeping the other fixes in the same lines. In an uncommitted run,
 take it back by editing the fix back out — not by restoring the pre-fix
 copy, which would also undo the other fixes and the user's hunks in that
-file. Once the fix is out, the row's Commit cell reads `—`, and its reason
+file. When the fix cannot be taken back, in either run — the index check
+exits non-zero, since the index then holds staged changes this run did
+not make, a file of the row's commit has uncommitted changes, or the hand
+edit cannot remove the fix without undoing another row's fix — leave the
+fix in place: the row keeps FIXED, adds `not reverted — <reason>` after
+its em-dash, and its Deferred Issues paragraph says the ruling asked for
+the code without this fix and why it is still there. Once the fix is out, the row's Commit cell reads `—`, and its reason
 names the commit that took the fix back, if any. Why: a row that says
 DEFERRED over a fix still in the code reads as a change no row accounts
 for, and the ruling asked for the code without it. Why abort on a
