@@ -2647,8 +2647,10 @@ Rules for the walk:
   `lsof -ti tcp:<port> -sTCP:LISTEN` for each port you started, and show
   each port free afterwards.
 - Screenshots: the Playwright MCP writes them only under its own output
-  directory and this session's working directory; copy each into
-  <workspace>/_logs/<batch>-walk/.
+  directory and this session's working directory; move each into
+  <workspace>/_logs/<batch>-walk/ with mv, never a copy, since one given
+  a relative name lands in the working directory, the repository, where a
+  copy would leave an untracked file a later commit could take in.
 
 Write <workspace>/_logs/<batch>-walk/walk.md: per flow, the steps, what
 was seen, PASS or FAIL against what must be seen, and the screenshot

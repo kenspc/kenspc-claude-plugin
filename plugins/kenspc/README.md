@@ -1156,7 +1156,7 @@ input or a message; checks each port with
 `lsof -ti tcp:<port> -sTCP:LISTEN` before it starts a server; and stops
 only the processes it started, found by their listener, showing each port
 free afterwards. It writes `walk.md` — per flow, the steps, what was
-seen, PASS or FAIL, and the screenshot paths — and copies its screenshots
+seen, PASS or FAIL, and the screenshot paths — and moves its screenshots
 under `_logs/<batch>-walk/`. A port held by a process it did not start is
 a question to the main session, which rules wait (S4w re-checks every 10
 minutes, for at most 60) or skip, recorded `not walked: port <n> in use`;
@@ -1729,9 +1729,9 @@ on Windows.
   default in `repo` mode, a spec written before 4.7.0 with no `Walk:` field
   now walks, and on a machine without the Playwright MCP stops at that
   check. The Playwright MCP writes screenshots only under its own output
-  directory and the session's working directory, so S4w copies each into
-  the workspace; a screenshot given a relative file name lands in the
-  repository first.
+  directory and the session's working directory, so S4w moves each into
+  the workspace, never copying one; a screenshot given a relative file
+  name lands in the repository first.
 - **A role's model reaches every subagent of its worker.** The plugin's
   agents declare `model: inherit`, which resolves to the model of the
   session that dispatches them, so inside an autopilot worker it is the
