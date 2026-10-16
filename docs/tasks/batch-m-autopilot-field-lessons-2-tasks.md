@@ -764,7 +764,25 @@ reports).
 
 ### Task 12: Walk settings, tags, and the start check
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: per Task 1's record, the walk uses the Playwright MCP alone,
+  and the start check is the record's command,
+  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'`, run
+  from the repository root (exit 0 usable, exit 1 not); Claude in Chrome
+  is named in prose as neither checked nor used, with the record's error
+  ("Browser extension is not connected") as the reason, so no
+  `claude-in-chrome` identifier enters the skill and
+  `check-no-model-names.sh` stays green. A flow sub-bullet's form is
+  `- <flow> — must see: <what>`. `Walk:` in plugin mode is `off` or absent;
+  `on` or sub-bullets there is the settings stop naming `Walk`.
+- Changes/tradeoffs: beyond the listed places, the settings line gained
+  `walk <on|off|<n> flows>`, so the user sees the walk setting before any
+  session is paid for, and the role table names S4w's tool. The state
+  file's walk line lists every record S4w or the main session can leave
+  (walked, `nothing to walk`, `not walked`, `walk: cut by budget`,
+  `walk tool unavailable`, `off`), which Task 13's flow writes.
 
 Depends on: Task 1, Task 10
 

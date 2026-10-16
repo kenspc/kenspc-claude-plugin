@@ -40,6 +40,7 @@ the sessions, and the two reports at the end are what the user reviews.
 | S3 | implementation | `/kenspc-task-implement <task document path>` |
 | S3b | standalone review — in repo mode, not run with `Standalone review: off`, or `auto` not triggered | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
 | S4 | acceptance | plugin mode: a seed-project acceptance with a record; repo mode: the `Acceptance:` commands |
+| S4w | runtime walk — repo mode, unless `Walk: off` | the batch's user-facing flows walked in a browser through the Playwright MCP, on the local machine, with a record and screenshots (Phase 3) |
 | S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified, `Fix <n> issues from this round: <ID>, <ID>, …` for several |
 | S6 | release preparation | one commit per mode (Phase 4), after a clarification commit for each question it asked — in any order when it removes nothing |
 
@@ -213,11 +214,12 @@ starts, and a user who wants a smaller budget writes the field.
 | `Acceptance record:` | a path (repo mode) the S4 results are written to | unset |
 | `Release preparation:` | `default`, `keep`, or sub-bullets of instructions | `default` |
 | `Standalone review:` | `on`, `off`, or `auto` (`off` and `auto` in repo mode only) | `on` |
+| `Walk:` | `on`, `off`, or one sub-bullet per flow, `- <flow> — must see: <what>` (`on` and the sub-bullets in repo mode only) | `on` in repo mode, `off` in plugin mode |
 | `Must read:` | paths every worker reads first | empty |
 | `Challenge seeds:` | sub-bullets S1 argues against | empty |
 | `Prior specs:` | `<hash>^:<path>` entries, read with `git show` | empty |
 | `Workspace:` | a directory | `~/Projects/_smoke/` |
-| `Role settings:` | one sub-bullet per role, `- <role>: model <model>[, effort <level>]` or `- <role>: effort <level>`: `<role>` one of `S1`, `S2`, `S3`, `S3b`, `S4`, `S5`, `S6`; `<model>` one token with no whitespace and no comma, passed to `--model` as written; `<level>` one of `low`, `medium`, `high`, `xhigh`, `max` | empty — every role runs at the pass-through values |
+| `Role settings:` | one sub-bullet per role, `- <role>: model <model>[, effort <level>]` or `- <role>: effort <level>`: `<role>` one of `S1`, `S2`, `S3`, `S3b`, `S4`, `S4w`, `S5`, `S6`; `<model>` one token with no whitespace and no comma, passed to `--model` as written; `<level>` one of `low`, `medium`, `high`, `xhigh`, `max` | empty — every role runs at the pass-through values |
 
 A label written with a note, `- <Label> (<note>): <value>`, is read as
 `- <Label>: <value>` when the label is known, and the note is carried with
@@ -289,6 +291,7 @@ the whole tree; `$TMPDIR` is for anything else.
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
                 <batch>-state.md  <batch>-report.md
+                <batch>-walk/   S4w's walk.md and its screenshots
   <batch>-*     seed projects (plugin mode)
   .trash/       discarded directories, moved here as <name>-<timestamp>/
 ```
@@ -318,9 +321,12 @@ copy as the main session, by the workspace path its task block names.
 ### The batch name, the tags, and the main session's name
 
 - The batch name is the argument file's base name without its extension.
-- Tags: `<batch>-s1`, `-s2`, `-s3`, `-s3b`, `-s4`, `-s5`, `-s6`; a re-run
-  of a step `-s4b`, `-s5b`, a further one the next letter (`-s4c`), and
-  the narrowed review after a fix `-s3c`, a re-run of S3b; a resume
+- Tags: `<batch>-s1`, `-s2`, `-s3`, `-s3b`, `-s4`, `-s4w`, `-s5`, `-s6`;
+  a re-run of a step `-s4b`, `-s4wb`, `-s5b`, a further one the next letter
+  (`-s4c`, `-s4wc`), S4's re-run letters skipping `w`, and the narrowed
+  review after a fix `-s3c`, a re-run of S3b. Why S4 skips `w`: `-s4w`
+  is the walk's tag, so an S4 re-run after `-s4v` that took the next
+  letter would take the walk's; a resume
   `<tag>-r<k>`, where `<k>` counts that step's resumes from 1 whatever
   their reason — an answer, a death, a raised cap — so a step resumed for
   its answer and then dead is resumed under `-r2`, that being its first
@@ -421,6 +427,27 @@ reminder to work without stopping), the run ends with the same message.
   edits the plugin while its own review runs the plugin's text from
   before those edits, so only a fresh session, S3b, reviews with the
   edited plugin.
+- `Walk:` is `on`, `off`, or flow sub-bullets in repo mode, and `off` or
+  absent in plugin mode; `on` or sub-bullets in plugin mode is the
+  settings stop, naming `Walk`. Why: the plugin has no app to walk.
+- When `Walk:` is not `off` in repo mode, the walk tool is usable. The
+  walk uses the Playwright MCP alone, checked from the repository root
+  with
+  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'` —
+  exit 0 usable, exit 1 not usable. Claude in Chrome is neither checked
+  nor used: a headless worker launched with `--chrome` reached no browser
+  — "Browser extension is not connected" — while an interactive session on
+  the same machine and account reached it, so the walk stays on the
+  Playwright MCP until a headless worker is shown reaching Claude in
+  Chrome. Not usable is a stop before the first launch, naming the
+  command's output and `Walk: off` as the way on. In a session that cannot
+  ask (a system reminder to work without stopping), the run ends with the
+  same message. Why before the first launch: a machine with no walk tool
+  then stops before any session is paid for, and the user fixes the tool
+  or writes `Walk: off`. Why the main session's check stands for the
+  worker's: a worker reads the same user MCP configuration and was given
+  the Playwright tools with no flag of its own; S4w checks again at its
+  own start (Phase 3).
 - `Role settings:` is in its grammar: every sub-bullet names a known role,
   no role appears twice, and every part matches the table — `model` and
   one token, `effort` and one of the five levels, the model first when both
@@ -660,6 +687,7 @@ pass-through: <model|not determined>/<effort|not determined>
 inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>[ (<the error or notice, quoted>)]…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
 standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>   (once S3 has returned)
+walk: <on|off|<n> flows> — <walked: <tag>, <k> flows, <PASS|FAIL per flow> | nothing to walk: <reason> | not walked: <reason> | walk: cut by budget | walk tool unavailable | off> — <workspace>/_logs/<batch>-walk/walk.md   (once S4w has returned, or the record that replaced it)
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|usage-limit|running>
 models and efforts:
@@ -860,9 +888,12 @@ Every worker is one launch, one wait, one return.
   left unquoted is read by the shell — a token in backticks, a markdown
   habit, becomes a command substitution that leaves the variable empty,
   and the worker runs at its settings' model. A re-run's tag
-  takes its step's role: `-s3<letter>` (`-s3c`, `-s3d`, …) is S3b,
-  `-s4<letter>` (`-s4b`, `-s4c`, …) is S4, `-s5<letter>` (`-s5b`, …) is
-  S5. Why: `Role settings:` is keyed by role, and a re-run's tag names the
+  takes its step's role: `-s3<letter>` (`-s3c`, `-s3d`, …) is S3b;
+  `-s4w` and `-s4w<letter>` (`-s4wb`, `-s4wc`, …) are S4w, read before the
+  next rule; any other `-s4<letter>` (`-s4b`, `-s4c`, …) is S4;
+  `-s5<letter>` (`-s5b`, …) is S5. Why `-s4w` first: it has the form
+  `-s4<letter>`, so read by the S4 rule a walk would take the acceptance
+  role's settings. Why: `Role settings:` is keyed by role, and a re-run's tag names the
   step it repeats, not a role; `-s3c` is the narrowed review after a fix,
   S3b's work and not S3's implementation, so read by its prefix it would
   take the implementer's values. A resume, `<tag>-r<k>`, sets the same
@@ -2712,7 +2743,7 @@ reply text, where the state file's copy does not stand in for the
 printed one:
 
 ```
-Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off|auto>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
+Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off|auto>, walk <on|off|<n> flows>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
 ```
 
 The roles list names each role `Role settings:` declares, in the field's
