@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.7.0 — unreleased
+## 4.7.0 — 2026-10-16
 
 The second slice of the autopilot's field lessons. A review runs one
 second fix round when a ruling arrives after code-fixer's dispatch, the
@@ -37,6 +37,12 @@ message lacked its `## User report` heading, and two main sessions ruled
 the installed 4.6.0's `.gitignore` commit two ways. The second round,
 `auto`, BLOCKED classification, and benign breaches are accepted in use,
 in the next product-repository batches.
+No smoke run was made beyond those two records: the implementation
+review's verdict was FAIL on one MEDIUM regression its own fix introduced
+(27 of 29 findings fixed, the one HIGH among them); two narrowed reviews
+fixed and passed it and the findings they raised, and the pre-flight
+passed on the release tree. Release-checklist rows 11 and 14, whose seed
+spec and live probes this release changes, have not run as written.
 
 ### Added
 

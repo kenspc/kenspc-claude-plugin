@@ -1,7 +1,7 @@
 # Batch M — walk acceptance
 
-Task 15 of `docs/tasks/batch-m-autopilot-field-lessons-2-tasks.md` (plan
-Step 8, `docs/plans/batch-m-autopilot-field-lessons-2.md`). Run on
+Task 15 of `git show c91a0c9:docs/tasks/batch-m-autopilot-field-lessons-2-tasks.md` (plan
+Step 8, `git show c91a0c9:docs/plans/batch-m-autopilot-field-lessons-2.md`). Run on
 16 Oct 2026 on the maintainer's Mac, Claude Code 2.1.300, by the main
 session of the batch, after telling the user and getting the go-ahead.
 

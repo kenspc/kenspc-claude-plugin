@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.7.0)
+## Next minor (4.8.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -381,13 +381,7 @@ its number.
     with evidence and a negative control, after S4 has failed; a dry run of
     each command at the baseline, before the first launch, would find these
     before any session is paid for.
-22. A narrowed review's own code-fixer can make an incomplete fix that fails
-    that same review. The narrowed review after an S5 runs task-review, whose
-    code-fixer may fix what its reviewers find; a fix it leaves incomplete
-    fails the review's verification and costs another S5 and another
-    narrowed review. Open: whether a narrowed review should fix at all, or
-    only report for the next S5.
-23. Autopilot rulings follow-ups, which 4.5.0 left out (its review rounds;
+22. Autopilot rulings follow-ups, which 4.5.0 left out (its review rounds;
     the batch K spec's clarifications,
     `git show d1406e9:docs/plans/batch-k-autopilot-rulings.md`):
     - The main session's own keep-path clarification commit has no outcome
@@ -404,29 +398,24 @@ its number.
       maps `no` to a stop, where the documented default may still deliver.
     - The README and CHANGELOG summaries of the keep-path gate do not name
       the case of an entry already at HEAD.
-24. `rulings.md` follow-ups, which 4.5.0 left out:
+23. `rulings.md` follow-ups, which 4.5.0 left out (4.7.0 settled an entry
+    outside the grammar and a ruled ID's unruled duplicate):
     - Whether an interactive task-review pauses, once the reviewers return,
       for the user to rule before code-fixer runs — a new gate; until it is
       decided, a ruling that arrives after the code-fixer dispatch has no
       stated outcome.
-    - An entry outside the grammar — an unknown action word, no ID, no
-      first line naming who ruled, one ID ruled two ways — has no stated
-      outcome in code-fixer or regression-verifier.
-    - A ruled ID whose duplicate carries no ruling: merged into the ruled
-      row or kept apart, stated in code-fixer and mirrored in
-      regression-verifier's check 1.
     - The could-not-land exception to the ruled-row verdict rule rests on
       code-fixer's own reason, which regression-verifier does not check.
     - The plugin README's copy of the entry grammar sits outside
       `check-run-contract.sh`'s byte-identity check on the four carriers.
-25. A task whose `**Status:**` is none of TODO, IN PROGRESS, DONE, or
+24. A task whose `**Status:**` is none of TODO, IN PROGRESS, DONE, or
     BLOCKED falls into no bucket in task-implement's Phase 1 Step 3, while
     task-implementer reads "incomplete" loosely, so a hand-edited status can
     end as finished work that was never built. The fix spans
     `task-implement/SKILL.md` and `agents/task-implementer.md`: Step 3 names
     every unrecognized status in its reply, and task-implementer reads
     incomplete as exactly TODO or IN PROGRESS.
-26. Guards and smoke rows 4.5.0's new rules lack:
+25. Guards and smoke rows 4.5.0's new rules lack:
     - a test of the telemetry hook's transcript root under
       `CLAUDE_CONFIG_DIR` — one record with the transcript under
       `$CLAUDE_CONFIG_DIR/projects`, none with it only under
@@ -440,13 +429,13 @@ its number.
       `S6 return:`, and the keep-path gate's marker, the rule that a ruled
       ID no report lists keeps the verdict from PASS, and S6's question
       cutoff.
-27. `check-no-model-names.sh` reads the Linux and WSL managed-settings
+26. `check-no-model-names.sh` reads the Linux and WSL managed-settings
     directory, `/etc/claude-code/`, as a model ID, so the autopilot skill
     writes it as the pattern `/etc/claude?code/`. An exception for that
     directory, beside the ones the guard keeps for
     `claude-plugins-official` and the `instructionFiles` values, would let
     the skill cite it as the documentation writes it.
-28. The "session that cannot ask" sentence in the four skills that predate
+27. The "session that cannot ask" sentence in the four skills that predate
     it. The writing rule (CLAUDE.md § Writing Rules for Skill Content) has
     every question a skill stops on state what a session that cannot ask
     does instead; task-implement, task-review, generate-task, and
@@ -466,61 +455,7 @@ its number.
     reported stops without the sentence in generate-brief and
     generate-plan, outside the ones those two skills already cover; they
     were not checked line by line and are confirmed in the same plan.
-29. A second fix round, and when a ruling reaches code-fixer. task-review
-    and task-implement's review have one code-fixer pass. A second round
-    was needed in five batches in a row (tenants-api, portal-shell-tenants,
-    portal-service-locations, participants-api, participants-portal), each
-    run outside the skill's flow by a worker that resumed its code-fixer at
-    the main session's ruling. With it:
-    - code-fixer reads `rulings.md` once at its start, so a ruling sent
-      while it runs misses that dispatch (participants-portal,
-      attendance-api), and a ruling given while a resumed reviewer still
-      works is overtaken by it (participants-api). Ruling only after the
-      last reviewer has returned held from participant-import on, and a
-      second dispatch under an appended section of `rulings.md` kept
-      `schema-b.md`'s rows (attendance-api).
-    - An entry written for a group of findings named one half of a
-      two-part row, and the other half came back as a second round
-      (portal-service-locations): one entry per clause.
-    - `rulings.md` has no form for a finding ruled FIX for its record and
-      DEFER for its behaviour (three findings in participant-import), and
-      the review has no row for a defect code-fixer finds that no reviewer
-      reported (user-guide) or a regression the verifier finds
-      (participants-portal), which the ruled-ID verdict rule then reads as
-      a failure.
-    - A standalone review does not read the implementation review's
-      rulings, so a finding the first deferred came back in the second and
-      only a note of the main session kept it from being fixed
-      (user-guide).
-    The item on a narrowed review's own code-fixer and the `rulings.md`
-    follow-ups above are the same area; one plan should settle the three.
-30. Heavy commands across parallel reviewers. Each reviewer of a parallel
-    review may run the repository's test suite; five at once exhausted the
-    Mac's local ports in participants-api, and tests failed on connection
-    errors that read like findings (dayaku-crm issue #95). Neither review
-    skill has a rule for a heavy command across parallel reviewers — one
-    run whose result they share, or a turn. Two read-only slips in the same
-    runs: the quality reviewer's `vitest list --json <files>` overwrote a
-    tracked test file, restored with `git checkout` (reschedule-pages;
-    dayaku-crm issue #205), and code-fixer made mutants in place on tracked
-    files, restored before its commit (portal-fixes, reschedule-pages),
-    where its rule puts a mutant on a copy.
-31. Rails gaps and benign breaches met in the dayaku-crm batches, beside
-    the rails follow-ups above:
-    - The hook does not judge a write made through Bash (its header lists
-      redirections, `cp`, `mv`, and `tee` among its misses): a redirect to
-      `"$TMPDIR/../nothing"` passed (scheduling-board), as did a Bash
-      append to `MEMORY.md` under `~/.claude` (portal-shell-tenants). Each
-      was reported by the worker itself and stopped the run.
-    - Neither the hook nor § 3 names `gh`, the GitHub API, or remote git:
-      an implementer subagent's read-only `gh issue view` stopped
-      account-invitation.
-    - Stop condition 6 gives every breach to the user, while the user wants
-      a benign one ruled by the main session: a reviewer's probe whose
-      project code tried sends towards a reserved test name
-      (participants-api), a `docker exec pg18 true` (notifications-api).
-      Open: which breaches the main session may rule and record.
-32. S3b on a condition in repo mode. The autopilot keeps the
+28. S3b on a condition in repo mode. The autopilot keeps the
     implementation, the standalone review, and the acceptance in separate
     sessions for two reasons: a session that reviews its own work reads its
     own intent into the code, and a session that edited the plugin still
@@ -553,38 +488,7 @@ its number.
       4.7.0.
     - S3b returns to `on` if HIGH or MEDIUM follow-ups rise; otherwise the
       default may change to `auto`, in a later release.
-33. A runtime walk, which a batch can turn off. Several follow-up issues
-    of the dayaku-crm batches were found after the run by walking the app,
-    which neither review nor S4 does: scheduling-board's
-    standalone review inferred from the code that a date typed into the
-    board does not arrive and deferred it, and it became issue #157 once a
-    browser measured it. Today the main session walks the app by hand
-    after the finish, at the user's word (participants-portal,
-    participant-import). Open: a walk session after S4 that starts the app
-    as the plan says, walks the plan's key flows in a browser, keeps its
-    screenshots in the workspace, and reports what it saw, a failure going
-    to S5 as a review verdict does. It runs by default, and a
-    `## Autopilot` field turns it off for a batch with nothing to walk or
-    one the user walks in person (the maintainer's decision, 15 Oct 2026).
-    What it must respect, from the same runs: ports and a database shared
-    with another track (two tracks' walks had to take turns in
-    participants-portal), and the project's rule on real data (dayaku-crm
-    walks synthetic data only).
-34. A task S3 leaves BLOCKED, when its review is otherwise clean. S3's
-    Schema G verdict is PARTIAL when a task is BLOCKED and no HIGH row is
-    deferred, and the autopilot's verdict loop has no branch for that case:
-    with `Standalone review: off` S3's verdict enters the loop and falls
-    through it, and with S3b running S3 → S3b goes on for any verdict but
-    BLOCKED while S3b's Schema F ignores task statuses. A batch with a
-    BLOCKED task can then reach acceptance and release preparation without
-    the task being named. The choices, deferred by 4.6.0's review (B4 in
-    `.kenspc/runs/20261015-204543-batch-l-autopilot-field-lessons-tasks/schema-b.md`,
-    git-ignored, only in the maintainer's macOS checkout): classify such a
-    task as a HIGH row is classified (an S5 or a recorded deferral), make it
-    a stop, or name it in the reports while the run goes on; written once,
-    in § The verdict loop after S3b or § Phase transitions, so it covers
-    both values of the switch.
-35. S4 runs each extracted command with `<shell> <file>` (4.6.0), outside
+29. S4 runs each extracted command with `<shell> <file>` (4.6.0), outside
     the Bash tool's shell snapshot, so a command that relied on a function
     or an alias the tool's shell defines behaves differently there (the
     Bash tool's `grep` is a function that runs ugrep, which a command file
@@ -592,7 +496,7 @@ its number.
     same `schema-b.md`): state the difference in the S4 block, or settle
     whether the commands run with the interpreter only or the tool's whole
     environment.
-36. Second-round follow-ups, deferred by the reviews of 4.7.0's second fix
+30. Second-round follow-ups, deferred by the reviews of 4.7.0's second fix
     round (the rows are in `schema-b.md` of
     `.kenspc/runs/20261016-111213-batch-m-autopilot-field-lessons-2-tasks/`
     and `20261016-135828-changes/`, git-ignored, only in the maintainer's
@@ -620,7 +524,7 @@ its number.
     - The shared suite run's own writes into the tree go unreported (E13,
       LOW): the tree is recorded after the suite run, so a suite that writes
       a tracked file is not named anywhere.
-37. Walk acceptance findings (`docs/dry-runs/batch-m-walk-acceptance.md`,
+31. Walk acceptance findings (`docs/dry-runs/batch-m-walk-acceptance.md`,
     F1-F3):
     - F1: S4w passed a relative file name to the screenshot tool, which
       wrote it into the repository before S4w moved it; the S4w block could

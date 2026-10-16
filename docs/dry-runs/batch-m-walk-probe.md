@@ -1,7 +1,7 @@
 # Batch M — walk probe: browser tools in a headless worker
 
-Task 1 of `docs/tasks/batch-m-autopilot-field-lessons-2-tasks.md` (plan
-Step 1, `docs/plans/batch-m-autopilot-field-lessons-2.md`). Run on
+Task 1 of `git show c91a0c9:docs/tasks/batch-m-autopilot-field-lessons-2-tasks.md` (plan
+Step 1, `git show c91a0c9:docs/plans/batch-m-autopilot-field-lessons-2.md`). Run on
 16 Oct 2026 on the maintainer's Mac, Claude Code 2.1.300, by the main
 session, after the user confirmed Chrome was open with the Claude in
 Chrome extension connected.
