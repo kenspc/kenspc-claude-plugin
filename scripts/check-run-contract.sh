@@ -2,7 +2,7 @@
 # check-run-contract.sh
 #
 # Guards the run-directory contract that task-review and task-implement share
-# with code-fixer (v3.5.0). Seven checks:
+# with code-fixer (v3.5.0). Eight checks:
 #
 #   1. The run-directory preparation block (bounded by
 #      `<!-- canonical:run-dir:start/end -->`) is byte-identical in
@@ -69,6 +69,17 @@
 #      it. Check 5 holds only the file's name, so an action word reworded in
 #      one carrier would leave a skill writing rulings the agents read
 #      another way while every other check passes.
+#   8. The second-fix-round step (bounded by
+#      `<!-- canonical:second-round:start/end -->`) is byte-identical in
+#      skills/task-review/SKILL.md, its Step 7 and the reference, and
+#      skills/task-implement/SKILL.md, its Phase 2 Step 3. Both reviews run
+#      the same second round — the save of regression-verifier's first
+#      reply to `schema-c-1.md`, the `## Round 2` section of `rulings.md`,
+#      the fresh dispatches, the printed lines, and the one-round limit — so
+#      a rule reworded in one skill would leave the two reviews running
+#      different rounds. Check 5 also holds the name `schema-c-1.md` in both
+#      skills, which save the file, and in agents/code-fixer.md and
+#      agents/regression-verifier.md, which read it in a second round.
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
@@ -84,7 +95,8 @@
 # Exit code 0: all checks pass.
 # Exit code 1: a block diverges, the ignore probe answers wrongly, the
 #              recount disagrees, a file does not name change-set.md,
-#              pre-fix/index.txt, or rulings.md where check 5 requires it,
+#              pre-fix/index.txt, rulings.md, or schema-c-1.md where check 5
+#              requires it,
 #              or a copy of the reviewer invariant sentence does not contain
 #              the reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
@@ -103,17 +115,19 @@
 #                  target files (the five above, plugins/kenspc/README.md,
 #                  and CLAUDE.md) into a temp workdir, confirms
 #                  `change-set.md` is present in the four files check 5
-#                  reads, `pre-fix/index.txt` in its two, `rulings.md` in
-#                  its four, and the reviewer
+#                  reads, `pre-fix/index.txt` in its two, `rulings.md` and
+#                  `schema-c-1.md` in their four each, and the reviewer
 #                  invariant sentence's start line once in the copied
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on twenty-seven mutations that
+#                  prefix classification), then on thirty-three mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the rulings grammar's
 #                  DEFER entry reworded in each of its four carriers in turn
-#                  (check 7), the ignore probe
+#                  (check 7), the second-round block's one-round limit
+#                  reworded in each of its two carriers in turn (check 8),
+#                  the ignore probe
 #                  reverted to `.kenspc/` in both SKILLs (the Windows CRLF
 #                  case, which only check 3 can catch), five recount
 #                  mutations that each leave exactly one rule to catch them
@@ -127,7 +141,9 @@
 #                  name removed from each of its two carriers in turn, the
 #                  rulings file name removed from each of its four carriers
 #                  in turn (every occurrence, through the same replace-all
-#                  helper), and
+#                  helper), the first-round Schema C file name
+#                  `schema-c-1.md` removed from each of its four carriers in
+#                  turn the same way, and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
@@ -161,6 +177,7 @@ CLAUDE_REL="CLAUDE.md"
 CHANGE_SET_NAME="change-set.md"
 PRE_FIX_INDEX="pre-fix/index.txt"
 RULINGS_NAME="rulings.md"
+SCHEMA_C1_NAME="schema-c-1.md"
 INVARIANT_START="Each reviewer is read-only on the working tree"
 
 # Print the lines strictly between the start and end markers of <name>.
@@ -423,6 +440,11 @@ run_main_logic() {
     [[ "$rc" -ne 0 ]] && return "$rc"
     echo "OK    canonical:rulings-grammar — identical in task-review, task-implement, code-fixer, regression-verifier"
 
+    # Check 8: the second-fix-round step, task-review's Step 7 the reference.
+    compare_block "canonical:second-round" "$review" "$implement" && rc=0 || rc=$?
+    [[ "$rc" -ne 0 ]] && return "$rc"
+    echo "OK    canonical:second-round — identical in task-review and task-implement"
+
     local example_file
     example_file=$(mktemp)
     extract_block "$fixer" "example:schema-b" > "$example_file" && rc=0 || rc=$?
@@ -452,17 +474,26 @@ run_main_logic() {
             missing=1
         fi
     done
+    for f in "$review" "$implement" "$fixer" "$verifier"; do
+        if ! grep -qF -- "$SCHEMA_C1_NAME" "$f"; then
+            echo "MISSING '$SCHEMA_C1_NAME' in $f" >&2
+            missing=1
+        fi
+    done
     if [[ "$missing" -ne 0 ]]; then
         echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
         echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
         echo "regression-verifier; task-review and task-implement write a ruling on the" >&2
-        echo "findings to RUN_DIR/$RULINGS_NAME, and code-fixer and regression-verifier read it." >&2
+        echo "findings to RUN_DIR/$RULINGS_NAME, and code-fixer and regression-verifier read it;" >&2
+        echo "both skills save regression-verifier's first reply to RUN_DIR/$SCHEMA_C1_NAME," >&2
+        echo "which code-fixer and regression-verifier read in a second round." >&2
         echo "Restore the name, or rename it in every carrier and in this guard together." >&2
         return 1
     fi
     echo "OK    $CHANGE_SET_NAME — named in task-review, code-fixer, regression-verifier, requirements-reviewer"
     echo "OK    $PRE_FIX_INDEX — named in code-fixer, regression-verifier"
     echo "OK    $RULINGS_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
+    echo "OK    $SCHEMA_C1_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
 
     # Check 6: the reviewer invariant sentence in its three copies.
     local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
@@ -570,6 +601,10 @@ run_self_test() {
             echo "FAIL  self-test fixture stale: '$RULINGS_NAME' not found in $rel" >&2
             return 2
         fi
+        if ! grep -qF -- "$SCHEMA_C1_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$SCHEMA_C1_NAME' not found in $rel" >&2
+            return 2
+        fi
     done
 
     # Fixture-stale guard for check 6: the reference sentence's start line
@@ -650,6 +685,12 @@ run_self_test() {
         mutate_and_expect "rulings grammar in $rel" "$rel" \
             "- <ID>[, <ID>…]: DEFER — <reason>" "- <ID>[, <ID>…]: POSTPONE — <reason>" || return $?
     done
+    # Check 8: the one-round limit reworded in each of the second-round
+    # block's two carriers in turn, the reference included.
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL"; do
+        mutate_and_expect "second-round block in $rel" "$rel" \
+            "A review runs at most one second round:" "A review runs at most two second rounds:" || return $?
+    done
     # The Windows case: the probe reverted to the bare directory in both
     # SKILLs, so the blocks stay identical and only the probe check can
     # catch it. If a future git stops parsing a blank CRLF line as an empty
@@ -718,6 +759,22 @@ run_self_test() {
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
         if [[ "$rc" -ne 1 ]]; then
             echo "FAIL  self-test rulings name mutation in $rel: expected exit 1, got $rc" >&2
+            return 1
+        fi
+    done
+    # The first-round Schema C file name, renamed in each of its four
+    # carriers in turn, every occurrence, so only check 5's loop for it
+    # can catch it.
+    for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$FIXER_REL" "$VERIFIER_REL"; do
+        replace_all_literal "$WORK/$rel" "$SCHEMA_C1_NAME" "schema-c-first.md"
+        if grep -qF -- "$SCHEMA_C1_NAME" "$WORK/$rel"; then
+            echo "FAIL  self-test: schema-c-1 mutation did not apply ('$SCHEMA_C1_NAME' still in $rel)" >&2
+            return 2
+        fi
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        cp "$REPO_ROOT/$rel" "$WORK/$rel"
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test schema-c-1 name mutation in $rel: expected exit 1, got $rc" >&2
             return 1
         fi
     done

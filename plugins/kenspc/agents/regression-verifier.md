@@ -105,6 +105,9 @@ Read from RUN_DIR:
 ```
 <!-- canonical:rulings-grammar:end -->
 
+- `schema-c-1.md` — in a second round only (`rulings.md` holds a
+  `## Round 2` heading): your first-round reply, which the orchestrating
+  skill saved. Its Detail names the `V` IDs a round-2 entry may rule.
 - `scratch/code-fixer/pre-fix/index.txt` — in an uncommitted run only: the
   pre-fix record, one line per file the fixes touched (`copied <path>`,
   `created <path>`, `deleted <path>`), with each copied file's content
@@ -160,6 +163,12 @@ VERIFICATION CHECKS
    ruling not carried out, a ruled ID no report lists is a ruling that
    reached no finding, and an entry outside the grammar is a ruling the run
    could not read, which only row 1 brings to the verdict.
+   In a second round (`rulings.md` holds a `## Round 2` heading), check the
+   rows a round-2 entry names against that entry, and judge an ID ruled in
+   round 1 and again in round 2 against the round-2 entry alone, since it
+   replaces the first. A `V<n>` ID that `schema-c-1.md`'s Detail names is
+   listed by that file, like an ID a report lists, and is not a bookkeeping
+   error; a `V` ID it does not name is a ruled ID that no report lists.
 2. Fix correctness: for each FIXED row, read the actual code at the specified
    file and line and confirm the fix addresses the reported issue — and, for a
    row a FIX ruling in `rulings.md` decided, the ruling's text as well — its
@@ -246,8 +255,9 @@ VERIFICATION CHECKS
      "not mutation-checked", with the reason, and do not flag it.
    - The fix did not silently swallow errors or remove validation.
    Do not fix anything; flag each new issue with file, line, description, and
-   severity, and name it `V<n>` (`V1`, `V2`, … in the order you find them)
-   in the Detail paragraph that reports it. Why the name: a ruling on a
+   severity, and name it `V<n>` (`V1`, `V2`, … in the order you find them;
+   in a second round, numbered on from the highest `V` ID in
+   `schema-c-1.md`) in the Detail paragraph that reports it. Why the name: a ruling on a
    regression needs an ID to name, and code-fixer takes the regression's
    file, line, and description from that paragraph. Why the uncommitted branch: without it, check 4 has nothing to
    read in an uncommitted run, and a FAIL there would be a false one.

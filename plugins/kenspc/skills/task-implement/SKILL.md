@@ -476,7 +476,8 @@ ruling, each in one of these forms:
 ```
 <!-- canonical:rulings-grammar:end -->
 
-This step adds no pause and no question, and waits for no ruling. The
+This step adds no pause and no question, and waits for no ruling; a
+ruling given after code-fixer's dispatch is the second round's (below). The
 CONTEXT block passes unchanged, and a ruling never goes into `CUSTOM_INSTRUCTIONS`; with no
 ruling, no file is written and nothing changes. Why: as task-review's
 Step 5 says — a ruling written into the `CUSTOM_INSTRUCTIONS` of
@@ -536,6 +537,54 @@ as it came back; the run goes on to the next dispatch or to Step 4. Why:
 counts or a result filled in without that line are made up, and they read
 as a step that finished.
 
+<!-- canonical:second-round:start -->
+**Second fix round.** As soon as regression-verifier's first reply
+returns, save it verbatim to `RUN_DIR/schema-c-1.md`, whatever it says and
+whether or not a ruling is held. Why in every review: an autopilot
+worker's question names `schema-c-1.md` before any ruling exists, and the
+`V` IDs a ruling names are read from it; the save is one file write and
+asks nothing.
+
+Then, when this skill holds a ruling given after code-fixer's first
+dispatch — in an interactive run, a message from the user received after
+that dispatch; in an autopilot worker, the main session's answer — run a
+second round:
+
+1. Append a `## Round 2` heading to `RUN_DIR/rulings.md`, followed by the
+   round's entries in the grammar the first round's entries follow. When
+   the file does not exist, create it first, with its first line naming
+   who ruled. A round-2 entry for an ID ruled in round 1 replaces that
+   entry: it is not a second entry for the ID, and the round-1 entry no
+   longer applies to it.
+2. Dispatch `code-fixer`, then `regression-verifier`, each afresh — new
+   dispatches, not resumed agents — with `run_in_background: false` and the
+   CONTEXT block unchanged. code-fixer carries out only the `## Round 2`
+   entries and updates `schema-b.md` in place; regression-verifier checks
+   the round against them.
+3. When each returns, print its line in the form of its first-round line,
+   with `(round 2)` after the agent's name:
+   `code-fixer returned (round 2) — FIXED <f>, DEFERRED <d>, NOT APPLICABLE <n> — <RUN_DIR>/schema-b.md`
+   and `regression-verifier returned (round 2) — CLEAN`, or
+   `regression-verifier returned (round 2) — HAS ISSUES: row <k> <result>[, row <k> <result>…]`;
+   for a reply with no statistics line or no result line,
+   `code-fixer returned (round 2) — no statistics line` or
+   `regression-verifier returned (round 2) — no result line`.
+4. Read the verdict from the second round's replies. The final report
+   renders them in place of the first round's, and names
+   `<RUN_DIR>/schema-c-1.md` for the first round's Schema C.
+
+A review runs at most one second round: a ruling that arrives after the
+second round's code-fixer dispatch is not carried out in this review, and
+what is left goes to the verdict. With no ruling held, no second round and
+no question: the review goes on to its final report, and this step adds no
+pause. Why a ruling: a second pass without one would only repeat
+code-fixer's own choices. Why one: an unbounded loop inside a review would
+bypass the stop conditions that count fixes per defect, and one finding has
+taken three rounds in an implementation review and four in a standalone
+one. Why fresh dispatches: a resumed subagent has run in the background,
+and a headless worker had to wait on it by hand.
+<!-- canonical:second-round:end -->
+
 The lines above stay in English, exactly as written, whatever the
 conversation language. Why: this run carries the implementation phase
 before the review, and everything the orchestrator prints stays in its
@@ -578,11 +627,15 @@ ruled: `Rulings: <RUN_DIR>/rulings.md — ruled by <who>`.)
 (code-fixer's reply verbatim, rendered here only: the statistics line, the
 Per-angle Results table, the HIGH and MEDIUM rows with their Deferred Issues
 paragraphs, the scratch-pollution note when there is one, and the full path
-of schema-b.md, where the LOW rows and their prose remain.)
+of schema-b.md, where the LOW rows and their prose remain. When a second
+round ran (Step 3), its reply, which accounts for every row, in place of
+the first's.)
 
 ## Verification
 
-(Schema C verbatim; rendered here only.)
+(Schema C verbatim; rendered here only — when a second round ran, the
+second round's, then one line naming the first round's:
+`First-round Schema C: <RUN_DIR>/schema-c-1.md`.)
 
 ## Verdict
 

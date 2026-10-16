@@ -115,6 +115,23 @@ only through this file, never through CUSTOM_INSTRUCTIONS. When the file
 is absent, nothing below changes. How a ruling applies is in FIXING
 PRIORITY.
 
+When `rulings.md` holds a `## Round 2` heading, this dispatch is the
+review's second round, and `schema-b.md` already holds your first round's
+rows. Carry out only the entries after that heading: the entries before it
+were carried out in the first round, and a round-2 entry for an ID ruled
+in round 1 replaces that entry. Update `schema-b.md` in place — the
+action, commit, and Deferred Issues paragraph of each row a round-2 entry
+names — and keep every row, the rows no round-2 entry names unchanged;
+then recount the Per-angle Results table and the statistics line. For each
+`V` ID a round-2 entry names, add a row whose Source is that ID, taking
+the regression's file, line, description, and severity from the Detail of
+`RUN_DIR/schema-c-1.md`, regression-verifier's first-round reply, which
+you read for that purpose; a `V` ID that file does not name is a ruled ID
+that no report lists. An `F` row a round-2 entry names is updated like any
+other row. Reply as OUTPUT FORMAT gives, for the whole updated file. Why in
+place: the second round's file is the one the verdict reads, and a row
+dropped from it would be an issue no longer accounted for.
+
 PREREQUISITES
 1. Inspect key files in the project root to identify the tech stack, build/test/lint
    commands, and project conventions (prioritize the project's instruction files).

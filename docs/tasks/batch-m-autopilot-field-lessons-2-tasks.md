@@ -252,7 +252,31 @@ fix round, the "`F` and `V` IDs" bullet). Files:
 
 ### Task 4: The second fix round
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the block's text is skill-neutral ("this skill", "the final
+  report", "the grammar the first round's entries follow") so one copy
+  reads true in both skills; in task-implement it sits after the
+  no-statistics/no-result paragraph of Phase 2 Step 3, so the existing
+  "The lines above stay in English" paragraph covers the round-2 lines
+  too. The final reports name `schema-c-1.md` only when a second round
+  ran (`First-round Schema C: <RUN_DIR>/schema-c-1.md` under
+  Verification), since without one the rendered Schema C is that file. A
+  `V` ID a round-2 entry names that `schema-c-1.md` does not name is
+  treated as a ruled ID that no report lists, by code-fixer and
+  regression-verifier alike; regression-verifier numbers its second-round
+  regressions on from the highest `V` ID in `schema-c-1.md`, so two
+  rounds never reuse one `V` ID. Check 8's self-test rewords the
+  one-round limit sentence (`A review runs at most one second round:`).
+- Changes/tradeoffs: beyond the spec, task-review's Step 5 and
+  task-implement's Step 3 each gained one clause saying a ruling given
+  after code-fixer's dispatch is the second round's, so the first-round
+  rule no longer reads as the only place a ruling lands; task-review's
+  Step 4 sentence about the fixed English lines now names Step 7's lines.
+  Step 6's "the run goes on to Step 7" was left as it is, since Step 7 is
+  now the step that follows it. The self-test grew from 27 to 33
+  exit-1 mutations.
 
 Depends on: Task 2, Task 3
 
