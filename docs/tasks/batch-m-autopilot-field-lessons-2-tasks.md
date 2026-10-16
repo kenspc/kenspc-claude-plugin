@@ -1043,6 +1043,14 @@ no other file):
   count and severity with the batches before 4.7.0, S3b back to `on` if
   HIGH or MEDIUM follow-ups rise); the items this batch settles stay until
   the release removes them (Step 6).
+- `plugins/kenspc/skills/autopilot/SKILL.md` § The driver — the paragraph
+  on the rails hook still says it denies a recursive `rm` and a file-tool
+  write outside the roots and misses "writes through Bash"; bring it in
+  line with Tasks 7 and 8 (redirection targets judged, `gh` and remote git
+  denied with the route "ask the main session", `tee`, `cp`, `mv`, and
+  interpreter writes still missed). Added by the user's ruling of 16 Oct
+  2026 on the implementer's report; not in the plan's Documentation
+  impact (Step 4).
 
 **Promotion:** read the `Decisions` sub-bullets in the Implementation notes
 of Tasks 1-15. Write each decision that a future reader would look for in
