@@ -592,3 +592,47 @@ its number.
     same `schema-b.md`): state the difference in the S4 block, or settle
     whether the commands run with the interpreter only or the tool's whole
     environment.
+36. Second-round follow-ups, deferred by the reviews of 4.7.0's second fix
+    round (the rows are in `schema-b.md` of
+    `.kenspc/runs/20261016-111213-batch-m-autopilot-field-lessons-2-tasks/`
+    and `20261016-135828-changes/`, git-ignored, only in the maintainer's
+    macOS checkout):
+    - The take-back check rests on code-fixer's own reason text (E3/B3,
+      MEDIUM; and E12, LOW, the same gap): `schema-b.md` is updated in
+      place and the first round's copy is never kept, so regression-verifier
+      cannot see which rows round 1 FIXED, and a take-back code-fixer skipped
+      or recorded in another shape passes row 1 as a DEFERRED row that
+      matches its ruling. The suggested remedy: the orchestrator saves the
+      first round's file as `schema-b-1.md` beside `schema-c-1.md`, in the
+      `canonical:second-round` block, and row 1 runs the take-back check on
+      every row a round-2 DEFER or NOT APPLICABLE names that the round-1
+      record shows FIXED.
+    - No guard holds the take-back reason literals (T1, MEDIUM):
+      `first-round fix <hash>; taken back in <hash>` and
+      `first-round fix uncommitted; taken back by hand`, which code-fixer
+      writes and regression-verifier keys on; reworded in one file, every
+      guard still passes and the check goes silent. The suggested remedy:
+      check 5 of `check-run-contract.sh` requires both in `code-fixer.md`
+      and `regression-verifier.md`, with a self-test mutant per carrier, and
+      CLAUDE.md's description of check 5 moves with it.
+    - CLAUDE.md's second-round paragraph does not name the take-back (R6,
+      LOW).
+    - The shared suite run's own writes into the tree go unreported (E13,
+      LOW): the tree is recorded after the suite run, so a suite that writes
+      a tracked file is not named anywhere.
+37. Walk acceptance findings (`docs/dry-runs/batch-m-walk-acceptance.md`,
+    F1-F3):
+    - F1: S4w passed a relative file name to the screenshot tool, which
+      wrote it into the repository before S4w moved it; the S4w block could
+      name an absolute path under the Playwright MCP's output directory.
+    - F2: a headless main session's final message carried
+      `## Reviewer report` without the `## User report` heading.
+    - F3: the installed 4.6.0's task-implement committed a `.gitignore` for
+      `.kenspc/` in seeds whose specs put any other file out of scope, and
+      two main sessions ruled that departure two ways (reverted by an S5 in
+      one, kept in another).
+    - Claude in Chrome stays out of the walk until a headless worker is
+      shown reaching it: the probe (`docs/dry-runs/batch-m-walk-probe.md`)
+      saw "Browser extension is not connected" in a headless `--chrome`
+      worker while the desktop session reached the browser, cause not
+      determined.
