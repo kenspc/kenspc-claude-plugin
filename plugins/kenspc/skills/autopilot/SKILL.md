@@ -658,10 +658,12 @@ dirty tree is spent money, and every check is a condition a worker assumes.
 pass-through values, where the inbound `accept` came from, or that no
 source sets the key (The start checks), and each question a worker
 returned with that never arrived as a message (§ The message protocol), the
-current step and its tag, each session's tag, id, cost, and result, each
+current step and its tag, whether the standalone review ran and why,
+the walk's result, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
 questions answered, the rail observations and the lessons each worker
-listed, the breaches ruled benign, the gates
+listed, each BLOCKED task and its classification, the breaches ruled
+benign, the gates
 a worker skipped and their outcome, the
 stops, the questions left open for a later step (The stop conditions), the
 clarification numbers recorded in the spec and the rulings that have no
