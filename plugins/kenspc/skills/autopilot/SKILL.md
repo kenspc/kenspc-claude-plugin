@@ -1439,8 +1439,8 @@ Before each launch:
   an unreadable JSON does (The return); a `0` there would read as a free
   case.
   Projected = the largest cost so far of a session of the role about to
-  launch — S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6,
-  each with its resumes and re-runs — or the budget divided by six while
+  launch — S1, S2, S3, S3b, the narrowed reviews together, S4, S4w, S5,
+  S6, each with its resumes and re-runs — or the budget divided by six while
   no session of that role has a known cost: before its first session, or
   when each one's JSON was unreadable (The return). A plugin-mode S4's cost is its own session's
   plus the trial's and the cases' costs from its record, as spent counts
@@ -1450,7 +1450,10 @@ Before each launch:
   steps; the answer sets the budget for the rest of the run and is recorded
   in the state file and the reports, not in the brief. In a session that
   cannot ask (a system reminder to work without stopping), the run ends with
-  those numbers. Why: per-step estimates drift with every model generation
+  those numbers. Before S4w's first launch a failed check asks nothing:
+  the walk is cut as an `(optional)` acceptance case is (Phase 3's
+  narrowing rule), recorded `walk: cut by budget` on the state file's
+  `walk:` line and in both reports. Why: per-step estimates drift with every model generation
   and would be numbers hard-coded in a prompt; the batch's own sessions are
   the only evidence in the run. Why per role: projected at the largest
   session of the whole batch, a USD 1 release preparation was judged
@@ -1532,16 +1535,20 @@ continue.
 
 ## Phase 3: Accept
 
-**Goal**: the acceptance run, and every FAIL classified.
+**Goal**: the acceptance run, then the walk (S4w), and every FAIL of
+either classified.
 
-**Inputs**: the `Acceptance:` field as Phase 0 read it (§ The
-`## Autopilot` section); the S3b HEAD — S3's when S3b does not run (`Standalone review: off`, or `auto` not triggered); the preamble; in plugin
+**Inputs**: the `Acceptance:` and `Walk:` fields as Phase 0 read them
+(§ The `## Autopilot` section); the S3b HEAD — S3's when S3b does not run (`Standalone review: off`, or `auto` not triggered); the preamble; in plugin
 mode the plugin directory and the workspace for seeds.
 
 **DONE when** every case has a result in the state file and every FAIL a
 class, or `Acceptance: none` has been recorded as
 `none named; S3b is the last check` — `none named; S3 is the last check`
-when S3b does not run (`Standalone review: off`, or `auto` not triggered).
+when S3b does not run (`Standalone review: off`, or `auto` not triggered)
+— and the walk has its record: S4w's reply with every FAIL classified,
+or `off`, `nothing to walk`, `not walked`, or `walk: cut by budget` on
+the state file's `walk:` line.
 
 **Plugin mode.** S4 runs a seed-project acceptance: a trial run of a seed
 first, to confirm the path under test is reachable, then one case per run,
@@ -1706,6 +1713,51 @@ check fails, in the order listed, with Not exercised recorded. An unmarked
 case that cannot be run is a stop. Implementation is never narrowed. Why:
 acceptance is the part of a batch a budget may shorten with the shortfall
 on record; an implementation cut to fit a budget is a different batch.
+
+**The walk (S4w).** In repo mode with `Walk:` not `off`, S4w runs once
+S4's FAILs are classified and their re-runs have passed, or once the
+`Acceptance: none` record is written, so it walks the code the batch will
+release. Its task block (Templates § The task blocks, S4w) carries the
+flows — the `Walk:` sub-bullets as written, or, with `on`, the flows a
+user of the app takes that the batch changed, which S4w picks from the
+spec's steps and lists in its reply — and the rules it walks by: local
+URLs only, tabs of its own, the app started as the project's instruction
+files and the spec say with its local resources named as the run's, data
+by the project's rule or synthetic, a test account's password read at run
+time inside the page or a script, the ports checked before a server
+starts, and only the processes it started stopped, by their listener. It
+writes `walk.md` and its screenshots under `<workspace>/_logs/<batch>-walk/`
+and replies with each flow's result.
+
+S4w's reply ends the walk one of four ways besides a walk: `nothing to
+walk: <reason>` when the batch has no user interface, and
+`not walked: <reason>` when the app cannot be started or a port it needs
+stays held — neither is a failure or a stop, and the state file's `walk:`
+line records it; `walk tool unavailable` when S4w's own check of the
+Playwright tools finds them missing, which is a stop stated here, naming
+`Walk: off` as the way on — in a session that cannot ask (a system
+reminder to work without stopping), the run ends with the same message.
+A port held by a process S4w did not start arrives as its question, and
+the main session rules wait — S4w re-checks the port every 10 minutes, for
+at most 60 minutes — or skip, recorded `not walked: port <n> in use`; it
+rules wait when the holder looks like a session that will end (a test
+run, a build) and skip otherwise, and neither is a stop.
+
+A FAIL is classified as an acceptance FAIL is (Classification above): a
+defect → S5 (Templates § The task blocks, S5, the walk's flow as its
+case) → the narrowed review → an `-s4wb` re-run that walks the failed
+flows only; a behavior deviation → a reviewer-report line; an observation
+→ recorded; the same defect still failing after two fixes of it is stop
+condition 4, counted per defect. Every classification is a clarification
+in the spec naming who ruled. Why a walk after the acceptance: an
+acceptance command checks what its author thought to check, while a walk
+through the flows a user takes shows what the user would see, on the code
+that will be released. Why local only, own tabs, and the password read at
+run time: the browser can reach any environment the machine can, and a
+password in a tool call's input or a message is in the transcript and
+the logs for good. Why only its own processes, by their listener: a dev
+server another session runs on the same port is someone's work, and a
+kill by name or by port alone stops it too.
 
 ## Phase 4: Release preparation and reports
 
@@ -1905,7 +1957,8 @@ reads both reports before the tag.
   status command printed; each breach the main session ruled benign, with
   the breach and the ruling; each task S3 left BLOCKED, with its
   classification), whether the standalone review ran — with
-  `auto`, its trigger or that it was not triggered — and the cost. Then, under the
+  `auto`, its trigger or that it was not triggered — the walk's result,
+  and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -2518,14 +2571,84 @@ alone, `docs: update batch <batch> acceptance record`; the repository
 changes in no other way.]
 ````
 
+- **S4w** — Phase 3, The walk: repo mode, `Walk:` not `off`. `<HEAD sha>`
+  is HEAD at the launch, the state file's `head:`; `<resources>` are the
+  local resources the app's start needs — its database, its dev servers —
+  as the project's instruction files and the spec name them, or `none
+  named`; `<data rule>` is the project's instruction files' rule for test
+  data, or `none given`. The first bracketed paragraph is written when
+  `Walk:` holds flow sub-bullets, the second with `Walk: on`, and the
+  third instead of both on an `-s4wb` re-run, which walks the failed flows
+  only. Why the tool is named: the start check found the Playwright MCP
+  usable, while Claude in Chrome is not used by a headless worker (Phase 0
+  § The start checks).
+
+````
+## Task: runtime walk for batch <batch>
+
+The batch's commits are <baseline sha>..<HEAD sha>; walk the app at that
+HEAD, from the repository, on this machine only, with the Playwright MCP's
+browser tools.
+
+[Walk these flows as written, each with what must be seen:
+<the Walk: sub-bullets>]
+[Pick the flows a user of the app takes that this batch changed, from the
+specification's steps, each with what must be seen, and list the flows
+you chose in your reply.]
+[Walk only these flows, which failed in <the earlier walk's tag>, each with
+what must be seen:
+<the failed flows>]
+
+First check the tool: the Playwright MCP's browser tools must be present
+in this session. When they are not, start nothing and reply
+`walk tool unavailable`, naming what you saw. When the batch changes no
+user interface, start nothing and reply `nothing to walk: <reason>`.
+
+Rules for the walk:
+- Local URLs only — http://127.0.0.1 or http://localhost, on the ports
+  you started; never a staging or production environment, never another
+  host.
+- Tabs of your own only: open pages in the browser the Playwright MCP
+  starts for this session; never read, use, or close a tab of the user's
+  own browser.
+- Start the app as the project's instruction files and the specification
+  say. Its local resources — <resources> — are resources this run names
+  (§ 3).
+- Data: <data rule>; when none is given, synthetic data only.
+- A test account's password is read at run time from the file the
+  project keeps it in, inside the page or a script you run; it never
+  appears in a tool call's input, a message, or your reply.
+- Before you start a server, check each port it needs:
+  `lsof -ti tcp:<port> -sTCP:LISTEN` prints nothing for a free port. A port held by
+  a process you did not start: send <main name> one question naming the
+  port and the process, and wait as § 1 says. The answer is wait — check
+  the port again every 10 minutes, for at most 60 minutes — or skip,
+  which ends the walk `not walked: port <n> in use`.
+- An app you cannot start ends the walk `not walked: <reason>`, with the
+  output that shows why.
+- Stop only the processes you started, each found by its listener,
+  `lsof -ti tcp:<port> -sTCP:LISTEN` for each port you started, and show
+  each port free afterwards.
+- Screenshots: the Playwright MCP writes them only under its own output
+  directory and this session's working directory; copy each into
+  <workspace>/_logs/<batch>-walk/.
+
+Write <workspace>/_logs/<batch>-walk/walk.md: per flow, the steps, what
+was seen, PASS or FAIL against what must be seen, and the screenshot
+paths. Reply with walk.md's path; one line per flow — the flow, PASS or
+FAIL, one line of what was seen; the processes you started and stopped,
+each port shown free; and every URL you opened.
+````
+
 - **S5** — a fix, launched from a classified defect: a Schema F row after
   S3b, or a row of S3's review when S3b does not run (`Standalone review: off`, or `auto` not triggered) (Phase 2), a
-  task S3 left BLOCKED (§ The verdict loop after S3b), or
-  an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
+  task S3 left BLOCKED (§ The verdict loop after S3b), an
+  acceptance FAIL (Phase 3), or a walk FAIL (Phase 3, The walk). `<ID>` and `<run dir>`
   name the finding — the row's issue ID and the review's run directory, the
-  task's number (`Task <n>`) and the task document's path, or
+  task's number (`Task <n>`) and the task document's path,
   the case's number and the record's path (plugin mode) or S4's reply (repo
-  mode); `<one line>` is the finding in one sentence. A BLOCKED task's
+  mode), or the flow's name and the path of `walk.md`, whose lines for the
+  flow are the finding and whose must-see is the case to make pass; `<one line>` is the finding in one sentence. A BLOCKED task's
   entry takes the second form below, quoting the task and its BLOCKED
   note, and its commit sets the task's `**Status:**` to DONE. Why: the
   note says what stopped the implementer, which the S5 must get past, and
@@ -2850,15 +2973,17 @@ run overnight — the steps between, which needed no answer, waited with it,
 and S3b's fixes then changed the list again, so the question answered in
 the morning had to be asked a second time.
 
-**Stops stated at their own steps.** Six stops sit outside the numbered
+**Stops stated at their own steps.** Seven stops sit outside the numbered
 list, each stated where it happens, and end the run the same way: a
 driver that refuses a launch (§ Launch, wait, return), a delivery notice
 that the first message to a worker was held or refused (§ The message
 protocol), an artifact absent after a return (§ Phase transitions), an
 unmarked acceptance case that cannot be run (Phase 3's narrowing rule),
 the skipped-gate post-check's second failure (§ A worker's question
-at a gate), and a usage-limit end when the main session is headless or no tool of
-it can schedule its wake-up after the reset (§ Death and resume). Why listed
+at a gate), a usage-limit end when the main session is headless or no tool of
+it can schedule its wake-up after the reset (§ Death and resume), and an
+S4w that ends `walk tool unavailable`, the walk tool's absence at its
+start (Phase 3, The walk). Why listed
 here: a reader of the stop conditions finds every stop from this section,
 while each rule stays beside the step it governs.
 
@@ -2894,7 +3019,8 @@ decisions the user has yet to see.
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
-- Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check
+- Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check | none named; S3b is the last review, the walk follows | none named; S3 is the last review, the walk follows
+- Walk: <off | walked (<tag>[, <tag>…]): <flow> PASS|FAIL[ — <classification>]; …; <walk.md path> | nothing to walk: <reason> | not walked: <reason> | walk: cut by budget>
 - Standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>
 - BLOCKED tasks: <Task <n>: <one line> — <fixed by S5 <tag>, <commit> | deferred (<clarification>)>; … | none>
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
@@ -2960,7 +3086,16 @@ whether S3b ran — `ran` with `on`, `ran (<trigger>)` with `auto`, the
 trigger being S3's verdict or its deferred HIGH or MEDIUM rows, and
 `not run (off)` or `not run (auto: <S3's verdict, nothing HIGH or MEDIUM deferred>)`
 — so a trial of `auto` reads from the reports; the Acceptance line's
-`none named; S3 is the last check` is used whenever S3b did not run. The
+`none named; S3 is the last check` is used whenever S3b did not run. With
+`Acceptance: none` and a walk that walked, the Acceptance line reads
+`none named; S3b is the last review, the walk follows`, or
+`none named; S3 is the last review, the walk follows` when S3b did not
+run, since the walk then checks after the last review; with `Walk: off`,
+or a walk recorded `nothing to walk`, `not walked`, or
+`walk: cut by budget`, it stays as it is, and the state file's
+`Acceptance: none` record, written before S4w starts, is unchanged. The
+`Walk` line is the state file's `walk:` line, with each FAIL's
+classification. The
 `BLOCKED tasks` line lists the state file's `blocked tasks:` entries, each
 with its classification, and reads `none` when S3 left none.
 
@@ -2985,6 +3120,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | S2 returned without its confirmation question, and the post-check of its task document finds a mismatch, or an open choice whose ruling differs from the document | Nothing on the first failure: S2 is resumed under `<tag>-r<k>` with the ruling, to amend, and the post-check runs again; on a second failure, a stop with the mismatch or the choice quoted | The first failure the same; on a second, the run ends with it quoted |
 | Stop condition 7: (a) every option changes the batch's contract, none staying inside it; (b) an acceptance case corrected without both pieces of evidence | How to go on — (a) with the options, (b) with the case and the evidence missing | The run ends with the reason |
 | A question of stop condition 7's kind — a way forward the main session cannot rule on — the main session raises that only a later step needs | Nothing until that step; then the question as it then stands | The run goes on and ends at that step with the question quoted |
+| S4w ended `walk tool unavailable` | How to go on: fix the walk tool, or write `Walk: off` and go on | The run ends with the reason |
 | A rail breach (stop condition 6) | Nothing when the main session rules it benign (§ A breach the main session rules benign): the worker is resumed; any other breach, how to go on | A benign breach the same; any other, the run ends with the reason |
 | Any other stop condition, or a stop stated at its own step | How to go on | The run ends with the reason |
 | The final gate | Tag, push, release | The run ends with the two reports and the finish line |
@@ -3054,7 +3190,10 @@ wording that closed it:
   in S3b's place, and the zero-diff check's result after S3, or
   `Zero diff:` empty.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
-  with every FAIL classified, or `Acceptance: none` recorded.
+  with every FAIL classified, or `Acceptance: none` recorded; then, in
+  repo mode, S4w's reply with every FAIL classified, or the walk's record
+  on the state file's `walk:` line — `off`, `nothing to walk`,
+  `not walked`, or `walk: cut by budget`.
 - The exit: S6's commit, after the clarification commit of each question
   S6 asked, and the reports. A ruling that has no clarification commit,
   a failed check at S6's return, or, when S6 removed nothing, a

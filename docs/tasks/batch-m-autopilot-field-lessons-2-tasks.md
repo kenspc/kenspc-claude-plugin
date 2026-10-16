@@ -829,7 +829,30 @@ the walk's record).
 
 ### Task 13: The walk session's flow
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the walk's flow is one Phase 3 paragraph group, "The walk
+  (S4w)", after the narrowing rule; the S4w task block sits before S5's
+  and names the Playwright MCP as its tool (Task 12's order), so its
+  own-tabs rule reads "tabs of your own only: open pages in the browser
+  the Playwright MCP starts for this session; never read, use, or close a
+  tab of the user's own browser" — no Claude in Chrome identifier, and
+  `check-no-model-names.sh` stays green. The block has three bracketed
+  flow paragraphs: `Walk:` sub-bullets, `Walk: on` (S4w picks and lists),
+  and an `-s4wb` re-run of the failed flows only. The main session's
+  port ruling is wait when the holder looks like a session that will end
+  (a test run, a build) and skip otherwise. A walk FAIL's S5 entry names
+  the flow and `walk.md`, the flow's must-see being the case to make pass.
+- Changes/tradeoffs: before S4w's first launch, a failed budget check
+  asks nothing and cuts the walk (`walk: cut by budget`), which differs
+  from every other launch's budget question, as the plan rules. § The
+  gates gained an explicit `walk tool unavailable` row. Phase 3's Goal,
+  Inputs, and DONE line now name the walk, and the reviewer report's
+  `Walk:` line carries each FAIL's classification. The S4w block states
+  its rules in the worker's imperative, and the Why for local-only,
+  own tabs, the password, and listener-only stops sits in the Phase 3
+  paragraph, as the other task blocks keep their Why outside the fence.
 
 Depends on: Task 11, Task 12
 
