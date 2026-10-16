@@ -70,7 +70,8 @@
 #       separate argument; any other word starting with -) — with the
 #       subcommand fetch, pull, push, ls-remote, or remote update, or
 #       clone whose source is a URL (it
-#       holds ://, or reads <user>@<host>:<path>); a git clone of a local
+#       holds ://, or reads [<user>@]<host>:<path>, a : before any /, as
+#       git reads it, a drive letter aside); a git clone of a local
 #       path is allowed. The reason's route: ask the main session, which
 #       gets anything the work needs from GitHub. Why: a denial is not a
 #       breach, so the run goes on, and the hook reaches a subagent that
@@ -243,7 +244,9 @@ function check(   i, wr, j, a, r) {
 # every option: skipping only those listed let git -P push and
 # git --git-dir .git fetch through. The subcommands
 # fetch, pull, push, ls-remote, and remote update, and a clone whose source
-# holds :// or reads <user>@<host>:<path>, set found, marked \003 as a
+# holds :// or reads [<user>@]<host>:<path> (a : before any /, not a
+# Windows drive letter, as git reads an scp-like source), set found,
+# marked \003 as a
 # remote call. A clone of a local path is no remote call.
 function gitremote(i,   j, a, s) {
   j = i + 1
@@ -269,7 +272,7 @@ function gitremote(i,   j, a, s) {
   }
   if (j > nw) return
   a = w[j]
-  if (index(a, "://") > 0 || a ~ /^[^\/:@]+@[^\/:]+:/) found = "\003" w[i] " clone " a
+  if (index(a, "://") > 0 || (a ~ /^[^\/:]+:/ && a !~ /^[A-Za-z]:/)) found = "\003" w[i] " clone " a
 }
 # push and pop enter and leave a substitution or subshell. The words of its
 # command go on top of those of the enclosing command, as w[base + 1] to

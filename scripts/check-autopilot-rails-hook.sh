@@ -55,7 +55,8 @@
 # git pull, git ls-remote origin, git remote update, git -c x.y=z push,
 # git --no-pager fetch, git --git-dir=.git fetch, git -P push,
 # git --git-dir .git fetch, git --no-optional-locks fetch, and a git clone
-# of an https URL (also after --depth 1) or of a user@host:path source
+# of an https URL (also after --depth 1) or of a user@host:path or
+# host:path source
 # (denied, the reason's route to ask the main session), and git clone of
 # a local path, git status, git --git-dir .git status, type gh, grep gh f,
 # command -v gh, and which gh (allowed); an input whose tool
@@ -575,6 +576,7 @@ run_fixtures() {
     fx_deny "$hook" "git push" "$r" Bash "$FX_REPO" 'git push' deny-ask
     fx_deny "$hook" "git clone of an https URL" "$r" Bash "$FX_REPO" 'git clone https://example.test/r.git d' deny-ask
     fx_deny "$hook" "git clone of a user@host:path source" "$r" Bash "$FX_REPO" 'git clone git@example.test:r.git d' deny-ask
+    fx_deny "$hook" "git clone of a host:path source with no user" "$r" Bash "$FX_REPO" 'git clone example.test:r.git d' deny-ask
     # Every global option before the subcommand is skipped, a separate
     # argument after --git-dir, --work-tree, -C, or -c included.
     fx_deny "$hook" "git -P push" "$r" Bash "$FX_REPO" 'git -P push' deny-ask

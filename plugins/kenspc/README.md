@@ -1661,7 +1661,7 @@ on Windows.
   `--work-tree`, and `--namespace` with a separate argument — is denied
   with `fetch`, `pull`, `push`,
   `ls-remote`, or `remote update`, and with a `clone` whose source holds
-  `://` (a `file://` URL included) or reads `<user>@<host>:<path>`, while a
+  `://` (a `file://` URL included) or reads `[<user>@]<host>:<path>`, while a
   `git clone` of a local path passes. Its reason's route is to ask the main
   session. A denied call is a rail
   observation, not a breach: the worker takes the route the deny's reason

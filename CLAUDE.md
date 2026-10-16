@@ -888,7 +888,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `git --no-pager fetch`, `git --git-dir=.git fetch`, `git -P push`,
   `git --git-dir .git fetch`, `git --no-optional-locks fetch`, and a
   `git clone` of an https URL (also after `--depth 1`) or of a
-  `user@host:path` source; allowed: a `git clone` of a local path,
+  `user@host:path` or `host:path` source; allowed: a `git clone` of a
+  local path,
   `git status`, `git --git-dir .git status`, `type gh`, `grep gh f`,
   `command -v gh`, and `which gh` — and every
   denied fixture again

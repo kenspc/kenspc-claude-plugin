@@ -245,7 +245,7 @@ in the next product-repository batches.
   `--git-dir`, `--work-tree`, and `--namespace` with a separate argument —
   with `fetch`, `pull`, `push`,
   `ls-remote`, or `remote update`, or `clone` of a source holding `://` or
-  reading `<user>@<host>:<path>`; a `git clone` of a local path passes.
+  reading `[<user>@]<host>:<path>`; a `git clone` of a local path passes.
   The reason's route is to ask the main session, which gets anything the
   work needs from GitHub, and preamble § 3 says the same. Why: a denial is
   not a breach, so the run goes on, and the hook reaches a subagent that
