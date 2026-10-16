@@ -130,13 +130,16 @@ you read for that purpose; a `V` ID that file does not name is a ruled ID
 that no report lists. An `F` row a round-2 entry names is updated like any
 other row. A round-2 DEFER or NOT APPLICABLE entry on a row the first round
 FIXED takes that fix back before the row changes. In a committed run,
+check the index with `git diff --cached --quiet`, and when it exits 0,
 `git revert --no-commit <the row's commit>`, then a commit of its own whose
 subject follows the commit convention FIXING RULES gives, under the
 dirty-file rule of FIXING RULES. When the revert stops on a conflict, run
-`git revert --abort`, which returns the tree to where it was, and edit the
-fix back out by hand instead, in a commit of its own, keeping the other
-fixes in the same lines. When neither takes the fix back — the hand edit
-cannot remove it without undoing another row's fix — leave the fix in
+`git revert --abort`, which, with the index clean, returns the tree to
+where it was, and edit the fix back out by hand instead, in a commit of its
+own, keeping the other fixes in the same lines. When the fix cannot be
+taken back — the index check exits non-zero, since the index then holds
+staged changes this run did not make, or the hand edit cannot remove the
+fix without undoing another row's fix — leave the fix in
 place: the row keeps FIXED, adds `not reverted — <reason>` after its
 em-dash, and its Deferred Issues paragraph says the ruling asked for the
 code without this fix and why it is still there. In an uncommitted run,
@@ -153,7 +156,11 @@ paragraphs. Why a fix left in place stays FIXED: the row then says what
 the code holds, and as a ruled row whose action differs from its ruling it
 keeps the verdict from PASS, so the user sees it. Why `--no-commit`: git's
 own revert subject, `Revert "<subject>"`, does not follow a project's
-commit convention. Reply as
+commit convention. Why the index check: `--no-commit` skips git's own
+refusal to revert over staged changes, so the commit of its own would
+carry the user's staged work under this run's message, and
+`git revert --abort` would discard it from the index and the working tree,
+in files the revert never touched. Reply as
 OUTPUT FORMAT gives, for the whole updated file. Why in
 place: the second round's file is the one the verdict reads, and a row
 dropped from it would be an issue no longer accounted for.
