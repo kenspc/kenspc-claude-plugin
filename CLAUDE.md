@@ -879,9 +879,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   roots hold, so `$TMPDIR/..` lies outside every root on any machine, and
   its `$USER` to a fixture name —
   `gh` and remote git (4.7.0) — denied: `gh issue view 1`,
-  `git -C . fetch`, `git push`, and a `git clone` of an https URL or of a
+  `git -C . fetch`, `git push`, `git -P push`, `git --git-dir .git fetch`,
+  `git --no-optional-locks fetch`, and a `git clone` of an https URL or of a
   `user@host:path` source; allowed: a `git clone` of a local path,
-  `git status`, `grep gh f`, `command -v gh`, and `which gh` — and every
+  `git status`, `git --git-dir .git status`, `grep gh f`, `command -v gh`,
+  and `which gh` — and every
   denied fixture again
   without the marker and with the marker `0`. Main mode also checks that
   `hooks.json` registers the hook under PreToolUse with a matcher naming

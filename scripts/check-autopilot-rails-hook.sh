@@ -49,9 +49,11 @@
 # repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
 # in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture path
 # the redirection fixtures' roots hold and its $USER to a fixture name; gh issue view 1,
-# git -C . fetch, git push, and a git clone of an https URL or of a
+# git -C . fetch, git push, git -P push, git --git-dir .git fetch,
+# git --no-optional-locks fetch, and a git clone of an https URL or of a
 # user@host:path source (denied, the reason's route to ask the main
-# session), and git clone of a local path, git status, grep gh f,
+# session), and git clone of a local path, git status,
+# git --git-dir .git status, grep gh f,
 # command -v gh, and which gh (allowed); an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
@@ -559,6 +561,12 @@ run_fixtures() {
     fx_deny "$hook" "git push" "$r" Bash "$FX_REPO" 'git push' deny-ask
     fx_deny "$hook" "git clone of an https URL" "$r" Bash "$FX_REPO" 'git clone https://example.test/r.git d' deny-ask
     fx_deny "$hook" "git clone of a user@host:path source" "$r" Bash "$FX_REPO" 'git clone git@example.test:r.git d' deny-ask
+    # Every global option before the subcommand is skipped, a separate
+    # argument after --git-dir, --work-tree, -C, or -c included.
+    fx_deny "$hook" "git -P push" "$r" Bash "$FX_REPO" 'git -P push' deny-ask
+    fx_deny "$hook" "git --git-dir .git fetch, the space form" "$r" Bash "$FX_REPO" 'git --git-dir .git fetch' deny-ask
+    fx_deny "$hook" "git --no-optional-locks fetch" "$r" Bash "$FX_REPO" 'git --no-optional-locks fetch' deny-ask
+    fx "$hook" "git --git-dir .git status" allow 1 "$r" Bash "$FX_REPO" 'git --git-dir .git status'
     fx "$hook" "git clone of a local path" allow 1 "$r" Bash "$FX_REPO" 'git clone /local/repo d'
     fx "$hook" "git status" allow 1 "$r" Bash "$FX_REPO" 'git status'
     fx "$hook" "grep gh f, gh as an argument" allow 1 "$r" Bash "$FX_REPO" 'grep gh f'

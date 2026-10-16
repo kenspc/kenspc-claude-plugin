@@ -1654,8 +1654,9 @@ on Windows.
   target, and a `>` inside quotes or a heredoc body is no redirection.
   `gh` is denied at a command position, wrappers such as `sudo` and
   `xargs` included, while `command -v gh`, `type gh`, and `which gh` pass;
-  `git` — its global options `-C`, `-c`, `--git-dir=`, `--work-tree=`, and
-  `--no-pager` skipped — is denied with `fetch`, `pull`, `push`,
+  `git` — its global options skipped, `-C`, `-c`, `--git-dir`,
+  `--work-tree`, and `--namespace` with a separate argument — is denied
+  with `fetch`, `pull`, `push`,
   `ls-remote`, or `remote update`, and with a `clone` whose source holds
   `://` (a `file://` URL included) or reads `<user>@<host>:<path>`, while a
   `git clone` of a local path passes. Its reason's route is to ask the main

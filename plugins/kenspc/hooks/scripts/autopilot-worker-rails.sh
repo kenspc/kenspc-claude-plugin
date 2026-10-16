@@ -66,9 +66,10 @@
 #       reason (c) gives;
 #   (e) gh at a command position (command -v gh, type gh, and which gh,
 #       which do not run it, are allowed), and git — its global options
-#       -C <path>, -c <name>=<value>, --git-dir=, --work-tree=, and
-#       --no-pager skipped — with the subcommand fetch, pull, push,
-#       ls-remote, or remote update, or clone whose source is a URL (it
+#       skipped (-C, -c, --git-dir, --work-tree, and --namespace with a
+#       separate argument; any other word starting with -) — with the
+#       subcommand fetch, pull, push, ls-remote, or remote update, or
+#       clone whose source is a URL (it
 #       holds ://, or reads <user>@<host>:<path>); a git clone of a local
 #       path is allowed. The reason's route: ask the main session, which
 #       gets anything the work needs from GitHub. Why: a denial is not a
@@ -100,7 +101,8 @@
 # interpreter-level deletes (python, node, perl), git clean, and writes
 # through Bash other than a redirection (cp, mv, tee, an interpreter's own
 # writes); a redirection whose relative target follows a cd earlier in the
-# same command, read against the input's cwd; also rm reached through a
+# same command, read against the input's cwd; remote git through git lfs,
+# git submodule update --remote, or a git alias; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
 # ($'\x72m', kept as written), rm after a redirection written before the command
 # name (2>/dev/null rm -rf d), other wrappers (timeout, nice), commands inside an
@@ -234,8 +236,12 @@ function check(   i, wr, j, a, r) {
     if (a ~ /^-[^-]/ && a ~ /[rR]/) { found = w[i] " " a; return }
   }
 }
-# gitremote(i): w[i] is git. Its global options -C <path>, -c <name>=<value>,
-# --git-dir=, --work-tree=, and --no-pager are skipped; the subcommands
+# gitremote(i): w[i] is git. Its global options are skipped: -C, -c,
+# --git-dir, --work-tree, and --namespace with the argument that follows as
+# a word of its own, any other word that starts with - alone, and --help,
+# -h, or --version ends the check, since git then runs no subcommand. Why
+# every option: skipping only those listed let git -P push and
+# git --git-dir .git fetch through. The subcommands
 # fetch, pull, push, ls-remote, and remote update, and a clone whose source
 # holds :// or reads <user>@<host>:<path>, set found, marked \003 as a
 # remote call. A clone of a local path is no remote call.
@@ -243,8 +249,9 @@ function gitremote(i,   j, a, s) {
   j = i + 1
   while (j <= nw) {
     a = w[j]
-    if (a == "-C" || a == "-c") { j += 2; continue }
-    if (a == "--no-pager" || a ~ /^--(git-dir|work-tree)=/) { j++; continue }
+    if (a == "-C" || a == "-c" || a ~ /^--(git-dir|work-tree|namespace)$/) { j += 2; continue }
+    if (a ~ /^(--help|-h|--version)$/) return
+    if (a ~ /^-/) { j++; continue }
     break
   }
   if (j > nw) return

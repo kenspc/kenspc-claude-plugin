@@ -238,8 +238,9 @@ in the next product-repository batches.
 - **The rails hook denies `gh` and remote git (hooks, autopilot preamble
   § 3).** At a command position, wrappers such as `sudo` and `xargs`
   included, `gh` is denied (`command -v gh`, `type gh`, and `which gh`
-  pass), and so is `git` — its global options `-C`, `-c`, `--git-dir=`,
-  `--work-tree=`, `--no-pager` skipped — with `fetch`, `pull`, `push`,
+  pass), and so is `git` — its global options skipped, `-C`, `-c`,
+  `--git-dir`, `--work-tree`, and `--namespace` with a separate argument —
+  with `fetch`, `pull`, `push`,
   `ls-remote`, or `remote update`, or `clone` of a source holding `://` or
   reading `<user>@<host>:<path>`; a `git clone` of a local path passes.
   The reason's route is to ask the main session, which gets anything the
