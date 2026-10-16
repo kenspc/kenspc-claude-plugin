@@ -45,7 +45,11 @@
 # those the hook must not deny: > /dev/null, 2>&1, > "$TMPDIR/x",
 # > out.txt in the repository, > "$OTHER/x" (not judged), a > inside single
 # quotes, and a > in a heredoc body (allowed), with the hook's $TMPDIR set
-# to a fixture path the redirection fixtures' roots hold; an input whose tool
+# to a fixture path the redirection fixtures' roots hold; gh issue view 1,
+# git -C . fetch, git push, and a git clone of an https URL or of a
+# user@host:path source (denied, the reason's route to ask the main
+# session), and git clone of a local path, git status, grep gh f,
+# command -v gh, and which gh (allowed); an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
 # Bash input over the hook's length cap
@@ -108,7 +112,7 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against seven mutants,
+#                  unmodified copy (must pass), then against eight mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
@@ -120,8 +124,10 @@
 #                  reason alone (the "Bash with no readable command field"
 #                  fixture, which must be the first red, while the heading
 #                  check on the same copy stays green, since the other two
-#                  reasons still carry the phrase), and the redirection check
-#                  removed (any fixture red). Then the restored copy
+#                  reasons still carry the phrase), the redirection check
+#                  removed (any fixture red), and the gh check removed (the
+#                  "gh issue view" fixture, which must be the first red).
+#                  Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
 #                  It then copies SKILL.md beside the hook copy, runs the
@@ -274,14 +280,19 @@ SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, 
 # the denial and end instead.
 UNREADABLE_NO_ROUTE="No permitted route applies"
 UNREADABLE_REPORT="list this denial with its reason under ## Rail observations and end"
+# The route a gh or remote-git denial names, and the phrase the preamble's
+# § 3 shares with it.
+ASK_ROUTE="ask the main session"
 D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
 
 # fx <hook> <label> <expect> <marker or -> <roots> <tool> <cwd> <payload>
 # <expect> deny-unreadable is a deny whose reason offers no route and asks
-# for the denial to be reported, as a field the hook cannot read gets.
+# for the denial to be reported, as a field the hook cannot read gets;
+# deny-ask is a deny whose route is to ask the main session, as gh and
+# remote git get.
 fx() {
     local hook="$1" label="$2" expect="$3" marker="$4" roots="$5" tool="$6" cwd="$7" payload="$8" ok=0 want="$3"
-    if [[ "$expect" == deny-unreadable ]]; then want=deny; fi
+    if [[ "$expect" == deny-unreadable || "$expect" == deny-ask ]]; then want=deny; fi
     decide "$hook" "$marker" "$roots" "$(make_input "$tool" "$cwd" "$payload")"
     if [[ "$GOT" == "$want" ]]; then
         ok=1
@@ -294,6 +305,13 @@ fx() {
         && [[ "$ERR" != *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
         ok=0
         GOT="deny without .trash in its reason, or saying '$UNREADABLE_NO_ROUTE'"
+    fi
+    # A gh or remote-git denial names the main session as the route, and
+    # neither the .trash route nor the no-route reason.
+    if [[ "$expect" == deny-ask && "$ok" -eq 1 ]] \
+        && [[ "$ERR" != *"$ASK_ROUTE"* || "$ERR" == *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
+        ok=0
+        GOT="deny whose reason does not say '$ASK_ROUTE', or names .trash or '$UNREADABLE_NO_ROUTE'"
     fi
     # Each unreadable-field reason must carry the phrase stop condition 11
     # matches on, so a reword of one field's reason turns its fixture red.
@@ -507,6 +525,21 @@ run_fixtures() {
     # under half the hook's timeout.
     t=$(awk 'BEGIN { for (i = 0; i < 8000; i++) printf ">a " }')
     fx_timed "$hook" "8000 redirections inside the repository, then one to /etc, decided in time" 2.5 "echo $t> /etc/x" "redirects output outside" "$rr"
+
+    # gh at a command position, and git with a remote subcommand or a URL
+    # clone, denied with the main session as the route; a local clone, a
+    # local subcommand, gh as a mere word, and the commands that name gh
+    # without running it, allowed.
+    fx_deny "$hook" "gh issue view" "$r" Bash "$FX_REPO" 'gh issue view 1' deny-ask
+    fx_deny "$hook" "git -C . fetch" "$r" Bash "$FX_REPO" 'git -C . fetch' deny-ask
+    fx_deny "$hook" "git push" "$r" Bash "$FX_REPO" 'git push' deny-ask
+    fx_deny "$hook" "git clone of an https URL" "$r" Bash "$FX_REPO" 'git clone https://example.test/r.git d' deny-ask
+    fx_deny "$hook" "git clone of a user@host:path source" "$r" Bash "$FX_REPO" 'git clone git@example.test:r.git d' deny-ask
+    fx "$hook" "git clone of a local path" allow 1 "$r" Bash "$FX_REPO" 'git clone /local/repo d'
+    fx "$hook" "git status" allow 1 "$r" Bash "$FX_REPO" 'git status'
+    fx "$hook" "grep gh f, gh as an argument" allow 1 "$r" Bash "$FX_REPO" 'grep gh f'
+    fx "$hook" "command -v gh" allow 1 "$r" Bash "$FX_REPO" 'command -v gh'
+    fx "$hook" "which gh" allow 1 "$r" Bash "$FX_REPO" 'which gh'
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
@@ -817,13 +850,13 @@ run_self_test() {
         return 1
     fi
 
-    # Seven mutants, each a literal replacement in a fresh copy. The
+    # Eight mutants, each a literal replacement in a fresh copy. The
     # constant-time push mutant copies every word collected so far on each
     # push, the last-character check mutant matches the whole word
     # against [<>]$ on each | or &, as the hook once did, and the
     # command-reason-phrase mutant rewords the phrase in one of the three
     # unreadable-field reasons, which only the fixture assertion catches.
-    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check; do
+    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check gh-check; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -846,6 +879,9 @@ run_self_test() {
             redirection-check)
                 old='|| deny "this Bash call redirects output outside'
                 new='|| : "this Bash call redirects output outside' ;;
+            gh-check)
+                old='if (bname(w[i]) == "gh")'
+                new='if (0 && bname(w[i]) == "gh")' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?
@@ -864,6 +900,7 @@ run_self_test() {
         case "$name" in
             constant-time-push) want=$SUBST_TIMED_LABEL ;;
             command-reason-phrase) want="Bash with no readable command field" ;;
+            gh-check) want="gh issue view" ;;
             *) want="" ;;
         esac
         if [[ -n "$want" && "$FIRST_RED" != "$want" ]]; then

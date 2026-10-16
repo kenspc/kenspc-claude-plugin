@@ -5,8 +5,10 @@
 # Purpose: an autopilot worker's rails — no recursive rm, no write outside
 # the repository, the workspace, and scratch — are written in its prompt,
 # which the subagents it dispatches never see. A plugin hook fires for a
-# subagent's tool call too, so this hook carries two of the rails to every
-# call a worker's session makes, its subagents' included.
+# subagent's tool call too, so this hook carries rails to every call a
+# worker's session makes, its subagents' included: the recursive rm, the
+# write outside the roots, and, since a worker reaches GitHub only through
+# the main session, gh and remote git.
 #
 # Marker and roots, both exported by the autopilot driver (run.sh, run.ps1)
 # to every worker it starts:
@@ -56,7 +58,18 @@
 #       body is no redirection. Why redirections: both writes outside the
 #       roots that workers made through Bash were redirections, one to a
 #       file beside $TMPDIR and one appending to a memory file under
-#       ~/.claude.
+#       ~/.claude;
+#   (e) gh at a command position (command -v gh, type gh, and which gh,
+#       which do not run it, are allowed), and git — its global options
+#       -C <path>, -c <name>=<value>, --git-dir=, --work-tree=, and
+#       --no-pager skipped — with the subcommand fetch, pull, push,
+#       ls-remote, or remote update, or clone whose source is a URL (it
+#       holds ://, or reads <user>@<host>:<path>); a git clone of a local
+#       path is allowed. The reason's route: ask the main session, which
+#       gets anything the work needs from GitHub. Why: a denial is not a
+#       breach, so the run goes on, and the hook reaches a subagent that
+#       never saw the preamble — a subagent's read-only gh call once
+#       stopped a run as a breach.
 # An input whose tool_name cannot be read, or a Bash input whose
 # tool_input.command cannot be read, is denied as well: were a Claude Code
 # release to rename either field, the calls would stop loudly rather than
@@ -70,7 +83,8 @@
 # headless bypassPermissions session: neither file was created.
 # The reason names the rail and the permitted route: discard by mv into the
 # workspace's .trash/<name>-<timestamp>/, and write under the repository,
-# the workspace, or scratch; for a field that cannot be read, that no route
+# the workspace, or scratch; for gh and remote git, to ask the main session;
+# for a field that cannot be read, that no route
 # applies and that the denial is to be listed under ## Rail observations
 # before the worker ends.
 #
@@ -190,6 +204,8 @@ function check(   i, wr, j, a, r) {
       i++
       while (i <= nw) {
         if (w[i] == "--") { i++; break }
+        # command -v and command -V name a command without running it.
+        if (wr == "command" && w[i] ~ /^-[vV]+$/) return
         if (w[i] ~ /^-./) { if (takesarg(wr, w[i])) i++; i++; continue }
         if (wr == "env" && w[i] ~ /^[A-Za-z_][A-Za-z0-9_]*=/) { i++; continue }
         break
@@ -198,7 +214,10 @@ function check(   i, wr, j, a, r) {
     }
     break
   }
-  if (i > nw || bname(w[i]) != "rm") return
+  if (i > nw) return
+  if (bname(w[i]) == "gh") { found = "\003" w[i] ((i < nw) ? " " w[i + 1] : ""); return }
+  if (bname(w[i]) == "git") { gitremote(i); return }
+  if (bname(w[i]) != "rm") return
   for (j = i + 1; j <= nw; j++) {
     a = w[j]
     if (a == "--") return
@@ -209,6 +228,36 @@ function check(   i, wr, j, a, r) {
     }
     if (a ~ /^-[^-]/ && a ~ /[rR]/) { found = w[i] " " a; return }
   }
+}
+# gitremote(i): w[i] is git. Its global options -C <path>, -c <name>=<value>,
+# --git-dir=, --work-tree=, and --no-pager are skipped; the subcommands
+# fetch, pull, push, ls-remote, and remote update, and a clone whose source
+# holds :// or reads <user>@<host>:<path>, set found, marked \003 as a
+# remote call. A clone of a local path is no remote call.
+function gitremote(i,   j, a, s) {
+  j = i + 1
+  while (j <= nw) {
+    a = w[j]
+    if (a == "-C" || a == "-c") { j += 2; continue }
+    if (a == "--no-pager" || a ~ /^--(git-dir|work-tree)=/) { j++; continue }
+    break
+  }
+  if (j > nw) return
+  s = w[j]
+  if (s ~ /^(fetch|pull|push|ls-remote)$/ || (s == "remote" && j < nw && w[j + 1] == "update")) {
+    found = "\003" w[i] " " s
+    return
+  }
+  if (s != "clone") return
+  for (j++; j <= nw; j++) {
+    a = w[j]
+    if (a == "--") { j++; break }
+    if (a !~ /^-/) break
+    if (a ~ /^(-[bocuj]|--(branch|origin|config|upload-pack|reference|reference-if-able|template|depth|separate-git-dir|filter|jobs|shallow-since|shallow-exclude|server-option|bundle-uri))$/) j++
+  }
+  if (j > nw) return
+  a = w[j]
+  if (index(a, "://") > 0 || a ~ /^[^\/:@]+@[^\/:]+:/) found = "\003" w[i] " clone " a
 }
 # push and pop enter and leave a substitution or subshell. The words of its
 # command go on top of those of the enclosing command, as w[base + 1] to
@@ -405,6 +454,9 @@ END {
 }
 '
 
+# The route for gh and remote git: the main session, which reaches GitHub.
+REASON_ASK="Permitted instead: ask the main session by a question message, which gets anything the work needs from GitHub or a remote; this denial is not a breach, so list it under ## Rail observations and go on."
+REMOTE_MARK=$(printf '\003')
 REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name>-<timestamp>/ (inside the repository, delete through git rm), and write under the repository, the workspace, or scratch (\$TMPDIR, /tmp)."
 # In place of the route, for a field of the input the hook cannot read:
 # every later call is read the same way, so a retry would be denied too.
@@ -515,6 +567,9 @@ case $tool in
     targets=""
     case $found in
       *"$NL"*) targets=${found#*"$NL"}; found=${found%%"$NL"*} ;;
+    esac
+    case $found in
+      "$REMOTE_MARK"*) deny "gh, and git with a remote subcommand or a URL clone, are denied in an autopilot worker (${found#"$REMOTE_MARK"})" "$REASON_ASK" ;;
     esac
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"
     # Split by parameter expansion, not read from a heredoc: bash 3.2 writes

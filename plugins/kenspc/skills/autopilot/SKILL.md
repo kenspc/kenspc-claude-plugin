@@ -1928,8 +1928,12 @@ message and go on. Any other write outside those locations is a breach.
 No recursive rm in any spelling — rm -r, rm -rf, rm -fr, rm -R — wherever
 it points: discard by mv into <workspace>/.trash/<name>-<timestamp>/,
 created when missing; deletions inside the repository only through
-git rm. No git push, no git tag, no release. No resource the brief does
-not name — no database, no network service. No secrets in any file or
+git rm. No git push, no git tag, no release. No GitHub and no remote
+git: no gh, and no git fetch, pull, push, ls-remote, remote update, or
+clone of a URL — ask <main name>, which gets anything the work needs from
+GitHub or a remote; the rails hook denies those calls, and a denial is not
+a breach. No resource the brief does not name — no database, no network
+service. No secrets in any file or
 message. Listing environment variables prints their names only, never
 their values: `bash -c 'compgen -e'` prints the names alone, while `env`
 or `printenv` cut at the `=` still prints every further line of a
@@ -2100,6 +2104,14 @@ not a delete or a write the agent chose; read as one, the rails have kept review
 running the repository's own checks, and workers that reworded them for
 code-fixer and regression-verifier alone broke task-review's rule that
 those two get the reviewers' CONTEXT unchanged.
+
+Why § 3 sends GitHub and remote git to the main session: an
+implementer's subagent ran a read-only `gh issue view`, and the run
+stopped on it as a breach; the main session can fetch what the work needs
+and record it, the hook's denial of the call is not a breach, so the run
+goes on, and the hook reaches a subagent that never saw this prompt. A
+`git clone` of a local path stays allowed, since acceptance evidence is
+gathered in local clones.
 
 Why nothing under `~/.claude`: a worker's harness tells it to save
 memories in the project's folder there, and a note written so is loaded

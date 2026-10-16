@@ -543,7 +543,29 @@ mutant).
 
 ### Task 8: The rails hook denies `gh` and remote git; preamble § 3
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the gh and git checks sit in the scanner's existing `check()`
+  at the command word the wrapper skipping leaves (so `sudo gh …` and
+  `xargs gh …` are read too), and mark their result with the byte `\003`
+  so the shell tells a remote call from a recursive rm and denies it with
+  its own route, `REASON_ASK` ("ask the main session by a question
+  message … this denial is not a breach, so list it under
+  ## Rail observations and go on"). `command -v`/`-V` ends the check for
+  that command, since it names a command without running it; `type` and
+  `which` pass because their command word is not gh. A clone's source is
+  the first word after `clone` that is not an option or the argument of
+  a clone option that takes one (`-b`, `-o`, `-c`, `-u`, `-j`, `--depth`,
+  `--branch`, …). The guard gained a `deny-ask` expectation (the reason
+  names the main session, and neither `.trash` nor the no-route text).
+- Changes/tradeoffs: beyond the listed forms, `git remote update` and a
+  clone with options before its URL are denied too (probed). A clone of
+  `file://…` is denied, since it holds `://`, as the spec's URL rule reads.
+  The self-test's eighth mutant disables the gh check and must turn the
+  "gh issue view" fixture red first. Preamble § 3's new sentence names
+  "No GitHub and no remote git", the commands, and the route; its Why sits
+  with the other § 3 reasons after the template.
 
 Depends on: Task 7
 
