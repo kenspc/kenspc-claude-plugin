@@ -560,6 +560,16 @@ the walk's record).
   shows a headless worker cannot use Claude in Chrome); neither usable is
   a stop before the first launch naming both outputs and `Walk: off` as
   the way on, with the no-ask sentence.
+- The skill names the tool "Claude in Chrome" in prose. Its MCP
+  identifier (`claude-in-chrome`, as in `mcp__claude-in-chrome__*` tool
+  names) holds `claude-` followed by a letter, which
+  `check-no-model-names.sh` rule 3 reports as a model ID in any file under
+  `skills/`. When a check command from Task 1's record, or a rule of
+  Task 13's S4w block, cannot be written without that identifier, mark the
+  task BLOCKED (`the walk check needs the claude-in-chrome identifier,
+  which check-no-model-names.sh rejects; an exclusion is outside the
+  plan's files`) and quote the command, rather than adding an exclusion to
+  the guard or spelling the identifier around the rule.
 
 **Acceptance criteria:**
 - The table holds `Walk:` with its three forms and `S4w` in
@@ -622,7 +632,8 @@ own steps; § The gates; § Budget and caps; the reviewer and user reports;
 
 **Acceptance criteria:**
 - The S4w task block holds the local-only, own-tabs, password, port, and
-  listener rules (joined-line reads).
+  listener rules (joined-line reads), and names the browser tool as
+  Task 12 does, so `check-no-model-names.sh` stays green.
 - The stops-at-their-own-steps paragraph says seven and names the walk
   tool's absence.
 - § Phase transitions names the walk's records.
