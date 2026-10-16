@@ -172,10 +172,14 @@ VERIFICATION CHECKS
    A row a round-2 DEFER or NOT APPLICABLE entry names, whose reason reads
    `first-round fix <hash>; taken back in <hash>`, must hold the code
    without that first-round fix: from the repository root,
-   `git show <first-round hash> | git apply --check` exits 0 only when
-   every hunk's pre-fix lines are back, which is the fix taken back. A
-   non-zero exit is not yet a failure, since a later fix may have changed
-   the same lines: read each hunk of `git show <first-round hash>` against
+   `git show <first-round hash> | git apply --check -v` exits 0 with no
+   hunk reported at an offset only when every hunk's pre-fix lines are
+   back where the fix found them, which is the fix taken back. Exit 0
+   alone is not: `git apply` finds a hunk's pre-fix lines anywhere in the
+   file, so a fix still in place passes when its context lines occur a
+   second time. A non-zero exit, or a hunk at an offset, is not yet a
+   failure, since a later fix may have changed or moved the same lines:
+   read each hunk of `git show <first-round hash>` against
    the current file, and a hunk whose added lines are still there is a
    failure of row 1, naming the row and the hunk. A reason reading
    `first-round fix uncommitted; taken back by hand` is checked by reading

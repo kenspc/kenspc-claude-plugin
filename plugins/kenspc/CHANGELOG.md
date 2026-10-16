@@ -63,8 +63,8 @@ in the next product-repository batches.
   the verdict from PASS. A row taken back names the first-round fix in its
   reason (`first-round fix <hash>; taken back in <hash>`), and
   regression-verifier's row 1 checks the fix is gone with
-  `git show <hash> | git apply --check`, reading each hunk when a later fix
-  changed the same lines. At most one second
+  `git show <hash> | git apply --check -v` exiting 0 with no hunk at an
+  offset, reading each hunk otherwise. At most one second
   round per review; with no ruling held, no second round and no question.
   The step is a new canonical block, `canonical:second-round`,
   byte-identical in task-review's new Step 7 (Schema F moves to Step 8)
