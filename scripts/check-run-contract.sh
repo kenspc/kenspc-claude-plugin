@@ -72,7 +72,10 @@
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
-# each Source ID is `[REQBT]<number>` and appears in one row only; the first
+# each Source ID is `[REQBTFV]<number>` — the five angles, code-fixer's own
+# `F` rows, and the `V` regressions regression-verifier names — and appears
+# in one row only; the Per-angle Results table has a row for each of the
+# seven letters; the first
 # ID in a row is its primary and counts under the row's action, the others
 # count as DEDUPED; an action is classified by its leading word (FIXED,
 # DEFERRED, NOT APPLICABLE), so `NOT APPLICABLE — <reason>` counts as NOT
@@ -235,7 +238,7 @@ recount_schema_b() {
             k = split(src, ids, ",")
             for (j = 1; j <= k; j++) {
                 id = trim(ids[j])
-                if (id !~ /^[REQBT][0-9]+$/) { err("row " rows ": invalid ID \"" id "\""); continue }
+                if (id !~ /^[REQBTFV][0-9]+$/) { err("row " rows ": invalid ID \"" id "\""); continue }
                 if (id in seen) { err("ID " id " appears in more than one row"); continue }
                 seen[id] = 1
                 a = substr(id, 1, 1)
@@ -256,9 +259,9 @@ recount_schema_b() {
         { line = $0; gsub(/`/, "", line) }
         line ~ /^total reported / { stats = line }
         END {
-            split("R E Q B T", angles, " ")
+            split("R E Q B T F V", angles, " ")
             split("F D N X", buckets, " ")
-            for (i = 1; i <= 5; i++) {
+            for (i = 1; i <= 7; i++) {
                 a = angles[i]
                 if (!(a in has_row)) { err("Per-angle Results has no row for " a); continue }
                 for (j = 1; j <= 4; j++) {
@@ -277,11 +280,11 @@ recount_schema_b() {
             }
             if (s != shape) { err("statistics line does not match the template shape: " stats); exit 1 }
             want[1] = total + 0
-            for (i = 1; i <= 5; i++) want[i + 1] = rep[angles[i]] + 0
-            want[7] = rows + 0
-            want[8] = tot["F"] + 0; want[9] = tot["D"] + 0; want[10] = tot["N"] + 0; want[11] = tot["X"] + 0
-            split("total R E Q B T unique FIXED DEFERRED NOT_APPLICABLE DEDUPED", label, " ")
-            for (i = 1; i <= 11; i++)
+            for (i = 1; i <= 7; i++) want[i + 1] = rep[angles[i]] + 0
+            want[9] = rows + 0
+            want[10] = tot["F"] + 0; want[11] = tot["D"] + 0; want[12] = tot["N"] + 0; want[13] = tot["X"] + 0
+            split("total R E Q B T F V unique FIXED DEFERRED NOT_APPLICABLE DEDUPED", label, " ")
+            for (i = 1; i <= 13; i++)
                 if (num[i] != want[i]) err("statistics " label[i] ": line says " num[i] ", rows give " want[i])
             exit bad
         }
@@ -660,16 +663,16 @@ run_self_test() {
     mutate_and_expect "per-angle cell" "$FIXER_REL" \
         "| Q     | 0     | 0        | 1              |" "| Q     | 0     | 1        | 0              |" || return $?
     mutate_and_expect "example statistics number" "$FIXER_REL" \
-        "FIXED 3, DEFERRED 1" "FIXED 2, DEFERRED 1" || return $?
+        "FIXED 3, DEFERRED 2" "FIXED 2, DEFERRED 2" || return $?
     mutate_and_expect "example statistics wording" "$FIXER_REL" \
-        "deduplicated to 5 unique" "deduplicated to 5 distinct" || return $?
+        "deduplicated to 6 unique" "deduplicated to 6 distinct" || return $?
     # R1 repeated as a non-primary ID, with the table and statistics line
     # updated to match, so only the one-row-per-ID rule can catch it.
     mutate_and_expect "repeated example ID" "$FIXER_REL" \
         "| T1     |" "| T1, R1 |" \
         "| R     | 0     | 1        | 0              | 0       | 1        |" \
         "| R     | 0     | 1        | 0              | 1       | 2        |" \
-        "total reported 6 (R 1," "total reported 7 (R 2," \
+        "total reported 7 (R 1," "total reported 8 (R 2," \
         "NOT APPLICABLE 1, DEDUPED 1" "NOT APPLICABLE 1, DEDUPED 2" || return $?
     # Check 5: the change-set file renamed in one carrier at a time, every
     # occurrence, so only the name check can catch it. Each of the four

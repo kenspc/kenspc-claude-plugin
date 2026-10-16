@@ -409,7 +409,7 @@ table, the Deferred Issues prose, the scratch-pollution note when there is
 one, and a statistics line of this fixed form:
 
 <!-- canonical:stats-line:start -->
-`total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
+`total reported N (R n, E n, Q n, B n, T n, F n, V n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
 <!-- canonical:stats-line:end -->
 
 Its reply carries the statistics line, the Per-angle Results table, the HIGH

@@ -167,6 +167,14 @@ PROCESSING APPROACH
   commit at all in an uncommitted run.
 - Large structural changes (multiple files, architecture-level) are not applied —
   record them as DEFERRED with rationale.
+- A defect you find that no report lists is not fixed: record it as a row
+  of its own whose Source is `F<n>` (`F1`, `F2`, … in the order you find
+  them), its severity read by the policy in FIXING PRIORITY, its action
+  `DEFERRED — no report lists it`, and its Deferred Issues paragraph. A
+  ruling may name an `F` ID, and a second round may then fix it. Why: a fix
+  outside the reports is a change no reviewer reported and nobody ruled on,
+  and a defect left with no row has nowhere for a ruling on it to land —
+  the ruling would read as a ruled ID that no report lists.
 - Run build/test/lint after each fix to catch breakage early; run it once more
   after all fixes to catch interaction issues.
 
@@ -341,7 +349,8 @@ Every accountability entry produced by this agent is a structured record with
 the following required fields:
 
 - `source` — every issue ID the row accounts for, comma-separated, primary
-  first (for example `B1, E1`).
+  first (for example `B1, E1`); an `F<n>` ID for a defect no report lists
+  (PROCESSING APPROACH).
 - `short_label` — at most 60 characters; a one-phrase identifier for the issue
   used as the orchestrator's table label. Required for every issue (not just
   FIXED ones). Example: `null deref in user lookup`.
@@ -381,6 +390,7 @@ that order.
 | 3 | Q1     | log call bypasses shared logger  | LOW      | src/audit.ts:14     | NOT APPLICABLE — cited rule in no instruction file | —       |
 | 4 | T1     | charge amount never asserted     | MEDIUM   | test/pay.test.ts:30 | FIXED                                              | def5678 |
 | 5 | E2     | empty cart treated as missing    | LOW      | src/cart.ts:57      | FIXED                                              | 9ab0cde |
+| 6 | F1     | refund total ignores coupon      | MEDIUM   | src/refund.ts:21    | DEFERRED — no report lists it                      | —       |
 
 ## Per-angle Results
 
@@ -391,23 +401,28 @@ that order.
 | Q     | 0     | 0        | 1              | 0       | 1        |
 | B     | 1     | 0        | 0              | 0       | 1        |
 | T     | 1     | 0        | 0              | 0       | 1        |
+| F     | 0     | 1        | 0              | 0       | 1        |
+| V     | 0     | 0        | 0              | 0       | 0        |
 
 ## Deferred Issues (prose)
 
 (One paragraph per DEFERRED row — here, R1, deferred by a ruling in
-`rulings.md`.)
+`rulings.md`, and F1, a defect no report lists.)
 
-total reported 6 (R 1, E 2, Q 1, B 1, T 1), deduplicated to 5 unique, FIXED 3, DEFERRED 1, NOT APPLICABLE 1, DEDUPED 1
+total reported 7 (R 1, E 2, Q 1, B 1, T 1, F 1, V 0), deduplicated to 6 unique, FIXED 3, DEFERRED 2, NOT APPLICABLE 1, DEDUPED 1
 <!-- example:schema-b:end -->
 
 Fixes Applied: one row per unique issue. Source lists every issue ID the row
 accounts for, primary first. If the reports list no issues, the table has no
 rows and every count is 0.
 
-Per-angle Results: one row per angle letter. Each Source ID counts in its own
-angle's row — under the row's action when it is the primary ID, under DEDUPED
-otherwise. Reported is the row's sum and equals the number of issues that
-angle's report lists. Actions are classified by their leading word, so a NOT
+Per-angle Results: one row per Source letter — the five angles, then `F`
+and `V`, each written even when its counts are 0. Each Source ID counts in
+its own letter's row — under the row's action when it is the primary ID,
+under DEDUPED otherwise. Reported is the row's sum and equals the number of
+issues that angle's report lists; for `F`, the number of `F` IDs in the
+rows, and for `V`, the number of `V` IDs. The statistics line counts `F`
+and `V` the same way. Actions are classified by their leading word, so a NOT
 APPLICABLE reason never moves a count.
 
 Deferred Issues (prose): for each DEFERRED row, one short paragraph: which
@@ -430,7 +445,7 @@ Statistics line: the file's last line, in exactly this form with the counts
 filled in:
 
 <!-- canonical:stats-line:start -->
-`total reported N (R n, E n, Q n, B n, T n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
+`total reported N (R n, E n, Q n, B n, T n, F n, V n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
 <!-- canonical:stats-line:end -->
 
 The counts satisfy two identities: total reported = FIXED + DEFERRED + NOT

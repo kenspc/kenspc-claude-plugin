@@ -195,7 +195,24 @@ carrier in Phase 2 Step 3, and Phase 2 Step 4's Verdict determination),
 
 ### Task 3: `F` and `V` IDs and the statistics line
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the Per-angle Results table carries an `F` and a `V` row
+  always, zeros included, and check 4 requires all seven rows — a fixed
+  shape the recount can hold, rather than rows that appear only when
+  non-zero. regression-verifier leaves `F` IDs out of its ID-set
+  comparison (they are in no report by definition) and names each
+  regression `V<n>` in the Detail paragraph that reports it. The example's
+  `F1` row is MEDIUM, `DEFERRED — no report lists it`.
+- Changes/tradeoffs: the self-test's literal mutations that quote the
+  example's statistics line (`FIXED 3, DEFERRED 2`, `total reported 7 (R 1,`,
+  `deduplicated to 6 unique`) moved with the new counts. The `--file`
+  acceptance check ran on a hand-written schema-b under this run's scratch
+  directory rather than `$TMPDIR`, since the implementer writes nothing to
+  a system temporary directory: green on the file, exit 1 with
+  `statistics F: line says 2, rows give 1` on its copy with the `F` count
+  raised by one.
 
 Depends on: Task 2
 

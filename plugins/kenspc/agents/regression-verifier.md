@@ -131,9 +131,13 @@ VERIFICATION CHECKS
 
 1. Completeness, by ID: collect the issue IDs from the Issues tables of the 5
    reports and the IDs from every Source cell in schema-b.md. The two sets
-   must be equal, with no ID in more than one row. An ID missing from
-   schema-b.md is UNRESOLVED; an ID that no report lists, or that appears in
-   two rows, is a bookkeeping error. Then check the statistics line against
+   must be equal, with no ID in more than one row. An `F<n>` ID is
+   code-fixer's own — a defect no report lists, which code-fixer records
+   rather than fixes — so it is left out of the comparison and is not an ID
+   that no report lists; its row is DEFERRED with the reason
+   `no report lists it` unless a ruling names it. An ID missing from
+   schema-b.md is UNRESOLVED; any other ID that no report lists, or one that
+   appears in two rows, is a bookkeeping error. Then check the statistics line against
    the rows, classifying each action by its leading word: total reported =
    FIXED + DEFERRED + NOT APPLICABLE + DEDUPED, and unique = FIXED + DEFERRED +
    NOT APPLICABLE = the number of rows. When `rulings.md` exists, each ruled
@@ -242,7 +246,10 @@ VERIFICATION CHECKS
      "not mutation-checked", with the reason, and do not flag it.
    - The fix did not silently swallow errors or remove validation.
    Do not fix anything; flag each new issue with file, line, description, and
-   severity. Why the uncommitted branch: without it, check 4 has nothing to
+   severity, and name it `V<n>` (`V1`, `V2`, … in the order you find them)
+   in the Detail paragraph that reports it. Why the name: a ruling on a
+   regression needs an ID to name, and code-fixer takes the regression's
+   file, line, and description from that paragraph. Why the uncommitted branch: without it, check 4 has nothing to
    read in an uncommitted run, and a FAIL there would be a false one.
    In `Mode: uncommitted`, a commit code-fixer made fails Schema C row 5,
    with the commits named: a hash in a FIXED row's Commit cell, or any commit
