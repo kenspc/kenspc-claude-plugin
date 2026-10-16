@@ -38,7 +38,7 @@ the sessions, and the two reports at the end are what the user reviews.
 | S1 | design (brief entry only) | a design prompt: drafts the spec with its decision table, sends the table, finalizes and commits the spec after the decisions |
 | S2 | task decomposition | `/kenspc-task <spec path>` |
 | S3 | implementation | `/kenspc-task-implement <task document path>` |
-| S3b | standalone review — runs unless `Standalone review: off` in repo mode | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
+| S3b | standalone review — in repo mode, not run with `Standalone review: off`, or `auto` not triggered | `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>` |
 | S4 | acceptance | plugin mode: a seed-project acceptance with a record; repo mode: the `Acceptance:` commands |
 | S5 | fix on demand | `Fix issue <ID> from run <run dir>: <one line>` for a defect the main session classified, `Fix <n> issues from this round: <ID>, <ID>, …` for several |
 | S6 | release preparation | one commit per mode (Phase 4), after a clarification commit for each question it asked — in any order when it removes nothing |
@@ -50,11 +50,12 @@ work reads its own intent into the code, and a session that edited the
 plugin still runs the text it started with — skills and agents load at
 session start, so a plugin edit is visible only to the next session.
 
-S3b runs unless `Standalone review: off` in repo mode. Why the switch, and
-in repo mode only: S3's own review is already five fresh subagents, so the
-first reason is mostly met inside S3, while the second — a session that
-edited the plugin still runs the text it started with — holds only in
-plugin mode, where S3b stays unconditional.
+S3b runs unless, in repo mode, `Standalone review: off` is set, or
+`auto` is set and S3's own review does not trigger it (§ The verdict loop
+after S3b). Why the switch, and in repo mode only: S3's own review is
+already five fresh subagents, so the first reason is mostly met inside S3,
+while the second — a session that edited the plugin still runs the text it
+started with — holds only in plugin mode, where S3b stays unconditional.
 
 ## Trigger Phrases
 
@@ -211,7 +212,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Acceptance:` | `none`, or one sub-bullet per case: a command or a case description, its PASS criterion after ` — PASS: `, and `(optional)` at the end of a case that may be cut | `none` |
 | `Acceptance record:` | a path (repo mode) the S4 results are written to | unset |
 | `Release preparation:` | `default`, `keep`, or sub-bullets of instructions | `default` |
-| `Standalone review:` | `on` or `off` (`off` in repo mode only) | `on` |
+| `Standalone review:` | `on`, `off`, or `auto` (`off` and `auto` in repo mode only) | `on` |
 | `Must read:` | paths every worker reads first | empty |
 | `Challenge seeds:` | sub-bullets S1 argues against | empty |
 | `Prior specs:` | `<hash>^:<path>` entries, read with `git show` | empty |
@@ -415,8 +416,8 @@ reminder to work without stopping), the run ends with the same message.
   the settings stop, naming the field and the value. Why a stop and not
   the default: the field is one the user wrote, and a run that read it as
   absent would spend the default budget the user meant to lower.
-- `Standalone review: off` is set only in repo mode; in plugin mode it is
-  the settings stop, naming `Standalone review`. Why: a plugin-mode S3
+- `Standalone review: off` or `auto` is set only in repo mode; in plugin
+  mode either is the settings stop, naming `Standalone review`. Why: a plugin-mode S3
   edits the plugin while its own review runs the plugin's text from
   before those edits, so only a fresh session, S3b, reviews with the
   edited plugin.
@@ -658,6 +659,7 @@ main session: <name>   repository: <root>   baseline: <sha>   spec: <path> (<has
 pass-through: <model|not determined>/<effort|not determined>
 inbound: <accept from <the launch line | <file>:<line> | <managed preferences file or registry value> | the user's answer> | the default: no source sets the key>[; question not received: <tag>[ (<the error or notice, quoted>)][, <tag>[ (<the error or notice, quoted>)]…]]
 step: <S<n>>  tag: <tag>  pid: <pid>  session: <id>  launched: <time>  head: <sha at the step's first launch>
+standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>   (once S3 has returned)
 sessions:
   <tag>  <session id>  USD <cost>  <success|subtype|dead|usage-limit|running>
 models and efforts:
@@ -759,14 +761,16 @@ reviewable.
 
 ## Phase 2: Build
 
-**Goal**: the batch implemented and reviewed — S2, S3, S3b in order; with
-`Standalone review: off` (repo mode), S2 and S3, and no S3b is launched.
+**Goal**: the batch implemented and reviewed — S2, S3, S3b in order;
+when S3b does not run (`Standalone review: off`, or `auto` not
+triggered), S2 and S3, and no S3b is launched.
 
 **Inputs**: the spec (committed); the preamble; the driver copy; the state
 file.
 
-**DONE when** S3b's verdict is PASS — with `Standalone review: off`, S3's
-Schema G verdict — or every HIGH row, every ruled row
+**DONE when** S3b's verdict is PASS — when S3b does not run
+(`Standalone review: off`, or `auto` not triggered), S3's Schema G
+verdict — or every HIGH row, every ruled row
 whose action differs from its ruling, every ruled ID that no report lists,
 and every row-3 or row-5 FAIL is classified, and the zero-diff check's
 exit code is 0, its `compared:` count equal to the field's (§ The
@@ -1268,10 +1272,23 @@ a skip at any effort; the post-check catches it at every effort.
 
 ### The verdict loop after S3b
 
-S3b's Schema F verdict decides the next step. With `Standalone review: off`
-(repo mode), no S3b runs, and S3's Schema G verdict and the rows of its
-review enter this loop in S3b's place, read by task-implement's Verdict
-determination; S5 and the narrowed reviews are unchanged. Passing: PASS, on to Phase 3.
+S3b's Schema F verdict decides the next step. When S3b does not run
+(`Standalone review: off`, or `auto` not triggered; repo mode), S3's Schema G verdict and the rows of its review enter this
+loop in S3b's place, read by task-implement's Verdict determination; S5
+and the narrowed reviews are unchanged. With `Standalone review: auto`,
+the main session reads S3's Schema G once S3 returns: S3b runs when its
+verdict is FAIL, or PARTIAL for a reason other than BLOCKED tasks alone,
+or its review left a HIGH or MEDIUM row DEFERRED (a row of its Fixes
+section, HIGH or MEDIUM, whose action is DEFERRED); otherwise S3b does
+not run, and S3's verdict enters this loop as with `off`. The state file
+records which, with the trigger or the reason. Why read from S3's own
+review: the condition is an artifact S3 already produced, so the main
+session judges nothing; the one HIGH a standalone review found that the
+implementation review had missed came from a batch whose implementation
+review had deferred four findings, which the condition catches. Why
+BLOCKED tasks alone do not trigger it: a review of a batch with a task
+not built adds nothing about that task. A batch the user judges risky —
+security, a data migration, concurrency — is written `on`. Passing: PASS, on to Phase 3.
 FAIL, or PARTIAL with HIGH rows deferred or with a ruled row whose action
 differs from its ruling (task-review's Verdict determination): each HIGH
 row, each such ruled row, and each row-3 or row-5 FAIL is classified by
@@ -1333,7 +1350,7 @@ S3b found again would otherwise be ruled twice, perhaps two ways.
 
 ### The zero-diff check
 
-After S3b — after S3 with `Standalone review: off` — the main session runs the script copy from the repository
+After S3b — after S3 when S3b does not run (`Standalone review: off`, or `auto` not triggered) — the main session runs the script copy from the repository
 root, `bash <workspace>/_prompts/<batch>-zero-diff.sh <baseline> <workspace>/_prompts/<batch>-zero-diff.txt`,
 the `Zero diff:` paths written to `_prompts/<batch>-zero-diff.txt` one per
 line before the first launch, and checks that the `compared:` count it
@@ -1469,14 +1486,13 @@ continue.
 **Goal**: the acceptance run, and every FAIL classified.
 
 **Inputs**: the `Acceptance:` field as Phase 0 read it (§ The
-`## Autopilot` section); the S3b HEAD — S3's with `Standalone review:
-off`; the preamble; in plugin
+`## Autopilot` section); the S3b HEAD — S3's when S3b does not run (`Standalone review: off`, or `auto` not triggered); the preamble; in plugin
 mode the plugin directory and the workspace for seeds.
 
 **DONE when** every case has a result in the state file and every FAIL a
 class, or `Acceptance: none` has been recorded as
 `none named; S3b is the last check` — `none named; S3 is the last check`
-with `Standalone review: off`.
+when S3b does not run (`Standalone review: off`, or `auto` not triggered).
 
 **Plugin mode.** S4 runs a seed-project acceptance: a trial run of a seed
 first, to confirm the path under test is reachable, then one case per run,
@@ -1513,7 +1529,7 @@ case that cannot be run (the narrowing rule below), naming the counts or
 the script's reason. Why both counts: the script ends the field at the
 first line that starts in column 0, so a case line wrapped there drops
 every case after it, and a dropped description changes only `cases:`. An S4 worker then runs each case at the S3b
-HEAD — S3's with `Standalone review: off` — in the repository: it extracts the commands again with the same copy
+HEAD — S3's when S3b does not run (`Standalone review: off`, or `auto` not triggered) — in the repository: it extracts the commands again with the same copy
 into `<workspace>/_prompts/<batch>-<tag>-recheck/` — not a `-cmds` name,
 since a tag holds the batch name and `<batch>-<tag>-cmds` written with it
 once is the main session's own directory — its extraction exiting 0
@@ -1547,7 +1563,7 @@ its case's lines there in a commit of its own,
 `docs: update batch <name> acceptance record`. With
 `Acceptance: none`, no S4 session starts and the report's acceptance line
 reads `none named; S3b is the last check`, or `none named; S3 is the last
-check` with `Standalone review: off`. Why: a product repository has no
+check` when S3b does not run (`Standalone review: off`, or `auto` not triggered). Why: a product repository has no
 place for a record the plugin invented, and the report is where the user
 reads the run; where the user names a path, S4 is the session that ran the
 commands, a worker may write into the repository, and a file left
@@ -1701,8 +1717,7 @@ The zero-diff check runs again before S6 is launched, over
 `<baseline>..HEAD` as it then stands, and not after S6's commit; its exit
 code and `compared:` count are read as § The zero-diff check reads them,
 and the reviewer report's `zero diff:` field reports this run. Why
-before: S4 and S5 commit after the check that follows S3b — S3 with
-`Standalone review: off` — so their commits
+before: S4 and S5 commit after the check that follows S3b — S3 when S3b does not run (`Standalone review: off`, or `auto` not triggered) — so their commits
 need one of their own; and in plugin mode the release commit edits, by
 design, paths a zero-diff list may name — a plugin repository's roadmap or
 manifest — so a check run over the release commit would stop a run whose
@@ -1839,7 +1854,8 @@ reads both reports before the tag.
   return, with the commits it names; work S6 left undone for a point
   raised after the removal; a change S6 left to the spec, with what the
   status command printed; each breach the main session ruled benign, with
-  the breach and the ruling), and the cost. Then, under the
+  the breach and the ruling), whether the standalone review ran — with
+  `auto`, its trigger or that it was not triggered — and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -2453,7 +2469,7 @@ changes in no other way.]
 ````
 
 - **S5** — a fix, launched from a classified defect: a Schema F row after
-  S3b, or a row of S3's review with `Standalone review: off` (Phase 2), or
+  S3b, or a row of S3's review when S3b does not run (`Standalone review: off`, or `auto` not triggered) (Phase 2), or
   an acceptance FAIL (Phase 3). `<ID>` and `<run dir>`
   name the finding — the row's issue ID and the review's run directory, or
   the case's number and the record's path (plugin mode) or S4's reply (repo
@@ -2666,7 +2682,7 @@ reply text, where the state file's copy does not stand in for the
 printed one:
 
 ```
-Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
+Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off|auto>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
 ```
 
 The roles list names each role `Role settings:` declares, in the field's
@@ -2818,6 +2834,7 @@ decisions the user has yet to see.
 - Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check
+- Standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
@@ -2830,7 +2847,7 @@ decisions the user has yet to see.
 - Release preparation: <commit | not prepared | kept>
 - Sessions: <n>, messages: <m>, resumes: <r>, stops: <s> (<reasons>)
   <tag>  <session id>  USD <cost>  <result>
-  [S3b: off (Standalone review: off)]
+  [S3b: not run (Standalone review: off | Standalone review: auto, not triggered)]
 ```
 
 The `Main-session rulings` line is built from the state file's
@@ -2874,8 +2891,14 @@ line records — each failed check at S6's return, with the commits it
 names, the work S6 left undone for a point raised after the removal, and
 a change S6 left to the spec, with what the status command printed
 (Phase 4). The line reads `none` when there are none. The `Sessions:`
-list carries the line `S3b: off (Standalone review: off)` in S3b's place
-when S3b did not run.
+list carries the line `S3b: not run (Standalone review: off)`, or
+`S3b: not run (Standalone review: auto, not triggered)`, in S3b's place
+when S3b did not run. The `Standalone review` line names the value and
+whether S3b ran — `ran` with `on`, `ran (<trigger>)` with `auto`, the
+trigger being S3's verdict or its deferred HIGH or MEDIUM rows, and
+`not run (off)` or `not run (auto: <S3's verdict, nothing HIGH or MEDIUM deferred>)`
+— so a trial of `auto` reads from the reports; the Acceptance line's
+`none named; S3 is the last check` is used whenever S3b did not run.
 
 ## The gates
 
@@ -2956,11 +2979,13 @@ wording that closed it:
   post-check's match recorded — after the amendment, when a mismatch
   resumed S2 to amend it;
   S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
-  its `result` other than `BLOCKED`; S3b → Phase 3: its Schema F
-  verdict and the zero-diff check's exit 0 with its `compared:` count
-  equal to the field's, or `Zero diff:` empty, which has no check. With
-  `Standalone review: off` (repo mode) there
-  is no S3b: S3 → Phase 3 on S3's `.exit`, the HEAD it left, its Schema G
+  its `result` other than `BLOCKED` — with `Standalone review: auto`, and
+  that verdict or its review's DEFERRED rows triggering S3b (§ The verdict
+  loop after S3b); S3b → Phase 3: its Schema F verdict and the zero-diff
+  check's exit 0 with its `compared:` count equal to the field's, or
+  `Zero diff:` empty, which has no check. When S3b does not run
+  (`Standalone review: off`, or `auto` not triggered; repo mode) there is
+  no S3b: S3 → Phase 3 on S3's `.exit`, the HEAD it left, its Schema G
   verdict in its `result` other than `BLOCKED`, read by the verdict loop
   in S3b's place, and the zero-diff check's result after S3, or
   `Zero diff:` empty.

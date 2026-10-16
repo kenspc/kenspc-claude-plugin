@@ -660,7 +660,25 @@ the reviewer report and the user report; § The gates).
 
 ### Task 10: `Standalone review: auto`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the `auto` trigger and its Why are written once, in § The
+  verdict loop after S3b, and every other place reads "when S3b does not
+  run (`Standalone review: off`, or `auto` not triggered)". A HIGH or
+  MEDIUM DEFERRED row is read from the Fixes section of S3's Schema G.
+  The state file gained a `standalone review:` line, written once S3 has
+  returned, since the reviewer report is built from the state file and
+  its new `Standalone review:` line needs a source. The `Sessions:` line
+  reads `S3b: not run (Standalone review: off)` or
+  `S3b: not run (Standalone review: auto, not triggered)`.
+- Changes/tradeoffs: beyond the listed places, the user report says
+  whether the standalone review ran (with `auto`, its trigger or that it
+  was not triggered), and the state file's step block gained the line
+  above. The commit body lists each `grep -n 'Standalone review: off'`
+  line, each read to name `auto` in its sentence, and the reading of
+  § Phase transitions with `auto` (PASS and nothing deferred → Phase 3
+  without S3b; a deferred MEDIUM → S3b).
 
 Implement plan Step 6, its `auto` part (Technical Approach § S3b on a
 condition in repo mode). File: `plugins/kenspc/skills/autopilot/SKILL.md`
