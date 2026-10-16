@@ -866,7 +866,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   prefix, no roots and root entries that are not absolute, an unreadable
   tool name, command, or path field, redirections (4.7.0) — denied:
   `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, and `&> ../outside`
-  from the repository root; allowed: `> /dev/null`, `2>&1`,
+  from the repository root, and a target after quoted text in the same
+  word (`"hi">>~/.claude/x`, `'done'>/etc/x`); allowed: `> /dev/null`, `2>&1`,
   `> "$TMPDIR/x"`, `> out.txt` in the repository, `> "$OTHER/x"` (not
   judged), a `>` inside single quotes, and a `>` in a heredoc body, with
   the hook's `$TMPDIR` set to a fixture path the redirection fixtures'

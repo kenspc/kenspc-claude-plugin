@@ -188,7 +188,8 @@ in the next product-repository batches.
   Per-angle Results rows, and the worked Schema B example gains an `F`
   row; check 7's grammar holds the four forms (27 → 36 exit-1 mutations).
   `check-autopilot-rails-hook.sh` gains the redirection fixtures (denied:
-  `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, `&> ../outside`;
+  `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, `&> ../outside`,
+  `"hi">>~/.claude/x`, `'done'>/etc/x`;
   allowed: `> /dev/null`, `2>&1`, `> "$TMPDIR/x"`, `> out.txt`,
   `> "$OTHER/x"`, a quoted `>`, a heredoc `>`), a timed fixture of 8000
   redirections then `> /etc/x` (0.112 s measured), the `gh` and remote-git

@@ -438,7 +438,12 @@ function scan(c,   n, i, ch, nx) {
     if ((ch == "&" || ch == "|") && (nx == ">" || ltgt == i - 1)) { cur = cur ch; inw = 1; i++; continue }
     if (ch == ";" || ch == "&" || ch == "|") { endcmd(); i++; continue }
     if (ch == "<" || ch == ">") ltgt = i
-    cur = cur ((ch == ">") ? "\002" : ch); inw = 1; i++
+    # An unquoted > clears the quote flags of the word, so they describe the
+    # text after the last > of the word, its target: quoted text before the
+    # > ("hi">>~/x) left ~/x unexpanded, and a single-quoted word before it
+    # left a /etc target unjudged.
+    if (ch == ">") { cur = cur "\002"; cq = 0; cd = 0; inw = 1; i++; continue }
+    cur = cur ch; inw = 1; i++
   }
   endcmd()
   while (sp > 0 && found == "") pop()
