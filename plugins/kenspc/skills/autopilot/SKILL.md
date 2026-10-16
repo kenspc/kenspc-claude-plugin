@@ -1473,15 +1473,18 @@ Before each launch:
   steps; the answer sets the budget for the rest of the run and is recorded
   in the state file and the reports, not in the brief. In a session that
   cannot ask (a system reminder to work without stopping), the run ends with
-  those numbers. Before S4w's first launch a failed check asks nothing:
-  the walk is cut as an `(optional)` acceptance case is (Phase 3's
-  narrowing rule), recorded `walk: cut by budget` on the state file's
-  `walk:` line and in both reports. Why: per-step estimates drift with every model generation
+  those numbers. Why: per-step estimates drift with every model generation
   and would be numbers hard-coded in a prompt; the batch's own sessions are
   the only evidence in the run. Why per role: projected at the largest
   session of the whole batch, a USD 1 release preparation was judged
   against a USD 70 implementation session and needed that much headroom,
   while a role's own sessions are what its next session resembles.
+  Before S4w's first launch a failed check asks nothing: the walk is cut
+  as an `(optional)` acceptance case is (Phase 3's narrowing rule),
+  recorded `walk: cut by budget` on the state file's `walk:` line and in
+  both reports. Why no question: the walk, like an `(optional)` case, is
+  acceptance a budget may shorten with the shortfall on record, while the
+  launches the question guards are work the batch cannot do without.
 - Every launch passes `--max-budget-usd` with the remaining amount — the
   budget minus spent — through `AUTOPILOT_BUDGET_USD`. A resume passes the
   same remaining amount, computed the same way: the ended session's last
