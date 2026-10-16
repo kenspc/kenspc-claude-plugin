@@ -259,7 +259,9 @@ VERIFICATION CHECKS
    incomplete. Both differ from the no-test-suite SPOT-CHECK state in the fallback
    below, where no test suite exists at all.
 4. Cross-check for regressions: review fix commits with `git log` and `git show`
-   — or, when `change-set.md` says `Mode: uncommitted` and code-fixer committed
+   — each FIXED row's Commit, and each take-back commit a row's action
+   names (`taken back in <hash>`), since a take-back can remove code a later
+   fix calls — or, when `change-set.md` says `Mode: uncommitted` and code-fixer committed
    nothing (its FIXED rows carry `—` in Commit), the pre-fix record at
    `RUN_DIR/scratch/code-fixer/pre-fix/`. Its `index.txt` names every file
    the fixes touched, one line each: for a `copied <path>` line the fixes
