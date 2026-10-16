@@ -855,7 +855,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `rm -rf`, a command word of 64000 characters with no slash and then
   `rm -rf`, one word of 32000 `<|` pairs and then `rm -rf`, and (4.7.0)
   8000 redirections `>a ` to a relative target in the repository and then
-  `> /etc/x`, each of
+  `> /etc/x`, 999 distinct targets in distinct directories under `/tmp`
+  and then `> /etc/x`, and 6000 distinct targets, over the hook's cap of
+  1000, each of
   which must be denied in under 2.5 seconds, half the hook's
   timeout (timed, the hook under a CPU limit of that timeout, so a slow
   scan costs the guard seconds), a write inside each root for each file

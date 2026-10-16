@@ -41,11 +41,14 @@
 # a sibling that shares a root's prefix (denied); no roots with the marker
 # set, and root entries that are not absolute (denied); redirections whose
 # target lies outside the roots — > "$TMPDIR/../x", >> ~/.claude/x,
-# 2> /etc/x, and &> ../outside from the repository root (denied) — and
-# those the hook must not deny: > /dev/null, 2>&1, > "$TMPDIR/x",
-# > out.txt in the repository, > "$OTHER/x" (not judged), a > inside single
-# quotes, and a > in a heredoc body (allowed), with the hook's $TMPDIR set
-# to a fixture path the redirection fixtures' roots hold; gh issue view 1,
+# 2> /etc/x, and &> ../outside from the repository root, a target after
+# quoted text in the same word ("hi">>~/.claude/x, 'done'>/etc/x), a
+# single-quoted > '/etc/x', >& /etc/x, 1>&/etc/x, and >> ~<user>/.claude/x
+# for the hook's user (denied) — and those the hook must not deny:
+# > /dev/null, 2>&1, >&2, > "$TMPDIR/x", > out.txt and > 'out.txt' in the
+# repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
+# in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture path
+# the redirection fixtures' roots hold and its $USER to a fixture name; gh issue view 1,
 # git -C . fetch, git push, and a git clone of an https URL or of a
 # user@host:path source (denied, the reason's route to ask the main
 # session), and git clone of a local path, git status, grep gh f,
@@ -55,9 +58,11 @@
 # Bash input over the hook's length cap
 # (denied) and one under it (allowed); a command of many $( )
 # substitutions under the cap, then rm -rf, a long command word with no
-# slash, then rm -rf, a word of many <| pairs, then rm -rf, and 8000
+# slash, then rm -rf, a word of many <| pairs, then rm -rf, 8000
 # redirections to a relative target in the repository, then one to /etc,
-# each denied in under half the hook's 5-second timeout (timed); and every
+# 999 distinct targets in distinct directories under /tmp, then one to
+# /etc, and 6000 distinct targets, over the hook's target cap, each denied
+# in under half the hook's 5-second timeout (timed); and every
 # denied fixture again
 # without the marker and with the marker 0 (inert). Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
@@ -537,6 +542,13 @@ run_fixtures() {
     # under half the hook's timeout.
     t=$(awk 'BEGIN { for (i = 0; i < 8000; i++) printf ">a " }')
     fx_timed "$hook" "8000 redirections inside the repository, then one to /etc, decided in time" 2.5 "echo $t> /etc/x" "redirects output outside" "$rr"
+    # Distinct targets, each resolved in the shell: 999 in distinct
+    # directories under /tmp (a link on macOS) and then one to /etc, judged
+    # one by one; and 6000, over the hook's target cap, denied unjudged.
+    t=$(awk 'BEGIN { for (i = 0; i < 999; i++) printf ">/tmp/a%d/x ", i }')
+    fx_timed "$hook" "999 distinct redirection targets under /tmp, then one to /etc, decided in time" 2.5 "echo $t> /etc/x" "redirects output outside" "$rr"
+    t=$(awk 'BEGIN { for (i = 0; i < 6000; i++) printf ">/tmp/%d ", i }')
+    fx_timed "$hook" "6000 distinct redirection targets, over the target cap, decided in time" 2.5 "echo $t> /etc/x" "distinct redirection targets" "$rr"
 
     # gh at a command position, and git with a remote subcommand or a URL
     # clone, denied with the main session as the route; a local clone, a

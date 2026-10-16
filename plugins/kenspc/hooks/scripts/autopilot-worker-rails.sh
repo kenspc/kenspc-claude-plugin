@@ -61,7 +61,9 @@
 #       quotes, escaped, or in a heredoc body is no redirection. Why
 #       redirections: both writes outside the roots that workers made
 #       through Bash were redirections, one to a file beside $TMPDIR and one
-#       appending to a memory file under ~/.claude;
+#       appending to a memory file under ~/.claude. A command with more than
+#       TARGET_CAP (1000) distinct targets is denied unjudged, for the
+#       reason (c) gives;
 #   (e) gh at a command position (command -v gh, type gh, and which gh,
 #       which do not run it, are allowed), and git — its global options
 #       -C <path>, -c <name>=<value>, --git-dir=, --work-tree=, and
@@ -497,6 +499,14 @@ REASON_UNREADABLE="No permitted route applies: the hook reads every such call th
 # check-autopilot-rails-hook.sh times — takes 0.3 to 0.6 seconds.
 BASH_INPUT_CAP=65536
 
+# The most distinct redirection targets one Bash call may have; a call with
+# more is denied unjudged. Why a cap: each target is resolved in the shell,
+# about a millisecond apiece under bash 3.2, and 6000 targets in 41 KB took
+# 8 seconds, past the hook's timeout, where a run denies nothing; at this
+# cap, targets in distinct directories under /tmp or $TMPDIR, the slowest
+# shapes measured, take about 0.4 seconds.
+TARGET_CAP=1000
+
 NL='
 '
 TAB='	'
@@ -518,9 +528,14 @@ field() {
 # ancestors resolved; "" stands for /. A component that does not exist is
 # kept as written. Why .. first, as written: Claude Code collapses it that
 # way before the write, so a .. after a link leaves the link's parent,
-# not its target's.
+# not its target's. Each link's resolution is kept in LINKS, one
+# "<link><tab><target>" line each. Why: resolving forks a subshell, and a
+# fork per redirection target under a linked directory (/tmp on macOS)
+# made thousands of targets outlast the hook's timeout.
+LINKS='
+'
 resolve() {
-  local rest=$1 lex="" out="" comp next
+  local rest=$1 lex="" out="" comp next link
   while [ -n "$rest" ]; do
     comp=${rest%%/*}
     case $rest in
@@ -542,8 +557,16 @@ resolve() {
     esac
     next="$out/$comp"
     if [ -L "$next" ] && [ -d "$next" ]; then
-      next=$(cd "$next" 2>/dev/null && pwd -P) || next="$out/$comp"
-      next=${next%/}
+      case $LINKS in
+        *"$NL$next$TAB"*)
+          link=${LINKS#*"$NL$next$TAB"}
+          next=${link%%"$NL"*} ;;
+        *)
+          link=$(cd "$next" 2>/dev/null && pwd -P) || link="$out/$comp"
+          link=${link%/}
+          LINKS="$LINKS$next$TAB$link$NL"
+          next=$link ;;
+      esac
     fi
     out=$next
   done
@@ -553,22 +576,35 @@ resolve() {
 # in_roots <resolved path>: status 0 when the path lies inside a root of
 # KENSPC_AUTOPILOT_WRITE_ROOTS, by whole path components, each root
 # resolved as resolve() resolves a target; a root entry that is not
-# absolute is skipped.
+# absolute is skipped. The roots are resolved once, on the first call, into
+# RROOTS, one per line. Why once: resolving every root again for each of
+# thousands of redirection targets outlasted the hook's timeout.
+RROOTS_SET=""
 in_roots() {
-  local p=$1 rest=$roots root
+  local p=$1 rest root
+  if [ -z "$RROOTS_SET" ]; then
+    RROOTS="" rest=$roots
+    while [ -n "$rest" ]; do
+      root=${rest%%|*}
+      case $rest in
+        *"|"*) rest=${rest#*|} ;;
+        *) rest="" ;;
+      esac
+      case $root in
+        /*) ;;
+        *) continue ;;
+      esac
+      resolve "$root"
+      RROOTS="$RROOTS$RESOLVED$NL"
+    done
+    RROOTS_SET=1
+  fi
+  rest=$RROOTS
   while [ -n "$rest" ]; do
-    root=${rest%%|*}
-    case $rest in
-      *"|"*) rest=${rest#*|} ;;
-      *) rest="" ;;
-    esac
-    case $root in
-      /*) ;;
-      *) continue ;;
-    esac
-    resolve "$root"
+    root=${rest%%"$NL"*}
+    rest=${rest#*"$NL"}
     case $p in
-      "$RESOLVED"|"$RESOLVED"/*) return 0 ;;
+      "$root"|"$root"/*) return 0 ;;
     esac
   done
   return 1
@@ -597,16 +633,21 @@ case $tool in
       "$REMOTE_MARK"*) deny "gh, and git with a remote subcommand or a URL clone, are denied in an autopilot worker (${found#"$REMOTE_MARK"})" "$REASON_ASK" ;;
     esac
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"
-    # Split by parameter expansion, not read from a heredoc: bash 3.2 writes
-    # a heredoc to a temporary file, and where it cannot, the loop would
-    # read nothing and judge no target.
-    while [ -n "$targets" ]; do
-      line=${targets%%"$NL"*}
-      case $targets in
-        *"$NL"*) targets=${targets#*"$NL"} ;;
-        *) targets="" ;;
-      esac
-      [ -n "$line" ] || continue
+    # Split by word splitting on line breaks with globbing off, not read
+    # from a heredoc: bash 3.2 writes a heredoc to a temporary file, and
+    # where it cannot, the loop would read nothing and judge no target. Not
+    # by parameter expansion either: taking one line off the front at a
+    # time rescans the rest, which grows with the square of the list.
+    [ -n "$targets" ] || exit 0
+    oldifs=$IFS
+    IFS=$NL
+    set -f
+    set -- $targets
+    IFS=$oldifs
+    set +f
+    [ "$#" -le "$TARGET_CAP" ] \
+      || deny "this Bash call has $# distinct redirection targets, over the $TARGET_CAP the hook judges within its timeout, so it is denied in an autopilot worker; split the command"
+    for line in "$@"; do
       resolve "${line%%"$TAB"*}"
       rt=$RESOLVED
       in_roots "$rt" \

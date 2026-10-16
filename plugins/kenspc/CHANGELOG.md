@@ -192,8 +192,10 @@ in the next product-repository batches.
   `"hi">>~/.claude/x`, `'done'>/etc/x`, `> '/etc/x'`, `>& /etc/x`,
   `1>&/etc/x`, `>> ~<user>/.claude/x`;
   allowed: `> /dev/null`, `2>&1`, `>&2`, `> "$TMPDIR/x"`, `> out.txt`, `> 'out.txt'`,
-  `> "$OTHER/x"`, a quoted `>`, a heredoc `>`), a timed fixture of 8000
-  redirections then `> /etc/x` (0.112 s measured), the `gh` and remote-git
+  `> "$OTHER/x"`, a quoted `>`, a heredoc `>`), timed fixtures of 8000
+  redirections then `> /etc/x` (0.112 s measured), 999 distinct targets
+  under `/tmp` then `> /etc/x`, and 6000 distinct targets, over the hook's
+  cap of 1000, the `gh` and remote-git
   fixtures with a `deny-ask` expectation, and two self-test mutants (the
   redirection check and the `gh` check removed; six → eight).
 
