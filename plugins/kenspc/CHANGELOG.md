@@ -9,6 +9,262 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.7.0 — unreleased
+
+The second slice of the autopilot's field lessons. A review runs one
+second fix round when a ruling arrives after code-fixer's dispatch, the
+rulings grammar gains a DEFER tail on FIX and settles entries outside it,
+and code-fixer's own findings and the verifier's regressions get IDs
+(`F`, `V`) a ruling can name. The five reviewers share one suite run, and
+a tree check around them stops a review whose reviewer changed a tracked
+file. The rails hook judges Bash redirection targets and denies `gh` and
+remote git, routing them to the main session; the main session may rule a
+harmless breach benign and resume the worker. `Standalone review: auto`
+runs S3b only when S3's own review calls for it, a task S3 leaves BLOCKED
+is classified as a HIGH row is, and a new session, S4w, walks the batch's
+user-facing flows in a browser after the acceptance — on by default in
+repo mode, which changes what an existing spec does (below). Guard counts
+are unchanged: `guards run: 13`, `self-tests run: 12`.
+
+A headless probe settled the walk's browser tool before the walk was
+written (`docs/dry-runs/batch-m-walk-probe.md`, USD 1.16), and a walk
+acceptance on a repo-mode seed passed its four cases — `Walk: on`,
+`Walk: off`, no usable walk tool, and a port held before S4w starts
+(`docs/dry-runs/batch-m-walk-acceptance.md`, about USD 15.8). It left
+three findings for follow-up: a screenshot given a relative file name
+lands in the repository before S4w moves it, one main session's final
+message lacked its `## User report` heading, and two main sessions ruled
+the installed 4.6.0's `.gitignore` commit two ways. The second round,
+`auto`, BLOCKED classification, and benign breaches are accepted in use,
+in the next product-repository batches.
+
+### Added
+
+- **A second fix round (task-review, task-implement).** In every review,
+  regression-verifier's first reply is saved to `RUN_DIR/schema-c-1.md`.
+  When the orchestrator then holds a ruling given after code-fixer's first
+  dispatch — a message from the user in an interactive run, the main
+  session's answer in an autopilot worker — it appends the round's entries
+  under a `## Round 2` heading in `rulings.md` (creating the file when
+  there is none) and dispatches code-fixer and regression-verifier again,
+  afresh, with the CONTEXT block unchanged; code-fixer carries out only the
+  round-2 entries and updates `schema-b.md` in place, a round-2 entry
+  replaces a round-1 entry for the same ID, the progress lines carry
+  `(round 2)`, and the verdict and the final report come from the second
+  round, which names `schema-c-1.md` for the first. At most one second
+  round per review; with no ruling held, no second round and no question.
+  The step is a new canonical block, `canonical:second-round`,
+  byte-identical in task-review's new Step 7 (Schema F moves to Step 8)
+  and task-implement's Phase 2 Step 3. Why a ruling: a second pass without
+  one would only repeat code-fixer's own choices. Why one: one finding took
+  three rounds in an implementation review and four in a standalone one,
+  and an unbounded loop inside a review would bypass the stops that count
+  fixes per defect. Why fresh dispatches: a resumed subagent ran in the
+  background, and a headless worker had to wait on it by hand.
+- **`F` and `V` IDs (code-fixer, regression-verifier).** A defect
+  code-fixer finds that no report lists is recorded as a row with Source
+  `F<n>`, `DEFERRED — no report lists it`, never fixed outside the
+  reports; regression-verifier names each regression it finds `V<n>` in
+  its Detail (numbered on from `schema-c-1.md`'s highest in a second
+  round), leaves `F` IDs out of its ID-set comparison, and takes a `V` ID
+  that `schema-c-1.md` names as listed. A ruling may name either, and a
+  second round then fixes it. The statistics line becomes
+  `total reported N (R n, E n, Q n, B n, T n, F n, V n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`,
+  and the Per-angle Results table carries all seven rows. Why: a defect
+  code-fixer found that no reviewer had, and a regression the verifier
+  found, had no row, so the main session's ruling on each read as a ruled
+  ID that no report lists.
+- **The shared suite run and the tree check (task-review,
+  task-implement, the five reviewers).** Before the five reviewers are
+  dispatched, the orchestrator runs the project's test commands once — the
+  ones the project's instruction files give for the parts the change set
+  touches — and writes `RUN_DIR/suite-run.md` (each command, exit code,
+  duration, and log path); a reviewer given `RUN_DIR` reads it and never
+  runs the full test command itself, only named test files and its
+  scratch mutation checks, one command at a time (a new PREREQUISITES item,
+  identical in the five). The orchestrator then records the tree state
+  (`git status --porcelain=v1 -uall`, a hash of `git diff HEAD --binary`,
+  and each listed tracked path's content hash) and records it again once
+  the five have returned: a changed tracked file stops the review before
+  code-fixer, naming the files, with no restore and one question (go on,
+  or end); a new untracked file stops nothing and is named in Next steps.
+  Both rules sit in the canonical dispatch block. Why the suite run: five
+  full suites at once exhausted the machine's local ports, and the
+  connection errors read like findings. Why the tree check: a reviewer's
+  `vitest list --json <files>` overwrote a tracked test file, the flag
+  taking the next word as its output file, and code-fixer would have fixed
+  the tree as it found it. An unchanged tree asks nothing, so an
+  interactive review gains no question in the ordinary case.
+- **Benign breaches (autopilot).** A worker that breaches a rail still
+  reports it and ends; the main session may rule the breach benign when
+  no secret was written or sent, it is not a recursive `rm`, a push, a
+  tag, or a release, and it changed no state outside the write roots — or
+  only a file holding no secret, which the main session moves into the
+  workspace's `.trash/` — each checked against the report and the disk. It
+  records the breach under the state file's new `breaches ruled:`
+  section, resumes the worker under `<tag>-r<k>` with
+  `answer <tag>: breach ruled benign — <one line>` (counted as a resume),
+  and records the ruling as every ruling is, a `questions answered:` line
+  and a clarification in the spec; the reviewer report gains
+  `Breaches ruled benign:` and the user report lists each. Stop condition
+  6 narrows to a breach the main session cannot rule benign. Why: a file
+  written beside `$TMPDIR` holding nothing, a probe that sent nothing off
+  the machine, and a read-only command against a local resource each
+  stopped a run that a ruling would have let go on.
+- **`Standalone review: auto` (autopilot).** A third value, repo mode
+  only: after S3 returns, the main session reads S3's Schema G, and S3b
+  runs when its verdict is FAIL, or PARTIAL for a reason other than
+  BLOCKED tasks alone, or its review left a HIGH or MEDIUM row DEFERRED;
+  otherwise S3's verdict enters the verdict loop as with `off`. The state
+  file gains a `standalone review:` line, the reviewer report a
+  `Standalone review: <value> — ran (<trigger>)` or `— not run (<reason>)`
+  line, and the `Sessions:` list `S3b: not run (Standalone review: auto, not triggered)`.
+  The default stays `on`. Why read from S3's own review: the condition is
+  an artifact S3 already produced, so the main session judges nothing, and
+  the one HIGH S3b found that the implementation review had missed came
+  from a batch whose implementation review had deferred four findings.
+- **BLOCKED tasks in the verdict loop (autopilot).** At S3's return the
+  main session reads every task's status from the committed task
+  document, whatever `Standalone review:` says, and classifies each
+  BLOCKED task as a HIGH row: an S5 that implements it — its task block
+  quoting the task and its BLOCKED note, the task's `**Status:**` set to
+  DONE in its own commit — followed by the narrowed review and counted per
+  task as stop condition 4 counts a defect, or a deferral recorded as a
+  clarification; a block needing a change outside the batch's contract is
+  stop condition 7 (a). The state file gains a `blocked tasks:` section,
+  and both reports name each task and its classification. Why: S3b's
+  Schema F does not read task statuses and S3's PARTIAL had no branch, so
+  a batch with a task not built could reach the release preparation
+  without the task being named.
+- **The runtime walk, S4w (autopilot, repo mode).** A new role walks the
+  batch's user-facing flows in a browser through the Playwright MCP, once
+  S4's FAILs are classified and their re-runs have passed, or after the
+  `Acceptance: none` record. A new `## Autopilot` field, `Walk:` — `on`
+  (S4w picks the flows the batch changed from the spec's steps and lists
+  them), `off`, or one sub-bullet per flow, `- <flow> — must see: <what>`;
+  `on` by default in repo mode, `off` in plugin mode, where `on` or
+  sub-bullets is a settings stop. `Role settings:` accepts `S4w`; its tags
+  are `-s4w` and `-s4wb`, read as S4w before the S4 re-run rule, and S4's
+  own re-run letters skip `w`. S4w walks local URLs only, opens pages only
+  in the browser the Playwright MCP starts for it, starts the app as the
+  instruction files and the spec say, uses data by the project's rule or
+  synthetic, reads a test account's password at run time inside the page
+  or a script, checks each port before a server starts — a port held by
+  another process is a question, ruled wait (re-check every 10 minutes,
+  at most 60) or skip, `not walked: port <n> in use` — and stops only the
+  processes it started, by their listener. It writes `walk.md` and its
+  screenshots under `<workspace>/_logs/<batch>-walk/`. A walk FAIL is
+  classified as an acceptance FAIL (a defect → S5 → the narrowed review →
+  an `-s4wb` re-run of the failed flows); `nothing to walk` and
+  `not walked` are records, not failures; the budget projection includes
+  S4w, and a failed check before its first launch cuts it, recorded
+  `walk: cut by budget`. The settings line gains `walk <on|off|<n> flows>`,
+  the state file a `walk:` line, and both reports a `Walk:` line; with
+  `Acceptance: none` and a walk that walked, the Acceptance line reads
+  `none named; S3b is the last review, the walk follows`. Why: several
+  follow-up issues of the product-repository batches were found after the
+  run by walking the app, which neither review nor S4 does.
+- **The walk tool's start check (autopilot).** With `Walk:` not `off` in
+  repo mode, the main session runs
+  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'` from
+  the repository root before the first launch; not usable is a stop
+  naming the output and `Walk: off` as the way on, before any session is
+  paid for. S4w checks the tools again at its start, and finding them
+  missing it ends `walk tool unavailable`, a seventh stop stated at its own
+  step. Claude in Chrome, planned as the first choice, is neither checked
+  nor used: the probe showed a headless worker launched with `--chrome`
+  reaching no browser ("Browser extension is not connected") while an
+  interactive session on the same account did, and a headless worker
+  reaching the Playwright MCP with no flag, so the driver passes none. The
+  skill names Claude in Chrome in prose only, since its MCP identifier
+  would trip `check-no-model-names.sh`'s model-ID rule.
+- **Guard coverage.** `check-run-contract.sh` gains check 8, the
+  `canonical:second-round` block byte-identical in the two skills, its
+  self-test rewording the one-round limit sentence in each; check 5 names
+  `schema-c-1.md` in both skills, `code-fixer.md`, and
+  `regression-verifier.md`, and `suite-run.md` in both skills and
+  `requirements-reviewer.md`, each renamed in turn by the self-test; check
+  4's recount counts `F` and `V` Source IDs and requires all seven
+  Per-angle Results rows, and the worked Schema B example gains an `F`
+  row; check 7's grammar holds the four forms (27 → 36 exit-1 mutations).
+  `check-autopilot-rails-hook.sh` gains the redirection fixtures (denied:
+  `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, `&> ../outside`;
+  allowed: `> /dev/null`, `2>&1`, `> "$TMPDIR/x"`, `> out.txt`,
+  `> "$OTHER/x"`, a quoted `>`, a heredoc `>`), a timed fixture of 8000
+  redirections then `> /etc/x` (0.112 s measured), the `gh` and remote-git
+  fixtures with a `deny-ask` expectation, and two self-test mutants (the
+  redirection check and the `gh` check removed; six → eight).
+
+### Changed
+
+- **The rulings grammar (task-review, task-implement, code-fixer,
+  regression-verifier).** A FIX entry may defer the rest of a finding:
+  `- <ID>[, <ID>…]: FIX — <what to do>; DEFER rest — <reason>` — the row
+  stays FIXED, regression-verifier checks the fix against the FIX text,
+  and code-fixer writes the deferred part into the row's Deferred Issues
+  prose. An entry naming a group covers every clause of every row it
+  names, one sentence per clause. An entry outside the grammar — an
+  unknown action word, no ID, a first line naming nobody who ruled, one ID
+  in two entries of the same round — is not carried out: code-fixer names
+  it on a new `Rulings outside the grammar:` reply line, regression-verifier's
+  row 1 names it, and it keeps the verdict from PASS, as a ruled ID no
+  report lists does. A ruled ID's unruled duplicate is merged into the
+  ruled row and takes its ruling. Task-review's Step 5 states these rules,
+  and task-implement points at it. Why the tail rather than a second
+  entry: one ID keeps one entry and one action, so the recount and
+  regression-verifier's check 1 stay as they are.
+- **The rails hook judges redirection targets (hooks).** In a marked
+  worker, a Bash redirection — `>`, `>>`, `>|`, `&>`, `&>>`, and the same
+  after a file-descriptor number — whose target, after a leading `~`,
+  `$HOME`, `${HOME}`, `$TMPDIR`, or `${TMPDIR}` is expanded and `.` and
+  `..` collapsed (relative targets against the input's cwd), lies outside
+  every write root is denied by the root check the file tools get, with
+  their route. A target holding any other expansion, a command
+  substitution, a glob, or single-quoted text is not judged;
+  `/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/tty`, and
+  `/dev/fd/<n>` are allowed; `2>&1` has no target; a `>` in quotes or a
+  heredoc body is no redirection. The header's misses keep `tee`, `cp`,
+  `mv`, and interpreter writes, add a relative target after a `cd` in the
+  same command, and record one false denial, a `>` inside `[[ ]]` or
+  `(( ))`. Why redirections only: both writes outside the roots that
+  workers made through Bash were redirections — a file beside `$TMPDIR`,
+  and an append to a memory file under `~/.claude`.
+- **The rails hook denies `gh` and remote git (hooks, autopilot preamble
+  § 3).** At a command position, wrappers such as `sudo` and `xargs`
+  included, `gh` is denied (`command -v gh`, `type gh`, and `which gh`
+  pass), and so is `git` — its global options `-C`, `-c`, `--git-dir=`,
+  `--work-tree=`, `--no-pager` skipped — with `fetch`, `pull`, `push`,
+  `ls-remote`, or `remote update`, or `clone` of a source holding `://` or
+  reading `<user>@<host>:<path>`; a `git clone` of a local path passes.
+  The reason's route is to ask the main session, which gets anything the
+  work needs from GitHub, and preamble § 3 says the same. Why: a denial is
+  not a breach, so the run goes on, and the hook reaches a subagent that
+  never saw the preamble — an implementer subagent's read-only
+  `gh issue view` stopped a run as a breach.
+- **The autopilot's side of the second round (preamble § 1, the verdict
+  loop, S3b's task block).** A worker running a review asks for a ruling
+  on its findings only once the last reviewer has returned; a ruling that
+  arrives after code-fixer's dispatch is the second round's; after
+  regression-verifier returns HAS ISSUES or a verdict other than PASS, the
+  worker sends one question naming `schema-b.md` and `schema-c-1.md`. A
+  narrowed review's verdict is read after its second round, so an
+  incomplete fix its own code-fixer made is finished there rather than by
+  another S5. S3b's task block names S3's `rulings.md` path(s) on a line
+  kept out of the command, since task-review reads everything after its
+  path as the reviewers' custom instructions; the main session rules a
+  finding an earlier DEFER or NOT APPLICABLE entry covered the same way,
+  citing the entry. Why the main session and not task-review: the two
+  reviews' IDs differ, and whether two findings are the same is a judgment
+  the main session already makes.
+- **The walk is on by default in repo mode (autopilot).** A repo-mode spec
+  written before 4.7.0 with no `Walk:` field now launches S4w, and on a
+  machine without the Playwright MCP stops at the start check before the
+  first launch. Write `Walk: off` to keep such a spec's earlier behavior;
+  the release checklist's row 11 seed now does.
+- **§ The driver (autopilot).** Its paragraph on the rails hook names the
+  redirection, `gh`, and remote-git denials, and keeps `tee`, `cp`, `mv`,
+  and interpreter writes among the misses.
+
 ## 4.6.0 — 2026-10-15
 
 The autopilot carries the remedies its product-repository batches applied

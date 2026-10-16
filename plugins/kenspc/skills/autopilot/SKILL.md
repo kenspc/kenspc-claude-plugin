@@ -2815,13 +2815,17 @@ on a fresh launch and on a resume alike; the empty string counts as unset.
 The two exported variables are read by the plugin's rails hook
 (`${CLAUDE_PLUGIN_ROOT}/hooks/scripts/autopilot-worker-rails.sh`, on
 PreToolUse for Bash, Write, Edit, and NotebookEdit), which acts only in a
-worker that carries the marker: there it denies a recursive `rm` and a
-file-tool write outside the roots, in the worker's own calls and its
-subagents' alike. It is a best-effort guard behind the preamble's rails
-(§ 3), which still bind — it misses `find -delete`, `bash -c '…'`,
-interpreter-level deletes, `git clean`, and writes through Bash. Why the
-hook: the preamble is the worker's prompt, which the subagents it
-dispatches never see, while a plugin's PreToolUse hook fires for a
+worker that carries the marker: there it denies a recursive `rm`, a
+file-tool write or a Bash redirection whose target lies outside the
+roots, and `gh` and remote git (`git fetch`, `pull`, `push`, `ls-remote`,
+`remote update`, a `clone` of a URL), whose reason routes the worker to
+ask the main session, in the worker's own calls and its subagents' alike.
+It is a best-effort guard behind the preamble's rails (§ 3), which still
+bind — it misses `find -delete`, `bash -c '…'`, interpreter-level
+deletes, `git clean`, and writes through Bash other than a redirection
+(`tee`, `cp`, `mv`, an interpreter's own writes). Why the hook: the
+preamble is the worker's prompt, which the subagents it dispatches never
+see, while a plugin's PreToolUse hook fires for a
 subagent's tool call too, and its deny holds in a bypassPermissions
 session.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:

@@ -102,9 +102,15 @@ is inert there — exit 0, no output, stdin unread — unless
 it, while `:` is in every drive letter and `;` may be in a file name). In a
 marked worker it
 denies, with exit 2 and the reason on stderr, a Bash command that runs a
-recursive `rm` at a command position and a Write, Edit, or NotebookEdit
-whose resolved target lies outside every root, and a Bash input over
-64 KB unscanned, since a scan that outlasts the hook's 5-second timeout
+recursive `rm` at a command position, a Write, Edit, or NotebookEdit
+whose resolved target lies outside every root, a Bash redirection (`>`,
+`>>`, `>|`, `&>`, `&>>`, with or without a file-descriptor number) whose
+target — read after a leading `~`, `$HOME`, or `$TMPDIR` is expanded and
+`.` and `..` are collapsed — lies outside every root by the same root
+check (4.7.0), `gh` and remote git (`git fetch`, `pull`, `push`,
+`ls-remote`, `remote update`, a `clone` of a URL) at a command position,
+its reason routing the worker to ask the main session (4.7.0), and a Bash
+input over 64 KB unscanned, since a scan that outlasts the hook's 5-second timeout
 denies nothing; a call whose tool name, Bash command, or file-tool target
 it cannot read from its input is denied too, so a renamed field stops the
 calls loudly, with a reason that names no route, since a retry is read
@@ -283,12 +289,37 @@ changed.
   — rules written in the project's instruction files / README and
   patterns in adjacent code —
   since v3.5; the file name is kept so the canonical dispatch block stays
-  unchanged.
+  unchanged. Around Phase 1 (4.7.0, in the canonical dispatch block): before
+  the dispatch the orchestrator runs the project's test commands once —
+  those the project's instruction files give for the parts the change set
+  touches, found as `regression-verifier` finds them — and writes
+  `suite-run.md`, which each reviewer reads instead of running the full
+  suite (five full suites at once exhausted a machine's local ports, and
+  the connection errors read like findings); then it records the tree
+  state (`git status --porcelain=v1 -uall`, a hash of
+  `git diff HEAD --binary`, and each listed tracked path's
+  `git hash-object`), and records it again once all five have returned. A
+  changed tracked file stops the review before Phase 2, naming the files,
+  with no restore and one question (go on with the tree as the user leaves
+  it, or end); a new untracked file stops nothing and is named in the
+  final report, so an unchanged tree asks nothing.
 - Phase 2: `code-fixer` reads all 5 reports from the run directory,
   deduplicates, applies fixes, and writes the accountability list (Schema B)
-  back to it.
+  back to it. A defect it finds that no report lists is recorded, not
+  fixed, as an `F<n>` row, DEFERRED (4.7.0).
 - Phase 3: `regression-verifier` cross-checks the reports' issue IDs against
-  the accountability list, verifies fixes, runs build/test/lint.
+  the accountability list, verifies fixes, runs build/test/lint, and names
+  each regression it finds `V<n>` (4.7.0).
+- After Phase 3, a second round (4.7.0, the `canonical:second-round`
+  block): the orchestrator saves regression-verifier's first reply to
+  `schema-c-1.md` in every review, and when it holds a ruling given after
+  code-fixer's first dispatch — a user message in an interactive run, the
+  main session's answer in an autopilot worker — appends it under
+  `## Round 2` in `rulings.md` and dispatches `code-fixer` and
+  `regression-verifier` again, afresh, with the CONTEXT block unchanged;
+  the verdict is read from that round. At most one per review, since an
+  unbounded loop would bypass the autopilot's per-defect stop counts; with
+  no ruling held, no second round and no question.
 
 Between the dispatches the orchestrating skill prints one fixed progress
 line per step — which agent returned, its counts or result, and the path of
@@ -304,7 +335,11 @@ its batch confirmation and before it dispatches task-implementer, reusing
 the same directory for its review (4.3.0). In a review without a
 task document it then writes `change-set.md` (v3.7), the change set every
 agent reads (see CONTEXT block contract). Each reviewer writes only
-its own `angle-<n>.md`, and `code-fixer` only `schema-b.md`. Probe and
+its own `angle-<n>.md`, and `code-fixer` only `schema-b.md`; the
+orchestrating skill writes `suite-run.md` before the reviewers' dispatch,
+`rulings.md` when it holds a ruling, and `schema-c-1.md` when
+regression-verifier first returns (4.7.0), with the suite logs and the
+tree state under `scratch/orchestrator/`. Probe and
 temporary files go in one scratch subdirectory per writer —
 `scratch/task-implementer/`, `scratch/angle-<n>/` for each reviewer,
 `scratch/code-fixer/`, `scratch/regression-verifier/`, and
@@ -317,7 +352,9 @@ project: still no `__mocks__` directory; a file that already carries a
 collectable name is renamed, not deleted). So parallel writers never share
 a file, and the main session relays paths rather than report text. Issue IDs (`R` / `E` / `Q` / `B` / `T` plus a sequence number)
 and code-fixer's Source column let `regression-verifier` settle completeness
-by comparing ID sets. Subagents cannot spawn other subagents; orchestration
+by comparing ID sets; code-fixer's own `F` rows and the `V` regressions
+are left out of that comparison (4.7.0), an `F` row being code-fixer's
+own and a `V` row listed by `schema-c-1.md`. Subagents cannot spawn other subagents; orchestration
 stays at the skill (main session) level.
 
 **Sessions, not agents (autopilot):**
@@ -327,8 +364,13 @@ only), S2 task decomposition (`/kenspc-task`), S3 implementation
 (`/kenspc-task-implement`), S3b standalone review (`/kenspc-task-review`
 over the batch's range; it runs unless `Standalone review: off` in repo
 mode, 4.6.0, where S3's Schema G verdict and its review's rows take its
-place in the verdict loop), S4 acceptance, S5 fix on demand, S6 release
-preparation — each started through the driver script that ships with the
+place in the verdict loop, or `auto`, 4.7.0, which the main session reads
+from S3's Schema G — S3b runs on a FAIL, a PARTIAL for a reason other
+than BLOCKED tasks alone, or a HIGH or MEDIUM row S3's review left
+DEFERRED), S4 acceptance, S4w runtime walk (repo mode unless `Walk: off`,
+4.7.0: the batch's user-facing flows walked in a browser through the
+Playwright MCP, on the local machine, after S4), S5 fix on demand, S6
+release preparation — each started through the driver script that ships with the
 skill (`skills/autopilot/scripts/run.sh`) and is copied per batch, with
 `--name <tag>` and `crossSessionInbound: accept`. Questions and answers
 travel as cross-session messages (`question <tag>:` / `answer <tag>:`);
@@ -340,8 +382,11 @@ every wake, and `--resume` only continues a worker that has ended — dead,
 ended by its cap, ended by the usage limit (resumed after the reset, not
 counted as a death; 4.6.0), stopped on a question it got no answer to within
 thirty minutes or whose send returned an error or a held or refused
-notice, or an S2 whose committed task document the skipped-gate
-post-check sends back to amend — never a live one; no agent, no CONTEXT key, no agent
+notice, an S2 whose committed task document the skipped-gate
+post-check sends back to amend, or a worker that ended on a rail breach
+the main session rules benign (no secret written or sent; no recursive
+`rm`, push, tag, or release; no state changed outside the write roots but
+a file holding no secret, moved into `.trash/`; 4.7.0) — never a live one; no agent, no CONTEXT key, no agent
 teams. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix each need a session
@@ -460,9 +505,20 @@ run, or an autopilot main session's answer to the worker running the
 review — task-review (Step 5) or task-implement (Phase 2 Step 3) writes it
 to `RUN_DIR/rulings.md` before the dispatch: a first line naming who
 ruled, then one `- <ID>[, <ID>…]: FIX — <what to do>`,
+`FIX — <what to do>; DEFER rest — <reason>` (4.7.0: the row stays FIXED,
+the FIX text bounds the check, and the deferred part goes into the row's
+Deferred Issues prose, so one ID keeps one entry and one action),
 `DEFER — <reason>`, or `NOT APPLICABLE — <reason>` entry per ruling. The
 step adds no pause and no question, and with no ruling no file is
-written. `code-fixer` gives a ruled ID the ruling's action over FIXING
+written. task-review's Step 5 alone states the rules around the grammar
+(4.7.0) — an entry naming a group covers every clause of every row it
+names; an entry outside the grammar (an unknown action word, no ID, a
+first line naming nobody, one ID in two entries of one round) is not
+carried out, its IDs falling back to code-fixer's own rules, is named on
+code-fixer's `Rulings outside the grammar:` reply line and in
+regression-verifier's row 1, and keeps the verdict from PASS; a ruled
+ID's unruled duplicate takes its ruling — and task-implement points at
+that step rather than carrying a second copy of the prose. `code-fixer` gives a ruled ID the ruling's action over FIXING
 PRIORITY (a FIX ruling's text bounds the fix, and a file it names is in
 its scope) and marks the row `ruled` after the em-dash, keeping the
 leading word so the statistics recount is unchanged; `regression-verifier`
@@ -471,6 +527,33 @@ item 1) and a FIX-ruled fix against the ruling's text (item 2). No key was added
 never goes into `CUSTOM_INSTRUCTIONS`: the CONTEXT block passes to both
 agents unchanged, the rule a narrowed review broke when it wrote a ruling
 there. The five reviewers do not read the file.
+
+`suite-run.md` and `schema-c-1.md` (4.7.0) follow it, with no key added.
+The orchestrator writes `RUN_DIR/suite-run.md` before the five reviewers'
+dispatch — each test command, its exit code, its duration, and its log's
+path under `scratch/orchestrator/`, or one line saying the project gives
+no test command — and a reviewer given `RUN_DIR` reads it and never runs
+the project's full test command (its PREREQUISITES item 5, held identical
+in the five by `check-review-agent-drift.sh`); one given `RUN_DIR` without
+the file says so in its report and still runs no full suite. The
+orchestrator saves regression-verifier's first reply to
+`RUN_DIR/schema-c-1.md` in every review, and a second round's entries go
+under a `## Round 2` heading in `rulings.md`, a round-2 entry for an ID
+ruled in round 1 replacing that entry. `code-fixer` then carries out only
+the round-2 entries, updates `schema-b.md` in place keeping every row, and
+adds a row for each `V` ID a round-2 entry names, taken from
+`schema-c-1.md`'s Detail; a `V` ID that file does not name is a ruled ID
+that no report lists. Schema B's Source IDs gain two letters: `F<n>`,
+code-fixer's row for a defect no report lists (DEFERRED,
+`no report lists it`, unless a ruling names it), and `V<n>`, a regression
+`regression-verifier` names in its Schema C Detail, numbered on from the
+highest `V` ID in `schema-c-1.md` in a second round so two rounds never
+reuse one. The statistics line counts both,
+`total reported N (R n, E n, Q n, B n, T n, F n, V n), …`, and the
+Per-angle Results table carries all seven rows, zeros included, a fixed
+shape the recount can hold. Why `F` and `V`: a ruling on a defect no
+reviewer reported, or on a regression, had no row to land on and read as
+a ruled ID that no report lists.
 
 #### Standalone safety classification
 
@@ -497,12 +580,17 @@ sections by convention. When modifying any of these sections in
 one agent, apply the same change to the other 4. Duplication is intentional
 (each agent is independently readable); silent drift between them is a bug.
 
-Three more byte-identity invariants bind `task-review/SKILL.md` and
+Four more byte-identity invariants bind `task-review/SKILL.md` and
 `task-implement/SKILL.md`: the canonical `## Code Review Phase
 (unconditional)` block (bounded by `<!-- canonical:dispatch:start/end -->`
-markers), the shared verdict-determination bullets (bounded by
-`<!-- canonical:verdict-shared:start/end -->` markers), and the run-directory
-preparation (bounded by `<!-- canonical:run-dir:start/end -->` markers). The
+markers), which since 4.7.0 also holds the shared suite run and the tree
+check, the shared verdict-determination bullets (bounded by
+`<!-- canonical:verdict-shared:start/end -->` markers), the run-directory
+preparation (bounded by `<!-- canonical:run-dir:start/end -->` markers),
+and the second fix round (bounded by
+`<!-- canonical:second-round:start/end -->` markers, 4.7.0; task-review's
+Step 7 and task-implement's Phase 2 Step 3), whose text is skill-neutral —
+"this skill", "the final report" — so one copy reads true in both. The
 Schema B statistics-line template (`<!-- canonical:stats-line:start/end -->`)
 is byte-identical across those two SKILLs and `code-fixer.md`, and the
 `rulings.md` entry grammar (`<!-- canonical:rulings-grammar:start/end -->`)
@@ -542,7 +630,7 @@ The Open Questions entry grammar — the status words, the labels and their orde
 
 The `## Autopilot` section grammar — the labels, their values, and the note form — is written once, in the autopilot skill's § The `## Autopilot` section, and generate-plan reads it there by path at run time (4.6.0) rather than carrying a copy, so a plan's section and the autopilot's reading of it cannot drift. A rename or move of that heading updates the pointer in `generate-plan/SKILL.md` in the same commit.
 
-The autopilot skill uses no agent teams: one role per headless session, and a session is never reused across roles. A session that reviews its own work reads its own intent into the code, and a session that edited the plugin still runs the text it started with — skills and agents load at session start — so the implementer, the reviewer, and the acceptor are three sessions, and a fix is a fourth. In repo mode with `Standalone review: off` (4.6.0) the reviewer session does not run and S3's own review — five fresh subagents — stands in for it; the three sessions hold whenever S3b runs, and always in plugin mode, where the field is a settings stop.
+The autopilot skill uses no agent teams: one role per headless session, and a session is never reused across roles. A session that reviews its own work reads its own intent into the code, and a session that edited the plugin still runs the text it started with — skills and agents load at session start — so the implementer, the reviewer, and the acceptor are three sessions, and a fix is a fourth. In repo mode with `Standalone review: off` (4.6.0), or `auto` (4.7.0) when S3's own review does not trigger S3b, the reviewer session does not run and S3's own review — five fresh subagents — stands in for it; the three sessions hold whenever S3b runs, and always in plugin mode, where `off` and `auto` are each a settings stop. The runtime walk (4.7.0) is a further role with a session of its own, S4w, after the acceptor, for the same reason: it walks what the batch will release, not what a session that wrote or accepted it meant.
 
 The autopilot's driver posts no completion message on the cross-session messaging socket. The socket documents only its auth line, and its message line format is undocumented; a driver that guessed the format would break silently on a release. `<tag>.exit`, written by the driver when the worker returns, is the completion artifact, and the idle notice is only the wake that tells the main session to read it.
 
@@ -675,31 +763,47 @@ Project-level shell scripts live in `scripts/` at the repo root:
   stripped before the ID rule is tested, so a line carrying one of them
   and a real model ID is still reported. Skills and agents follow the
   session's model and effort; a model name in a prompt pins it to one
-  generation. CHANGELOG and `docs/` are out of scope.
+  generation. CHANGELOG and `docs/` are out of scope. The Claude in Chrome
+  MCP server's identifier (`claude-in-chrome`, as in its tool names) holds
+  `claude-` and a letter, which the ID rule reports, so the autopilot skill
+  names that tool in prose only (4.7.0) — no exclusion was added to the
+  guard, and an identifier spelled around the rule would defeat it.
 - `check-run-contract.sh` — guards the run-directory contract: the
   `canonical:run-dir` block is byte-identical in the two SKILLs; its
   `git check-ignore` probe answers correctly against a CRLF `.gitignore`
   holding a blank line (the v3.5.0 Windows failure), with global git config
   masked; the
   `canonical:stats-line` template is byte-identical in the two SKILLs and
-  `code-fixer.md`; the `canonical:rulings-grammar` block, the three
-  `rulings.md` entry forms, is byte-identical in the two SKILLs,
-  `code-fixer.md`, and `regression-verifier.md`, task-review's copy the
-  reference, its self-test rewording the DEFER entry in each of the four in
-  turn (check 7); and the worked Schema B example in `code-fixer.md`
+  `code-fixer.md`; the `canonical:rulings-grammar` block, the four
+  `rulings.md` entry forms (FIX, FIX with the `; DEFER rest — <reason>`
+  tail, DEFER, and NOT APPLICABLE, 4.7.0), is byte-identical in the two
+  SKILLs, `code-fixer.md`, and `regression-verifier.md`, task-review's copy
+  the reference, its self-test rewording the DEFER entry in each of the
+  four in turn (check 7; the tail sits second in the block so that entry
+  still occurs on one line of each carrier, and the tail is held by the
+  byte-identity alone); the `canonical:second-round` block (4.7.0) is
+  byte-identical in task-review's Step 7, the reference, and
+  task-implement's Phase 2 Step 3, its self-test rewording the one-round
+  limit sentence (`A review runs at most one second round:`) in each in
+  turn (check 8); and the worked Schema B example in `code-fixer.md`
   recounts — its Per-angle Results table and statistics line agree with its
   rows (primary Source ID counts under the row's action, the rest as
   DEDUPED; actions classified by leading word, so `NOT APPLICABLE — <reason>`
-  counts as NOT APPLICABLE); and the literal `change-set.md` is named in
+  counts as NOT APPLICABLE; Source IDs `[REQBTFV]<n>`, code-fixer's `F`
+  rows and the `V` regressions counted with the five angles, and the
+  Per-angle Results table required to carry all seven rows, 4.7.0; the
+  example holds one `F` row); and the literal `change-set.md` is named in
   `task-review/SKILL.md`, `code-fixer.md`, `regression-verifier.md`, and
   `requirements-reviewer.md`, the pre-fix record's `pre-fix/index.txt`
   in `code-fixer.md` and `regression-verifier.md`, and the rulings file's
   `rulings.md` in `task-review/SKILL.md`, `task-implement/SKILL.md`,
   `code-fixer.md`, and `regression-verifier.md`, each file that does not
   name it reported, its self-test renaming it in each of the four in turn
-  (check 5;
-  `check-review-agent-drift.sh` carries the first name to the other four
-  reviewers); and the reviewer invariant sentence, extracted at run time
+  — and, since 4.7.0, `schema-c-1.md` in the same four and `suite-run.md`
+  in the two SKILLs and `requirements-reviewer.md`, each renamed in turn
+  by the self-test (check 5;
+  `check-review-agent-drift.sh` carries the first and the last name to the
+  other four reviewers); and the reviewer invariant sentence, extracted at run time
   from the ROLE section of `requirements-reviewer.md` and compared
   whitespace-normalized, is contained in its three copies — the plugin
   README, this file, and `task-review/SKILL.md`'s dispatch block (check 6;
@@ -733,7 +837,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   preamble tells a worker to know a denial by, and naming `.trash` — or,
   for a field the hook cannot read, saying no permitted route applies and
   asking for the denial to be listed under `## Rail observations` before
-  the worker ends, with no `.trash`; allow and inert: exit 0, no stdout).
+  the worker ends, with no `.trash`; or, the `deny-ask` expectation for a
+  `gh` or remote-git call (4.7.0), naming the main session, with neither
+  `.trash` nor the no-route text; allow and inert: exit 0, no stdout).
   The fixtures carry the field names and nesting of the live hook input
   Claude Code 2.1.283 sent for Bash, Write, Edit, and NotebookEdit calls,
   copied into the guard, since a hook that parses a harness-owned format
@@ -747,7 +853,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   delimiter line never does, a Bash input over the length cap and one
   under it, a command of 12000 `$( )` substitutions under the cap and then
   `rm -rf`, a command word of 64000 characters with no slash and then
-  `rm -rf`, and one word of 32000 `<|` pairs and then `rm -rf`, each of
+  `rm -rf`, one word of 32000 `<|` pairs and then `rm -rf`, and (4.7.0)
+  8000 redirections `>a ` to a relative target in the repository and then
+  `> /etc/x`, each of
   which must be denied in under 2.5 seconds, half the hook's
   timeout (timed, the hook under a CPU limit of that timeout, so a slow
   scan costs the guard seconds), a write inside each root for each file
@@ -756,7 +864,18 @@ Project-level shell scripts live in `scripts/` at the repo root:
   a link collapsed as written, `~`, `~/`, and leading-space targets, a
   Windows drive-letter path left unjudged, a sibling sharing a root's
   prefix, no roots and root entries that are not absolute, an unreadable
-  tool name, command, or path field, and every denied fixture again
+  tool name, command, or path field, redirections (4.7.0) — denied:
+  `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, and `&> ../outside`
+  from the repository root; allowed: `> /dev/null`, `2>&1`,
+  `> "$TMPDIR/x"`, `> out.txt` in the repository, `> "$OTHER/x"` (not
+  judged), a `>` inside single quotes, and a `>` in a heredoc body, with
+  the hook's `$TMPDIR` set to a fixture path the redirection fixtures'
+  roots hold, so `$TMPDIR/..` lies outside every root on any machine —
+  `gh` and remote git (4.7.0) — denied: `gh issue view 1`,
+  `git -C . fetch`, `git push`, and a `git clone` of an https URL or of a
+  `user@host:path` source; allowed: a `git clone` of a local path,
+  `git status`, `grep gh f`, `command -v gh`, and `which gh` — and every
+  denied fixture again
   without the marker and with the marker `0`. Main mode also checks that
   `hooks.json` registers the hook under PreToolUse with a matcher naming
   all four tools, since the fixtures run the script directly; and (4.5.0)
@@ -770,7 +889,7 @@ Project-level shell scripts live in `scripts/` at the repo root:
   conditions, where the main session and stop condition 11 match on it — each
   missing literal reported per carrier (exit 1), a missing `SKILL.md`,
   assignment, template, or section exit 2. The hook
-  runs under `/bin/bash` when it exists. Its self-test turns six mutants red — the
+  runs under `/bin/bash` when it exists. Its self-test turns eight mutants red — the
   `rm` detection, the root check, and the marker check removed, the
   constant-time push removed (every word collected so far copied on each
   `$(`, which only the timed `$( )` fixture catches), and the
@@ -779,7 +898,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   or `>` fixtures do, and the timed `<|` fixture only by a margin too thin
   to require), and the phrase reworded in the Bash command's
   unreadable-field reason alone (which only that fixture's reason
-  assertion catches, the heading check staying green on the same copy)
+  assertion catches, the heading check staying green on the same copy),
+  the redirection check removed (any fixture may catch it), and the `gh`
+  check removed (the `gh issue view` fixture, which must be the first
+  red), both 4.7.0
   — then runs the heading check on a copy of `SKILL.md` beside
   the hook copy and turns it red with six more mutants, each named with
   its carrier: the heading dropped from the hook's reason, the preamble

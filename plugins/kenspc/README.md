@@ -17,9 +17,9 @@ Skills activate automatically when Claude Code detects a matching task context.
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files). |
 | diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. A document with more than 12 incomplete tasks is implemented in slices of 12 — one batch confirmation, one implementer dispatch per slice, and one merged summary. Automatically runs task-review on completion with a consolidated final report. A task document with no TODO or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a `/kenspc-task-review <path>` line for reviewing the finished work — with a BLOCKED task, also that it runs again only once its Status is set back to TODO — and nothing else runs. |
-| task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
+| task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Before the reviewers, runs the project's test commands once for all five (`suite-run.md`) and records the working tree's state; a tracked file a reviewer changed stops the review before the fix agent, naming the files, while an unchanged tree asks nothing. A ruling you give after the fix agent has started runs one second fix round — the fix agent and the verifier again, on that ruling alone (see Run directory). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
-| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents, after a clarification commit for each question the release-preparation session asked) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review (which `Standalone review: off` skips in `repo` mode), acceptance, fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports; between them your session rules every point the spec leaves open, except the stop conditions, and records each ruling for you to review before the tag. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
+| autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents, after a clarification commit for each question the release-preparation session asked) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review (which `repo` mode skips with `Standalone review: off`, or with `auto` when the implementation's own review does not call for it), acceptance, a runtime walk of the batch's user-facing flows in a browser (`repo` mode, on by default, `Walk: off` to skip it), fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports; between them your session rules every point the spec leaves open, except the stop conditions, and records each ruling for you to review before the tag. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
 
 ## Commands
 
@@ -75,8 +75,8 @@ where their description marks them safe to invoke standalone.
 | `quality-reviewer` | Code reviewer | Yes | Project conventions and existing patterns |
 | `bug-reviewer` | Code reviewer | Yes | Bug hunting (skeptical mindset) |
 | `test-reviewer` | Code reviewer | Yes | Test coverage and quality |
-| `code-fixer` | Worker | No | Applies fixes from review reports |
-| `regression-verifier` | Verifier | No | Verifies fixes; read-only by design |
+| `code-fixer` | Worker | No | Applies fixes from review reports; a defect it finds that no report lists is not fixed but recorded as an `F<n>` row, DEFERRED, for a ruling to name |
+| `regression-verifier` | Verifier | No | Verifies fixes; read-only by design; names each regression it finds `V<n>` in its Detail, for a ruling to name |
 | `task-implementer` | Worker | No | Implements tasks from a task document |
 | `plan-document-reviewer` | Doc reviewer | No | Reviews generated plan documents |
 | `guide-document-reviewer` | Doc reviewer | No | Reviews generated guide documents |
@@ -92,7 +92,11 @@ files under `RUN_DIR/scratch/angle-<n>/`.
 Invoked standalone, without a run directory, they reply inline, write
 nothing, and work out the change set from git themselves. Dispatched by `/kenspc-task-review` or `/kenspc-task-implement`,
 which pass `RUN_DIR`, they write only there. The Write tool they carry is for
-those files; they already had Bash. Standalone output keeps the
+those files; they already had Bash. With `RUN_DIR`, a reviewer reads the
+shared suite run's results from `RUN_DIR/suite-run.md` and never runs the
+project's full test command itself — only named test files and its own
+scratch mutation checks, one command at a time (since 4.7.0); without it,
+it runs tests as before. Standalone output keeps the
 v3.4.3 shape (Findings table, Issues table, closing line); the one format
 difference is that issue IDs carry the angle's letter (`B1`, not `1`).
 
@@ -439,16 +443,18 @@ review reuses the same directory (since 4.3.0):
 ```
 .kenspc/runs/<YYYYMMDD-HHMMSS>-<task-doc-name or "changes">/
     change-set.md              # the change set under review (a review without a task document)
+    suite-run.md               # the shared suite run before the reviewers: each test command, exit code, duration, log path
     angle-1.md … angle-5.md    # full report from each review angle
-    rulings.md                 # a ruling on the findings, when one was given before code-fixer ran
+    rulings.md                 # a ruling on the findings, when one was given; a second round's under "## Round 2"
     schema-b.md                # code-fixer's full accountability list
+    schema-c-1.md              # regression-verifier's first reply, saved in every review
     scratch/                   # probe and temporary files, one subdirectory per agent
         task-implementer/      # task-implementer's probes, copies, mutants, and runner configs
         angle-<n>/             # each reviewer
         code-fixer/
             pre-fix/           # an uncommitted run: each fixed file before its first edit, as .txt, plus index.txt
         regression-verifier/
-        orchestrator/          # the orchestrating session, only when it probes
+        orchestrator/          # the orchestrating session: the suite logs, the tree state, and its probes
 ```
 
 - The final report shows code-fixer's statistics line, the per-angle results,
@@ -457,7 +463,37 @@ review reuses the same directory (since 4.3.0):
   stay in the directory. Between the agents the run prints only one progress
   line per step — the agent that returned, its counts or result, and the path
   of its report when it writes one — and the roll-up, code-fixer's reply, and
-  the verification table appear once, in the final report.
+  the verification table appear once, in the final report. code-fixer's
+  statistics line reads
+  `total reported N (R n, E n, Q n, B n, T n, F n, V n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
+  (since 4.7.0): `F` counts the rows code-fixer recorded for defects no
+  report lists, which it defers rather than fixes, and `V` the rows a second
+  round added for regressions regression-verifier named `V<n>`; its
+  Per-angle Results table carries a row for each of the seven letters,
+  zeros included.
+- `suite-run.md` and the tree check (since 4.7.0). Before it dispatches the
+  five reviewers, the orchestrating skill runs the project's test commands
+  once — the ones your instruction files give for the parts the change set
+  touches — one at a time, each with its log under
+  `scratch/orchestrator/1/`, and writes `suite-run.md`: each command, its
+  exit code, its duration, and its log's path, or one line saying the
+  project gives no test command. A failing command is recorded, not acted
+  on; the reviewers read the file as evidence instead of each running the
+  full suite, since five full suites at once exhausted a machine's local
+  ports and the connection errors read like findings. It then records the
+  tree state — `git status --porcelain=v1 -uall`, a hash of
+  `git diff HEAD --binary`, and the content hash of each tracked path the
+  status lists — and records it again once all five reviewers have
+  returned. A tracked file whose status or content changed stops the
+  review before code-fixer, naming the files, and nothing is restored: in
+  an `uncommitted` review the tree holds your own changes, and with five
+  reviewers in parallel nothing tells which one wrote what. The stop asks
+  one question — go on to code-fixer with the tree as you then leave it, or
+  end the review; a session that cannot ask ends with the files named, and
+  an autopilot worker sends the question to its main session. An unchanged
+  tree, and one whose only change is a new untracked file, stops nothing
+  and asks nothing; the final report's Next steps names a new untracked
+  file.
 - `rulings.md` carries a ruling on the reviewers' findings to code-fixer and
   regression-verifier. The orchestrating skill (task-review's Step 5, or
   task-implement's review) writes it before it dispatches code-fixer, from
@@ -466,8 +502,16 @@ review reuses the same directory (since 4.3.0):
   the main session's answer to the worker running the review. It adds no
   pause and asks nothing: with no ruling, no file is written and nothing
   changes. Its first line names who ruled, then one entry per ruling:
-  `- <ID>[, <ID>…]: FIX — <what to do>`, `- <ID>[, <ID>…]: DEFER — <reason>`,
-  or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. code-fixer gives a ruled
+  `- <ID>[, <ID>…]: FIX — <what to do>`,
+  `- <ID>[, <ID>…]: FIX — <what to do>; DEFER rest — <reason>`,
+  `- <ID>[, <ID>…]: DEFER — <reason>`,
+  or `- <ID>[, <ID>…]: NOT APPLICABLE — <reason>`. The `; DEFER rest` tail
+  (since 4.7.0) defers the part of a finding the FIX text does not cover:
+  the row stays FIXED, regression-verifier checks the fix against the FIX
+  text, and code-fixer writes the deferred part into the row's Deferred
+  Issues prose, so one ID keeps one entry and one action. An entry that
+  names a group of IDs covers every clause of every row it names, one
+  sentence per clause. code-fixer gives a ruled
   ID the ruling's action over its severity rules — a FIX ruling's text
   bounds the fix, and a file it names is in that fix's scope — keeps the
   action's leading word, and marks the row `ruled` after the em-dash
@@ -476,7 +520,15 @@ review reuses the same directory (since 4.3.0):
   row, and a FIX ruling whose fix cannot land — its build, tests, or lint
   fail, or the ruling cannot be carried out in the code as it stands — is
   DEFERRED with the reason, which regression-verifier then reports as a
-  ruling not carried out. regression-verifier checks that each ruled ID
+  ruling not carried out. A ruled ID's duplicate that carries no ruling is
+  merged into the ruled row and takes its ruling. An entry outside the
+  grammar is not carried out, and its IDs fall back to code-fixer's own
+  rules: an action word other than the three, an entry naming no ID, every
+  entry of a file whose first line names nobody who ruled, and both
+  entries that name one ID within the same round; code-fixer's reply names
+  each on a `Rulings outside the grammar:` line, and regression-verifier's
+  row 1 names it whether or not code-fixer did. regression-verifier checks
+  that each ruled ID
   sits in a row whose action matches its ruling, reports a ruled ID no
   report lists as a bookkeeping error, and checks a FIX-ruled fix against
   the ruling's text as well as the report. The CONTEXT block the agents
@@ -486,8 +538,29 @@ review reuses the same directory (since 4.3.0):
   row whose action differs from its ruling keeps the verdict from PASS
   (PARTIAL, whatever its severity), except a FIX ruling deferred because
   its fix could not land, which stays a deferral. A ruled ID no report
-  lists keeps it from PASS the same way. The autopilot classifies each
-  such row, and each such ID, as it classifies a HIGH row.
+  lists, and an entry outside the grammar, keep it from PASS the same way.
+  The autopilot classifies each such row, and each such ID, as it
+  classifies a HIGH row.
+- `schema-c-1.md` and the second fix round (since 4.7.0). In every review,
+  regression-verifier's first reply is saved to `schema-c-1.md` as soon as
+  it returns. When the orchestrating skill then holds a ruling given after
+  code-fixer's first dispatch — in an interactive run, a message from you
+  received after that dispatch; in an autopilot worker, the main session's
+  answer — it appends a `## Round 2` heading with the round's entries to
+  `rulings.md` (creating the file, its first line naming who ruled, when
+  there is none), and dispatches code-fixer and regression-verifier again,
+  afresh, with the same CONTEXT block. code-fixer carries out only the
+  round-2 entries, updates `schema-b.md` in place keeping every row, and
+  adds a row for each `V` ID a round-2 entry names, taken from
+  `schema-c-1.md`; a round-2 entry for an ID ruled in round 1 replaces
+  that entry. The progress lines read `code-fixer returned (round 2) — …`
+  and `regression-verifier returned (round 2) — …`, the verdict is read
+  from the second round, and the final report renders its replies and
+  names `schema-c-1.md` for the first round's. A review runs at most one
+  second round — an unbounded loop inside a review would bypass the
+  autopilot's stops that count fixes per defect — and with no ruling held
+  there is no second round and no question, so an interactive review gains
+  no pause.
 - The first run in a repository that does not yet ignore `.kenspc/` appends a
   `.kenspc/` line to `.gitignore`, in the file's existing line endings, and
   commits that file on its own (`chore: ignore kenspc run directory`, adapted
@@ -500,7 +573,8 @@ review reuses the same directory (since 4.3.0):
 - Each agent keeps its probe and temporary files in its own subdirectory of
   the run's `scratch/` (`task-implementer/`, `angle-<n>/` per reviewer,
   `code-fixer/`, `regression-verifier/`), and the orchestrating session keeps
-  its own in `orchestrator/` when it probes. task-implementer runs a mutation
+  its own in `orchestrator/` — the shared suite run's logs and the tree
+  state in a review, and its probes when it probes. task-implementer runs a mutation
   check — a new test shown failing against a broken implementation — on
   copies there, and never edits, backs up, or restores a tracked file to
   test it: a mutation made in place and restored afterwards would leave your
@@ -546,7 +620,8 @@ review reuses the same directory (since 4.3.0):
 `/kenspc-autopilot <path to a spec or a brief>` runs one batch of the chain
 unattended, one headless `claude -p` session per role: S2 `/kenspc-task`, S3
 `/kenspc-task-implement`, S3b a standalone `/kenspc-task-review` over the
-batch's range, S4 acceptance, S5 a fix on demand, S6 the release
+batch's range, S4 acceptance, S4w a runtime walk of the app in a browser
+(`repo` mode), S5 a fix on demand, S6 the release
 preparation — and S1, a design session, at brief entry. Each is started
 through a driver script while your session (the main session) waits for
 it, rules on the workers' questions, and classifies what they produce; the workers use the installed plugin in `repo` mode and the
@@ -556,8 +631,16 @@ started with, so the review, the acceptance, and a fix are each a session
 of their own. In `repo` mode, `Standalone review: off` skips S3b: S3's own
 review — five fresh subagents — stands in for it, its verdict and rows
 entering the verdict loop in S3b's place, since the reason a plugin edit
-needs a fresh session does not apply there. In `plugin` mode the field is
-a settings stop.
+needs a fresh session does not apply there. `Standalone review: auto`
+(since 4.7.0, `repo` mode too) decides from S3's own review once S3
+returns: S3b runs when S3's Schema G verdict is FAIL, or PARTIAL for a
+reason other than BLOCKED tasks alone, or its review left a HIGH or MEDIUM
+row DEFERRED; otherwise S3's verdict enters the verdict loop as with `off`.
+The condition is read from an artifact S3 already produced, so the main
+session judges nothing; write `on` for a batch you judge risky — security,
+a data migration, concurrency. The default stays `on` until a trial of
+`auto` on real batches has run. In `plugin` mode `off` and `auto` are
+each a settings stop.
 
 Start the main session with the name the workers will address:
 
@@ -615,7 +698,7 @@ later run or not. A known label written with a note,
 `Acceptance (in the order listed, …):` becomes a `Run notes:` line in the
 acceptance session's prompt, and any other field's note is named on the
 line after the settings line; an unknown label with a note is still
-ignored and named. The nineteen labels and their defaults:
+ignored and named. The twenty labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -643,15 +726,20 @@ ignored and named. The nineteen labels and their defaults:
   unset, nothing written into the repository
 - `Release preparation:` `default`, `keep`, or sub-bullets of instructions
   — `default`
-- `Standalone review:` `on` or `off` — `on`; `off` skips S3b in `repo`
-  mode and is a settings stop in `plugin` mode
+- `Standalone review:` `on`, `off`, or `auto` — `on`; `off` skips S3b in
+  `repo` mode, `auto` runs it only when S3's own review calls for it (above),
+  and either is a settings stop in `plugin` mode
+- `Walk:` `on`, `off`, or one sub-bullet per flow,
+  `- <flow> — must see: <what>` — `on` in `repo` mode, `off` in `plugin`
+  mode, where `on` or sub-bullets is a settings stop, since the plugin has
+  no app to walk (see The walk below)
 - `Must read:` paths every worker reads first — empty
 - `Challenge seeds:` sub-bullets the design session argues against — empty
 - `Prior specs:` `<hash>^:<path>` entries, read with `git show` — empty
 - `Workspace:` a directory — `~/Projects/_smoke/`
 - `Role settings:` one sub-bullet per role, `- <role>: model <model>[, effort <level>]`
   or `- <role>: effort <level>`, where `<role>` is one of `S1`, `S2`, `S3`,
-  `S3b`, `S4`, `S5`, `S6`, `<model>` is one token with no whitespace and no
+  `S3b`, `S4`, `S4w`, `S5`, `S6`, `<model>` is one token with no whitespace and no
   comma, passed to `--model` as written, and `<level>` is one of `low`,
   `medium`, `high`, `xhigh`, `max` — empty, every role at the pass-through
   values; a role that declares only a model, or only an effort, takes the
@@ -738,6 +826,7 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
                    blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md and extracted <batch>-s4-cmds/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
+                   <batch>-walk/  S4w's walk.md and its screenshots
     <batch>-*      seed projects (plugin mode)
     .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing is removed with a recursive rm
 ```
@@ -767,8 +856,11 @@ a worker that wrote nowhere else. Any other write outside those places
 is a breach, and so is a recursive `rm` in any spelling, wherever it
 points: a worker discards by `mv` into the workspace's
 `.trash/<name>-<timestamp>/` and deletes inside the repository only
-through `git rm`. No `git push`, `git tag`, or release; no resource the
-brief does not name; no secrets. Nothing under `~/.claude`, by a file tool
+through `git rm`. No `git push`, `git tag`, or release. No GitHub and no
+remote git (since 4.7.0): no `gh`, and no `git fetch`, `pull`, `push`,
+`ls-remote`, `remote update`, or `clone` of a URL — the worker asks the
+main session, which gets anything the work needs from GitHub or a remote.
+No resource the brief does not name; no secrets. Nothing under `~/.claude`, by a file tool
 or a shell command — a memory note included: a lesson worth keeping goes
 under `## Lessons for the main session` in the worker's final message,
 which the main session records in the state file and on the reviewer
@@ -798,18 +890,23 @@ never see its prompt, so the rails tell the worker to write them into
 every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
 dispatches its skills make. A dispatch that has no such key —
 task-implementer's, and the three document reviewers' — carries no rails
-text: for those agents the hook's two rails below are the only ones
-enforced, and a write of theirs through Bash is neither denied nor listed
-under `Rail observations`. Beside the text, the plugin's rails hook
-enforces two of them: the driver marks each worker it starts
+text: for those agents the hook's rails below are the only ones
+enforced, and a write of theirs through Bash other than a redirection
+(`cp`, `mv`, `tee`, an interpreter's own writes) is neither denied nor
+listed under `Rail observations`. Beside the text, the plugin's rails hook
+enforces some of them: the driver marks each worker it starts
 (`KENSPC_AUTOPILOT_WORKER=1`) and passes its write roots
 (`KENSPC_AUTOPILOT_WRITE_ROOTS`: the worker's repository, the workspace,
 `$TMPDIR`, `/tmp`, and `/private/tmp`, joined by `|`), and a PreToolUse
 hook on Bash, Write, Edit, and NotebookEdit denies, in a marked worker
-only, a Bash command that runs a recursive `rm` and a file-tool write
-outside the roots — in the worker's own calls and its subagents' alike,
-since a plugin hook fires for a subagent's tool call too. The deny's
-reason names the rail and the permitted route. A call the hook denied is
+only, a Bash command that runs a recursive `rm`, a Bash redirection
+(`>`, `>>`, `>|`, `&>`, `&>>`, with or without a file-descriptor number)
+or a file-tool write whose target lies outside the roots, and a `gh` or
+remote-git call (since 4.7.0 for the last two) — in the worker's own calls
+and its subagents' alike, since a plugin hook fires for a subagent's tool
+call too. The deny's reason names the rail and the permitted route: for a
+`gh` or remote-git call, to ask the main session, the route a subagent
+that never saw the worker's prompt would otherwise not know. A call the hook denied is
 not a breach, since it never ran: the worker takes the route the deny
 names, lists the denial under `## Rail observations`, naming the subagent
 that made the call, and goes on. A denial whose reason says a field of
@@ -824,6 +921,26 @@ later worker would end the same way. A denial in task-implementer or a
 document reviewer, whose dispatch carries no rails text, is not listed:
 a worker sees only a subagent's reply, not its tool results. The hook is
 a best-effort guard (see Known behavior), and the rails text still binds.
+
+**A breach ruled benign (since 4.7.0).** A worker that breaches a rail
+still reports it and ends. The main session may then rule the breach
+benign, when all three hold — each checked against the worker's report
+and the disk, not on the worker's word: no secret was written or sent; it
+is not a recursive `rm`, a push, a tag, or a release; and it changed no
+state outside the write roots, or the only such change is a file holding
+no secret, which the main session moves into the workspace's `.trash/`.
+It records the breach under the state file's `breaches ruled:` section
+with the evidence for each condition, and resumes the worker under the
+step's next `<tag>-r<k>` with `answer <tag>: breach ruled benign — <one line>`,
+counted as a resume. The ruling is also recorded as every other ruling is
+— a `questions answered:` line marked `(main session)` and a
+clarification in the spec — and the reviewer report's
+`Breaches ruled benign:` line and the user report's list name each one,
+for you to read before the tag. Any other breach is still a stop. Why: a
+file written beside `$TMPDIR` holding nothing, or a probe that sent
+nothing off the machine, stopped runs a ruling would have let go on, while
+a recursive `rm`, an action that leaves the machine, a secret, or a change
+outside the roots is not the main session's to wave through.
 
 **What a run writes and commits.** In `repo` mode: the workers' commits
 (the task document, the implementation, the review's fixes) and, with
@@ -876,9 +993,10 @@ release after the reports, and otherwise only on a stop condition. Phase
 plugin, an inbound setting it cannot read — are asked before the first
 launch, as part of the start. Every other point the spec leaves open is
 the main session's to rule: a worker's question, a choice riding on a
-task-list confirmation, a question it raises itself, a review row's or an
-acceptance FAIL's classification, a deferred row's route, and a corrected
-acceptance case. It answers a waiting worker at once and rules the same
+task-list confirmation, a question it raises itself, a review row's, an
+acceptance FAIL's, a walk FAIL's, or a BLOCKED task's classification, a
+deferred row's route, a review's second round, a breach it can rule
+benign, and a corrected acceptance case. It answers a waiting worker at once and rules the same
 way whether or not it can ask you, by this order: the spec's words; the
 locked design; the project's instruction files and the patterns in
 adjacent code; then the option easiest to reverse and closest to the
@@ -979,14 +1097,79 @@ findings a ruling deferred to a follow-up, for you to decide after the
 reports.
 
 **Fixes.** A defect the main session classifies — a review row after S3b
-(after S3, with `Standalone review: off`), or an acceptance FAIL — goes to
-an S5 fix session. One S5 may fix several
+(after S3, when S3b does not run), an acceptance FAIL, or a walk FAIL —
+goes to an S5 fix session. One S5 may fix several
 defects classified in the same round, one commit per defect. Every S5 is
 followed by a narrowed review (`-s3c`, then `-s3d`, …) over the range from
 HEAD at its first launch to its last commit, a wording-only fix included, before
 any acceptance case is re-run. A defect an S5 leaves without a commit still
 stands, whatever that review says, and goes to the next S5, counted as a
 fix of it.
+
+A worker running a review — S3's review phase, S3b, or a narrowed review —
+asks for a ruling on its findings only once the last of the five reviewers
+has returned, and after regression-verifier returns HAS ISSUES or a
+verdict other than PASS it sends the main session one question naming
+`schema-b.md` and `schema-c-1.md`; the main session rules a second fix
+round with its entries, or none (see Run directory), and the review's
+verdict is read after it. So an incomplete fix a narrowed review's own
+code-fixer made is finished inside that review rather than by another S5
+and another narrowed review; what it still fails goes to S5, bounded by
+the same stops. Before it rules on S3b's findings, the main session reads
+S3's `rulings.md`, whose path S3b's task block names, and rules a finding
+an earlier DEFER or NOT APPLICABLE entry covered the same way, citing the
+entry, so a finding S3's review deferred and S3b found again is not ruled
+twice, two ways (since 4.7.0).
+
+**BLOCKED tasks (since 4.7.0).** At S3's return the main session reads
+every task's status from the committed task document, whatever
+`Standalone review:` says, and classifies each BLOCKED task as a HIGH row
+is: an S5 that implements it — its task block quoting the task and its
+BLOCKED note, the task's acceptance criteria the case to make pass, its
+`**Status:**` set to DONE in its own commit — followed by the narrowed
+review and counted per task as a defect is; or a deferral recorded as a
+clarification naming who ruled. A block that needs a change outside the
+batch's contract — a new dependency, an API contract change, a schema
+change the spec does not name — is a stop. Both reports name each BLOCKED
+task and its classification, since a batch with a task not built could
+otherwise reach the release preparation without the task being named
+anywhere you read.
+
+**The walk (S4w, `repo` mode, since 4.7.0).** Once S4's FAILs are
+classified and their re-runs have passed, or once the `Acceptance: none`
+record is written, S4w walks the app at the HEAD the batch will release,
+in a browser through the Playwright MCP: the `Walk:` sub-bullets as
+written, or, with `on`, the flows a user of the app takes that the batch
+changed, which it picks from the spec's steps and lists in its reply. Its
+tag is `<batch>-s4w` (`-s4wb` for a re-run), and S4's own re-run letters
+skip `w`, so an S4 re-run never takes the walk's tag. It
+walks local URLs only (`127.0.0.1` or `localhost`, on ports it started),
+never a staging or production environment; opens pages only in the
+browser the Playwright MCP starts for it, never a tab of yours; starts the
+app as your instruction files and the spec say, its local resources (a
+database, dev servers) counting as resources the run names; uses data by
+your project's rule, else synthetic data only; reads a test account's
+password at run time inside the page or a script, never in a tool call's
+input or a message; checks each port with
+`lsof -ti tcp:<port> -sTCP:LISTEN` before it starts a server; and stops
+only the processes it started, found by their listener, showing each port
+free afterwards. It writes `walk.md` — per flow, the steps, what was
+seen, PASS or FAIL, and the screenshot paths — and copies its screenshots
+under `_logs/<batch>-walk/`. A port held by a process it did not start is
+a question to the main session, which rules wait (S4w re-checks every 10
+minutes, for at most 60) or skip, recorded `not walked: port <n> in use`;
+an app it cannot start is `not walked: <reason>`, and a batch with no user
+interface `nothing to walk: <reason>` — none of them a failure or a stop.
+A walk FAIL is classified as an acceptance FAIL is: a defect goes to S5,
+then the narrowed review, then an `-s4wb` re-run of the failed flows only;
+a behavior deviation is a reviewer-report line; an observation is
+recorded. Why after the acceptance: an acceptance command checks what its
+author thought to check, while a walk through the flows a user takes
+shows what the user would see, on the code that will be released. A
+`repo`-mode spec with no `Walk:` field now walks: write `Walk: off` for a
+batch with nothing to walk in a browser, or on a machine without the
+Playwright MCP, where the start check would otherwise stop the run before
+the first launch (see Known behavior).
 
 **Usage limits.** A worker's JSON with `is_error: true` is not a success,
 whatever its subtype. One whose result names a usage or session limit with
@@ -1007,29 +1190,34 @@ pid.
 touched; guards red twice in a row; the same defect still failing after
 two fixes of it, counted per defect; the session cap, the resume cap, or
 the budget exceeded (a question with the numbers); a safety-rail breach
-(see The rails: a write outside the repository, the workspace, `$TMPDIR`,
-the scratchpad, and `/tmp`; a recursive `rm` in any spelling — `rm -r`,
-`rm -rf`, `rm -fr`, `rm -R`; a `git push`, `git tag`, or release; a
-resource the brief does not name; a secret); a way forward the main
+the main session cannot rule benign (see The rails: a write outside the
+repository, the workspace, `$TMPDIR`, the scratchpad, and `/tmp`; a
+recursive `rm` in any spelling — `rm -r`, `rm -rf`, `rm -fr`, `rm -R`; a
+`git push`, `git tag`, or release; a resource the brief does not name; a
+secret — a breach that meets the three conditions of A breach ruled
+benign is resumed instead); a way forward the main
 session cannot rule on — every option changes the batch's contract (a new
 dependency, an API contract change, a database schema or configuration
 change the spec does not name, a file outside `Allowed files:` or on the
 zero-diff list) and none stays inside it, or an acceptance case corrected
 without both pieces of evidence; a nested `claude -p` refused; the same
 step's session dead twice; a settings stop before the first launch, among
-them a `Role settings` entry outside its grammar and
+them a `Role settings` entry outside its grammar,
 `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort (see Models
-and efforts); and a worker that ended on a denial whose reason says a
+and efforts), and, with `Walk:` not `off` in `repo` mode, no usable walk
+tool (see Known behavior); and a worker that ended on a denial whose reason says a
 field of the hook input could not be read (see The rails). When one
 option stays inside the contract — defer to a follow-up, leave as is — the
 main session takes it and records it instead of asking, and a ruling to
 leave a locked point as it stands and record the finding as a follow-up
-is its own, not a stop. Six stops are stated at their own steps: a driver
+is its own, not a stop. Seven stops are stated at their own steps: a driver
 that refuses a launch, a delivery notice that the first message to a
 worker was held or refused, an artifact absent after a return, an unmarked
 acceptance case that cannot be run, the skipped-gate check failing a
-second time, and a usage-limit end when the main session is headless or
-has no tool to schedule its own wake-up after the reset. Every stop
+second time, a usage-limit end when the main session is headless or
+has no tool to schedule its own wake-up after the reset, and an S4w that
+ends `walk tool unavailable` because its own check at its start finds the
+Playwright tools missing, naming `Walk: off` as the way on. Every stop
 ends the final message with `Autopilot stopped: <reason>`; the state file
 holds the next action.
 
@@ -1037,7 +1225,7 @@ holds the next action.
 each launch the run checks spent (the sum of the sessions' last cumulative
 costs and, in `plugin` mode, the acceptance cases' costs from the record)
 plus projected (the largest session so far of the role about to launch —
-S1, S2, S3, S3b, the narrowed reviews together, S4, S5, S6, each with its
+S1, S2, S3, S3b, the narrowed reviews together, S4, S4w, S5, S6, each with its
 resumes and re-runs — or budget ÷ 6 while no session of that role has a
 known cost, so
 a cheap release preparation is not judged against the implementation
@@ -1049,8 +1237,10 @@ remaining amount as its cap: the ended session's last cumulative total is
 already in spent, and the cap bounds only what the resumed session spends
 from there — a probe with a resumed session showed `--max-budget-usd`
 counts the invocation's own spend, not the session's earlier total. Acceptance
-cases marked `(optional)` may be cut when the budget check fails;
-implementation is never narrowed.
+cases marked `(optional)` may be cut when the budget check fails, and so
+may the walk: a failed check before S4w's first launch cuts it without a
+question, recorded `walk: cut by budget`; implementation is never
+narrowed.
 
 **The reports.** The final message carries `## User report` — your
 language, at most one page: what the batch built, the release commit, what
@@ -1065,14 +1255,24 @@ the `## Autopilot` section; files changed and the zero-diff result (the
 `compared:` count, the exit code, and any path the stat names);
 byte-identity / guards / counts; acceptance, one line per case with its
 cost and result, and `in the corrected form (<clarification>)` for a
-corrected case; models and efforts,
+corrected case — with `Acceptance: none` and a walk that walked,
+`none named; S3b is the last review, the walk follows` (S3 when S3b did not
+run); the walk, each flow's result and each FAIL's classification, or
+`off`, `nothing to walk`, `not walked`, or `walk: cut by budget`; the
+standalone review, `Standalone review: <value> — ran (<trigger>)` or
+`— not run (<reason>)`, so a trial of `auto` reads from the reports;
+BLOCKED tasks, each with its classification; models and efforts,
 `<n> workers, <k> mismatches, <j> not observed`
 (`<n> workers, mismatches: none, <j> not observed` when there are
 none) with one line per worker; total cost; Not exercised; rail
-observations; worker lessons; skipped gates; follow-up candidates;
-release-preparation state;
-sessions / messages / resumes / stops, with `S3b: off (Standalone review: off)`
-in S3b's place when it did not run. The total-cost line is the measured
+observations; breaches ruled benign; worker lessons; skipped gates;
+follow-up candidates; release-preparation state;
+sessions / messages / resumes / stops, with
+`S3b: not run (Standalone review: off)` or
+`S3b: not run (Standalone review: auto, not triggered)` in S3b's place
+when it did not run. The user report also names the walk's result, whether
+the standalone review ran, each BLOCKED task, and each breach ruled
+benign. The total-cost line is the measured
 sum of the workers' last cumulative `total_cost_usd`, plus in `plugin` mode
 the acceptance cases' costs from the record (S4's nested sessions), plus
 the main session's own cost as an estimate, labeled so: its turn count × the mean
@@ -1442,7 +1642,23 @@ on Windows.
 - **The rails hook is a best-effort guard.** In an autopilot worker — a
   session the driver marked with `KENSPC_AUTOPILOT_WORKER=1` — the hook
   denies a recursive `rm` at a command position and a Write, Edit, or
-  NotebookEdit outside the write roots. A denied call is a rail
+  NotebookEdit outside the write roots, and, since 4.7.0, a Bash
+  redirection whose target lies outside them and a `gh` or remote-git
+  call. A redirection's target is judged after a leading `~`, `$HOME`,
+  `${HOME}`, `$TMPDIR`, or `${TMPDIR}` is expanded and `.` and `..` are
+  collapsed, a relative target against the call's working directory; a
+  target holding any other expansion, a command substitution, a glob, or
+  single-quoted text is not judged, `/dev/null`, `/dev/stdout`,
+  `/dev/stderr`, `/dev/tty`, and `/dev/fd/<n>` are allowed, `2>&1` is no
+  target, and a `>` inside quotes or a heredoc body is no redirection.
+  `gh` is denied at a command position, wrappers such as `sudo` and
+  `xargs` included, while `command -v gh`, `type gh`, and `which gh` pass;
+  `git` — its global options `-C`, `-c`, `--git-dir=`, `--work-tree=`, and
+  `--no-pager` skipped — is denied with `fetch`, `pull`, `push`,
+  `ls-remote`, or `remote update`, and with a `clone` whose source holds
+  `://` (a `file://` URL included) or reads `<user>@<host>:<path>`, while a
+  `git clone` of a local path passes. Its reason's route is to ask the main
+  session. A denied call is a rail
   observation, not a breach: the worker takes the route the deny's reason
   names, lists the denial, naming the subagent that made the call, and
   goes on. A denial in task-implementer or a document reviewer, whose
@@ -1451,8 +1667,11 @@ on Windows.
   `find -exec rm`), `bash -c '…'`, a script fed to a shell on stdin
   (`bash <<EOF`), `eval`, and a `trap` body
   (`trap 'rm -rf "$d"' EXIT`), interpreter-level deletes
-  (Python, Node, Perl), `git clean`, and writes through Bash (redirections,
-  `cp`, `mv`, `tee`); also an `rm` reached through a variable or an alias,
+  (Python, Node, Perl), `git clean`, and writes through Bash other than a
+  redirection (`cp`, `mv`, `tee`, an interpreter's own writes), and a
+  redirection whose relative target follows a `cd` earlier in the same
+  command, which it reads against the call's working directory; also an
+  `rm` reached through a variable or an alias,
   or spelled through the escapes of `$'…'` (`$'\x72m'`),
   an `rm` after a redirection written before the command name
   (`2>/dev/null rm -rf d`),
@@ -1461,7 +1680,9 @@ on Windows.
   which it does not judge; and a Write or Edit whose target is itself a
   symbolic link pointing outside the roots, since it resolves only the
   links of the target's ancestors. The rails text in the worker's prompt still
-  binds for all of these. The other way round, a call whose fields the
+  binds for all of these. One known false denial: a `>` inside `[[ ]]` or
+  `(( ))`, a comparison there, is read as a redirection and its right-hand
+  word judged as a target. The other way round, a call whose fields the
   hook cannot read from its input — the tool's name, a Bash call's
   command, or a file-tool call's target — is denied in a marked worker,
   with a reason saying so: were a Claude Code release to rename one of
@@ -1483,6 +1704,28 @@ on Windows.
   Edit, and NotebookEdit call of every session with the plugin enabled.
   Whether a worker that `run.ps1` starts on Windows can run the bash hook
   at all has not been probed.
+- **The walk uses the Playwright MCP, not Claude in Chrome.** The
+  autopilot's walk was designed with Claude in Chrome first and the
+  Playwright MCP as the fallback. A probe made while 4.7.0 was built found that a headless `claude -p`
+  worker launched with `--chrome` reached no browser — "Browser extension
+  is not connected" — while an interactive session on the same machine and
+  account reached it (the cause was not determined), and that a headless
+  worker reaches the Playwright MCP from your user MCP configuration with
+  no flag of its own. So the walk uses the Playwright MCP alone, Claude in
+  Chrome is neither checked nor used, and the driver passes no walk flag;
+  this holds until a headless worker is shown reaching Claude in Chrome.
+  Before the first launch, with `Walk:` not `off` in `repo` mode, the main
+  session runs, from the repository root,
+  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'` —
+  exit 0 usable, exit 1 not — and not usable is a stop naming the command's
+  output and `Walk: off` as the way on, before any session is paid for;
+  S4w checks the tools again at its own start. Since the walk is on by
+  default in `repo` mode, a spec written before 4.7.0 with no `Walk:` field
+  now walks, and on a machine without the Playwright MCP stops at that
+  check. The Playwright MCP writes screenshots only under its own output
+  directory and the session's working directory, so S4w copies each into
+  the workspace; a screenshot given a relative file name lands in the
+  repository first.
 - **A role's model reaches every subagent of its worker.** The plugin's
   agents declare `model: inherit`, which resolves to the model of the
   session that dispatches them, so inside an autopilot worker it is the

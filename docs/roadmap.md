@@ -540,18 +540,19 @@ its number.
     unconditional in plugin mode; S4 stays, being cheap (USD 2 a batch)
     and the one check taken from the plan's text on the finished batch.
     4.6.0 shipped the switch alone, `Standalone review: off` in repo mode,
-    default `on`. Open:
-    - The condition. Candidates: the implementation review reported a HIGH
-      or deferred a MEDIUM or above; the batch has more than a set number
-      of tasks; the plan marks the batch as touching security, a data
-      migration, or concurrency. A narrower S3b (the bug and requirements
-      angles only) is the alternative to weigh.
-    - A trial before the default changes: a few repo-mode batches without
-      S3b, their follow-up issues compared by count and severity with the
-      batches before; S3b returns if HIGH or MEDIUM follow-ups rise.
-    - With S3b optional, the standalone review reading the implementation
-      review's rulings (the second-fix-round item above) matters only when
-      S3b runs.
+    default `on`; 4.7.0 adds the condition as a third value,
+    `Standalone review: auto`: after S3 returns, S3b runs when S3's
+    Schema G verdict is FAIL, or PARTIAL for a reason other than BLOCKED
+    tasks alone, or S3's review left a HIGH or MEDIUM row DEFERRED, and the
+    reviewer report's `Standalone review:` line records whether it ran and
+    why. The default stays `on`. What remains is the trial:
+    - The maintainer writes `Standalone review: auto` in the next five
+      repo-mode dayaku-crm batches.
+    - The follow-up issues filed after each of those batches' releases are
+      compared by count and by severity with those of the batches before
+      4.7.0.
+    - S3b returns to `on` if HIGH or MEDIUM follow-ups rise; otherwise the
+      default may change to `auto`, in a later release.
 33. A runtime walk, which a batch can turn off. Several follow-up issues
     of the dayaku-crm batches were found after the run by walking the app,
     which neither review nor S4 does: scheduling-board's

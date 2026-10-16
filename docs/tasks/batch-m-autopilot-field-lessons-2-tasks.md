@@ -1007,7 +1007,72 @@ checkout. Cases:
 
 ### Task 16: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promoted — Task 1 and Task 12 (the walk uses the Playwright
+  MCP alone, the start check command, Claude in Chrome neither checked nor
+  used, screenshots copied into the workspace) into the plugin README's
+  § Known behavior (a new "The walk uses the Playwright MCP" bullet) and
+  § Autopilot, and the CHANGELOG; Task 12 (Claude in Chrome named in prose
+  only, since its MCP identifier trips the model-ID rule) into CLAUDE.md's
+  `check-no-model-names.sh` bullet, and the flow sub-bullet form
+  `- <flow> — must see: <what>` into the README's `Walk:` entry; Task 2
+  (an entry outside the grammar is not carried out, its IDs fall back to
+  code-fixer's rules, code-fixer's `Rulings outside the grammar:` line,
+  row 1 names it either way) into the README's § Run directory, and
+  task-implement pointing at task-review's Step 5 into CLAUDE.md's
+  `rulings.md` paragraph, the tail sitting second for check 7 into
+  § Repository scripts/; Task 3 (seven Per-angle Results rows, `F` out of
+  the ID-set comparison, `V` named in the Detail) into CLAUDE.md's
+  § CONTEXT block contract and § Repository scripts/ and the README's
+  § Run directory; Task 4 (skill-neutral block text) into CLAUDE.md's
+  § Maintenance note, `schema-c-1.md` named only when a second round ran
+  into the README's § Run directory, a `V` ID absent from `schema-c-1.md`
+  read as a ruled ID no report lists and `V` numbering carried on into
+  § CONTEXT block contract, check 8's self-test sentence into
+  § Repository scripts/; Task 6 (per-path content hashes, the logs under
+  `scratch/orchestrator/1/`, the one-line `suite-run.md` with no test
+  command, a reviewer without the file running no full suite) into the
+  README's § Run directory and CLAUDE.md's Parallel MapReduce and
+  § CONTEXT block contract; Task 7 (the guard's fixture `$TMPDIR`) into
+  § Repository scripts/, and the `[[ ]]`/`(( ))` false denial and the
+  after-`cd` miss into the README's rails-hook bullet; Task 8 (wrappers
+  such as `sudo gh` read, `command -v gh` allowed, a `file://` clone
+  denied) into that bullet, and the `deny-ask` expectation into
+  § Repository scripts/; Task 9 (the three conditions checked against the
+  report and the disk) into the README's new "A breach ruled benign"
+  paragraph; Task 10 (the trigger read from S3's Fixes section, the
+  `standalone review:` state line, the `Sessions:` forms) into the
+  README's § Autopilot and the CHANGELOG; Task 11 (an S5 for a BLOCKED
+  task sets its Status to DONE in its own commit, counted per task) into
+  the README's "BLOCKED tasks" paragraph; Task 13 (wait or skip for a held
+  port, the budget cut asking nothing, a walk FAIL's S5) into the README's
+  "The walk" paragraph and § Budget; Task 14 (no driver flag) into the
+  README's Known behavior bullet and the CHANGELOG; Task 5 (S3b's rulings
+  paths on a line kept out of the command) and Task 15 (the acceptance's
+  four cases, cost, and three findings) into the CHANGELOG. Local — Task
+  7's scanner internals (the `\002` byte, the quote flags, the awk
+  expansion, the shared `in_roots()`, the parameter-expansion split),
+  Task 8's `\003` mark and clone-option parsing, Task 9's gates row, Task
+  13's block placement and bracketed flow paragraphs, Task 15's cheaper
+  worker settings and its case-3 `CLAUDE_CONFIG_DIR` technique. Needs a
+  home: none.
+- Changes/tradeoffs: beyond the listed sections, the README's § Agents
+  paragraph says a reviewer with `RUN_DIR` reads `suite-run.md`, its
+  "two gates" list names the new rulings (a walk FAIL's and a BLOCKED
+  task's classification, a second round, a benign breach), the stops list
+  names the walk-tool settings stop, and the reports paragraph fixes the
+  stale `S3b: off (Standalone review: off)` to the skill's
+  `S3b: not run (…)` forms; CLAUDE.md's `check-no-model-names.sh` bullet
+  gained the Claude in Chrome identifier sentence (CLAUDE.md is listed;
+  that bullet was not named). The README's driver description is
+  unchanged, since Task 14 added no flag. The acceptance record's three
+  findings (a relative screenshot name, a missing `## User report`
+  heading, the `.gitignore` commit ruled two ways) are in the CHANGELOG
+  intro but not added to the roadmap, whose edit this task limits to the
+  `Standalone review` item. The row 14 additions use `gh --version`, which
+  sends nothing off the machine if the hook were to let it run.
 
 Depends on: Task 1-15
 
