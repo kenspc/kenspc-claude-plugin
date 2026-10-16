@@ -188,9 +188,13 @@ VERIFICATION CHECKS
    fails), or a commit whose patch holds no hunk to read, such as a binary
    file's, is a failure of row 1 too: a check with nothing to compare
    cannot fail. A reason reading
-   `first-round fix uncommitted; taken back by hand` is checked by reading
-   the row's file at its line against the finding: code that still holds
-   the change the first round made is a failure of row 1. Why: a take-back
+   `first-round fix uncommitted; taken back by hand` is checked against
+   the pre-fix record check 4 reads, not `git diff <base>`, which holds the
+   user's hunks too: in the row's file, and in each other file
+   `pre-fix/index.txt` names, the difference from its pre-fix copy (for a
+   `created` file, the whole file) is the fixes still there, and a hunk of
+   it that makes the change the row's finding called for is a failure of
+   row 1. Why: a take-back
    made by hand can leave part of a fix in the code under a row whose
    action matches its ruling, which the action check alone passes, and
    the run could then end PASS over code the ruling asked to be without
