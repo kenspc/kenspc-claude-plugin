@@ -21,7 +21,8 @@ Rules for every task, from the plan's Implementation Steps:
 - A stop a task adds to a skill opens its no-ask branch with "In a session
   that cannot ask (a system reminder to work without stopping), …".
 - Tasks 5, 8, 9, 10, 11, 12, and 13 edit
-  `plugins/kenspc/skills/autopilot/SKILL.md`, and Tasks 2, 3, 4, and 6
+  `plugins/kenspc/skills/autopilot/SKILL.md` (Task 14 too, when it adds a
+  driver flag), and Tasks 2, 3, 4, and 6
   edit `skills/task-review/SKILL.md` and `skills/task-implement/SKILL.md`;
   each task edits the text as the earlier tasks left it and keeps their
   additions.
@@ -108,7 +109,8 @@ Implement plan Step 2, its first bullet (Technical Approach § A second fix
 round, the "Rulings grammar" bullet). Files:
 `plugins/kenspc/skills/task-review/SKILL.md` (Step 5),
 `plugins/kenspc/skills/task-implement/SKILL.md` (its rulings-grammar
-carrier), `plugins/kenspc/agents/code-fixer.md`,
+carrier in Phase 2 Step 3, and Phase 2 Step 4's Verdict determination),
+`plugins/kenspc/agents/code-fixer.md`,
 `plugins/kenspc/agents/regression-verifier.md`,
 `scripts/check-run-contract.sh` (check 7).
 
@@ -120,14 +122,17 @@ carrier), `plugins/kenspc/agents/code-fixer.md`,
 - task-review's Step 5 states beside the block: an entry naming a group
   covers every clause of every named row, one sentence per clause; an
   entry outside the grammar (an unknown action word, no ID, no first line
-  naming who ruled, one ID in two entries of the same round) is not
+  naming who ruled, one ID in two entries of the same round — the entries
+  before `## Round 2`, or those after it; Task 4 adds that section) is not
   carried out, is named in code-fixer's reply and in regression-verifier's
   row 1, and keeps the verdict from PASS (at most PARTIAL, as for a ruled
   ID no report lists); a ruled ID's duplicate that carries no ruling is
   merged into the ruled row and takes its ruling. code-fixer and
   regression-verifier each state their side of these rules.
-- task-review's Verdict determination gains the outside-grammar entry
-  beside the existing "ruled ID that no report lists" bullet.
+- The Verdict determination of both skills — task-review's and
+  task-implement's (Phase 2 Step 4) — gains the outside-grammar entry
+  beside the existing "ruled ID that no report lists" bullet, and its
+  PASS bullet's conditions name it beside that ID.
 - `check-run-contract.sh` check 7: the reference grammar includes the
   tail; its self-test still rewords an entry in each of the four carriers
   in turn.
@@ -139,6 +144,9 @@ carrier), `plugins/kenspc/agents/code-fixer.md`,
   for each of the four carriers.
 - `code-fixer.md` and `regression-verifier.md` each state the outcome of
   an entry outside the grammar and of an unruled duplicate of a ruled ID.
+- The Verdict determination of `task-review/SKILL.md` and of
+  `task-implement/SKILL.md` each name an entry outside the grammar as
+  keeping the verdict from PASS (joined-line read of each section).
 
 ---
 
@@ -324,6 +332,10 @@ receiving one identical edit.
   never removed with a recursive `rm`.
 - The dispatch block's no-ask sentence opens with "In a session that
   cannot ask (a system reminder to work without stopping), …".
+- The dispatch block states that an unchanged tree — and a tree whose only
+  change is a new untracked file — stops nothing and asks no question
+  (joined-line read), so an interactive review gains no question in the
+  ordinary case.
 
 ---
 
@@ -376,8 +388,8 @@ Depends on: Task 7
 
 Implement plan Step 4, its GitHub and remote-git part and its preamble
 bullet (Technical Approach § Rails, "The hook denies GitHub and remote
-git"). Files: `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`,
-`scripts/check-autopilot-rails-hook.sh`,
+git"). Files: `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`
+(scanner and header), `scripts/check-autopilot-rails-hook.sh`,
 `plugins/kenspc/skills/autopilot/SKILL.md` (preamble § 3 and its Why).
 
 - At a command position, `gh` is denied; `command -v gh`, `type gh`, and
@@ -388,12 +400,14 @@ git"). Files: `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`,
   holds `://`, or is `<user>@<host>:<path>`); a `git clone` of a local
   path is allowed. The reason's route: ask the main session, which gets
   anything the work needs from GitHub.
+- The header's list of what the hook denies with the marker set gains the
+  `gh` and remote-git denials and their allowed forms.
 - Fixtures: denied — `gh issue view 1`, `git -C . fetch`, `git push`,
   `git clone https://example.test/r.git d`,
   `git clone git@example.test:r.git d`; allowed — `git clone /local/repo d`,
   `git status`, `grep gh f`, `command -v gh`, `which gh`; every denied
-  fixture again without the marker. A new self-test mutant removes the
-  `gh` check.
+  fixture again without the marker and with the marker `0` (inert). A new
+  self-test mutant removes the `gh` check.
 - Preamble § 3 names GitHub and remote git and the route, with its Why
   (a denial is not a breach; the hook reaches a subagent that never saw
   the preamble).
@@ -453,8 +467,10 @@ condition in repo mode). File: `plugins/kenspc/skills/autopilot/SKILL.md`
 review: off` bullet; the role table at the top and the paragraph after
 it; Phase 2's goal and DONE line; § The verdict loop after S3b; § The
 zero-diff check; Phase 3's inputs, DONE line, and Repo mode paragraph;
-Phase 4's zero-diff paragraph; § Phase transitions; the reviewer report's
-Acceptance and `Sessions:` lines and the user report; the settings line).
+Phase 4's zero-diff paragraph; § Phase transitions; the S5 task block's
+"a row of S3's review with `Standalone review: off`" source; the reviewer
+report's Acceptance and `Sessions:` lines and the user report; the
+settings line).
 
 - `Standalone review:` takes `on`, `off`, or `auto`; `off` and `auto` are
   repo mode only, either in plugin mode a settings stop. With `auto`,
@@ -595,7 +611,8 @@ own steps; § The gates; § Budget and caps; the reviewer and user reports;
 - Both reports gain a `Walk:` line; with `Acceptance: none` and a walk
   that walked, the reviewer report's Acceptance line reads
   `none named; S3b is the last review, the walk follows` (S3 likewise);
-  otherwise it stays as it is.
+  otherwise it stays as it is. The state file's `Acceptance: none` record,
+  written before S4w starts, is unchanged.
 
 **Acceptance criteria:**
 - The S4w task block holds the local-only, own-tabs, password, port, and
@@ -613,9 +630,11 @@ own steps; § The gates; § Budget and caps; the reviewer and user reports;
 
 Depends on: Task 1, Task 12
 
-Implement plan Step 7's driver part. Files:
+Implement plan Step 7's driver part. Files, only when a flag is needed:
 `plugins/kenspc/skills/autopilot/scripts/run.sh`,
-`plugins/kenspc/skills/autopilot/scripts/run.ps1`.
+`plugins/kenspc/skills/autopilot/scripts/run.ps1`, and
+`plugins/kenspc/skills/autopilot/SKILL.md` (the S4w launch that sets the
+variable).
 
 When Task 1's record shows a headless worker needs no extra flag for the
 tool order Task 12 wrote, change no file and mark this task DONE with the
@@ -665,10 +684,12 @@ checkout. Cases:
    the main session's ruling recorded.
 
 **Acceptance criteria:**
-- The record holds the four cases, each with its PASS or FAIL against the
-  criteria above and its cost.
+- The record holds the four cases, each with its cost, and each case
+  PASSes as written above; a case that FAILs is recorded with what was
+  seen, and the task is marked BLOCKED naming the failed case.
 - The total cost is at most USD 40; a case that would pass the cap is
-  recorded under Not exercised with the spend so far.
+  recorded under Not exercised with the spend so far, and the task is
+  marked BLOCKED with the spend so far (Context).
 - The seed and its workspace stay under `~/Projects/_smoke/`; nothing is
   deleted with a recursive `rm`.
 
