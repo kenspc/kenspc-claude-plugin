@@ -947,7 +947,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   line, `Acceptance: none`, no section, no field, inline text on the label
   line, an empty field, a code span that does not end the text, an unclosed
   one, a deeper-indented bullet, a second `## Autopilot` section, a CRLF
-  spec, the wrong arguments, and an unreadable spec, each file's content
+  spec, fenced code blocks before and inside the section (backtick and
+  tilde fences, a longer fence around a shorter one, a column-0 `# `
+  comment and `## ` line inside them, a backtick line whose info string
+  holds a backtick, a column-0 fence inside the field, an unclosed fence;
+  4.8.1), the wrong arguments, and an unreadable spec, each file's content
   and the printed counts asserted; for the zero-diff script, a path with a
   space, a changed path, an unchanged path, a path absent at the baseline,
   paths with a space before or after them, a path holding glob characters,
@@ -965,16 +969,18 @@ Project-level shell scripts live in `scripts/` at the repo root:
   clone, another track's prefix, a symlink, and a prefix only a `.case`
   file names must be left; the same sweep with no cmds dir; and seven usage
   errors, the listing and the `candidates:` line asserted. Its self-test
-  copies the three scripts and turns the guard red with six mutants written
+  copies the three scripts and turns the guard red with seven mutants written
   to separate files with `sed` — the padding stripping removed, the
-  continuation joining removed, the paths passed to `git diff` as one
+  continuation joining removed, the fence tracking removed (4.8.1), the
+  paths passed to `git diff` as one
   word, the before-list filter removed, the origin comparison removed, and
   the symlink exclusion removed — then green on the unmutated copies; a
   mutant that changes nothing is exit 2. Why the scripts have a guard:
   the first two each replaced a step every main session wrote by hand and
   got wrong — a stray backtick at each end of extracted commands, and a
   zero-diff check whose paths arrived as one zsh word and compared
-  nothing — and the third decides what a recursive `rm` removes, where a
+  nothing — the extractor then read a column-0 `# ` comment inside a
+  fenced script as the section's end, and the third decides what a recursive `rm` removes, where a
   rule that drifts toward listing too much fails silently.
 
 Twelve of the guards (`check-canonical-dispatch.sh`,

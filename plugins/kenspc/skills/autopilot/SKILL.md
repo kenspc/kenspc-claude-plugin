@@ -159,7 +159,8 @@ carry the line. Why: nothing downstream reads a headless session's reply
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
 the driver copy, its self-test files, the three script copies, the
-temp folder's before list, the `Zero diff:` paths file, the state file —
+temp folder's before list, the `Zero diff:` paths file, the trial
+extraction's spec copy and `<batch>-trial-cmds/`, the state file —
 and nothing into the repository. Why: every failing check is a stop, and a stop before the first
 launch leaves the repository as the run found it.
 
@@ -286,8 +287,8 @@ the whole tree; `$TMPDIR` is for anything else.
   _prompts/     the copied driver <batch>-run.sh and scripts
                 <batch>-extract-acceptance.sh, <batch>-zero-diff.sh,
                 <batch>-temp-candidates.sh, <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
-                the assembled <batch>-<tag>.md, and S4's <batch>-spec.md and
-                <batch>-s4-cmds/ (repo mode)
+                the assembled <batch>-<tag>.md, and S4's <batch>-spec.md,
+                <batch>-trial-cmds/, and <batch>-s4-cmds/ (repo mode)
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
                 <batch>-state.md  <batch>-report.md
@@ -660,6 +661,21 @@ reminder to work without stopping), the run ends with the same message.
   on without the material.
 - The driver copy's `--self-test` prints `self-test passed` and exits 0.
 - In plugin mode, the plugin directory holds a `plugin.json`.
+- In repo mode and spec entry, the trial extraction passes: the main
+  session saves `git show <baseline>:<spec path>` to
+  `<workspace>/_prompts/<batch>-spec.md`, runs
+  `bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-trial-cmds`,
+  and holds its exit and its `commands:` and `cases:` counts to the field
+  as Phase 3 § Repo mode holds its own extraction; an exit other than 0,
+  or a count that differs, is the stop naming the script's reason or the
+  counts. In brief entry the spec does not exist yet, and the same trial
+  runs on `git show <S1 hash>:<spec path>` before S2 is launched (Phase 1,
+  step 6). Why: the extraction otherwise runs first at Phase 3, after S2,
+  S3, and S3b are paid for — a batch whose spec kept Python scripts in
+  fenced blocks of its `## Autopilot` section, where a column-0 `# `
+  comment then read as a heading ended the section before its field,
+  stopped there, with about USD 40 spent, at a point where only a user present
+  could let it go on.
 
 Why before anything is written: an unattended run on the wrong base or a
 dirty tree is spent money, and every check is a condition a worker assumes.
@@ -772,6 +788,10 @@ The flow:
    failed or was held (The message protocol) — the same text
    is the body of the resume prompt, under its `answer <tag>:` first line.
 5. Record the hash S1 replies with in the state file.
+6. In repo mode, run the trial extraction (Phase 0 § The start checks) on
+   `git show <S1 hash>:<spec path>`, saved to
+   `<workspace>/_prompts/<batch>-spec.md`; a failure is the same stop,
+   before S2 is launched.
 
 S1's task block carries: the draft-spec task — the shape of a decided spec
 with an empty decision column, the design table's options and leanings,
@@ -3045,8 +3065,9 @@ the run ends with that message.
 8. A nested `claude -p` refused — the topology cannot be run here.
 9. The same step's session dead twice — a third resume replays the same
    failure.
-10. A settings stop before the first launch (The start checks), the two
-    that concern the role settings among them: a `Role settings` entry
+10. A settings stop before the first launch (The start checks) — or, for
+    the trial extraction in brief entry, before S2's launch (Phase 1,
+    step 6) — the two that concern the role settings among them: a `Role settings` entry
     outside its grammar, named with the value that failed, and
     `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort — a run
     that went on would launch its roles at a model or an effort nobody
@@ -3284,7 +3305,8 @@ wording that closed it:
   its record in the state file and the timeline (Templates § The settings
   line), so a transition that waited on a printed line would wait on a
   line the run is not required to print.
-- Phase 1 → Phase 2: the spec's commit hash in the state file.
+- Phase 1 → Phase 2: the spec's commit hash in the state file, and in
+  repo mode the trial extraction's pass (Phase 1, step 6).
 - Within Phase 2: each `<tag>.exit`; S2 → S3: the task document on disk,
   and, when S2 sent no confirmation question, the skipped-gate
   post-check's match recorded — after the amendment, when a mismatch

@@ -832,7 +832,8 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
 <workspace>/
     _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh,
                    <batch>-zero-diff.sh, and <batch>-temp-candidates.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
-                   blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md and extracted <batch>-s4-cmds/
+                   blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md, the trial extraction's
+                   <batch>-trial-cmds/, and the extracted <batch>-s4-cmds/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
                    <batch>-tmp-before.txt  <batch>-tmp-candidates.txt  the temp folder before and after
@@ -1071,7 +1072,14 @@ its settings to `_prompts/<batch>-spec.md` and runs the copied
 `<nn>.cmd` — the text of its one code span as it stands, one padding space
 removed from each end when both are there — or, for a case description,
 `<nn>.case`, and prints `commands: <n>, cases: <m>`; the main session
-checks both counts against its own reading of the field. S4 extracts the
+checks both counts against its own reading of the field. The script skips
+the lines of fenced code blocks, so a script kept in one inside the
+`## Autopilot` section — a `# ` comment in column 0 included — neither
+ends the section nor reads as a field. The same extraction runs once
+before the first paid session, into `_prompts/<batch>-trial-cmds/`, as a
+start check — in brief entry after S1 commits the spec and before S2 —
+so a spec the script misreads stops the run before anything is spent,
+not at acceptance. S4 extracts the
 commands again into a directory of its own, shows `cmp` equal for every
 file and one `cmp` of two differing files reporting the difference, runs
 each command as `<shell> <file>` in the shell your session's Bash tool

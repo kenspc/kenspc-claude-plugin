@@ -26,8 +26,11 @@
 # case, a description case, a continuation line, `Acceptance: none`, no
 # section, no field, inline text on the label line, an empty field, a code
 # span that does not end the text, an unclosed code span, a deeper-indented
-# bullet, a second ## Autopilot section, a CRLF spec, the wrong arguments, an
-# unreadable spec; a path
+# bullet, a second ## Autopilot section, a CRLF spec, fenced code blocks
+# before and inside the section (backtick and tilde fences, a longer fence
+# around a shorter one, a column-0 `# ` comment and a `## ` line inside them,
+# a backtick line whose info string holds a backtick, a column-0 fence inside
+# the field, an unclosed fence), the wrong arguments, an unreadable spec; a path
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
@@ -43,9 +46,10 @@
 #
 # Optional flag:
 #   --self-test    Copies the three scripts into the temp directory and turns
-#                  the guard red with six mutants of the copies — the padding
+#                  the guard red with seven mutants of the copies — the padding
 #                  stripping removed from the extractor, its continuation
-#                  joining removed, zero-diff.sh's paths passed to git diff
+#                  joining removed, its fence tracking removed, zero-diff.sh's
+#                  paths passed to git diff
 #                  as one word, and temp-candidates.sh's before-list filter,
 #                  origin comparison, and symlink exclusion each removed —
 #                  each of which must make the guard exit 1, then green again
@@ -135,6 +139,63 @@ cat > "$FX/spec-spans.md" <<'EOF'
   - `npm test` passes, then `npm run lint` — PASS: exit 0
   - `echo x — PASS: ok
 EOF
+# Fenced code blocks: one before the section holding a `## Autopilot` line
+# and a field, and three inside it — backticks with a column-0 `# ` comment,
+# tildes with a `## ` line, and a four-backtick fence holding a three-
+# backtick line that must not close it — none of which ends the section or
+# is read as a field. A backtick line whose info string holds a backtick
+# opens no fence.
+cat > "$FX/spec-fenced.md" <<'EOF'
+# Spec
+
+```markdown
+## Autopilot
+
+- Acceptance:
+  - `echo from-the-example` — PASS: exit 0
+```
+
+## Autopilot
+
+- Budget: USD 10
+
+```python
+# usage: python3 -I mutate.py <file>
+print("x")
+```
+
+~~~sh
+## not a heading
+~~~
+
+````text
+```
+# still inside
+````
+
+``` not a fence `x`
+- Acceptance:
+  - `echo fenced` — PASS: exit 0
+  - run it by hand — PASS: ok
+
+## After
+
+- Acceptance: none
+EOF
+
+# A fence opened in column 0 inside the field ends it, as any line there
+# does; one never closed hides the field and is named in the reason.
+cat > "$FX/spec-fence-ends.md" <<'EOF'
+## Autopilot
+
+- Acceptance:
+  - `echo first` — PASS: exit 0
+```sh
+  - `echo in-fence` — PASS: exit 0
+```
+  - `echo after` — PASS: exit 0
+EOF
+printf '## Autopilot\n\n```py\n# usage\n- Acceptance:\n  - `echo x` — PASS: ok\n' > "$FX/spec-unclosed.md"
 printf '# Spec\n\n## Implementation Steps\n\n- Acceptance: none\n' > "$FX/spec-nosection.md"
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance: run the suite\n- Budget: USD 10\n' > "$FX/spec-inline.md"
@@ -314,6 +375,30 @@ run_checks() {
     listing=$(cd "$out" 2>/dev/null && ls | tr '\n' ' ') || listing="(no out dir)"
     [[ "$listing" == "01.case 02.cmd " ]] || fail "extract: more fixture wrote [$listing]"
     expect_content "$out/02.cmd" 'echo z'
+
+    # Fenced code blocks before and inside the section: the field after
+    # them is read, and nothing inside them is.
+    out="$WORK/out-$runs-fenced"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-fenced.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: fenced fixture exited $rc, expected 0 ($(cat "$WORK/err"))"
+    [[ "$stdout" == "commands: 1, cases: 1" ]] || fail "extract: fenced fixture printed [$stdout], expected [commands: 1, cases: 1]"
+    expect_content "$out/01.cmd" 'echo fenced'
+    expect_content "$out/02.case" 'run it by hand'
+
+    # A column-0 fence inside the field ends it.
+    out="$WORK/out-$runs-fence-ends"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-fence-ends.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: fence-ends fixture exited $rc, expected 0"
+    [[ "$stdout" == "commands: 1, cases: 0" ]] || fail "extract: fence-ends fixture printed [$stdout], expected [commands: 1, cases: 0]"
+    expect_content "$out/01.cmd" 'echo first'
+
+    # An unclosed fence: exit 2, its line named in the reason.
+    rc=0
+    bash "$ex" "$FX/spec-unclosed.md" "$WORK/out-$runs-unclosed" >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: unclosed fence exited $rc, expected 2"
+    grep -qF 'opened at line 3 is never closed' "$WORK/err" || fail "extract: unclosed fence's reason does not name line 3 [$(cat "$WORK/err")]"
 
     # A spec with CRLF line ends: the command carries no carriage return.
     out="$WORK/out-$runs-crlf"
@@ -522,26 +607,32 @@ run_self_test() {
     run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 3: the paths passed to git diff as one word.
+    # Mutant 3: fenced code blocks no longer skipped.
+    name="fence tracking removed"
+    mutate "$ex" "$m_ex" 's/^    infence = 1; ofch = fch; oflen = flen; fenceline = NR$/    ofch = fch; oflen = flen; fenceline = NR/' "$name"
+    run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 4: the paths passed to git diff as one word.
     name="paths read as one word"
     mutate "$zd" "$m_zd" 's/HEAD -- "\${paths\[@\]}"/HEAD -- "${paths[*]}"/' "$name"
     run_checks "$ex" "$m_zd" "$tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 4: the before list no longer filters, so entries older than the
+    # Mutant 5: the before list no longer filters, so entries older than the
     # batch are listed.
     name="before-list filter removed"
     mutate "$tc" "$m_tc" 's/if grep -qxF -- "\$name" "\$before"; then/if false; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 5: any clone counts, whatever its origin.
+    # Mutant 6: any clone counts, whatever its origin.
     name="origin comparison removed"
     mutate "$tc" "$m_tc" 's/if \[ "\$p" = "\$r" \]; then/if :; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 6: a symbolic link is judged by what it points to.
+    # Mutant 7: a symbolic link is judged by what it points to.
     name="symlink exclusion removed"
     mutate "$tc" "$m_tc" 's/if \[ ! -L "\$e" \] && \[ -O "\$e" \]; then/if [ -O "$e" ]; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" 2>/dev/null

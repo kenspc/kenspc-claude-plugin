@@ -22,6 +22,17 @@
 # lines are joined to it with one space. The field's label may carry a
 # note, `- Acceptance (<note>):`, parentheses inside the note included.
 #
+# The lines of a fenced code block (up to three spaces of indent, then three
+# or more backticks or tildes, closed by a run of the same character at
+# least as long, as CommonMark has it), its fence lines included, are not
+# read: a heading, a `## Autopilot` line, or an `Acceptance:` field inside
+# one is no heading and no field. A fence line in column 0 still ends the
+# field, as any line there does. Why: a spec kept Python scripts in fenced
+# blocks of its `## Autopilot` section for the acceptance commands to read,
+# and a comment line, `# usage: …` in column 0, read as the next heading
+# ended the section nearly 200 lines before the field, so the batch stopped at
+# acceptance after its implementation and review were paid for.
+#
 # Output and exit codes
 #   0  prints "commands: <n>, cases: <m>"; `Acceptance: none` writes no file
 #      and prints "commands: 0, cases: 0"
@@ -93,7 +104,40 @@ function addentry() {
   have = 0
   cur = ""
 }
+# Sets fch and flen to the fence character and run length when the line
+# opens or closes a fenced code block (up to three spaces of indent, then
+# three or more backticks or tildes), else fch to the empty string; frest is
+# the text after the run.
+function fenceof(s,   ind, rest, c) {
+  fch = ""
+  match(s, /[^ ]/)
+  if (RSTART == 0) return
+  ind = RSTART - 1
+  if (ind > 3) return
+  rest = substr(s, RSTART)
+  c = substr(rest, 1, 1)
+  if (c != "`" && c != "~") return
+  flen = 0
+  while (substr(rest, flen + 1, 1) == c) flen++
+  if (flen < 3) return
+  frest = substr(rest, flen + 1)
+  fch = c
+  fcol0 = (ind == 0)
+}
 { sub(/\r$/, "") }
+infence {
+  fenceof($0)
+  if (fch == ofch && flen >= oflen && frest ~ /^[ \t]*$/) infence = 0
+  next
+}
+{
+  fenceof($0)
+  if (fch != "" && !(fch == "`" && index(frest, "`"))) {
+    infence = 1; ofch = fch; oflen = flen; fenceline = NR
+    if (infield && fcol0) { addentry(); infield = 0 }
+    next
+  }
+}
 !insec && !secdone && /^## Autopilot[ \t]*$/ { insec = 1; secfound = 1; next }
 insec && (/^# / || /^## /) {
   if (infield) addentry()
@@ -127,8 +171,9 @@ insec && (/^# / || /^## /) {
 }
 END {
   if (infield) addentry()
-  if (!secfound) { print "extract-acceptance.sh: no ## Autopilot section in the spec" > "/dev/stderr"; exit 2 }
-  if (!found) { print "extract-acceptance.sh: no Acceptance: field in the ## Autopilot section" > "/dev/stderr"; exit 2 }
+  unclosed = infence ? " (the code fence opened at line " fenceline " is never closed)" : ""
+  if (!secfound) { print "extract-acceptance.sh: no ## Autopilot section in the spec" unclosed > "/dev/stderr"; exit 2 }
+  if (!found) { print "extract-acceptance.sh: no Acceptance: field in the ## Autopilot section" unclosed > "/dev/stderr"; exit 2 }
   if (inlinev == "none" && nent == 0) { print "commands: 0, cases: 0"; exit 0 }
   if (inlinev != "" || nent == 0) {
     print "extract-acceptance.sh: the Acceptance: field is neither none nor a list of sub-bullets" > "/dev/stderr"

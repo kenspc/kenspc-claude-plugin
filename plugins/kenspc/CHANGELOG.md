@@ -9,6 +9,46 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.8.1 — unreleased
+
+### Fixed
+
+- **The acceptance extractor reads past fenced code blocks (autopilot).**
+  `extract-acceptance.sh` ended the `## Autopilot` section at the first
+  column-0 line starting `# ` or `## `, inside a fenced code block or not.
+  A spec that kept two Python scripts in fenced blocks of that section,
+  for its acceptance commands to read, had a `# usage: …` comment in
+  column 0 nearly 200 lines above its `Acceptance:` field, so the script
+  exited 2 with `no Acceptance: field in the ## Autopilot section`; the
+  batch stopped before S4, with S2, S3, and S3b already run for about
+  USD 40, until the user ruled to extract from a copy with the blocks
+  removed — a copy S4's re-extraction then had to use too. The script now
+  skips the lines of a fenced code block, its fence lines included, as
+  CommonMark delimits one (up to three spaces of indent, three or more
+  backticks or tildes, closed by a run of the same character at least as
+  long): a heading, a `## Autopilot` line, or an `Acceptance:` field inside
+  one is none of them. A column-0 fence line inside the field still ends
+  the field, as any column-0 line does, and a fence never closed is named,
+  with its line, in the exit-2 reason.
+
+### Changed
+
+- **A trial extraction before the first paid session (autopilot, repo
+  mode).** The extraction ran first at Phase 3, so a spec the script
+  misread showed only after implementation and review were paid for, and
+  at a stop that needs the user present. Phase 0's start checks now run
+  the copied extractor on the spec as the run reads it, into
+  `_prompts/<batch>-trial-cmds/`, and hold its exit and counts to the
+  field as Phase 3 does — a failure is a stop before the first launch. In
+  brief entry, where the spec does not exist until S1 commits it, the same
+  trial runs after S1's hash is recorded and before S2 is launched (Phase
+  1, step 6).
+- `check-autopilot-scripts.sh` adds fenced-block fixtures — backtick and
+  tilde fences before and inside the section, a longer fence around a
+  shorter one, a backtick line whose info string holds a backtick, a
+  column-0 fence inside the field, an unclosed fence — and a seventh
+  self-test mutant, the fence tracking removed.
+
 ## 4.8.0 — 2026-10-16
 
 A finished autopilot batch now removes the clones and builds it left in
