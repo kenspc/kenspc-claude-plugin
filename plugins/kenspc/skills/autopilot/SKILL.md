@@ -1269,6 +1269,28 @@ of a round, two of them in wording only, and those two reached the next
 step with no review after them; a change of any size is a change no
 review has seen until the narrowed one runs.
 
+S3b's verdict, and a narrowed review's, is read after its second fix round
+when one ran (task-review's Step 7): the worker running the review sends
+one question once regression-verifier returns HAS ISSUES or the verdict is
+other than PASS, naming `schema-b.md` and `schema-c-1.md` (the preamble's
+§ 1), and the main session rules a second round with its entries, or none,
+by the order in § How the main session rules. An incomplete fix a
+narrowed review's own code-fixer made is finished by that ruled second
+round rather than by another S5 and another narrowed review; what the
+review still fails after it goes to S5 as above, bounded by stop
+condition 3. Before it rules on S3b's findings — in the first round or the
+second — the main session reads S3's `rulings.md`, the path or paths the
+S3b task block names, and a finding that an earlier DEFER or NOT
+APPLICABLE entry covered is ruled the same way, the ruling citing that
+entry. Why the second round inside the review: an incomplete fix found by
+the review that made it costs a second code-fixer and verifier there,
+where outside it costs an S5 and a narrowed review; the review still runs
+at most one, so the per-defect stop counts stay where they are. Why the
+main session reads S3's rulings and task-review does not: the two
+reviews' IDs differ, and whether two findings are the same is a judgment
+the main session already makes, while a finding S3's review deferred and
+S3b found again would otherwise be ruled twice, perhaps two ways.
+
 ### The zero-diff check
 
 After S3b — after S3 with `Standalone review: off` — the main session runs the script copy from the repository
@@ -1869,11 +1891,18 @@ or a delivery notice says the message was held or refused, do not wait:
 put the question under `## Question for the main session` at once,
 quoting the error or the notice, and stop. Do not decide a question
 yourself because the run is unattended: ask <main name>, which rules and
-records every answer, while an answer you decide is recorded nowhere. An
-answer that rules on the findings of a review you are running —
-/kenspc-task-review, or the review phase of /kenspc-task-implement — goes
-into that run's `RUN_DIR/rulings.md` before code-fixer is dispatched,
-never into an agent's CUSTOM_INSTRUCTIONS. Messages carry summaries and paths,
+records every answer, while an answer you decide is recorded nowhere. In a
+review you are running — /kenspc-task-review, or the review phase of
+/kenspc-task-implement — ask for a ruling on its findings only once the
+last of its five reviewers has returned. An answer that rules on them goes
+into that run's `RUN_DIR/rulings.md`, never into an agent's
+CUSTOM_INSTRUCTIONS: before code-fixer is dispatched when it arrives
+first, and as the review's second fix round, under a `## Round 2` heading,
+when it arrives after code-fixer's dispatch. When regression-verifier
+returns HAS ISSUES, or the review's verdict is other than PASS, send
+<main name> one question naming `RUN_DIR/schema-b.md` and
+`RUN_DIR/schema-c-1.md` by path, the run directory filled in; the answer
+rules a second round with its entries, or none. Messages carry summaries and paths,
 never a report's text: a report or a full table goes to a file — under
 <workspace>/_prompts, or in the repository when it belongs there — and the
 message names its path, since a message over about a million characters
@@ -2009,7 +2038,16 @@ answer a worker decides is recorded nowhere, so nobody reviews it. Why
 ruling written into code-fixer's and regression-verifier's
 `CUSTOM_INSTRUCTIONS` broke task-review's rule that both get the
 reviewers' CONTEXT unchanged, while the run directory is the one path
-both already read. Why § 1 has a worker whose send failed or was held
+both already read. Why § 1 asks for a ruling only once the last reviewer
+has returned: a ruling is made on the findings, and one asked for while
+reviewers still run rules on a set not yet complete. Why a ruling that
+arrives after code-fixer's dispatch is the second round's: code-fixer reads
+`rulings.md` once, at its dispatch, so a ruling written after it changes
+nothing in the first round, and the review's second fix round is the one
+place it can still land. Why one question after a result short of PASS:
+what is left of a review is the main session's to rule, a second round runs
+only on a ruling, and the two paths let the main session rule from the
+files rather than from a report's text in a message. Why § 1 has a worker whose send failed or was held
 stop at once, quoting what it saw: no answer comes to a send that failed
 or was held, so the thirty-minute wait only delays the resume that
 answers it, and the error or the notice is the one sign of the cause,
@@ -2166,10 +2204,24 @@ instruction come in the prompt that resumed you, under its first line
 
 - S2: `/kenspc-task <spec path>`.
 - S3: `/kenspc-task-implement <task document path>`.
-- S3b: `/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>`.
-  Why the range: the batch's change set is that range by definition,
-  whatever the branch tracks, and task-review pins a range named in its
-  instructions.
+- **S3b** — the command, then one line naming S3's rulings:
+  `<S3 rulings.md path(s)>` is the `rulings.md` of S3's review run
+  directory — the one whose `schema-b.md` S3's Schema G names — and of
+  any S3 resume's, each that exists, or `none`. Why the range: the batch's
+  change set is that range by definition, whatever the branch tracks, and
+  task-review pins a range named in its instructions. Why the rulings line
+  apart from the command: task-review reads everything after its path as
+  CUSTOM_INSTRUCTIONS for the reviewers, and the comparison with S3's
+  rulings is the main session's (§ The verdict loop after S3b), so the
+  worker only names the paths in its question.
+
+````
+/kenspc-task-review review the range <baseline sha>..<HEAD sha at S3's end>
+
+S3's review rulings, not part of the command above: <S3 rulings.md path(s)>.
+When you ask <main name> for a ruling on this review's findings, name
+these paths in the question.
+````
 - **S4, plugin mode** — Phase 3, when `Acceptance:` names cases and the
   mode is `plugin`. The cases and their PASS criteria are the field's
   sub-bullets, `(optional)` carried over; `<HEAD sha>` is HEAD at the

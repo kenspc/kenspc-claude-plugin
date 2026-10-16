@@ -340,7 +340,25 @@ Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 
 ### Task 5: The autopilot side of the second round, and S3b reading S3's rulings
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the S3b task block became a fenced block like the other
+  roles': the command line, then a line naming S3's `rulings.md` path(s)
+  marked "not part of the command above", which the worker names in its
+  question. Why: task-review reads everything after its path as
+  CUSTOM_INSTRUCTIONS for the reviewers, and the comparison with S3's
+  rulings is the main session's, so the paths must not reach the
+  reviewers. The paths are the `rulings.md` of the run directory whose
+  `schema-b.md` S3's Schema G names, plus any S3 resume's, or `none`.
+- Changes/tradeoffs: the verdict-loop paragraph also states the
+  "narrowed reviews keep fixing" point (an incomplete fix a narrowed
+  review's own code-fixer made is finished by its ruled second round,
+  what it still fails goes to S5 under stop condition 3), which the plan's
+  Technical Approach gives and the task's bullets left implicit. The
+  preamble's Why paragraph gained the reasons for asking only after the
+  last reviewer, for a late ruling landing in the second round, and for
+  the one question after a result short of PASS.
 
 Depends on: Task 4
 
