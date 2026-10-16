@@ -606,7 +606,25 @@ git"). Files: `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`
 
 ### Task 9: Benign breaches ruled by the main session
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the main session checks the three conditions against the
+  worker's report and the disk, not on the worker's word alone, since the
+  worker is the session whose breach is being ruled. The resume prompt's
+  body tells the worker to continue its task, under the
+  `answer <tag>: breach ruled benign — <one line>` first line. The
+  state-file entry carries the evidence for each condition and the file
+  moved, if any; the reviewer report's line lists each entry with the
+  clarification that records it. § The gates gained a row of its own for
+  stop condition 6 (benign: resumed; any other: how to go on) above the
+  catch-all row.
+- Changes/tradeoffs: § How the main session rules' list of points it rules
+  now names a benign-breach ruling, so the subsection extends that list
+  rather than standing beside it. The user report names each benign breach
+  among what needs the user. The Why gives the benign cases in general
+  words (a file beside `$TMPDIR`, a probe that sent nothing, a read-only
+  command against a local resource), not as dry-run citations.
 
 Implement plan Step 5 (Technical Approach § Rails, "Benign breaches ruled
 by the main session"). File: `plugins/kenspc/skills/autopilot/SKILL.md`

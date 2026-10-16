@@ -629,7 +629,7 @@ returned with that never arrived as a message (§ The message protocol), the
 current step and its tag, each session's tag, id, cost, and result, each
 worker's requested and applied model and effort, the
 questions answered, the rail observations and the lessons each worker
-listed, the gates
+listed, the breaches ruled benign, the gates
 a worker skipped and their outcome, the
 stops, the questions left open for a later step (The stop conditions), the
 clarification numbers recorded in the spec and the rulings that have no
@@ -666,6 +666,8 @@ questions answered:
   <tag>: <one line> → <one line> (main session|user)
 rail observations:
   <tag>: <the worker's entry, one per line | none | not read (<reason>)>
+breaches ruled:
+  <tag>: <the breach, one line> → benign: <the evidence for the three conditions>[; moved <path> to <workspace>/.trash/<name>-<timestamp>/] (resumed <tag>-r<k>)
 worker lessons:
   <tag>: <the worker's entry under ## Lessons for the main session, one per line>
 skipped gates:
@@ -1027,8 +1029,9 @@ Every point the spec leaves open is the main session's to rule: a
 worker's question, a choice riding on a task-list confirmation (§ A
 worker's question at a gate), a question the main session raises itself,
 a review row's or an acceptance FAIL's classification (§ The verdict loop
-after S3b, Phase 3's Classification), a deferred row's route, and a
-corrected acceptance case (Phase 3). It answers a waiting worker at once,
+after S3b, Phase 3's Classification), a deferred row's route, a corrected
+acceptance case (Phase 3), and a breach it rules benign (§ A breach the
+main session rules benign). It answers a waiting worker at once,
 in the `answer <tag>:` form (§ The message protocol). It asks the user
 only on a stop condition (Templates § The stop conditions) and at the two
 gates; Phase 0's questions about the run's inputs — no path, the entry
@@ -1083,6 +1086,43 @@ rules itself: it asks the main session (the preamble's § 1), which
 records every answer. Why: an answer a worker invents is recorded
 nowhere, so nobody reads it before the release, while the main
 session's answer is in the state file and the spec, where the user reviews it before the tag and the push.
+
+### A breach the main session rules benign
+
+A worker that breaches a rail still reports it and ends (the preamble's
+§ 3). The main session may rule the breach benign when all three hold,
+each checked against the worker's report and the disk, not on the
+worker's word alone:
+
+1. no secret was written or sent;
+2. it is not a recursive `rm`, a push, a tag, or a release;
+3. it changed no state outside the write roots, or the only such change is
+   a file holding no secret, which the main session moves into the
+   workspace's `.trash/<name>-<timestamp>/`.
+
+Then it records the breach under the state file's `breaches ruled:`
+section — the tag, the breach as the worker reported it, the evidence for
+each condition, and the file it moved, if any — and resumes the worker
+under the step's next `<tag>-r<k>` with a prompt whose first line is
+`answer <tag>: breach ruled benign — <one line>` and whose body tells it
+to continue its task, counted as a resume under `Caps:`. The ruling is
+also recorded as every other ruling is (§ How the main session rules):
+under `questions answered:`, marked `(main session)`, and as a
+clarification entry in the spec that names the main session as the ruler,
+committed as Phase 2's Constraints say. The reviewer report's
+`Breaches ruled benign:` line and the user report's list name each one. A
+breach that fails any condition is stop condition 6.
+
+Why a ruling and not a stop: breaches that cost nothing — a file written
+beside `$TMPDIR` holding nothing, a reviewer's probe that sent nothing off
+the machine, a read-only command against a local resource the spec did
+not name — have stopped runs a ruling would have let go on, while a
+recursive `rm`, an action that leaves the machine, a secret, or a change
+outside the roots is not the main session's to wave through. Why recorded
+as every ruling is, besides the section and the line: the rule that every
+ruling is a clarification then holds without an exception, and the spec is
+where the user reads every ruling before the tag; the section and the
+report line keep the breaches findable as a class.
 
 ### A worker's question at a gate
 
@@ -1798,7 +1838,8 @@ reads both reports before the tag.
   cause the worker quoted or the causes to check; a failed check at S6's
   return, with the commits it names; work S6 left undone for a point
   raised after the removal; a change S6 left to the spec, with what the
-  status command printed), and the cost. Then, under the
+  status command printed; each breach the main session ruled benign, with
+  the breach and the ruling), and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
   line each in the user's language — the question, the ruling, and its
@@ -2676,7 +2717,13 @@ the run ends with that message.
    counts; an S5 that left the defect unfixed counts as a fix of it.
 5. The session cap, the resume cap, or the budget exceeded — a question
    with the numbers.
-6. A rail breach — the worker has already reported it and ended.
+6. A rail breach the main session cannot rule benign — the worker has
+   already reported it and ended. A breach that wrote or sent no secret,
+   is not a recursive `rm`, a push, a tag, or a release, and changed no
+   state outside the write roots, or only a file holding no secret, which
+   the main session moves into the workspace's `.trash/`, is ruled benign
+   and the worker resumed instead (§ A breach the main session rules
+   benign).
 7. A way forward the main session cannot rule on — (a) every option
    changes the batch's contract and none stays inside it: a new
    dependency, an API contract change, a database schema or configuration
@@ -2776,6 +2823,7 @@ decisions the user has yet to see.
 - Total cost: USD <workers' sum> measured + USD <trial's and acceptance cases' sum> measured from the record (plugin mode; omitted otherwise) + USD <n> estimated for the main session (<turns> turns × USD <mean per turn> from <k> workers' totals ÷ turns); /cost may replace the estimate
 - Not exercised: <list, or none>
 - Rail observations: <list | none>
+- Breaches ruled benign: <list | none>
 - Worker lessons: <list | none>
 - Skipped gates: <list | none>
 - Follow-up candidates: <list | none>
@@ -2804,7 +2852,10 @@ The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`
 field. The `Rail observations` line lists the state file's
 `rail observations:` entries other than `none`, each as `<tag>: <entry>`,
-and reads `none` when there are none. The `Worker lessons` line lists the
+and reads `none` when there are none. The `Breaches ruled benign` line
+lists the state file's `breaches ruled:` entries, each as
+`<tag>: <the breach> → <the ruling>`, with the clarification that records
+it, and reads `none` when there are none. The `Worker lessons` line lists the
 state file's `worker lessons:` entries, each as `<tag>: <entry>`, and
 reads `none` when the section is empty. The `Skipped gates` line lists the
 state file's `skipped gates:` entries — the step, its tag, and the
@@ -2847,6 +2898,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | S2 returned without its confirmation question, and the post-check of its task document finds a mismatch, or an open choice whose ruling differs from the document | Nothing on the first failure: S2 is resumed under `<tag>-r<k>` with the ruling, to amend, and the post-check runs again; on a second failure, a stop with the mismatch or the choice quoted | The first failure the same; on a second, the run ends with it quoted |
 | Stop condition 7: (a) every option changes the batch's contract, none staying inside it; (b) an acceptance case corrected without both pieces of evidence | How to go on — (a) with the options, (b) with the case and the evidence missing | The run ends with the reason |
 | A question of stop condition 7's kind — a way forward the main session cannot rule on — the main session raises that only a later step needs | Nothing until that step; then the question as it then stands | The run goes on and ends at that step with the question quoted |
+| A rail breach (stop condition 6) | Nothing when the main session rules it benign (§ A breach the main session rules benign): the worker is resumed; any other breach, how to go on | A benign breach the same; any other, the run ends with the reason |
 | Any other stop condition, or a stop stated at its own step | How to go on | The run ends with the reason |
 | The final gate | Tag, push, release | The run ends with the two reports and the finish line |
 
