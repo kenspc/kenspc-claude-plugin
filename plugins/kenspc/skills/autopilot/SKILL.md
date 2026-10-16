@@ -2646,7 +2646,8 @@ Rules for the walk:
   a process you did not start: send <main name> one question naming the
   port and the process, and wait as § 1 says. The answer is wait — check
   the port again every 10 minutes, for at most 60 minutes — or skip,
-  which ends the walk `not walked: port <n> in use`.
+  which ends the walk `not walked: port <n> in use`; a port still held
+  after the 60 minutes ends it the same way.
 - An app you cannot start ends the walk `not walked: <reason>`, with the
   output that shows why.
 - Stop only the processes you started, each found by its listener,
