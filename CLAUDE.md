@@ -793,7 +793,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   counts as NOT APPLICABLE; Source IDs `[REQBTFV]<n>`, code-fixer's `F`
   rows and the `V` regressions counted with the five angles, and the
   Per-angle Results table required to carry all seven rows, 4.7.0; the
-  example holds one `F` row); and the literal `change-set.md` is named in
+  example holds one `F` row, and the self-test adds a `V1` row that must
+  recount green); and the literal `change-set.md` is named in
   `task-review/SKILL.md`, `code-fixer.md`, `regression-verifier.md`, and
   `requirements-reviewer.md`, the pre-fix record's `pre-fix/index.txt`
   in `code-fixer.md` and `regression-verifier.md`, and the rulings file's

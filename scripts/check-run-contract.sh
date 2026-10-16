@@ -126,7 +126,7 @@
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on thirty-six mutations that
+#                  prefix classification), then on thirty-seven mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the rulings grammar's
 #                  DEFER entry reworded in each of its four carriers in turn
@@ -139,7 +139,11 @@
 #                  (an example row's action, one Per-angle Results cell, one
 #                  statistics-line number, the statistics-line wording, and
 #                  an ID repeated across rows with the counts adjusted to
-#                  match), the change-set file name removed from each
+#                  match), a V1 row's statistics count off by one (the copy
+#                  with the V1 row, its Per-angle Results row, and its
+#                  statistics line added must first exit 0, so the V path
+#                  of the ID class is held), the change-set file name
+#                  removed from each
 #                  of the four copied files check 5 reads, one file at a
 #                  time (every occurrence, through a replace-all helper,
 #                  since it occurs on several lines), the pre-fix index
@@ -737,6 +741,35 @@ run_self_test() {
         "| R     | 0     | 1        | 0              | 1       | 2        |" \
         "total reported 7 (R 1," "total reported 8 (R 2," \
         "NOT APPLICABLE 1, DEDUPED 1" "NOT APPLICABLE 1, DEDUPED 2" || return $?
+    # The V path: the example carries no V row, so a V1 row is added, with
+    # its Per-angle Results row and statistics line updated to match, and
+    # the copy must recount green; then the same copy with the statistics
+    # line's V count off by one must recount red. Why: a regression that
+    # dropped V from the ID class would otherwise leave every check green
+    # and fail the first --file run on a real round-2 schema-b.md.
+    local v_row="| 6 | F1     | refund total ignores coupon      | MEDIUM   | src/refund.ts:21    | DEFERRED — no report lists it                      | —       |"
+    replace_literal "$WORK/$FIXER_REL" "$v_row" "$v_row\\n| 7 | V1     | coupon check reads stale total   | MEDIUM   | src/refund.ts:24    | FIXED                                              | 1234abc |"
+    replace_literal "$WORK/$FIXER_REL" "| V     | 0     | 0        | 0              | 0       | 0        |" \
+        "| V     | 1     | 0        | 0              | 0       | 1        |"
+    replace_literal "$WORK/$FIXER_REL" "total reported 7 (R 1, E 2, Q 1, B 1, T 1, F 1, V 0), deduplicated to 6 unique, FIXED 3," \
+        "total reported 8 (R 1, E 2, Q 1, B 1, T 1, F 1, V 1), deduplicated to 7 unique, FIXED 4,"
+    if ! grep -qF -- "| 7 | V1 " "$WORK/$FIXER_REL" || ! grep -qF -- "V 1), deduplicated to 7 unique" "$WORK/$FIXER_REL"; then
+        echo "FAIL  self-test fixture stale: the V row did not apply to $FIXER_REL" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    if [[ "$rc" -ne 0 ]]; then
+        cp "$REPO_ROOT/$FIXER_REL" "$WORK/$FIXER_REL"
+        echo "FAIL  self-test V row: expected exit 0 on the example with a V1 row, got $rc" >&2
+        return 1
+    fi
+    replace_literal "$WORK/$FIXER_REL" "V 1), deduplicated to 7 unique" "V 2), deduplicated to 7 unique"
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$FIXER_REL" "$WORK/$FIXER_REL"
+    if [[ "$rc" -ne 1 ]]; then
+        echo "FAIL  self-test V count mutation: expected exit 1, got $rc" >&2
+        return 1
+    fi
     # Check 5: the change-set file renamed in one carrier at a time, every
     # occurrence, so only the name check can catch it. Each of the four
     # files check 5 reads is mutated in turn, so a carrier dropped from its

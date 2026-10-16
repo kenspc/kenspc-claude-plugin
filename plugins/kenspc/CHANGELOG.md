@@ -188,7 +188,8 @@ in the next product-repository batches.
   `requirements-reviewer.md`, each renamed in turn by the self-test; check
   4's recount counts `F` and `V` Source IDs and requires all seven
   Per-angle Results rows, and the worked Schema B example gains an `F`
-  row; check 7's grammar holds the four forms (27 → 36 exit-1 mutations).
+  row; check 7's grammar holds the four forms (27 → 37 exit-1 mutations,
+  one a `V1` row added to the example, which must first recount green).
   `check-autopilot-rails-hook.sh` gains the redirection fixtures (denied:
   `> "$TMPDIR/../x"`, `>> ~/.claude/x`, `2> /etc/x`, `&> ../outside`,
   `> $HOME/.claude/x`, `>> ${HOME}/.claude/x`, `> ${TMPDIR}/../x`,
