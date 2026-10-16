@@ -148,7 +148,7 @@ index check exits non-zero, since the index then holds staged changes
 this run did not make, a file of the row's commit has uncommitted changes,
 the hand edit cannot remove the fix without undoing another row's fix, or
 the take-back's build / test / lint run fails — leave the fix in place:
-the row keeps FIXED, adds `not reverted — <reason>` after its em-dash, and
+its action reads `FIXED — ruled; not reverted: <reason>`, and
 its Deferred Issues paragraph says the ruling asked for the code without
 this fix and why it is still there. Once the fix is out, the row's Commit
 cell reads `—`, and its reason
@@ -423,8 +423,10 @@ the following required fields:
   `FIXED — not updated <path>: <reason>`. A row a ruling in
   `rulings.md` decided keeps its leading word and carries `ruled` after the
   em-dash (`DEFERRED — ruled`,
-  `NOT APPLICABLE — ruled; <reason>`). When there are several, the parts
-  after the em-dash are joined by `; `. Counts classify an
+  `NOT APPLICABLE — ruled; <reason>`). A first-round fix a round-2 DEFER or
+  NOT APPLICABLE could not take back reads
+  `FIXED — ruled; not reverted: <reason>` (INPUTS). When there are
+  several, the parts after the em-dash are joined by `; `. Counts classify an
   action by its leading word, so a reason or a document suffix never changes
   the bucket. DEDUPED is
   not a row action: it is the count of non-primary Source IDs.
@@ -486,7 +488,8 @@ APPLICABLE reason never moves a count.
 Deferred Issues (prose): for each DEFERRED row, one short paragraph: which
 issue (by ID), why deferred, suggested follow-up (concrete steps,
 prerequisites, risk if untreated). A FIXED row whose FIX ruling carries a
-`; DEFER rest — <reason>` tail gets one too, for the deferred part.
+`; DEFER rest — <reason>` tail gets one too, for the deferred part, and so
+does a `not reverted` FIXED row, for the take-back that did not land.
 
 Scratch-pollution note (optional): one short paragraph, written only when the
 project's build, test, or lint command, run as the project configures it,
