@@ -39,7 +39,14 @@
 #      skills/task-review/SKILL.md and skills/task-implement/SKILL.md, which
 #      write it to the run directory before code-fixer's dispatch when they
 #      hold a ruling on the reviewers' findings, and in agents/code-fixer.md
-#      and agents/regression-verifier.md, which read it there.
+#      and agents/regression-verifier.md, which read it there. So is the
+#      first-round Schema C file, `schema-c-1.md`, in both skills, which save
+#      it, and in agents/code-fixer.md and agents/regression-verifier.md,
+#      which read it in a second round; and the suite-run file,
+#      `suite-run.md`, in both skills, which write the shared suite run
+#      before the reviewers' dispatch, and in
+#      agents/requirements-reviewer.md, which reads it
+#      (check-review-agent-drift.sh carries it to the other four reviewers).
 #   6. The reviewer invariant sentence ("Each reviewer is read-only on the
 #      working tree and writes only under `RUN_DIR`: …"). It lives in four
 #      places: the five reviewers' ROLE, the canonical dispatch block of
@@ -77,13 +84,7 @@
 #      reply to `schema-c-1.md`, the `## Round 2` section of `rulings.md`,
 #      the fresh dispatches, the printed lines, and the one-round limit — so
 #      a rule reworded in one skill would leave the two reviews running
-#      different rounds. Check 5 also holds the name `schema-c-1.md` in both
-#      skills, which save the file, and in agents/code-fixer.md and
-#      agents/regression-verifier.md, which read it in a second round; and
-#      the name `suite-run.md` in both skills, which write the shared suite
-#      run before the reviewers' dispatch, and in
-#      agents/requirements-reviewer.md, which reads it
-#      (check-review-agent-drift.sh carries it to the other four reviewers).
+#      different rounds; check 5 holds the `schema-c-1.md` name.
 #
 # Check 4's recount rules (the same ones code-fixer and regression-verifier
 # follow):
