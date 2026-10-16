@@ -1720,7 +1720,9 @@ on Windows.
   this holds until a headless worker is shown reaching Claude in Chrome.
   Before the first launch, with `Walk:` not `off` in `repo` mode, the main
   session runs, from the repository root,
-  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'` —
+  `claude mcp list 2>&1 | grep -iE 'playwright.* - ✔ Connected$'` (the
+  server under any name whose line carries Playwright — its own name, a
+  plugin's, or its command) —
   exit 0 usable, exit 1 not — and not usable is a stop naming the command's
   output and `Walk: off` as the way on, before any session is paid for;
   S4w checks the tools again at its own start. Since the walk is on by

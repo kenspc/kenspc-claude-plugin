@@ -433,8 +433,12 @@ reminder to work without stopping), the run ends with the same message.
 - When `Walk:` is not `off` in repo mode, the walk tool is usable. The
   walk uses the Playwright MCP alone, checked from the repository root
   with
-  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'` —
-  exit 0 usable, exit 1 not usable. Claude in Chrome is neither checked
+  `claude mcp list 2>&1 | grep -iE 'playwright.* - ✔ Connected$'` —
+  exit 0 usable, exit 1 not usable. The pattern reads the whole line, so
+  the server is found under any name its line carries Playwright in: its
+  own name, a plugin's `plugin:<plugin>:<server>:`, or its command. Why:
+  matched by the name `playwright` alone, a working Playwright MCP under
+  another name read as not usable and stopped the run. Claude in Chrome is neither checked
   nor used: a headless worker launched with `--chrome` reached no browser
   — "Browser extension is not connected" — while an interactive session on
   the same machine and account reached it, so the walk stays on the

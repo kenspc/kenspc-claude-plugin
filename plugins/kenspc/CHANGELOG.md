@@ -166,7 +166,8 @@ in the next product-repository batches.
   run by walking the app, which neither review nor S4 does.
 - **The walk tool's start check (autopilot).** With `Walk:` not `off` in
   repo mode, the main session runs
-  `claude mcp list 2>&1 | grep -E '^playwright: .* - ✔ Connected$'` from
+  `claude mcp list 2>&1 | grep -iE 'playwright.* - ✔ Connected$'` (the
+  server under any name whose line carries Playwright) from
   the repository root before the first launch; not usable is a stop
   naming the output and `Walk: off` as the way on, before any session is
   paid for. S4w checks the tools again at its start, and finding them
