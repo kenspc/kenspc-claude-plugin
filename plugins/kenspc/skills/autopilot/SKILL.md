@@ -806,7 +806,8 @@ file.
 (`Standalone review: off`, or `auto` not triggered), S3's Schema G
 verdict — or every HIGH row, every ruled row
 whose action differs from its ruling, every ruled ID that no report lists,
-and every row-3 or row-5 FAIL is classified; every task S3 left BLOCKED
+every `rulings.md` entry outside its grammar, and every row-3 or row-5
+FAIL is classified; every task S3 left BLOCKED
 has its entry under the state file's `blocked tasks:` section (§ The
 verdict loop after S3b); and the zero-diff check's exit code is 0, its
 `compared:` count equal to the field's (§ The zero-diff check), or
@@ -1343,7 +1344,10 @@ is classified as such a ruled row, its `rulings.md` entry standing for the
 row it lacks: the main session names, from the entry and the reports, the
 finding the ruling meant, and an S5 for it quotes the entry as its
 finding, with that finding's row when one matches. Why: the S5 task block
-quotes a row, and an ID with none would give an S5 nothing to fix. Each
+quotes a row, and an ID with none would give an S5 nothing to fix. An
+entry of `rulings.md` outside its grammar, which the review did not carry
+out, keeps the verdict from PASS the same way and is classified as such a
+ruled ID is, the entry standing for its rows. Each
 such ruled row is classified as a HIGH row is, whatever its severity. Why: a
 ruling the review did not carry out is a decision of the run's own that
 the review overrode, and read as a MEDIUM or LOW row it would be
