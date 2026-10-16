@@ -802,9 +802,11 @@ file.
 (`Standalone review: off`, or `auto` not triggered), S3's Schema G
 verdict — or every HIGH row, every ruled row
 whose action differs from its ruling, every ruled ID that no report lists,
-and every row-3 or row-5 FAIL is classified, and the zero-diff check's
-exit code is 0, its `compared:` count equal to the field's (§ The
-zero-diff check) — or `Zero diff:` is empty.
+and every row-3 or row-5 FAIL is classified; every task S3 left BLOCKED
+has its entry under the state file's `blocked tasks:` section (§ The
+verdict loop after S3b); and the zero-diff check's exit code is 0, its
+`compared:` count equal to the field's (§ The zero-diff check), or
+`Zero diff:` is empty.
 
 **Constraints**: the main session commits nothing but clarification entries
 in the spec, `docs(plans): record clarifications settled after <step>`; the
@@ -1370,10 +1372,13 @@ ruled. A block that needs a change outside the batch's contract — a new
 dependency, an API contract change, a database schema change the spec
 does not name — is stop condition 7 (a), as any such option is. The state
 file's `blocked tasks:` section records each one and its classification,
-and both reports name them. Why: S3b's Schema F does not read task
-statuses, and S3's PARTIAL had no branch of its own, so a batch with a
-task not built could reach acceptance and release preparation without the
-task being named anywhere the user reads.
+and both reports name them. Once every BLOCKED task is classified, and the
+narrowed review after each S5 for one has passed, a verdict that is
+PARTIAL for BLOCKED tasks alone passes as PASS does, on to Phase 3. Why:
+S3b's Schema F does not read task statuses, and S3's PARTIAL had no branch
+of its own, so a batch with a task not built could reach acceptance and
+release preparation without the task being named anywhere the user reads,
+or stay in the loop with no branch to leave it by.
 
 S3b's verdict, and a narrowed review's, is read after its second fix round
 when one ran (task-review's Step 7): the worker running the review sends
@@ -3185,13 +3190,15 @@ wording that closed it:
   S3 → S3b: S3's `.exit`, the HEAD it left, and the Schema G verdict in
   its `result` other than `BLOCKED` — with `Standalone review: auto`, and
   that verdict or its review's DEFERRED rows triggering S3b (§ The verdict
-  loop after S3b); S3b → Phase 3: its Schema F verdict and the zero-diff
+  loop after S3b); S3b → Phase 3: its Schema F verdict, the
+  `blocked tasks:` entry of every task S3 left BLOCKED, and the zero-diff
   check's exit 0 with its `compared:` count equal to the field's, or
   `Zero diff:` empty, which has no check. When S3b does not run
   (`Standalone review: off`, or `auto` not triggered; repo mode) there is
   no S3b: S3 → Phase 3 on S3's `.exit`, the HEAD it left, its Schema G
   verdict in its `result` other than `BLOCKED`, read by the verdict loop
-  in S3b's place, and the zero-diff check's result after S3, or
+  in S3b's place, the `blocked tasks:` entry of every task it left
+  BLOCKED, and the zero-diff check's result after S3, or
   `Zero diff:` empty.
 - Phase 3 → Phase 4: the record (plugin mode) or S4's reply (repo mode)
   with every FAIL classified, or `Acceptance: none` recorded; then, in
