@@ -579,7 +579,8 @@ or
 `regression-verifier returned — no result line`
 
 and Schema G's Fixes or Verification section renders that reply verbatim,
-as it came back; the run goes on to the next dispatch or to Step 4. Why:
+as it came back; the run goes on to the next dispatch — after
+regression-verifier, the second fix round below, then Step 4. Why:
 counts or a result filled in without that line are made up, and they read
 as a step that finished.
 
