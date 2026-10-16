@@ -951,7 +951,22 @@ it is not.
 
 ### Task 15: Walk acceptance on a seed
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: run by the main session after telling the user (16 Oct
+  2026). S2, S3, and S6 ran at a cheaper declared model and low effort to
+  bound the cost; S4w at the pass-through values. Case 3's "not usable"
+  state was made with `--settings` `env` giving the main session's Bash
+  children an empty `CLAUDE_CONFIG_DIR`, since a `PATH` test double did
+  not reach the Bash tool. Record: `docs/dry-runs/batch-m-walk-acceptance.md`
+  (cdfce2c); all four cases PASS, about USD 15.8 in all.
+- Changes/tradeoffs: case 3's first attempt (`walk-nt`) ran past the start
+  check because the test double failed, and was stopped by the main
+  session after S2 and part of S3; it is recorded and not counted. Three
+  findings for follow-up: a relative screenshot file name lands in the
+  repository (F1), a final message without its `## User report` heading
+  (F2), and installed 4.6.0's `.gitignore` commit ruled two ways (F3).
 
 Depends on: Task 12-14
 
