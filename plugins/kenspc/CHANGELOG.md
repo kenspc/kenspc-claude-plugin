@@ -83,11 +83,12 @@ in the next product-repository batches.
   runs the full test command itself, only named test files and its
   scratch mutation checks, one command at a time (a new PREREQUISITES item,
   identical in the five). The orchestrator then records the tree state
-  (`git status --porcelain=v1 -uall`, a hash of `git diff HEAD --binary`,
-  and each listed tracked path's content hash) and records it again once
-  the five have returned: a changed tracked file stops the review before
-  code-fixer, naming the files, with no restore and one question (go on,
-  or end); a new untracked file stops nothing and is named in Next steps.
+  (`HEAD` and its branch, `git status --porcelain=v1 -uall`, a hash of
+  `git diff HEAD --binary`, and each listed path's content hash, untracked
+  ones included) and records it again once the five have returned: a
+  changed `HEAD` or branch, or a changed file listed before the review,
+  stops the review before code-fixer, naming the files, with no restore
+  and one question (go on, or end); a new untracked file stops nothing and is named in Next steps.
   Both rules sit in the canonical dispatch block. Why the suite run: five
   full suites at once exhausted the machine's local ports, and the
   connection errors read like findings. Why the tree check: a reviewer's

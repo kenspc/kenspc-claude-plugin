@@ -296,10 +296,11 @@ changed.
   `suite-run.md`, which each reviewer reads instead of running the full
   suite (five full suites at once exhausted a machine's local ports, and
   the connection errors read like findings); then it records the tree
-  state (`git status --porcelain=v1 -uall`, a hash of
-  `git diff HEAD --binary`, and each listed tracked path's
-  `git hash-object`), and records it again once all five have returned. A
-  changed tracked file stops the review before Phase 2, naming the files,
+  state (`HEAD` and its branch, `git status --porcelain=v1 -uall`, a hash
+  of `git diff HEAD --binary`, and each listed path's `git hash-object`,
+  untracked ones included), and records it again once all five have
+  returned. A changed `HEAD` or branch, or a changed file listed before
+  the review, stops the review before Phase 2, naming the files,
   with no restore and one question (go on with the tree as the user leaves
   it, or end); a new untracked file stops nothing and is named in the
   final report, so an unchanged tree asks nothing.

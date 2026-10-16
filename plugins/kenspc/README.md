@@ -481,10 +481,11 @@ review reuses the same directory (since 4.3.0):
   on; the reviewers read the file as evidence instead of each running the
   full suite, since five full suites at once exhausted a machine's local
   ports and the connection errors read like findings. It then records the
-  tree state — `git status --porcelain=v1 -uall`, a hash of
-  `git diff HEAD --binary`, and the content hash of each tracked path the
-  status lists — and records it again once all five reviewers have
-  returned. A tracked file whose status or content changed stops the
+  tree state — `HEAD` and its branch, `git status --porcelain=v1 -uall`,
+  a hash of `git diff HEAD --binary`, and the content hash of each path
+  the status lists, untracked ones included — and records it again once
+  all five reviewers have returned. A changed `HEAD` or branch, or a file
+  listed before the review whose status or content changed, stops the
   review before code-fixer, naming the files, and nothing is restored: in
   an `uncommitted` review the tree holds your own changes, and with five
   reviewers in parallel nothing tells which one wrote what. The stop asks
