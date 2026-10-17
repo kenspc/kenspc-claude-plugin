@@ -85,11 +85,13 @@
 #       stopped a run as a breach;
 #   (f) with KENSPC_AUTOPILOT_SUITE_COMMANDS non-empty, a Bash command that
 #       runs a listed suite command at a command position, the positions (a)
-#       and (e) recognize, their skips included. Each prefix's first word
-#       is compared with the command word's base name, as (a) compares rm,
-#       and its later words with the words after it as written, whole word
-#       by whole word: with dotnet test listed, dotnet test --filter X,
-#       sudo dotnet test, $(dotnet test), and
+#       and (e) recognize, their skips included. The base name of each
+#       prefix's first word is compared with the command word's base name,
+#       as (a) compares rm, and its later words with the words after it as
+#       written, whole word by whole word; a prefix's leading assignments
+#       and wrappers are skipped as a command's are, so ./gradlew test or
+#       CI=1 pnpm test listed is matched too: with dotnet test listed,
+#       dotnet test --filter X, sudo dotnet test, $(dotnet test), and
 #       /usr/local/share/dotnet/dotnet test are denied, while dotnet testx,
 #       dotnet build, echo "dotnet test", a heredoc body, and
 #       bash <wrapper> run -- dotnet test, where dotnet is an argument of
@@ -268,9 +270,9 @@ function check(   i, wr, j, a, r) {
   }
 }
 # suite(i): check (f). True, with found set and marked \004, when the
-# words from w[i] on begin with a listed suite prefix: its first word
-# against the base name of the command word, its later words as written,
-# whole word by whole word.
+# words from w[i] on begin with a listed suite prefix: the base name of its
+# first word against the base name of the command word, its later words as
+# written, whole word by whole word.
 function suite(i,   k, m) {
   for (k = 1; k <= nsuite; k++) {
     if (SN[k] == 0 || bname(w[i]) != SW[k, 1]) continue
@@ -528,11 +530,27 @@ END {
   home = ENVIRON["HOME"]; tmpd = ENVIRON["TMPDIR"]; user = ENVIRON["USER"]
   cwd = jstr(buf, "cwd"); if (cwd == "\001") cwd = ENVIRON["PWD"]
   # The listed suite prefixes (-v suites, "|"-joined), each split into its
-  # words once: SN[k] words, SW[k, m] the m-th, SD[k] the prefix as named.
+  # words once: SD[k] the prefix as named, SN[k] its words from its command
+  # word on, SW[k, m] the m-th of them, the first one its base name. The
+  # leading words check() skips in a command (assignments, and the wrappers
+  # with their options) are skipped in a prefix too, since check() never
+  # compares them: a prefix written CI=1 pnpm test or ./gradlew test would
+  # otherwise match nothing.
   nsuite = split(suites, SP, "|")
   for (k = 1; k <= nsuite; k++) {
-    SN[k] = split(SP[k], sw1, " "); SD[k] = ""
-    for (m = 1; m <= SN[k]; m++) { SW[k, m] = sw1[m]; SD[k] = SD[k] (m > 1 ? " " : "") sw1[m] }
+    pn = split(SP[k], sw1, " "); SD[k] = ""
+    for (m = 1; m <= pn; m++) SD[k] = SD[k] (m > 1 ? " " : "") sw1[m]
+    pj = 1
+    while (pj <= pn) {
+      if (sw1[pj] ~ /^[A-Za-z_][A-Za-z0-9_]*=/) { pj++; continue }
+      pw = bname(sw1[pj])
+      if (pw !~ /^(sudo|command|env|xargs|exec|nohup|time)$/) break
+      pj++
+      while (pj <= pn && sw1[pj] ~ /^-./) { if (takesarg(pw, sw1[pj])) pj++; pj++ }
+    }
+    SN[k] = pn - pj + 1
+    for (m = 1; m <= SN[k]; m++) SW[k, m] = sw1[pj + m - 1]
+    if (SN[k] > 0) SW[k, 1] = bname(SW[k, 1])
   }
   found = ""; nt = 0; scan(c)
   printf "%s", found

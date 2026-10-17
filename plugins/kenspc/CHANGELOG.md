@@ -71,8 +71,9 @@ report. The live checks on the maintainer's Mac are in
   meant to pass now echoes six variables, not two.
 - **The rails hook's check (f).** With `KENSPC_AUTOPILOT_SUITE_COMMANDS`
   set, a marked worker's Bash command that runs a listed command at a
-  command position is denied — the prefix's first word against the
-  command word's base name, its later words as written — with the route
+  command position is denied — the base name of the prefix's first word
+  against the command word's base name, the prefix's leading assignments
+  and wrappers skipped, its later words as written — with the route
   `bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run -- <the command>`, run again
   on exit 75. The wrapper's own line passes, since there the command is an
   argument of `bash`. It misses a listed command reached through a

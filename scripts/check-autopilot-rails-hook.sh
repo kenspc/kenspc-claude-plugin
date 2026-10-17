@@ -73,7 +73,10 @@
 # bash /w/suite-slots.sh run -- dotnet test, echo "dotnet test",
 # grep 'dotnet test' f, dotnet build, dotnet testx, pnpm install, and a
 # dotnet test inside a heredoc body (allowed), and dotnet test with the
-# commands variable empty and with the marker unset (inert) — every other
+# commands variable empty and with the marker unset (inert); with
+# './gradlew test|scripts/test.sh|CI=1 pnpm e2e|sudo -u ci make check'
+# listed, ./gradlew test, gradlew test, ./scripts/test.sh, CI=1 pnpm e2e,
+# pnpm e2e, and make check (denied) and ./gradlew build (allowed) — every other
 # fixture running with the two suite variables empty; an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
@@ -661,6 +664,18 @@ run_fixtures() {
     fx "$hook" "dotnet test with the marker unset" inert - "$r" Bash "$FX_REPO" 'dotnet test'
     SUITE_CMDS=""
     fx "$hook" "dotnet test with the commands variable empty" inert 1 "$r" Bash "$FX_REPO" 'dotnet test'
+    # Prefixes whose first word holds a path, follows an assignment, or
+    # follows a wrapper match by the first word's base name, the assignment
+    # and the wrapper skipped as in a command.
+    SUITE_CMDS='./gradlew test|scripts/test.sh|CI=1 pnpm e2e|sudo -u ci make check'
+    fx_deny "$hook" "./gradlew test listed, run as written" "$r" Bash "$FX_REPO" './gradlew test' deny-suite
+    fx_deny "$hook" "./gradlew test listed, run as gradlew test" "$r" Bash "$FX_REPO" 'gradlew test' deny-suite
+    fx_deny "$hook" "scripts/test.sh listed, run as ./scripts/test.sh" "$r" Bash "$FX_REPO" './scripts/test.sh' deny-suite
+    fx_deny "$hook" "CI=1 pnpm e2e listed, run as written" "$r" Bash "$FX_REPO" 'CI=1 pnpm e2e' deny-suite
+    fx_deny "$hook" "CI=1 pnpm e2e listed, run as pnpm e2e" "$r" Bash "$FX_REPO" 'pnpm e2e' deny-suite
+    fx_deny "$hook" "sudo -u ci make check listed, run as make check" "$r" Bash "$FX_REPO" 'make check' deny-suite
+    fx "$hook" "./gradlew test listed, gradlew build" allow 1 "$r" Bash "$FX_REPO" './gradlew build'
+    SUITE_CMDS=""
     SUITE_WRAPPER=""
 
     # Quoted mentions and rm without a recursive flag, allowed.

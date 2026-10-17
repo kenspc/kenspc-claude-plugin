@@ -120,9 +120,11 @@ check (4.7.0), `gh` and remote git (`git fetch`, `pull`, `push`,
 `ls-remote`, `remote update`, a `clone` of a URL) at a command position,
 its reason routing the worker to ask the main session (4.7.0), a listed
 suite command at a command position run without the suite-slot wrapper
-(check (f), 4.10.0: with `KENSPC_AUTOPILOT_SUITE_COMMANDS` non-empty, a
-prefix's first word against the command word's base name and its later
-words as written, whole word by whole word, its reason giving the route
+(check (f), 4.10.0: with `KENSPC_AUTOPILOT_SUITE_COMMANDS` non-empty, the
+base name of a prefix's first word against the command word's base name
+and its later words as written, whole word by whole word, a prefix's
+leading assignments and wrappers skipped as a command's are, its reason
+giving the route
 `bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run -- <the command>`, run again on
 exit 75 with a `suite-slots: busy` line), and a Bash
 input over 64 KB unscanned, since a scan that outlasts the hook's 5-second timeout
@@ -1030,7 +1032,11 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `bash /w/suite-slots.sh run -- dotnet test`, `echo "dotnet test"`,
   `grep 'dotnet test' f`, `dotnet build`, `dotnet testx`, `pnpm install`,
   and a `dotnet test` in a heredoc body; inert: `dotnet test` with the
-  commands variable empty and with the marker unset — and every
+  commands variable empty and with the marker unset; and with
+  `'./gradlew test|scripts/test.sh|CI=1 pnpm e2e|sudo -u ci make check'`
+  listed — denied: `./gradlew test`, `gradlew test`, `./scripts/test.sh`,
+  `CI=1 pnpm e2e`, `pnpm e2e`, and `make check`; allowed: `./gradlew build`
+  — and every
   denied fixture again
   without the marker and with the marker `0`, each with the suite
   variables it was denied with. Main mode also checks that

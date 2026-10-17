@@ -997,8 +997,10 @@ only, a Bash command that runs a recursive `rm`, a Bash redirection
 or a file-tool write whose target lies outside the roots, and a `gh` or
 remote-git call (since 4.7.0 for the last two), and, since 4.10.0, with
 `Suite limit:` set, a listed suite command run without the suite-slot
-wrapper (check (f): the prefix's first word against the command word's
-base name, so `/usr/local/share/dotnet/dotnet test` is caught too, its
+wrapper (check (f): the base name of the prefix's first word against the
+command word's base name, so `/usr/local/share/dotnet/dotnet test` is
+caught too, the prefix's leading assignments and wrappers skipped as a
+command's are, its
 later words as written, whole word by whole word, at a command position,
 so `bash <wrapper> run -- dotnet test` passes) — in the worker's own calls
 and its subagents' alike, since a plugin hook fires for a subagent's tool
