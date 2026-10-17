@@ -127,11 +127,16 @@ suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
 - **A stale mutex.** The mutex holds an `owner` file with the taker's pid.
   It is reclaimed when that pid is dead. It is also reclaimed when it has
   no `owner` file and is older than 10 seconds: a taker killed between the
-  `mkdir` and the write leaves it so.
-- **Running the command.** The wrapper starts the command as a child with
-  `KENSPC_SUITE_SLOT_HELD=1` exported and waits for it. It removes its
-  holder file on exit and on SIGINT, SIGTERM, and SIGHUP; on those signals
-  it first forwards the signal to the child and waits for it. It exits
+  `mkdir` and the write leaves it so. Its age is the current epoch second
+  (`date +%s`) minus the directory's modification time, read with
+  `stat -f %m` (BSD, macOS) and, when that fails, `stat -c %Y` (GNU).
+- **Running the command.** The wrapper starts the command as a background
+  child with `KENSPC_SUITE_SLOT_HELD=1` exported and waits for it with
+  `wait`, so its traps run while the child does. It removes its holder file
+  on exit and on SIGINT, SIGTERM, and SIGHUP; on any of those signals it
+  first sends SIGTERM to the child and waits for it. Why SIGTERM whatever
+  signal arrived: a background child of a non-interactive bash ignores
+  SIGINT, so a forwarded SIGINT would leave the suite running. It exits
   with the command's status.
 - **A nested call.** With `KENSPC_SUITE_SLOT_HELD=1` already set, the
   wrapper runs the command directly and takes no slot. Why: an acceptance
@@ -149,9 +154,12 @@ suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
   <s>s holders <k> — <command, first 80 characters>`. The events are
   `acquired`, `busy`, `released <status>`, `nested`, and
   `reclaimed <stale pid>`. With the variable unset, nothing is logged.
-- **Portability.** The wrapper uses only POSIX tools and bash 3.2 features
-  (no `flock`, which macOS lacks; no `declare -A`), in line with the
-  guards' portability rule in CLAUDE.md.
+- **Portability.** The wrapper uses bash 3.2 features only (no
+  `declare -A`) and no `flock`, which macOS lacks, in line with the guards'
+  portability rule in CLAUDE.md. Its tools are POSIX ones plus three that
+  POSIX does not define but both macOS (BSD) and Linux (GNU, procps)
+  provide: `ps -o lstart=`, `date +%s`, and `stat` in the two spellings
+  above.
 
 ### The field, `Suite limit:`
 
@@ -262,9 +270,13 @@ alias.
   line. It says that the listed commands take a slot in the machine-wide
   lock, at most N at once across every batch on the machine; gives the
   wrapper line; says that exit 75 with the busy line means run the same
-  line again, never the command without the wrapper; and says that a
-  subagent's dispatch carries the same line. It notes that the hook denies
-  an unwrapped listed command. With the field absent, the line is omitted,
+  line again, never the command without the wrapper; says that the Bash
+  call's timeout must allow 90 seconds more than the command alone needs;
+  and says that a subagent's dispatch carries the same line. It notes that
+  the hook denies an unwrapped listed command. Why the timeout: the 90
+  seconds of § The wrapper keep a busy return under the Bash tool's
+  default timeout, but a call that acquires late runs the suite too, and a
+  timeout sized for the suite alone would kill it. With the field absent, the line is omitted,
   as the Allowed files line is.
 - **The S4 task blocks (both).** A case whose command file holds a listed
   prefix is run as `bash <wrapper copy> run -- <shell> <file>`. Why: the
@@ -311,8 +323,15 @@ scripts in that directory are.
 **Acceptance criteria.**
 
 - `bash -n` passes.
-- Under `/bin/bash` (3.2 on macOS) the script runs with no `declare -A`
-  and no `flock`, and step 2's fixtures pass.
+- `grep -nE 'declare -A|flock' plugins/kenspc/skills/autopilot/scripts/suite-slots.sh`
+  prints nothing and exits 1; the same pattern over `CLAUDE.md` prints a
+  line, the positive control.
+- Under `/bin/bash` (3.2 on macOS), with `KENSPC_SUITE_SLOTS_DIR` set to a
+  directory under `$TMPDIR`: `run --limit 1 -- true` exits 0,
+  `run --limit 1 -- sh -c 'exit 3'` exits 3, `run --limit 0 -- true` exits
+  2, and the lock directory holds no `holder-*` file afterwards. Step 2's
+  fixtures are the full check; this step's smoke runs only so step 1 can
+  be accepted before step 2 exists.
 - `bash scripts/check-no-model-names.sh` exits 0.
 
 ### Step 2: Guard fixtures for the wrapper
@@ -375,6 +394,9 @@ cleanup as its only recursive `rm`; git configuration masked).
   and `self-tests run:` counts as before this plan, since no guard file is
   added.
 - Each mutant's red run prints the fixture that caught it.
+- The wall time of `bash scripts/check-autopilot-scripts.sh --self-test`
+  (`time`), measured before and after this step, is recorded in the
+  step's implementation notes (Risks, The guard's run time).
 
 ### Step 3: The driver passes the limit
 
@@ -484,11 +506,14 @@ Each new rule carries its Why in the skill's own words.
 **What.** Run two checks that exercise the parts no fixture reaches.
 
 1. **The hook in a real headless session.** Start one `claude -p` session
-   in a throwaway directory under `$TMPDIR`. Its environment holds
-   `KENSPC_AUTOPILOT_WORKER=1`, write roots for that directory, and
-   `KENSPC_AUTOPILOT_SUITE_COMMANDS=kenspc-probe-suite`. Load the plugin
-   from this worktree with `--plugin-dir`, so the hook under test is the
-   edited one. Prompt: run `kenspc-probe-suite --x` in Bash and quote the
+   in a throwaway directory under `$TMPDIR`, with
+   `--permission-mode bypassPermissions`, so the permission system does
+   not refuse the Bash call before it can run in the red case. Its
+   environment holds `KENSPC_AUTOPILOT_WORKER=1`, write roots for that
+   directory, `KENSPC_AUTOPILOT_SUITE_COMMANDS=kenspc-probe-suite`, and
+   `KENSPC_AUTOPILOT_SUITE_WRAPPER` set to the absolute path of this
+   worktree's `suite-slots.sh`. Load the plugin from this worktree with
+   `--plugin-dir`, so the hook under test is the edited one. Prompt: run `kenspc-probe-suite --x` in Bash and quote the
    error. PASS: the quoted error opens `autopilot rails:` and names the
    wrapper. The command does not exist, so a hook that let it through
    prints `command not found` instead. That is the red case, seen when the
@@ -600,6 +625,31 @@ steps 1–6.
   slot. If it kills with SIGKILL, the command pid kept in the holder file
   holds the slot until the command ends, which is the behavior the ports
   need.
+- **Grandchildren outlive the forwarded signal.** The wrapper signals its
+  child's pid only. A child that does not pass SIGTERM on — `sh <file>`
+  waiting on a foreground `dotnet test`, or `dotnet test` and its test
+  host — can leave the suite's processes running, and the holder is then
+  stale (both its pids gone) while the ports are still in use. Mitigation
+  as planned: none; the window lasts until those processes end. Noted in
+  review: running the child in a process group of its own and signalling
+  the group would close it, at the cost of bash's job control in a
+  non-interactive script.
+- **Two waiters reclaiming one stale mutex.** When a mutex holder dies
+  between its `mkdir` and its release, two waiters that both see its dead
+  pid can each remove the mutex and take it, one removing the other's
+  fresh mutex, and both then count and write holders, so N + 1 holders
+  can run. The window needs a holder killed inside a critical section of a
+  few milliseconds and two waiters polling in the same instant. Mitigation
+  as planned: none. Noted in review: the plan does not say how a reclaim
+  avoids this, and step 2's fixture 7 does not exercise two reclaimers.
+- **The guard's run time.** `check-autopilot-scripts.sh --self-test` runs
+  every fixture once per mutant plus a positive and a restoration pass —
+  thirteen passes once step 2 adds four mutants to the seven — so the
+  wrapper fixtures' sleeps and waits (fixtures 1, 2, 3, 6, and 9) are paid
+  thirteen times. Mitigation: keep each pass's wrapper fixtures within a
+  few seconds of sleep, or run only the wrapper's fixtures for the four
+  wrapper mutants; step 2 records the self-test's duration before and
+  after.
 
 ## Open Questions
 
