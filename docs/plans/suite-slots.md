@@ -100,8 +100,9 @@ suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
   integer, the wrapper exits 2 with a usage line. `--wait` defaults to 90
   seconds.
 - **The lock directory.** `/tmp/kenspc-suite-slots`, created with mode 700
-  when missing. If it exists but is not owned by the current user, the
-  wrapper exits 2 naming the owner. `KENSPC_SUITE_SLOTS_DIR` overrides the
+  when missing. If it exists but is not a directory, the wrapper exits 2
+  naming the path; if it is a directory not owned by the current user, it
+  exits 2 naming the owner. `KENSPC_SUITE_SLOTS_DIR` overrides the
   path; it exists only so the guard's fixtures never touch the machine's
   real lock.
 - **Taking a slot.** The wrapper takes a short mutex
@@ -331,7 +332,8 @@ Step 7 depends on steps 1–6.
 as § The wrapper specifies. Its header comment gives the interface, the
 exit codes (the command's status, 75 busy, 2 usage or lock-directory
 error), the lock layout, the stale rules, and the Why of each, in the
-header style of `temp-candidates.sh`. Mark it executable, as the other
+header style of `temp-candidates.sh`, and names the other-owner refusal
+as the one branch the guard cannot reach. Mark it executable, as the other
 scripts in that directory are.
 
 **Input.** § The wrapper.
@@ -389,8 +391,9 @@ or the log line:
    the signal: its child `sleep` is gone, checked with `ps -p` on that
    pid.
 10. Usage errors exit 2: no `--`, no limit, limit `0`, limit `x`, and a
-    lock directory owned by another user. The last is simulated with a
-    file in the directory's place, since the guard cannot chown.
+    regular file in the lock directory's place. The other-owner branch
+    has no fixture, since the guard cannot chown; step 1's header names
+    it as unchecked.
 
 Self-test mutants, each written to its own file with `sed` and each
 required to turn the guard red:
@@ -415,7 +418,10 @@ cleanup as its only recursive `rm`; git configuration masked).
 - `bash scripts/check-all.sh --self-test` prints the same `guards run:`
   and `self-tests run:` counts as before this plan, since no guard file is
   added.
-- Each mutant's red run prints the fixture that caught it.
+- Each mutant's red run prints `OK    mutant '<name>': red (<n> assertions
+  failed)`, the line the guard's existing mutants print; the failing
+  assertions themselves go to stderr, which the self-test discards as it
+  does today.
 - The wall time of `bash scripts/check-autopilot-scripts.sh --self-test`
   (`time`), measured before and after this step, is recorded in the
   step's implementation notes (Risks, The guard's run time).
@@ -529,10 +535,13 @@ Each new rule carries its Why in the skill's own words.
 - `bash scripts/check-all.sh` exits 0, with
   `check-autopilot-rails-hook.sh` among the passing guards, since it reads
   the preamble template.
-- `grep -c 'Suite limit' plugins/kenspc/skills/autopilot/SKILL.md` counts
-  at least the table row, the grammar paragraph, the settings line, and
-  preamble § 6.
-- `grep -n 'kenspc-suite-slots'` shows preamble § 3.
+- `grep -n 'Suite limit' plugins/kenspc/skills/autopilot/SKILL.md` shows
+  the table row, the grammar paragraph, the start checks' settings-stop
+  sentence, and preamble § 6's line; `grep -n 'suite limit <n>'` over the
+  same file shows the settings line template, which is lower-case like
+  the line's other fields.
+- `grep -n 'kenspc-suite-slots' plugins/kenspc/skills/autopilot/SKILL.md`
+  shows preamble § 3.
 
 ### Step 6: Live checks on this Mac
 
