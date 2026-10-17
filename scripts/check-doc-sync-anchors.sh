@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-doc-sync-anchors.sh
 #
-# Anchor guard for the planning chain: presence for five anchors across
+# Anchor guard for the planning chain: presence for six anchors across
 # eleven files, and one exact count. Two paths run through it. The
 # documentation path: a plan's Documentation impact element becomes the task
 # document's Doc-sync task, whose promotion step reports what it could not
@@ -9,8 +9,10 @@
 # Open Questions entry marked `needs prototype` is what generate-plan stops
 # on and what the prototype skill settles, and the Prototype line the skill
 # writes into an answered entry is copied from generate-brief's grammar.
-# Five load-bearing anchors carry those paths across eleven files, and every
-# file in an anchor's group must keep it:
+# Five load-bearing anchors carry those paths across eleven files, and a
+# sixth, `## Checks run`, carries task-implementer's check evidence into the
+# report task-implement renders; every file in an anchor's group must keep
+# it:
 #
 #   `Documentation impact`      (the plan element)
 #       plugins/kenspc/skills/generate-plan/SKILL.md
@@ -26,6 +28,9 @@
 #       plugins/kenspc/agents/task-document-reviewer.md
 #       plugins/kenspc/agents/task-implementer.md
 #   `Decisions needing a home`  (the Schema D / Schema G section)
+#       plugins/kenspc/agents/task-implementer.md
+#       plugins/kenspc/skills/task-implement/SKILL.md
+#   `## Checks run`             (the Schema D / Schema G check evidence)
 #       plugins/kenspc/agents/task-implementer.md
 #       plugins/kenspc/skills/task-implement/SKILL.md
 #   `needs prototype`           (the Open Questions status word)
@@ -81,7 +86,7 @@
 #                  present in the copied task example, the Prototype line in
 #                  the copied prototype skill and generate-brief, and the
 #                  leftovers command twice in the prototype skill (exit 2 if
-#                  not), and runs the main check (must exit 0). Then five
+#                  not), and runs the main check (must exit 0). Then six
 #                  mutations, each restored by recopying before the next,
 #                  must each exit 1: `Doc-sync` renamed to `Docsync` in the
 #                  copied task example; "`<location>`, removed in the next
@@ -91,7 +96,9 @@
 #                  commands alone with `--ignored=matching` changed to
 #                  `--ignored`; and a third copy of the leftovers command
 #                  appended on the line that holds the first, so a count by
-#                  line would still read two. Then the main check runs on
+#                  line would still read two; and `## Checks run` renamed
+#                  to `## Checks made` in the copied task-implement skill.
+#                  Then the main check runs on
 #                  the reverted copy (must exit 0). Opt-in: invocation with
 #                  no arguments behaves unchanged. Exit 0 on self-test pass,
 #                  1 on unexpected exit codes, 2 on fixture-stale.
@@ -119,6 +126,8 @@ ANCHOR_CHECKS=(
     "Doc-sync|plugins/kenspc/agents/task-implementer.md"
     "Decisions needing a home|plugins/kenspc/agents/task-implementer.md"
     "Decisions needing a home|plugins/kenspc/skills/task-implement/SKILL.md"
+    "## Checks run|plugins/kenspc/agents/task-implementer.md"
+    "## Checks run|plugins/kenspc/skills/task-implement/SKILL.md"
     "needs prototype|plugins/kenspc/skills/generate-brief/SKILL.md"
     "needs prototype|plugins/kenspc/skills/generate-plan/SKILL.md"
     "needs prototype|plugins/kenspc/skills/prototype/SKILL.md"
@@ -174,8 +183,9 @@ run_main_logic() {
     if [[ "$drift_found" -ne 0 ]]; then
         echo "" >&2
         echo "The planning-chain anchors (Documentation impact, Doc-sync," >&2
-        echo "Decisions needing a home, needs prototype, and the Prototype line) must" >&2
-        echo "stay spelled the same in every file that writes, checks, or renders them." >&2
+        echo "Decisions needing a home, ## Checks run, needs prototype, and the Prototype" >&2
+        echo "line) must stay spelled the same in every file that writes, checks, or" >&2
+        echo "renders them." >&2
         echo "Restore the missing label, or change it in every file of its group and in" >&2
         echo "this guard together." >&2
     fi
@@ -196,7 +206,7 @@ run_main_logic() {
         return 1
     fi
 
-    echo "OK    doc-sync-anchors — all five anchors present in every file of their groups"
+    echo "OK    doc-sync-anchors — all six anchors present in every file of their groups"
     echo "OK    leftovers command — exactly $LEFTOVERS_WANT occurrences in $LEFTOVERS_REL"
     return 0
 }
@@ -204,14 +214,15 @@ run_main_logic() {
 # --- Self-test mode ---------------------------------------------------------
 #
 # Mutation regression fixture. Copies the eleven target files into a temp
-# workdir, runs the main check (expect 0), then five mutations, each
+# workdir, runs the main check (expect 0), then six mutations, each
 # restored by recopying (expect 1 each): `Doc-sync` renamed to `Docsync` in
 # the task example (the label is then absent from that file); the prototype
 # skill's Prototype line changed to "removed in a later commit", then
 # generate-brief's; the first leftovers command alone given `--ignored` for
 # `--ignored=matching` (the count drops to one); and a third leftovers
 # command appended on the first one's line (the count rises to three, where
-# a count by line would read two). Finally the reverted copy (expect 0).
+# a count by line would read two); and `## Checks run` renamed in the
+# task-implement skill. Finally the reverted copy (expect 0).
 # The presence check is presence-only by design, so renaming only the example's
 # `### Task 6: Doc-sync` heading is not caught while its closing note still
 # says `Doc-sync`.
@@ -377,6 +388,26 @@ run_self_test() {
     cp "$REPO_ROOT/$LEFTOVERS_REL" "$proto_file"
     if [[ "$rc" -ne 1 ]]; then
         echo "FAIL  self-test negative path (third leftovers command): expected exit 1 on mutated copy, got $rc" >&2
+        return 1
+    fi
+
+    # Mutation 6: the check-evidence heading renamed in the skill that
+    # renders it.
+    local checks_rel='plugins/kenspc/skills/task-implement/SKILL.md'
+    local checks_file="$WORK/$checks_rel"
+    if ! grep -qF -- '## Checks run' "$checks_file"; then
+        echo "FAIL  self-test fixture stale: '## Checks run' not found in $checks_file" >&2
+        return 2
+    fi
+    sed -i.bak 's|## Checks run|## Checks made|g' "$checks_file" && rm "$checks_file.bak"
+    if grep -qF -- '## Checks run' "$checks_file"; then
+        echo "FAIL  self-test: Checks run mutation did not apply in $checks_file" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$checks_rel" "$checks_file"
+    if [[ "$rc" -ne 1 ]]; then
+        echo "FAIL  self-test negative path (Checks run renamed): expected exit 1 on mutated copy, got $rc" >&2
         return 1
     fi
 

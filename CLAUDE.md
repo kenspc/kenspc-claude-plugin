@@ -811,7 +811,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   instance); it catches a rename of either label in one file but not the
   other.
 - `check-doc-sync-anchors.sh` — guards that the five planning-chain
-  anchors stay present in every file that writes, checks, or renders them.
+  anchors, and the `## Checks run` heading (`task-implementer.md`,
+  `task-implement/SKILL.md`; 4.9.0), stay present in every file that
+  writes, checks, or renders them.
   Three carry the documentation path: `Documentation impact`
   (`generate-plan/SKILL.md`, `references/plan-document-example.md`,
   `plan-document-reviewer.md`, `generate-task/SKILL.md`,
