@@ -32,6 +32,9 @@
 #      held by:" line, one line per holder after it (age, cwd, command),
 #      goes to stderr; that line, not the code, tells this apart from a
 #      command that exits 75 itself. The caller runs the same line again.
+#      Its opening, "suite-slots: busy", is fixed, since the rails hook's
+#      reason and the skill name it; every other line this script writes
+#      to stderr opens "suite-slots.sh:", as its sibling scripts' lines do.
 #   2  a usage error — no run, no --, no command, a limit that is not a
 #      positive integer, a wait that is not a whole number — or a lock
 #      directory that is not a directory, is owned by another user, or
@@ -220,7 +223,7 @@ log_event() { # <event> <waited> <holders>
   if ! printf '%s %s pid %s waited %ss holders %s — %s\n' \
       "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$$" "$2" "$3" \
       "${cmd_text:0:$LOG_COMMAND_CHARS}" >> "$KENSPC_AUTOPILOT_SUITE_LOG" 2>/dev/null; then
-    echo "suite-slots: cannot append to the log: $KENSPC_AUTOPILOT_SUITE_LOG" >&2
+    echo "suite-slots.sh: cannot append to the log: $KENSPC_AUTOPILOT_SUITE_LOG" >&2
   fi
 }
 
@@ -240,15 +243,15 @@ if [ ! -e "$LOCK_DIR" ] && [ ! -L "$LOCK_DIR" ]; then
   mkdir -m 700 "$LOCK_DIR" 2>/dev/null
 fi
 if [ ! -d "$LOCK_DIR" ]; then
-  echo "suite-slots: the lock directory is not a directory: $LOCK_DIR" >&2
+  echo "suite-slots.sh: the lock directory is not a directory: $LOCK_DIR" >&2
   exit 2
 fi
 if [ ! -O "$LOCK_DIR" ]; then
-  echo "suite-slots: the lock directory $LOCK_DIR is owned by $(ls -ld "$LOCK_DIR" | awk '{print $3}'), not by this user" >&2
+  echo "suite-slots.sh: the lock directory $LOCK_DIR is owned by $(ls -ld "$LOCK_DIR" | awk '{print $3}'), not by this user" >&2
   exit 2
 fi
 if [ ! -w "$LOCK_DIR" ]; then
-  echo "suite-slots: the lock directory cannot be written: $LOCK_DIR" >&2
+  echo "suite-slots.sh: the lock directory cannot be written: $LOCK_DIR" >&2
   exit 2
 fi
 
@@ -367,7 +370,7 @@ wrapper_start=$(start_of "$$")
 # live holder would read as stale and be reclaimed, and the count would let
 # every caller in. A ps without -o lstart (BusyBox, MSYS) prints nothing.
 if [ -z "$wrapper_start" ]; then
-  echo "suite-slots: ps -o lstart= printed no start time for this wrapper, so no holder's liveness can be judged" >&2
+  echo "suite-slots.sh: ps -o lstart= printed no start time for this wrapper, so no holder's liveness can be judged" >&2
   exit 2
 fi
 cwd=$(pwd)
@@ -422,7 +425,7 @@ while :; do
       waited=$((taken - t0))
       if ! write_holder "" ""; then
         release_mutex
-        echo "suite-slots: cannot write the holder file: $holder" >&2
+        echo "suite-slots.sh: cannot write the holder file: $holder" >&2
         exit 2
       fi
       holder_written=1
