@@ -62,7 +62,15 @@ The header comment gives the interface, the exit codes (the command's
 status, 75 busy, 2 usage or lock-directory error), the lock layout, the
 stale rules, and the Why of each, in the header style of `temp-candidates.sh`
 in the same directory, and names the other-owner refusal as the one branch
-the guard cannot reach. Bash 3.2 features only: no `declare -A`, no
+the guard cannot reach. It also names, as known gaps the wrapper accepts
+(plan § Risks and Mitigations), the two the plan leaves unmitigated: the
+forwarded SIGTERM reaches the child's pid only, so grandchildren that do not
+pass it on (`sh <file>` waiting on a foreground suite, a test host) can keep
+the ports in use after the holder turns stale; and two waiters that both see
+a dead mutex owner can each reclaim the mutex, one removing the other's
+fresh one, so N + 1 holders can run. Why in the header: the plan is deleted
+once it ships, and the header is where a later reader of the wrapper looks.
+Bash 3.2 features only: no `declare -A`, no
 `flock`. Mark the file executable, as the other scripts in that directory
 are.
 
@@ -78,6 +86,9 @@ are.
   exits 2; the lock directory holds no `holder-*` file afterwards. The
   directory is then removed and its absence shown.
 - `bash scripts/check-no-model-names.sh` exits 0.
+- `grep -n -i 'grandchild' plugins/kenspc/skills/autopilot/scripts/suite-slots.sh`
+  and `grep -n 'N + 1' plugins/kenspc/skills/autopilot/scripts/suite-slots.sh`
+  each print a header line.
 
 ---
 
