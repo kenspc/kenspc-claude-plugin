@@ -443,7 +443,20 @@ Files: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 10: Autopilot worker blocks — S4 runs its cases itself, S5 and S6 report their checks
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the S4 Why sits in its own short paragraph right after the
+  case list and its `[Run notes: …]` line ("Run them in this session, one
+  after another, not through a subagent. Why: …"), since the
+  "Then run each case yourself, in the order listed" sentence ends in the
+  colon that introduces the list. The new pre-flight behavior (both reports
+  quote the exit codes; a non-zero one is a pre-flight failure) and its Why
+  are stated once, in Phase 4's description of S6; the user report's list
+  and the reviewer report's field carry the form without repeating the Why.
+- Changes/tradeoffs: S5's reply line names `<command> → exit <n>` per check
+  with no log path, as the follow-up ruling says. The S6 reply line names
+  each pre-flight command in the same `<command> → exit <n>` form.
 
 Depends on: Task 9
 

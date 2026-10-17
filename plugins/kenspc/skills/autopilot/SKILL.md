@@ -1879,9 +1879,13 @@ brief-entry case since S1 commits the spec alone, is left where it is and
 named in both reports as the user's to commit or discard, since `git rm` on
 an untracked path fails and the rails allow no other deletion inside the
 repository; one release commit in the repository's convention; the
-pre-flight block runs and its two count lines are in S6's reply; no tag, no
-push. With `Version: none` in plugin mode, S6 makes the removal commit
-only, and the reports say the release was not prepared. Why:
+pre-flight block runs and its two count lines and each command's exit code
+are in S6's reply; no tag, no push. Both reports quote those exit codes,
+and name a non-zero one as a pre-flight failure. With `Version: none` in
+plugin mode, S6 makes the removal commit only, and the reports say the
+release was not prepared. Why the exit codes: evidence nobody reads is not
+confirmation, and the two count lines alone may be missing when a command
+before them failed. Why:
 stack-agnostic in form — the checklist and the project's instruction files
 are read — and the repository's own procedure in substance.
 
@@ -2070,7 +2074,8 @@ begins with `/`, so none can be read as an option.
   the batch built, the release commit, what needs the user (tag, push,
   release; any stop or deferred item; a question not received, with the
   cause the worker quoted or the causes to check; a failed check at S6's
-  return, with the commits it names; work S6 left undone for a point
+  return, with the commits it names — a non-zero pre-flight exit code
+  named as a pre-flight failure; work S6 left undone for a point
   raised after the removal; a change S6 left to the spec, with what the
   status command printed; each breach the main session ruled benign, with
   the breach and the ruling; each task S3 left BLOCKED, with its
@@ -2677,14 +2682,18 @@ appended — so the comparison is seen able to fail. When the extraction
 exits non-zero, the file names differ, or a file differs, run nothing and
 reply with its output, the listings, or the cmp output.
 
-Then run each case, in the order listed, a command as `<shell> <file>`,
-the file being in <workspace>/_prompts/<batch>-s4-cmds/:
+Then run each case yourself, in the order listed, a command as
+`<shell> <file>`, the file being in <workspace>/_prompts/<batch>-s4-cmds/:
 
 <n>. the command in `<nn>.cmd` — PASS: <criterion>[ (optional)]
 <n>. the command in `<nn>.corrected.cmd` — PASS: <criterion>[ (optional)] — in the corrected form (<clarification>)
 <n>. <the case's text> — PASS: <criterion>[ (optional)]
 
 [Run notes: <the Acceptance: field's note>]
+
+Run them in this session, one after another, not through a subagent. Why:
+the cases run at one HEAD in one working tree and may start servers or
+suites, so they share the tree and the machine's ports.
 
 A command you add to inspect a result — reading a log, listing a
 directory — carries no redirect: a redirect to a path outside the
@@ -2820,8 +2829,9 @@ Fix each defect[ inside the allowed files], run the checks the project's
 instruction files name for a change of this kind, and commit each fix
 alone — one commit per defect, in the repository's convention, touching
 nothing its finding does not need. Reply with one line per defect: its ID,
-the commit hash, and what changed — or, for a defect you did not fix, its
-ID, `not fixed`, and why.
+the commit hash, what changed, and each check you ran for it,
+`<command> → exit <n>` — or, for a defect you did not fix, its ID,
+`not fixed`, and why.
 ````
 
 - **S6, the removal commit** — Phase 4: repo mode with
@@ -2909,9 +2919,10 @@ release commit in the repository's convention:
 - `git rm` <spec path> and <task document path>[ and the brief
   <brief path>].
 
-[Run the checklist's pre-flight block; its two count lines go in your reply.]
+[Run the checklist's pre-flight block; its two count lines and each command's exit code go in your reply.]
 No tag, no push, no release: those are the user's. Reply with each
-commit's hash and subject[ and the two count lines].
+commit's hash and subject[, the two count lines, and each pre-flight
+command with its exit code, `<command> → exit <n>`].
 ````
 
 ### The driver
@@ -3162,7 +3173,7 @@ decisions the user has yet to see.
   <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed) | no clarification commit (S6 left the spec changed)>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
-- Byte-identity / guards / counts: <the pre-flight lines in plugin mode, or none: no checklist>
+- Byte-identity / guards / counts: <the pre-flight lines in plugin mode — the two count lines, and each pre-flight command beside them with its exit code, `<command> → exit <n>`, a non-zero one named as a pre-flight failure — or none: no checklist>
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check | none named; S3b is the last review, the walk follows | none named; S3 is the last review, the walk follows
 - Walk: <off | walked (<tag>[, <tag>…]): <flow> PASS|FAIL[ — <classification>]; …; <walk.md path> | nothing to walk: <reason> | not walked: <reason> | walk: cut by budget>
 - Standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>
