@@ -15,9 +15,14 @@
 #
 #   deny   exit 2, empty stdout, a reason on stderr that names the
 #          permitted route, or, for a field the hook cannot read, says no
-#          route applies and asks for the denial to be reported
+#          route applies and asks for the denial to be reported; for a
+#          listed suite command (the deny-suite expectation), the route is
+#          the suite-slot wrapper's line, naming the fixture wrapper path,
+#          with no .trash and none of the no-route text
 #   allow  exit 0, empty stdout
-#   inert  exit 0, empty stdout, empty stderr (the marker is not 1)
+#   inert  exit 0, empty stdout, empty stderr (the marker is not 1, or,
+#          for a listed suite command with the commands variable empty,
+#          check (f) has nothing to check)
 #
 # The fixtures cover every recursive rm spelling and command position the
 # hook lists (denied), words quoted as $'...' or $"...", backslash escapes,
@@ -59,7 +64,17 @@
 # host:path source
 # (denied, the reason's route to ask the main session), and git clone of
 # a local path, git status, git --git-dir .git status, type gh, grep gh f,
-# command -v gh, and which gh (allowed); an input whose tool
+# command -v gh, and which gh (allowed); with the suite variables set to
+# KENSPC_AUTOPILOT_SUITE_COMMANDS='dotnet test|pnpm test' and a fixture
+# wrapper path (check (f)), dotnet test, dotnet test --filter X,
+# cd a && dotnet test, sudo dotnet test, time pnpm test, echo x; pnpm test,
+# $(dotnet test), and /usr/local/share/dotnet/dotnet test (denied, the
+# reason's route the wrapper's line), and
+# bash /w/suite-slots.sh run -- dotnet test, echo "dotnet test",
+# grep 'dotnet test' f, dotnet build, dotnet testx, pnpm install, and a
+# dotnet test inside a heredoc body (allowed), and dotnet test with the
+# commands variable empty and with the marker unset (inert) — every other
+# fixture running with the two suite variables empty; an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
 # Bash input over the hook's length cap
@@ -71,7 +86,8 @@
 # /etc, and 6000 distinct targets, over the hook's target cap, each denied
 # in under half the hook's 5-second timeout (timed); and every
 # denied fixture again
-# without the marker and with the marker 0 (inert). Why the fixtures carry
+# without the marker and with the marker 0 (inert), each with the suite
+# variables it was denied with. Why the fixtures carry
 # the live input's shape: a hook that parses a harness-owned format goes
 # stale silently when the format changes, and a fixture shaped by guesswork
 # would keep passing.
@@ -124,7 +140,7 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against eight mutants,
+#                  unmodified copy (must pass), then against nine mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
@@ -137,8 +153,10 @@
 #                  fixture, which must be the first red, while the heading
 #                  check on the same copy stays green, since the other two
 #                  reasons still carry the phrase), the redirection check
-#                  removed (any fixture red), and the gh check removed (the
-#                  "gh issue view" fixture, which must be the first red).
+#                  removed (any fixture red), the gh check removed (the
+#                  "gh issue view" fixture, which must be the first red),
+#                  and the suite check (f) removed (the "dotnet test"
+#                  fixture, which must be the first red).
 #                  Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
@@ -252,7 +270,10 @@ make_input() {
 }
 
 # decide <hook> <marker or -> <roots> <input> [<cpu seconds>]: runs the
-# hook, sets RC, OUT, ERR, and GOT (deny, allow, inert, or other). The input
+# hook, sets RC, OUT, ERR, and GOT (deny, allow, inert, or other). The
+# hook's KENSPC_AUTOPILOT_SUITE_COMMANDS and KENSPC_AUTOPILOT_SUITE_WRAPPER
+# are the fixture's SUITE_CMDS and SUITE_WRAPPER, empty unless a fixture
+# sets them, whatever the guard's own environment holds. The input
 # goes through a file, not a pipe: the inert hook exits without reading it,
 # and a pipe's writer would then fail and make the status its own. With
 # <cpu seconds>, the hook and its awk run under that CPU limit where the
@@ -262,10 +283,11 @@ decide() {
     printf '%s' "$4" > "$WORK/input.json"
     RC=0
     OUT=$(
-        unset KENSPC_AUTOPILOT_WORKER KENSPC_AUTOPILOT_WRITE_ROOTS
+        unset KENSPC_AUTOPILOT_WORKER KENSPC_AUTOPILOT_WRITE_ROOTS KENSPC_AUTOPILOT_SUITE_COMMANDS KENSPC_AUTOPILOT_SUITE_WRAPPER
         export HOME="$FX_HOME" TMPDIR="$FX_TMPDIR" USER=kenspc-fixture
         if [[ "$marker" != "-" ]]; then export KENSPC_AUTOPILOT_WORKER="$marker"; fi
         export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
+        export KENSPC_AUTOPILOT_SUITE_COMMANDS="$SUITE_CMDS" KENSPC_AUTOPILOT_SUITE_WRAPPER="$SUITE_WRAPPER"
         if [[ -n "$cpu" ]]; then ulimit -t "$cpu" 2>/dev/null || true; fi
         "$HOOK_BASH" "$hook" < "$WORK/input.json" 2>"$WORK/stderr.txt"
     ) || RC=$?
@@ -295,16 +317,22 @@ UNREADABLE_REPORT="list this denial with its reason under ## Rail observations a
 # The route a gh or remote-git denial names, and the phrase the preamble's
 # § 3 shares with it.
 ASK_ROUTE="ask the main session"
-D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
+# The suite variables of the current fixture (check (f)), and the wrapper
+# path the suite fixtures hand the hook, which its reason must name.
+SUITE_CMDS=""
+SUITE_WRAPPER=""
+FX_SUITE_WRAPPER=$FX_BASE/workspace/_prompts/fixture-suite-slots.sh
+D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=(); D_SCMDS=(); D_SWRAP=()
 
 # fx <hook> <label> <expect> <marker or -> <roots> <tool> <cwd> <payload>
 # <expect> deny-unreadable is a deny whose reason offers no route and asks
 # for the denial to be reported, as a field the hook cannot read gets;
 # deny-ask is a deny whose route is to ask the main session, as gh and
-# remote git get.
+# remote git get; deny-suite is a deny whose route is the suite-slot
+# wrapper's line, naming FX_SUITE_WRAPPER, as a listed suite command gets.
 fx() {
     local hook="$1" label="$2" expect="$3" marker="$4" roots="$5" tool="$6" cwd="$7" payload="$8" ok=0 want="$3"
-    if [[ "$expect" == deny-unreadable || "$expect" == deny-ask ]]; then want=deny; fi
+    if [[ "$expect" == deny-unreadable || "$expect" == deny-ask || "$expect" == deny-suite ]]; then want=deny; fi
     decide "$hook" "$marker" "$roots" "$(make_input "$tool" "$cwd" "$payload")"
     if [[ "$GOT" == "$want" ]]; then
         ok=1
@@ -324,6 +352,13 @@ fx() {
         && [[ "$ERR" != *"$ASK_ROUTE"* || "$ERR" == *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
         ok=0
         GOT="deny whose reason does not say '$ASK_ROUTE', or names .trash or '$UNREADABLE_NO_ROUTE'"
+    fi
+    # A listed suite command's denial names the wrapper path as its route,
+    # and neither the .trash route nor the no-route reason.
+    if [[ "$expect" == deny-suite && "$ok" -eq 1 ]] \
+        && [[ "$ERR" != *"$FX_SUITE_WRAPPER"* || "$ERR" == *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
+        ok=0
+        GOT="deny whose reason does not name the wrapper $FX_SUITE_WRAPPER, or names .trash or '$UNREADABLE_NO_ROUTE'"
     fi
     # Each unreadable-field reason must carry the phrase stop condition 11
     # matches on, so a reword of one field's reason turns its fixture red.
@@ -355,6 +390,7 @@ fx_deny() {
     fx "$hook" "$label" "$expect" 1 "$roots" "$tool" "$cwd" "$payload"
     n=${#D_LABEL[@]}
     D_LABEL[$n]=$label; D_ROOTS[$n]=$roots; D_TOOL[$n]=$tool; D_CWD[$n]=$cwd; D_PAYLOAD[$n]=$payload
+    D_SCMDS[$n]=$SUITE_CMDS; D_SWRAP[$n]=$SUITE_WRAPPER
 }
 
 # fx_timed <hook> <label> <limit> <payload> [<reason> [<roots>]]: a Bash
@@ -386,13 +422,14 @@ fx_timed() {
     fi
     n=${#D_LABEL[@]}
     D_LABEL[$n]=$label; D_ROOTS[$n]=$roots; D_TOOL[$n]=Bash; D_CWD[$n]=$FX_REPO; D_PAYLOAD[$n]=$payload
+    D_SCMDS[$n]=$SUITE_CMDS; D_SWRAP[$n]=$SUITE_WRAPPER
 }
 
 # run_fixtures <hook>: every fixture; returns 1 when any decision differs.
 run_fixtures() {
     local hook="$1" r="$FX_ROOTS" t k
-    FAILS=0; FIRST_RED=""; TIMED=""
-    D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=()
+    FAILS=0; FIRST_RED=""; TIMED=""; SUITE_CMDS=""; SUITE_WRAPPER=""
+    D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=(); D_SCMDS=(); D_SWRAP=()
 
     # rm spellings, denied.
     fx_deny "$hook" "rm spelling -r" "$r" Bash "$FX_REPO" 'rm -r build'
@@ -600,6 +637,32 @@ run_fixtures() {
     fx "$hook" "command -v gh" allow 1 "$r" Bash "$FX_REPO" 'command -v gh'
     fx "$hook" "which gh" allow 1 "$r" Bash "$FX_REPO" 'which gh'
 
+    # Check (f): with two suite prefixes listed, a listed command at a
+    # command position is denied with the wrapper's line as the route; the
+    # wrapper's own line, quoted mentions, other subcommands, a longer word,
+    # and a heredoc body are allowed. The variables are cleared again after,
+    # so the fixtures below run with them empty, as those above do.
+    SUITE_CMDS='dotnet test|pnpm test'; SUITE_WRAPPER=$FX_SUITE_WRAPPER
+    fx_deny "$hook" "dotnet test" "$r" Bash "$FX_REPO" 'dotnet test' deny-suite
+    fx_deny "$hook" "dotnet test --filter X" "$r" Bash "$FX_REPO" 'dotnet test --filter X' deny-suite
+    fx_deny "$hook" "cd a && dotnet test" "$r" Bash "$FX_REPO" 'cd a && dotnet test' deny-suite
+    fx_deny "$hook" "sudo dotnet test" "$r" Bash "$FX_REPO" 'sudo dotnet test' deny-suite
+    fx_deny "$hook" "time pnpm test" "$r" Bash "$FX_REPO" 'time pnpm test' deny-suite
+    fx_deny "$hook" "echo x; pnpm test" "$r" Bash "$FX_REPO" 'echo x; pnpm test' deny-suite
+    fx_deny "$hook" "\$(dotnet test)" "$r" Bash "$FX_REPO" '$(dotnet test)' deny-suite
+    fx_deny "$hook" "/usr/local/share/dotnet/dotnet test" "$r" Bash "$FX_REPO" '/usr/local/share/dotnet/dotnet test' deny-suite
+    fx "$hook" "the suite wrapper's line" allow 1 "$r" Bash "$FX_REPO" 'bash /w/suite-slots.sh run -- dotnet test'
+    fx "$hook" "echo \"dotnet test\"" allow 1 "$r" Bash "$FX_REPO" 'echo "dotnet test"'
+    fx "$hook" "grep 'dotnet test' f" allow 1 "$r" Bash "$FX_REPO" "grep 'dotnet test' f"
+    fx "$hook" "dotnet build" allow 1 "$r" Bash "$FX_REPO" 'dotnet build'
+    fx "$hook" "dotnet testx" allow 1 "$r" Bash "$FX_REPO" 'dotnet testx'
+    fx "$hook" "pnpm install" allow 1 "$r" Bash "$FX_REPO" 'pnpm install'
+    fx "$hook" "dotnet test in a heredoc body" allow 1 "$r" Bash "$FX_REPO" $'cat <<EOF > notes.txt\ndotnet test\nEOF'
+    fx "$hook" "dotnet test with the marker unset" inert - "$r" Bash "$FX_REPO" 'dotnet test'
+    SUITE_CMDS=""
+    fx "$hook" "dotnet test with the commands variable empty" inert 1 "$r" Bash "$FX_REPO" 'dotnet test'
+    SUITE_WRAPPER=""
+
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"
     fx "$hook" "quoted mention git commit -m" allow 1 "$r" Bash "$FX_REPO" 'git commit -m "… rm -rf …"'
@@ -695,13 +758,17 @@ run_fixtures() {
     fx_deny "$hook" "Bash with no readable tool_name" "$r" Bash/no-tool-name "$FX_REPO" 'ls' deny-unreadable
     fx_deny "$hook" "Write with no readable tool_name" "$r" Write/no-tool-name "$FX_REPO" "$FX_REPO/src/a.txt" deny-unreadable
 
-    # Every denied fixture again without the marker, and with the marker 0.
+    # Every denied fixture again without the marker, and with the marker 0,
+    # each with the suite variables it was denied with, so the marker is
+    # seen to gate check (f) too.
     k=0
     while [[ "$k" -lt "${#D_LABEL[@]}" ]]; do
+        SUITE_CMDS=${D_SCMDS[$k]}; SUITE_WRAPPER=${D_SWRAP[$k]}
         fx "$hook" "${D_LABEL[$k]} (marker unset)" inert - "${D_ROOTS[$k]}" "${D_TOOL[$k]}" "${D_CWD[$k]}" "${D_PAYLOAD[$k]}"
         fx "$hook" "${D_LABEL[$k]} (marker 0)" inert 0 "${D_ROOTS[$k]}" "${D_TOOL[$k]}" "${D_CWD[$k]}" "${D_PAYLOAD[$k]}"
         k=$((k + 1))
     done
+    SUITE_CMDS=""; SUITE_WRAPPER=""
 
     [[ "$FAILS" -eq 0 ]]
 }
@@ -909,13 +976,13 @@ run_self_test() {
         return 1
     fi
 
-    # Eight mutants, each a literal replacement in a fresh copy. The
+    # Nine mutants, each a literal replacement in a fresh copy. The
     # constant-time push mutant copies every word collected so far on each
     # push, the last-character check mutant matches the whole word
     # against [<>]$ on each | or &, as the hook once did, and the
     # command-reason-phrase mutant rewords the phrase in one of the three
     # unreadable-field reasons, which only the fixture assertion catches.
-    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check gh-check; do
+    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check gh-check suite-check; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -941,6 +1008,9 @@ run_self_test() {
             gh-check)
                 old='if (bname(w[i]) == "gh")'
                 new='if (0 && bname(w[i]) == "gh")' ;;
+            suite-check)
+                old='if (nsuite > 0 && suite(i)) return'
+                new='if (0 && nsuite > 0 && suite(i)) return' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?
@@ -960,6 +1030,7 @@ run_self_test() {
             constant-time-push) want=$SUBST_TIMED_LABEL ;;
             command-reason-phrase) want="Bash with no readable command field" ;;
             gh-check) want="gh issue view" ;;
+            suite-check) want="dotnet test" ;;
             *) want="" ;;
         esac
         if [[ -n "$want" && "$FIRST_RED" != "$want" ]]; then

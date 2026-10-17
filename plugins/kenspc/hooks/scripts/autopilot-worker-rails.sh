@@ -18,6 +18,12 @@
 #   KENSPC_AUTOPILOT_WRITE_ROOTS  the roots a file-tool write may land under,
 #                                 joined by "|": the worker's repository,
 #                                 the workspace, $TMPDIR, /tmp, /private/tmp
+# and the batch's suite limit, exported the same way from its
+# `Suite limit:` field, empty without one:
+#   KENSPC_AUTOPILOT_SUITE_COMMANDS  the listed suite command prefixes,
+#                                 joined by "|"; check (f) reads them
+#   KENSPC_AUTOPILOT_SUITE_WRAPPER   the suite-slot wrapper copy's absolute
+#                                 path, named in (f)'s reason
 #
 # With the marker set, it denies:
 #   (a) a Bash command that runs rm with a recursive flag (-r, -R,
@@ -76,7 +82,29 @@
 #       gets anything the work needs from GitHub. Why: a denial is not a
 #       breach, so the run goes on, and the hook reaches a subagent that
 #       never saw the preamble — a subagent's read-only gh call once
-#       stopped a run as a breach.
+#       stopped a run as a breach;
+#   (f) with KENSPC_AUTOPILOT_SUITE_COMMANDS non-empty, a Bash command that
+#       runs a listed suite command at a command position, the positions (a)
+#       and (e) recognize, their skips included. Each prefix's first word
+#       is compared with the command word's base name, as (a) compares rm,
+#       and its later words with the words after it as written, whole word
+#       by whole word: with dotnet test listed, dotnet test --filter X,
+#       sudo dotnet test, $(dotnet test), and
+#       /usr/local/share/dotnet/dotnet test are denied, while dotnet testx,
+#       dotnet build, echo "dotnet test", a heredoc body, and
+#       bash <wrapper> run -- dotnet test, where dotnet is an argument of
+#       bash, are allowed. Every run takes a slot, whatever its arguments.
+#       The reason names the prefix and the route: run it through the
+#       suite-slot wrapper, bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run --
+#       <the command>, and on exit 75 with a "suite-slots: busy" line run
+#       the same line again. With the variable empty, (f) checks nothing.
+#       Why: the machine-wide limit on heavy suites holds only when every
+#       run takes a slot, more than about two runs of one integration suite
+#       at once exhausted a machine's local ports, and a worker's subagents
+#       never see the preamble that says so. Known misses of (f): a listed
+#       command reached through a script file, bash -c, make, eval, a
+#       variable, or an alias, or after a wrapper the scan does not skip
+#       (timeout, nice).
 # An input whose tool_name cannot be read, or a Bash input whose
 # tool_input.command cannot be read, is denied as well: were a Claude Code
 # release to rename either field, the calls would stop loudly rather than
@@ -91,6 +119,7 @@
 # The reason names the rail and the permitted route: discard by mv into the
 # workspace's .trash/<name>-<timestamp>/, and write under the repository,
 # the workspace, or scratch; for gh and remote git, to ask the main session;
+# for a listed suite command, the suite-slot wrapper's line;
 # for a field that cannot be read, that no route
 # applies and that the denial is to be listed under ## Rail observations
 # before the worker ends.
@@ -223,6 +252,7 @@ function check(   i, wr, j, a, r) {
     break
   }
   if (i > nw) return
+  if (nsuite > 0 && suite(i)) return
   if (bname(w[i]) == "gh") { found = "\003" w[i] ((i < nw) ? " " w[i + 1] : ""); return }
   if (bname(w[i]) == "git") { gitremote(i); return }
   if (bname(w[i]) != "rm") return
@@ -236,6 +266,18 @@ function check(   i, wr, j, a, r) {
     }
     if (a ~ /^-[^-]/ && a ~ /[rR]/) { found = w[i] " " a; return }
   }
+}
+# suite(i): check (f). True, with found set and marked \004, when the
+# words from w[i] on begin with a listed suite prefix: its first word
+# against the base name of the command word, its later words as written,
+# whole word by whole word.
+function suite(i,   k, m) {
+  for (k = 1; k <= nsuite; k++) {
+    if (SN[k] == 0 || bname(w[i]) != SW[k, 1]) continue
+    for (m = 2; m <= SN[k]; m++) if (i + m - 1 > nw || w[i + m - 1] != SW[k, m]) break
+    if (m > SN[k]) { found = "\004" SD[k]; return 1 }
+  }
+  return 0
 }
 # gitremote(i): w[i] is git. Its global options are skipped: -C, -c,
 # --git-dir, --work-tree, and --namespace with the argument that follows as
@@ -485,6 +527,13 @@ END {
   if (c == "\001") exit 3
   home = ENVIRON["HOME"]; tmpd = ENVIRON["TMPDIR"]; user = ENVIRON["USER"]
   cwd = jstr(buf, "cwd"); if (cwd == "\001") cwd = ENVIRON["PWD"]
+  # The listed suite prefixes (-v suites, "|"-joined), each split into its
+  # words once: SN[k] words, SW[k, m] the m-th, SD[k] the prefix as named.
+  nsuite = split(suites, SP, "|")
+  for (k = 1; k <= nsuite; k++) {
+    SN[k] = split(SP[k], sw1, " "); SD[k] = ""
+    for (m = 1; m <= SN[k]; m++) { SW[k, m] = sw1[m]; SD[k] = SD[k] (m > 1 ? " " : "") sw1[m] }
+  }
   found = ""; nt = 0; scan(c)
   printf "%s", found
   if (found == "") for (k = 1; k <= nt; k++) printf "\n%s", tl[k]
@@ -494,6 +543,9 @@ END {
 # The route for gh and remote git: the main session, which reaches GitHub.
 REASON_ASK="Permitted instead: ask the main session by a question message, which gets anything the work needs from GitHub or a remote; this denial is not a breach, so list it under ## Rail observations and go on."
 REMOTE_MARK=$(printf '\003')
+# Check (f)'s mark, and its route: the wrapper's line, run again on busy.
+SUITE_MARK=$(printf '\004')
+REASON_SUITE="Permitted instead: run it through the suite-slot wrapper: bash ${KENSPC_AUTOPILOT_SUITE_WRAPPER:-<the wrapper copy; KENSPC_AUTOPILOT_SUITE_WRAPPER is empty>} run -- <the command>; exit 75 with a \"suite-slots: busy\" line means run the same line again. This denial is not a breach."
 REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name>-<timestamp>/ (inside the repository, delete through git rm), and write under the repository, the workspace, or scratch (\$TMPDIR, /tmp)."
 # In place of the route, for a field of the input the hook cannot read:
 # every later call is read the same way, so a retry would be denied too.
@@ -630,7 +682,7 @@ case $tool in
     bytes=$(printf '%s' "$input" | LC_ALL=C wc -c)
     [ "$((bytes))" -le "$BASH_INPUT_CAP" ] \
       || deny "this Bash call's hook input is $((bytes)) bytes, over the $BASH_INPUT_CAP the hook scans within its timeout, so it is denied in an autopilot worker; write long content with the Write tool, or split the command"
-    found=$(printf '%s' "$input" | awk -v sq="'" "$RM_AWK") \
+    found=$(printf '%s' "$input" | awk -v sq="'" -v suites="${KENSPC_AUTOPILOT_SUITE_COMMANDS:-}" "$RM_AWK") \
       || deny "the command of this Bash call could not be read from the hook input (tool_input.command), so it is denied in an autopilot worker" "$REASON_UNREADABLE"
     # The scan prints the recursive rm it found, then, when there is none,
     # one line per redirection target it judges: the target collapsed to an
@@ -640,6 +692,7 @@ case $tool in
       *"$NL"*) targets=${found#*"$NL"}; found=${found%%"$NL"*} ;;
     esac
     case $found in
+      "$SUITE_MARK"*) deny "a listed suite command runs only through the suite-slot wrapper in an autopilot worker (${found#"$SUITE_MARK"}, listed in KENSPC_AUTOPILOT_SUITE_COMMANDS)" "$REASON_SUITE" ;;
       "$REMOTE_MARK"*) deny "gh, and git with a remote subcommand or a URL clone, are denied in an autopilot worker (${found#"$REMOTE_MARK"})" "$REASON_ASK" ;;
     esac
     [ -z "$found" ] || deny "a recursive rm is denied in an autopilot worker ($found)"

@@ -312,7 +312,31 @@ self-test items.
 
 ### Task 4: The hook's suite check (f)
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: check (f) sits in `check()` right after the skips and the
+  `if (i > nw) return`, ahead of the `gh`, `git`, and `rm` branches, as
+  `if (nsuite > 0 && suite(i)) return`, so with the variable empty it costs
+  one comparison per command and the existing scan is the only pass. The
+  prefixes are split once in `END` into `SN[k]`/`SW[k, m]`/`SD[k]` (words
+  split on blanks, so stray spaces around a prefix do not matter), and a
+  match sets `found` with its own mark, `\004`, beside the `\003` of `gh`
+  and remote git. The deny reason names the matched prefix as listed and
+  the route `bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run -- <the command>`,
+  with the busy-line rule and "This denial is not a breach."; with the
+  wrapper variable empty it says so in the route rather than printing an
+  empty path. In the guard the per-fixture values travel as `SUITE_CMDS` and
+  `SUITE_WRAPPER`, which `decide()` exports after unsetting the caller's,
+  and `fx_deny`/`fx_timed` record them (`D_SCMDS`, `D_SWRAP`) for the
+  marker-unset and marker-0 replays.
+- Changes/tradeoffs: the guard's inert definition in its header now also
+  covers the marker-1 fixture with the commands variable empty. Comments
+  inside the hook's awk program avoid apostrophes, since the program is a
+  single-quoted shell string. Self-test: the suite-check mutant turned 8
+  fixtures red, first `dotnet test`; the marker-check mutant's first red is
+  now `dotnet test with the marker unset` (not pinned). Timed fixtures
+  stayed between 0.11 and 0.47 s, under the 2.5 s bound.
 
 Add check (f) to `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh` as
 the plan's § The hook's new check specifies, and extend
