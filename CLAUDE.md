@@ -356,8 +356,11 @@ a file, and the main session relays paths rather than report text. Issue IDs (`R
 and code-fixer's Source column let `regression-verifier` settle completeness
 by comparing ID sets; code-fixer's own `F` rows and the `V` regressions
 are left out of that comparison (4.7.0), an `F` row being code-fixer's
-own and a `V` row listed by `schema-c-1.md`. Subagents cannot spawn other subagents; orchestration
-stays at the skill (main session) level.
+own and a `V` row listed by `schema-c-1.md`. kenspc's agents cannot
+dispatch subagents, since none lists Agent in `tools:`; Claude Code itself
+nests subagents to depth 3 by default (2.1.301,
+`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`); orchestration stays at the skill
+(main session) level.
 
 **Sessions, not agents (autopilot):**
 The autopilot skill runs one batch of this plugin's own chain unattended
@@ -413,9 +416,15 @@ Every Agent dispatch in the skills sets `run_in_background: false`
 background call returns at once and is stopped when a headless session
 exits. Foreground calls sent in one message still run in parallel, which is
 how the five reviewers are dispatched. The parameter exists in headless
-(`claude -p`) and SDK sessions; the interactive Agent tool (Claude Code
-2.1.281) has no such parameter and runs subagents asynchronously, handing
-each result back within the same turn.
+(`claude -p`) and SDK sessions, and in a Claude Code 2.1.301 Desktop
+session, measured on 2026-10-17: there a call with
+`run_in_background: false` returned only when the subagent had finished,
+and the same call with the parameter omitted returned at once and ran the
+subagent in the background. The interactive terminal CLI is not measured:
+the 2.1.301 binary drops the parameter when its fork-mode gate is on, which
+its docs tie to that CLI (a reading of the binary), and there subagents
+ran asynchronously, each result handed back within the same turn (observed
+on 2.1.281).
 
 As of v3.5, effort follows the session by default: a SKILL.md or agent
 .md without an `effort:` field inherits the session's effort level (per

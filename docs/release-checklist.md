@@ -101,9 +101,13 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   five reviewer calls go out in one message, no background-task notice
   appears, and code-fixer and regression-verifier follow in the same turn.
   Interactive (TUI) run: no user input is needed between the invocation and
-  the Schema F / G report. Foreground dispatch cannot be observed there:
-  the interactive Agent tool (Claude Code 2.1.281) has no `run_in_background`
-  parameter and runs subagents asynchronously, handing each result back.
+  the Schema F / G report. In a Desktop session the Agent tool has the
+  `run_in_background` parameter, and `false` holds each call until its
+  subagent finishes, as in a headless run (Claude Code 2.1.301, measured
+  2026-10-17); an omitted parameter runs the subagent in the background.
+  The interactive terminal CLI is not measured: the 2.1.301 binary drops
+  the parameter there when fork mode is on, so foreground dispatch may not
+  be observable in that CLI.
 - The final report's Fixes section prints the full path of `schema-b.md`.
 - That directory holds `angle-1.md` through `angle-5.md` and `schema-b.md`.
   Every probe, copy of a project file, mutant, and runner config is under

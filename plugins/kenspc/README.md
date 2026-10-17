@@ -1484,12 +1484,16 @@ on Windows.
   make its unmutated copy pass first, so it is reported as not made. Land
   the fix, or revert the reproduction commit, before a review whose
   verdict you need.
-- **Subagents in interactive sessions.** In an interactive session, Claude
-  Code runs subagents asynchronously and hands each result back; the
-  workflow still finishes within the same turn, with no further input. The
-  skills' `run_in_background: false` takes effect only in headless
-  (`claude -p`) and SDK sessions, where the Agent tool has that parameter
-  (Claude Code 2.1.281).
+- **Subagents in interactive sessions.** The skills'
+  `run_in_background: false` holds each Agent call until its subagent
+  finishes in headless (`claude -p`) and SDK sessions, and in the Claude
+  Code Desktop app: measured on 2.1.301 (2026-10-17), where the same call
+  with the parameter omitted returned at once and ran the subagent in the
+  background. The interactive terminal CLI is not measured; Claude Code
+  2.1.301 drops the parameter there when its fork mode is on, and
+  subagents then run asynchronously and hand each result back — the
+  workflow still finishes within the same turn, with no further input
+  (observed on 2.1.281).
 - **Branches.** The plugin does not create branches; the one branch it
   names is the first branch of a repository `/kenspc-init` creates with
   `git init`, which is `main`. Commits follow the

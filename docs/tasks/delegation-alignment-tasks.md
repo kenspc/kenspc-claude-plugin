@@ -545,7 +545,23 @@ Files: the three SKILL.md files above.
 
 ### Task 12: Correct the two stale platform statements
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: each corrected sentence marks what was measured and what was
+  read: the Desktop behavior as measured on 2.1.301 (2026-10-17), the
+  fork-mode drop as a reading of the binary, and the asynchronous hand-back
+  in an interactive session as observed on 2.1.281 (the old text's
+  observation, kept with its version). The `tools:` premise was checked
+  against every agent's frontmatter (none lists Agent).
+- Changes/tradeoffs: positive controls before the edit —
+  `grep -rn 'cannot spawn' CLAUDE.md plugins/ docs/release-checklist.md docs/roadmap.md --exclude=CHANGELOG.md`
+  printed `CLAUDE.md:359:own and a `V` row listed by `schema-c-1.md`.
+  Subagents cannot spawn other subagents; orchestration`; the
+  `has no such parameter\|has no .run_in_background.\|takes effect only in headless`
+  grep printed `CLAUDE.md:417`, `plugins/kenspc/README.md:1490`, and
+  `docs/release-checklist.md:105`. After the edit both print no line
+  (exit 1).
 
 Plan Step 13.
 
