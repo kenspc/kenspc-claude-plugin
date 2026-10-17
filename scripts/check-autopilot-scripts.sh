@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-autopilot-scripts.sh
 #
-# Behavior guard for the three helper scripts the autopilot skill ships
+# Behavior guard for the four helper scripts the autopilot skill ships
 # beside its driver:
 #
 #   1. plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh
@@ -11,6 +11,8 @@
 #        compares a list of paths between a baseline and HEAD
 #   3. plugins/kenspc/skills/autopilot/scripts/temp-candidates.sh
 #        snapshots a temp folder, and lists the batch's own new entries in it
+#   4. plugins/kenspc/skills/autopilot/scripts/suite-slots.sh
+#        runs a listed test suite only while fewer than N run on the machine
 #
 # The first two replaced steps every main session used to write by hand, and
 # both went wrong that way: commands extracted with a stray backtick at each
@@ -19,6 +21,10 @@
 # rm, so a rule that drifts toward listing too much must turn the guard red:
 # its fixtures hold entries made before the batch, another repository's
 # clone, another track's prefix, and a symlink, none of which may be listed.
+# The fourth is the only bound on how many heavy suites every batch on the
+# machine runs at once, so a slot it gives away, a stale holder it keeps, a
+# holder file it leaves, or a nested call it holds back must turn the guard
+# red.
 # This guard runs the scripts against fixtures built in a mktemp -d directory —
 # single and double backticks, a backtick inside a double-backtick span, spans
 # with and without the padding spaces, a label with a note holding
@@ -37,7 +43,22 @@
 # paths file, one of whitespace-only lines, a baseline that is not a commit, a
 # last line without a newline, a run from a subdirectory; a temp folder and its
 # before list, a cmds dir, the repository, another repository, and a seed for
-# the sweep — and asserts each outcome.
+# the sweep; and, for the wrapper, under /bin/bash and with a lock directory
+# of each fixture's own under the work directory (KENSPC_SUITE_SLOTS_DIR): two
+# wrapped `sleep 3` holders at limit 2 and a third run that is busy (exit 75,
+# a busy line naming both holders) and then, with --wait 10, acquires once a
+# holder ends while no sample every 0.2 seconds shows three holder files;
+# limit 3 entering beside two live holders and limit 2 busy beside them; a
+# wrapped `exit 3` returning 3 and leaving no holder file; a holder whose
+# wrapper pid is dead and whose command pid runs with another start time,
+# reclaimed; a holder whose command pid is a live sleep, kept; a mutex with
+# no owner backdated with touch -t, reclaimed; a nested call beside a live
+# holder at limit 1, run at once; a wrapped run killed with SIGTERM, its
+# holder file gone and its child sleep ended; and usage errors (no --, no
+# limit, limit 0, limit x, a regular file as the lock directory) — and
+# asserts each outcome. Every background process a fixture starts is waited
+# for or killed by its pid before the fixture ends, and again on exit. The
+# other-owner refusal has no fixture: the guard cannot chown.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -45,15 +66,20 @@
 #              apply (the fixture is stale).
 #
 # Optional flag:
-#   --self-test    Copies the three scripts into the temp directory and turns
-#                  the guard red with seven mutants of the copies — the padding
-#                  stripping removed from the extractor, its continuation
-#                  joining removed, its fence tracking removed, zero-diff.sh's
-#                  paths passed to git diff
-#                  as one word, and temp-candidates.sh's before-list filter,
-#                  origin comparison, and symlink exclusion each removed —
-#                  each of which must make the guard exit 1, then green again
-#                  on the unmutated copies.
+#   --self-test    Copies the four scripts into the temp directory and turns
+#                  the guard red with eleven mutants of the copies — the
+#                  padding stripping removed from the extractor, its
+#                  continuation joining removed, its fence tracking removed,
+#                  zero-diff.sh's paths passed to git diff as one word,
+#                  temp-candidates.sh's before-list filter, origin
+#                  comparison, and symlink exclusion each removed, and
+#                  suite-slots.sh's count check made always true, its
+#                  stale-holder reclaim removed, its release on exit
+#                  removed, and its nesting check removed — each of which
+#                  must make the guard exit 1, then green again on the
+#                  unmutated copies. The wrapper's four mutants run the
+#                  wrapper's fixtures alone, since the other fixtures cannot
+#                  see a change to it and each pass pays its sleeps again.
 #
 # Runs under the bash 3.2 macOS ships. The only recursive rm is the EXIT
 # trap's removal of the guard's own mktemp directory. Git runs with the
@@ -68,16 +94,34 @@ SCRIPTS="$REPO_ROOT/plugins/kenspc/skills/autopilot/scripts"
 EXTRACT_SRC="$SCRIPTS/extract-acceptance.sh"
 ZERO_SRC="$SCRIPTS/zero-diff.sh"
 TEMP_SRC="$SCRIPTS/temp-candidates.sh"
+SLOTS_SRC="$SCRIPTS/suite-slots.sh"
 
-for f in "$EXTRACT_SRC" "$ZERO_SRC" "$TEMP_SRC"; do
+for f in "$EXTRACT_SRC" "$ZERO_SRC" "$TEMP_SRC" "$SLOTS_SRC"; do
     if [[ ! -f "$f" ]]; then
         echo "ERROR: missing script $f" >&2
         exit 2
     fi
 done
 
+# The background processes the wrapper's fixtures start, each killed on
+# exit in case an assertion's error ends the guard before its fixture does.
+BG_PIDS=""
+
+cleanup() {
+    local p
+    for p in $BG_PIDS; do
+        kill "$p" 2>/dev/null || true
+    done
+    rm -rf "${WORK:-}"
+}
+
 WORK=$(mktemp -d)
-trap 'rm -rf "${WORK:-}"' EXIT
+trap cleanup EXIT
+
+# A run of this guard inside a wrapped suite, or inside an autopilot worker,
+# would otherwise hand the wrapper fixtures the caller's limit, log, or
+# nesting mark.
+unset KENSPC_AUTOPILOT_SUITE_LIMIT KENSPC_AUTOPILOT_SUITE_LOG KENSPC_SUITE_SLOT_HELD KENSPC_SUITE_SLOTS_DIR
 
 export HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/home" GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME"
@@ -330,10 +374,231 @@ expect_content() {
     fi
 }
 
+# --- The wrapper's fixtures ---------------------------------------------------
+
+# The wrapper runs under /bin/bash where it exists, the bash 3.2 macOS ships.
+SLOT_BASH=bash
+[[ -x /bin/bash ]] && SLOT_BASH=/bin/bash
+
+# lstart_of <pid>: the start time as the wrapper records it.
+lstart_of() {
+    LC_ALL=C ps -o lstart= -p "$1" 2>/dev/null | sed -e 's/  */ /g' -e 's/^ //' -e 's/ $//'
+}
+
+# holder_count <lock dir>: the holder-* files present.
+holder_count() {
+    local f n=0
+    for f in "$1"/holder-*; do
+        [[ -f "$f" ]] && n=$((n + 1))
+    done
+    echo "$n"
+}
+
+# fake_holder <lock dir> <wrapper pid> <wrapper start> <command pid> <command start>
+# Writes a holder file by hand, in the layout the wrapper's header fixes.
+fake_holder() {
+    mkdir -p "$1"
+    chmod 700 "$1"
+    printf 'wrapper_pid=%s\nwrapper_start=%s\ncommand_pid=%s\ncommand_start=%s\ntaken=%s\ncwd=%s\ncommand=%s\n' \
+        "$2" "$3" "$4" "$5" "$(date +%s)" "$WORK" "fixture holder" > "$1/holder-$2"
+}
+
+# start_bg <command...>: runs it in the background, records its pid in
+# $bg and in BG_PIDS.
+start_bg() {
+    "$@" &
+    bg=$!
+    BG_PIDS="$BG_PIDS $bg"
+}
+
+# stop_bg <pid>: kills it if it still runs, and reaps it.
+stop_bg() {
+    kill "$1" 2>/dev/null || true
+    wait "$1" 2>/dev/null || true
+}
+
+# wait_holders <lock dir> <n>: polls up to five seconds for n holder files
+# whose command fields are filled in.
+wait_holders() {
+    local i=0 f n
+    while [[ "$i" -lt 50 ]]; do
+        n=0
+        for f in "$1"/holder-*; do
+            [[ -f "$f" ]] && grep -q '^command_pid=[0-9]' "$f" && n=$((n + 1))
+        done
+        [[ "$n" -ge "$2" ]] && return 0
+        sleep 0.1
+        i=$((i + 1))
+    done
+    return 1
+}
+
+# slot_checks <suite-slots script>: the wrapper's ten fixtures, each with a
+# lock directory and a log of its own under $WORK.
+slot_checks() {
+    local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args
+    local base="$WORK/slots-$runs"
+    mkdir -p "$base"
+
+    # 1. Two wrapped `sleep 3` holders at limit 2: a third run with --wait 1
+    #    is busy, its stderr naming both holders.
+    d="$base/1"
+    log="$base/1.log"
+    start_bg env KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+        "$SLOT_BASH" "$ss" run --limit 2 -- sleep 3
+    h1=$bg
+    start_bg env KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+        "$SLOT_BASH" "$ss" run --limit 2 -- sleep 3
+    h2=$bg
+    wait_holders "$d" 2 || fail "suite-slots 1: the two holders never both held a slot"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+        "$SLOT_BASH" "$ss" run --limit 2 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 75 ]] || fail "suite-slots 1: a third run at limit 2 exited $rc, expected 75"
+    grep -q '^suite-slots: busy after [0-9]*s; held by:' "$WORK/slot-err" \
+        || fail "suite-slots 1: no busy line on stderr [$(tr '\n' '|' < "$WORK/slot-err")]"
+    n=$(grep -c '^  age .*, command sleep 3$' "$WORK/slot-err" || true)
+    [[ "$n" -eq 2 ]] || fail "suite-slots 1: the busy line names $n holders, expected 2"
+    grep -q ' busy pid [0-9]* waited [0-9]*s holders 2 — true$' "$log" 2>/dev/null \
+        || fail "suite-slots 1: the log shows no busy line with two holders"
+
+    # 2. The same third run with --wait 10 acquires once a holder ends, and
+    #    no sample, every 0.2 seconds, shows more than two holder files.
+    start_bg env KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+        "$SLOT_BASH" "$ss" run --limit 2 --wait 10 -- sleep 1
+    h3=$bg
+    max=0
+    while kill -0 "$h3" 2>/dev/null; do
+        n=$(holder_count "$d")
+        [[ "$n" -gt "$max" ]] && max=$n
+        sleep 0.2
+    done
+    rc=0
+    wait "$h3" 2>/dev/null || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 2: the third run with --wait 10 exited $rc, expected 0"
+    [[ "$max" -le 2 ]] || fail "suite-slots 2: $max holder files were present at once, expected at most 2"
+    n=$(grep -c ' acquired pid ' "$log" 2>/dev/null || true)
+    [[ "$n" -eq 3 ]] || fail "suite-slots 2: the log shows $n acquired lines, expected 3"
+    stop_bg "$h1"
+    stop_bg "$h2"
+
+    # Two live processes stand behind hand-written holders in fixtures 3,
+    # 6, and 8; a reaped pid stands for a dead one.
+    start_bg sleep 30
+    s1=$bg
+    start_bg sleep 30
+    s2=$bg
+    true &
+    dead=$!
+    wait "$dead" 2>/dev/null || true
+
+    # 3. Each caller's own N: with two live holders, limit 3 enters and
+    #    limit 2 waits and is busy.
+    d="$base/3"
+    fake_holder "$d" "$s1" "$(lstart_of "$s1")" "" ""
+    fake_holder "$d" "$s2" "$(lstart_of "$s2")" "" ""
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 3 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 3: limit 3 beside two holders exited $rc, expected 0 ($(cat "$WORK/slot-err"))"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 2 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 75 ]] || fail "suite-slots 3: limit 2 beside two holders exited $rc, expected 75"
+
+    # 4. The command's own status, and no holder file left behind.
+    d="$base/4"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 -- sh -c 'exit 3' 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 3 ]] || fail "suite-slots 4: a wrapped exit 3 exited $rc, expected 3"
+    n=$(holder_count "$d")
+    [[ "$n" -eq 0 ]] || fail "suite-slots 4: $n holder files are left after the command ended"
+
+    # 5. A holder whose wrapper pid is dead and whose command pid runs with
+    #    another start time is stale: reclaimed, and the run acquires.
+    d="$base/5"
+    log="$base/5.log"
+    fake_holder "$d" "$dead" "Thu Jan 1 00:00:00 1970" "$s1" "Thu Jan 1 00:00:00 1970"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+        "$SLOT_BASH" "$ss" run --limit 1 --wait 2 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 5: a run beside a stale holder exited $rc, expected 0"
+    grep -q " reclaimed $dead pid " "$log" 2>/dev/null || fail "suite-slots 5: the log shows no reclaimed line for pid $dead"
+    [[ -f "$d/reclaimed-holder-$dead" ]] || fail "suite-slots 5: the stale holder was not moved aside"
+
+    # 6. A dead wrapper pid beside a live command pid is not stale.
+    d="$base/6"
+    fake_holder "$d" "$dead" "Thu Jan 1 00:00:00 1970" "$s2" "$(lstart_of "$s2")"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 75 ]] || fail "suite-slots 6: a run beside a live command pid exited $rc, expected 75"
+    [[ -f "$d/holder-$dead" ]] || fail "suite-slots 6: the live holder was moved aside"
+
+    # 7. A mutex with no owner file, older than 10 seconds, is reclaimed.
+    d="$base/7"
+    mkdir -p "$d/mutex"
+    chmod 700 "$d"
+    touch -t 202001010000 "$d/mutex"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 2 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 7: a run behind a stale mutex exited $rc, expected 0"
+
+    # 8. A nested call runs at once beside a live holder at limit 1.
+    d="$base/8"
+    log="$base/8.log"
+    fake_holder "$d" "$s1" "$(lstart_of "$s1")" "" ""
+    rc=0
+    KENSPC_SUITE_SLOT_HELD=1 KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+        "$SLOT_BASH" "$ss" run --limit 1 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 8: a nested call exited $rc, expected 0"
+    grep -q ' nested pid ' "$log" 2>/dev/null || fail "suite-slots 8: the log shows no nested line"
+
+    stop_bg "$s1"
+    stop_bg "$s2"
+
+    # 9. SIGTERM to the wrapper reaches its child and releases the slot.
+    d="$base/9"
+    start_bg env KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 -- sleep 30
+    h1=$bg
+    cpid=
+    if wait_holders "$d" 1; then
+        cpid=$(sed -n 's/^command_pid=//p' "$d"/holder-* | head -n 1)
+    else
+        fail "suite-slots 9: the wrapped run never held a slot"
+    fi
+    kill -TERM "$h1" 2>/dev/null || true
+    rc=0
+    wait "$h1" 2>/dev/null || rc=$?
+    [[ "$rc" -eq 143 ]] || fail "suite-slots 9: the wrapper killed with SIGTERM exited $rc, expected 143"
+    n=$(holder_count "$d")
+    [[ "$n" -eq 0 ]] || fail "suite-slots 9: $n holder files are left after SIGTERM"
+    if [[ -n "$cpid" ]] && ps -p "$cpid" >/dev/null 2>&1; then
+        fail "suite-slots 9: the child sleep $cpid still runs after SIGTERM"
+        kill "$cpid" 2>/dev/null || true
+    fi
+
+    # 10. Usage errors exit 2: no --, no limit, limit 0, limit x, and a
+    #     regular file where the lock directory goes.
+    d="$base/10"
+    for args in "run --limit 1 true" "run -- true" "run --limit 0 -- true" "run --limit x -- true"; do
+        rc=0
+        # shellcheck disable=SC2086
+        KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" $args >/dev/null 2>"$WORK/slot-err" || rc=$?
+        [[ "$rc" -eq 2 ]] || fail "suite-slots 10: [$args] exited $rc, expected 2"
+        [[ -s "$WORK/slot-err" ]] || fail "suite-slots 10: [$args] gave no reason on stderr"
+    done
+    printf 'x\n' > "$base/10-file"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$base/10-file" "$SLOT_BASH" "$ss" run --limit 1 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "suite-slots 10: a regular file as the lock directory exited $rc, expected 2"
+    grep -qF "$base/10-file" "$WORK/slot-err" || fail "suite-slots 10: the reason does not name the lock directory's path"
+
+    return 0
+}
+
 # run_checks <extract script> <zero-diff script> <temp-candidates script>
+#            <suite-slots script>
 # Sets $failures to the number of assertions that failed.
 run_checks() {
-    local ex=$1 zd=$2 tc=$3 out rc listing
+    local ex=$1 zd=$2 tc=$3 ss=$4 out rc listing
     failures=0
     runs=$((runs + 1))
 
@@ -565,6 +830,16 @@ run_checks() {
         [[ -s "$WORK/err" ]] || fail "temp-candidates: [$args] gave no reason on stderr"
     done
 
+    slot_checks "$ss"
+    return 0
+}
+
+# run_slot_only <suite-slots script>: the wrapper's fixtures alone, for the
+# wrapper's mutants. Sets $failures as run_checks does.
+run_slot_only() {
+    failures=0
+    runs=$((runs + 1))
+    slot_checks "$1"
     return 0
 }
 
@@ -582,13 +857,15 @@ mutate() {
 }
 
 run_self_test() {
-    local ex="$WORK/extract-acceptance.sh" zd="$WORK/zero-diff.sh" tc="$WORK/temp-candidates.sh"
+    local ex="$WORK/extract-acceptance.sh" zd="$WORK/zero-diff.sh" tc="$WORK/temp-candidates.sh" ss="$WORK/suite-slots.sh"
     local m_ex="$WORK/extract-mutant.sh" m_zd="$WORK/zero-diff-mutant.sh" m_tc="$WORK/temp-candidates-mutant.sh"
+    local m_ss="$WORK/suite-slots-mutant.sh"
     cp "$EXTRACT_SRC" "$ex"
     cp "$ZERO_SRC" "$zd"
     cp "$TEMP_SRC" "$tc"
+    cp "$SLOTS_SRC" "$ss"
 
-    run_checks "$ex" "$zd" "$tc" 2>/dev/null
+    run_checks "$ex" "$zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -ne 0 ]]; then
         echo "FAIL  self-test positive path: $failures assertions failed on the unmutated copies" >&2
         return 1
@@ -598,48 +875,76 @@ run_self_test() {
     # Mutant 1: the padding stripping removed.
     name="padding stripping removed"
     mutate "$ex" "$m_ex" '/inner = substr(inner, 2, length(inner) - 2)/d' "$name"
-    run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
+    run_checks "$m_ex" "$zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 2: the continuation joining removed.
     name="continuation joining removed"
     mutate "$ex" "$m_ex" '/if (have) cur = cur " " line/d' "$name"
-    run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
+    run_checks "$m_ex" "$zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 3: fenced code blocks no longer skipped.
     name="fence tracking removed"
     mutate "$ex" "$m_ex" 's/^    infence = 1; ofch = fch; oflen = flen; fenceline = NR$/    ofch = fch; oflen = flen; fenceline = NR/' "$name"
-    run_checks "$m_ex" "$zd" "$tc" 2>/dev/null
+    run_checks "$m_ex" "$zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 4: the paths passed to git diff as one word.
     name="paths read as one word"
     mutate "$zd" "$m_zd" 's/HEAD -- "\${paths\[@\]}"/HEAD -- "${paths[*]}"/' "$name"
-    run_checks "$ex" "$m_zd" "$tc" 2>/dev/null
+    run_checks "$ex" "$m_zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 5: the before list no longer filters, so entries older than the
     # batch are listed.
     name="before-list filter removed"
     mutate "$tc" "$m_tc" 's/if grep -qxF -- "\$name" "\$before"; then/if false; then/' "$name"
-    run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
+    run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 6: any clone counts, whatever its origin.
     name="origin comparison removed"
     mutate "$tc" "$m_tc" 's/if \[ "\$p" = "\$r" \]; then/if :; then/' "$name"
-    run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
+    run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Mutant 7: a symbolic link is judged by what it points to.
     name="symlink exclusion removed"
     mutate "$tc" "$m_tc" 's/if \[ ! -L "\$e" \] && \[ -O "\$e" \]; then/if [ -O "$e" ]; then/' "$name"
-    run_checks "$ex" "$zd" "$m_tc" 2>/dev/null
+    run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # The wrapper's four mutants run the wrapper's fixtures alone: the other
+    # scripts' fixtures cannot see a change to the wrapper, and each full
+    # pass pays the wrapper fixtures' sleeps again.
+
+    # Mutant 8: every caller enters, whatever the count.
+    name="count check always true"
+    mutate "$ss" "$m_ss" 's/if \[ "\$live" -lt "\$limit" \]; then # count check/if true; then # count check/' "$name"
+    run_slot_only "$m_ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 9: a stale holder is counted as live, never reclaimed.
+    name="stale-holder reclaim removed"
+    mutate "$ss" "$m_ss" 's/if holder_alive; then # live-holder check/if true; then # live-holder check/' "$name"
+    run_slot_only "$m_ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 10: the holder file outlives the wrapper.
+    name="release on exit removed"
+    mutate "$ss" "$m_ss" 's/\[ "\$holder_written" -eq 1 \] && rm -f "\$holder" # release on exit/: # release on exit/' "$name"
+    run_slot_only "$m_ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 11: a nested call waits for a slot like any other.
+    name="nesting check removed"
+    mutate "$ss" "$m_ss" 's/if \[ "\${KENSPC_SUITE_SLOT_HELD:-}" = 1 \]; then/if false; then/' "$name"
+    run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
     # Restoration path: green again on the unmutated copies.
-    run_checks "$ex" "$zd" "$tc" 2>/dev/null
+    run_checks "$ex" "$zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -ne 0 ]]; then
         echo "FAIL  self-test restoration path: $failures assertions failed on the unmutated copies" >&2
         return 1
@@ -658,10 +963,10 @@ if [[ "${1:-}" == "--self-test" ]]; then
     exit "$rc"
 fi
 
-run_checks "$EXTRACT_SRC" "$ZERO_SRC" "$TEMP_SRC"
+run_checks "$EXTRACT_SRC" "$ZERO_SRC" "$TEMP_SRC" "$SLOTS_SRC"
 if [[ "$failures" -ne 0 ]]; then
     echo "autopilot-scripts — $failures assertions failed" >&2
     exit 1
 fi
-echo "OK    autopilot-scripts — extract-acceptance.sh, zero-diff.sh, and temp-candidates.sh behave as their fixtures expect"
+echo "OK    autopilot-scripts — extract-acceptance.sh, zero-diff.sh, temp-candidates.sh, and suite-slots.sh behave as their fixtures expect"
 exit 0

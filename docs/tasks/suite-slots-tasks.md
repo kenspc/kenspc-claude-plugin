@@ -122,7 +122,40 @@ are.
 
 ### Task 2: Guard fixtures for the wrapper
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the wrapper's four mutants run the wrapper's fixtures alone
+  (`run_slot_only`), while the seven earlier mutants and the positive and
+  restoration passes run every fixture through `run_checks`, which gained
+  the fourth parameter. Fixtures 3, 6, and 8 stand on hand-written holder
+  files backed by two background `sleep 30` processes and their real
+  `ps -o lstart=` start times, so they need no wrapped holder to wait out;
+  fixtures 1 and 2 share one pair of wrapped `sleep 3` holders, and the
+  third run of fixture 2 wraps `sleep 1` rather than `true` so a mutant that
+  lets it in is caught by the 0.2-second samples too. The wrapper runs under
+  `/bin/bash` where it exists. The guard unsets
+  `KENSPC_AUTOPILOT_SUITE_LIMIT`, `KENSPC_AUTOPILOT_SUITE_LOG`,
+  `KENSPC_SUITE_SLOT_HELD`, and `KENSPC_SUITE_SLOTS_DIR` at its start, since
+  a run inside a wrapped suite or a worker would otherwise turn every
+  fixture into a nested call. Every background pid also goes into
+  `BG_PIDS`, killed by the EXIT trap, so an error that ends the guard
+  mid-fixture leaves no `sleep` behind.
+- Changes/tradeoffs: fixture 5's holder pairs a reaped wrapper pid with the
+  guard's own live `sleep` as its command pid under a 1970 start time, so it
+  checks the start-time comparison as well as the dead pid; it also asserts
+  the `reclaimed-holder-<pid>` file. Fixture 1 also asserts the log's busy
+  line, and fixture 2 the three `acquired` lines. Wall time of
+  `bash scripts/check-autopilot-scripts.sh --self-test`: 5.1 s before this
+  task, 1 min 31 s after (each full pass pays about 7 s of wrapper sleeps
+  and busy waits, nine full passes and four wrapper-only passes). Red
+  counts: count check always true 8, stale-holder reclaim removed 3,
+  release on exit removed 2, nesting check removed 2. Captured around a
+  self-test run: no new `suite-slots.sh` or `sleep` process and no new
+  `tmp.*` entry under `$TMPDIR` (a sample taken during the run showed the
+  guard's `tmp.*` directory and its wrapped `sleep 3` holders, the positive
+  control). `bash scripts/check-all.sh --self-test` exits 0 with
+  `guards run: 13` and `self-tests run: 12`.
 
 Depends on: Task 1
 
