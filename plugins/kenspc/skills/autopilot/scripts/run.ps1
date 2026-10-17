@@ -51,6 +51,15 @@
 #                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below, and
 #                         refused unless it is an absolute path; the empty
 #                         string counts as unset
+#   AUTOPILOT_SUITE_LIMIT     the batch's Suite limit: value, N; exported as
+#                         KENSPC_AUTOPILOT_SUITE_LIMIT below
+#   AUTOPILOT_SUITE_COMMANDS  the Suite limit: field's command prefixes,
+#                         joined by "|"; exported as
+#                         KENSPC_AUTOPILOT_SUITE_COMMANDS below
+#   AUTOPILOT_SUITE_WRAPPER   the suite-slot wrapper copy's absolute path;
+#                         exported as KENSPC_AUTOPILOT_SUITE_WRAPPER below,
+#                         and refused unless it is an absolute path; the
+#                         empty string counts as unset
 #
 # Exported to every worker, on a fresh launch and on a resume, overwriting
 # any value the caller's environment holds:
@@ -61,6 +70,14 @@
 #                         AUTOPILOT_WORKSPACE when non-empty, $TMPDIR when
 #                         set, /tmp, and /private/tmp, each as given, with
 #                         no symbolic link resolved
+#   KENSPC_AUTOPILOT_SUITE_LIMIT     AUTOPILOT_SUITE_LIMIT, or the empty string
+#   KENSPC_AUTOPILOT_SUITE_COMMANDS  AUTOPILOT_SUITE_COMMANDS, or the empty
+#                         string
+#   KENSPC_AUTOPILOT_SUITE_WRAPPER   AUTOPILOT_SUITE_WRAPPER, or the empty
+#                         string
+#   KENSPC_AUTOPILOT_SUITE_LOG       <logs>/<batch>-suite-slots.log when
+#                         AUTOPILOT_SUITE_LIMIT is non-empty, else the empty
+#                         string
 # Why: the plugin's rails hook reads the two variables and acts only in a
 # worker that carries the marker, so every other session's tool calls pass
 # it untouched; the caller's values are overwritten, since a marker of 0 or
@@ -68,6 +85,12 @@
 # reach the worker. Why "|": no Windows path holds it, while ":" is in
 # every drive letter and ";" may be in a file name; run.sh joins the roots
 # the same way, and the hook splits them on it.
+# Why the four suite variables go through the environment: a subagent
+# inherits its worker's environment, so the suite-slot wrapper finds N and
+# its log, and the rails hook finds the listed commands and the wrapper's
+# path, without any agent having to carry them. Why they are overwritten,
+# the empty string included: a value left in the main session's environment
+# would otherwise reach a worker of a batch with no limit.
 #
 # Files, all under the logs directory
 #   <tag>.session   the session id, written before the process starts
@@ -152,8 +175,12 @@
 # claude is one, byte for byte. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
 # exercises the failure path; a stub of theirs that is meant to pass writes
 # its arguments, "cwd=<its working directory, logical or physical path>",
-# and the two exported variables as "KENSPC_AUTOPILOT_WORKER=<value>" and
-# "KENSPC_AUTOPILOT_WRITE_ROOTS=<value>", each on a line of its own,
+# and the six exported variables as "KENSPC_AUTOPILOT_WORKER=<value>",
+# "KENSPC_AUTOPILOT_WRITE_ROOTS=<value>",
+# "KENSPC_AUTOPILOT_SUITE_LIMIT=<value>",
+# "KENSPC_AUTOPILOT_SUITE_COMMANDS=<value>",
+# "KENSPC_AUTOPILOT_SUITE_WRAPPER=<value>", and
+# "KENSPC_AUTOPILOT_SUITE_LOG=<value>", each on a line of its own,
 # to its error output (Write-Error, for a .ps1 run inside the inner pwsh),
 # since the self-test
 # reads the flags, the cwd, and the variables in <tag>.err; prints to stdout a JSON object
@@ -198,6 +225,10 @@ try {
     $prompt = (Get-Content -Raw -LiteralPath __PROMPT__ -ErrorAction Stop) -replace '(\r?\n)+\z', ''
     $env:KENSPC_AUTOPILOT_WORKER = '1'
     $env:KENSPC_AUTOPILOT_WRITE_ROOTS = __ROOTS__
+    $env:KENSPC_AUTOPILOT_SUITE_LIMIT = __SUITELIMIT__
+    $env:KENSPC_AUTOPILOT_SUITE_COMMANDS = __SUITECOMMANDS__
+    $env:KENSPC_AUTOPILOT_SUITE_WRAPPER = __SUITEWRAPPER__
+    $env:KENSPC_AUTOPILOT_SUITE_LOG = __SUITELOG__
     $argv = @('-p', $prompt, __SESSION__, '--name', __TAG__, '--settings', __SETTINGS__, '--permission-mode', 'bypassPermissions', '--output-format', 'json'__OPTIONAL__)
     $global:LASTEXITCODE = 0
     $null | & __EXE__ @argv > __JSON__ 2> __ERR__
@@ -299,6 +330,15 @@ function Invoke-Launch {
     if (-not [string]::IsNullOrEmpty($env:AUTOPILOT_WORKSPACE) -and -not [System.IO.Path]::IsPathFullyQualified($env:AUTOPILOT_WORKSPACE)) {
         Stop-Driver "AUTOPILOT_WORKSPACE is not an absolute path ($($env:AUTOPILOT_WORKSPACE)); pass the workspace's absolute path"
     }
+    # A wrapper path that is not absolute is refused the same way: the hook's
+    # deny reason hands it to a worker as the line to run, and a relative one
+    # would resolve against whatever directory that worker's call runs in.
+    $suiteLimit = [string]$env:AUTOPILOT_SUITE_LIMIT
+    $suiteCommands = [string]$env:AUTOPILOT_SUITE_COMMANDS
+    $suiteWrapper = [string]$env:AUTOPILOT_SUITE_WRAPPER
+    if (-not [string]::IsNullOrEmpty($suiteWrapper) -and -not [System.IO.Path]::IsPathFullyQualified($suiteWrapper)) {
+        Stop-Driver "AUTOPILOT_SUITE_WRAPPER is not an absolute path ($suiteWrapper); pass the wrapper copy's absolute path"
+    }
     # A missing executable is a refusal here, not a worker that dies at once:
     # otherwise the driver prints "started", .exit reads a failure with an
     # empty .json, and the skill resumes a dead worker instead of reading the
@@ -328,6 +368,7 @@ function Invoke-Launch {
     $errFile = Join-Path $logsPath "$Tag.err"
     $exitFile = Join-Path $logsPath "$Tag.exit"
     $timeline = Join-Path $logsPath "$batch-timeline.log"
+    $suiteLog = if ([string]::IsNullOrEmpty($suiteLimit)) { '' } else { Join-Path $logsPath "$batch-suite-slots.log" }
 
     # A launch under a tag whose earlier worker still runs — its pid live and
     # its exit file not yet written — would overwrite that worker's files and
@@ -403,6 +444,10 @@ function Invoke-Launch {
         EXIT       = ConvertTo-Literal $exitFile
         TIMELINE   = ConvertTo-Literal $timeline
         ROOTS      = ConvertTo-Literal ($roots -join '|')
+        SUITELIMIT    = ConvertTo-Literal $suiteLimit
+        SUITECOMMANDS = ConvertTo-Literal $suiteCommands
+        SUITEWRAPPER  = ConvertTo-Literal $suiteWrapper
+        SUITELOG      = ConvertTo-Literal $suiteLog
     }
     $inner = $InnerTemplate -replace '__([A-Z]+)__', { $values[$_.Groups[1].Value] }
     $encoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($inner))
@@ -530,6 +575,24 @@ function Assert-WorkerVars {
     }
 }
 
+function Assert-SuiteVars {
+    param([string]$ErrFile, [string]$Limit, [string]$Commands, [string]$Wrapper, [string]$Log)
+    # The self-test's check of the four suite variables a stub wrote to its
+    # .err: each line reads exactly the value given, the empty string
+    # included; the first failure names the variable.
+    $wanted = [ordered]@{
+        KENSPC_AUTOPILOT_SUITE_LIMIT    = $Limit
+        KENSPC_AUTOPILOT_SUITE_COMMANDS = $Commands
+        KENSPC_AUTOPILOT_SUITE_WRAPPER  = $Wrapper
+        KENSPC_AUTOPILOT_SUITE_LOG      = $Log
+    }
+    foreach ($name in $wanted.Keys) {
+        if (-not (Test-FileLine $ErrFile ('(^|\s)' + $name + '=' + [regex]::Escape($wanted[$name]) + '$'))) {
+            Stop-SelfTest "$ErrFile does not show $name=$($wanted[$name])"
+        }
+    }
+}
+
 function Invoke-Refused {
     param([string]$Tag, [string]$Dir, [string]$PromptFile)
     # A launch run in this process, as the command line runs it: the refusal
@@ -548,8 +611,9 @@ function Invoke-Refused {
 # writes nothing under the workspace; it is left in place afterwards. Checks,
 # in this order, naming the first that fails: a launch naming a missing
 # executable, on macOS and Linux one with no execute bit, an empty or
-# whitespace-only prompt file, or an AUTOPILOT_WORKSPACE that is not an
-# absolute path, refused with the
+# whitespace-only prompt file, an AUTOPILOT_WORKSPACE that is not an
+# absolute path, or an AUTOPILOT_SUITE_WRAPPER that is not one, refused with
+# the
 # subject named and no .session; a logs directory holding a wildcard
 # character refused with the directory named and not created; a tag holding
 # one refused with the tag named and the logs directory not created; the
@@ -586,7 +650,13 @@ function Invoke-Refused {
 # which is no repository's top level; a git init of a repository under the
 # self-test's directory succeeding, and a launch in that repository with
 # AUTOPILOT_WORKSPACE the empty string, the same with roots holding the
-# repository's top level and no workspace entry; a
+# repository's top level and no workspace entry; with the caller's
+# environment also holding stale KENSPC_AUTOPILOT_SUITE_* values, a launch
+# with the three AUTOPILOT_SUITE_* inputs set, its .exit present after the
+# wait and its .err showing --name <tag> and the four suite variables
+# reading the inputs and <logs>/selftest-suite-slots.log, and one with them
+# unset, the same with each variable the empty string, each failure naming
+# the variable; a
 # throwing stub's .exit
 # reading 1, its end line, and its reason in .err; a launch through the
 # command line whose .pid and timeline writes fail returning 0 with its
@@ -628,7 +698,7 @@ function Invoke-SelfTest {
         $stubPath = Join-Path $stubDir 'claude.ps1'
         Write-LfFile $stubPath (@'
 # Stub executable for run.ps1 --self-test: writes its arguments, its
-# working directory, and the two exported worker variables to the error
+# working directory, and the six exported worker variables to the error
 # stream, prints a result object to stdout, sleeps one second, exits 0.
 # Write-Error, since this stub runs inside the inner pwsh, where
 # [Console]::Error would bypass the 2> redirection.
@@ -636,6 +706,10 @@ Write-Error ($args -join ' ')
 Write-Error "cwd=$((Get-Location).Path)"
 Write-Error "KENSPC_AUTOPILOT_WORKER=$env:KENSPC_AUTOPILOT_WORKER"
 Write-Error "KENSPC_AUTOPILOT_WRITE_ROOTS=$env:KENSPC_AUTOPILOT_WRITE_ROOTS"
+Write-Error "KENSPC_AUTOPILOT_SUITE_LIMIT=$env:KENSPC_AUTOPILOT_SUITE_LIMIT"
+Write-Error "KENSPC_AUTOPILOT_SUITE_COMMANDS=$env:KENSPC_AUTOPILOT_SUITE_COMMANDS"
+Write-Error "KENSPC_AUTOPILOT_SUITE_WRAPPER=$env:KENSPC_AUTOPILOT_SUITE_WRAPPER"
+Write-Error "KENSPC_AUTOPILOT_SUITE_LOG=$env:KENSPC_AUTOPILOT_SUITE_LOG"
 $id = ''
 for ($i = 0; $i -lt $args.Count - 1; $i++) {
     if ($args[$i] -ceq '--session-id' -or $args[$i] -ceq '--resume') { $id = $args[$i + 1] }
@@ -664,7 +738,7 @@ exit 0
     # AUTOPILOT_CLAUDE names too.
     $failStub = Join-Path $stubDir 'fail.ps1'
     $promptSeen = Join-Path $base 'prompt-seen.txt'
-    Write-LfFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nWrite-Error `"KENSPC_AUTOPILOT_WORKER=`$env:KENSPC_AUTOPILOT_WORKER`"`nWrite-Error `"KENSPC_AUTOPILOT_WRITE_ROOTS=`$env:KENSPC_AUTOPILOT_WRITE_ROOTS`"`nexit 3`n"
+    Write-LfFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nWrite-Error `"KENSPC_AUTOPILOT_WORKER=`$env:KENSPC_AUTOPILOT_WORKER`"`nWrite-Error `"KENSPC_AUTOPILOT_WRITE_ROOTS=`$env:KENSPC_AUTOPILOT_WRITE_ROOTS`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_LIMIT=`$env:KENSPC_AUTOPILOT_SUITE_LIMIT`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_COMMANDS=`$env:KENSPC_AUTOPILOT_SUITE_COMMANDS`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_WRAPPER=`$env:KENSPC_AUTOPILOT_SUITE_WRAPPER`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_LOG=`$env:KENSPC_AUTOPILOT_SUITE_LOG`"`nexit 3`n"
     $slowStub = Join-Path $stubDir 'slow.ps1'
     Write-LfFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
     # A fourth that throws, for the check that a failure inside the worker's
@@ -686,7 +760,16 @@ exit 0
     # sets it.
     $env:KENSPC_AUTOPILOT_WORKER = '0'
     $env:KENSPC_AUTOPILOT_WRITE_ROOTS = '/kenspc-selftest-stale-root'
+    # Stale suite values too, so a driver that did not overwrite each of the
+    # four would hand a worker of a batch with no limit another batch's.
+    $env:KENSPC_AUTOPILOT_SUITE_LIMIT = '97'
+    $env:KENSPC_AUTOPILOT_SUITE_COMMANDS = 'kenspc-selftest-stale-command'
+    $env:KENSPC_AUTOPILOT_SUITE_WRAPPER = '/kenspc-selftest-stale-wrapper'
+    $env:KENSPC_AUTOPILOT_SUITE_LOG = '/kenspc-selftest-stale-log'
     $env:AUTOPILOT_WORKSPACE = $null
+    $env:AUTOPILOT_SUITE_LIMIT = $null
+    $env:AUTOPILOT_SUITE_COMMANDS = $null
+    $env:AUTOPILOT_SUITE_WRAPPER = $null
     $env:AUTOPILOT_LOGS = $logsDir
     $env:AUTOPILOT_BATCH = 'selftest'
     $tag = 'selftest-s1'
@@ -756,6 +839,17 @@ exit 0
         if (-not $refusal.Contains("AUTOPILOT_WORKSPACE is not an absolute path ($bad)")) {
             Stop-SelfTest "the refusal of AUTOPILOT_WORKSPACE=$bad does not name it"
         }
+    }
+    # A wrapper path that is not absolute is refused the same way: the hook's
+    # deny reason hands it to the worker as the line to run.
+    $env:AUTOPILOT_SUITE_WRAPPER = 'suite-slots.sh'
+    $refusal = Invoke-Refused $tag $base $promptFile
+    $env:AUTOPILOT_SUITE_WRAPPER = $null
+    if ($null -eq $refusal -or (Test-Path -LiteralPath $sessionFile)) {
+        Stop-SelfTest "a launch with AUTOPILOT_SUITE_WRAPPER=suite-slots.sh was not refused before writing, expected a refusal and no .session"
+    }
+    if (-not $refusal.Contains("AUTOPILOT_SUITE_WRAPPER is not an absolute path (suite-slots.sh)")) {
+        Stop-SelfTest "the refusal of AUTOPILOT_SUITE_WRAPPER=suite-slots.sh does not name it"
     }
     # A logs directory holding a wildcard character is refused before
     # anything is written, not left to fail in Start-Process after .session:
@@ -1067,6 +1161,36 @@ exit 0
     if (-not (Test-Path -LiteralPath $wsEmptyExit -PathType Leaf)) { Stop-SelfTest "$wsEmptyExit is missing after the wait" }
     if (-not ([System.IO.File]::ReadAllText($wsEmptyErr)).Contains("--name $wsEmptyTag")) { Stop-SelfTest "$wsEmptyErr does not show --name $wsEmptyTag" }
     Assert-WorkerVars $wsEmptyErr $workspaceDir $false $repoTop
+
+    # The four suite variables: with the three inputs set, each reads its
+    # input and the log sits under the logs directory; with them unset, each
+    # is the empty string, though the caller's environment holds stale
+    # values. The rails hook and the wrapper read them, so a driver that
+    # dropped one would leave a worker's suites unbounded or bounded by
+    # another batch's values.
+    $suiteSetTag = 'selftest-s17'
+    $suiteWrapperPath = Join-Path $base 'suite-slots.sh'
+    $env:AUTOPILOT_SUITE_LIMIT = '2'
+    $env:AUTOPILOT_SUITE_COMMANDS = 'dotnet test|pnpm test'
+    $env:AUTOPILOT_SUITE_WRAPPER = $suiteWrapperPath
+    $null = Invoke-Launch $suiteSetTag $base $promptFile ''
+    $env:AUTOPILOT_SUITE_LIMIT = $null
+    $env:AUTOPILOT_SUITE_COMMANDS = $null
+    $env:AUTOPILOT_SUITE_WRAPPER = $null
+    $suiteSetExit = Join-Path $logsDir "$suiteSetTag.exit"
+    $suiteSetErr = Join-Path $logsDir "$suiteSetTag.err"
+    Wait-ExitFile $suiteSetExit
+    if (-not (Test-Path -LiteralPath $suiteSetExit -PathType Leaf)) { Stop-SelfTest "$suiteSetExit is missing after the wait" }
+    if (-not ([System.IO.File]::ReadAllText($suiteSetErr)).Contains("--name $suiteSetTag")) { Stop-SelfTest "$suiteSetErr does not show --name $suiteSetTag" }
+    Assert-SuiteVars $suiteSetErr '2' 'dotnet test|pnpm test' $suiteWrapperPath (Join-Path (Resolve-FullPath $logsDir) 'selftest-suite-slots.log')
+    $suiteUnsetTag = 'selftest-s18'
+    $null = Invoke-Launch $suiteUnsetTag $base $promptFile ''
+    $suiteUnsetExit = Join-Path $logsDir "$suiteUnsetTag.exit"
+    $suiteUnsetErr = Join-Path $logsDir "$suiteUnsetTag.err"
+    Wait-ExitFile $suiteUnsetExit
+    if (-not (Test-Path -LiteralPath $suiteUnsetExit -PathType Leaf)) { Stop-SelfTest "$suiteUnsetExit is missing after the wait" }
+    if (-not ([System.IO.File]::ReadAllText($suiteUnsetErr)).Contains("--name $suiteUnsetTag")) { Stop-SelfTest "$suiteUnsetErr does not show --name $suiteUnsetTag" }
+    Assert-SuiteVars $suiteUnsetErr '' '' '' ''
 
     # A failure inside the worker's own script, here an executable that
     # throws, still writes .exit reading 1 and the end line, and leaves its

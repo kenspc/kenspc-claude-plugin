@@ -37,6 +37,15 @@
 #                         roots in KENSPC_AUTOPILOT_WRITE_ROOTS below, and
 #                         refused unless it is an absolute path; the empty
 #                         string counts as unset
+#   AUTOPILOT_SUITE_LIMIT     the batch's Suite limit: value, N; exported as
+#                         KENSPC_AUTOPILOT_SUITE_LIMIT below
+#   AUTOPILOT_SUITE_COMMANDS  the Suite limit: field's command prefixes,
+#                         joined by "|"; exported as
+#                         KENSPC_AUTOPILOT_SUITE_COMMANDS below
+#   AUTOPILOT_SUITE_WRAPPER   the suite-slot wrapper copy's absolute path;
+#                         exported as KENSPC_AUTOPILOT_SUITE_WRAPPER below,
+#                         and refused unless it is an absolute path; the
+#                         empty string counts as unset
 #
 # Exported to every worker, on a fresh launch and on a resume, overwriting
 # any value the caller's environment holds:
@@ -47,6 +56,14 @@
 #                         AUTOPILOT_WORKSPACE when non-empty, $TMPDIR when
 #                         set, /tmp, and /private/tmp, each as given, with
 #                         no symbolic link resolved
+#   KENSPC_AUTOPILOT_SUITE_LIMIT     AUTOPILOT_SUITE_LIMIT, or the empty string
+#   KENSPC_AUTOPILOT_SUITE_COMMANDS  AUTOPILOT_SUITE_COMMANDS, or the empty
+#                         string
+#   KENSPC_AUTOPILOT_SUITE_WRAPPER   AUTOPILOT_SUITE_WRAPPER, or the empty
+#                         string
+#   KENSPC_AUTOPILOT_SUITE_LOG       <logs>/<batch>-suite-slots.log when
+#                         AUTOPILOT_SUITE_LIMIT is non-empty, else the empty
+#                         string
 # Why: the plugin's rails hook reads the two variables and acts only in a
 # worker that carries the marker, so every other session's tool calls pass
 # it untouched; the caller's values are overwritten, since a marker of 0 or
@@ -54,6 +71,12 @@
 # reach the worker. Why "|": no Windows path holds it, while ":" is in
 # every drive letter and ";" may be in a file name; run.ps1 joins the roots
 # the same way, and the hook splits them on it.
+# Why the four suite variables go through the environment: a subagent
+# inherits its worker's environment, so the suite-slot wrapper finds N and
+# its log, and the rails hook finds the listed commands and the wrapper's
+# path, without any agent having to carry them. Why they are overwritten,
+# the empty string included: a value left in the main session's environment
+# would otherwise reach a worker of a batch with no limit.
 #
 # Files, all under the logs directory
 #   <tag>.session   the session id, written before the process starts
@@ -93,9 +116,13 @@
 # <tag>.exit. A caller who sets
 # AUTOPILOT_CLAUDE to a stub of their own exercises the failure path; a stub
 # of theirs that is meant to pass echoes its arguments,
-# "cwd=<its working directory, physical path>", and the two exported
-# variables as the lines "KENSPC_AUTOPILOT_WORKER=<value>" and
-# "KENSPC_AUTOPILOT_WRITE_ROOTS=<value>" to stderr, since the self-test
+# "cwd=<its working directory, physical path>", and the six exported
+# variables as the lines "KENSPC_AUTOPILOT_WORKER=<value>",
+# "KENSPC_AUTOPILOT_WRITE_ROOTS=<value>",
+# "KENSPC_AUTOPILOT_SUITE_LIMIT=<value>",
+# "KENSPC_AUTOPILOT_SUITE_COMMANDS=<value>",
+# "KENSPC_AUTOPILOT_SUITE_WRAPPER=<value>", and
+# "KENSPC_AUTOPILOT_SUITE_LOG=<value>" to stderr, since the self-test
 # reads the flags, the cwd, and the variables there; prints to stdout a JSON
 # object holding "result" and the --session-id value as "session_id", the
 # two keys the self-test reads from <tag>.json; exits 0; and stays alive for
@@ -151,10 +178,14 @@ new_uuid() {
 # Starts the worker and prints "started <tag> pid <pid> session <id>".
 launch() {
   local tag dir prompt_file resume logs batch exe prompt session pid stamp extra roots top
+  local suite_limit suite_commands suite_wrapper suite_log
   tag=$1; dir=$2; prompt_file=$3; resume=$4
   logs=${AUTOPILOT_LOGS:-$HOME/Projects/_smoke/_logs}
   batch=${AUTOPILOT_BATCH:-${tag%-s*}}
   exe=${AUTOPILOT_CLAUDE:-claude}
+  suite_limit=${AUTOPILOT_SUITE_LIMIT:-}
+  suite_commands=${AUTOPILOT_SUITE_COMMANDS:-}
+  suite_wrapper=${AUTOPILOT_SUITE_WRAPPER:-}
 
   [ -n "$tag" ] || die "the tag is empty"
   [ -d "$dir" ] || die "cannot cd to $dir"
@@ -171,6 +202,13 @@ launch() {
     ''|/*) ;;
     *) die "AUTOPILOT_WORKSPACE is not an absolute path ($AUTOPILOT_WORKSPACE); pass the workspace's absolute path" ;;
   esac
+  # A wrapper path that is not absolute is refused the same way: the hook's
+  # deny reason hands it to a worker as the line to run, and a relative one
+  # would resolve against whatever directory that worker's call runs in.
+  case $suite_wrapper in
+    ''|/*) ;;
+    *) die "AUTOPILOT_SUITE_WRAPPER is not an absolute path ($suite_wrapper); pass the wrapper copy's absolute path" ;;
+  esac
   # A missing executable is a refusal here, not a worker that dies at once:
   # without the check the driver printed "started", .exit read 127 with an
   # empty .json, and the skill resumed a dead worker instead of reading the
@@ -178,6 +216,10 @@ launch() {
   command -v "$exe" >/dev/null 2>&1 || die "no executable $exe; set AUTOPILOT_CLAUDE or put claude on PATH"
   mkdir -p "$logs" || die "cannot create the logs directory $logs"
   logs=$(cd "$logs" && pwd) || die "cannot enter the logs directory $logs"
+  suite_log=""
+  if [ -n "$suite_limit" ]; then
+    suite_log=$logs/$batch-suite-slots.log
+  fi
   prompt=$(cat "$prompt_file") || die "cannot read $prompt_file"
 
   # A launch under a tag whose earlier worker still runs — its pid live and
@@ -259,6 +301,10 @@ launch() {
     trap '' HUP
     export KENSPC_AUTOPILOT_WORKER=1
     export KENSPC_AUTOPILOT_WRITE_ROOTS="$roots"
+    export KENSPC_AUTOPILOT_SUITE_LIMIT="$suite_limit"
+    export KENSPC_AUTOPILOT_SUITE_COMMANDS="$suite_commands"
+    export KENSPC_AUTOPILOT_SUITE_WRAPPER="$suite_wrapper"
+    export KENSPC_AUTOPILOT_SUITE_LOG="$suite_log"
     "${cmd[@]}" > "$logs/$tag.json" 2> "$logs/$tag.err" < /dev/null
     status=$?
     printf '%s\n' "$status" > "$logs/$tag.exit"
@@ -323,13 +369,31 @@ selftest_worker_vars() {
   return 0
 }
 
+# selftest_suite_vars <err-file> <limit> <commands> <wrapper> <log>
+# The self-test's check of the four suite variables a stub wrote to its
+# .err: each line reads exactly the value given, the empty string included.
+# Prints the first failure, naming the variable, and returns 1.
+selftest_suite_vars() {
+  local err=$1 name want
+  shift
+  for name in KENSPC_AUTOPILOT_SUITE_LIMIT KENSPC_AUTOPILOT_SUITE_COMMANDS \
+              KENSPC_AUTOPILOT_SUITE_WRAPPER KENSPC_AUTOPILOT_SUITE_LOG; do
+    want=$1
+    shift
+    grep -qxF -- "$name=$want" "$err" \
+      || { echo "self-test failed: $err does not show $name=$want (it shows $(grep "^$name=" "$err" | head -n 1))" >&2; return 1; }
+  done
+  return 0
+}
+
 # self_test: launch a stub through the same path and check every file the
 # header names. The logs directory is always a fresh directory under $TMPDIR,
 # whatever AUTOPILOT_LOGS says, so a self-test writes nothing under the
 # workspace. Passing: every file is present with the expected content and the
 # timeline holds both lines. It fails, in this order, on a launch naming a
-# missing executable, an empty or whitespace-only prompt file, or an
-# AUTOPILOT_WORKSPACE that is not an absolute path, that is not refused
+# missing executable, an empty or whitespace-only prompt file, an
+# AUTOPILOT_WORKSPACE that is not an absolute path, or an
+# AUTOPILOT_SUITE_WRAPPER that is not an absolute path, that is not refused
 # with status 2 naming it and writing no .session; on a logs
 # directory the launch did not create; on a stdout line other than
 # "started <tag> pid <pid> session <id>" with the pid and the id that .pid
@@ -374,6 +438,13 @@ selftest_worker_vars() {
 # fails, and for a launch under selftest-s16 in that repository with
 # AUTOPILOT_WORKSPACE the empty string, the same items with roots not
 # holding the repository's top level or holding a workspace entry;
+# then, with the caller's environment also holding stale
+# KENSPC_AUTOPILOT_SUITE_* values, for a launch under selftest-s17 with the
+# three AUTOPILOT_SUITE_* inputs set, a .exit missing after the wait, an
+# .err without --name <tag>, or an .err whose four suite variables do not
+# read the inputs and <logs>/selftest-suite-slots.log, and for one under
+# selftest-s18 with the inputs unset, the same with each variable not the
+# empty string — each failure naming the variable;
 # then, for a resume launch of the same stub
 # under <tag>-r1 through the command line (the parser the skill calls)
 # with that id and AUTOPILOT_PLUGIN_DIR, AUTOPILOT_BUDGET_USD, APPEND_SP,
@@ -400,7 +471,7 @@ selftest_worker_vars() {
 # default keeps a name that holds "-s") — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG PETAG PSTAG PRTAG plugin_case n exit_status session flag
-  local WSDIR W1TAG W2TAG W3TAG repo_top
+  local WSDIR W1TAG W2TAG W3TAG S1TAG S2TAG repo_top
   local first_session first_pid refusal rc self FTAG saved_exe bad started
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
@@ -416,12 +487,16 @@ self_test() {
     cat > "$base/stub/claude" <<'STUB'
 #!/bin/sh
 # Stub executable for run.sh --self-test: echoes its arguments, its working
-# directory, and the two exported worker variables to stderr, prints a
+# directory, and the six exported worker variables to stderr, prints a
 # result object to stdout, sleeps one second, exits 0.
 echo "$@" >&2
 echo "cwd=$(pwd -P)" >&2
 echo "KENSPC_AUTOPILOT_WORKER=${KENSPC_AUTOPILOT_WORKER:-}" >&2
 echo "KENSPC_AUTOPILOT_WRITE_ROOTS=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}" >&2
+echo "KENSPC_AUTOPILOT_SUITE_LIMIT=${KENSPC_AUTOPILOT_SUITE_LIMIT:-}" >&2
+echo "KENSPC_AUTOPILOT_SUITE_COMMANDS=${KENSPC_AUTOPILOT_SUITE_COMMANDS:-}" >&2
+echo "KENSPC_AUTOPILOT_SUITE_WRAPPER=${KENSPC_AUTOPILOT_SUITE_WRAPPER:-}" >&2
+echo "KENSPC_AUTOPILOT_SUITE_LOG=${KENSPC_AUTOPILOT_SUITE_LOG:-}" >&2
 id=""
 while [ $# -gt 0 ]; do
   case $1 in
@@ -440,7 +515,7 @@ STUB
   # below; written whatever AUTOPILOT_CLAUDE names, so a caller's stub is
   # used for the passing launches only.
   mkdir -p "$base/stub" || die "cannot create $base/stub"
-  printf '#!/bin/sh\necho "$@" >&2\necho "KENSPC_AUTOPILOT_WORKER=${KENSPC_AUTOPILOT_WORKER:-}" >&2\necho "KENSPC_AUTOPILOT_WRITE_ROOTS=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}" >&2\nexit 3\n' > "$base/stub/fail" || die "cannot write the failing stub"
+  printf '#!/bin/sh\necho "$@" >&2\necho "KENSPC_AUTOPILOT_WORKER=${KENSPC_AUTOPILOT_WORKER:-}" >&2\necho "KENSPC_AUTOPILOT_WRITE_ROOTS=${KENSPC_AUTOPILOT_WRITE_ROOTS:-}" >&2\necho "KENSPC_AUTOPILOT_SUITE_LIMIT=${KENSPC_AUTOPILOT_SUITE_LIMIT:-}" >&2\necho "KENSPC_AUTOPILOT_SUITE_COMMANDS=${KENSPC_AUTOPILOT_SUITE_COMMANDS:-}" >&2\necho "KENSPC_AUTOPILOT_SUITE_WRAPPER=${KENSPC_AUTOPILOT_SUITE_WRAPPER:-}" >&2\necho "KENSPC_AUTOPILOT_SUITE_LOG=${KENSPC_AUTOPILOT_SUITE_LOG:-}" >&2\nexit 3\n' > "$base/stub/fail" || die "cannot write the failing stub"
   chmod +x "$base/stub/fail" || die "cannot make the failing stub executable"
 
   # The five optional variables are unset for the first launch, whatever
@@ -453,7 +528,13 @@ STUB
   # sets it.
   KENSPC_AUTOPILOT_WORKER=0; export KENSPC_AUTOPILOT_WORKER
   KENSPC_AUTOPILOT_WRITE_ROOTS=/kenspc-selftest-stale-root; export KENSPC_AUTOPILOT_WRITE_ROOTS
-  unset AUTOPILOT_WORKSPACE
+  # Stale suite values too, so a driver that did not overwrite each of the
+  # four would hand a worker of a batch with no limit another batch's.
+  KENSPC_AUTOPILOT_SUITE_LIMIT=97; export KENSPC_AUTOPILOT_SUITE_LIMIT
+  KENSPC_AUTOPILOT_SUITE_COMMANDS=kenspc-selftest-stale-command; export KENSPC_AUTOPILOT_SUITE_COMMANDS
+  KENSPC_AUTOPILOT_SUITE_WRAPPER=/kenspc-selftest-stale-wrapper; export KENSPC_AUTOPILOT_SUITE_WRAPPER
+  KENSPC_AUTOPILOT_SUITE_LOG=/kenspc-selftest-stale-log; export KENSPC_AUTOPILOT_SUITE_LOG
+  unset AUTOPILOT_WORKSPACE AUTOPILOT_SUITE_LIMIT AUTOPILOT_SUITE_COMMANDS AUTOPILOT_SUITE_WRAPPER
   AUTOPILOT_LOGS=$LOGS
   AUTOPILOT_BATCH=selftest
   TAG=selftest-s1
@@ -491,6 +572,13 @@ STUB
     printf '%s\n' "$refusal" | grep -qF -- "AUTOPILOT_WORKSPACE is not an absolute path ($bad)" \
       || { echo "self-test failed: the refusal of AUTOPILOT_WORKSPACE=$bad does not name it" >&2; return 1; }
   done
+  # A wrapper path that is not absolute is refused the same way: the hook's
+  # deny reason hands it to the worker as the line to run.
+  refusal=$( (AUTOPILOT_SUITE_WRAPPER=suite-slots.sh launch "$TAG" "$base" "$base/prompt.md" "") 2>&1 ); rc=$?
+  [ "$rc" -eq 2 ] && [ ! -f "$LOGS/$TAG.session" ] \
+    || { echo "self-test failed: a launch with AUTOPILOT_SUITE_WRAPPER=suite-slots.sh returned $rc, expected 2 and no .session" >&2; return 1; }
+  printf '%s\n' "$refusal" | grep -qF -- "AUTOPILOT_SUITE_WRAPPER is not an absolute path (suite-slots.sh)" \
+    || { echo "self-test failed: the refusal of AUTOPILOT_SUITE_WRAPPER=suite-slots.sh does not name it" >&2; return 1; }
 
   # The launch's stdout is captured: the skill reads the pid and the
   # session id from that one line.
@@ -698,6 +786,30 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
   grep -qF -- "--name $W2TAG" "$LOGS/$W2TAG.err" \
     || { echo "self-test failed: $LOGS/$W2TAG.err does not show --name $W2TAG" >&2; return 1; }
   selftest_worker_vars "$LOGS/$W2TAG.err" "$WSDIR" absent "$repo_top" || return 1
+
+  # The four suite variables: with the three inputs set, each reads its
+  # input and the log sits under the logs directory; with them unset, each
+  # is the empty string, though the caller's environment holds stale
+  # values. The rails hook and the wrapper read them, so a driver that
+  # dropped one would leave a worker's suites unbounded or bounded by
+  # another batch's values.
+  S1TAG=selftest-s17
+  AUTOPILOT_SUITE_LIMIT=2; AUTOPILOT_SUITE_COMMANDS='dotnet test|pnpm test'; AUTOPILOT_SUITE_WRAPPER=$base/suite-slots.sh
+  launch "$S1TAG" "$base" "$base/prompt.md" ""
+  unset AUTOPILOT_SUITE_LIMIT AUTOPILOT_SUITE_COMMANDS AUTOPILOT_SUITE_WRAPPER
+  n=0; until [ -f "$LOGS/$S1TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$S1TAG.exit" ] || { echo "self-test failed: $LOGS/$S1TAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $S1TAG" "$LOGS/$S1TAG.err" \
+    || { echo "self-test failed: $LOGS/$S1TAG.err does not show --name $S1TAG" >&2; return 1; }
+  selftest_suite_vars "$LOGS/$S1TAG.err" 2 'dotnet test|pnpm test' "$base/suite-slots.sh" \
+    "$(cd "$LOGS" && pwd)/selftest-suite-slots.log" || return 1
+  S2TAG=selftest-s18
+  launch "$S2TAG" "$base" "$base/prompt.md" ""
+  n=0; until [ -f "$LOGS/$S2TAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ -f "$LOGS/$S2TAG.exit" ] || { echo "self-test failed: $LOGS/$S2TAG.exit is missing after the wait" >&2; return 1; }
+  grep -qF -- "--name $S2TAG" "$LOGS/$S2TAG.err" \
+    || { echo "self-test failed: $LOGS/$S2TAG.err does not show --name $S2TAG" >&2; return 1; }
+  selftest_suite_vars "$LOGS/$S2TAG.err" "" "" "" "" || return 1
 
   # A resume launch through the same path, with the first launch's id: it
   # is the recovery for a dead or cap-ended worker, reached after a paid

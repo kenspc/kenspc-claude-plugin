@@ -231,7 +231,35 @@ OK message that names the scripts.
 
 ### Task 3: The drivers pass the limit
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: `launch()` reads the three inputs into locals at its top, and
+  the log path is built from the resolved logs directory after its
+  `mkdir -p`, so `KENSPC_AUTOPILOT_SUITE_LOG` is absolute whatever
+  `AUTOPILOT_LOGS` was given as. Each export is one line of its own in the
+  subshell (and one `$env:` line in run.ps1's inner script), so deleting one
+  line drops exactly one variable. In run.ps1 the placeholders are
+  `__SUITELIMIT__`, `__SUITECOMMANDS__`, `__SUITEWRAPPER__`, and
+  `__SUITELOG__`, without an inner underscore, since the template's
+  replacement matches `__[A-Z]+__`. The stale caller values the self-tests
+  set (`97`, `kenspc-selftest-stale-command`, `/kenspc-selftest-stale-wrapper`,
+  `/kenspc-selftest-stale-log`) stay in place for every launch, so the
+  inputs-set launch also fails on a deleted export, not only the unset one.
+- Changes/tradeoffs: the new launches use the free tags `selftest-s17`
+  (inputs set) and `selftest-s18` (inputs unset) in both drivers; each
+  self-test failure names the variable, and run.sh's also quotes the value
+  the stub saw. The refusal of a relative wrapper path is checked before the
+  first launch, beside the workspace refusals. The self-test header comments
+  list the new items. `pwsh` on this Mac is a .NET tool that found no
+  runtime from this shell (`You must install .NET`, exit 131); the runtime
+  is in `~/.dotnet`, so the PowerShell runs used
+  `DOTNET_ROOT=$HOME/.dotnet` on the command line, with nothing installed.
+  Mutation runs on copies under `$TMPDIR` (removed afterwards, absence
+  shown): each of the four export lines deleted from each driver made its
+  self-test exit 1 naming that variable (eight runs). The self-tests' own
+  `autopilot-selftest*` directories under `$TMPDIR` from these runs were
+  removed by path.
 
 Implement the plan's § The driver and Step 3 in
 `plugins/kenspc/skills/autopilot/scripts/run.sh` and its PowerShell mirror
