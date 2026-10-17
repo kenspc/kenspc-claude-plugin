@@ -488,7 +488,22 @@ that cannot ask (a system reminder to work without stopping), …".
 
 ### Task 6: Live checks on this Mac
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: both headless sessions ran with `--max-budget-usd 1` and
+  `timeout 300` (`/opt/homebrew/bin/timeout`), from the throwaway
+  directory, with write roots `<dir>|$TMPDIR|/tmp|/private/tmp`. The prompt
+  told the session to quote the error verbatim and do nothing else, so it
+  would not go on to run the wrapper's line itself. The three wrappers of
+  check 2 used a lock directory inside the same throwaway directory, so one
+  removal cleared both.
+- Changes/tradeoffs: check 1's quoted error carries the harness's prefix
+  (`PreToolUse:Bash hook error: [bash "…/autopilot-worker-rails.sh"]:`)
+  before `autopilot rails:`; the record says so rather than calling the
+  prefix part of the hook's reason. Check 2's third wrapper waited 5 s.
+  The real `/tmp/kenspc-suite-slots` was never created (`ls -d` exit 1
+  afterwards). The record is `docs/dry-runs/suite-slots-live.md`.
 
 Depends on: Task 1-5
 
