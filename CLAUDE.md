@@ -78,7 +78,7 @@ Each skill lives in `skills/<skill-name>/` with:
 - `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's: its two drivers, `run.sh` and its PowerShell mirror `run.ps1`, and its three helper scripts, `extract-acceptance.sh` and `zero-diff.sh` (4.6.0) and `temp-candidates.sh` (4.8.0), which `check-autopilot-scripts.sh` holds; `check-no-model-names.sh` scans all five with the rest of `skills/`
 - `templates/` (optional) — files the skill reads by path and fills in (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/templates/<file>`); today only init-project's, one `.tmpl` file per document it writes. A template is never named `CLAUDE.md` or `AGENTS.md`, since a session working in this repository would load a `CLAUDE.md` as a memory file, and an `AGENTS.md` too wherever Claude Code reads AGENTS.md itself (its `claude-md-and-agents-md` mode), and `check-no-model-names.sh` scans templates with the rest of `skills/`
 
-Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt.
+Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt; the one other dispatch is the read-only sweep of generate-task, generate-guide, and diagnose-bug (4.9.0), unnamed subagents given a free-text prompt that write nothing and return `file:line`.
 
 Commands live in `commands/` as `.md` files with YAML frontmatter (`name`, `description`, `argument-hint`, `disable-model-invocation: true`). Commands are explicit entry points only: since Claude Code merged commands and skills, both descriptions load into context and compete for natural-language auto-routing — the skill's description owns the trigger phrases, so each command keeps a one-line description and opts out of model invocation (v3.4.2).
 
@@ -161,7 +161,9 @@ an architecture rewrite, so the per-skill field stays `3.0.0`.
 
 Skills use plugin agents (defined in `agents/`) as workers, dispatched via the
 Agent tool — except the autopilot, whose workers are headless sessions (the
-fourth pattern below). Four orchestration patterns:
+fourth pattern below); the read-only sweeps of generate-task,
+generate-guide, and diagnose-bug (4.9.0) are unnamed subagents that return
+`file:line` and review nothing. Four orchestration patterns:
 
 **No review (generate-brief, diagnose-bug, prototype, init-project):**
 Brief is a discovery artifact, not a verifiable spec. Review happens downstream
