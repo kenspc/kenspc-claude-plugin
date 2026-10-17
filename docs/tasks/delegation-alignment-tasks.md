@@ -94,7 +94,21 @@ Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 
 ### Task 3: Reviewers leave port- and database-bound tests to regression-verifier
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: PREREQUISITES item 5's existing Why already gave the ports
+  reason, so the plan's Why was merged into it (five reviewers run at once;
+  five full suites exhausted the ports) rather than stated twice, with the
+  contention and regression-verifier-alone reasons appended. In
+  regression-verifier, a section reading `none`, or a report without the
+  section (a standalone or older report), lists nothing, so check 3 does not
+  fail on its absence.
+- Changes/tradeoffs: beyond the spec, Schema A's opening sentence ("two
+  tables and a one-line closing summary") now names the section, so the
+  format's own summary stays true; the Schema A section carries one example
+  line and the `none` form. The INPUTS bullet for `angle-<n>.md` names the
+  section and points at check 3, which carries the run rule and its Why.
 
 Plan Step 3, agent text (the guard is Task 4). In the five reviewers
 (`requirements-reviewer.md`, `edge-case-reviewer.md`, `quality-reviewer.md`,

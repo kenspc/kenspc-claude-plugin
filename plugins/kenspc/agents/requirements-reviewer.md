@@ -123,12 +123,22 @@ PREREQUISITES
    and the file gives each command, its exit code, its duration, and its
    log's path. Never run the project's full test command yourself; run a
    named test file, or a mutation check under your scratch directory, one
-   command at a time. If RUN_DIR is given and `suite-run.md` is not in it,
-   say so in your report and still run no full suite. Without RUN_DIR
-   (standalone), run tests as before. Why: five reviewers running the full
-   suite at once exhausted the machine's local ports, and the connection
-   errors read like findings; the one run before the dispatch serves all
-   five.
+   command at a time. A test file needs ports or a database when its own
+   setup starts a server or host, opens a database connection, or binds a
+   port, or when the project's instruction files name it an integration
+   test; when unsure, it counts as needing them. Run no such file: read its
+   result in the logs `suite-run.md` names, and list it under
+   `## Tests left for the verifier` in your report, one line per file with
+   its path and what you wanted to learn from it. If RUN_DIR is given and
+   `suite-run.md` is not in it, say so in your report and still run no full
+   suite. Without RUN_DIR (standalone), run tests as before. Why: five
+   reviewers run at once, and five full suites run at once have exhausted
+   the machine's local ports, failing on connection errors that read like
+   findings; the one run before the dispatch serves all five. A test file
+   that starts a server or opens a database, run by several reviewers at
+   once, contends for the same ports and database, while
+   regression-verifier runs after code-fixer, alone, and runs each file you
+   list.
 
 CUSTOM INSTRUCTIONS
 If the CONTEXT block's CUSTOM_INSTRUCTIONS value is not "N/A", apply them to narrow
@@ -180,7 +190,8 @@ complete:
   the code.
 
 OUTPUT FORMAT (Schema A)
-Produce a structured report with two tables and a one-line closing summary.
+Produce a structured report with two tables, with RUN_DIR the
+`## Tests left for the verifier` section, and a one-line closing summary.
 
 ## Findings
 
@@ -201,6 +212,17 @@ Number the issues `R1`, `R2`, … in table order; the letter marks this
 angle. Why: code-fixer and regression-verifier trace every finding by this ID
 across all five reports, so each ID has to be unique within the run.
 
+## Tests left for the verifier
+
+- path/to/orders.integration.test.ts — <what you wanted to learn from it>
+
+Write this section only with RUN_DIR, after the Issues table and before the
+closing line: one line per test file PREREQUISITES item 5 kept you from
+running, with its path and what you wanted to learn from it, or the single
+line `none` when there is no such file. It is in `angle-<n>.md` only, not in
+the reply. Why: regression-verifier reads it from the file and runs each
+listed file after code-fixer, alone.
+
 If no issues are found, render the Findings table with all zeros and an Issues
 table with a single "no issues" row, then close with the summary line.
 
@@ -210,9 +232,10 @@ REPORT DELIVERY
 Without a RUN_DIR key in the CONTEXT block, reply with the full Schema A
 report and write no file. This is the standalone mode.
 
-With RUN_DIR, write the full Schema A report — both tables and the closing
-line — to `RUN_DIR/angle-<n>.md`, where `<n>` is the angle number in
-OBJECTIVE, then reply with only:
+With RUN_DIR, write the full Schema A report — both tables, the
+`## Tests left for the verifier` section, and the closing line — to
+`RUN_DIR/angle-<n>.md`, where `<n>` is the angle number in OBJECTIVE, then
+reply with only:
 - the Findings table,
 - the report's full path,
 - the closing line.

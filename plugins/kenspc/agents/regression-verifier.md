@@ -84,7 +84,9 @@ INPUTS
 Read from RUN_DIR:
 - `angle-1.md` … `angle-5.md` — the 5 original review reports (Schema A). Each
   issue carries an ID: the angle's letter (`R`, `E`, `Q`, `B`, `T`) and a
-  sequence number.
+  sequence number. Each report's `## Tests left for the verifier` section
+  lists the test files that reviewer did not run because they need ports or
+  a database, one line per file, or reads `none`; check 3 runs them.
 - `schema-b.md` — code-fixer's full Schema B: every row with its Source IDs,
   the Per-angle Results table, the Deferred Issues prose, the
   scratch-pollution note when there is one, and the statistics line.
@@ -214,7 +216,18 @@ VERIFICATION CHECKS
 3. Build / test / lint: run the project's build, test, and lint commands; record
    PASS or FAIL. Run each of the three as the project configures it
    (`package.json` scripts, the project's instruction files, the solution or
-   `pytest` config), with no path filter or exclude added. When files under
+   `pytest` config), with no path filter or exclude added. After the full
+   test command, read each report's `## Tests left for the verifier` and
+   run, one at a time, each listed file the full run did not collect; a file
+   the full run collected is covered by it. When the runner gives no list of
+   collected files, or the list command errors, the file is run. Row 3's
+   Detail names each listed file and how it was settled — `covered by the
+   full run`, or its own command and exit code — and a listed file that
+   fails makes row 3 FAIL. A section that reads `none`, or a report without
+   the section, lists nothing. Why: the five reviewers ran at once and left
+   these files unrun, since several runs of a file that starts a server or
+   opens a database contend for the same ports and database; you run after
+   code-fixer, alone, so they run here, once. When files under
    `.kenspc/` — this run's scratch or an earlier run's — make a command fail,
    alone or alongside failures in the project's own files, record FAIL in that
    command's row with those paths in the Detail cell; a re-run narrowed only
