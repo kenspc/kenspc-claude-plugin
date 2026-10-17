@@ -15,7 +15,8 @@ make stale. The release is 4.9.0.
 Out of scope:
 
 - Question 11, a machine-wide lock on full test suites for concurrent
-  autopilot batches — a new feature, planned separately.
+  autopilot batches — a new feature, planned separately; the Doc-sync step
+  records it on `docs/roadmap.md`.
 - The global rule itself: narrowed in dev-setup `463cd95` (pushed), which
   this plan builds on.
 - Reusing task-implementer's last test run in place of task-implement's
@@ -42,7 +43,7 @@ rule and the plugin's text read against each other. The user ruled:
 
 | Q | Finding | Ruling |
 |---|---------|--------|
-| 2 | Plugin agents report PASS rows with no command or exit code (Schema C rows 2–4, code-fixer's final run, Schema D) | Add command, exit code and log path to those rows; also to S5's and S6's replies |
+| 2 | Plugin agents report PASS rows with no command or exit code (Schema C rows 2–4, code-fixer's final run, Schema D) | Add command, exit code and log path to those rows; S5's and S6's replies add each check's command and exit code, with no log path (follow-up ruling) |
 | 3 | "Confirm the part you build on" could make the main session re-run the suite | Confirm by reading the reported exit codes and logs; no re-run |
 | 4 | The pre-review suite run names "the orchestrator" but not that it runs in the main session's own context | State it |
 | 5 | A whole task-review handed to a subagent would review all five angles in one context | task-review and task-implement run only in the top-level session |
@@ -77,10 +78,12 @@ none lists Agent in `tools:`.
   the plugin runs in projects whose user-level CLAUDE.md holds no such
   rule, and the repository's writing rules ask a Why to state what fails
   and why. The bold titles in this plan name the rule for its reader only.
-- **Evidence is a field, not prose.** Every check an agent or worker runs
-  and reports gets its command, exit code, and a log path in the report's
-  existing structure (a Detail cell, a reply line, a Schema D section), so
-  the main session confirms a verdict by reading, not re-running (Q3).
+- **Evidence is a field, not prose.** Every check an agent runs and
+  reports gets its command, exit code, and a log path in the report's
+  existing structure (a Detail cell, a reply line, a Schema D section), and
+  every check S5 or S6 runs gets its command and exit code in the worker's
+  reply, so the main session confirms a verdict by reading, not re-running
+  (Q3).
 - **Byte-identical blocks change together.** Rulings that land in the
   reviewers' shared sections, the `canonical:dispatch` block, or the
   `canonical:verdict-shared` block are written once and copied, and the
@@ -408,6 +411,7 @@ at least by these, each of which fails at `20000bf`:
 `check-run-contract.sh` entry); `plugins/kenspc/CHANGELOG.md` holds `## 4.9.0 — unreleased`;
 `grep -n 'Detail is .—., so the table cannot show' docs/release-checklist.md`
 prints nothing (it prints line 168 before the edit);
+`grep -ci 'machine-wide' docs/roadmap.md` is at least 1 (0 at `20000bf`);
 `bash scripts/check-all.sh` and `bash scripts/check-all.sh --self-test`
 exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
 (no guard is added).
@@ -433,6 +437,11 @@ exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
   smoke rows 6 and 7, which gain the Schema C Detail form and code-fixer's
   `Final checks:` line, row 6 also Schema D's `## Checks run` (Step 5; the
   Testing Strategy names the smoke run as where they are first seen).
+- `docs/roadmap.md` — a new item at the end of the list: a machine-wide
+  limit on full test suites run at once across concurrent autopilot
+  batches, the batches' own `Run facts:` gates bounding only each batch
+  (Q11, planned separately; the user ruled it onto the roadmap on
+  2026-10-17).
 - `plugins/kenspc/references/task-document-example.md` — N/A for this
   document: Schema D is task-implementer's reply, not the task document.
 - `README.md` — N/A for this document: no skill's summary row changes.
@@ -478,16 +487,3 @@ exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
 - The interactive terminal CLI's Agent tool is not measured (Step 13
   records it as unmeasured). Measuring it needs a terminal session the
   user starts; nothing in this plan depends on the answer.
-- Log paths in S5's and S6's replies. The Q2 ruling reads "Add command,
-  exit code and log path to those rows; also to S5's and S6's replies",
-  and the Technical Approach gives every reported check a log path, while
-  Step 11 as written gives S5's line `<command> → exit <n>` and S6's
-  pre-flight its exit codes, with no log path in either. Step 11 is
-  labelled a follow-up ruling, which may have dropped the log path; which
-  reading holds is the user's to confirm before Step 11 runs. If the log
-  path stays, Step 11 also names where a worker writes those logs (for example under
-  `<workspace>/_logs/`, a write root).
-- Question 11 (a machine-wide lock on full test suites) is out of scope as
-  "planned separately", and no step records it anywhere durable. Whether it
-  goes on `docs/roadmap.md` in this release is the user's call; if it does,
-  the Doc-sync step lists `docs/roadmap.md` under Documentation impact.
