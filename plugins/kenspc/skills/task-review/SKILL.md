@@ -479,9 +479,10 @@ one, and a statistics line of this fixed form:
 `total reported N (R n, E n, Q n, B n, T n, F n, V n), deduplicated to N unique, FIXED N, DEFERRED N, NOT APPLICABLE N, DEDUPED N`
 <!-- canonical:stats-line:end -->
 
-Its reply carries the statistics line, the Per-angle Results table, the HIGH
-and MEDIUM rows with their Deferred Issues paragraphs, the scratch-pollution
-note when there is one, and the path of schema-b.md. The Schema F report
+Its reply carries the statistics line, the `Final checks:` line, the
+Per-angle Results table, the HIGH and MEDIUM rows with their Deferred
+Issues paragraphs, the scratch-pollution note when there is one, and the
+path of schema-b.md. The Schema F report
 renders that reply verbatim, and the LOW rows and their prose stay in the
 file. When code-fixer returns, print only this line, the counts taken from
 its statistics line:
@@ -618,9 +619,10 @@ Schema A roll-up, code-fixer's reply, and Schema C are rendered in the run:
 (When `RUN_DIR/rulings.md` exists, first one line naming the file and who
 ruled: `Rulings: <RUN_DIR>/rulings.md — ruled by <who>`.)
 
-(code-fixer's reply verbatim: the statistics line, the Per-angle Results
-table, the HIGH and MEDIUM rows with their Deferred Issues paragraphs, the
-scratch-pollution note when there is one, and the full path of schema-b.md,
+(code-fixer's reply verbatim: the statistics line, the `Final checks:`
+line, the Per-angle Results table, the HIGH and MEDIUM rows with their
+Deferred Issues paragraphs, the scratch-pollution note when there is one,
+and the full path of schema-b.md,
 where the LOW rows and their prose remain. When a second round ran
 (Step 7), its reply, which accounts for every row, in place of the
 first's.)
