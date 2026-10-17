@@ -38,7 +38,35 @@ Tasks 1, 3, and 4 depend on nothing in this document.
 
 ### Task 1: The suite-slot wrapper script
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the child is started as `"$@" 0<&0 &`, because a background
+  child of a non-interactive bash otherwise reads `/dev/null` as its
+  standard input. The mutex is tried up to 10 times at 0.1-second steps
+  per poll, so a mutex held for milliseconds by another counter does not
+  cost a whole one-second poll; each try counts toward the 10 whether or
+  not a stale mutex was reclaimed, so a mutex that cannot be removed ends
+  the tries. A GNU `stat -f %m` prints file-system data rather than
+  failing, so a value that is not all digits falls through to
+  `stat -c %Y`. `ps -o lstart=` runs under `LC_ALL=C` per call, never as
+  an export, so the wrapped suite keeps the caller's locale. The nested
+  call validates its arguments first and then runs the command without
+  `exec`. Mutant targets for Task 2 carry trailing comments
+  (`# count check`, `# live-holder check`, `# release on exit`), and the
+  nesting check is the one `KENSPC_SUITE_SLOT_HELD` test in the file.
+- Changes/tradeoffs: an empty `owner` file is treated as no owner (the age
+  rule), since a taker killed between the file's creation and its write
+  leaves it so. A busy return whose last attempt never got the mutex reads
+  the holders without reclaiming them; with none live it says the mutex
+  stayed held. The mutex reclaim writes no log line, since the plan's
+  `reclaimed` event counts holders in the reviewer report. The log's
+  `holders <k>` on `released` and `nested` lines counts the holder files
+  present, the caller's own included; the header says so. Smoke checks
+  under `/bin/bash` 3.2: `run --limit 1 -- true` exit 0,
+  `sh -c 'exit 3'` exit 3, `--limit 0` exit 2, no holder file left, and
+  additionally a busy return (75, two holders named), limit 3 entering
+  beside two holders, and SIGTERM ending the child (143, child gone).
 
 Create `plugins/kenspc/skills/autopilot/scripts/suite-slots.sh` as the plan's
 § The wrapper, `suite-slots.sh` specifies: the interface
