@@ -105,6 +105,10 @@ Run-directory check for rows 6 and 7 (v3.5.1):
   `run_in_background` parameter, and `false` holds each call until its
   subagent finishes, as in a headless run (Claude Code 2.1.301, measured
   2026-10-17); an omitted parameter runs the subagent in the background.
+  One exception was seen the same day: a code-fixer dispatch with `false`
+  ran in the background while the calls around it held, so in a Desktop
+  run a single background-task notice is recorded, not failed, as long as
+  the workflow still reaches its report with no user input.
   The interactive terminal CLI is not measured: the 2.1.301 binary drops
   the parameter there when fork mode is on, so foreground dispatch may not
   be observable in that CLI.

@@ -1658,7 +1658,10 @@ on Windows.
   finishes in headless (`claude -p`) and SDK sessions, and in the Claude
   Code Desktop app: measured on 2.1.301 (2026-10-17), where the same call
   with the parameter omitted returned at once and ran the subagent in the
-  background. The interactive terminal CLI is not measured; Claude Code
+  background. Once, in another Desktop session the same day, a call with
+  the parameter set to `false` still ran in the background, cause unknown;
+  the session went on when the subagent's completion notice woke it. The
+  interactive terminal CLI is not measured; Claude Code
   2.1.301 drops the parameter there when its fork mode is on, and
   subagents then run asynchronously and hand each result back — the
   workflow still finishes within the same turn, with no further input

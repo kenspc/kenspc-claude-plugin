@@ -9,6 +9,17 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.10.1 — unreleased
+
+### Changed
+
+- **The README's Known behavior bullet on subagents in interactive
+  sessions** records that `run_in_background: false` is not always held in
+  a Claude Code Desktop session: in the 4.10.0 implementation run (2.1.301)
+  one code-fixer dispatch with `false` ran in the background while the
+  calls around it held, cause unknown, and the run went on when the
+  completion notice woke it.
+
 ## 4.10.0 — 2026-10-17
 
 Autopilot batches running side by side on one machine can now cap how

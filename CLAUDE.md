@@ -514,7 +514,13 @@ how the five reviewers are dispatched. The parameter exists in headless
 session, measured on 2026-10-17: there a call with
 `run_in_background: false` returned only when the subagent had finished,
 and the same call with the parameter omitted returned at once and ran the
-subagent in the background. The interactive terminal CLI is not measured:
+subagent in the background. It is not a guarantee there: in another
+2.1.301 Desktop session the same day (the 4.10.0 implementation run), one
+code-fixer dispatch with `run_in_background: false` returned at once and
+ran in the background, while the five reviewers before it and
+regression-verifier after it, with the same setting, held in the
+foreground; the session went on when the completion notice woke it, and
+the cause is not known. The interactive terminal CLI is not measured:
 the 2.1.301 binary drops the parameter when its fork-mode gate is on, which
 its docs tie to that CLI (a reading of the binary), and there subagents
 ran asynchronously, each result handed back within the same turn (observed
