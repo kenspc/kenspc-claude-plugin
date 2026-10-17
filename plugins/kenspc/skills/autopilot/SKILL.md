@@ -149,7 +149,7 @@ the first launch needs, checked before any session is paid for.
 **Inputs**: the argument file; the repository (`git rev-parse --show-toplevel`,
 HEAD, `git -c core.quotePath=false status --porcelain -uall`); `ListAgents`;
 the driver at `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh` and
-the three scripts beside it;
+the four scripts beside it;
 `ps -o args= -p $PPID`; `$CLAUDE_EFFORT` and `$CLAUDE_CODE_SESSION_ID` in
 this session's Bash; `printenv CLAUDE_CODE_EFFORT_LEVEL`; the sources
 that can set `crossSessionInbound` — managed, the launch line's
@@ -167,7 +167,7 @@ carry the line. Why: nothing downstream reads a headless session's reply
 (Templates § The settings line).
 
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
-the driver copy, its self-test files, the three script copies, the
+the driver copy, its self-test files, the four script copies, the
 temp folder's before list, the `Zero diff:` paths file, the trial
 extraction's spec copy and `<batch>-trial-cmds/`, the state file —
 and nothing into the repository. Why: every failing check is a stop, and a stop before the first
@@ -229,6 +229,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Challenge seeds:` | sub-bullets S1 argues against | empty |
 | `Prior specs:` | `<hash>^:<path>` entries, read with `git show` | empty |
 | `Workspace:` | a directory | `~/Projects/_smoke/` |
+| `Suite limit:` | a positive integer N, with one sub-bullet per command prefix, each one code span (repo mode only) | unset — no lock |
 | `Role settings:` | one sub-bullet per role, `- <role>: model <model>[, effort <level>]` or `- <role>: effort <level>`: `<role>` one of `S1`, `S2`, `S3`, `S3b`, `S4`, `S4w`, `S5`, `S6`; `<model>` one token with no whitespace and no comma, passed to `--model` as written; `<level>` one of `low`, `medium`, `high`, `xhigh`, `max` | empty — every role runs at the pass-through values |
 
 A label written with a note, `- <Label> (<note>): <value>`, is read as
@@ -254,6 +255,47 @@ from its own settings. Why the declarations live only in the spec: the
 plugin ships no default table and names no model, since a model name
 written into the plugin goes stale silently at the next model generation,
 while a spec is written for the models of its own day.
+
+`Suite limit:` caps how many heavy test suites run at once on the machine,
+across every batch on it:
+
+```
+- Suite limit: 2
+  - `dotnet test`
+  - `pnpm test`
+```
+
+The value is a positive integer, N. Each sub-bullet is one code span
+holding a command prefix: one or more words, none of them holding `|`, a
+quote, or a newline. The field may carry a note, like any label. Before a
+listed command runs, it takes a slot in a lock the whole machine shares,
+the directory `/tmp/kenspc-suite-slots`, through the wrapper
+`suite-slots.sh` (Phase 0 § The workspace copies it), whatever the
+command's arguments — `dotnet test --filter X` takes one too — and a caller
+enters only while fewer than its own N slots are held. Every listed command
+of every batch counts against the one lock: a batch that lists
+`dotnet test` and one that lists `pnpm test` share it. The run hands N, the
+prefixes, and the wrapper copy's path to every worker through the driver
+(§ Launch, wait, return); the preamble's § 6 tells the worker to run each
+listed command through the wrapper, and the rails hook denies one run
+without it. With no field there is no lock: the wrapper is still copied,
+no worker is told to use it, and the hook checks nothing. The field is
+repo mode only (The start checks). `Run facts:` stays free text beside it.
+Why a lock across batches: more than about two runs of one integration
+suite at once exhausted a machine's local ports, and its tests then failed
+on a connection error rather than on an assertion; a batch's `Run facts:`
+bound that batch and its subagents alone, so three batches still ran three
+suites at once. Why one pool: the resource that runs out, the machine's
+local ports, belongs to no one command. Why no default list: the plugin
+names no project's suite, and a default list would be hard-coded. Why
+repo mode only: the plugin-mode S4 runs each case as a nested headless
+session through the driver copy, not as a `<shell> <file>` the wrapper
+could take, a nested launch would inherit the suite values from S4's
+environment as it inherits the model, and the plugin's own checks are not
+the port-heavy suites the lock is for. Why `Run facts:` stays free text:
+it is the measured fact behind the field, written for a worker to read a
+failure correctly, while the limit has to be read by the run, and free
+text cannot be parsed reliably.
 
 The section is read once, in Phase 0, and the values read there govern the
 whole run. A later read of a field — Phase 3's `Acceptance:` cases, Phase
@@ -295,13 +337,15 @@ the whole tree; `$TMPDIR` is for anything else.
 <workspace>/
   _prompts/     the copied driver <batch>-run.sh and scripts
                 <batch>-extract-acceptance.sh, <batch>-zero-diff.sh,
-                <batch>-temp-candidates.sh, <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
+                <batch>-temp-candidates.sh, <batch>-suite-slots.sh,
+                <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
                 the assembled <batch>-<tag>.md, and S4's <batch>-spec.md,
                 <batch>-trial-cmds/, and <batch>-s4-cmds/ (repo mode)
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
                 <batch>-state.md  <batch>-report.md
                 <batch>-tmp-before.txt  <batch>-tmp-candidates.txt
+                <batch>-suite-slots.log   the suite-slot wrapper's events
                 <batch>-walk/   S4w's walk.md and its screenshots
   <batch>-*     seed projects (plugin mode)
   .trash/       discarded directories, moved here as <name>-<timestamp>/
@@ -322,13 +366,17 @@ exported for the workers — a `claude` outside `PATH` — would stand in for
 the stub: paid sessions at every start, then a stop on the flag check,
 since the real executable echoes nothing to stderr.
 
-The three scripts beside the driver are copied with it:
+The four scripts beside the driver are copied with it:
 `extract-acceptance.sh` to `_prompts/<batch>-extract-acceptance.sh`,
-`zero-diff.sh` to `_prompts/<batch>-zero-diff.sh`, and
-`temp-candidates.sh` to `_prompts/<batch>-temp-candidates.sh`. Why: for the reason the
+`zero-diff.sh` to `_prompts/<batch>-zero-diff.sh`,
+`temp-candidates.sh` to `_prompts/<batch>-temp-candidates.sh`, and
+`suite-slots.sh` to `_prompts/<batch>-suite-slots.sh`, the last copied
+whether or not `Suite limit:` is set. Why: for the reason the
 driver is copied — a plugin-mode S3 may edit the shipped scripts, and a
 running batch keeps the text it started with — and so S4 runs the same
-copy as the main session, by the workspace path its task block names.
+copy as the main session, by the workspace path its task block names; the
+wrapper copy is also the path every worker's wrapper line and the rails
+hook's deny reason name.
 
 Before the driver's self-test, and so before anything of the batch is
 written there, the main session records the temp folder — `${TMPDIR:-/tmp}`
@@ -452,6 +500,14 @@ reminder to work without stopping), the run ends with the same message.
 - `Walk:` is `on`, `off`, or flow sub-bullets in repo mode, and `off` or
   absent in plugin mode; `on` or sub-bullets in plugin mode is the
   settings stop, naming `Walk`. Why: the plugin has no app to walk.
+- `Suite limit:` is absent, or set in repo mode and in its grammar. A
+  value that is not a positive integer, a field with no sub-bullet, a
+  sub-bullet that is not exactly one code span or whose prefix holds `|`, a
+  quote, or a newline, and the field in plugin mode are each the settings
+  stop, naming `Suite limit` and the value that failed. Why: a limit the
+  hook cannot apply would let suites run unbounded while the settings line
+  said otherwise, and in plugin mode no worker runs a case the wrapper
+  could take (§ The `## Autopilot` section).
 - When `Walk:` is not `off` in repo mode, the walk tool is usable. The
   walk uses the Playwright MCP alone, checked from the repository root
   with
@@ -895,8 +951,9 @@ Every worker is one launch, one wait, one return.
   and the task block; run the driver copy with the environment it needs —
   `AUTOPILOT_LOGS=<workspace>/_logs`, `AUTOPILOT_BATCH=<batch>`,
   `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_WORKSPACE=<workspace>`
-  (below), `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` (below), and
-  `AUTOPILOT_PLUGIN_DIR` (below) — with the repository root as the
+  (below), `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` (below),
+  `AUTOPILOT_PLUGIN_DIR` (below), and the three `AUTOPILOT_SUITE_*`
+  inputs (below) — with the repository root as the
   worker's cwd; in an interactive main session, print
   `S<n> started — <tag> pid <pid> session <session-id> — <prompt path>`
   as a line of its own in this session's reply (the pid and the session id
@@ -970,6 +1027,20 @@ Every worker is one launch, one wait, one return.
   the plugin's rails hook reads in every worker the driver starts, and a
   marked nested main session writes its state file and prompts under the
   workspace, a write the hook would deny without that root.
+
+  Every launch sets `AUTOPILOT_SUITE_LIMIT`, `AUTOPILOT_SUITE_COMMANDS`,
+  and `AUTOPILOT_SUITE_WRAPPER` explicitly as well. With `Suite limit:`
+  set, they hold its N, its prefixes joined by `|`, and the wrapper copy's
+  absolute path, `<workspace>/_prompts/<batch>-suite-slots.sh`; without the
+  field, each is the empty string. A resume sets the values the tag it
+  resumes was launched with. The commands value goes on the launch line in
+  single quotes, as the model does, since it holds `|` and spaces. Why, as
+  for `AUTOPILOT_MODEL`: a variable of the same name already in this
+  session's environment would otherwise reach the driver, which exports the
+  three, and the log path it builds from the limit, to the worker as
+  `KENSPC_AUTOPILOT_SUITE_*` (Templates § The driver), where the wrapper
+  and the rails hook read them — in the worker's subagents too, which
+  inherit its environment.
 - **The wait, interactive.** Subscribe to the worker with `SendMessage`
   `notify_when_idle` right after the launch and end the turn. On every wake
   re-read the state file and `<tag>.exit`. With no `.exit` and a live pid,
@@ -1174,6 +1245,33 @@ rules itself: it asks the main session (the preamble's § 1), which
 records every answer. Why: an answer a worker invents is recorded
 nowhere, so nobody reads it before the release, while the main
 session's answer is in the state file and the spec, where the user reviews it before the tag and the push.
+
+**A long wait for a suite slot.** A worker whose suite-slot wrapper has
+returned busy for one command over 30 minutes asks
+`question <tag>: …`, quoting the last busy line (the preamble's § 6
+`Suite limit:` line). The main session reads each `holder-*` file in the
+lock directory `/tmp/kenspc-suite-slots`, read-only, and runs
+`ps -o pid=,etime=,args= -p <pid>` on each pid a holder records; a
+holder's age is the time since the epoch second on its `taken=` line.
+With every holder younger than 60 minutes, the answer is
+`answer <tag>: wait on`, recorded under the state file's
+`questions answered:` as any ruling is; the worker runs the same wrapper
+line again, and after another 30 minutes of busy returns asks again, each
+such question ruled the same way. A holder aged 60 minutes or more is stop
+condition 12 (Templates § The stop conditions), which names each such
+holder. Why wait on: holders that come and go are contention, not a fault,
+and the batch's budget and caps bound what the wait costs. Why 30 minutes
+before the question: it matches the worker's answer wait in the preamble's
+§ 1, and a hung holder would otherwise hold the worker until its cap with
+nothing in front of the main session but a quiet timeline. Why a stop at
+60 minutes rather than the main session's ruling: the holder may be
+another batch's process, and ending it is outside this batch's contract,
+as for stop condition 7, while a suite that runs past an hour cannot be
+told from a hung one by its age alone. The 60 minutes is a plugin-wide
+threshold, two of the worker's 30-minute questions, not a project's
+measured figure: a project whose suite runs longer than an hour meets the
+stop on a healthy holder, and the stop's message shows the holder's
+command, so the user can tell and answer wait on.
 
 ### A breach the main session rules benign
 
@@ -1763,6 +1861,20 @@ baseline or a break made in the working tree would change the tree and
 the index the workers and the next step read — and a break left there by
 a stop would be swept into the next worker's commit.
 
+With `Suite limit:` set, the main session's evidence runs take a slot the
+same way S4's cases do: a form of the case whose command holds a listed
+prefix — by the repo-mode S4 block's test, the prefix's words in order as
+whole words anywhere in the command — runs as
+`KENSPC_AUTOPILOT_SUITE_LOG=<workspace>/_logs/<batch>-suite-slots.log bash <workspace>/_prompts/<batch>-suite-slots.sh run --limit <n> -- <shell> <file>`,
+`<n>` the field's N, its Bash call's timeout 90 seconds longer than the
+command alone needs, and exit 75 with a `suite-slots: busy` line means the
+same line is run again, never the command without the wrapper. Why: the
+main session carries no worker marker, so the rails hook does not check
+its calls and this text is all that binds them, while its suite uses the
+same ports a worker's does; `--limit` and the log are on the line because
+the driver exports them to workers only. The start checks' trial
+extraction runs no case command and takes no slot.
+
 Why both pieces of evidence: four acceptance commands have broken for
 reasons outside a batch's work — a flag the package manager read instead
 of the test runner, a failure word that matched an application log line,
@@ -2206,7 +2318,8 @@ is refused and so is a burst of about thirty sends.
 ## 3. Safety rails
 
 Write only to the repository at <repository root>, the workspace at
-<workspace>, $TMPDIR, and the harness's per-session scratchpad. A write
+<workspace>, $TMPDIR, the harness's per-session scratchpad, and the
+suite-slot lock directory /tmp/kenspc-suite-slots. A write
 elsewhere under /tmp (on macOS /private/tmp) holding no secret is not a
 breach: list it under a heading `## Rail observations` in your final
 message and go on. Any other write outside those locations is a breach.
@@ -2303,7 +2416,25 @@ Byte-identity exceptions: <the Byte-identity exceptions: text — the only byte-
 Run facts: measured facts of this machine that bind you and every subagent you dispatch:
 <the Run facts: sub-bullets, as written>
 A gate a run fact or the specification sets on a command — another session's go before a full suite — is yours to ask, with SendMessage, since the kenspc:* subagents have no message tool; name the go in the dispatch of the agent that runs the command.
+Suite limit: <N> — <the prefixes, each in backticks, joined by ", "> take a slot in a machine-wide lock, at most <N> at once across every batch on this machine, whatever their arguments. Run each as `bash <workspace>/_prompts/<batch>-suite-slots.sh run -- <the command>`. Exit 75 with a `suite-slots: busy` line on stderr means no slot was free within 90 seconds: run the same line again, never the command without the wrapper. Give that Bash call a timeout 90 seconds longer than the command alone needs. Write this line into the prompt of every subagent you dispatch and the CUSTOM_INSTRUCTIONS of every agent dispatch that may run one of these commands; the rails hook denies a listed command run without the wrapper, in your calls and theirs. When the busy returns for one command have spanned 30 minutes, send <main name> `question <tag>: suite slots busy for 30 minutes`, quoting the last busy line, and wait as § 1 says; on `answer <tag>: wait on`, run the same line again, and ask again after another 30 minutes of busy returns.
 ````
+
+The Suite limit line of § 6 is written when `Suite limit:` is set and
+omitted when the field is absent, as the Allowed files line is. Why the
+line: the wrapper and the hook bind only a worker that knows the wrapper
+line, and the line is the one place it is given. Why the timeout: the 90
+seconds of the wrapper's default wait keep a busy return under the Bash
+tool's default two-minute timeout, but a call that takes its slot late
+also runs the suite, and a timeout sized for the suite alone would kill
+it mid-run. Why the line goes into every dispatch: a subagent never sees
+this preamble, and while the hook denies its unwrapped call, the denial
+alone does not give it N or the reason. Why the question after 30
+minutes: it matches § 1's answer wait, and the main session rules it
+(Phase 2 § How the main session rules, A long wait for a suite slot).
+
+Why § 3 names the lock directory among the write locations: every slot
+taken writes a holder file there, and without it each would be a write
+elsewhere under /tmp to list under `## Rail observations`.
 
 The Allowed files, Byte-identity exceptions, and Run facts lines of § 6
 are written when their fields are set and omitted when empty; the Run
@@ -2660,7 +2791,14 @@ FAIL, its cost.
   section). With `Acceptance: none`, no S4 starts. Why no redirect on an
   inspection command: an S4 that read a result through a redirect to a
   path outside every root breached the rails with a command the case
-  never named.
+  never named. The bracketed suite-slot paragraph is written when
+  `Suite limit:` is set, its prefixes listed as the field holds them: a
+  case whose command file holds a listed prefix — the prefix's words in
+  order as whole words, anywhere in the file, at a command position or not
+  — runs through the wrapper copy. Why wrap the file: the hook sees
+  `<shell> <file>`, not the suite inside the file. Why a looser test than
+  the hook's: a false match only costs a slot, while a miss runs a suite
+  unbounded.
 
 ````
 ## Task: acceptance for batch <batch>
@@ -2686,6 +2824,11 @@ reply with its output, the listings, or the cmp output.
 
 Then run each case yourself, in the order listed, a command as
 `<shell> <file>`, the file being in <workspace>/_prompts/<batch>-s4-cmds/:
+[A file that holds one of the Suite limit commands — <the prefixes, each in
+backticks, joined by ", "> — its words in order as whole words, anywhere in
+the file, runs instead as
+`bash <workspace>/_prompts/<batch>-suite-slots.sh run -- <shell> <file>`,
+as § 6's Suite limit line says.]
 
 <n>. the command in `<nn>.cmd` — PASS: <criterion>[ (optional)]
 <n>. the command in `<nn>.corrected.cmd` — PASS: <criterion>[ (optional)] — in the corrected form (<clarification>)
@@ -2945,11 +3088,18 @@ AUTOPILOT_EFFORT       when non-empty, --effort <value>   (fresh launch and resu
 AUTOPILOT_CLAUDE       the executable (default claude)
 AUTOPILOT_BATCH        the batch name in the timeline's file name
 AUTOPILOT_WORKSPACE    the workspace; when non-empty, one of the write roots below, refused unless absolute (the empty string counts as unset)
+AUTOPILOT_SUITE_LIMIT     the Suite limit: N
+AUTOPILOT_SUITE_COMMANDS  the Suite limit: prefixes joined by "|"
+AUTOPILOT_SUITE_WRAPPER   the wrapper copy's path; refused unless absolute (the empty string counts as unset)
 
 exported to every worker, fresh launch and resume, over any value the caller holds:
 KENSPC_AUTOPILOT_WORKER        1
 KENSPC_AUTOPILOT_WRITE_ROOTS   the roots joined by "|": the worker's repository (git rev-parse --show-toplevel in <cwd>),
                                AUTOPILOT_WORKSPACE when non-empty, $TMPDIR when set, /tmp, /private/tmp
+KENSPC_AUTOPILOT_SUITE_LIMIT     AUTOPILOT_SUITE_LIMIT, or the empty string
+KENSPC_AUTOPILOT_SUITE_COMMANDS  AUTOPILOT_SUITE_COMMANDS, or the empty string
+KENSPC_AUTOPILOT_SUITE_WRAPPER   AUTOPILOT_SUITE_WRAPPER, or the empty string
+KENSPC_AUTOPILOT_SUITE_LOG       <logs>/<batch>-suite-slots.log when AUTOPILOT_SUITE_LIMIT is non-empty, else the empty string
 
 <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
 <batch>-timeline.log   start <tag> pid <pid> …  /  end   <tag> exit <status>
@@ -2979,6 +3129,21 @@ preamble is the worker's prompt, which the subagents it dispatches never
 see, while a plugin's PreToolUse hook fires for a
 subagent's tool call too, and its deny holds in a bypassPermissions
 session.
+The four suite variables carry `Suite limit:` to the worker and every
+subagent it dispatches, which inherit its environment: the wrapper reads
+`KENSPC_AUTOPILOT_SUITE_LIMIT` as its N and appends its events to
+`KENSPC_AUTOPILOT_SUITE_LOG`, and the rails hook, with
+`KENSPC_AUTOPILOT_SUITE_COMMANDS` non-empty, denies a listed command at a
+command position, its reason giving the route
+`bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run -- <the command>`; it misses a
+listed command reached through a script, `bash -c`, `make`, `eval`, a
+variable, or an alias, or after `timeout` or `nice`. The wrapper,
+`suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]`,
+exits with the command's status, 75 when no slot was free within its wait
+(90 seconds by default, with a `suite-slots: busy` line on stderr), and 2
+on a usage or lock-directory error; its header gives the lock's layout.
+Why overwritten like the marker: a value left in the main session's
+environment would otherwise reach a worker of a batch with no limit.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:
 every worker asks by message, as the preamble says, and a worker told to
 work without stopping would answer its own questions, and those rulings
@@ -3021,10 +3186,11 @@ reply text, where the state file's copy does not stand in for the
 printed one:
 
 ```
-Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off|auto>, walk <on|off|<n> flows>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
+Autopilot settings — batch <batch>, mode <repo|plugin>, baseline <sha>, budget USD <n>, caps <n> sessions / <m> resumes, version <v|none>, acceptance <k> cases|none, release preparation <default|keep|custom>, standalone review <on|off|auto>, walk <on|off|<n> flows>, suite limit <<n> (<k> commands)|none>, workspace <path>, wait <interactive|headless>, roles <S2 <model>/<effort>; …|none declared>, pass-through <model|not determined>/<effort|not determined>
 ```
 
-The roles list names each role `Role settings:` declares, in the field's
+The suite limit field gives `Suite limit:`'s N and the number of its
+command prefixes, or `none` without the field. The roles list names each role `Role settings:` declares, in the field's
 order, with its model and effort; the part a role's entry leaves out is
 written `—` (`S3 —/low`), and an empty field is `none declared`. The
 pass-through values are the ones Phase 0 determined. Why on the settings
@@ -3112,6 +3278,18 @@ the run ends with that message.
     parentheses and the output of `claude --version` — the rails hook no
     longer reads the harness's input format, so every later worker would
     end the same way.
+12. A suite-slot holder aged 60 minutes or more when a worker asks about a
+    long wait for a slot (§ How the main session rules, A long wait for a
+    suite slot) — the message names each such holder: its pid and `ps`
+    line, its age, its cwd, and its command. The user decides: wait on, end
+    that process themselves, or end the run. The worker gets no answer
+    meanwhile: it ends after its 30-minute wait with the question under
+    `## Question for the main session` (the preamble's § 1) and is resumed
+    with the answer the user's ruling gives. In a session that cannot ask
+    (a system reminder to work without stopping), the run ends with that
+    message, as every stop does. Why numbered rather than stated at its
+    step: it is a question the user rules on, as the other numbered stops
+    are, not a failed mechanical step.
 
 **A question only a later step needs.** A question of condition 7's kind —
 a way forward the main session cannot rule on — that the main session
@@ -3179,6 +3357,7 @@ decisions the user has yet to see.
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check | none named; S3b is the last review, the walk follows | none named; S3 is the last review, the walk follows
 - Walk: <off | walked (<tag>[, <tag>…]): <flow> PASS|FAIL[ — <classification>]; …; <walk.md path> | nothing to walk: <reason> | not walked: <reason> | walk: cut by budget>
 - Standalone review: <on|off|auto> — <ran[ (<trigger>)] | not run (<reason>)>
+- Suite slots: <a> acquired, <b> busy returns (<s>s waited in all), longest single wait <w>s, <r> reclaimed | none
 - BLOCKED tasks: <Task <n>: <one line> — <fixed by S5 <tag>, <commit> | deferred (<clarification>)>; … | none>
 - Models and efforts: <n> workers, <k> mismatches|mismatches: none, <j> not observed
   <tag> requested <model|—>/<effort|—> (<declared|pass-through>) applied <model|not observed>/<effort|—|not observed>[ MISMATCH: <what>]
@@ -3210,6 +3389,16 @@ that has none because an S6 that removed nothing left the spec changed,
 `none` when the main session ruled nothing. Why: it is the list the user
 reads before the tag and the push, so every ruling the run made without
 the user is on it.
+
+The `Suite slots` line is read from `<workspace>/_logs/<batch>-suite-slots.log`:
+`<a>` counts its `acquired` lines, `<b>` its `busy` lines, `<s>` sums the
+`waited` values of the `busy` lines, `<w>` is the largest `waited` value
+on any line, and `<r>` counts its `reclaimed` lines. Each wrapper call
+logs its own wait only, so a wait that spanned several busy returns shows
+in `<s>` and in the state file's `questions answered:` (§ How the main
+session rules, A long wait for a suite slot), not in `<w>`. It reads
+`none` without `Suite limit:`. Why: the run allows no bypass of a busy
+lock, so the report is where a batch that waited long becomes visible.
 
 The lines under `Models and efforts` are the state file's as they stand;
 `—` in an applied effort means the worker's records carry no `effort`

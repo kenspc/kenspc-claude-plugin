@@ -392,7 +392,33 @@ header for the new expectation, fixtures, and mutant.
 
 ### Task 5: The autopilot SKILL.md text
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the field's grammar paragraph sits after the `Role settings:`
+  paragraph and carries the field's Whys (the lock across batches, one pool,
+  no default list, repo mode only, `Run facts:` kept free text), so the
+  start-check bullet and the other sections point back to it rather than
+  repeat them. The main session's ruling on a long wait is a bold-headed
+  paragraph, **A long wait for a suite slot.**, at the end of § How the main
+  session rules, the name stop condition 12, preamble § 6's commentary, and
+  the reviewer report's description cite. The preamble's § 6 line gives
+  the question's first line as `question <tag>: suite slots busy for 30 minutes`
+  and the answer as `answer <tag>: wait on`. The repo-mode S4 block's
+  wrapper rule is a bracketed paragraph, written when `Suite limit:` is set,
+  as the block's other optional parts are. The corrected-case runs carry
+  `KENSPC_AUTOPILOT_SUITE_LOG=…` and `--limit <n>` on the line, since the
+  driver exports them to workers only.
+- Changes/tradeoffs: beyond the listed sections, the Launch bullet's
+  environment list names the three `AUTOPILOT_SUITE_*` inputs, the launch
+  paragraph says the commands value goes in single quotes (it holds `|` and
+  spaces), the settings-line section has a sentence on its new field, and
+  § The driver gains a paragraph on the wrapper's interface, exit codes,
+  and check (f)'s route and misses, so a reader of the skill alone learns
+  them. The copy paragraph says the wrapper is copied whether or not the
+  field is set (the plan's "Absent" rule). No `Suite slots` value is added
+  to the state file: the reviewer report reads the log directly, as the
+  plan specifies.
 
 Depends on: Task 1, Task 3, Task 4
 
