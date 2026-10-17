@@ -64,7 +64,15 @@ Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 
 ### Task 2: The pre-review suite run stays in the orchestrating session's own Bash
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the added reason is its own `Why yourself:` sentence at the
+  paragraph's end rather than a clause spliced into the existing Why, so
+  the ports reason (why one run) and the new reason (why this session runs
+  it) stay apart.
+- Changes/tradeoffs: none — byte-identical in both copies of the
+  `canonical:dispatch` block.
 
 Plan Step 2. In the `canonical:dispatch` block's "Before the dispatch: one
 suite run" paragraph (task-review line 286; task-implement line 424), after

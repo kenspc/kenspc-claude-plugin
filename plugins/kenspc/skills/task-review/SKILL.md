@@ -291,7 +291,8 @@ The orchestrator's job in this phase is to dispatch and aggregate — not to
 pre-filter findings.
 
 **Before the dispatch: one suite run, then the tree state.** Run the
-project's test commands once — the commands the project's instruction
+project's test commands once, yourself, in the orchestrating session's own
+Bash and not through a subagent — the commands the project's instruction
 files give for the parts the change set touches, found as
 regression-verifier finds its build, test, and lint commands — one at a
 time, each command's output in a log under `RUN_DIR/scratch/orchestrator/`
@@ -303,7 +304,9 @@ reviewers read the file as evidence. Why: five reviewers each running the
 full suite at once exhausted the machine's local ports, and the connection
 errors read like findings; one run before the dispatch serves all five,
 and each reviewer reads the file instead of running the suite (its
-PREREQUISITES).
+PREREQUISITES). Why yourself: the commands are already known, so a brief
+to a subagent costs more than the run, and the logs belong under
+`scratch/orchestrator/`, the orchestrating session's own directory.
 
 Then record the tree state in `tree-before.txt`, in the directory that
 holds the suite logs: the output of `git rev-parse HEAD` and
