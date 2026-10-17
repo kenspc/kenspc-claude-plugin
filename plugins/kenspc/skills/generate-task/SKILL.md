@@ -86,6 +86,16 @@ instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
   misses hidden dependencies and existing implementations. Read the public
   interfaces of relevant modules — function signatures, exports, API routes,
   data models, type definitions — not every line of implementation.
+- **Read-only sweeps may run side by side**: a sweep that only reads — the
+  code behind several plan steps, the config across a project — may go to
+  read-only subagents sent in one message, every call with
+  `run_in_background: false`, each told in its prompt to write nothing and
+  to return `file:line` for what it reports. Read every line a task rests
+  on yourself before writing that task; the decomposition itself stays in
+  this session. Why: independent read-only sweeps finish sooner side by
+  side and leave this session's context for the decomposition, and the
+  traceability the task document promises is kept by reading the cited
+  lines, not by trusting a summary of them.
 - **Dependency rule**: annotate a task with `Depends on` whenever it has a
   hard ordering dependency on another task in the same task document — it
   cannot start until that task is DONE — within a phase or across phases:

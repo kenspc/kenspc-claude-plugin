@@ -81,6 +81,16 @@ session.
 - **Why grounded reading matters**: inference is not verification. Every
   command, path, environment variable, and version requirement must be
   traceable to a config file, source file, or explicit user confirmation.
+- **Read-only sweeps may run side by side**: a sweep that only reads — the
+  config across a project, the scripts and source behind several sections
+  — may go to read-only subagents sent in one message, every call with
+  `run_in_background: false`, each told in its prompt to write nothing and
+  to return `file:line` for what it reports. Read every line a guide
+  sentence rests on yourself before writing that sentence; the guide itself
+  stays in this session. Why: independent read-only sweeps finish sooner
+  side by side and leave this session's context for the guide, and the
+  traceability every command and path must have is kept by reading the
+  cited lines, not by trusting a summary of them.
 - All commands must specify the working directory.
 - Include expected output or success indicators for each step.
 - Use relative paths from the project root.

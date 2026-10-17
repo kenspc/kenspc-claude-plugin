@@ -215,6 +215,17 @@ reproduction — rather than guessing. Why: listing the hypotheses before
 testing any keeps the first plausible one from ending the search, and the
 recorded outcomes are the evidence that rules the alternatives out.
 
+A hypothesis checked by reading a code path may go to a read-only
+subagent, several such hypotheses in one message, every call with
+`run_in_background: false`, each subagent told in its prompt to write
+nothing and to return `file:line` for what it reports. Read every line an
+outcome rests on yourself before recording it. Probes that run code, the
+reproduction test's repeated runs, and the diagnosis itself stay in this
+session. Why: independent read-only sweeps finish sooner side by side and
+leave this session's context for the diagnosis, and the evidence the
+record promises is kept by reading the cited lines, not by trusting a
+summary of them.
+
 ### Probes
 
 When a hypothesis needs a probe, a copy, or a mutant, prepare a run
@@ -270,7 +281,13 @@ work, which generate-plan's discovery exists for.
   boundary of the fix task.
 - **Adjacent cases**: boundaries and sibling code paths the root cause
   implicates, each a candidate regression test. An empty list is stated as
-  `none — <reason>`, not left out.
+  `none — <reason>`, not left out. A sweep of sibling code paths may go to
+  read-only subagents sent in one message, as the hypothesis loop allows —
+  every call with `run_in_background: false`, each told to write nothing
+  and to return `file:line` for what it reports — and you read every cited
+  line before listing a case. Why: the sweep finishes sooner side by side,
+  and a case listed from a summary alone could name a path that does not
+  share the root cause.
 - **Documentation impact**: the durable documents the fix makes stale,
   determined as generate-plan determines its Documentation impact element —
   the documentation table in the project's instruction files where one

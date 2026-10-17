@@ -499,7 +499,23 @@ Files: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 11: Read-only sweeps may go to parallel subagents
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: in generate-task and generate-guide the paragraph is a bold-led
+  Constraints bullet placed right after the existing "Why deep code reading
+  matters" / "Why grounded reading matters" bullet it qualifies, matching
+  that list's form. In diagnose-bug the hypothesis-loop paragraph carries
+  the full rule (what stays in the session: probes that run code, the
+  reproduction test's repeated runs, the diagnosis), and the adjacent-cases
+  bullet points back at it while restating `run_in_background: false`,
+  write nothing, and `file:line`, so each place reads on its own.
+- Changes/tradeoffs: the generate-guide sweep examples are the config
+  across a project and "the scripts and source behind several sections",
+  in place of the plan's "code behind several plan steps", which is
+  generate-task's. The adjacent-cases Why names its own failure (a case
+  listed from a summary could name a path that does not share the root
+  cause).
 
 Plan Step 12. Add one paragraph each to `plugins/kenspc/skills/generate-task/SKILL.md`
 Phase 1 (line 85), `plugins/kenspc/skills/generate-guide/SKILL.md` Phase 1
