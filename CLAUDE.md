@@ -1115,7 +1115,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   checked against the layout the wrapper's header fixes, and a third run with
   `--wait 1` busy (exit 75, the busy line naming both holders), then with
   `--wait 10` acquiring once a holder ends while no sample every 0.2
-  seconds shows three holder files; limit 3 entering beside two live
+  seconds shows three holder files, its `acquired` log line showing the
+  wait; limit 3 entering beside two live
   holders and limit 2 busy beside them; a wrapped `exit 3` returning 3 and
   leaving no holder file; a holder with a dead wrapper pid and a command
   pid alive under another start time, reclaimed; a holder whose command

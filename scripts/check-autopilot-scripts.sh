@@ -49,7 +49,8 @@
 # zones, one's holder file checked against the layout the wrapper's header
 # fixes, and a third run that is busy (exit 75,
 # a busy line naming both holders) and then, with --wait 10, acquires once a
-# holder ends while no sample every 0.2 seconds shows three holder files;
+# holder ends while no sample every 0.2 seconds shows three holder files,
+# its acquired log line showing the wait;
 # limit 3 entering beside two live holders and limit 2 busy beside them; a
 # wrapped `exit 3` returning 3 and leaving no holder file; a holder whose
 # wrapper pid is dead and whose command pid runs with another start time,
@@ -444,7 +445,7 @@ wait_holders() {
 # slot_checks <suite-slots script>: the wrapper's thirteen fixtures, each with a
 # lock directory and a log of its own under $WORK.
 slot_checks() {
-    local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args f
+    local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args f before
     local base="$WORK/slots-$runs"
     mkdir -p "$base"
 
@@ -487,7 +488,10 @@ slot_checks() {
         || fail "suite-slots 1: the log shows no busy line with two holders"
 
     # 2. The same third run with --wait 10 acquires once a holder ends, and
-    #    no sample, every 0.2 seconds, shows more than two holder files.
+    #    no sample, every 0.2 seconds, shows more than two holder files. Its
+    #    acquired line shows the wait, at least one poll of a second, when
+    #    both holders were still there as it started.
+    before=$(holder_count "$d")
     start_bg env KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
         "$SLOT_BASH" "$ss" run --limit 2 --wait 10 -- sleep 1
     h3=$bg
@@ -503,6 +507,10 @@ slot_checks() {
     [[ "$max" -le 2 ]] || fail "suite-slots 2: $max holder files were present at once, expected at most 2"
     n=$(grep -c ' acquired pid ' "$log" 2>/dev/null || true)
     [[ "$n" -eq 3 ]] || fail "suite-slots 2: the log shows $n acquired lines, expected 3"
+    if [[ "$before" -eq 2 ]]; then
+        grep -q " acquired pid $h3 waited [1-9][0-9]*s " "$log" 2>/dev/null \
+            || fail "suite-slots 2: the third run's acquired line does not show its wait [$(grep " acquired pid $h3 " "$log" 2>/dev/null)]"
+    fi
     stop_bg "$h1"
     stop_bg "$h2"
 
