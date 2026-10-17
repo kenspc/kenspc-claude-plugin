@@ -195,7 +195,8 @@ suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
   is still copied, but no worker is told to use it and the hook checks
   nothing. Why: the plugin names no project's suite, and a default list
   would be hard-coded.
-- **The settings line** gains `suite limit <n> (<k> commands)|none`.
+- **The settings line** gains `suite limit <<n> (<k> commands)|none>`,
+  written after the `walk …` field.
 - **One pool.** Every listed command of every batch counts against the
   same lock. A batch that lists `dotnet test` and one that lists
   `pnpm test` share it. Why: the exhausted resource, the machine's local
@@ -294,15 +295,20 @@ variable, or an alias, or after a wrapper the scan does not skip
   the hook denies an unwrapped listed command. Why the timeout: the 90
   seconds of § The wrapper keep a busy return under the Bash tool's
   default timeout, but a call that acquires late runs the suite too, and a
-  timeout sized for the suite alone would kill it. With the field absent, the line is omitted,
-  as the Allowed files line is.
+  timeout sized for the suite alone would kill it. With the field absent,
+  the line is omitted, as the Allowed files line is.
 - **The S4 task blocks (both).** A case whose command file holds a listed
-  prefix is run as `bash <wrapper copy> run -- <shell> <file>`. Why: the
-  hook sees `<shell> <file>`, not the suite inside the file.
+  prefix is run as `bash <wrapper copy> run -- <shell> <file>`. A file
+  holds a prefix when the prefix's words occur in it in order as whole
+  words, anywhere in the file, whether or not at a command position. Why
+  the looser test than the hook's: a false match only costs a slot, while
+  a miss runs a suite unbounded. Why wrap at all: the hook sees
+  `<shell> <file>`, not the suite inside the file.
 - **The main session's own runs.** The corrected-case runs (Phase 3 § A
   corrected case) take a slot the same way when their command holds a
-  listed prefix, with `--limit <n>` and `KENSPC_AUTOPILOT_SUITE_LOG` set
-  on the line. The main session carries no marker, so the hook does not
+  listed prefix, by the S4 blocks' test, with `--limit <n>` and
+  `KENSPC_AUTOPILOT_SUITE_LOG=<workspace>/_logs/<batch>-suite-slots.log`
+  set on the line. The main session carries no marker, so the hook does not
   check it, and the text is all that binds it. The start checks' trial
   extraction runs no case command and takes no slot.
 - **A long wait.** When busy returns for one command have spanned 30
@@ -315,10 +321,16 @@ variable, or an alias, or after a wrapper the scan does not skip
   with nothing in front of the main session but a quiet timeline.
 - **§ The driver.** The block gains the three inputs and the four exports.
 - **The reviewer report.** A `Suite slots:` line, read from
-  `<batch>-suite-slots.log`: the number of runs acquired, the number of
-  busy returns, and the longest wait. With the field absent, it reads
-  `none`. Why: ruling 5 keeps no bypass, so the report is where a batch
-  that waited long becomes visible.
+  `<batch>-suite-slots.log`:
+  `Suite slots: <a> acquired, <b> busy returns (<s>s waited in all), longest single wait <w>s, <r> reclaimed`
+  — `<a>` the `acquired` lines, `<b>` the `busy` lines, `<s>` the sum of
+  the `waited` values on the `busy` lines, `<w>` the largest `waited`
+  value on any line, `<r>` the `reclaimed` lines. Each wrapper call logs
+  its own wait only, so a wait that spanned several busy returns shows in
+  `<s>` and in the state file's `questions answered:` (A long wait), not in
+  `<w>`. With the field absent, it reads `none`. Why: ruling 5 keeps no
+  bypass, so the report is where a batch that waited long becomes
+  visible.
 
 ## Implementation Steps
 
@@ -349,7 +361,8 @@ scripts in that directory are.
 - Under `/bin/bash` (3.2 on macOS), with `KENSPC_SUITE_SLOTS_DIR` set to a
   directory under `$TMPDIR`: `run --limit 1 -- true` exits 0,
   `run --limit 1 -- sh -c 'exit 3'` exits 3, `run --limit 0 -- true` exits
-  2, and the lock directory holds no `holder-*` file afterwards. Step 2's
+  2, and the lock directory holds no `holder-*` file afterwards; the
+  directory is then removed and its absence shown. Step 2's
   fixtures are the full check; this step's smoke runs only so step 1 can
   be accepted before step 2 exists.
 - `bash scripts/check-no-model-names.sh` exits 0.
@@ -462,8 +475,9 @@ items.
   prints `self-test passed` and exits 0.
 - `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test`
   prints `self-test passed` and exits 0.
-- With the new export line deleted from a copy of either driver, its
-  self-test exits 1 naming the variable.
+- With any one of the four new export lines deleted from a copy of
+  either driver, run once per variable, its self-test exits 1 naming
+  that variable.
 
 ### Step 4: The hook's suite check
 
@@ -555,11 +569,12 @@ Each new rule carries its Why in the skill's own words.
    directory, `KENSPC_AUTOPILOT_SUITE_COMMANDS=kenspc-probe-suite`, and
    `KENSPC_AUTOPILOT_SUITE_WRAPPER` set to the absolute path of this
    worktree's `suite-slots.sh`. Load the plugin from this worktree with
-   `--plugin-dir`, so the hook under test is the edited one. Prompt: run `kenspc-probe-suite --x` in Bash and quote the
-   error. PASS: the quoted error opens `autopilot rails:` and names the
-   wrapper. The command does not exist, so a hook that let it through
-   prints `command not found` instead. That is the red case, seen when the
-   same probe is run without `KENSPC_AUTOPILOT_SUITE_COMMANDS`.
+   `--plugin-dir`, so the hook under test is the edited one. Prompt: run
+   `kenspc-probe-suite --x` in Bash and quote the error. PASS: the quoted
+   error opens `autopilot rails:` and names the wrapper. The command does
+   not exist, so a hook that let it through prints `command not found`
+   instead. That is the red case, seen when the same probe is run without
+   `KENSPC_AUTOPILOT_SUITE_COMMANDS`.
 2. **Three concurrent wrappers.** In three background shells, run
    `bash suite-slots.sh run --limit 2 --wait 30 -- sleep 5`, with
    `KENSPC_SUITE_SLOTS_DIR` under `$TMPDIR` and a log set. PASS: the log
@@ -590,8 +605,10 @@ steps 1–6.
 
 **Acceptance criteria.**
 
-- Each listed document states the field, the wrapper, the driver exports,
-  and the hook's check as built.
+- Each document listed with changes carries every change its entry names,
+  stated as steps 1–6 built it (the field's grammar, the wrapper's
+  interface and exit codes, the driver's inputs and exports, check (f) and
+  its route); the documents marked N/A are unchanged.
 - `docs/roadmap.md` no longer holds item 32.
 - `bash scripts/check-all.sh --self-test` exits 0.
 
