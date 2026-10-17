@@ -10,7 +10,7 @@ A heavy suite is a command a batch's spec lists. Before one runs, it takes
 a slot from a lock shared by the whole machine, which holds at most N
 slots at once. N and the list come from a new `## Autopilot` field. The
 lock binds the main session, every worker, and every subagent a worker
-dispatches.
+dispatches. The release is 4.10.0, after 4.9.0 is tagged (ruling 8).
 
 In scope:
 
@@ -86,6 +86,8 @@ recorded it as `docs/roadmap.md` item 32.
 | 4 | Where the lock lives | A fixed path, `/tmp/kenspc-suite-slots`, named as an allowed write in preamble § 3 |
 | 5 | A wrapper that finds no slot in time | It returns busy and the same line is run again. No bypass. Waits are logged for the reviewer report |
 | 6 | Sessions outside autopilot | Out of scope |
+| 7 | How the main session rules on a worker's long-wait question | "Wait on" while no holder has held its slot 60 minutes or more; the worker asks again after another 30 minutes. A holder at 60 minutes or more is stop condition 12, a question to the user |
+| 8 | The release this ships in | 4.10.0, after 4.9.0 is tagged |
 
 ## Technical Approach
 
@@ -313,12 +315,42 @@ variable, or an alias, or after a wrapper the scan does not skip
   extraction runs no case command and takes no slot.
 - **A long wait.** When busy returns for one command have spanned 30
   minutes, the worker sends the main session a `question <tag>:` quoting
-  the last busy line. The main session rules: wait on, or stop the run
-  naming the holders (how it chooses: Open Questions 2). The question
-  goes into the preamble's § 6
+  the last busy line. The question goes into the preamble's § 6
   `Suite limit:` line. Why 30 minutes: it matches the worker's answer wait
   in § 1. A hung holder would otherwise hold the worker until its cap,
   with nothing in front of the main session but a quiet timeline.
+- **The main session's ruling on a long wait (ruling 7).** The main
+  session reads each holder file in the lock directory, read-only, and
+  runs `ps -o pid=,etime=,args= -p <pid>` on each recorded pid. A holder's
+  age is the time since the epoch second its file records.
+  - Every holder younger than 60 minutes: the answer is
+    `answer <tag>: wait on`, recorded as any ruling is, under the state
+    file's `questions answered:`. The worker runs the same wrapper line
+    again and, after another 30 minutes of busy returns, asks again. Each
+    such question is ruled the same way. Holders that come and go are
+    contention, not a fault, and the batch's budget and caps bound what
+    the wait costs.
+  - A holder aged 60 minutes or more: stop condition 12 (§ The stop
+    conditions). The worker gets no answer meanwhile: it ends after its
+    30-minute wait with the question under
+    `## Question for the main session` (preamble § 1), and is resumed
+    with the answer the user's ruling gives. The stop's message names
+    each such holder: its pid and `ps` line, its age, its cwd, and its
+    command. The user decides: wait
+    on, end that process themselves, or end the run. In a session that
+    cannot ask (a system reminder to work without stopping), the run ends
+    with that message, as every stop does.
+  - Why a stop and not the main session's ruling: the holder may be
+    another batch's process, and ending it is outside this batch's
+    contract (stop 7's reasoning), while a suite that runs past an hour
+    cannot be told from a hung one by its age alone. Why 60 minutes: a
+    plugin-wide threshold, not a project's measured figure — two of the
+    worker's 30-minute questions — chosen by the user on 2026-10-17. A
+    project whose suite runs longer than an hour meets this stop on a
+    healthy holder; the stop's message shows the holder's command, so the
+    user can tell and answer wait on.
+  - Why numbered and not a stop stated at its own step: it is a question
+    the user rules on, as stops 1–11 are, not a failed mechanical step.
 - **§ The driver.** The block gains the three inputs and the four exports.
 - **The reviewer report.** A `Suite slots:` line, read from
   `<batch>-suite-slots.log`:
@@ -532,9 +564,10 @@ text lists:
 - preamble § 6, for the `Suite limit:` line and when it is omitted;
 - both S4 task blocks;
 - the corrected-case paragraph;
-- the long-wait question, and the main session's ruling on it (Open
-  Questions 2);
-- § The stop conditions, for the stop that ruling can end in;
+- the long-wait question, and the main session's ruling on it (ruling 7),
+  in § How the main session rules;
+- § The stop conditions, for stop condition 12, a holder aged 60 minutes
+  or more;
 - § The driver;
 - the reviewer report template, for the `Suite slots:` line.
 
@@ -634,7 +667,7 @@ steps 1–6.
   - the maintenance note's list of files after whose edit
     `check-autopilot-scripts.sh` runs (step 1).
 - `plugins/kenspc/CHANGELOG.md` — an entry under the release this ships
-  in (Open Questions 1). Steps 1–5.
+  in, 4.10.0 (ruling 8). Steps 1–5.
 - `docs/roadmap.md` — item 32 leaves the file, since it ships. Step 7.
 - `docs/release-checklist.md` — N/A for this document: no guard file is
   added, so `guards run: 13` and `self-tests run: 12` hold (step 2); row
@@ -670,8 +703,9 @@ steps 1–6.
 - **A wait that never ends.** A holder that never exits — a hung suite —
   keeps its slot, and ruling 5 allows no bypass. Mitigation: the busy line
   names each holder's age, cwd, and command. After 30 minutes of busy
-  returns, the worker asks the main session, which rules to wait on or to
-  stop (§ The SKILL.md text, A long wait). The reviewer report's
+  returns, the worker asks the main session, which answers wait on while
+  every holder is younger than 60 minutes and stops on stop condition 12
+  once one is not (ruling 7). The reviewer report's
   `Suite slots:` line shows the longest wait.
 - **A command the hook cannot see.** A listed command reached through a
   script, `make`, `bash -c`, or another miss § The hook's new check lists
@@ -723,18 +757,8 @@ steps 1–6.
 
 ## Open Questions
 
-1. The release this ships in: 4.10.0, after 4.9.0 is tagged, or folded
-   into the unreleased 4.9.0. This draft assumes 4.10.0. The 4.9.0 plan
-   names the work as planned separately, and 4.9.0's CHANGELOG
-   introduction says "No … guard, or `## Autopilot` field", which folding
-   this in would make false.
-2. The main session's ruling on the long-wait question (§ The SKILL.md
-   text, A long wait) has no rule yet. The plan says it rules "wait on,
-   or stop the run naming the holders", but not what tells the two apart
-   (a holder's age, whether its pids are a batch's live worker, the
-   holder's cwd), what follows "wait on" (the next question after a
-   further 30 minutes, or none), or where the stop is listed in § The
-   stop conditions — a numbered condition 12, or an eighth stop stated at
-   its own step. Step 5 writes the ruling and the stop as this answer
-   settles them. Found in review; the order in § How the main session
-   rules may settle the first part, the rest is a design choice.
+None. The two questions this plan carried were settled by the user on
+2026-10-17, after its review: the release (ruling 8, 4.10.0; 4.9.0's
+CHANGELOG introduction says "No … guard, or `## Autopilot` field", which
+folding this in would have made false) and the main session's ruling on a
+long wait (ruling 7).
