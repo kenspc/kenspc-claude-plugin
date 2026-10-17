@@ -46,7 +46,8 @@
 # the sweep; and, for the wrapper, under /bin/bash and with a lock directory
 # of each fixture's own under the work directory (KENSPC_SUITE_SLOTS_DIR): two
 # wrapped `sleep 3` holders at limit 2, started under two different time
-# zones, and a third run that is busy (exit 75,
+# zones, one's holder file checked against the layout the wrapper's header
+# fixes, and a third run that is busy (exit 75,
 # a busy line naming both holders) and then, with --wait 10, acquires once a
 # holder ends while no sample every 0.2 seconds shows three holder files;
 # limit 3 entering beside two live holders and limit 2 busy beside them; a
@@ -442,7 +443,7 @@ wait_holders() {
 # slot_checks <suite-slots script>: the wrapper's thirteen fixtures, each with a
 # lock directory and a log of its own under $WORK.
 slot_checks() {
-    local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args
+    local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args f
     local base="$WORK/slots-$runs"
     mkdir -p "$base"
 
@@ -459,13 +460,27 @@ slot_checks() {
         "$SLOT_BASH" "$ss" run --limit 2 -- sleep 3
     h2=$bg
     wait_holders "$d" 2 || fail "suite-slots 1: the two holders never both held a slot"
+    # The holder file a wrapped run writes, in the layout its header fixes:
+    # the seven keys in order, its own pid and start, its child's, and a
+    # numeric taken.
+    f="$d/holder-$h1"
+    n=$(sed 's/=.*//' "$f" 2>/dev/null | tr '\n' ' ')
+    [[ "$n" == "wrapper_pid wrapper_start command_pid command_start taken cwd command " ]] \
+        || fail "suite-slots 1: the holder file's keys are [$n]"
+    cpid=$(sed -n 's/^command_pid=//p' "$f" 2>/dev/null)
+    [[ "$(sed -n 's/^wrapper_pid=//p' "$f" 2>/dev/null)" == "$h1" ]] || fail "suite-slots 1: the holder file's wrapper_pid is not the wrapper's"
+    [[ "$(sed -n 's/^wrapper_start=//p' "$f" 2>/dev/null)" == "$(lstart_of "$h1")" ]] || fail "suite-slots 1: the holder file's wrapper_start is not the wrapper's"
+    [[ -n "$cpid" && "$(ps -o ppid= -p "$cpid" 2>/dev/null | tr -d ' ')" == "$h1" ]] || fail "suite-slots 1: the holder file's command_pid $cpid is not the wrapper's child"
+    [[ "$(sed -n 's/^command_start=//p' "$f" 2>/dev/null)" == "$(lstart_of "$cpid")" ]] || fail "suite-slots 1: the holder file's command_start is not its child's"
+    [[ "$(sed -n 's/^taken=//p' "$f" 2>/dev/null)" =~ ^[0-9]+$ ]] || fail "suite-slots 1: the holder file's taken is not an epoch second"
+    [[ "$(sed -n 's/^command=//p' "$f" 2>/dev/null)" == "sleep 3" ]] || fail "suite-slots 1: the holder file's command is not sleep 3"
     rc=0
     KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
         "$SLOT_BASH" "$ss" run --limit 2 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 75 ]] || fail "suite-slots 1: a third run at limit 2 exited $rc, expected 75"
     grep -q '^suite-slots: busy after [0-9]*s; held by:' "$WORK/slot-err" \
         || fail "suite-slots 1: no busy line on stderr [$(tr '\n' '|' < "$WORK/slot-err")]"
-    n=$(grep -c '^  age .*, command sleep 3$' "$WORK/slot-err" || true)
+    n=$(grep -c '^  age [0-9][0-9]*s, cwd .*, command sleep 3$' "$WORK/slot-err" || true)
     [[ "$n" -eq 2 ]] || fail "suite-slots 1: the busy line names $n holders, expected 2"
     grep -q ' busy pid [0-9]* waited [0-9]*s holders 2 — true$' "$log" 2>/dev/null \
         || fail "suite-slots 1: the log shows no busy line with two holders"

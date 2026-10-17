@@ -1111,7 +1111,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   suite-slot wrapper, under `/bin/bash`, each fixture with a lock
   directory of its own under the work directory
   (`KENSPC_SUITE_SLOTS_DIR`), and the caller's suite variables unset
-  first: two wrapped `sleep 3` holders at limit 2 and a third run with
+  first: two wrapped `sleep 3` holders at limit 2, one's holder file
+  checked against the layout the wrapper's header fixes, and a third run with
   `--wait 1` busy (exit 75, the busy line naming both holders), then with
   `--wait 10` acquiring once a holder ends while no sample every 0.2
   seconds shows three holder files; limit 3 entering beside two live
