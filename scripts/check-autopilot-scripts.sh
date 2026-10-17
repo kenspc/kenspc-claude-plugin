@@ -45,7 +45,8 @@
 # before list, a cmds dir, the repository, another repository, and a seed for
 # the sweep; and, for the wrapper, under /bin/bash and with a lock directory
 # of each fixture's own under the work directory (KENSPC_SUITE_SLOTS_DIR): two
-# wrapped `sleep 3` holders at limit 2 and a third run that is busy (exit 75,
+# wrapped `sleep 3` holders at limit 2, started under two different time
+# zones, and a third run that is busy (exit 75,
 # a busy line naming both holders) and then, with --wait 10, acquires once a
 # holder ends while no sample every 0.2 seconds shows three holder files;
 # limit 3 entering beside two live holders and limit 2 busy beside them; a
@@ -380,9 +381,9 @@ expect_content() {
 SLOT_BASH=bash
 [[ -x /bin/bash ]] && SLOT_BASH=/bin/bash
 
-# lstart_of <pid>: the start time as the wrapper records it.
+# lstart_of <pid>: the start time as the wrapper records it, in UTC.
 lstart_of() {
-    LC_ALL=C ps -o lstart= -p "$1" 2>/dev/null | sed -e 's/  */ /g' -e 's/^ //' -e 's/ $//'
+    LC_ALL=C TZ=UTC ps -o lstart= -p "$1" 2>/dev/null | sed -e 's/  */ /g' -e 's/^ //' -e 's/ $//'
 }
 
 # holder_count <lock dir>: the holder-* files present.
@@ -441,13 +442,15 @@ slot_checks() {
     mkdir -p "$base"
 
     # 1. Two wrapped `sleep 3` holders at limit 2: a third run with --wait 1
-    #    is busy, its stderr naming both holders.
+    #    is busy, its stderr naming both holders. The two holders run under
+    #    different time zones, so a start time read in the caller's zone
+    #    would make each wrapper see the other's live holder as stale.
     d="$base/1"
     log="$base/1.log"
-    start_bg env KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+    start_bg env TZ=UTC0 KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
         "$SLOT_BASH" "$ss" run --limit 2 -- sleep 3
     h1=$bg
-    start_bg env KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
+    start_bg env TZ=JST-9 KENSPC_SUITE_SLOTS_DIR="$d" KENSPC_AUTOPILOT_SUITE_LOG="$log" \
         "$SLOT_BASH" "$ss" run --limit 2 -- sleep 3
     h2=$bg
     wait_holders "$d" 2 || fail "suite-slots 1: the two holders never both held a slot"

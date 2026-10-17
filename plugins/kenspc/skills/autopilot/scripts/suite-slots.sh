@@ -45,8 +45,9 @@
 #                     lines in this order: wrapper_pid, wrapper_start,
 #                     command_pid, command_start, taken, cwd, command, each
 #                     value running to the end of its line. The starts are
-#                     `ps -o lstart=` output; taken is the epoch second the
-#                     slot was taken; command is the first 120 characters.
+#                     `ps -o lstart=` output read in UTC; taken is the
+#                     epoch second the slot was taken; command is the first
+#                     120 characters.
 #                     Written under the mutex with the two command fields
 #                     empty, then rewritten once the command has started;
 #                     each write goes to .tmp-<pid> and is renamed over the
@@ -71,7 +72,9 @@
 # match, and is not counted. Why both pids: a wrapper killed with SIGKILL
 # runs no trap and leaves its command running, and that command still uses
 # the ports. Why the start time: a pid reused after a reboot or a long run
-# would otherwise keep a dead holder alive.
+# would otherwise keep a dead holder alive. Why the start is read under
+# TZ=UTC: ps prints it in the caller's time zone, so two wrappers started
+# under different TZ values would each judge the other's live holder stale.
 #
 # Stale mutex: reclaimed when its owner pid is dead, or when it has no
 # owner (or an empty one) and is older than 10 seconds by its modification
@@ -185,11 +188,11 @@ cmd_text=${cmd_text//$NL/ }
 
 now() { date +%s; }
 
-# start_of <pid>: the process's start time, spaces squeezed; empty when no
-# such process runs.
+# start_of <pid>: the process's start time in UTC, spaces squeezed; empty
+# when no such process runs.
 start_of() {
   [ -n "$1" ] || return 0
-  LC_ALL=C ps -o lstart= -p "$1" 2>/dev/null | sed -e 's/  */ /g' -e 's/^ //' -e 's/ $//'
+  LC_ALL=C TZ=UTC ps -o lstart= -p "$1" 2>/dev/null | sed -e 's/  */ /g' -e 's/^ //' -e 's/ $//'
 }
 
 # alive_as <pid> <start>: true when <pid> runs and started at <start>.
