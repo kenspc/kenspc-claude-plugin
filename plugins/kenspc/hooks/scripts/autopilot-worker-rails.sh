@@ -563,7 +563,7 @@ REASON_ASK="Permitted instead: ask the main session by a question message, which
 REMOTE_MARK=$(printf '\003')
 # Check (f)'s mark, and its route: the wrapper's line, run again on busy.
 SUITE_MARK=$(printf '\004')
-REASON_SUITE="Permitted instead: run it through the suite-slot wrapper: bash ${KENSPC_AUTOPILOT_SUITE_WRAPPER:-<the wrapper copy; KENSPC_AUTOPILOT_SUITE_WRAPPER is empty>} run -- <the command>; exit 75 with a \"suite-slots: busy\" line means run the same line again. This denial is not a breach."
+REASON_SUITE="Permitted instead: run it through the suite-slot wrapper: bash ${KENSPC_AUTOPILOT_SUITE_WRAPPER:-<the wrapper copy; KENSPC_AUTOPILOT_SUITE_WRAPPER is empty>} run -- <the command>; exit 75 with a \"suite-slots: busy\" line means run the same line again; this denial is not a breach, so list it under ## Rail observations and go on."
 REASON_ROUTE="Permitted instead: discard by mv into the workspace's .trash/<name>-<timestamp>/ (inside the repository, delete through git rm), and write under the repository, the workspace, or scratch (\$TMPDIR, /tmp)."
 # In place of the route, for a field of the input the hook cannot read:
 # every later call is read the same way, so a retry would be denied too.
