@@ -197,24 +197,42 @@ Depends on: Step 3.
   cell (`<command> → exit <n>, log <path>`; several commands joined by
   `; `); a check the project gives no command for reads
   `no <build|lint> command in the project`, and row 3's SPOT-CHECK keeps
-  its fallback text; the worked example table shows these forms; the
+  its fallback text; what the row's Detail already carries (row 3's
+  skipped tests, collected `.kenspc/` paths, and Step 3's listed files)
+  follows the evidence after `; `; the worked example table shows these forms; the
   Detail prose section stays for non-PASS rows. Why: **Ask for evidence,
   not a verdict**; a `—` cell is a verdict.
-- `agents/code-fixer.md` reply list (line 525): add a line after the
-  statistics line, `Final checks: <command> → exit <n>, log <path>[; …]`,
-  for the final build, test, and lint run, logs under
-  `RUN_DIR/scratch/code-fixer/`; not written to `schema-b.md`, whose last
-  line stays the statistics line (so `check-run-contract.sh`'s recount is
-  unchanged).
+- `agents/code-fixer.md` reply list (line 525): add a line, always
+  present, after the statistics line and after every conditional line the
+  list places after it (the uncommitted line, `Doc-sync documents:`,
+  `Ruled IDs in no report:`, `Rulings outside the grammar:`) and before
+  the Per-angle Results table:
+  `Final checks: <command> → exit <n>, log <path>[; …]`, for the final
+  build, test, and lint run, logs under `RUN_DIR/scratch/code-fixer/`; in a
+  run with no fix applied that made no final run,
+  `Final checks: none run (no fix applied)`. Not written to
+  `schema-b.md`, whose last line stays the statistics line (so
+  `check-run-contract.sh`'s recount is unchanged).
 - `agents/task-implementer.md` Schema D (line 307): add a `## Checks run`
-  section after `## Tasks`, always rendered: the last build, test, and lint
-  commands the dispatch ran, each with its exit code, the task after which
-  it ran, and its log path under `RUN_DIR/scratch/task-implementer/`.
-  `skills/task-implement/SKILL.md` Step 5 (line 284) merges the slices'
-  sections by keeping the last slice's.
+  section after `## Post-implementation notes`, the last section, always
+  rendered: the last build, test, and lint commands the dispatch ran, each
+  with its exit code, the task after which it ran, and its log path under
+  `RUN_DIR/scratch/task-implementer/`; `none run` when the dispatch ran
+  none. It is not a roll-up of the per-task notes, so the "four prose
+  sections below" sentence after the `## Tasks` table stays true. DONE
+  CRITERIA (line 86) gains the section beside the `## Decisions needing a
+  home` bullet.
+- `skills/task-implement/SKILL.md` Step 5 (line 284): render `## Checks run`
+  verbatim after the Post-implementation notes; after slices, keep the last
+  slice's section, an exception to the "entries joined under one heading"
+  merge rule, since the last slice's checks ran on the code every slice
+  built.
 
-Acceptance: the three examples show the forms; `check-run-contract.sh` and
-`check-notes-format-sync.sh` exit 0.
+Acceptance: regression-verifier's worked Schema C table shows rows 2–4 in
+the `→ exit <n>, log <path>` form (and one no-command form); code-fixer's
+reply list states the `Final checks:` line in both forms; Schema D's
+format shows `## Checks run` with one example line;
+`check-run-contract.sh` and `check-notes-format-sync.sh` exit 0.
 
 ### Step 6: The verdict is confirmed by reading, not re-running (Q3)
 
@@ -226,7 +244,8 @@ Depends on: Step 5.
   runs no build, test, or lint of its own. A row 2–4 that carries neither
   an exit code nor one of Step 5's no-command forms (the `no … command in
   the project` text, row 3's SPOT-CHECK fallback) keeps the verdict from
-  PASS. Why: regression-verifier is the skill's confirmation step; a third
+  PASS: PARTIAL, unless a FAIL condition holds (the form the ruled-row
+  bullets outside the block use). Why: regression-verifier is the skill's confirmation step; a third
   full run adds load and no independence, and a row with no evidence is
   the bare verdict the global rule refuses.
 
@@ -304,8 +323,14 @@ Acceptance: the block reads so; `check-autopilot-rails-hook.sh` exits 0.
   only the two count lines, which a failing command before them may leave
   unwritten.
 
-Acceptance: both blocks, line 1873, and the two reports' templates read
-so; `check-autopilot-rails-hook.sh` exits 0.
+- The two reports: the reviewer report's
+  `- Byte-identity / guards / counts:` field (line 3144) carries each
+  pre-flight command's exit code beside the count lines; the user report's
+  "what needs the user" list (line 2060, "a failed check at S6's return")
+  names a non-zero pre-flight exit code as a pre-flight failure.
+
+Acceptance: both blocks, line 1873, the reviewer report's field, and the
+user report's list read so; `check-autopilot-rails-hook.sh` exits 0.
 
 ### Step 12: Read-only sweeps may go to parallel subagents (Q13)
 
@@ -363,8 +388,8 @@ exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
 
 ## Documentation impact
 
-- `plugins/kenspc/README.md` — the reviewer section (Q6's list and Q7's
-  standalone note), task-review's and task-implement's run-directory and
+- `plugins/kenspc/README.md` — § Agents, the reviewer paragraph (Q6's list
+  and Q7's standalone note), task-review's and task-implement's run-directory and
   report descriptions (Schema C's Detail, code-fixer's `Final checks:`
   line, Schema D's `## Checks run`), the top-level-only rule (Step 1), the
   autopilot section (Steps 8–11), the three skills' read-only sweeps (Step
@@ -374,10 +399,14 @@ exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
   `check-run-contract.sh` entry under Repository scripts/ (Step 3's
   literal), lines 359 and 411–418 (Step 13), and § Sessions, not agents
   (Steps 8–9).
-- `plugins/kenspc/CHANGELOG.md` — a 4.9.0 entry for Steps 1–13.
-- `docs/release-checklist.md` — lines 104–106 (Step 13), and the smoke
-  rows for task-review / task-implement where they describe what the
-  report shows (Step 5).
+- `plugins/kenspc/CHANGELOG.md` — a `## 4.9.0 — unreleased` entry for
+  Steps 1–13 (the release procedure dates it).
+- `docs/release-checklist.md` — lines 104–106 (Step 13); the run-directory
+  check's sub-check 4 (lines 161–169), whose "a clean PASS row's Detail is
+  `—`, so the table cannot show which command ran" Step 5 makes false; and
+  smoke rows 6 and 7, which gain the Schema C Detail form and code-fixer's
+  `Final checks:` line, row 6 also Schema D's `## Checks run` (Step 5; the
+  Testing Strategy names the smoke run as where they are first seen).
 - `plugins/kenspc/references/task-document-example.md` — N/A for this
   document: Schema D is task-implementer's reply, not the task document.
 - `README.md` — N/A for this document: no skill's summary row changes.
@@ -423,3 +452,7 @@ exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
 - The interactive terminal CLI's Agent tool is not measured (Step 13
   records it as unmeasured). Measuring it needs a terminal session the
   user starts; nothing in this plan depends on the answer.
+- Question 11 (a machine-wide lock on full test suites) is out of scope as
+  "planned separately", and no step records it anywhere durable. Whether it
+  goes on `docs/roadmap.md` in this release is the user's call; if it does,
+  the Doc-sync step lists `docs/roadmap.md` under Documentation impact.
