@@ -1122,7 +1122,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `touch -t`, reclaimed; a nested call beside a live holder at limit 1,
   run at once; SIGTERM to a wrapped run, its holder file and its child
   gone; and usage errors (no `--`, no limit, limit `0`, limit `x`, a
-  regular file as the lock directory) — every background process waited
+  regular file as the lock directory, a `ps` that prints no start time) —
+  every background process waited
   for or killed by its pid, and again by the EXIT trap. Its self-test
   copies the four scripts and turns the guard red with eleven mutants written
   to separate files with `sed` — the padding stripping removed, the

@@ -50,7 +50,8 @@ report. The live checks on the maintainer's Mac are in
   as a background child, forwards SIGTERM on INT, TERM, or HUP, removes its
   holder file on exit, and exits with the command's status, 75 with a
   `suite-slots: busy after <s>s; held by:` line on stderr when no slot was
-  free, or 2 on a usage or lock-directory error. A call inside a wrapped
+  free, or 2 on a usage or lock-directory error or when `ps -o lstart=`
+  prints no start time. A call inside a wrapped
   command runs at once. Its events go to `KENSPC_AUTOPILOT_SUITE_LOG`. The
   holder-file layout is shared by every plugin version on the machine, so
   a change to it is a breaking change. Its header names the two gaps it

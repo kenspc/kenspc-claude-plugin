@@ -3141,7 +3141,8 @@ variable, or an alias, or after `timeout` or `nice`. The wrapper,
 `suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]`,
 exits with the command's status, 75 when no slot was free within its wait
 (90 seconds by default, with a `suite-slots: busy` line on stderr), and 2
-on a usage or lock-directory error; its header gives the lock's layout.
+on a usage or lock-directory error or when `ps -o lstart=` prints no start
+time; its header gives the lock's layout.
 Why overwritten like the marker: a value left in the main session's
 environment would otherwise reach a worker of a batch with no limit.
 `APPEND_SP` is listed by the driver and set by no launch of this skill:

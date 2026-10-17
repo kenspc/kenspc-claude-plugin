@@ -35,7 +35,8 @@
 #   2  a usage error — no run, no --, no command, a limit that is not a
 #      positive integer, a wait that is not a whole number — or a lock
 #      directory that is not a directory, is owned by another user, or
-#      cannot be written; the reason goes to stderr
+#      cannot be written, or a ps that prints no start time for the
+#      wrapper itself; the reason goes to stderr
 #
 # The lock directory, created with mode 700 when missing
 #   mutex/            a short mutex, taken with mkdir (atomic on every POSIX
@@ -358,6 +359,13 @@ holder=$LOCK_DIR/holder-$$
 holder_tmp=$LOCK_DIR/.tmp-$$
 holder_written=0
 wrapper_start=$(start_of "$$")
+# Why refuse: without a start time no holder can be judged alive, so every
+# live holder would read as stale and be reclaimed, and the count would let
+# every caller in. A ps without -o lstart (BusyBox, MSYS) prints nothing.
+if [ -z "$wrapper_start" ]; then
+  echo "suite-slots: ps -o lstart= printed no start time for this wrapper, so no holder's liveness can be judged" >&2
+  exit 2
+fi
 cwd=$(pwd)
 cwd=${cwd//$NL/ }
 

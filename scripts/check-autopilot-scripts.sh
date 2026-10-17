@@ -56,7 +56,8 @@
 # no owner backdated with touch -t, reclaimed; a nested call beside a live
 # holder at limit 1, run at once; a wrapped run killed with SIGTERM, its
 # holder file gone and its child sleep ended; and usage errors (no --, no
-# limit, limit 0, limit x, a regular file as the lock directory) — and
+# limit, limit 0, limit x, a regular file as the lock directory, a ps that
+# prints no start time) — and
 # asserts each outcome. Every background process a fixture starts is waited
 # for or killed by its pid before the fixture ends, and again on exit. The
 # other-owner refusal has no fixture: the guard cannot chown.
@@ -578,8 +579,9 @@ slot_checks() {
         kill "$cpid" 2>/dev/null || true
     fi
 
-    # 10. Usage errors exit 2: no --, no limit, limit 0, limit x, and a
-    #     regular file where the lock directory goes.
+    # 10. Usage errors exit 2: no --, no limit, limit 0, limit x, a
+    #     regular file where the lock directory goes, and a ps that prints
+    #     no start time.
     d="$base/10"
     for args in "run --limit 1 true" "run -- true" "run --limit 0 -- true" "run --limit x -- true"; do
         rc=0
@@ -593,6 +595,15 @@ slot_checks() {
     KENSPC_SUITE_SLOTS_DIR="$base/10-file" "$SLOT_BASH" "$ss" run --limit 1 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 2 ]] || fail "suite-slots 10: a regular file as the lock directory exited $rc, expected 2"
     grep -qF "$base/10-file" "$WORK/slot-err" || fail "suite-slots 10: the reason does not name the lock directory's path"
+    # A ps that prints no start time leaves no holder judgeable: exit 2,
+    # not a run that reclaims every live holder.
+    mkdir -p "$base/10-ps"
+    printf '#!/bin/sh\nexit 1\n' > "$base/10-ps/ps"
+    chmod +x "$base/10-ps/ps"
+    rc=0
+    PATH="$base/10-ps:$PATH" KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "suite-slots 10: a ps with no lstart exited $rc, expected 2"
+    grep -q 'no start time' "$WORK/slot-err" || fail "suite-slots 10: a ps with no lstart gave no reason naming the start time"
 
     return 0
 }

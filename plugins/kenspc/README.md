@@ -1458,7 +1458,7 @@ child, sends it SIGTERM on an interrupt, removes its holder file on exit,
 and exits with the command's status — 75 when no slot was free within the
 wait, with a `suite-slots: busy after <s>s; held by:` line naming each
 holder's age, cwd, and command on stderr, and 2 on a usage or
-lock-directory error. A call already inside a wrapped command runs at once.
+lock-directory error or when `ps -o lstart=` prints no start time. A call already inside a wrapped command runs at once.
 Its header names the gaps it accepts: a grandchild that does not pass the
 forwarded SIGTERM on can keep the ports in use after its holder turns
 stale, and two waiters reclaiming one dead mutex at the same instant can
