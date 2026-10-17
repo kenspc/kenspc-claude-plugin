@@ -72,6 +72,11 @@ none lists Agent in `tools:`.
   the step it governs, with a `Why:` in the plugin's rationale-anchored
   style, so **A skill's split wins** has something explicit to defer to.
   No ruling is stated only in `CLAUDE.md`, which user projects do not load.
+- **A Why says its reason in its own words.** A sentence added to a skill
+  or agent never cites the global rule by its bold title as its reason:
+  the plugin runs in projects whose user-level CLAUDE.md holds no such
+  rule, and the repository's writing rules ask a Why to state what fails
+  and why. The bold titles in this plan name the rule for its reader only.
 - **Evidence is a field, not prose.** Every check an agent or worker runs
   and reports gets its command, exit code, and a log path in the report's
   existing structure (a Detail cell, a reply line, a Schema D section), so
@@ -99,8 +104,10 @@ Line numbers are as of `20000bf` and move as earlier steps edit a file.
   `skills/task-implement/SKILL.md` § Prerequisites (line 46): add one
   bullet: the skill runs in the top-level session — the one the user talks
   to, or a headless `claude -p` session — and never inside a subagent.
-  Why: a subagent dispatches no subagents under the global rule, so it
-  would review all five angles, fix, and verify in one context, which
+  Why (in the skill's words, not by the global rule's title): a subagent
+  may not dispatch subagents of its own — a user rule may forbid it, and
+  Claude Code caps the nesting depth — so it would review all five angles,
+  fix, and verify in one context, which
   removes the independence the five reviewers exist for; and it cannot ask
   the user at the skill's gates.
 - Outside every canonical block, so the two bullets may differ in wording
@@ -138,10 +145,12 @@ in both).
   when unsure, it counts as needing them. Run no such file; read its result
   in `suite-run.md`'s logs instead, and list it under
   `## Tests left for the verifier` with one line per file: the path, and
-  what you wanted to learn from it. Why: five reviewers run at once, and
-  two runs of one integration suite at once have exhausted a machine's
-  local ports, failing on connection errors that read as findings;
-  regression-verifier runs after code-fixer, alone. Without RUN_DIR the
+  what you wanted to learn from it. Why: five reviewers run at once; five
+  full suites run at once have exhausted a machine's local ports, failing
+  on connection errors that read as findings, and a test file that starts
+  a server or opens a database, run by several reviewers at once, contends
+  for the same ports and database; regression-verifier runs after
+  code-fixer, alone. Without RUN_DIR the
   item is unchanged.
 - Each reviewer's OUTPUT FORMAT (Schema A): add the
   `## Tests left for the verifier` section after `## Issues` and before
@@ -200,8 +209,10 @@ Depends on: Step 3.
   its fallback text; what the row's Detail already carries (row 3's
   skipped tests, collected `.kenspc/` paths, and Step 3's listed files)
   follows the evidence after `; `; the worked example table shows these forms; the
-  Detail prose section stays for non-PASS rows. Why: **Ask for evidence,
-  not a verdict**; a `—` cell is a verdict.
+  Detail prose section stays for non-PASS rows. Why (as the agent text
+  states it): a `—` cell says a check passed without saying which command
+  ran or where its output is, so the reader can confirm it only by running
+  it again.
 - `agents/code-fixer.md` reply list (line 525): add a line, always
   present, after the statistics line and after every conditional line the
   list places after it (the uncommitted line, `Doc-sync documents:`,
@@ -246,16 +257,17 @@ Depends on: Step 5.
   the project` text, row 3's SPOT-CHECK fallback) keeps the verdict from
   PASS: PARTIAL, unless a FAIL condition holds (the form the ruled-row
   bullets outside the block use). Why: regression-verifier is the skill's confirmation step; a third
-  full run adds load and no independence, and a row with no evidence is
-  the bare verdict the global rule refuses.
+  full run adds load and no independence, and a row with no evidence is a
+  verdict nobody can check without re-running it.
 
 Acceptance: `check-verdict-shared.sh` exits 0.
 
 ### Step 7: task-document-reviewer does not rewrite task steps to delegate (Q8)
 
 - `agents/task-document-reviewer.md` angle 3 (line 111): after the Passing
-  paragraph, add: the user-level rule on delegating to subagents governs
-  the session that dispatches agents, not a task's steps; a task step that
+  paragraph, add: a user-level or project rule on delegating work to
+  subagents governs the session that dispatches agents, not a task's
+  steps; a task step that
   runs a suite or a check is not a departure from it. Why: task-implementer
   has no Agent tool, so a step rewritten to delegate cannot be carried out.
 
@@ -339,13 +351,18 @@ user report's list read so; `check-autopilot-rails-hook.sh` exits 0.
   (line 207) and adjacent cases (line 271): add a paragraph each: a sweep
   that only reads — the code behind several plan steps, the config across a
   project, a hypothesis checked by reading a code path, sibling code paths —
-  may go to read-only subagents sent in one message, foreground, each
-  returning `file:line` for what it reports and writing nothing; the main
+  may go to read-only subagents sent in one message, every call with
+  `run_in_background: false` (the repository's rule for every Agent
+  dispatch in the skills), each told in its prompt to write nothing and to
+  return `file:line` for what it reports; the main
   session reads every line a task, a guide sentence, or the diagnosis rests
   on before writing it. Probes that run code, the reproduction test's
   repeated runs, and the decomposition, the guide, and the diagnosis
-  themselves stay in the main session. Why: **Delegate in parallel**, with
-  the traceability these documents promise kept by reading the cited lines.
+  themselves stay in the main session. Why (in the skill's words):
+  independent read-only sweeps finish sooner side by side and leave the
+  main session's context for the decomposition, the guide, or the
+  diagnosis; the traceability these documents promise is kept by reading
+  the cited lines.
 
 Acceptance: the three skills carry the paragraph; `check-instruction-files.sh`
 and `check-doc-sync-anchors.sh` exit 0.
@@ -452,6 +469,15 @@ exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
 - The interactive terminal CLI's Agent tool is not measured (Step 13
   records it as unmeasured). Measuring it needs a terminal session the
   user starts; nothing in this plan depends on the answer.
+- Log paths in S5's and S6's replies. The Q2 ruling reads "Add command,
+  exit code and log path to those rows; also to S5's and S6's replies",
+  and the Technical Approach gives every reported check a log path, while
+  Step 11 as written gives S5's line `<command> → exit <n>` and S6's
+  pre-flight its exit codes, with no log path in either. Step 11 is
+  labelled a follow-up ruling, which may have dropped the log path; which
+  reading holds is the user's to confirm before Step 11 runs. If the log
+  path stays, Step 11 also names where a worker writes those logs (for example under
+  `<workspace>/_logs/`, a write root).
 - Question 11 (a machine-wide lock on full test suites) is out of scope as
   "planned separately", and no step records it anywhere durable. Whether it
   goes on `docs/roadmap.md` in this release is the user's call; if it does,
