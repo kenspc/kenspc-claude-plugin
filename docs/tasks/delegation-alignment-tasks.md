@@ -209,7 +209,16 @@ Files: `scripts/check-run-contract.sh`.
 
 ### Task 5: Reviewer descriptions warn against parallel standalone dispatch
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the sentence reads "Invoked standalone (without RUN_DIR) it
+  runs the project's full test suite itself, so dispatch one at a time or
+  use /kenspc-task-review." — appended after "also safe to invoke
+  standalone with a project context.", so the warning sits next to the
+  standalone permission it qualifies.
+- Changes/tradeoffs: none — the first sentence, which carries the trigger,
+  is unchanged; `grep -lF` lists exactly the five reviewers.
 
 Plan Step 4. Append one sentence to the `description:` frontmatter of each of
 the five reviewers: invoked standalone (without RUN_DIR) it runs the project's

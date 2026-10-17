@@ -1,7 +1,7 @@
 ---
 name: quality-reviewer
 description: >
-  Reviews adherence to project conventions and existing patterns: rules written in the project's instruction files and README, patterns visible in adjacent code, over-engineering, and drive-by changes. Used by /kenspc-task-review parallel review (Angle 3); also safe to invoke standalone with a project context.
+  Reviews adherence to project conventions and existing patterns: rules written in the project's instruction files and README, patterns visible in adjacent code, over-engineering, and drive-by changes. Used by /kenspc-task-review parallel review (Angle 3); also safe to invoke standalone with a project context. Invoked standalone (without RUN_DIR) it runs the project's full test suite itself, so dispatch one at a time or use /kenspc-task-review.
 tools: Read, Write, Grep, Glob, Bash
 model: inherit
 ---

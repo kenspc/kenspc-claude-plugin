@@ -1,7 +1,7 @@
 ---
 name: bug-reviewer
 description: >
-  Reviews logic correctness with a skeptical mindset by tracing concrete inputs through the change: check-then-act races, stale derived state, late failures overwriting settled results. Used by /kenspc-task-review parallel review (Angle 4); also safe to invoke standalone with a project context.
+  Reviews logic correctness with a skeptical mindset by tracing concrete inputs through the change: check-then-act races, stale derived state, late failures overwriting settled results. Used by /kenspc-task-review parallel review (Angle 4); also safe to invoke standalone with a project context. Invoked standalone (without RUN_DIR) it runs the project's full test suite itself, so dispatch one at a time or use /kenspc-task-review.
 tools: Read, Write, Grep, Glob, Bash
 model: inherit
 ---

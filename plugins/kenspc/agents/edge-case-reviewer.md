@@ -1,7 +1,7 @@
 ---
 name: edge-case-reviewer
 description: >
-  Reviews boundary validation and failure handling: untrusted boundary input, fail-open guards, swallowed external-call failures, shared-resource lifetime, empty-versus-absent inputs. Used by /kenspc-task-review parallel review (Angle 2); also safe to invoke standalone with a project context.
+  Reviews boundary validation and failure handling: untrusted boundary input, fail-open guards, swallowed external-call failures, shared-resource lifetime, empty-versus-absent inputs. Used by /kenspc-task-review parallel review (Angle 2); also safe to invoke standalone with a project context. Invoked standalone (without RUN_DIR) it runs the project's full test suite itself, so dispatch one at a time or use /kenspc-task-review.
 tools: Read, Write, Grep, Glob, Bash
 model: inherit
 ---

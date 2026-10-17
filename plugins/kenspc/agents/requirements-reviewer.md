@@ -1,7 +1,7 @@
 ---
 name: requirements-reviewer
 description: >
-  Reviews code completeness against requirements: every required change implemented end to end and reachable, no partial completion marked done, interfaces and documentation matching the implementation. Used by /kenspc-task-review parallel review (Angle 1); also safe to invoke standalone with a project context.
+  Reviews code completeness against requirements: every required change implemented end to end and reachable, no partial completion marked done, interfaces and documentation matching the implementation. Used by /kenspc-task-review parallel review (Angle 1); also safe to invoke standalone with a project context. Invoked standalone (without RUN_DIR) it runs the project's full test suite itself, so dispatch one at a time or use /kenspc-task-review.
 tools: Read, Write, Grep, Glob, Bash
 model: inherit
 ---

@@ -1,7 +1,7 @@
 ---
 name: test-reviewer
 description: >
-  Reviews whether tests would catch a broken change: missing tests for new behavior and error paths, tautological tests, unverified collaborator calls, bypassed tests. Used by /kenspc-task-review parallel review (Angle 5); also safe to invoke standalone with a project context.
+  Reviews whether tests would catch a broken change: missing tests for new behavior and error paths, tautological tests, unverified collaborator calls, bypassed tests. Used by /kenspc-task-review parallel review (Angle 5); also safe to invoke standalone with a project context. Invoked standalone (without RUN_DIR) it runs the project's full test suite itself, so dispatch one at a time or use /kenspc-task-review.
 tools: Read, Write, Grep, Glob, Bash
 model: inherit
 ---
