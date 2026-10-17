@@ -57,6 +57,14 @@
 #      FORMAT as well, which check-review-agent-drift.sh does not hold; in
 #      the reviewers it must stand on a line of its own, since their
 #      drift-held PREREQUISITES and REPORT DELIVERY name it mid-sentence.
+#      And Schema C's no-command forms, `no build command in the project`
+#      and `no lint command in the project`, in agents/regression-verifier.md,
+#      which writes them, and in both skills, whose verdict-shared bullet
+#      quotes them to tell a row with no command from a row with no
+#      evidence; matched whitespace-normalized, since the skills wrap one
+#      across two lines. check-verdict-shared.sh ties the two skills only to
+#      each other, so a form reworded in regression-verifier alone would
+#      keep every project with no lint command from PASS.
 #   6. The reviewer invariant sentence ("Each reviewer is read-only on the
 #      working tree and writes only under `RUN_DIR`: …"). It lives in four
 #      places: the five reviewers' ROLE, the canonical dispatch block of
@@ -112,7 +120,8 @@
 #              recount disagrees, a file does not name change-set.md,
 #              pre-fix/index.txt, rulings.md, schema-c-1.md, suite-run.md,
 #              or `## Tests left for the verifier` where check 5 requires it
-#              (in a reviewer, as a line of its own),
+#              (in a reviewer, as a line of its own), or a no-command form
+#              where check 5 requires it,
 #              or a copy of the reviewer invariant sentence does not contain
 #              the reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
@@ -140,7 +149,7 @@
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on forty-four mutations that
+#                  prefix classification), then on fifty mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the rulings grammar's
 #                  DEFER entry reworded in each of its four carriers in turn
@@ -171,7 +180,8 @@
 #                  way, the heading `## Tests left for the verifier` removed
 #                  from each of its six carriers in turn the same way, the
 #                  heading's own line alone removed from edge-case-reviewer's
-#                  OUTPUT FORMAT, and
+#                  OUTPUT FORMAT, each of the two no-command forms reworded
+#                  in each of its three carriers in turn, and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
@@ -212,6 +222,8 @@ RULINGS_NAME="rulings.md"
 SCHEMA_C1_NAME="schema-c-1.md"
 SUITE_RUN_NAME="suite-run.md"
 TESTS_LEFT_HEADING="## Tests left for the verifier"
+NO_BUILD_FORM="no build command in the project"
+NO_LINT_FORM="no lint command in the project"
 INVARIANT_START="Each reviewer is read-only on the working tree"
 
 # Print the lines strictly between the start and end markers of <name>.
@@ -536,6 +548,16 @@ run_main_logic() {
         echo "MISSING '$TESTS_LEFT_HEADING' in $verifier" >&2
         missing=1
     fi
+    local form normalized
+    for f in "$verifier" "$review" "$implement"; do
+        normalized=$(normalize_ws "$f")
+        for form in "$NO_BUILD_FORM" "$NO_LINT_FORM"; do
+            if [[ "$normalized" != *"$form"* ]]; then
+                echo "MISSING '$form' in $f" >&2
+                missing=1
+            fi
+        done
+    done
     if [[ "$missing" -ne 0 ]]; then
         echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
         echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
@@ -545,7 +567,8 @@ run_main_logic() {
         echo "which code-fixer and regression-verifier read in a second round; both skills" >&2
         echo "write the shared suite run to RUN_DIR/$SUITE_RUN_NAME, which the reviewers read;" >&2
         echo "each reviewer writes '$TESTS_LEFT_HEADING' in its report, which" >&2
-        echo "regression-verifier reads." >&2
+        echo "regression-verifier reads; regression-verifier writes Schema C's no-command" >&2
+        echo "forms, which both skills' verdict bullet quotes." >&2
         echo "Restore the name, or rename it in every carrier and in this guard together." >&2
         return 1
     fi
@@ -555,6 +578,7 @@ run_main_logic() {
     echo "OK    $SCHEMA_C1_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
     echo "OK    $SUITE_RUN_NAME — named in task-review, task-implement, requirements-reviewer"
     echo "OK    $TESTS_LEFT_HEADING — named in the five reviewers and regression-verifier"
+    echo "OK    no-command forms — named in regression-verifier, task-review, task-implement"
 
     # Check 6: the reviewer invariant sentence in its three copies.
     local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
@@ -935,6 +959,31 @@ run_self_test() {
         return 1
     fi
     echo "OK    self-test tests-left heading line removed in $EDGE_REL — main check exit 1"
+    # Schema C's no-command forms, each reworded in each carrier in turn.
+    # The skills wrap the build form after "in", so the mutation rewords a
+    # part that sits on one line in every carrier.
+    local form old_part new_part
+    for form in "$NO_BUILD_FORM" "$NO_LINT_FORM"; do
+        if [[ "$form" == "$NO_BUILD_FORM" ]]; then
+            old_part="no build command in"; new_part="no build tool in"
+        else
+            old_part="no lint command in"; new_part="no lint tool in"
+        fi
+        for rel in "$VERIFIER_REL" "$REVIEW_REL" "$IMPLEMENT_REL"; do
+            replace_all_literal "$WORK/$rel" "$old_part" "$new_part"
+            if [[ "$(normalize_ws "$WORK/$rel")" == *"$form"* ]]; then
+                echo "FAIL  self-test: no-command form mutation did not apply ('$form' still in $rel)" >&2
+                return 2
+            fi
+            ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+            cp "$REPO_ROOT/$rel" "$WORK/$rel"
+            if [[ "$rc" -ne 1 ]]; then
+                echo "FAIL  self-test no-command form mutation ('$form') in $rel: expected exit 1, got $rc" >&2
+                return 1
+            fi
+            echo "OK    self-test '$form' reworded in $rel — main check exit 1"
+        done
+    done
     # Check 6: one word of the reviewer invariant sentence changed in each
     # copy in turn, and in the reference itself, which every copy then
     # fails to contain.

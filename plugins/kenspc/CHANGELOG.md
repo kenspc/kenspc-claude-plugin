@@ -114,7 +114,7 @@ section in each reviewer's report file.
 - `check-run-contract.sh` check 5 holds the heading
   `## Tests left for the verifier` in the five reviewers and
   `regression-verifier.md`; its self-test now copies eleven target files
-  and renames the heading in each of the six in turn (forty-four
+  and renames the heading in each of the six in turn (fifty
   mutations).
 
 ### Fixed
