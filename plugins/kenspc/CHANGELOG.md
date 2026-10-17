@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.9.0 — unreleased
+## 4.9.0 — 2026-10-17
 
 The skills and agents now say who runs each check, what may run side by
 side, and what evidence comes back, so a session whose instructions favor
@@ -19,7 +19,21 @@ runs in projects whose instructions hold no such rule. No new agent,
 command, CONTEXT key, guard, or `## Autopilot` field, and every skill
 keeps `version: 3.0.0`; what changes for a user is the evidence in the
 review reports — each check's command, exit code, and log — and one new
-section in each reviewer's report file.
+section in each reviewer's report file. The pre-flight passed on the
+release tree. The smoke was one headless `/kenspc-task-implement` run of
+a one-task document on a small Node project, with `--plugin-dir` on this
+release's plugin (Claude Code 2.1.301): every Agent call went out with
+`run_in_background: false`, the five reviewers in one message;
+task-implementer's Schema D carried `## Checks run`, code-fixer's reply
+its `Final checks:` line, each `angle-<n>.md` its
+`## Tests left for the verifier` section (`none`), and Schema C rows 2–4
+the command, exit code, and log, or the no-command form. The run's main
+session printed only the last of the three progress lines and
+paraphrased the agents' replies in its final report instead of rendering
+them verbatim, so smoke row 6's progress-line and verbatim criteria did
+not pass in that run. This release leaves the progress lines' text as it
+was; it adds one verbatim instruction, for `## Checks run`, and the run's
+final report gave that section as a bold one-line summary.
 
 ### Changed
 
