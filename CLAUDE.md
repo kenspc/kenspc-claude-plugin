@@ -781,7 +781,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   numbers.
 - `check-review-agent-drift.sh` — guards the byte-identity invariant
   across the 5 review-angle agents (CONTEXT YOU WILL RECEIVE, ROLE,
-  PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, REPORT DELIVERY).
+  PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, REPORT DELIVERY), and
+  (4.9.0) that each one's frontmatter holds the standalone warning
+  sentence, naming a reviewer without it.
 - `check-canonical-dispatch.sh` — guards the byte-identity invariant on
   the `## Code Review Phase (unconditional)` canonical block between
   `task-review/SKILL.md` and `task-implement/SKILL.md`.
@@ -893,7 +895,12 @@ Project-level shell scripts live in `scripts/` at the repo root:
   self-test, every occurrence — all five reviewers rather than one, since
   the heading also sits in each reviewer's OUTPUT FORMAT, which
   `check-review-agent-drift.sh` does not hold, so the self-test copies
-  eleven target files (check 5); and the reviewer invariant sentence, extracted at run time
+  eleven target files, the heading also required in each reviewer as a
+  line of its own; and, since 4.9.0, Schema C's no-command forms,
+  `no build command in the project` and `no lint command in the project`,
+  whitespace-normalized in `regression-verifier.md`, which writes them,
+  and the two SKILLs, whose verdict-shared bullet quotes them, each
+  reworded in each carrier by the self-test (check 5); and the reviewer invariant sentence, extracted at run time
   from the ROLE section of `requirements-reviewer.md` and compared
   whitespace-normalized, is contained in its three copies — the plugin
   README, this file, and `task-review/SKILL.md`'s dispatch block (check 6;

@@ -1201,7 +1201,8 @@ with one line per defect: its commit, what changed, and each check it ran
 for it, `<command> → exit <n>` (since 4.9.0). Every S5 is
 followed by a narrowed review (`-s3c`, then `-s3d`, …) over the range from
 HEAD at its first launch to its last commit, a wording-only fix included, before
-any acceptance case is re-run. A defect an S5 leaves without a commit still
+any acceptance case is re-run. A defect an S5 leaves without a commit, or
+lists with a check that exited non-zero, still
 stands, whatever that review says, and goes to the next S5, counted as a
 fix of it.
 

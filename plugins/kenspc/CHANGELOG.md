@@ -39,7 +39,8 @@ section in each reviewer's report file.
   With `RUN_DIR`, a reviewer runs no test file that needs ports or a
   database — its own setup starts a server or host, opens a database
   connection, or binds a port, or the project's instruction files name it
-  an integration test; a file it is unsure of counts — but reads its
+  an integration test; a file it is unsure of counts — nor a mutation
+  check on a copy of one, which needs the same ports and database, but reads its
   result in `suite-run.md`'s logs and lists it under a new
   `## Tests left for the verifier` section of `angle-<n>.md`, one line per
   file with what it wanted to learn, or `none`. Five reviewers run at once,
@@ -78,7 +79,10 @@ section in each reviewer's report file.
   codes as reported, the orchestrating session confirms a row by reading
   the log it names and runs no build, test, or lint of its own, and a row
   2–4 with neither an exit code nor a no-command form keeps the verdict
-  from PASS (PARTIAL, unless a FAIL condition holds).
+  from PASS (PARTIAL, unless a FAIL condition holds). So does a row whose
+  named log is missing, or shows an exit code or a failure its Detail does
+  not report, and the Verdict paragraph names the row and what its log
+  shows.
 - **task-document-reviewer does not rewrite task steps to delegate.** Its
   consistency angle now says a user-level or project rule on delegating
   work to subagents governs the session that dispatches agents, not a
@@ -99,7 +103,9 @@ section in each reviewer's report file.
   The repo-mode acceptance session runs each case itself, one after
   another, since the cases share one working tree and the machine's ports.
   S5's reply line per defect names each check it ran,
-  `<command> → exit <n>`. Plugin-mode S6's reply carries each pre-flight
+  `<command> → exit <n>`, or `no check run` and why, and a defect whose
+  check exited non-zero still stands, as a defect left without a commit
+  does, and goes to the next S5. Plugin-mode S6's reply carries each pre-flight
   command's exit code beside the two count lines, and both reports quote
   them, naming a non-zero one as a pre-flight failure, since the count
   lines alone may be missing when a command before them failed.
@@ -112,10 +118,18 @@ section in each reviewer's report file.
   every cited line a task, a guide sentence, or the diagnosis rests on
   before writing it, and probes that run code stay in the main session.
 - `check-run-contract.sh` check 5 holds the heading
-  `## Tests left for the verifier` in the five reviewers and
-  `regression-verifier.md`; its self-test now copies eleven target files
-  and renames the heading in each of the six in turn (fifty
-  mutations).
+  `## Tests left for the verifier` in the five reviewers, each as a line
+  of its own, and `regression-verifier.md`, and Schema C's no-command
+  forms, `no build command in the project` and
+  `no lint command in the project`, whitespace-normalized in
+  `regression-verifier.md` and the two skills; its self-test now copies
+  eleven target files, renames the heading in each of the six in turn,
+  and rewords each no-command form in each carrier (fifty mutations).
+- `check-doc-sync-anchors.sh` holds a sixth anchor, the `## Checks run`
+  heading, in `task-implementer.md` and `task-implement/SKILL.md`, with a
+  self-test rename in the skill.
+- `check-review-agent-drift.sh` also requires the standalone warning
+  sentence in each reviewer's frontmatter and names a reviewer without it.
 
 ### Fixed
 
