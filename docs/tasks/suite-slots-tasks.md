@@ -101,13 +101,15 @@ holders at limit 2 and a third run with `--wait 1` exits 75 with a
 `suite-slots: busy` line naming two holders; (2) the same third run with
 `--wait 10` exits 0 after a holder ends, with no sampled moment (every 0.2
 seconds) showing more than two holder files; (3) limit 3 with two live
-holders acquires, limit 2 with the same holders waits; (4) a wrapped
+holders and `--wait 1` acquires (exit 0), and limit 2 with the same holders
+and `--wait 1` waits and exits 75; (4) a wrapped
 `sh -c 'exit 3'` exits 3 and leaves no holder file; (5) a holder file with a
 dead pid and a mismatched start time is reclaimed (limit 1, `--wait 2`
 acquires, the log shows `reclaimed`); (6) a holder whose wrapper pid is dead
 but whose command pid is a live `sleep` is not reclaimed (limit 1,
 `--wait 1` exits 75); (7) a mutex directory with no `owner` file,
-backdated beyond 10 seconds with `touch -t`, is reclaimed; (8) a nested
+backdated beyond 10 seconds with `touch -t`, is reclaimed (a run with
+limit 1 and `--wait 2` acquires and exits 0); (8) a nested
 call (`KENSPC_SUITE_SLOT_HELD=1`) at limit 1 with one live holder runs at
 once and the log shows `nested`; (9) a wrapped run killed with SIGTERM
 removes its holder file and its child `sleep` is gone (`ps -p` on that
@@ -134,8 +136,15 @@ OK message that names the scripts.
   among them.
 - `bash scripts/check-all.sh --self-test` exits 0 and prints
   `guards run: 13` and, as its last line, `self-tests run: 12`.
-- After the guard runs, no process it started is left: `ps` shows no
-  `sleep` whose parent was the guard, and `$WORK` is gone.
+- After the guard runs, no process it started is left and its work
+  directory is gone: `ps -A -o pid=,ppid=,args=` and `ls -d "$TMPDIR"/tmp.*`
+  are captured right before and right after
+  `bash scripts/check-autopilot-scripts.sh --self-test`, and the after
+  listings hold no `suite-slots.sh` process, no `sleep` process, and no
+  `tmp.*` entry that the before listings did not. Why compare listings
+  rather than filter on the guard's pid: a child left behind is reparented
+  when the guard exits, so a filter on the guard's pid finds nothing
+  whatever was left.
 - The task's Implementation notes record the self-test's wall time before
   and after this task.
 
@@ -274,9 +283,14 @@ text and Step 5 list, naming the real interfaces Tasks 1, 3, and 4 built:
   inputs explicitly, a resume the values its tag was launched with;
 - preamble § 3: `/tmp/kenspc-suite-slots` among the allowed write
   locations;
-- preamble § 6: the `Suite limit:` line, including the long-wait question
-  after 30 minutes of busy returns, and the rule that it is omitted when
-  the field is absent;
+- preamble § 6: the `Suite limit:` line — the listed commands take a slot
+  in the machine-wide lock, at most N at once across every batch on the
+  machine; the wrapper line; exit 75 with the busy line means run the same
+  line again, never the command without the wrapper; the Bash call's
+  timeout allows 90 seconds more than the command alone needs; a
+  subagent's dispatch carries the same line; the hook denies an unwrapped
+  listed command; and the long-wait question after 30 minutes of busy
+  returns — and the rule that the line is omitted when the field is absent;
 - the repo-mode S4 task block only (the plugin-mode block is unchanged,
   ruling 9): a case whose command file holds a listed prefix runs as
   `bash <wrapper copy> run -- <shell> <file>`;
@@ -369,7 +383,12 @@ no other file):
   paragraph, which name "the three scripts" copied per batch and the files
   under `_logs/`; the reviewer report's `Suite slots:` line; a sentence on
   the machine-wide lock and the `/tmp/kenspc-suite-slots` directory, naming
-  native Windows as unchecked (plan steps 1, 3, 4, 5).
+  native Windows as unchecked; and the **Stops.** paragraph, which lists
+  every stop condition: it gains the new stop (a suite-slot holder aged 60
+  minutes or more on a worker's long-wait question), and its settings-stop
+  examples gain a `Suite limit:` field outside its grammar or in `plugin`
+  mode (plan steps 1, 3, 4, 5; the plan's Documentation impact does not
+  name the Stops paragraph, added here because it enumerates the stops).
 - `CLAUDE.md` § Plugin Directory Layout and § File Structure — the tree
   gains `suite-slots.sh`, and the `scripts/` bullet's "three helper
   scripts" becomes four and "`check-no-model-names.sh` scans all five"
@@ -405,7 +424,7 @@ modify no document outside the list.
 - Each listed document describes the behavior Tasks 1-6 implemented, so
   that a reader of that document alone learns it: the field's grammar and
   repo-mode limit, the wrapper's interface and exit codes, the driver's
-  inputs and exports, check (f) and its route.
+  inputs and exports, check (f) and its route, and the long-wait stop.
 - Every promoted decision appears in the document named for it, in that
   document's language.
 - `docs/roadmap.md` no longer holds item 32.
