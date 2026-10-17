@@ -54,11 +54,12 @@
 # wrapper pid is dead and whose command pid runs with another start time,
 # reclaimed; a holder whose command pid is a live sleep, kept; a mutex with
 # no owner backdated with touch -t, reclaimed; a nested call beside a live
-# holder at limit 1, run at once; a wrapped run killed with SIGTERM, its
-# holder file gone and its child sleep ended; and usage errors (no --, no
-# limit, limit 0, limit x, a regular file as the lock directory, a ps that
-# prints no start time) — and
-# asserts each outcome. Every background process a fixture starts is waited
+# holder at limit 1, run at once; the limit read from
+# KENSPC_AUTOPILOT_SUITE_LIMIT alone, entering with no holder and busy
+# beside one, and --limit taking precedence over it; a wrapped run killed
+# with SIGTERM, its holder file gone and its child sleep ended; and usage
+# errors (no --, no limit, limit 0, limit x, a regular file as the lock
+# directory, a ps that prints no start time) — and asserts each outcome. Every background process a fixture starts is waited
 # for or killed by its pid before the fixture ends, and again on exit. The
 # other-owner refusal has no fixture: the guard cannot chown.
 #
@@ -435,7 +436,7 @@ wait_holders() {
     return 1
 }
 
-# slot_checks <suite-slots script>: the wrapper's ten fixtures, each with a
+# slot_checks <suite-slots script>: the wrapper's eleven fixtures, each with a
 # lock directory and a log of its own under $WORK.
 slot_checks() {
     local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args
@@ -554,6 +555,21 @@ slot_checks() {
         "$SLOT_BASH" "$ss" run --limit 1 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 0 ]] || fail "suite-slots 8: a nested call exited $rc, expected 0"
     grep -q ' nested pid ' "$log" 2>/dev/null || fail "suite-slots 8: the log shows no nested line"
+
+    # 11. The limit from KENSPC_AUTOPILOT_SUITE_LIMIT alone, as a worker
+    #     runs the wrapper: 1 enters with no holder and is busy beside one
+    #     live holder, and --limit 2 over it enters beside the same holder.
+    d="$base/11"
+    rc=0
+    KENSPC_AUTOPILOT_SUITE_LIMIT=1 KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 11: the variable's limit alone exited $rc, expected 0 ($(cat "$WORK/slot-err"))"
+    fake_holder "$d" "$s1" "$(lstart_of "$s1")" "" ""
+    rc=0
+    KENSPC_AUTOPILOT_SUITE_LIMIT=1 KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 75 ]] || fail "suite-slots 11: the variable's limit 1 beside one holder exited $rc, expected 75"
+    rc=0
+    KENSPC_AUTOPILOT_SUITE_LIMIT=1 KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 2 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 11: --limit 2 over the variable's 1 beside one holder exited $rc, expected 0"
 
     stop_bg "$s1"
     stop_bg "$s2"

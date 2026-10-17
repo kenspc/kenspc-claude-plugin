@@ -98,7 +98,7 @@ report. The live checks on the maintainer's Mac are in
   `Suite slots: <a> acquired, <b> busy returns (<s>s waited in all), longest single wait <w>s, <r> reclaimed`
   line, `none` without the field.
 - **Guard fixtures for the wrapper.** `check-autopilot-scripts.sh` covers
-  `suite-slots.sh` with ten fixtures under `/bin/bash` and four mutants
+  `suite-slots.sh` with eleven fixtures under `/bin/bash` and four mutants
   (eleven in all), the wrapper's mutants running its fixtures alone. Its
   `--self-test` now takes about a minute and a half on the maintainer's
   Mac, up from about five seconds, since each pass pays the wrapper
