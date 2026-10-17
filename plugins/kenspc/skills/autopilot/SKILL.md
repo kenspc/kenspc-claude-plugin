@@ -1402,9 +1402,10 @@ Every S5 is followed by the narrowed review — `-s3c`, the next letter for
 a later one (`-s3d`) — over the range from HEAD at the S5's first launch,
 the state file's `head:`, to its last commit, a wording-only fix included,
 before any re-run of a case and
-before the next S5. A defect the S5's reply marks `not fixed`, or lists
-with no commit, still stands whatever the narrowed review says, since that
-review reads only the commits the S5 made: it counts as a fix of it
+before the next S5. A defect the S5's reply marks `not fixed`, lists
+with no commit, or lists with a check that exited non-zero, still stands
+whatever the narrowed review says, since that review reads only the
+commits the S5 made: it counts as a fix of it
 (stop condition 4) and goes to the next S5. The second narrowed
 review that still FAILs is the "guards red twice in a row" stop. DEFERRED
 MEDIUM and LOW rows are classified once — a fix in S5, or a roadmap
@@ -2831,8 +2832,8 @@ instruction files name for a change of this kind, and commit each fix
 alone — one commit per defect, in the repository's convention, touching
 nothing its finding does not need. Reply with one line per defect: its ID,
 the commit hash, what changed, and each check you ran for it,
-`<command> → exit <n>` — or, for a defect you did not fix, its ID,
-`not fixed`, and why.
+`<command> → exit <n>`, or `no check run` and why — or, for a defect you
+did not fix, its ID, `not fixed`, and why.
 ````
 
 - **S6, the removal commit** — Phase 4: repo mode with
