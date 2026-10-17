@@ -176,6 +176,8 @@ Files: the five reviewer files under `plugins/kenspc/agents/`.
 - `grep -lF '<the sentence>' plugins/kenspc/agents/*-reviewer.md` lists
   exactly the five reviewers.
 - `claude plugin validate --strict ./plugins/kenspc` exits 0.
+- `bash scripts/check-review-agent-drift.sh` exits 0 (this repository's
+  CLAUDE.md § Maintenance note: run it after editing any reviewer agent).
 
 ---
 
