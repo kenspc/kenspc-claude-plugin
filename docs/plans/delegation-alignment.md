@@ -144,20 +144,32 @@ in both).
   regression-verifier runs after code-fixer, alone. Without RUN_DIR the
   item is unchanged.
 - Each reviewer's OUTPUT FORMAT (Schema A): add the
-  `## Tests left for the verifier` section after `## Issues`, written only
-  with RUN_DIR, holding `none` when empty. It stays in the file
-  (`angle-<n>.md`) and is not part of the reply.
+  `## Tests left for the verifier` section after `## Issues` and before
+  the closing line, written only with RUN_DIR, holding `none` when empty.
+  It stays in the file (`angle-<n>.md`) and is not part of the reply.
+- The five reviewers' REPORT DELIVERY (byte-identical in all five): the
+  file's content, today "both tables and the closing line", also names the
+  `## Tests left for the verifier` section; the reply list is unchanged.
 - `agents/regression-verifier.md` INPUTS (line 83) and check 3 (line 214):
   read each `angle-<n>.md`'s `## Tests left for the verifier`; after the
   full test command, run, one at a time, each listed file the full run did
-  not collect; one the full run collected is covered by it. Row 3's Detail
+  not collect; one the full run collected is covered by it. When the runner
+  gives no list of collected files, or the list command errors, the file
+  is run. Row 3's Detail
   names each listed file and how it was settled (`covered by the full run`,
   or its own command and exit code). A listed file that fails makes row 3
   FAIL.
 - `scripts/check-run-contract.sh` check 5: add the literal
   `## Tests left for the verifier`, required in the five reviewers and
-  `regression-verifier.md`, its self-test renaming it in each in turn; the
-  guard's header comment and its self-test count text updated to match.
+  `regression-verifier.md`, its self-test renaming it in each in turn. The
+  self-test copies seven target files today, of the reviewers only
+  `requirements-reviewer.md`; it gains `edge-case-reviewer.md`,
+  `quality-reviewer.md`, `bug-reviewer.md`, and `test-reviewer.md`, and its
+  fixture-stale check requires the literal in all six. Why all five
+  reviewers and not the existing one-reviewer pattern: the literal sits in
+  OUTPUT FORMAT as well, which `check-review-agent-drift.sh` does not hold.
+  The guard's header comment (the file list, the copied-file count, and
+  the mutation count, "thirty-seven" today) updated to match.
 
 Acceptance: `check-review-agent-drift.sh` and `check-run-contract.sh` exit
 0; `bash scripts/check-run-contract.sh --self-test` turns red on each of the
@@ -170,8 +182,9 @@ six renames and green unmutated.
   test suite itself, so dispatch one at a time or use /kenspc-task-review.
   Same sentence in all five.
 
-Acceptance: `grep -c` of the sentence over `agents/*-reviewer.md` counts 5
-(the three document reviewers carry none);
+Acceptance: `grep -lF '<the sentence>' plugins/kenspc/agents/*-reviewer.md`
+lists exactly the five reviewers (the three document reviewers, which the
+glob also matches, carry none);
 `claude plugin validate --strict ./plugins/kenspc` exits 0.
 
 ### Step 5: Checks report their command, exit code, and log (Q2)
@@ -327,12 +340,16 @@ and `check-doc-sync-anchors.sh` exit 0.
   is not measured, and the binary drops the parameter there when fork mode
   is on.
 
-Acceptance: no file in the repository still states that subagents cannot
-spawn subagents as a platform fact (`grep -rn 'cannot spawn'` over
-`CLAUDE.md`, `plugins/`, `docs/`, CHANGELOG excluded, prints no line
-stating it — run once before the edit as a positive control, where it
-prints line 359);
-`check-all.sh` exits 0.
+Acceptance: no durable file still states either platform fact.
+`grep -rn 'cannot spawn' CLAUDE.md plugins/ docs/release-checklist.md docs/roadmap.md --exclude=CHANGELOG.md`
+prints no line — run once before the edit as a positive control, where it
+prints `CLAUDE.md` line 359; and
+`grep -rn 'has no such parameter\|has no .run_in_background.\|takes effect only in headless' CLAUDE.md plugins/ docs/release-checklist.md --exclude=CHANGELOG.md`
+prints no line — its positive control before the edit prints `CLAUDE.md`
+line 417, README line 1490, and release-checklist line 105. The plan and
+task documents under `docs/plans/` and `docs/tasks/`, and the historical
+records under `docs/dry-runs/`, are left out: they quote the old text by
+design. `check-all.sh` exits 0.
 
 ### Step 14: Doc-sync
 
