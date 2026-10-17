@@ -61,8 +61,9 @@
 # pid is dead, reclaimed, and one whose owner runs, kept (busy, the mutex
 # left in place); a wrapped run killed with SIGTERM, SIGINT, or SIGHUP,
 # its holder file gone and its child sleep ended, each with its own exit
-# code; and usage errors (no --, no limit, limit 0, limit x, a regular
-# file as the lock directory, a ps that prints no start time) — and
+# code; and usage errors (no --, no limit, limit 0 or 00, limit x, a
+# regular file as the lock directory, a ps that prints no start time),
+# beside limit 01 read as 1 — and
 # asserts each outcome. Every background process a fixture starts is
 # waited for or killed by its pid before the fixture ends, and again on
 # exit. The other-owner refusal has no fixture: the guard cannot chown.
@@ -645,6 +646,13 @@ slot_checks() {
         [[ "$rc" -eq 2 ]] || fail "suite-slots 10: [$args] exited $rc, expected 2"
         [[ -s "$WORK/slot-err" ]] || fail "suite-slots 10: [$args] gave no reason on stderr"
     done
+    # A leading zero is read as decimal, as the start check reads it.
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 01 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 10: --limit 01 exited $rc, expected 0"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 00 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "suite-slots 10: --limit 00 exited $rc, expected 2"
     printf 'x\n' > "$base/10-file"
     rc=0
     KENSPC_SUITE_SLOTS_DIR="$base/10-file" "$SLOT_BASH" "$ss" run --limit 1 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?

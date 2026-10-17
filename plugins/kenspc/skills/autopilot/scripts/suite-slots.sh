@@ -175,8 +175,12 @@ done
 [ -n "$limit" ] || limit=${KENSPC_AUTOPILOT_SUITE_LIMIT:-}
 case $limit in
   '') usage "no limit: give --limit or set KENSPC_AUTOPILOT_SUITE_LIMIT" ;;
-  0*|*[!0-9]*) usage "the limit is not a positive integer: $limit" ;;
+  *[!0-9]*) usage "the limit is not a positive integer: $limit" ;;
 esac
+# Read as decimal, a leading zero dropped: 02 is the positive integer 2,
+# which the run's start check accepts as one.
+[ "$((10#$limit))" -gt 0 ] || usage "the limit is not a positive integer: $limit"
+limit=$((10#$limit))
 case $wait_seconds in
   ''|*[!0-9]*) usage "the wait is not a whole number of seconds: $wait_seconds" ;;
 esac
