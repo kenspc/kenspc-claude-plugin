@@ -765,7 +765,7 @@ later run or not. A known label written with a note,
 `Acceptance (in the order listed, …):` becomes a `Run notes:` line in the
 acceptance session's prompt, and any other field's note is named on the
 line after the settings line; an unknown label with a note is still
-ignored and named. The twenty labels and their defaults:
+ignored and named. The twenty-one labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -786,6 +786,16 @@ ignored and named. The twenty labels and their defaults:
   (another session's go before a full suite) is asked by the worker
   itself, since the plugin's subagents have no message tool, and that the
   go is named in the dispatch of the agent that runs the command
+- `Suite limit:` (since 4.10.0, `repo` mode only) a positive integer N, with
+  one sub-bullet per command prefix, each one code span holding one or more
+  words with no `|`, quote, or newline (`` - `dotnet test` ``) — unset, no
+  lock. Each listed command, whatever its arguments (`dotnet test --filter X`
+  too), takes a slot in a lock the whole machine shares before it runs, and
+  a caller enters only while fewer than its own N slots are held, so at
+  most N listed suites run at once across every batch on the machine (see
+  Suite slots below). A value that is not a positive integer, a field with
+  no sub-bullet, a sub-bullet that is not one such code span, or the field
+  in `plugin` mode is a settings stop
 - `Acceptance:` `none`, or one sub-bullet per case: a command or a case
   description, its PASS criterion after ` — PASS: `, and `(optional)` at the
   end of a case that may be cut — `none`
@@ -889,12 +899,13 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
 ```
 <workspace>/
     _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh,
-                   <batch>-zero-diff.sh, and <batch>-temp-candidates.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
+                   <batch>-zero-diff.sh, <batch>-temp-candidates.sh, and <batch>-suite-slots.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
                    blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md, the trial extraction's
                    <batch>-trial-cmds/, and the extracted <batch>-s4-cmds/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
                    <batch>-tmp-before.txt  <batch>-tmp-candidates.txt  the temp folder before and after
+                   <batch>-suite-slots.log  the suite-slot wrapper's events, with Suite limit: set
                    <batch>-walk/  S4w's walk.md and its screenshots
     <batch>-*      seed projects (plugin mode)
     .trash/        discarded directories, moved here as <name>-<timestamp>/ — nothing here is removed with a recursive rm
@@ -913,8 +924,9 @@ reply, which nothing downstream reads — the release checklist reads the
 state file and the timeline.
 
 **The rails.** Every worker's prompt carries the same safety rails. A
-worker writes only to the repository, the workspace, `$TMPDIR`, and the
-harness's per-session scratchpad. A write elsewhere under `/tmp` (on
+worker writes only to the repository, the workspace, `$TMPDIR`, the
+harness's per-session scratchpad, and the suite-slot lock directory
+`/tmp/kenspc-suite-slots` (since 4.10.0). A write elsewhere under `/tmp` (on
 macOS `/private/tmp`) that holds no secret is not a breach: the worker
 lists it under `## Rail observations` in its final message and goes on,
 together with each rail observation a subagent of its reports, naming the
@@ -983,11 +995,22 @@ hook on Bash, Write, Edit, and NotebookEdit denies, in a marked worker
 only, a Bash command that runs a recursive `rm`, a Bash redirection
 (`>`, `>>`, `>|`, `&>`, `&>>`, with or without a file-descriptor number)
 or a file-tool write whose target lies outside the roots, and a `gh` or
-remote-git call (since 4.7.0 for the last two) — in the worker's own calls
+remote-git call (since 4.7.0 for the last two), and, since 4.10.0, with
+`Suite limit:` set, a listed suite command run without the suite-slot
+wrapper (check (f): the prefix's first word against the command word's
+base name, so `/usr/local/share/dotnet/dotnet test` is caught too, its
+later words as written, whole word by whole word, at a command position,
+so `bash <wrapper> run -- dotnet test` passes) — in the worker's own calls
 and its subagents' alike, since a plugin hook fires for a subagent's tool
 call too. The deny's reason names the rail and the permitted route: for a
-`gh` or remote-git call, to ask the main session, the route a subagent
-that never saw the worker's prompt would otherwise not know. A call the hook denied is
+`gh` or remote-git call, to ask the main session, and for a listed suite
+command, the wrapper's line, `bash <wrapper copy> run -- <the command>`,
+run again on exit 75 with a `suite-slots: busy` line — the route a subagent
+that never saw the worker's prompt would otherwise not know. Check (f)
+misses a listed command reached through a script file, `bash -c`, `make`,
+`eval`, a variable, or an alias, or after a wrapper the scan does not skip
+(`timeout`, `nice`); the spec author lists the outer command a batch
+actually types. A call the hook denied is
 not a breach, since it never ran: the worker takes the route the deny
 names, lists the denial under `## Rail observations`, naming the subagent
 that made the call, and goes on. A denial whose reason says a field of
@@ -1304,9 +1327,13 @@ without both pieces of evidence; a nested `claude -p` refused; the same
 step's session dead twice; a settings stop before the first launch, among
 them a `Role settings` entry outside its grammar,
 `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort (see Models
-and efforts), and, with `Walk:` not `off` in `repo` mode, no usable walk
-tool (see Known behavior); and a worker that ended on a denial whose reason says a
-field of the hook input could not be read (see The rails). When one
+and efforts), with `Walk:` not `off` in `repo` mode, no usable walk
+tool (see Known behavior), and a `Suite limit:` field outside its grammar
+or in `plugin` mode; a worker that ended on a denial whose reason says a
+field of the hook input could not be read (see The rails); and, on a
+worker's question about a long wait for a suite slot, a holder aged 60
+minutes or more, its pid, `ps` line, age, cwd, and command named, for you
+to wait on, end that process yourself, or end the run (see Suite slots). When one
 option stays inside the contract — defer to a follow-up, leave as is — the
 main session takes it and records it instead of asking, and a ruling to
 leave a locked point as it stands and record the finding as a follow-up
@@ -1362,6 +1389,8 @@ run); the walk, each flow's result and each FAIL's classification, or
 `off`, `nothing to walk`, `not walked`, or `walk: cut by budget`; the
 standalone review, `Standalone review: <value> — ran (<trigger>)` or
 `— not run (<reason>)`, so a trial of `auto` reads from the reports;
+suite slots, the acquired slots, busy returns and their total wait, the
+longest single wait, and the reclaimed holders, or `none`;
 BLOCKED tasks, each with its classification; models and efforts,
 `<n> workers, <k> mismatches, <j> not observed`
 (`<n> workers, mismatches: none, <j> not observed` when there are
@@ -1403,11 +1432,59 @@ nothing: a later run may need the entries, and the stop message names the
 temp folder and the before list. Where your `rm` moves files to the trash,
 the removal goes there too.
 
+**Suite slots (since 4.10.0).** More than about two runs of one
+integration suite at once exhausted a machine's local ports, and the tests
+then failed on a connection error rather than on an assertion; a batch's
+`Run facts:` bound that batch alone, so batches running side by side still
+ran their suites at once. With `Suite limit:` set, every listed command
+takes a slot through the wrapper the skill ships,
+`skills/autopilot/scripts/suite-slots.sh`, copied per batch to
+`_prompts/<batch>-suite-slots.sh`:
+
+```
+suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
+```
+
+N is `--limit`, else `KENSPC_AUTOPILOT_SUITE_LIMIT`; `--wait` defaults to
+90 seconds, under the Bash tool's default two-minute timeout. Under a short
+`mkdir` mutex the wrapper counts the live holder files in the lock
+directory, `/tmp/kenspc-suite-slots` (mode 700), and enters only while
+fewer than its own N are live, so batches with different limits share one
+pool; a holder whose recorded pids are both gone, or alive with another
+start time, is moved aside as stale. It runs the command as a background
+child, sends it SIGTERM on an interrupt, removes its holder file on exit,
+and exits with the command's status — 75 when no slot was free within the
+wait, with a `suite-slots: busy after <s>s; held by:` line naming each
+holder's age, cwd, and command on stderr, and 2 on a usage or
+lock-directory error. A call already inside a wrapped command runs at once.
+Its header names the gaps it accepts: a grandchild that does not pass the
+forwarded SIGTERM on can keep the ports in use after its holder turns
+stale, and two waiters reclaiming one dead mutex at the same instant can
+let N + 1 holders run. Each worker's prompt carries a `Suite limit:` line:
+run every listed command through the wrapper, run the same line again on
+exit 75 and never the command bare, give the Bash call 90 seconds more than
+the command needs, carry the line into every subagent and agent dispatch,
+and ask the main session after 30 minutes of busy returns. The main session
+answers `wait on` while every holder is younger than 60 minutes, and stops
+for you once one is 60 minutes old or older (see Stops). In `repo`-mode
+acceptance, a case whose command file holds a listed prefix runs as
+`bash <wrapper copy> run -- <shell> <file>`, and the main session's own
+corrected-case evidence runs take a slot the same way, with `--limit <n>`
+and the log on the line. The reviewer report's
+`Suite slots: <a> acquired, <b> busy returns (<s>s waited in all), longest single wait <w>s, <r> reclaimed`
+line, or `none` without the field, is read from `_logs/<batch>-suite-slots.log`,
+and the settings line carries `suite limit <<n> (<k> commands)|none>`. The
+lock directory is fixed so that every batch on the machine finds it;
+native Windows is unchecked: under Git Bash `/tmp` maps to the user's temp
+folder, which is not measured. A session outside autopilot takes no slot
+unless you run the wrapper by hand.
+
 **The drivers.** `run.sh` (`skills/autopilot/scripts/run.sh`) ships with the
-skill and is copied per batch to `_prompts/<batch>-run.sh`, with the three
-scripts beside it, `extract-acceptance.sh`, `zero-diff.sh`, and
-`temp-candidates.sh`, copied to `_prompts/<batch>-extract-acceptance.sh`,
-`_prompts/<batch>-zero-diff.sh`, and `_prompts/<batch>-temp-candidates.sh`
+skill and is copied per batch to `_prompts/<batch>-run.sh`, with the four
+scripts beside it, `extract-acceptance.sh`, `zero-diff.sh`,
+`temp-candidates.sh`, and `suite-slots.sh`, copied to
+`_prompts/<batch>-extract-acceptance.sh`, `_prompts/<batch>-zero-diff.sh`,
+`_prompts/<batch>-temp-candidates.sh`, and `_prompts/<batch>-suite-slots.sh`
 — a running batch keeps the text it started with even when a `plugin`-mode
 implementation edits them; it starts each
 worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
@@ -1428,7 +1505,16 @@ launch also sets `AUTOPILOT_WORKSPACE` to the workspace's absolute path
 root), and the driver exports
 `KENSPC_AUTOPILOT_WORKER=1` and `KENSPC_AUTOPILOT_WRITE_ROOTS` to every
 worker, fresh or resumed, over any value your session holds (see The
-rails). S4's nested acceptance sessions take S4's model and effort
+rails). Since 4.10.0 it also reads `AUTOPILOT_SUITE_LIMIT`,
+`AUTOPILOT_SUITE_COMMANDS` (the prefixes joined by `|`), and
+`AUTOPILOT_SUITE_WRAPPER` (the wrapper copy's absolute path, refused when
+relative), which every launch sets — the empty string without
+`Suite limit:` — and exports them as `KENSPC_AUTOPILOT_SUITE_LIMIT`,
+`KENSPC_AUTOPILOT_SUITE_COMMANDS`, and `KENSPC_AUTOPILOT_SUITE_WRAPPER`,
+with `KENSPC_AUTOPILOT_SUITE_LOG` set to `<logs>/<batch>-suite-slots.log`
+when the limit is non-empty, each overwriting your session's value and
+empty when its input is: a subagent inherits the worker's environment, so
+the wrapper finds N and the hook the list with no agent carrying them. S4's nested acceptance sessions take S4's model and effort
 through the environment, since the driver copy S4 runs reads the same two
 variables, and every nested launch sets `AUTOPILOT_PLUGIN_DIR` on its own
 line. `run.sh --self-test` launches a stub through the same path

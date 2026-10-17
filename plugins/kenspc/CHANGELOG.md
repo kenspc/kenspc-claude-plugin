@@ -9,6 +9,99 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.10.0 — unreleased
+
+Autopilot batches running side by side on one machine can now cap how
+many heavy test suites run at once across all of them, with no session
+acting as a dispatcher and no project named in the plugin. A new
+`## Autopilot` field, `Suite limit:`, names N and the commands; each
+listed command then takes a slot in a lock the whole machine shares
+before it runs. No new agent, command, CONTEXT key, or guard file, and
+every skill keeps `version: 3.0.0`; what changes for a user is the new
+field, a new script copied per batch, a new rails-hook check, a new stop
+condition, and one new line each on the settings line and the reviewer
+report. The live checks on the maintainer's Mac are in
+`docs/dry-runs/suite-slots-live.md`.
+
+### Added
+
+- **The `Suite limit:` field (autopilot, `repo` mode only).** A positive
+  integer N, with one sub-bullet per command prefix, each one code span
+  (`` - `dotnet test` ``). Every run of a listed command takes a slot,
+  whatever its arguments, and a caller enters only while fewer than its
+  own N slots are held, so batches with different limits share one pool.
+  Why: more than about two runs of one integration suite at once exhausted
+  a machine's local ports, and the tests then failed on connection errors
+  that read as findings; a batch's `Run facts:` bound that batch alone.
+  Without the field there is no lock. A value outside the grammar, or the
+  field in `plugin` mode, is a settings stop: the plugin-mode acceptance
+  runs its cases as nested sessions the wrapper cannot take. The settings
+  line gains `suite limit <<n> (<k> commands)|none>`.
+- **The suite-slot wrapper, `skills/autopilot/scripts/suite-slots.sh`.**
+  `suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]`,
+  copied per batch to `_prompts/<batch>-suite-slots.sh`. N is `--limit`,
+  else `KENSPC_AUTOPILOT_SUITE_LIMIT`; `--wait` defaults to 90 seconds,
+  under the Bash tool's default two-minute timeout. Under a `mkdir` mutex
+  it counts the live `holder-<pid>` files in `/tmp/kenspc-suite-slots`
+  (mode 700; `KENSPC_SUITE_SLOTS_DIR` overrides it for the guard's
+  fixtures), moving aside a holder whose wrapper and command pids are both
+  gone or alive with another start time, and reclaiming a mutex whose
+  owner is dead or that has no owner after 10 seconds. It runs the command
+  as a background child, forwards SIGTERM on INT, TERM, or HUP, removes its
+  holder file on exit, and exits with the command's status, 75 with a
+  `suite-slots: busy after <s>s; held by:` line on stderr when no slot was
+  free, or 2 on a usage or lock-directory error. A call inside a wrapped
+  command runs at once. Its events go to `KENSPC_AUTOPILOT_SUITE_LOG`. The
+  holder-file layout is shared by every plugin version on the machine, so
+  a change to it is a breaking change. Its header names the two gaps it
+  accepts: a grandchild that does not pass the forwarded SIGTERM on can
+  keep the ports in use after its holder turns stale, and two waiters
+  reclaiming one dead mutex at once can let N + 1 holders run.
+- **The drivers pass the limit (`run.sh`, `run.ps1`).** Three new inputs,
+  `AUTOPILOT_SUITE_LIMIT`, `AUTOPILOT_SUITE_COMMANDS` (the prefixes joined
+  by `|`), and `AUTOPILOT_SUITE_WRAPPER` (refused unless absolute), are
+  exported to every worker, fresh or resumed, as
+  `KENSPC_AUTOPILOT_SUITE_LIMIT`, `KENSPC_AUTOPILOT_SUITE_COMMANDS`, and
+  `KENSPC_AUTOPILOT_SUITE_WRAPPER`, with `KENSPC_AUTOPILOT_SUITE_LOG` set to
+  `<logs>/<batch>-suite-slots.log` when the limit is set — each the empty
+  string when its input is, and each overwriting the caller's value, as
+  the marker does. A subagent inherits them from its worker. Both
+  self-tests check the values set, the values empty over stale caller
+  values, and the relative-wrapper refusal; a stub of your own that is
+  meant to pass now echoes six variables, not two.
+- **The rails hook's check (f).** With `KENSPC_AUTOPILOT_SUITE_COMMANDS`
+  set, a marked worker's Bash command that runs a listed command at a
+  command position is denied — the prefix's first word against the
+  command word's base name, its later words as written — with the route
+  `bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run -- <the command>`, run again
+  on exit 75. The wrapper's own line passes, since there the command is an
+  argument of `bash`. It misses a listed command reached through a
+  script, `bash -c`, `make`, `eval`, a variable, an alias, or `timeout` or
+  `nice`. `check-autopilot-rails-hook.sh` gains a `deny-suite`
+  expectation, its fixtures, and a ninth mutant.
+- **The autopilot skill ties it together.** Every launch sets the three
+  inputs, the empty string without the field. The preamble's § 3 names
+  `/tmp/kenspc-suite-slots` among the write locations, and its § 6 gains a
+  `Suite limit:` line: run each listed command through the wrapper, run
+  the same line again on exit 75 and never the command bare, give the Bash
+  call 90 seconds more than the command needs, carry the line into every
+  dispatch, and ask the main session after 30 minutes of busy returns. The
+  repo-mode acceptance runs a case whose command file holds a listed
+  prefix through the wrapper, and so do the main session's corrected-case
+  evidence runs, with `--limit` and the log on the line. The main session
+  answers a long-wait question `wait on` while every holder is younger
+  than 60 minutes; a holder aged 60 minutes or more is the new stop
+  condition 12, naming each such holder for you to wait on, end, or end
+  the run. The reviewer report gains a
+  `Suite slots: <a> acquired, <b> busy returns (<s>s waited in all), longest single wait <w>s, <r> reclaimed`
+  line, `none` without the field.
+- **Guard fixtures for the wrapper.** `check-autopilot-scripts.sh` covers
+  `suite-slots.sh` with ten fixtures under `/bin/bash` and four mutants
+  (eleven in all), the wrapper's mutants running its fixtures alone. Its
+  `--self-test` now takes about a minute and a half on the maintainer's
+  Mac, up from about five seconds, since each pass pays the wrapper
+  fixtures' sleeps. `guards run: 13` and `self-tests run: 12` hold.
+
 ## 4.9.0 — 2026-10-17
 
 The skills and agents now say who runs each check, what may run side by

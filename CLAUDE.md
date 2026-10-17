@@ -64,7 +64,8 @@ plugins/kenspc/
 │           ├── run.ps1          # PowerShell mirror of run.sh (pwsh 7.3 or later), checked on macOS only — a parse and its --self-test; the skill copies and runs run.sh
 │           ├── extract-acceptance.sh  # Writes each Acceptance: case of a spec's ## Autopilot section to <nn>.cmd or <nn>.case; copied per batch, run by the main session and S4
 │           ├── zero-diff.sh     # The zero-diff check: git diff --stat over a paths file, one argument per path, with a compared: count; copied per batch
-│           └── temp-candidates.sh  # Read-only: snapshots the temp folder before a batch, and at its end lists the batch's own new entries with their evidence; copied per batch
+│           ├── temp-candidates.sh  # Read-only: snapshots the temp folder before a batch, and at its end lists the batch's own new entries with their evidence; copied per batch
+│           └── suite-slots.sh   # The suite-slot wrapper: runs a listed suite only while fewer than N run on the machine, through a lock in /tmp/kenspc-suite-slots; copied per batch
 ├── README.md
 └── LICENSE
 ```
@@ -75,7 +76,7 @@ plugins/kenspc/
 
 Each skill lives in `skills/<skill-name>/` with:
 - `SKILL.md` — skill definition with YAML frontmatter (`name`, `description`, `version`, `argument-hint`) followed by structured phases/modes
-- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's: its two drivers, `run.sh` and its PowerShell mirror `run.ps1`, and its three helper scripts, `extract-acceptance.sh` and `zero-diff.sh` (4.6.0) and `temp-candidates.sh` (4.8.0), which `check-autopilot-scripts.sh` holds; `check-no-model-names.sh` scans all five with the rest of `skills/`
+- `scripts/` (optional) — executable scripts the skill ships and runs by path (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/scripts/<file>`); today only the autopilot's: its two drivers, `run.sh` and its PowerShell mirror `run.ps1`, and its four helper scripts, `extract-acceptance.sh` and `zero-diff.sh` (4.6.0), `temp-candidates.sh` (4.8.0), and `suite-slots.sh` (4.10.0), which `check-autopilot-scripts.sh` holds; `check-no-model-names.sh` scans all six with the rest of `skills/`
 - `templates/` (optional) — files the skill reads by path and fills in (`${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/templates/<file>`); today only init-project's, one `.tmpl` file per document it writes. A template is never named `CLAUDE.md` or `AGENTS.md`, since a session working in this repository would load a `CLAUDE.md` as a memory file, and an `AGENTS.md` too wherever Claude Code reads AGENTS.md itself (its `claude-md-and-agents-md` mode), and `check-no-model-names.sh` scans templates with the rest of `skills/`
 
 Each plugin agent lives in `agents/<agent-name>.md` with YAML frontmatter (`name`, `description`, `tools`, `model`) followed by the agent's static system prompt. SKILLs dispatch agents by name through the Agent tool, passing a structured CONTEXT block as the dispatch prompt; the one other dispatch is the read-only sweep of generate-task, generate-guide, and diagnose-bug (4.9.0), unnamed subagents given a free-text prompt that write nothing and return `file:line`.
@@ -100,7 +101,14 @@ is inert there — exit 0, no output, stdin unread — unless
 (`run.sh`, `run.ps1`) exports to every worker with
 `KENSPC_AUTOPILOT_WRITE_ROOTS` (the worker's repository, the workspace,
 `$TMPDIR`, `/tmp`, `/private/tmp`, joined by `|` — no Windows path holds
-it, while `:` is in every drive letter and `;` may be in a file name). In a
+it, while `:` is in every drive letter and `;` may be in a file name), and,
+since 4.10.0, the batch's `Suite limit:` as `KENSPC_AUTOPILOT_SUITE_LIMIT`,
+`KENSPC_AUTOPILOT_SUITE_COMMANDS` (the prefixes joined by `|`),
+`KENSPC_AUTOPILOT_SUITE_WRAPPER` (the wrapper copy's absolute path), and
+`KENSPC_AUTOPILOT_SUITE_LOG` (`<logs>/<batch>-suite-slots.log`), each the
+empty string without the field and overwriting the caller's value; the
+wrapper reads the limit and the log, the hook the commands and the
+wrapper, and a subagent inherits all four from its worker. In a
 marked worker it
 denies, with exit 2 and the reason on stderr, a Bash command that runs a
 recursive `rm` at a command position, a Write, Edit, or NotebookEdit
@@ -110,7 +118,13 @@ target — read after a leading `~`, `$HOME`, or `$TMPDIR` is expanded and
 `.` and `..` are collapsed — lies outside every root by the same root
 check (4.7.0), `gh` and remote git (`git fetch`, `pull`, `push`,
 `ls-remote`, `remote update`, a `clone` of a URL) at a command position,
-its reason routing the worker to ask the main session (4.7.0), and a Bash
+its reason routing the worker to ask the main session (4.7.0), a listed
+suite command at a command position run without the suite-slot wrapper
+(check (f), 4.10.0: with `KENSPC_AUTOPILOT_SUITE_COMMANDS` non-empty, a
+prefix's first word against the command word's base name and its later
+words as written, whole word by whole word, its reason giving the route
+`bash <KENSPC_AUTOPILOT_SUITE_WRAPPER> run -- <the command>`, run again on
+exit 75 with a `suite-slots: busy` line), and a Bash
 input over 64 KB unscanned, since a scan that outlasts the hook's 5-second timeout
 denies nothing; a call whose tool name, Bash command, or file-tool target
 it cannot read from its input is denied too, so a renamed field stops the
@@ -442,7 +456,22 @@ new entry `temp-candidates.sh` lists as the batch's by evidence — the
 self-test's directory, a prefix the acceptance commands write under
 `$TMPDIR`, or a clone of the repository or a seed — since two tracks share
 the folder and the workers' rails forbid a recursive `rm`; a stopped run
-removes nothing. The roles are sessions rather than
+removes nothing. Batches on one machine share one suite-slot lock
+(4.10.0, repo mode only): with the `## Autopilot` field `Suite limit:` set
+— N, and the command prefixes as sub-bullets — every listed command, in a
+worker, its subagents, S4's cases, and the main session's corrected-case
+runs, runs through the copied `suite-slots.sh`, which takes a slot under a
+`mkdir` mutex in `/tmp/kenspc-suite-slots` only while fewer than the
+caller's own N holders are live, and the rails hook denies a listed
+command run without it. A busy wrapper (exit 75) is run again, never
+bypassed; after 30 minutes of busy returns the worker asks the main
+session, which answers `wait on` while every holder is younger than 60
+minutes and stops on stop condition 12 once one is not, since the holder
+may be another batch's. Why: more than about two runs of one integration
+suite at once exhausted a machine's local ports, and a batch's
+`Run facts:` bound only that batch. The field in plugin mode is a settings
+stop, since plugin-mode S4 runs its cases as nested sessions the wrapper
+cannot take. The roles are sessions rather than
 agents because a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix each need a session
 of their own; the workers run the installed plugin, or in plugin mode the
@@ -695,8 +724,8 @@ instruction files", or `shared/instruction-files.md`, run
 `hooks/scripts/autopilot-worker-rails.sh`, or the autopilot `SKILL.md`'s
 preamble template, § Launch, wait, return, or stop conditions, run
 `check-autopilot-rails-hook.sh`. After editing
-`skills/autopilot/scripts/extract-acceptance.sh`, `zero-diff.sh`, or
-`temp-candidates.sh`, run `check-autopilot-scripts.sh`. What each
+`skills/autopilot/scripts/extract-acceptance.sh`, `zero-diff.sh`,
+`temp-candidates.sh`, or `suite-slots.sh`, run `check-autopilot-scripts.sh`. What each
 guard checks is documented once, in "Repository scripts/" below.
 
 ### Non-Goals
@@ -936,7 +965,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   asking for the denial to be listed under `## Rail observations` before
   the worker ends, with no `.trash`; or, the `deny-ask` expectation for a
   `gh` or remote-git call (4.7.0), naming the main session, with neither
-  `.trash` nor the no-route text; allow and inert: exit 0, no stdout).
+  `.trash` nor the no-route text; or, the `deny-suite` expectation for a
+  listed suite command (4.10.0), naming the fixture wrapper path, with
+  neither `.trash` nor the no-route text; allow and inert: exit 0, no
+  stdout).
   The fixtures carry the field names and nesting of the live hook input
   Claude Code 2.1.283 sent for Bash, Write, Edit, and NotebookEdit calls,
   copied into the guard, since a hook that parses a harness-owned format
@@ -987,9 +1019,21 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `user@host:path` or `host:path` source; allowed: a `git clone` of a
   local path,
   `git status`, `git --git-dir .git status`, `type gh`, `grep gh f`,
-  `command -v gh`, and `which gh` — and every
+  `command -v gh`, and `which gh` —
+  check (f) (4.10.0), with `decide()` exporting
+  `KENSPC_AUTOPILOT_SUITE_COMMANDS` and `KENSPC_AUTOPILOT_SUITE_WRAPPER`
+  per fixture, empty for every other fixture, and here
+  `'dotnet test|pnpm test'` and a fixture wrapper path — denied:
+  `dotnet test`, `dotnet test --filter X`, `cd a && dotnet test`,
+  `sudo dotnet test`, `time pnpm test`, `echo x; pnpm test`,
+  `$(dotnet test)`, and `/usr/local/share/dotnet/dotnet test`; allowed:
+  `bash /w/suite-slots.sh run -- dotnet test`, `echo "dotnet test"`,
+  `grep 'dotnet test' f`, `dotnet build`, `dotnet testx`, `pnpm install`,
+  and a `dotnet test` in a heredoc body; inert: `dotnet test` with the
+  commands variable empty and with the marker unset — and every
   denied fixture again
-  without the marker and with the marker `0`. Main mode also checks that
+  without the marker and with the marker `0`, each with the suite
+  variables it was denied with. Main mode also checks that
   `hooks.json` registers the hook under PreToolUse with a matcher naming
   all four tools, since the fixtures run the script directly; and (4.5.0)
   that the literal `## Rail observations` occurs in the hook's
@@ -1002,7 +1046,7 @@ Project-level shell scripts live in `scripts/` at the repo root:
   conditions, where the main session and stop condition 11 match on it — each
   missing literal reported per carrier (exit 1), a missing `SKILL.md`,
   assignment, template, or section exit 2. The hook
-  runs under `/bin/bash` when it exists. Its self-test turns eight mutants red — the
+  runs under `/bin/bash` when it exists. Its self-test turns nine mutants red — the
   `rm` detection, the root check, and the marker check removed, the
   constant-time push removed (every word collected so far copied on each
   `$(`, which only the timed `$( )` fixture catches), and the
@@ -1014,7 +1058,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   assertion catches, the heading check staying green on the same copy),
   the redirection check removed (any fixture may catch it), and the `gh`
   check removed (the `gh issue view` fixture, which must be the first
-  red), both 4.7.0
+  red), both 4.7.0, and the suite check (f) removed (the `dotnet test`
+  fixture, which must be the first red; 4.10.0)
   — then runs the heading check on a copy of `SKILL.md` beside
   the hook copy and turns it red with six more mutants, each named with
   its carrier: the heading dropped from the hook's reason, the preamble
@@ -1023,9 +1068,10 @@ Project-level shell scripts live in `scripts/` at the repo root:
   occurrence in the carrier's region); a
   mutation that replaces nothing is exit 2 — and cleans up without a
   recursive `rm`.
-- `check-autopilot-scripts.sh` — guards the autopilot's three helper
+- `check-autopilot-scripts.sh` — guards the autopilot's four helper
   scripts, `skills/autopilot/scripts/extract-acceptance.sh` and
-  `zero-diff.sh` (4.6.0) and `temp-candidates.sh` (4.8.0), by running them against fixtures built in its own
+  `zero-diff.sh` (4.6.0), `temp-candidates.sh` (4.8.0), and
+  `suite-slots.sh` (4.10.0), by running them against fixtures built in its own
   `mktemp -d` directory, removed by its EXIT trap (the only recursive
   `rm`), with git's global and system configuration masked: for the
   extractor, single and double backticks, a backtick inside a
@@ -1055,20 +1101,42 @@ Project-level shell scripts live in `scripts/` at the repo root:
   through a symlink — and of a seed must be, and another repository's
   clone, another track's prefix, a symlink, and a prefix only a `.case`
   file names must be left; the same sweep with no cmds dir; and seven usage
-  errors, the listing and the `candidates:` line asserted. Its self-test
-  copies the three scripts and turns the guard red with seven mutants written
+  errors, the listing and the `candidates:` line asserted; for the
+  suite-slot wrapper, under `/bin/bash`, each fixture with a lock
+  directory of its own under the work directory
+  (`KENSPC_SUITE_SLOTS_DIR`), and the caller's suite variables unset
+  first: two wrapped `sleep 3` holders at limit 2 and a third run with
+  `--wait 1` busy (exit 75, the busy line naming both holders), then with
+  `--wait 10` acquiring once a holder ends while no sample every 0.2
+  seconds shows three holder files; limit 3 entering beside two live
+  holders and limit 2 busy beside them; a wrapped `exit 3` returning 3 and
+  leaving no holder file; a holder with a dead wrapper pid and a command
+  pid alive under another start time, reclaimed; a holder whose command
+  pid is a live `sleep`, kept; an ownerless mutex backdated with
+  `touch -t`, reclaimed; a nested call beside a live holder at limit 1,
+  run at once; SIGTERM to a wrapped run, its holder file and its child
+  gone; and usage errors (no `--`, no limit, limit `0`, limit `x`, a
+  regular file as the lock directory) — every background process waited
+  for or killed by its pid, and again by the EXIT trap. Its self-test
+  copies the four scripts and turns the guard red with eleven mutants written
   to separate files with `sed` — the padding stripping removed, the
   continuation joining removed, the fence tracking removed (4.8.1), the
   paths passed to `git diff` as one
-  word, the before-list filter removed, the origin comparison removed, and
-  the symlink exclusion removed — then green on the unmutated copies; a
+  word, the before-list filter removed, the origin comparison removed, the
+  symlink exclusion removed, and, for the wrapper (4.10.0), the count check
+  made always true, the stale-holder reclaim removed, the release on exit
+  removed, and the nesting check removed, the wrapper's four running the
+  wrapper's fixtures alone — then green on the unmutated copies; a
   mutant that changes nothing is exit 2. Why the scripts have a guard:
   the first two each replaced a step every main session wrote by hand and
   got wrong — a stray backtick at each end of extracted commands, and a
   zero-diff check whose paths arrived as one zsh word and compared
   nothing — the extractor then read a column-0 `# ` comment inside a
   fenced script as the section's end, and the third decides what a recursive `rm` removes, where a
-  rule that drifts toward listing too much fails silently.
+  rule that drifts toward listing too much fails silently; the fourth is
+  the only bound on how many heavy suites the batches on a machine run at
+  once, so a slot it gives away, a stale holder it keeps, a holder file it
+  leaves, or a nested call it holds back fails silently too.
 
 Twelve of the guards (`check-canonical-dispatch.sh`,
 `check-verdict-shared.sh`, `check-code-craft-canonical.sh`,

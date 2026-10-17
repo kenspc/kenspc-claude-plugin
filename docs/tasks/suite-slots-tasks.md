@@ -541,7 +541,34 @@ Run the two live checks of the plan's Step 6 and record them in
 
 ### Task 7: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promotion outcomes, by the task that made each decision.
+  T2: the wrapper's four mutants run the wrapper's fixtures alone — promoted
+  into `CLAUDE.md` § Repository scripts/ (the `check-autopilot-scripts.sh`
+  entry). T2: the guard unsets the caller's suite variables before the
+  wrapper fixtures — promoted into the same entry. T4: `decide()` exports
+  the suite variables per fixture, empty for every other fixture, and the
+  replays carry the values each denied fixture had — promoted into
+  `CLAUDE.md` § Repository scripts/ (the `check-autopilot-rails-hook.sh`
+  entry). Every other decision of Tasks 1-6 explains a code-local choice
+  (the child's stdin, the mutex retries, the GNU `stat` fallback, the
+  per-call `LC_ALL`, one export per line, the placeholder names, the
+  `\004` mark, the place of check (f) in `check()`, the SKILL.md paragraph
+  placement, the live checks' budget and timeout) and stays local. No
+  decision needs a home outside the listed documents.
+- Changes/tradeoffs: the README's **Stops.** paragraph gained the long-wait
+  stop and the `Suite limit:` settings stop, as the task asks; the README
+  also gained a **Suite slots (since 4.10.0).** paragraph that carries the
+  wrapper's interface, exit codes, the lock directory, the native-Windows
+  note, and the reviewer line, so the label list, the rails paragraph,
+  and the Stops paragraph point at it rather than repeat it; the
+  reports paragraph names the new line. CHANGELOG states the self-test's
+  longer run time (about five seconds to about a minute and a half), since
+  a release pre-flight runs it. `docs/roadmap.md` item 32 was the last
+  item, so no renumbering followed. `docs/release-checklist.md` and the
+  root `README.md` are unchanged.
 
 Depends on: Task 1-6
 
