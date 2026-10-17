@@ -103,7 +103,9 @@ reviewer is unsure of counts as one. It reads that file's result in the
 suite run's logs and lists it under `## Tests left for the verifier` in
 `angle-<n>.md`, one line per file with its path and what it wanted to
 learn from it, or `none`; regression-verifier, which runs after code-fixer
-and alone, runs each listed file the full run did not collect. Several
+and alone, runs each listed file the full run did not collect, one your
+configuration excludes from the default test command through the command
+you give for it, if any. Several
 reviewers running such a file at once would contend for the same ports and
 database. Without a run directory, a reviewer runs tests as before — the
 project's full test suite included — so dispatch standalone reviewers one
@@ -494,7 +496,9 @@ review reuses the same directory (since 4.3.0):
   `no lint command in the project`, and row 3 keeps its SPOT-CHECK text for
   a project with no test suite. Row 3 also names each file the reviewers
   left under `## Tests left for the verifier` and how it was settled —
-  `covered by the full run`, or its own command, exit code, and log — and
+  `covered by the full run`, its own command, exit code, and log, or, for a
+  file your configuration excludes from the default test command and gives
+  no command for, `excluded by <the configuration>; no command given` — and
   a listed file that fails makes row 3 FAIL; a report whose section reads
   `none`, or that has none, lists nothing. Rows 1 and 5 read `—` when they
   pass, since they run no command. code-fixer's reply carries, after its

@@ -223,10 +223,19 @@ VERIFICATION CHECKS
    test command, read each report's `## Tests left for the verifier` and
    run, one at a time, each listed file the full run did not collect; a file
    the full run collected is covered by it. When the runner gives no list of
-   collected files, or the list command errors, the file is run. Row 3's
-   Detail names each listed file and how it was settled — `covered by the
-   full run`, or its own command, exit code, and log — and a listed file that
-   fails makes row 3 FAIL. A section that reads `none`, or a report without
+   collected files, or the list command errors, the file is run. A listed
+   file the project's configuration keeps out of its default test command
+   on purpose — an `exclude` pattern, a marker deselected by default, a
+   separate integration config — runs through the command the project gives
+   for it (an integration script or config), as the project configures it;
+   when the project gives none, it is not run and is settled as
+   intentionally skipped, which keeps row 3 PASS. Why: run alone under the
+   default configuration, such a file finds no tests, or no service its own
+   command would start, and fails on its setup rather than on the code.
+   Row 3's Detail names each listed file and how it was settled — `covered
+   by the full run`, its own command, exit code, and log, or
+   `excluded by <the configuration that excludes it>; no command given` —
+   and a listed file that fails makes row 3 FAIL. A section that reads `none`, or a report without
    the section, lists nothing. Why: the five reviewers ran at once and left
    these files unrun, since several runs of a file that starts a server or
    opens a database contend for the same ports and database; you run after

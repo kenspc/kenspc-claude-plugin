@@ -46,8 +46,11 @@ section in each reviewer's report file.
   and such a file run by several of them contends for the same ports and
   database. regression-verifier, which runs after code-fixer and alone,
   runs each listed file the full test run did not collect, one at a time
-  (a file is run when the runner gives no list of collected files), and
-  row 3 names how each was settled; a listed file that fails makes row 3
+  (a file is run when the runner gives no list of collected files), one
+  the project's configuration excludes from its default test command
+  through the command the project gives for it, or settled as
+  intentionally skipped when it gives none, and row 3 names how each was
+  settled; a listed file that fails makes row 3
   FAIL. The section is in the report file only, not in the reply.
 - **The reviewer descriptions warn against parallel standalone dispatch.**
   Each of the five reviewers' descriptions ends: "Invoked standalone

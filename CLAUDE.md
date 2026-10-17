@@ -331,7 +331,10 @@ changed.
   each regression it finds `V<n>` (4.7.0). After the full test command it
   runs, one at a time, each file a reviewer listed under
   `## Tests left for the verifier` that the full run did not collect —
-  alone, after code-fixer — and row 3 names how each was settled (4.9.0).
+  alone, after code-fixer, one the project's configuration excludes from
+  its default test command through the command the project gives for it,
+  or settled as intentionally skipped when it gives none — and row 3 names
+  how each was settled (4.9.0).
   Schema C rows 2–4 carry `<command> → exit <n>, log <path>` in the Detail
   cell in every state, PASS included, the path relative to `RUN_DIR`, or a
   no-command form (`no build command in the project`, row 3's SPOT-CHECK
