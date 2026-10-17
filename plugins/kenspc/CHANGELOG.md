@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.10.0 — unreleased
+## 4.10.0 — 2026-10-17
 
 Autopilot batches running side by side on one machine can now cap how
 many heavy test suites run at once across all of them, with no session
@@ -21,7 +21,16 @@ every skill keeps `version: 3.0.0`; what changes for a user is the new
 field, a new script copied per batch, a new rails-hook check, a new stop
 condition, and one new line each on the settings line and the reviewer
 report. The live checks on the maintainer's Mac are in
-`docs/dry-runs/suite-slots-live.md`.
+`docs/dry-runs/suite-slots-live.md`. The pre-flight passed on the release
+tree. The smoke covered what changed, the autopilot alone: both drivers'
+`--self-test` passed, and each turned red as the release checklist's row
+11 expects (a stub that exits 3, naming `.exit`, in both; a missing
+executable in `run.ps1`); the live check's headless session showed the
+rails hook's new check denying a listed command, with the plugin loaded
+from this release (Claude Code 2.1.301). No whole autopilot batch (row
+11's headless run) was made for this release: without the new field, the
+text it adds is omitted or reads `none`, and the driver self-tests and the
+live check cover the parts that run.
 
 ### Added
 
