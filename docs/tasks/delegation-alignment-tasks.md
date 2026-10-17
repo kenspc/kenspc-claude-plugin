@@ -158,7 +158,24 @@ Files: the five reviewer files and `plugins/kenspc/agents/regression-verifier.md
 
 ### Task 4: check-run-contract.sh holds the new literal
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the six renames run in their own loop through
+  `replace_all_literal` (to `## Tests left for review`), like the
+  `suite-run.md` and `schema-c-1.md` loops; the four added reviewers are
+  also required to exist by main mode (exit 2 when missing), as the other
+  carriers are. The header's check 5 paragraph says why all five reviewers
+  are held rather than one: the heading also sits in OUTPUT FORMAT, which
+  `check-review-agent-drift.sh` does not hold.
+- Changes/tradeoffs: beyond the spec, the self-test prints one `OK` line for
+  the unmutated copy and one per tests-left rename (the other mutations stay
+  silent), so its output shows each rename red and the unmutated copy green
+  as the acceptance asks. The scratch-copy check (guard and its eleven
+  target files under `RUN_DIR/scratch/task-implementer/1/t4-copy/`, the
+  heading renamed in `quality-reviewer.md`) exited 1 with
+  `MISSING '## Tests left for the verifier' in …/quality-reviewer.md`; the
+  unmutated copy exited 0.
 
 Depends on: Task 3
 

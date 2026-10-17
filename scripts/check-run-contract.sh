@@ -47,6 +47,14 @@
 #      before the reviewers' dispatch, and in
 #      agents/requirements-reviewer.md, which reads it
 #      (check-review-agent-drift.sh carries it to the other four reviewers).
+#      And the heading the reviewers write for regression-verifier,
+#      `## Tests left for the verifier`, in all five reviewers —
+#      agents/requirements-reviewer.md, agents/edge-case-reviewer.md,
+#      agents/quality-reviewer.md, agents/bug-reviewer.md, and
+#      agents/test-reviewer.md, each of which writes the section — and in
+#      agents/regression-verifier.md, which reads it. All five reviewers are
+#      checked, not one, since the heading sits in each reviewer's OUTPUT
+#      FORMAT as well, which check-review-agent-drift.sh does not hold.
 #   6. The reviewer invariant sentence ("Each reviewer is read-only on the
 #      working tree and writes only under `RUN_DIR`: …"). It lives in four
 #      places: the five reviewers' ROLE, the canonical dispatch block of
@@ -100,8 +108,8 @@
 # Exit code 0: all checks pass.
 # Exit code 1: a block diverges, the ignore probe answers wrongly, the
 #              recount disagrees, a file does not name change-set.md,
-#              pre-fix/index.txt, rulings.md, schema-c-1.md, or suite-run.md
-#              where check 5 requires it,
+#              pre-fix/index.txt, rulings.md, schema-c-1.md, suite-run.md,
+#              or `## Tests left for the verifier` where check 5 requires it,
 #              or a copy of the reviewer invariant sentence does not contain
 #              the reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
@@ -116,18 +124,20 @@
 # Optional flags:
 #   --file PATH    Run only check 4, against a real schema-b.md (for example
 #                  one under .kenspc/runs/<run-id>/ after a review run).
-#   --self-test    Run the mutation regression fixture. Copies the seven
-#                  target files (the five above, plugins/kenspc/README.md,
-#                  and CLAUDE.md) into a temp workdir, confirms
+#   --self-test    Run the mutation regression fixture. Copies the eleven
+#                  target files (the five above, the other four reviewers,
+#                  plugins/kenspc/README.md, and CLAUDE.md) into a temp
+#                  workdir, confirms
 #                  `change-set.md` is present in the four files check 5
 #                  reads, `pre-fix/index.txt` in its two, `rulings.md` and
 #                  `schema-c-1.md` in their four each, `suite-run.md` in
-#                  its three, and the reviewer
+#                  its three, `## Tests left for the verifier` in its six,
+#                  and the reviewer
 #                  invariant sentence's start line once in the copied
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on thirty-seven mutations that
+#                  prefix classification), then on forty-three mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the rulings grammar's
 #                  DEFER entry reworded in each of its four carriers in turn
@@ -155,7 +165,8 @@
 #                  `schema-c-1.md` removed from each of its four carriers in
 #                  turn the same way, the suite-run file name `suite-run.md`
 #                  removed from each of its three carriers in turn the same
-#                  way, and
+#                  way, the heading `## Tests left for the verifier` removed
+#                  from each of its six carriers in turn the same way, and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
@@ -184,6 +195,10 @@ REVIEW_REL="plugins/kenspc/skills/task-review/SKILL.md"
 IMPLEMENT_REL="plugins/kenspc/skills/task-implement/SKILL.md"
 VERIFIER_REL="plugins/kenspc/agents/regression-verifier.md"
 REVIEWER_REL="plugins/kenspc/agents/requirements-reviewer.md"
+EDGE_REL="plugins/kenspc/agents/edge-case-reviewer.md"
+QUALITY_REL="plugins/kenspc/agents/quality-reviewer.md"
+BUG_REL="plugins/kenspc/agents/bug-reviewer.md"
+TEST_REL="plugins/kenspc/agents/test-reviewer.md"
 README_REL="plugins/kenspc/README.md"
 CLAUDE_REL="CLAUDE.md"
 CHANGE_SET_NAME="change-set.md"
@@ -191,6 +206,7 @@ PRE_FIX_INDEX="pre-fix/index.txt"
 RULINGS_NAME="rulings.md"
 SCHEMA_C1_NAME="schema-c-1.md"
 SUITE_RUN_NAME="suite-run.md"
+TESTS_LEFT_HEADING="## Tests left for the verifier"
 INVARIANT_START="Each reviewer is read-only on the working tree"
 
 # Print the lines strictly between the start and end markers of <name>.
@@ -407,9 +423,12 @@ run_main_logic() {
     local implement="$repo_root/$IMPLEMENT_REL"
     local verifier="$repo_root/$VERIFIER_REL"
     local reviewer="$repo_root/$REVIEWER_REL"
+    local edge="$repo_root/$EDGE_REL" quality="$repo_root/$QUALITY_REL"
+    local bug="$repo_root/$BUG_REL" tester="$repo_root/$TEST_REL"
     local f rc template shape
 
-    for f in "$fixer" "$review" "$implement" "$verifier" "$reviewer"; do
+    for f in "$fixer" "$review" "$implement" "$verifier" "$reviewer" \
+             "$edge" "$quality" "$bug" "$tester"; do
         if [[ ! -f "$f" ]]; then
             echo "ERROR: missing file $f" >&2
             return 2
@@ -499,6 +518,12 @@ run_main_logic() {
             missing=1
         fi
     done
+    for f in "$reviewer" "$edge" "$quality" "$bug" "$tester" "$verifier"; do
+        if ! grep -qF -- "$TESTS_LEFT_HEADING" "$f"; then
+            echo "MISSING '$TESTS_LEFT_HEADING' in $f" >&2
+            missing=1
+        fi
+    done
     if [[ "$missing" -ne 0 ]]; then
         echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
         echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
@@ -506,7 +531,9 @@ run_main_logic() {
         echo "findings to RUN_DIR/$RULINGS_NAME, and code-fixer and regression-verifier read it;" >&2
         echo "both skills save regression-verifier's first reply to RUN_DIR/$SCHEMA_C1_NAME," >&2
         echo "which code-fixer and regression-verifier read in a second round; both skills" >&2
-        echo "write the shared suite run to RUN_DIR/$SUITE_RUN_NAME, which the reviewers read." >&2
+        echo "write the shared suite run to RUN_DIR/$SUITE_RUN_NAME, which the reviewers read;" >&2
+        echo "each reviewer writes '$TESTS_LEFT_HEADING' in its report, which" >&2
+        echo "regression-verifier reads." >&2
         echo "Restore the name, or rename it in every carrier and in this guard together." >&2
         return 1
     fi
@@ -515,6 +542,7 @@ run_main_logic() {
     echo "OK    $RULINGS_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
     echo "OK    $SCHEMA_C1_NAME — named in task-review, task-implement, code-fixer, regression-verifier"
     echo "OK    $SUITE_RUN_NAME — named in task-review, task-implement, requirements-reviewer"
+    echo "OK    $TESTS_LEFT_HEADING — named in the five reviewers and regression-verifier"
 
     # Check 6: the reviewer invariant sentence in its three copies.
     local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
@@ -587,6 +615,7 @@ run_self_test() {
 
     local rel
     for rel in "$FIXER_REL" "$REVIEW_REL" "$IMPLEMENT_REL" "$VERIFIER_REL" "$REVIEWER_REL" \
+               "$EDGE_REL" "$QUALITY_REL" "$BUG_REL" "$TEST_REL" \
                "$README_REL" "$CLAUDE_REL"; do
         mkdir -p "$WORK/$(dirname "$rel")"
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
@@ -630,6 +659,12 @@ run_self_test() {
     for rel in "$REVIEW_REL" "$IMPLEMENT_REL" "$REVIEWER_REL"; do
         if ! grep -qF -- "$SUITE_RUN_NAME" "$WORK/$rel"; then
             echo "FAIL  self-test fixture stale: '$SUITE_RUN_NAME' not found in $rel" >&2
+            return 2
+        fi
+    done
+    for rel in "$REVIEWER_REL" "$EDGE_REL" "$QUALITY_REL" "$BUG_REL" "$TEST_REL" "$VERIFIER_REL"; do
+        if ! grep -qF -- "$TESTS_LEFT_HEADING" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$TESTS_LEFT_HEADING' not found in $rel" >&2
             return 2
         fi
     done
@@ -699,6 +734,7 @@ run_self_test() {
         echo "FAIL  self-test positive path: expected exit 0 on unmutated copy, got $rc" >&2
         return 1
     fi
+    echo "OK    self-test positive path — unmutated copy exit 0"
 
     # Block drift: one SKILL's copy of a canonical block changes.
     mutate_and_expect "stats-line template" "$IMPLEMENT_REL" \
@@ -848,6 +884,23 @@ run_self_test() {
             echo "FAIL  self-test suite-run name mutation in $rel: expected exit 1, got $rc" >&2
             return 1
         fi
+    done
+    # The reviewers' tests-left heading, renamed in each of its six carriers
+    # in turn, every occurrence, since it occurs on several lines of each
+    # reviewer.
+    for rel in "$REVIEWER_REL" "$EDGE_REL" "$QUALITY_REL" "$BUG_REL" "$TEST_REL" "$VERIFIER_REL"; do
+        replace_all_literal "$WORK/$rel" "$TESTS_LEFT_HEADING" "## Tests left for review"
+        if grep -qF -- "$TESTS_LEFT_HEADING" "$WORK/$rel"; then
+            echo "FAIL  self-test: tests-left mutation did not apply ('$TESTS_LEFT_HEADING' still in $rel)" >&2
+            return 2
+        fi
+        ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+        cp "$REPO_ROOT/$rel" "$WORK/$rel"
+        if [[ "$rc" -ne 1 ]]; then
+            echo "FAIL  self-test tests-left heading mutation in $rel: expected exit 1, got $rc" >&2
+            return 1
+        fi
+        echo "OK    self-test tests-left heading renamed in $rel — main check exit 1"
     done
     # Check 6: one word of the reviewer invariant sentence changed in each
     # copy in turn, and in the reference itself, which every copy then
