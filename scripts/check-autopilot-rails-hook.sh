@@ -16,9 +16,11 @@
 #   deny   exit 2, empty stdout, a reason on stderr that names the
 #          permitted route, or, for a field the hook cannot read, says no
 #          route applies and asks for the denial to be reported; for a
-#          listed suite command (the deny-suite expectation), the route is
-#          the suite-slot wrapper's line, naming the fixture wrapper path,
-#          with no .trash and none of the no-route text
+#          listed suite command (the deny-suite expectation), the reason
+#          names the listed prefix it matched and its route is the
+#          suite-slot wrapper's line, naming the fixture wrapper path (or
+#          saying the wrapper variable is empty), with no .trash and none
+#          of the no-route text
 #   allow  exit 0, empty stdout
 #   inert  exit 0, empty stdout, empty stderr (the marker is not 1, or,
 #          for a listed suite command with the commands variable empty,
@@ -76,7 +78,8 @@
 # commands variable empty and with the marker unset (inert); with
 # './gradlew test|scripts/test.sh|CI=1 pnpm e2e|sudo -u ci make check'
 # listed, ./gradlew test, gradlew test, ./scripts/test.sh, CI=1 pnpm e2e,
-# pnpm e2e, and make check (denied) and ./gradlew build (allowed) — every other
+# pnpm e2e, and make check (denied) and ./gradlew build (allowed); and
+# dotnet test with the wrapper variable empty (denied) — every other
 # fixture running with the two suite variables empty; an input whose tool
 # name, Bash command, or file-tool path the hook cannot read (denied, with
 # no route offered and the denial to be reported); a
@@ -334,7 +337,7 @@ D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=(); D_SCMDS=(); D_SWRAP=(
 # remote git get; deny-suite is a deny whose route is the suite-slot
 # wrapper's line, naming FX_SUITE_WRAPPER, as a listed suite command gets.
 fx() {
-    local hook="$1" label="$2" expect="$3" marker="$4" roots="$5" tool="$6" cwd="$7" payload="$8" ok=0 want="$3"
+    local hook="$1" label="$2" expect="$3" marker="$4" roots="$5" tool="$6" cwd="$7" payload="$8" ok=0 want="$3" route named p
     if [[ "$expect" == deny-unreadable || "$expect" == deny-ask || "$expect" == deny-suite ]]; then want=deny; fi
     decide "$hook" "$marker" "$roots" "$(make_input "$tool" "$cwd" "$payload")"
     if [[ "$GOT" == "$want" ]]; then
@@ -356,12 +359,20 @@ fx() {
         ok=0
         GOT="deny whose reason does not say '$ASK_ROUTE', or names .trash or '$UNREADABLE_NO_ROUTE'"
     fi
-    # A listed suite command's denial names the wrapper path as its route,
-    # and neither the .trash route nor the no-route reason.
-    if [[ "$expect" == deny-suite && "$ok" -eq 1 ]] \
-        && [[ "$ERR" != *"$FX_SUITE_WRAPPER"* || "$ERR" == *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
-        ok=0
-        GOT="deny whose reason does not name the wrapper $FX_SUITE_WRAPPER, or names .trash or '$UNREADABLE_NO_ROUTE'"
+    # A listed suite command's denial names the wrapper path as its route
+    # (or, with the wrapper variable empty, says so) and the listed prefix
+    # it matched, and neither the .trash route nor the no-route reason.
+    if [[ "$expect" == deny-suite && "$ok" -eq 1 ]]; then
+        route=$FX_SUITE_WRAPPER
+        [[ -z "$SUITE_WRAPPER" ]] && route="KENSPC_AUTOPILOT_SUITE_WRAPPER is empty"
+        named=0
+        while IFS= read -r p; do
+            [[ -n "$p" && "$ERR" == *"($p, listed in KENSPC_AUTOPILOT_SUITE_COMMANDS)"* ]] && named=1
+        done <<< "$(printf '%s\n' "$SUITE_CMDS" | tr '|' '\n')"
+        if [[ "$ERR" != *"$route"* || "$named" -eq 0 || "$ERR" == *.trash* || "$ERR" == *"$UNREADABLE_NO_ROUTE"* ]]; then
+            ok=0
+            GOT="deny whose reason does not name '$route' and a listed prefix, or names .trash or '$UNREADABLE_NO_ROUTE'"
+        fi
     fi
     # Each unreadable-field reason must carry the phrase stop condition 11
     # matches on, so a reword of one field's reason turns its fixture red.
@@ -675,8 +686,10 @@ run_fixtures() {
     fx_deny "$hook" "CI=1 pnpm e2e listed, run as pnpm e2e" "$r" Bash "$FX_REPO" 'pnpm e2e' deny-suite
     fx_deny "$hook" "sudo -u ci make check listed, run as make check" "$r" Bash "$FX_REPO" 'make check' deny-suite
     fx "$hook" "./gradlew test listed, gradlew build" allow 1 "$r" Bash "$FX_REPO" './gradlew build'
+    # With the wrapper variable empty, the reason says so in its route.
+    SUITE_CMDS='dotnet test'; SUITE_WRAPPER=""
+    fx_deny "$hook" "dotnet test with the wrapper variable empty" "$r" Bash "$FX_REPO" 'dotnet test' deny-suite
     SUITE_CMDS=""
-    SUITE_WRAPPER=""
 
     # Quoted mentions and rm without a recursive flag, allowed.
     fx "$hook" "quoted mention grep -c 'rm -rf'" allow 1 "$r" Bash "$FX_REPO" "grep -c 'rm -rf' notes.md"

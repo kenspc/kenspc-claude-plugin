@@ -968,7 +968,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   the worker ends, with no `.trash`; or, the `deny-ask` expectation for a
   `gh` or remote-git call (4.7.0), naming the main session, with neither
   `.trash` nor the no-route text; or, the `deny-suite` expectation for a
-  listed suite command (4.10.0), naming the fixture wrapper path, with
+  listed suite command (4.10.0), naming the listed prefix it matched and
+  the fixture wrapper path, or saying the wrapper variable is empty, with
   neither `.trash` nor the no-route text; allow and inert: exit 0, no
   stdout).
   The fixtures carry the field names and nesting of the live hook input
@@ -1035,8 +1036,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   commands variable empty and with the marker unset; and with
   `'./gradlew test|scripts/test.sh|CI=1 pnpm e2e|sudo -u ci make check'`
   listed — denied: `./gradlew test`, `gradlew test`, `./scripts/test.sh`,
-  `CI=1 pnpm e2e`, `pnpm e2e`, and `make check`; allowed: `./gradlew build`
-  — and every
+  `CI=1 pnpm e2e`, `pnpm e2e`, and `make check`; allowed: `./gradlew build`;
+  and `dotnet test` with the wrapper variable empty, denied — and every
   denied fixture again
   without the marker and with the marker `0`, each with the suite
   variables it was denied with. Main mode also checks that
