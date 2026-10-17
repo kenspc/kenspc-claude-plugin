@@ -540,3 +540,24 @@ its number.
       saw "Browser extension is not connected" in a headless `--chrome`
       worker while the desktop session reached the browser, cause not
       determined.
+32. Suite-slot lock follow-ups, deferred by the 4.10.0 implementation
+    review (rows E2 and E4 of
+    `.kenspc/runs/20261017-185407-suite-slots-tasks/schema-b.md`,
+    git-ignored; only in the maintainer's macOS checkout):
+    - E2, liveness after a clock step: `suite-slots.sh` judges a holder
+      alive by an exact match on `ps -o lstart=`, which procps on Linux
+      derives from the kernel's boot time; a stepped wall clock (WSL2 after
+      the host sleeps, an NTP makestep) moves it, every live holder then
+      reads as stale, and more than N suites can run at once. Not measured:
+      reproduce on WSL2 first (a wrapped `sleep`, `sudo date -s`, a second
+      wrapper at limit 1). Either fix — a tolerance of a few seconds, or a
+      start key that does not move such as `/proc/<pid>/stat` field 22 —
+      changes the holder file layout, which the wrapper's header names a
+      breaking change.
+    - E4, no route for the wrapper's exit 2: preamble § 6 routes only exit
+      75 (busy). The wrapper exits 2 when `/tmp/kenspc-suite-slots` is not
+      a directory, is another user's, or cannot be written, and when `ps`
+      gives no start time; a worker then may record a test failure or run
+      the suite unwrapped, which the hook denies. Open: whether the worker
+      asks the main session or stops, and whether the main session rules
+      or it is a new stop condition (with the README Stops entry).
