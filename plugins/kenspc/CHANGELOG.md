@@ -100,7 +100,7 @@ report. The live checks on the maintainer's Mac are in
 - **Guard fixtures for the wrapper.** `check-autopilot-scripts.sh` covers
   `suite-slots.sh` with thirteen fixtures under `/bin/bash` and four mutants
   (eleven in all), the wrapper's mutants running its fixtures alone. Its
-  `--self-test` now takes about a minute and a half on the maintainer's
+  `--self-test` now takes about two minutes on the maintainer's
   Mac, up from about five seconds, since each pass pays the wrapper
   fixtures' sleeps. `guards run: 13` and `self-tests run: 12` hold.
 
