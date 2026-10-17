@@ -380,7 +380,22 @@ Files: `plugins/kenspc/agents/task-document-reviewer.md`.
 
 ### Task 9: Autopilot subagent rules — the main session uses none, workers foreground only
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the worker rail is written so that it still reads true once
+  copied into a subagent's prompt (§ 3 goes into every subagent prompt
+  verbatim): it adds the form the rail takes there — "you are a subagent of
+  an autopilot worker — dispatch no subagent and start no `claude -p`" —
+  since "you may dispatch subagents" read by a subagent would invert it. The
+  rail sits just before the "These rails bind every subagent you dispatch"
+  paragraph, so that paragraph's carry-into-every-prompt rule covers it with
+  the rest of § 3. The overview's budget reason names what the budget's
+  terms are (the sum of the sessions' costs, § Budget and caps).
+- Changes/tradeoffs: the rail is text only — the rails hook does not tell a
+  worker's call from its subagent's, so
+  `hooks/scripts/autopilot-worker-rails.sh` is unchanged (plan Risks). The
+  preamble's first line is unchanged.
 
 Plan Steps 8 and 9, in `plugins/kenspc/skills/autopilot/SKILL.md`:
 

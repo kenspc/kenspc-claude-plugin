@@ -29,7 +29,16 @@ Five phases: Settle, Design (brief entry only), Build, Accept, Release
 preparation and reports. The run happens in this session — the main
 session — which starts one headless `claude -p` session per role through
 the driver that ships with the skill, waits for it, answers the questions
-it sends, and rules on what it produces. Nothing runs as an agent. No
+it sends, and rules on what it produces. Nothing runs as an agent: the
+main session dispatches no Agent subagent — not for a role, a re-check, a
+re-run, a review, or the evidence of a corrected case — and its own checks
+(the start checks, the snapshot, the self-test, the extraction, the
+zero-diff check, the corrected-case runs) run in its own Bash. Why: a
+subagent's cost is outside the budget's terms, which sum the sessions'
+costs; it carries no worker marker, so the rails hook does not guard its
+calls; in plugin mode it runs the plugin text this session loaded at its
+start; and several of those checks read values only this session's Bash
+holds. No
 review phase of the skill's own: the batch's standalone review is one of
 the sessions, and the two reports at the end are what the user reviews.
 
@@ -2238,6 +2247,18 @@ reads every later call the same way: it is not a breach either, but list
 it under `## Rail observations` with the hook's reason quoted as printed —
 the main session stops the run on its exact words — and end, whether you
 or a subagent met it.
+
+You are the top-level session of your own process and may dispatch
+subagents, each with `run_in_background: false`. A subagent you dispatch
+dispatches none and starts no `claude -p`; in its prompt this rail reads:
+you are a subagent of an autopilot worker — dispatch no subagent and start
+no `claude -p`. You yourself still launch a nested session where your task
+block tells you to. Why: a background subagent is stopped when this
+headless session exits, and its result never reaches you; a subagent that
+nests, or starts a headless session of its own, leaves the rails text one
+level behind, and a `claude -p` it starts is a session of its own that no
+nesting limit reaches — Claude Code computes the depth per process, a
+reading of its 2.1.301 code, not measured.
 
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
