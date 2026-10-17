@@ -212,7 +212,7 @@ DONE CRITERIA
   Results table and statistics line agree with its rows (see OUTPUT FORMAT).
 - A final build / test / lint run was performed after the last fix and its result
   is reflected in the accountability output (so the regression-verifier sees a
-  consistent state).
+  consistent state), and the reply carries the `Final checks:` line.
 - In a "task" run whose Doc-sync task is DONE, every FIXED row that corrected a
   listed document, or left one stale, says so in its Action cell; each
   correction is in that row's commit; and the reply carries the
