@@ -189,7 +189,8 @@ six renames and green unmutated.
 - The `description:` frontmatter of the five reviewers: append one
   sentence: invoked standalone (without RUN_DIR) it runs the project's full
   test suite itself, so dispatch one at a time or use /kenspc-task-review.
-  Same sentence in all five.
+  Same sentence in all five, appended to the description's single line
+  (each is one line under `>` today), so a fixed-string grep finds it.
 
 Acceptance: `grep -lF '<the sentence>' plugins/kenspc/agents/*-reviewer.md`
 lists exactly the five reviewers (the three document reviewers, which the
@@ -334,7 +335,6 @@ Acceptance: the block reads so; `check-autopilot-rails-hook.sh` exits 0.
   evidence nobody reads is not confirmation (Q3); today the reports carry
   only the two count lines, which a failing command before them may leave
   unwritten.
-
 - The two reports: the reviewer report's
   `- Byte-identity / guards / counts:` field (line 3144) carries each
   pre-flight command's exit code beside the count lines; the user report's
@@ -364,8 +364,10 @@ user report's list read so; `check-autopilot-rails-hook.sh` exits 0.
   diagnosis; the traceability these documents promise is kept by reading
   the cited lines.
 
-Acceptance: the three skills carry the paragraph; `check-instruction-files.sh`
-and `check-doc-sync-anchors.sh` exit 0.
+Acceptance: `grep -c 'file:line'` prints at least 1 for
+`generate-task/SKILL.md` and `generate-guide/SKILL.md` and at least 2 for
+`diagnose-bug/SKILL.md` (0 in all three at `20000bf`, so the count can
+fail); `check-instruction-files.sh` and `check-doc-sync-anchors.sh` exit 0.
 
 ### Step 13: Correct the two stale platform statements (Q14)
 
@@ -398,7 +400,14 @@ design. `check-all.sh` exits 0.
 Depends on: Steps 1–13. Brings the documents under Documentation impact in
 line with Steps 1–13.
 
-Acceptance: each listed document reads true against the steps;
+Acceptance: each listed document reads true against the steps, checked
+at least by these, each of which fails at `20000bf`:
+`grep -c` of `## Tests left for the verifier`, `Final checks:`, and
+`## Checks run` is at least 1 each in `plugins/kenspc/README.md`, and of
+`## Tests left for the verifier` at least 1 in `CLAUDE.md` (its
+`check-run-contract.sh` entry); `plugins/kenspc/CHANGELOG.md` holds `## 4.9.0 — unreleased`;
+`grep -n 'Detail is .—., so the table cannot show' docs/release-checklist.md`
+prints nothing (it prints line 168 before the edit);
 `bash scripts/check-all.sh` and `bash scripts/check-all.sh --self-test`
 exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`
 (no guard is added).
