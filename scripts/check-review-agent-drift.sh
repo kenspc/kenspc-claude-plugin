@@ -6,10 +6,16 @@
 # REPORT DELIVERY sections. Project CLAUDE.md flags drift between these
 # sections as a bug; this script is the mechanical guard. ROLE, CONTEXT YOU
 # WILL RECEIVE, and REPORT DELIVERY joined in v3.5.0: they carry the RUN_DIR
-# contract and the reviewers' one permitted write.
+# contract and the reviewers' one permitted write. It also checks that each
+# reviewer's frontmatter holds the standalone warning sentence (4.9.0),
+# which the shared sections do not cover: a reviewer that dropped it would
+# again invite five standalone dispatches at once, each running the full
+# suite.
 #
-# Exit code 0: all shared sections byte-identical across all 5 files.
-# Exit code 1: drift detected. The first diverging section is printed via diff.
+# Exit code 0: all shared sections byte-identical across all 5 files, and
+#              the standalone warning in each one's frontmatter.
+# Exit code 1: drift detected. The first diverging section is printed via
+#              diff; a reviewer without the warning is named.
 #
 # Run from the repository root (or any directory — paths are resolved relative
 # to this script's location).
@@ -29,6 +35,8 @@ FILES=(
 )
 
 SECTIONS=("CONTEXT YOU WILL RECEIVE" "ROLE" "PREREQUISITES" "CUSTOM INSTRUCTIONS" "FILE COVERAGE" "REPORT DELIVERY")
+
+STANDALONE_WARNING="Invoked standalone (without RUN_DIR) it runs the project's full test suite itself, so dispatch one at a time or use /kenspc-task-review."
 
 # Extract a named section from a reviewer agent file.
 # A section starts at a line whose entire content equals the section name
@@ -97,6 +105,19 @@ for sect in "${SECTIONS[@]}"; do
         done
     fi
 done
+
+# The standalone warning, in the frontmatter between the first two `---`
+# lines.
+for f in "${FILES[@]}"; do
+    frontmatter=$(awk 'NR == 1 && $0 == "---" { fm = 1; next } fm && $0 == "---" { exit } fm' "$f")
+    if [[ "$frontmatter" != *"$STANDALONE_WARNING"* ]]; then
+        drift_found=1
+        echo "DRIFT standalone warning — not in the frontmatter of $f" >&2
+    fi
+done
+if [[ "$drift_found" -eq 0 ]]; then
+    echo "OK    standalone warning — in the frontmatter of all 5 reviewers"
+fi
 
 if [[ "$drift_found" -ne 0 ]]; then
     echo "" >&2
