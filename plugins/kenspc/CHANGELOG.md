@@ -68,7 +68,8 @@ section in each reviewer's report file.
   `## Checks run` section — the last build, test, and lint commands, each
   with its exit code, the task after which it ran, and its log, or
   `none run` — which task-implement renders after the Post-implementation
-  notes, keeping the last slice's alone after slices.
+  notes, keeping that of the last slice that ran a check alone after
+  slices.
 - **The verdict is confirmed by reading, not re-running.** A new bullet in
   the `canonical:verdict-shared` block: the verdict reads rows 2–4's exit
   codes as reported, the orchestrating session confirms a row by reading

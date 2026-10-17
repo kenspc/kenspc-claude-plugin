@@ -506,8 +506,9 @@ review reuses the same directory (since 4.3.0):
   ends with `## Checks run`: the last build, test, and lint commands it
   ran, each with its exit code, the task after which it ran, and its log
   under `scratch/task-implementer/`, or `none run`; the final report renders
-  it after the Post-implementation notes, and after slices the last
-  slice's alone, since its checks ran on the code every slice built. The
+  it after the Post-implementation notes, and after slices that of the
+  last slice that ran a check alone, since its checks ran on the code
+  every slice before them built. The
   verdict reads rows 2–4's exit codes as reported: the orchestrating
   session confirms a row by reading the log it names and runs no build,
   test, or lint of its own, and a row 2–4 that carries neither an exit

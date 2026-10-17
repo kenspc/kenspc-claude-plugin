@@ -309,10 +309,13 @@ now persisted in the task document; the orchestrator still renders them
 verbatim from the agent's output rather than re-reading the document.
 
 After the Post-implementation notes, render the agent's `## Checks run`
-section verbatim. After slices, render the last slice's section alone
-rather than joining the slices' entries. Why: the last slice's checks ran
-on the code every slice built, while an earlier slice's describe code that
-later slices changed.
+section verbatim. After slices, render alone the section of the last
+slice that ran a check, rather than joining the slices' entries, and
+`none run` only when every slice's reads `none run`. Why: the last checks
+that ran ran on the code every slice before them built, while an earlier
+slice's describe code that later slices changed; a later slice that ran
+none — its tasks all blocked, or none of their statuses changed — built
+nothing they describe.
 
 Then present a brief progress update to the user:
 
