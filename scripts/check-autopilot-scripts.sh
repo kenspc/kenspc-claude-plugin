@@ -706,6 +706,9 @@ slot_checks() {
         fi
     done
 
+    # Every process started above has been reaped, and its pid may now
+    # belong to an unrelated process, which the EXIT trap must not signal.
+    BG_PIDS=""
     return 0
 }
 
