@@ -21,8 +21,8 @@ In scope:
   to every worker.
 - The rails hook denies a listed command run without the wrapper.
 - The autopilot SKILL.md text that ties these together: the field, the
-  settings line, the copy, the launch, the preamble, the S4 task blocks,
-  and the main session's own runs.
+  settings line, the copy, the launch, the preamble, the repo-mode S4 task
+  block, and the main session's own runs.
 - The guard fixtures and mutants that hold the wrapper and the hook's new
   check.
 - The documentation these make stale.
@@ -88,6 +88,7 @@ recorded it as `docs/roadmap.md` item 32.
 | 6 | Sessions outside autopilot | Out of scope |
 | 7 | How the main session rules on a worker's long-wait question | "Wait on" while no holder has held its slot 60 minutes or more; the worker asks again after another 30 minutes. A holder at 60 minutes or more is stop condition 12, a question to the user |
 | 8 | The release this ships in | 4.10.0, after 4.9.0 is tagged |
+| 9 | `Suite limit:` in plugin mode | Repo mode only: the field in plugin mode is the settings stop, and only the repo-mode S4 task block changes |
 
 ## Technical Approach
 
@@ -193,6 +194,13 @@ suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
   sub-bullet is not exactly one code span or breaks the word rule. Why a
   stop: a limit the hook cannot apply would let suites run unbounded while
   the settings line said otherwise.
+- **Repo mode only (ruling 9).** The field in plugin mode is the settings
+  stop, as `Walk: on` is. Why: the plugin-mode S4 task block runs each
+  case as a nested headless session through the driver copy, not as a
+  `<shell> <file>` the wrapper could take, and a nested launch would
+  inherit the `AUTOPILOT_SUITE_*` values from S4's environment, as it
+  inherits `AUTOPILOT_MODEL`; the plugin's own checks
+  (`scripts/check-all.sh`) are not the port-heavy suites the lock is for.
 - **Absent.** With no `Suite limit:` field there is no lock. The wrapper
   is still copied, but no worker is told to use it and the hook checks
   nothing. Why: the plugin names no project's suite, and a default list
@@ -299,7 +307,8 @@ variable, or an alias, or after a wrapper the scan does not skip
   default timeout, but a call that acquires late runs the suite too, and a
   timeout sized for the suite alone would kill it. With the field absent,
   the line is omitted, as the Allowed files line is.
-- **The S4 task blocks (both).** A case whose command file holds a listed
+- **The repo-mode S4 task block.** The plugin-mode block is unchanged
+  (ruling 9). A case whose command file holds a listed
   prefix is run as `bash <wrapper copy> run -- <shell> <file>`. A file
   holds a prefix when the prefix's words occur in it in order as whole
   words, anywhere in the file, whether or not at a command position. Why
@@ -553,7 +562,7 @@ fixture.
 text lists:
 
 - the field table and the field's grammar paragraph;
-- the settings stop;
+- the settings stop, the field in plugin mode included (ruling 9);
 - the settings line template;
 - the copy paragraph, and Phase 0's Inputs and Constraints, which count
   "the three scripts" and "the three script copies";
@@ -562,7 +571,8 @@ text lists:
 - the launch bullet, for the three inputs;
 - preamble § 3, for the lock directory;
 - preamble § 6, for the `Suite limit:` line and when it is omitted;
-- both S4 task blocks;
+- the repo-mode S4 task block (the plugin-mode block is unchanged,
+  ruling 9);
 - the corrected-case paragraph;
 - the long-wait question, and the main session's ruling on it (ruling 7),
   in § How the main session rules;
@@ -584,7 +594,7 @@ Each new rule carries its Why in the skill's own words.
   the preamble template.
 - `grep -n 'Suite limit' plugins/kenspc/skills/autopilot/SKILL.md` shows
   the table row, the grammar paragraph, the start checks' settings-stop
-  sentence, and preamble § 6's line; `grep -n 'suite limit <n>'` over the
+  sentence, and preamble § 6's line; `grep -n 'suite limit <<n>'` over the
   same file shows the settings line template, which is lower-case like
   the line's other fields.
 - `grep -n 'kenspc-suite-slots' plugins/kenspc/skills/autopilot/SKILL.md`
