@@ -540,3 +540,13 @@ its number.
       saw "Browser extension is not connected" in a headless `--chrome`
       worker while the desktop session reached the browser, cause not
       determined.
+32. A machine-wide limit on full test suites run at once across concurrent
+    autopilot batches. Each batch runs full suites of its own — the
+    pre-review suite run, regression-verifier's build, test, and lint, the
+    acceptance cases — and a batch's `Run facts:` gates (another session's
+    go before a full suite) bound only that batch's workers, so two batches
+    on one machine can still run several suites at once. Five full suites
+    at once have exhausted a machine's local ports, failing on connection
+    errors that read as findings. Planned separately from 4.9.0's
+    delegation alignment (its question 11); the user ruled it onto the
+    roadmap on 2026-10-17.

@@ -596,7 +596,51 @@ Files: `CLAUDE.md`, `plugins/kenspc/README.md`, `docs/release-checklist.md`.
 
 ### Task 13: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promotion outcomes for Tasks 1-12 —
+  - T3 (a `## Tests left for the verifier` section reading `none`, or a
+    report without it, lists nothing) promoted into
+    `plugins/kenspc/README.md` § Run directory, the new check-evidence
+    bullet.
+  - T4 (all five reviewers hold the heading, not one, since it also sits in
+    OUTPUT FORMAT, which `check-review-agent-drift.sh` does not hold; the
+    self-test copies eleven files) promoted into `CLAUDE.md`'s
+    `check-run-contract.sh` entry.
+  - T6 (log paths written relative to RUN_DIR; a check with no project
+    command keeps PASS; rows 1 and 5 keep `—` on PASS) promoted into
+    `plugins/kenspc/README.md` § Run directory, and the first two into
+    `CLAUDE.md` § Subagent Review Architecture's Phase 3 bullet.
+  - T7 (the verdict bullet names the no-command forms by their literal
+    Schema C text) promoted into the README's check-evidence bullet and the
+    CLAUDE.md Phase 3 bullet.
+  - T9 (the worker rail is worded to read true when copied into a
+    subagent's prompt, with the form it takes there; the rail is text only)
+    promoted into `CLAUDE.md` § Sessions, not agents and the README's
+    § Autopilot rails paragraph.
+  - T1 (task-implement's bullet also names the implementer's own context
+    and the batch confirmation) promoted into the README's new Known
+    behavior bullet on the top-level session.
+  - Local: T1's shared wording, T2's separate `Why yourself:` sentence,
+    T3's merged Why and Schema A opening sentence, T5's placement, T8's
+    placement and premise check, T10's and T11's placements and T11's
+    guide examples, T12's measured-versus-read marking (already in the
+    documents T12 edited).
+  - Needs a home: none.
+- Changes/tradeoffs: the top-level rule (Step 1) and the read-only sweeps
+  (Step 12) went into two new README § Known behavior bullets, since the
+  README has no per-skill section for either. Steps 10–11 are in the
+  README's § Autopilot and the CHANGELOG but not in `CLAUDE.md`, whose
+  listed section covers Steps 8–9 only; Step 7 (task-document-reviewer) is
+  in the CHANGELOG only, as no listed section describes that angle. The
+  Task 12 lines (`CLAUDE.md` subagent-nesting and `run_in_background`
+  paragraphs, README § Known behavior's interactive-sessions bullet,
+  release-checklist lines 104–110) were verified against the plan's
+  measurement and not edited. The release-checklist grep's positive
+  control printed line 172 at HEAD (the plan's 168 predates Task 12's
+  edit), and no line after the edit. A documentation task has no
+  failing-capable unit test; the acceptance greps stand in for one.
 
 Depends on: Task 1-12
 

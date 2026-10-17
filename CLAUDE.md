@@ -293,10 +293,23 @@ changed.
   unchanged. Around Phase 1 (4.7.0, in the canonical dispatch block): before
   the dispatch the orchestrator runs the project's test commands once —
   those the project's instruction files give for the parts the change set
-  touches, found as `regression-verifier` finds them — and writes
+  touches, found as `regression-verifier` finds them — itself, in its own
+  Bash and not through a subagent (4.9.0: the commands are known, so a
+  brief costs more than the run, and the logs belong under
+  `scratch/orchestrator/`), and writes
   `suite-run.md`, which each reviewer reads instead of running the full
   suite (five full suites at once exhausted a machine's local ports, and
-  the connection errors read like findings); then it records the tree
+  the connection errors read like findings). A reviewer given `RUN_DIR`
+  also runs no test file that needs ports or a database — its own setup
+  starts a server or host, opens a database connection, or binds a port,
+  or the project's instruction files name it an integration test, and a
+  file it is unsure of counts — but reads its result in the suite logs and
+  lists it under `## Tests left for the verifier` in `angle-<n>.md`, the
+  path and what it wanted to learn, or `none` (4.9.0), since such a file
+  run by several reviewers at once contends for the same ports and
+  database. Invoked standalone, without `RUN_DIR`, a reviewer runs the full
+  suite itself, and its description says to dispatch standalone reviewers
+  one at a time or use `/kenspc-task-review` (4.9.0). Then the orchestrator records the tree
   state (`HEAD` and its branch, `git status --porcelain=v1 -uall`, a hash
   of `git diff HEAD --binary`, and each listed path's `git hash-object`,
   untracked ones included), and records it again once all five have
@@ -308,10 +321,26 @@ changed.
 - Phase 2: `code-fixer` reads all 5 reports from the run directory,
   deduplicates, applies fixes, and writes the accountability list (Schema B)
   back to it. A defect it finds that no report lists is recorded, not
-  fixed, as an `F<n>` row, DEFERRED (4.7.0).
+  fixed, as an `F<n>` row, DEFERRED (4.7.0). Its reply carries a
+  `Final checks:` line — each final build, test, and lint command with its
+  exit code and log, or `Final checks: none run (no fix applied)` — that
+  is not written to `schema-b.md`, whose last line stays the statistics
+  line the recount reads (4.9.0).
 - Phase 3: `regression-verifier` cross-checks the reports' issue IDs against
   the accountability list, verifies fixes, runs build/test/lint, and names
-  each regression it finds `V<n>` (4.7.0).
+  each regression it finds `V<n>` (4.7.0). After the full test command it
+  runs, one at a time, each file a reviewer listed under
+  `## Tests left for the verifier` that the full run did not collect —
+  alone, after code-fixer — and row 3 names how each was settled (4.9.0).
+  Schema C rows 2–4 carry `<command> → exit <n>, log <path>` in the Detail
+  cell in every state, PASS included, the path relative to `RUN_DIR`, or a
+  no-command form (`no build command in the project`, row 3's SPOT-CHECK
+  fallback), since a `—` cell could be confirmed only by running the check
+  again (4.9.0). The verdict reads those exit codes as reported (the
+  `canonical:verdict-shared` block): the orchestrator confirms a row by
+  reading the log it names and runs no build, test, or lint of its own,
+  and a row 2–4 with neither an exit code nor a no-command form keeps the
+  verdict from PASS.
 - After Phase 3, a second round (4.7.0, the `canonical:second-round`
   block): the orchestrator saves regression-verifier's first reply to
   `schema-c-1.md` in every review, and when it holds a ruling given after
@@ -322,6 +351,15 @@ changed.
   the verdict is read from that round. At most one per review, since an
   unbounded loop would bypass the autopilot's per-defect stop counts; with
   no ruling held, no second round and no question.
+
+task-review and task-implement run only in the top-level session — the one
+the user talks to, or a headless `claude -p` session — never inside a
+subagent (4.9.0, each skill's Prerequisites, outside the canonical blocks,
+so the two bullets differ where the skills do): a subagent may not dispatch
+subagents of its own — a user rule may forbid it, and Claude Code caps the
+nesting depth — so it would review all five angles, fix, and verify in one
+context, losing the reviewers' independence, and it cannot ask the user at
+the skill's gates.
 
 Between the dispatches the orchestrating skill prints one fixed progress
 line per step — which agent returned, its counts or result, and the path of
@@ -410,6 +448,26 @@ session, so the skill passes each role's values — declared in the spec's
 `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT`, which the driver turns into
 `--model` and `--effort` on a fresh launch and on a resume alike (a resume
 keeps the model but not the effort).
+
+The main session dispatches no Agent subagent — not for a role, a
+re-check, a re-run, a review, or the evidence of a corrected case — and
+runs its own checks (the start checks, the temp-folder snapshot, the
+driver's self-test, the extraction, the zero-diff check, the corrected-case
+runs) in its own Bash (4.9.0, the skill's overview): a subagent's cost is
+outside the budget's terms, which sum the sessions' costs; it carries no
+worker marker, so the rails hook does not guard its calls; in plugin mode
+it runs the plugin text the main session loaded at its start; and several
+of those checks read values only the main session's Bash holds. A worker,
+by contrast, is the top-level session of its own process and may dispatch
+subagents, each with `run_in_background: false`, while a subagent it
+dispatches dispatches none and starts no `claude -p` (4.9.0, the preamble's
+§ 3). The rail is worded so it still reads true copied into a subagent's
+prompt, where § 3 goes verbatim: there it reads "you are a subagent of an
+autopilot worker — dispatch no subagent and start no `claude -p`". It is
+text only: the rails hook does not tell a worker's call from its
+subagent's, so `autopilot-worker-rails.sh` does not enforce it. The worker
+itself still launches the nested sessions its task block names
+(plugin-mode S4).
 
 Every Agent dispatch in the skills sets `run_in_background: false`
 (v3.5.1): each skill reads the agent's result in the same turn, while a
@@ -822,7 +880,13 @@ Project-level shell scripts live in `scripts/` at the repo root:
   in the two SKILLs and `requirements-reviewer.md`, each renamed in turn
   by the self-test (check 5;
   `check-review-agent-drift.sh` carries the first and the last name to the
-  other four reviewers); and the reviewer invariant sentence, extracted at run time
+  other four reviewers); and, since 4.9.0, the heading
+  `## Tests left for the verifier` in all five reviewers, which write it,
+  and `regression-verifier.md`, which reads it, each renamed in turn by the
+  self-test, every occurrence — all five reviewers rather than one, since
+  the heading also sits in each reviewer's OUTPUT FORMAT, which
+  `check-review-agent-drift.sh` does not hold, so the self-test copies
+  eleven target files (check 5); and the reviewer invariant sentence, extracted at run time
   from the ROLE section of `requirements-reviewer.md` and compared
   whitespace-normalized, is contained in its three copies — the plugin
   README, this file, and `task-review/SKILL.md`'s dispatch block (check 6;

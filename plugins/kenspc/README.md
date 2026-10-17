@@ -95,8 +95,20 @@ which pass `RUN_DIR`, they write only there. The Write tool they carry is for
 those files; they already had Bash. With `RUN_DIR`, a reviewer reads the
 shared suite run's results from `RUN_DIR/suite-run.md` and never runs the
 project's full test command itself — only named test files and its own
-scratch mutation checks, one command at a time (since 4.7.0); without it,
-it runs tests as before. Standalone output keeps the
+scratch mutation checks, one command at a time (since 4.7.0). Nor does it
+run a test file that needs ports or a database (since 4.9.0): one whose
+own setup starts a server or host, opens a database connection, or binds a
+port, or that your instruction files name an integration test — a file the
+reviewer is unsure of counts as one. It reads that file's result in the
+suite run's logs and lists it under `## Tests left for the verifier` in
+`angle-<n>.md`, one line per file with its path and what it wanted to
+learn from it, or `none`; regression-verifier, which runs after code-fixer
+and alone, runs each listed file the full run did not collect. Several
+reviewers running such a file at once would contend for the same ports and
+database. Without a run directory, a reviewer runs tests as before — the
+project's full test suite included — so dispatch standalone reviewers one
+at a time, or use `/kenspc-task-review`; each reviewer's description says
+so (since 4.9.0). Standalone output keeps the
 v3.4.3 shape (Findings table, Issues table, closing line); the one format
 difference is that issue IDs carry the angle's letter (`B1`, not `1`).
 
@@ -471,10 +483,43 @@ review reuses the same directory (since 4.3.0):
   round added for regressions regression-verifier named `V<n>`; its
   Per-angle Results table carries a row for each of the seven letters,
   zeros included.
+- Every check is reported with its command, exit code, and log (since
+  4.9.0), each log's path written relative to the run directory.
+  regression-verifier's verification table carries, in rows 2–4 (build,
+  tests, lint), `<command> → exit <n>, log <path>` in the Detail cell in
+  every state, PASS included — for example
+  `` `npm run build` → exit 0, log scratch/regression-verifier/1/build.log `` —
+  several commands joined by `; `; a check your project gives no command
+  for stays PASS and reads `no build command in the project` or
+  `no lint command in the project`, and row 3 keeps its SPOT-CHECK text for
+  a project with no test suite. Row 3 also names each file the reviewers
+  left under `## Tests left for the verifier` and how it was settled —
+  `covered by the full run`, or its own command, exit code, and log — and
+  a listed file that fails makes row 3 FAIL; a report whose section reads
+  `none`, or that has none, lists nothing. Rows 1 and 5 read `—` when they
+  pass, since they run no command. code-fixer's reply carries, after its
+  other lines and before the Per-angle Results table,
+  `Final checks: <command> → exit <n>, log <path>[; …]` for its final
+  build, test, and lint run, logs under `scratch/code-fixer/`, or
+  `Final checks: none run (no fix applied)`; the line is not written to
+  `schema-b.md`. In `/kenspc-task-implement`, task-implementer's summary
+  ends with `## Checks run`: the last build, test, and lint commands it
+  ran, each with its exit code, the task after which it ran, and its log
+  under `scratch/task-implementer/`, or `none run`; the final report renders
+  it after the Post-implementation notes, and after slices the last
+  slice's alone, since its checks ran on the code every slice built. The
+  verdict reads rows 2–4's exit codes as reported: the orchestrating
+  session confirms a row by reading the log it names and runs no build,
+  test, or lint of its own, and a row 2–4 that carries neither an exit
+  code nor a no-command form keeps the verdict from PASS (PARTIAL, unless
+  a FAIL condition holds). A `—` cell said a check passed without saying
+  which command ran or where its output was, so the only way to confirm it
+  was to run it again.
 - `suite-run.md` and the tree check (since 4.7.0). Before it dispatches the
   five reviewers, the orchestrating skill runs the project's test commands
   once — the ones your instruction files give for the parts the change set
-  touches — one at a time, each with its log under
+  touches — itself, in its own Bash rather than through a subagent (since
+  4.9.0), one at a time, each with its log under
   `scratch/orchestrator/1/`, and writes `suite-run.md`: each command, its
   exit code, its duration, and its log's path, or one line saying the
   project gives no test command. A failing command is recorded, not acted
@@ -637,7 +682,15 @@ it, rules on the workers' questions, and classifies what they produce; the worke
 worktree's plugin (`--plugin-dir`) in `plugin` mode. One role per session,
 never reused: a session that edited the plugin still runs the text it
 started with, so the review, the acceptance, and a fix are each a session
-of their own. In `repo` mode, `Standalone review: off` skips S3b: S3's own
+of their own. Your session dispatches no Agent subagent — not for a role, a
+re-check, a re-run, a review, or the evidence of a corrected case — and
+runs its own checks (the start checks, the temp-folder snapshot, the
+driver's self-test, the extraction, the zero-diff check, the corrected-case
+runs) in its own Bash (since 4.9.0): a subagent's cost would fall outside
+the budget, which sums the sessions' costs; it carries no worker marker,
+so the rails hook would not guard it; in `plugin` mode it would run the
+plugin text your session loaded at its start; and several of those checks
+read values only your session's Bash holds. In `repo` mode, `Standalone review: off` skips S3b: S3's own
 review — five fresh subagents — stands in for it, its verdict and rows
 entering the verdict loop in S3b's place, since the reason a plugin edit
 needs a fresh session does not apply there. `Standalone review: auto`
@@ -899,7 +952,19 @@ since `env` cut at the `=` still prints the further lines of a multi-line
 value. A worker's subagents
 never see its prompt, so the rails tell the worker to write them into
 every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
-dispatches its skills make. A dispatch that has no such key —
+dispatches its skills make. One of those rails (since 4.9.0) says how a
+worker uses subagents: a worker is the top-level session of its own
+process and may dispatch subagents, each with `run_in_background: false`,
+while a subagent it dispatches dispatches none and starts no `claude -p` —
+in the subagent's prompt the rail reads "you are a subagent of an
+autopilot worker — dispatch no subagent and start no `claude -p`". A
+background subagent is stopped when the headless worker exits, its result
+lost; a subagent that nests, or starts a headless session of its own,
+leaves the rails text one level behind, and a `claude -p` it starts is a
+session of its own that no nesting limit reaches. The worker itself still
+launches the nested sessions its task block names (`plugin`-mode S4). The
+rail is text only: the rails hook below does not tell a worker's call from
+its subagent's. A dispatch that has no such key —
 task-implementer's, and the three document reviewers' — carries no rails
 text: for those agents the hook's rails below are the only ones
 enforced, and a write of theirs through Bash other than a redirection
@@ -967,7 +1032,11 @@ its commits sets is set there alone). In `plugin` mode: the
 same, plus the acceptance record `docs/dry-runs/<batch>-acceptance.md` and
 the repository's release commit — the CHANGELOG heading dated, the manifest
 at `Version:`, the checklist and roadmap updated, the batch's documents
-removed, the pre-flight run — with no tag and no push. At brief entry the
+removed, the pre-flight run — with no tag and no push. S6's reply carries
+the pre-flight block's two count lines and each command's exit code, and
+both reports quote those exit codes, a non-zero one named as a pre-flight
+failure (since 4.9.0), since the count lines alone may be missing when a
+command before them failed. At brief entry the
 design session commits the spec alone, `docs(plans): add batch <name> spec`,
 and the main session commits each ruling made during the run into the
 spec's clarifications section, each entry naming who ruled
@@ -1082,7 +1151,10 @@ so a spec the script misreads stops the run before anything is spent,
 not at acceptance. S4 extracts the
 commands again into a directory of its own, shows `cmp` equal for every
 file and one `cmp` of two differing files reporting the difference, runs
-each command as `<shell> <file>` in the shell your session's Bash tool
+each command itself, one after another and not through a subagent (since
+4.9.0: the cases run at one HEAD in one working tree and may start servers
+or suites, so they share the tree and the machine's ports), as
+`<shell> <file>` in the shell your session's Bash tool
 runs, adds no redirect to a command it writes to inspect a result, and
 replies with each command's exit code and the evidence it leaves — the
 files, logs, or clones it writes, by path. A count that differs, an
@@ -1119,7 +1191,9 @@ reports.
 **Fixes.** A defect the main session classifies — a review row after S3b
 (after S3, when S3b does not run), an acceptance FAIL, or a walk FAIL —
 goes to an S5 fix session. One S5 may fix several
-defects classified in the same round, one commit per defect. Every S5 is
+defects classified in the same round, one commit per defect, and replies
+with one line per defect: its commit, what changed, and each check it ran
+for it, `<command> → exit <n>` (since 4.9.0). Every S5 is
 followed by a narrowed review (`-s3c`, then `-s3d`, …) over the range from
 HEAD at its first launch to its last commit, a wording-only fix included, before
 any acceptance case is re-run. A defect an S5 leaves without a commit still
@@ -1273,7 +1347,8 @@ letter and the rulings that departed from a spec sentence on evidence;
 main-session rulings, `<n> | none` with one line per ruling; settings edits, each field a worker changed in
 the `## Autopilot` section; files changed and the zero-diff result (the
 `compared:` count, the exit code, and any path the stat names);
-byte-identity / guards / counts; acceptance, one line per case with its
+byte-identity / guards / counts, in `plugin` mode the two count lines with
+each pre-flight command and its exit code beside them; acceptance, one line per case with its
 cost and result, and `in the corrected form (<clarification>)` for a
 corrected case — with `Acceptance: none` and a walk that walked,
 `none named; S3b is the last review, the walk follows` (S3 when S3b did not
@@ -1494,6 +1569,29 @@ on Windows.
   subagents then run asynchronously and hand each result back — the
   workflow still finishes within the same turn, with no further input
   (observed on 2.1.281).
+- **The review skills run in the top-level session.** `/kenspc-task-review`
+  and `/kenspc-task-implement` run in the session you talk to, or in a
+  headless `claude -p` session, and never inside a subagent (since 4.9.0).
+  A subagent may not dispatch subagents of its own — a user rule may forbid
+  it, and Claude Code caps the nesting depth — so it would review all five
+  angles, fix, and verify in one context, which removes the independence
+  the five reviewers exist for (and, in `/kenspc-task-implement`, would
+  implement the tasks in that same context); and it cannot ask you at the
+  skills' gates, the batch confirmation among them. Invoke them yourself
+  rather than asking a subagent to.
+- **Read-only sweeps may go to subagents.** `/kenspc-task`,
+  `/kenspc-guide`, and `/kenspc-diagnose` may send a sweep that only reads
+  — the code behind several plan steps, the config across a project, the
+  scripts and source behind several guide sections, a hypothesis checked
+  by reading a code path, the sibling code paths behind the adjacent cases
+  — to read-only subagents sent in one message, each with
+  `run_in_background: false` and told to write nothing and to return
+  `file:line` for what it reports (since 4.9.0). The skill reads every line
+  a task, a guide sentence, or the diagnosis rests on before writing it, so
+  the document stays traceable to the code rather than to a summary of it.
+  Probes that run code, the reproduction test's repeated runs, and the task
+  document, the guide, and the diagnosis themselves stay in the main
+  session.
 - **Branches.** The plugin does not create branches; the one branch it
   names is the first branch of a repository `/kenspc-init` creates with
   `git init`, which is `main`. Commits follow the

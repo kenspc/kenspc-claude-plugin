@@ -9,6 +9,123 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.9.0 — unreleased
+
+The skills and agents now say who runs each check, what may run side by
+side, and what evidence comes back, so a session whose instructions favor
+handing work to parallel subagents still does what each skill intends.
+Every Why states its reason in the plugin's own words, since the plugin
+runs in projects whose instructions hold no such rule. No new agent,
+command, CONTEXT key, guard, or `## Autopilot` field, and every skill
+keeps `version: 3.0.0`; what changes for a user is the evidence in the
+review reports — each check's command, exit code, and log — and one new
+section in each reviewer's report file.
+
+### Changed
+
+- **The review skills run only in the top-level session (task-review,
+  task-implement).** Each skill's Prerequisites now say it runs in the
+  session the user talks to, or a headless `claude -p` session, and never
+  inside a subagent: a subagent may not dispatch subagents of its own — a
+  user rule may forbid it, and Claude Code caps the nesting depth — so it
+  would review all five angles, fix, and verify in one context, losing the
+  reviewers' independence, and it cannot ask the user at the skill's gates.
+- **The pre-review suite run stays in the orchestrating session's own
+  Bash.** The `canonical:dispatch` block's suite run now says the
+  orchestrating session runs the test commands itself, not through a
+  subagent: the commands are known, so a brief costs more than the run,
+  and the logs belong under `scratch/orchestrator/`.
+- **Reviewers leave port- and database-bound tests to regression-verifier.**
+  With `RUN_DIR`, a reviewer runs no test file that needs ports or a
+  database — its own setup starts a server or host, opens a database
+  connection, or binds a port, or the project's instruction files name it
+  an integration test; a file it is unsure of counts — but reads its
+  result in `suite-run.md`'s logs and lists it under a new
+  `## Tests left for the verifier` section of `angle-<n>.md`, one line per
+  file with what it wanted to learn, or `none`. Five reviewers run at once,
+  and such a file run by several of them contends for the same ports and
+  database. regression-verifier, which runs after code-fixer and alone,
+  runs each listed file the full test run did not collect, one at a time
+  (a file is run when the runner gives no list of collected files), and
+  row 3 names how each was settled; a listed file that fails makes row 3
+  FAIL. The section is in the report file only, not in the reply.
+- **The reviewer descriptions warn against parallel standalone dispatch.**
+  Each of the five reviewers' descriptions ends: "Invoked standalone
+  (without RUN_DIR) it runs the project's full test suite itself, so
+  dispatch one at a time or use /kenspc-task-review." The first sentence,
+  which carries the trigger, is unchanged.
+- **Each check reports its command, exit code, and log.** A PASS row read
+  `—`, which said a check passed without saying which command ran or where
+  its output was, so the reader could confirm it only by running it again.
+  regression-verifier's Schema C rows 2–4 now carry
+  `<command> → exit <n>, log <path>` in the Detail cell in every state,
+  PASS included, the path relative to `RUN_DIR`, or
+  `no build command in the project` / `no lint command in the project`
+  (row 3 keeps its SPOT-CHECK text). code-fixer's reply gains an
+  always-present `Final checks:` line, or
+  `Final checks: none run (no fix applied)`, not written to
+  `schema-b.md`. task-implementer's Schema D gains an always-rendered
+  `## Checks run` section — the last build, test, and lint commands, each
+  with its exit code, the task after which it ran, and its log, or
+  `none run` — which task-implement renders after the Post-implementation
+  notes, keeping the last slice's alone after slices.
+- **The verdict is confirmed by reading, not re-running.** A new bullet in
+  the `canonical:verdict-shared` block: the verdict reads rows 2–4's exit
+  codes as reported, the orchestrating session confirms a row by reading
+  the log it names and runs no build, test, or lint of its own, and a row
+  2–4 with neither an exit code nor a no-command form keeps the verdict
+  from PASS (PARTIAL, unless a FAIL condition holds).
+- **task-document-reviewer does not rewrite task steps to delegate.** Its
+  consistency angle now says a user-level or project rule on delegating
+  work to subagents governs the session that dispatches agents, not a
+  task's steps, since task-implementer has no Agent tool.
+- **The autopilot main session uses no Agent subagent; a worker's
+  subagents run in the foreground and nest nothing.** The overview's
+  "Nothing runs as an agent" is now a rule with its Why: no Agent subagent
+  for a role, a re-check, a re-run, a review, or a corrected case's
+  evidence, and the main session's own checks run in its own Bash, since a
+  subagent's cost is outside the budget, the rails hook does not guard it,
+  in plugin mode it runs the plugin text loaded at the session's start,
+  and several checks read values only that session's Bash holds. The
+  preamble's § 3 gains a rail: a worker may dispatch subagents, each with
+  `run_in_background: false`, and a subagent it dispatches dispatches none
+  and starts no `claude -p` — text only, since the rails hook does not
+  tell a worker's call from its subagent's.
+- **S4 runs its cases itself; S5 and S6 report their checks (autopilot).**
+  The repo-mode acceptance session runs each case itself, one after
+  another, since the cases share one working tree and the machine's ports.
+  S5's reply line per defect names each check it ran,
+  `<command> → exit <n>`. Plugin-mode S6's reply carries each pre-flight
+  command's exit code beside the two count lines, and both reports quote
+  them, naming a non-zero one as a pre-flight failure, since the count
+  lines alone may be missing when a command before them failed.
+- **Read-only sweeps may go to parallel subagents (generate-task,
+  generate-guide, diagnose-bug).** A sweep that only reads — the code
+  behind several plan steps, the config across a project, a hypothesis
+  checked by reading a code path, sibling code paths — may go to read-only
+  subagents sent in one message, each with `run_in_background: false`,
+  told to write nothing and to return `file:line`; the main session reads
+  every cited line a task, a guide sentence, or the diagnosis rests on
+  before writing it, and probes that run code stay in the main session.
+- `check-run-contract.sh` check 5 holds the heading
+  `## Tests left for the verifier` in the five reviewers and
+  `regression-verifier.md`; its self-test now copies eleven target files
+  and renames the heading in each of the six in turn (forty-three
+  mutations).
+
+### Fixed
+
+- **Two stale platform statements.** `CLAUDE.md` said subagents cannot
+  spawn subagents; kenspc's agents cannot, since none lists Agent in
+  `tools:`, while Claude Code nests to depth 3 by default (2.1.301,
+  `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`). `CLAUDE.md`, the README's Known
+  behavior, and the release checklist said the interactive Agent tool has
+  no `run_in_background` parameter; measured on 2026-10-17 in a Claude
+  Code 2.1.301 Desktop session, the parameter is present, `false` holds the
+  call until the subagent finishes, and an omitted parameter runs it in
+  the background. The interactive terminal CLI is not measured; the
+  binary drops the parameter there when fork mode is on.
+
 ## 4.8.1 — 2026-10-16
 
 An autopilot spec that keeps scripts in fenced code blocks of its
