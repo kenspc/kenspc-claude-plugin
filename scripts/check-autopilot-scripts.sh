@@ -58,12 +58,13 @@
 # KENSPC_AUTOPILOT_SUITE_LIMIT alone, entering with no holder and busy
 # beside one, and --limit taking precedence over it; a mutex whose owner
 # pid is dead, reclaimed, and one whose owner runs, kept (busy, the mutex
-# left in place); a wrapped run killed
-# with SIGTERM, its holder file gone and its child sleep ended; and usage
-# errors (no --, no limit, limit 0, limit x, a regular file as the lock
-# directory, a ps that prints no start time) — and asserts each outcome. Every background process a fixture starts is waited
-# for or killed by its pid before the fixture ends, and again on exit. The
-# other-owner refusal has no fixture: the guard cannot chown.
+# left in place); a wrapped run killed with SIGTERM, SIGINT, or SIGHUP,
+# its holder file gone and its child sleep ended, each with its own exit
+# code; and usage errors (no --, no limit, limit 0, limit x, a regular
+# file as the lock directory, a ps that prints no start time) — and
+# asserts each outcome. Every background process a fixture starts is
+# waited for or killed by its pid before the fixture ends, and again on
+# exit. The other-owner refusal has no fixture: the guard cannot chown.
 #
 # Exit code 0: every assertion held.
 # Exit code 1: at least one assertion failed (each is printed on stderr).
@@ -438,7 +439,7 @@ wait_holders() {
     return 1
 }
 
-# slot_checks <suite-slots script>: the wrapper's twelve fixtures, each with a
+# slot_checks <suite-slots script>: the wrapper's thirteen fixtures, each with a
 # lock directory and a log of its own under $WORK.
 slot_checks() {
     local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args
@@ -643,6 +644,36 @@ slot_checks() {
     PATH="$base/10-ps:$PATH" KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 -- true >/dev/null 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 2 ]] || fail "suite-slots 10: a ps with no lstart exited $rc, expected 2"
     grep -q 'no start time' "$WORK/slot-err" || fail "suite-slots 10: a ps with no lstart gave no reason naming the start time"
+
+    # 13. SIGINT and SIGHUP to the wrapper reach its child too and release
+    #     the slot. The wrapper starts under set -m: a background job of a
+    #     non-interactive bash otherwise starts with SIGINT ignored, which it
+    #     cannot trap.
+    for args in "INT 130" "HUP 129"; do
+        # shellcheck disable=SC2086
+        set -- $args
+        d="$base/13-$1"
+        set -m
+        start_bg env KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 -- sleep 30
+        set +m
+        h1=$bg
+        cpid=
+        if wait_holders "$d" 1; then
+            cpid=$(sed -n 's/^command_pid=//p' "$d"/holder-* | head -n 1)
+        else
+            fail "suite-slots 13: the wrapped run for SIG$1 never held a slot"
+        fi
+        kill -"$1" "$h1" 2>/dev/null || true
+        rc=0
+        wait "$h1" 2>/dev/null || rc=$?
+        [[ "$rc" -eq "$2" ]] || fail "suite-slots 13: the wrapper killed with SIG$1 exited $rc, expected $2"
+        n=$(holder_count "$d")
+        [[ "$n" -eq 0 ]] || fail "suite-slots 13: $n holder files are left after SIG$1"
+        if [[ -n "$cpid" ]] && ps -p "$cpid" >/dev/null 2>&1; then
+            fail "suite-slots 13: the child sleep $cpid still runs after SIG$1"
+            kill "$cpid" 2>/dev/null || true
+        fi
+    done
 
     return 0
 }

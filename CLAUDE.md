@@ -1123,8 +1123,8 @@ Project-level shell scripts live in `scripts/` at the repo root:
   run at once; the limit read from `KENSPC_AUTOPILOT_SUITE_LIMIT` alone,
   entering with no holder and busy beside one, with `--limit` taking
   precedence over it; a mutex whose owner pid is dead, reclaimed, and one
-  whose owner runs, kept; SIGTERM to a wrapped run, its holder file and its child
-  gone; and usage errors (no `--`, no limit, limit `0`, limit `x`, a
+  whose owner runs, kept; SIGTERM, SIGINT, or SIGHUP to a wrapped run,
+  its holder file and its child gone; and usage errors (no `--`, no limit, limit `0`, limit `x`, a
   regular file as the lock directory, a `ps` that prints no start time) —
   every background process waited
   for or killed by its pid, and again by the EXIT trap. Its self-test
