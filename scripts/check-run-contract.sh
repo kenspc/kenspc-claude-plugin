@@ -54,7 +54,9 @@
 #      agents/test-reviewer.md, each of which writes the section — and in
 #      agents/regression-verifier.md, which reads it. All five reviewers are
 #      checked, not one, since the heading sits in each reviewer's OUTPUT
-#      FORMAT as well, which check-review-agent-drift.sh does not hold.
+#      FORMAT as well, which check-review-agent-drift.sh does not hold; in
+#      the reviewers it must stand on a line of its own, since their
+#      drift-held PREREQUISITES and REPORT DELIVERY name it mid-sentence.
 #   6. The reviewer invariant sentence ("Each reviewer is read-only on the
 #      working tree and writes only under `RUN_DIR`: …"). It lives in four
 #      places: the five reviewers' ROLE, the canonical dispatch block of
@@ -109,7 +111,8 @@
 # Exit code 1: a block diverges, the ignore probe answers wrongly, the
 #              recount disagrees, a file does not name change-set.md,
 #              pre-fix/index.txt, rulings.md, schema-c-1.md, suite-run.md,
-#              or `## Tests left for the verifier` where check 5 requires it,
+#              or `## Tests left for the verifier` where check 5 requires it
+#              (in a reviewer, as a line of its own),
 #              or a copy of the reviewer invariant sentence does not contain
 #              the reviewers' ROLE sentence.
 # Exit code 2: missing file, missing or repeated markers, no git, no ignore
@@ -137,7 +140,7 @@
 #                  reference (exit 2 if not), and runs the main check on
 #                  the unmodified copy (must exit 0 — the example carries a
 #                  `NOT APPLICABLE — <reason>` row, so this also proves
-#                  prefix classification), then on forty-three mutations that
+#                  prefix classification), then on forty-four mutations that
 #                  must each exit 1: stats-line template changed in one SKILL,
 #                  run-dir block changed in one SKILL, the rulings grammar's
 #                  DEFER entry reworded in each of its four carriers in turn
@@ -166,7 +169,9 @@
 #                  turn the same way, the suite-run file name `suite-run.md`
 #                  removed from each of its three carriers in turn the same
 #                  way, the heading `## Tests left for the verifier` removed
-#                  from each of its six carriers in turn the same way, and
+#                  from each of its six carriers in turn the same way, the
+#                  heading's own line alone removed from edge-case-reviewer's
+#                  OUTPUT FORMAT, and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
 #                  CLAUDE.md's, in task-review's, and in the reference
@@ -518,12 +523,19 @@ run_main_logic() {
             missing=1
         fi
     done
-    for f in "$reviewer" "$edge" "$quality" "$bug" "$tester" "$verifier"; do
-        if ! grep -qF -- "$TESTS_LEFT_HEADING" "$f"; then
-            echo "MISSING '$TESTS_LEFT_HEADING' in $f" >&2
+    # In the reviewers the heading must stand on a line of its own: their
+    # PREREQUISITES and REPORT DELIVERY name it inside sentences, so a
+    # match anywhere would pass with OUTPUT FORMAT's section gone.
+    for f in "$reviewer" "$edge" "$quality" "$bug" "$tester"; do
+        if ! grep -qxF -- "$TESTS_LEFT_HEADING" "$f"; then
+            echo "MISSING '$TESTS_LEFT_HEADING' as a line of its own in $f" >&2
             missing=1
         fi
     done
+    if ! grep -qF -- "$TESTS_LEFT_HEADING" "$verifier"; then
+        echo "MISSING '$TESTS_LEFT_HEADING' in $verifier" >&2
+        missing=1
+    fi
     if [[ "$missing" -ne 0 ]]; then
         echo "The orchestrator writes the change set to RUN_DIR/$CHANGE_SET_NAME, the agents" >&2
         echo "read it there, and code-fixer writes the pre-fix record's $PRE_FIX_INDEX for" >&2
@@ -662,12 +674,16 @@ run_self_test() {
             return 2
         fi
     done
-    for rel in "$REVIEWER_REL" "$EDGE_REL" "$QUALITY_REL" "$BUG_REL" "$TEST_REL" "$VERIFIER_REL"; do
-        if ! grep -qF -- "$TESTS_LEFT_HEADING" "$WORK/$rel"; then
-            echo "FAIL  self-test fixture stale: '$TESTS_LEFT_HEADING' not found in $rel" >&2
+    for rel in "$REVIEWER_REL" "$EDGE_REL" "$QUALITY_REL" "$BUG_REL" "$TEST_REL"; do
+        if ! grep -qxF -- "$TESTS_LEFT_HEADING" "$WORK/$rel"; then
+            echo "FAIL  self-test fixture stale: '$TESTS_LEFT_HEADING' not a line of its own in $rel" >&2
             return 2
         fi
     done
+    if ! grep -qF -- "$TESTS_LEFT_HEADING" "$WORK/$VERIFIER_REL"; then
+        echo "FAIL  self-test fixture stale: '$TESTS_LEFT_HEADING' not found in $VERIFIER_REL" >&2
+        return 2
+    fi
 
     # Fixture-stale guard for check 6: the reference sentence's start line
     # occurs once in the copied reference, so check 6 extracts the sentence
@@ -902,6 +918,23 @@ run_self_test() {
         fi
         echo "OK    self-test tests-left heading renamed in $rel — main check exit 1"
     done
+    # The heading line alone dropped from one reviewer's OUTPUT FORMAT: the
+    # mentions in PREREQUISITES and REPORT DELIVERY stay, so only the
+    # line-of-its-own match catches it.
+    awk -v h="$TESTS_LEFT_HEADING" '$0 != h' "$WORK/$EDGE_REL" > "$WORK/$EDGE_REL.tmp" \
+        && mv "$WORK/$EDGE_REL.tmp" "$WORK/$EDGE_REL"
+    if grep -qxF -- "$TESTS_LEFT_HEADING" "$WORK/$EDGE_REL" \
+            || ! grep -qF -- "$TESTS_LEFT_HEADING" "$WORK/$EDGE_REL"; then
+        echo "FAIL  self-test: tests-left heading-line mutation did not apply as intended in $EDGE_REL" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$EDGE_REL" "$WORK/$EDGE_REL"
+    if [[ "$rc" -ne 1 ]]; then
+        echo "FAIL  self-test tests-left heading line removed in $EDGE_REL: expected exit 1, got $rc" >&2
+        return 1
+    fi
+    echo "OK    self-test tests-left heading line removed in $EDGE_REL — main check exit 1"
     # Check 6: one word of the reviewer invariant sentence changed in each
     # copy in turn, and in the reference itself, which every copy then
     # fails to contain.
