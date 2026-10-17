@@ -668,6 +668,15 @@ Based on the regression verification results, declare a verdict:
   Verdict paragraph must note "N tests skipped by design" so the PASS is never
   silent about the reduced coverage. Why: the user should accept skipped coverage
   knowingly, not discover it later.
+- The verdict reads Schema C rows 2–4's exit codes as reported: the
+  orchestrating session confirms a row by reading the log its Detail names,
+  and runs no build, test, or lint of its own. A row 2–4 whose Detail
+  carries neither an exit code nor a no-command form (`no build command in
+  the project`, `no lint command in the project`, or row 3's SPOT-CHECK
+  fallback text) keeps the verdict from PASS: PARTIAL, unless a FAIL
+  condition holds. Why: regression-verifier is this skill's confirmation
+  step, so a third full run adds load and no independence, and a row with
+  no evidence is a verdict nobody can check without re-running it.
 <!-- canonical:verdict-shared:end -->
 - **FAIL** when any of: one or more HIGH severity issues remain unresolved;
   one or more INCORRECTLY FIXED items; build / test / lint fails; the fixes

@@ -316,7 +316,16 @@ Files: `plugins/kenspc/agents/regression-verifier.md`,
 
 ### Task 7: The verdict is confirmed by reading, not re-running
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the bullet goes last inside the block, after the skipped-tests
+  bullet, and names the no-command forms by their literal Schema C text
+  (`no build command in the project`, `no lint command in the project`, row
+  3's SPOT-CHECK fallback) so the orchestrator matches what
+  regression-verifier writes; "this skill's confirmation step" keeps the
+  text skill-neutral for both copies.
+- Changes/tradeoffs: none — byte-identical in both blocks.
 
 Depends on: Task 6
 
