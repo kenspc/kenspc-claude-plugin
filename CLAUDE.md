@@ -461,8 +461,8 @@ of those checks read values only the main session's Bash holds. A worker,
 by contrast, is the top-level session of its own process and may dispatch
 subagents, each with `run_in_background: false`, while a subagent it
 dispatches dispatches none and starts no `claude -p` (4.9.0, the preamble's
-§ 3). The rail is worded so it still reads true copied into a subagent's
-prompt, where § 3 goes verbatim: there it reads "you are a subagent of an
+§ 3). The rail has its own form for a subagent's prompt, where the rest
+of § 3 goes verbatim: there it reads "you are a subagent of an
 autopilot worker — dispatch no subagent and start no `claude -p`". It is
 text only: the rails hook does not tell a worker's call from its
 subagent's, so `autopilot-worker-rails.sh` does not enforce it. The worker

@@ -2276,8 +2276,9 @@ as it gave it.
 Only § 3 holds rails. A constraint in § 6 is not a rail: a departure from
 one is listed under `## Rail observations` and stops nothing. The rails
 you write into a subagent prompt or an agent's CUSTOM_INSTRUCTIONS are
-this section as written, never narrower: code-fixer may edit and commit,
-and regression-verifier may build and run the suite.
+this section as written, never narrower, but for the dispatch rail above,
+which goes in the form it gives for a subagent's prompt: code-fixer may
+edit and commit, and regression-verifier may build and run the suite.
 
 Any breach is a stop: report it and end.
 
