@@ -58,8 +58,8 @@
 # holder at limit 1, run at once; the limit read from
 # KENSPC_AUTOPILOT_SUITE_LIMIT alone, entering with no holder and busy
 # beside one, and --limit taking precedence over it; a mutex whose owner
-# pid is dead, reclaimed, and one whose owner runs, kept (busy, the mutex
-# left in place); a wrapped run killed with SIGTERM, SIGINT, or SIGHUP,
+# pid is dead or runs under another start time, reclaimed, and one whose
+# owner runs with its recorded start, kept (busy, the mutex left in place); a wrapped run killed with SIGTERM, SIGINT, or SIGHUP,
 # its holder file gone and its child sleep ended, each with its own exit
 # code; and usage errors (no --, no limit, limit 0 or 00, limit x, a
 # regular file as the lock directory, a ps that prints no start time),
@@ -590,20 +590,28 @@ slot_checks() {
     KENSPC_AUTOPILOT_SUITE_LIMIT=1 KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 2 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 0 ]] || fail "suite-slots 11: --limit 2 over the variable's 1 beside one holder exited $rc, expected 0"
 
-    # 12. A mutex whose owner pid is dead is reclaimed and the run
-    #     acquires; one whose owner is a live process is kept, and the run
-    #     is busy with the mutex still there and no holder readable.
+    # 12. A mutex whose owner pid is dead, or alive under another start
+    #     time (a reused pid), is reclaimed and the run acquires; one whose
+    #     owner is alive with its recorded start is kept, and the run is
+    #     busy with the mutex still there and no holder readable.
     d="$base/12-dead"
     mkdir -p "$d/mutex"
     chmod 700 "$d"
-    printf '%s\n' "$dead" > "$d/mutex/owner"
+    printf '%s\n%s\n' "$dead" "Thu Jan 1 00:00:00 1970" > "$d/mutex/owner"
     rc=0
     KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 2 -- true 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 0 ]] || fail "suite-slots 12: a run behind a dead owner's mutex exited $rc, expected 0"
+    d="$base/12-reused"
+    mkdir -p "$d/mutex"
+    chmod 700 "$d"
+    printf '%s\n%s\n' "$s2" "Thu Jan 1 00:00:00 1970" > "$d/mutex/owner"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 2 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 12: a run behind a reused owner pid's mutex exited $rc, expected 0"
     d="$base/12-live"
     mkdir -p "$d/mutex"
     chmod 700 "$d"
-    printf '%s\n' "$s2" > "$d/mutex/owner"
+    printf '%s\n%s\n' "$s2" "$(lstart_of "$s2")" > "$d/mutex/owner"
     rc=0
     KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 75 ]] || fail "suite-slots 12: a run behind a live owner's mutex exited $rc, expected 75"

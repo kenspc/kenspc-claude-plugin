@@ -1123,8 +1123,9 @@ Project-level shell scripts live in `scripts/` at the repo root:
   `touch -t`, reclaimed; a nested call beside a live holder at limit 1,
   run at once; the limit read from `KENSPC_AUTOPILOT_SUITE_LIMIT` alone,
   entering with no holder and busy beside one, with `--limit` taking
-  precedence over it; a mutex whose owner pid is dead, reclaimed, and one
-  whose owner runs, kept; SIGTERM, SIGINT, or SIGHUP to a wrapped run,
+  precedence over it; a mutex whose owner pid is dead or runs under
+  another start time, reclaimed, and one whose owner runs with its
+  recorded start, kept; SIGTERM, SIGINT, or SIGHUP to a wrapped run,
   its holder file and its child gone; and usage errors (no `--`, no
   limit, limit `0` or `00`, limit `x`, a regular file as the lock
   directory, a `ps` that prints no start time), beside limit `01` read as

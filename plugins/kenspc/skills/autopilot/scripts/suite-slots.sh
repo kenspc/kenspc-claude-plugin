@@ -44,7 +44,8 @@
 # The lock directory, created with mode 700 when missing
 #   mutex/            a short mutex, taken with mkdir (atomic on every POSIX
 #                     file system) around each count and each holder write
-#   mutex/owner       the pid of the wrapper holding the mutex
+#   mutex/owner       the pid of the wrapper holding the mutex, and its
+#                     start time on a second line
 #   holder-<pid>      one per slot held, <pid> the wrapper's; key=value
 #                     lines in this order: wrapper_pid, wrapper_start,
 #                     command_pid, command_start, taken, cwd, command, each
@@ -80,10 +81,14 @@
 # TZ=UTC: ps prints it in the caller's time zone, so two wrappers started
 # under different TZ values would each judge the other's live holder stale.
 #
-# Stale mutex: reclaimed when its owner pid is dead, or when it has no
-# owner (or an empty one) and is older than 10 seconds by its modification
-# time (stat -f %m, then stat -c %Y): a taker killed between the mkdir and
-# the owner write leaves it so.
+# Stale mutex: reclaimed when its owner pid is not alive with the start
+# time the owner file records, or when it has no owner (or an empty one)
+# and is older than 10 seconds by its modification time (stat -f %m, then
+# stat -c %Y): a taker killed between the mkdir and the owner write leaves
+# it so. Why the start time here too: a taker killed with SIGKILL inside
+# the mutex leaves its owner file, and once its pid is reused the mutex
+# would never be reclaimed, every wrapper on the machine busy until it was
+# removed by hand.
 #
 # Running the command: the wrapper waits for its background child with
 # wait, so its traps run while the child does. On EXIT it removes its
@@ -259,14 +264,14 @@ fi
 
 mutex_mine=0
 
-# mutex_stale: true when the mutex is held by a dead owner, or has no
-# owner and is older than MUTEX_STALE_SECONDS.
+# mutex_stale: true when the mutex is held by an owner not alive with its
+# recorded start, or has no owner and is older than MUTEX_STALE_SECONDS.
 mutex_stale() {
-  local owner mtime
+  local owner= owner_start= mtime
   [ -d "$MUTEX" ] || return 1
-  owner=$(cat "$MUTEX/owner" 2>/dev/null)
+  { IFS= read -r owner; IFS= read -r owner_start; } 2>/dev/null < "$MUTEX/owner"
   if [ -n "$owner" ]; then
-    ps -p "$owner" >/dev/null 2>&1 && return 1
+    alive_as "$owner" "$owner_start" && return 1
     return 0
   fi
   # GNU stat reads -f as "file system" and prints that for the directory,
@@ -286,7 +291,7 @@ take_mutex() {
   local i=0
   while [ "$i" -lt "$MUTEX_TRIES" ]; do
     if mkdir "$MUTEX" 2>/dev/null; then
-      if printf '%s\n' "$$" > "$MUTEX/owner" 2>/dev/null; then
+      if printf '%s\n%s\n' "$$" "$wrapper_start" > "$MUTEX/owner" 2>/dev/null; then
         mutex_mine=1
         return 0
       fi
@@ -306,7 +311,7 @@ take_mutex() {
 
 release_mutex() {
   [ "$mutex_mine" -eq 1 ] || return 0
-  if [ "$(cat "$MUTEX/owner" 2>/dev/null)" = "$$" ]; then
+  if [ "$(sed -n 1p "$MUTEX/owner" 2>/dev/null)" = "$$" ]; then
     rm -f "$MUTEX/owner"
     rmdir "$MUTEX" 2>/dev/null
   fi
