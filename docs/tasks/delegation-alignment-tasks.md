@@ -29,7 +29,16 @@ depends on Task 6; Task 10 depends on Task 9; Task 13 depends on Tasks 1–12
 
 ### Task 1: Review skills run only in the top-level session
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the two bullets share their first sentence and their Why's
+  opening; task-implement's names what that skill would lose besides the
+  reviewers' independence (the implementer's own context, and the batch
+  confirmation among the gates it cannot ask at), which is where the task
+  allows the wording to differ.
+- Changes/tradeoffs: none — each bullet is added after the section's
+  existing bullet, outside every canonical block.
 
 Plan Step 1. In `plugins/kenspc/skills/task-review/SKILL.md` § Prerequisites
 (line 33) and `plugins/kenspc/skills/task-implement/SKILL.md` § Prerequisites

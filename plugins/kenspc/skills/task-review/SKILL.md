@@ -34,6 +34,13 @@ covered; no file is silently skipped because it "looks routine".
 
 - A project with code to review.
 - Optionally, a task document for requirements context.
+- The skill runs in the top-level session — the one the user talks to, or a
+  headless `claude -p` session — and never inside a subagent. Why: a
+  subagent may not dispatch subagents of its own — a user rule may forbid
+  it, and Claude Code caps the nesting depth — so it would review all five
+  angles, fix, and verify in one context, which removes the independence
+  the five reviewers exist for; and it cannot ask the user at this skill's
+  gates.
 
 ## Arguments
 

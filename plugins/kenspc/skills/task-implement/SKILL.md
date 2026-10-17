@@ -46,6 +46,14 @@ just completed and tests passed — Phase 2 dispatches review unconditionally.
 ## Prerequisites
 
 - A task document with clearly defined tasks and status markers.
+- The skill runs in the top-level session — the one the user talks to, or a
+  headless `claude -p` session — and never inside a subagent. Why: a
+  subagent may not dispatch subagents of its own — a user rule may forbid
+  it, and Claude Code caps the nesting depth — so it would implement the
+  tasks, then review all five angles, fix, and verify in one context,
+  which removes the independence the implementer and the five reviewers
+  exist for; and it cannot ask the user at this skill's gates, the batch
+  confirmation among them.
 
 ## Arguments
 
