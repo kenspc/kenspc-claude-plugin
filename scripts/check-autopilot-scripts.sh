@@ -56,7 +56,9 @@
 # no owner backdated with touch -t, reclaimed; a nested call beside a live
 # holder at limit 1, run at once; the limit read from
 # KENSPC_AUTOPILOT_SUITE_LIMIT alone, entering with no holder and busy
-# beside one, and --limit taking precedence over it; a wrapped run killed
+# beside one, and --limit taking precedence over it; a mutex whose owner
+# pid is dead, reclaimed, and one whose owner runs, kept (busy, the mutex
+# left in place); a wrapped run killed
 # with SIGTERM, its holder file gone and its child sleep ended; and usage
 # errors (no --, no limit, limit 0, limit x, a regular file as the lock
 # directory, a ps that prints no start time) — and asserts each outcome. Every background process a fixture starts is waited
@@ -436,7 +438,7 @@ wait_holders() {
     return 1
 }
 
-# slot_checks <suite-slots script>: the wrapper's eleven fixtures, each with a
+# slot_checks <suite-slots script>: the wrapper's twelve fixtures, each with a
 # lock directory and a log of its own under $WORK.
 slot_checks() {
     local ss=$1 d log rc h1 h2 h3 s1 s2 cpid max n dead args
@@ -570,6 +572,27 @@ slot_checks() {
     rc=0
     KENSPC_AUTOPILOT_SUITE_LIMIT=1 KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 2 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
     [[ "$rc" -eq 0 ]] || fail "suite-slots 11: --limit 2 over the variable's 1 beside one holder exited $rc, expected 0"
+
+    # 12. A mutex whose owner pid is dead is reclaimed and the run
+    #     acquires; one whose owner is a live process is kept, and the run
+    #     is busy with the mutex still there and no holder readable.
+    d="$base/12-dead"
+    mkdir -p "$d/mutex"
+    chmod 700 "$d"
+    printf '%s\n' "$dead" > "$d/mutex/owner"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 2 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "suite-slots 12: a run behind a dead owner's mutex exited $rc, expected 0"
+    d="$base/12-live"
+    mkdir -p "$d/mutex"
+    chmod 700 "$d"
+    printf '%s\n' "$s2" > "$d/mutex/owner"
+    rc=0
+    KENSPC_SUITE_SLOTS_DIR="$d" "$SLOT_BASH" "$ss" run --limit 1 --wait 1 -- true 2>"$WORK/slot-err" || rc=$?
+    [[ "$rc" -eq 75 ]] || fail "suite-slots 12: a run behind a live owner's mutex exited $rc, expected 75"
+    [[ -d "$d/mutex" ]] || fail "suite-slots 12: a live owner's mutex was removed"
+    grep -qF '(none readable: the mutex stayed held)' "$WORK/slot-err" \
+        || fail "suite-slots 12: the busy line does not say the mutex stayed held [$(tr '\n' '|' < "$WORK/slot-err")]"
 
     stop_bg "$s1"
     stop_bg "$s2"
