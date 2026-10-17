@@ -1882,7 +1882,8 @@ on Windows.
   denies a recursive `rm` at a command position and a Write, Edit, or
   NotebookEdit outside the write roots, and, since 4.7.0, a Bash
   redirection whose target lies outside them and a `gh` or remote-git
-  call. A redirection's target is judged after a leading `~`, `$HOME`,
+  call, and, since 4.10.0, with `Suite limit:` set, a listed suite command
+  run without the suite-slot wrapper (see Suite slots). A redirection's target is judged after a leading `~`, `$HOME`,
   `${HOME}`, `$TMPDIR`, or `${TMPDIR}` is expanded and `.` and `..` are
   collapsed, a relative target against the call's working directory; a
   target holding any other expansion, a command substitution, or a glob,
