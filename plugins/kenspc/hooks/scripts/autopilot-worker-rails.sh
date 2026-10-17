@@ -7,8 +7,9 @@
 # which the subagents it dispatches never see. A plugin hook fires for a
 # subagent's tool call too, so this hook carries rails to every call a
 # worker's session makes, its subagents' included: the recursive rm, the
-# write outside the roots, and, since a worker reaches GitHub only through
-# the main session, gh and remote git.
+# write outside the roots, gh and remote git (a worker reaches GitHub only
+# through the main session), and, with a suite limit set, a listed suite
+# command run without the suite-slot wrapper.
 #
 # Marker and roots, both exported by the autopilot driver (run.sh, run.ps1)
 # to every worker it starts:
