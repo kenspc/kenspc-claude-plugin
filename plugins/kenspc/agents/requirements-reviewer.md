@@ -126,8 +126,9 @@ PREREQUISITES
    command at a time. A test file needs ports or a database when its own
    setup starts a server or host, opens a database connection, or binds a
    port, or when the project's instruction files name it an integration
-   test; when unsure, it counts as needing them. Run no such file: read its
-   result in the logs `suite-run.md` names, and list it under
+   test; when unsure, it counts as needing them. Run no such file, nor a
+   mutation check on a copy of one, which needs the same ports and
+   database: read its result in the logs `suite-run.md` names, and list it under
    `## Tests left for the verifier` in your report, one line per file with
    its path and what you wanted to learn from it. If RUN_DIR is given and
    `suite-run.md` is not in it, say so in your report and still run no full
