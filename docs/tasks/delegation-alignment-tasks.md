@@ -13,6 +13,14 @@ Related plan: `docs/plans/delegation-alignment.md`
 Edit the plugin's files in a session started without `--plugin-dir` (this
 repository's CLAUDE.md § Test the plugin locally).
 
+No sentence a task adds to a skill or an agent cites the global rule by its
+title or by a bold point title as its reason; each Why states what fails in
+its own words (the plan's Technical Approach: the plugin runs in projects
+whose user-level CLAUDE.md holds no such rule). Every task that edits a file
+under `plugins/kenspc/skills/` or `plugins/kenspc/agents/` leaves
+`grep -rn 'Delegating to Subagents\|Only the top-level session delegates\|A skill.s split wins\|Run in parallel only what shares nothing\|Ask for evidence, not a verdict\|Delegate in parallel' plugins/kenspc/skills plugins/kenspc/agents`
+printing no line (it prints none at `20000bf`).
+
 Dependency note: Task 4 depends on Task 3; Task 6 depends on Task 3; Task 7
 depends on Task 6; Task 10 depends on Task 9; Task 13 depends on Tasks 1–12
 (`Depends on: Task 1-12`) and runs after them.
@@ -31,7 +39,8 @@ subagent, with the plan's Why stated in the skill's own words (a subagent may
 not dispatch subagents of its own — a user rule may forbid it, and Claude Code
 caps the nesting depth — so it would review all five angles, fix, and verify in
 one context, losing the reviewers' independence; and it cannot ask the user at
-the skill's gates). The bullets sit outside every canonical block.
+the skill's gates). The bullets sit outside every canonical block, so the two
+may differ in wording where the skills differ.
 
 Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 `plugins/kenspc/skills/task-implement/SKILL.md`.
@@ -82,8 +91,9 @@ Plan Step 3, agent text (the guard is Task 4). In the five reviewers
   integration test; when unsure, it counts as needing them; run no such file,
   read its result in `suite-run.md`'s logs, and list it under
   `## Tests left for the verifier`, one line per file with the path and what
-  you wanted to learn from it — and the plan's Why (five full suites run at
-  once have exhausted a machine's local ports; such a file run by several
+  you wanted to learn from it — and the plan's Why (five reviewers run at
+  once; five full suites run at once have exhausted a machine's local ports,
+  failing on connection errors that read as findings; such a file run by several
   reviewers at once contends for the same ports and database;
   regression-verifier runs after code-fixer, alone). Without RUN_DIR the item
   is unchanged.
@@ -124,12 +134,16 @@ Depends on: Task 3
 Plan Step 3, guard. In `scripts/check-run-contract.sh` check 5, add the literal
 `## Tests left for the verifier`, required in the five reviewers and
 `regression-verifier.md`, each file that lacks it reported. Its self-test
-renames the literal in each of the six in turn: the self-test copies seven
-target files today, of the reviewers only `requirements-reviewer.md`, so it
-gains `edge-case-reviewer.md`, `quality-reviewer.md`, `bug-reviewer.md`, and
-`test-reviewer.md`, and its fixture-stale check requires the literal in all
-six. Update the guard's header comment (the file list, the copied-file count,
-and the mutation count, "thirty-seven" today) to match.
+renames the literal in each of the six in turn, every occurrence, through the
+existing `replace_all_literal` helper (as the `suite-run.md` and
+`schema-c-1.md` renames do), since the literal occurs on several lines of each
+reviewer: the self-test copies seven target files today, of the reviewers only
+`requirements-reviewer.md`, so it gains `edge-case-reviewer.md`,
+`quality-reviewer.md`, `bug-reviewer.md`, and `test-reviewer.md` (eleven
+copied files), and its fixture-stale check requires the literal in all six.
+Update the guard's header comment to match: the file list, the copied-file
+count (seven to eleven), and the mutation count ("thirty-seven" today,
+forty-three with the six renames).
 
 Files: `scripts/check-run-contract.sh`.
 
@@ -137,8 +151,11 @@ Files: `scripts/check-run-contract.sh`.
 - `bash scripts/check-run-contract.sh` exits 0.
 - `bash scripts/check-run-contract.sh --self-test` exits 0, its output showing
   each of the six renames turning the guard red and the unmutated copy green.
-- Renaming the literal by hand in one reviewer of a scratch copy makes main
-  mode exit non-zero, naming that file.
+- In a copy of `scripts/check-run-contract.sh` and its target files laid out
+  as in the repository under `RUN_DIR/scratch/task-implementer/` (the guard
+  reads the files from its own script directory's parent), renaming the
+  literal in one reviewer makes main mode exit 1 with a `MISSING` line naming
+  that file; no tracked file is mutated.
 
 ---
 
@@ -179,19 +196,27 @@ Plan Step 5.
   `.kenspc/` paths, Task 3's listed files) follows the evidence after `; `; the
   worked example shows these forms; the Detail prose stays for non-PASS rows.
   Why, in the agent's words: a `—` cell says a check passed without saying
-  which command ran or where its output is.
+  which command ran or where its output is, so the reader can confirm it only
+  by running it again.
 - `plugins/kenspc/agents/code-fixer.md` reply list (line 525): add the
   always-present line `Final checks: <command> → exit <n>, log <path>[; …]`
-  (logs under `RUN_DIR/scratch/code-fixer/`), or
-  `Final checks: none run (no fix applied)`, after the statistics line and
-  every conditional line the list places after it, before the Per-angle
-  Results table; not written to `schema-b.md`.
+  for the final build, test, and lint run (logs under
+  `RUN_DIR/scratch/code-fixer/`), or, in a run with no fix applied that made
+  no final run, `Final checks: none run (no fix applied)`; it goes after the
+  statistics line and after every conditional line the list places after it
+  (the uncommitted line, `Doc-sync documents:`, `Ruled IDs in no report:`,
+  `Rulings outside the grammar:`), before the Per-angle Results table. It is
+  not written to `schema-b.md`, whose last line stays the statistics line, so
+  `check-run-contract.sh`'s recount is unchanged.
 - `plugins/kenspc/agents/task-implementer.md` Schema D (line 307): add a
-  `## Checks run` section after `## Post-implementation notes`, always
-  rendered — the last build, test, and lint commands the dispatch ran, each
-  with its exit code, the task after which it ran, and its log path under
-  `RUN_DIR/scratch/task-implementer/`, or `none run`; add it to DONE CRITERIA
-  (line 86) beside the `## Decisions needing a home` bullet.
+  `## Checks run` section after `## Post-implementation notes` (the last
+  section today), always rendered — the last build, test, and lint commands
+  the dispatch ran, each with its exit code, the task after which it ran, and
+  its log path under `RUN_DIR/scratch/task-implementer/`, or `none run` when
+  the dispatch ran none. It is not a roll-up of the per-task notes, so the
+  "four prose sections below" sentence after the `## Tasks` table (line 319)
+  stays unchanged and true. Add the section to DONE CRITERIA (line 86) beside
+  the `## Decisions needing a home` bullet.
 - `plugins/kenspc/skills/task-implement/SKILL.md` Step 5 (line 284): render
   `## Checks run` verbatim after the Post-implementation notes; after slices,
   keep the last slice's section (an exception to the merge rule, since the
@@ -226,7 +251,8 @@ orchestrating session confirms a row by reading the log it names and runs no
 build, test, or lint of its own; a row 2–4 that carries neither an exit code
 nor one of Task 6's no-command forms (the `no … command in the project` text,
 row 3's SPOT-CHECK fallback) keeps the verdict from PASS — PARTIAL, unless a
-FAIL condition holds. Why: regression-verifier is the skill's confirmation
+FAIL condition holds (the form the ruled-row bullets outside the block use).
+Why: regression-verifier is the skill's confirmation
 step; a third full run adds load and no independence, and a row with no
 evidence is a verdict nobody can check without re-running it.
 
@@ -278,19 +304,29 @@ Plan Steps 8 and 9, in `plugins/kenspc/skills/autopilot/SKILL.md`:
   and may dispatch subagents, each with `run_in_background: false`; a subagent
   you dispatch dispatches none and starts no `claude -p`; it goes into every
   subagent prompt and every CUSTOM_INSTRUCTIONS with the rest of § 3 — with the
-  plan's Why (a background subagent is stopped when a headless session exits; a
-  subagent that nests or starts its own headless session leaves the rails text
-  one level behind, and a `claude -p` it starts is a session of its own that
-  the nesting limit does not reach — a reading of the 2.1.301 code, not
-  measured). The worker keeps launching nested sessions where a task block
+  plan's Why (a background subagent is stopped when a headless session exits,
+  and its result never reaches you; a subagent that nests or starts its own
+  headless session leaves the rails text one level behind, and a `claude -p`
+  it starts is a session of its own that the nesting limit does not reach —
+  depth is computed per process in the 2.1.301 binary, a reading of the code,
+  not measured). The worker keeps launching nested sessions where a task block
   tells it to (plugin-mode S4). The preamble's first line ("headless
-  sub-session") is unchanged.
+  sub-session") is unchanged, since the skill's trigger description matches
+  it. The rail is text only: the rails hook does not tell a worker's call from
+  its subagent's, so `hooks/scripts/autopilot-worker-rails.sh` is not changed
+  (plan Risks).
 
 Files: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 **Acceptance criteria:**
-- The overview holds the rule with its Why; § 3 holds the rail with its Why;
-  the preamble's first line is unchanged.
+- The overview paragraph (line 32) states that the main session dispatches no
+  Agent subagent and that its own checks run in its own Bash, with a `Why:`
+  naming the four reasons above.
+- The preamble template's § 3 holds the rail, including the words
+  `run_in_background: false` and the phrase "starts no `claude -p`", with its
+  `Why:`.
+- `git diff` over the task's commit shows no change to the preamble's first
+  line.
 - `bash scripts/check-no-model-names.sh` and
   `bash scripts/check-autopilot-rails-hook.sh` exit 0.
 
@@ -323,8 +359,18 @@ Plan Steps 10 and 11, in `plugins/kenspc/skills/autopilot/SKILL.md`:
 Files: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 **Acceptance criteria:**
-- The S4, S5, and S6 blocks, line 1873's description, the reviewer report's
-  field, and the user report's list read as above.
+- In `plugins/kenspc/skills/autopilot/SKILL.md`,
+  `grep -c 'Then run each case yourself, in the order listed'` and
+  `grep -c "its two count lines and each command's exit code go in your reply"`
+  each print at least 1 (0 at `20000bf`), and the S4 sentence carries its
+  `Why:`.
+- The S5 block's reply line per fixed defect names `<command> → exit <n>`
+  for each check run for it, with no log path.
+- Phase 4's description of S6 (line 1873), the S6 block's reply line, and the
+  reviewer report's `- Byte-identity / guards / counts:` field each name the
+  pre-flight commands' exit codes beside the two count lines; the user
+  report's "what needs the user" list names a non-zero pre-flight exit code
+  as a pre-flight failure.
 - `bash scripts/check-autopilot-rails-hook.sh` exits 0.
 
 ---
@@ -457,4 +503,8 @@ modify no document outside the list.
   `grep -n 'Detail is .—., so the table cannot show' docs/release-checklist.md`
   prints nothing; `grep -ci 'machine-wide' docs/roadmap.md` is at least 1.
 - `bash scripts/check-all.sh` and `bash scripts/check-all.sh --self-test`
-  exit 0, with `guards run:` and `self-tests run:` unchanged from `20000bf`.
+  exit 0, with `guards run: 13` and `self-tests run: 12`, the counts at
+  `20000bf` (no guard is added).
+- `claude plugin validate --strict .` and
+  `claude plugin validate --strict ./plugins/kenspc` exit 0 (the plan's
+  Testing Strategy, run at the end).
