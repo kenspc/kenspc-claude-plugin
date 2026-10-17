@@ -19,6 +19,13 @@ This repository has no unit-test framework: its tests are
 `claude plugin validate --strict .` and
 `claude plugin validate --strict ./plugins/kenspc`.
 
+Text written into the plugin — the wrapper's and the hook's headers, the
+deny reason, the SKILL.md — names no project, and its Why states evidence
+in its own words rather than citing a dry-run record or a file outside the
+plugin (the plan's Objective; CLAUDE.md, Writing Rules for Skill Content).
+The plan's Background cites another repository's prompt files for the
+measured port limit; those paths stay out of the plugin.
+
 All commits stay on the local `main`. Nothing is pushed, tagged, or
 released, and `plugins/kenspc/.claude-plugin/plugin.json` keeps `4.9.0`:
 the version bump is part of the release preparation, outside this document.
@@ -304,7 +311,11 @@ text and Step 5 list, naming the real interfaces Tasks 1, 3, and 4 built:
 - § The reviewer report: the `Suite slots:` line in the template and its
   description among the field descriptions below it.
 
-Each new rule carries its Why in the skill's own words. A sentence for a
+Each new rule carries its Why in the skill's own words: evidence is stated
+as what failed and on which command (more than about two runs of one
+integration suite at once exhausted a machine's local ports), not cited as
+a dry-run record or a path outside the plugin, and no project is named (the
+plan's Objective; CLAUDE.md, Writing Rules for Skill Content). A sentence for a
 session that cannot ask opens with the skill's fixed wording, "In a session
 that cannot ask (a system reminder to work without stopping), …".
 
