@@ -114,6 +114,11 @@ one).
    loaded into this session, and no task text the implementer will carry
    into a code artifact or a durable document is in a language other than
    that artifact's own. A preference none of them states is not a finding.
+   A user-level or project rule on delegating work to subagents governs the
+   session that dispatches agents, not a task's steps: a task step that runs
+   a suite or a check is not a departure from it, and is not rewritten to
+   delegate. Why: task-implementer has no Agent tool, so a step rewritten to
+   delegate cannot be carried out.
    Failure modes:
    (1) Written-rule departure: a task instructs a step, tool, command, commit
        form, or file placement that one of them forbids or prescribes

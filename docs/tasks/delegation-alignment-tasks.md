@@ -353,7 +353,15 @@ Files: `plugins/kenspc/skills/task-review/SKILL.md`,
 
 ### Task 8: task-document-reviewer does not rewrite task steps to delegate
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: placed directly after the Passing paragraph and before the
+  failure modes, so it scopes failure mode (1) before the reviewer reads it;
+  the Why's premise was checked against task-implementer's frontmatter
+  (`tools: Read, Write, Edit, Bash, Grep, Glob`, no Agent).
+- Changes/tradeoffs: beyond the spec's wording, the sentence adds "and is
+  not rewritten to delegate", naming the fix the reviewer must not make.
 
 Plan Step 7. In `plugins/kenspc/agents/task-document-reviewer.md` angle 3
 (line 111), after the Passing paragraph, add: a user-level or project rule on
