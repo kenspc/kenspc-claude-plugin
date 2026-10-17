@@ -552,6 +552,17 @@ After writing the file, reply with only:
   each entry quoted as the file has it; it is not written to
   `schema-b.md`. Why: such an entry was not carried out, and only this
   line tells the orchestrator and the reader so,
+- always, one line after every line above,
+  `Final checks: <command> → exit <n>, log <path>[; <command> → exit <n>, log <path>…]`
+  for the final build, test, and lint run after the last fix (PROCESSING
+  APPROACH), each command's output in a log under `RUN_DIR/scratch/code-fixer/`
+  and its path written relative to RUN_DIR, a check the project gives no
+  command for written `no <build|test|lint> command in the project` in its
+  place; or, in a run with no fix applied that made no final run,
+  `Final checks: none run (no fix applied)`. It is not written to
+  `schema-b.md`, whose last line stays the statistics line. Why: a final
+  run reported without its command and exit code is a claim the
+  orchestrator and the user can confirm only by running it again,
 - the Per-angle Results table,
 - the Fixes Applied header with its HIGH and MEDIUM rows,
 - the Deferred Issues paragraphs for those rows,

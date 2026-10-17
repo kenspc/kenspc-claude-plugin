@@ -240,7 +240,25 @@ Files: the five reviewer files under `plugins/kenspc/agents/`.
 
 ### Task 6: Checks report their command, exit code, and log
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: every log path in the three forms (Schema C rows 2–4,
+  `Final checks:`, `## Checks run`) is written relative to RUN_DIR
+  (`scratch/regression-verifier/1/build.log`), which keeps the cells short
+  (the plan's "wider Schema C cells" risk) while the orchestrator, which
+  holds RUN_DIR, can still open each log. A check with no project command
+  keeps PASS in Schema C (rows 2 and 4 stay PASS/FAIL only, as before).
+  Rows 1 and 5 keep `—` on PASS, since they run no command.
+- Changes/tradeoffs: beyond the spec — regression-verifier's check 3 now
+  says to write each command's output to a log in the current attempt's
+  scratch directory, and a listed file's own run names its log too;
+  code-fixer's `Final checks:` line writes `no <build|test|lint> command in
+  the project` for a check the project gives no command for, matching
+  Schema C's form; task-implementer's verify bullet in PROCESSING APPROACH
+  says where the logs go. task-implement Step 5's merge-rule sentence
+  points at the `## Checks run` exception. The "four prose sections below"
+  sentence is unchanged; the new section says it is not one of them.
 
 Depends on: Task 3
 

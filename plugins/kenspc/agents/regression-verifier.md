@@ -216,13 +216,16 @@ VERIFICATION CHECKS
 3. Build / test / lint: run the project's build, test, and lint commands; record
    PASS or FAIL. Run each of the three as the project configures it
    (`package.json` scripts, the project's instruction files, the solution or
-   `pytest` config), with no path filter or exclude added. After the full
+   `pytest` config), with no path filter or exclude added. Write each
+   command's output to a log under `RUN_DIR/scratch/regression-verifier/`,
+   in the current attempt's numbered directory; rows 2–4 name each command,
+   its exit code, and its log (OUTPUT FORMAT). After the full
    test command, read each report's `## Tests left for the verifier` and
    run, one at a time, each listed file the full run did not collect; a file
    the full run collected is covered by it. When the runner gives no list of
    collected files, or the list command errors, the file is run. Row 3's
    Detail names each listed file and how it was settled — `covered by the
-   full run`, or its own command and exit code — and a listed file that
+   full run`, or its own command, exit code, and log — and a listed file that
    fails makes row 3 FAIL. A section that reads `none`, or a report without
    the section, lists nothing. Why: the five reviewers ran at once and left
    these files unrun, since several runs of a file that starts a server or
@@ -341,14 +344,27 @@ section for each non-PASS row. Result values: PASS / FAIL for all checks;
 SPOT-CHECK additionally permitted for check 3 ("Tests pass") when the
 project has no test suite (see FALLBACK FOR NO-TEST-SUITE PROJECTS).
 
+Rows 2–4 carry their evidence in the Detail cell in every Result state, PASS
+included: `<command> → exit <n>, log <path>` for each command the row ran,
+several joined by `; `, the path relative to RUN_DIR
+(`scratch/regression-verifier/1/build.log`). A check the project gives no
+command for keeps PASS and reads `no build command in the project` or
+`no lint command in the project`; row 3's SPOT-CHECK keeps its fallback text
+below. Whatever else the row's Detail carries — the cause of a failure, row
+3's skipped tests, the collected `.kenspc/` paths, and the files the
+reviewers left for you (check 3) — follows the evidence after `; `. Rows 1
+and 5 read `—` when they pass. Why: a `—` cell says a check passed without
+saying which command ran or where its output is, so the reader can confirm
+it only by running it again.
+
 ## Verification
 
 | # | Check                            | Result     | Detail                                                   |
 |---|----------------------------------|------------|----------------------------------------------------------|
 | 1 | All accountability rows fixed    | PASS       | —                                                        |
-| 2 | Build succeeds                   | PASS       | —                                                        |
-| 3 | Tests pass                       | PASS       | —                                                        |
-| 4 | Lint passes                      | PASS       | —                                                        |
+| 2 | Build succeeds                   | PASS       | `npm run build` → exit 0, log scratch/regression-verifier/1/build.log |
+| 3 | Tests pass                       | PASS       | `npm test` → exit 0, log scratch/regression-verifier/1/test.log; `test/orders.integration.test.ts` (angle-4.md): covered by the full run |
+| 4 | Lint passes                      | PASS       | no lint command in the project                           |
 | 5 | No regressions in non-fix files  | PASS       | —                                                        |
 
 Row 3 alternate (no-test-suite project — see FALLBACK FOR NO-TEST-SUITE

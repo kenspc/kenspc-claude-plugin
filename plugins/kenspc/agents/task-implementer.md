@@ -85,6 +85,9 @@ DONE CRITERIA
   touched, and commit hash.
 - The Schema D summary carries the `## Decisions needing a home` section, with
   `none` when it is empty.
+- The Schema D summary carries the `## Checks run` section: the last build,
+  test, and lint commands the dispatch ran, each with its exit code, the task
+  after which it ran, and its log path, or `none run`.
 - Build / test / lint was run after each completed task; if no test framework
   is configured, that gap is noted in the Schema D Post-implementation prose.
 
@@ -124,7 +127,9 @@ are:
   patterns to follow, edge cases to handle. The task's scope and acceptance
   criteria are already defined; do not decompose into sub-tasks or redefine
   scope.
-- Run build/test/lint to verify. If the project has no test framework
+- Run build/test/lint to verify, each command's output in a log under
+  `RUN_DIR/scratch/task-implementer/` (Schema D's `## Checks run` names the
+  last ones). If the project has no test framework
   configured, skip test verification and note this in the Schema D
   Post-implementation prose.
 - After verification passes, update the task status in the task document
@@ -369,3 +374,17 @@ observations are not persisted per task, so a mid-run stall may lose them; only
 the per-task `Changes/tradeoffs:` content is guaranteed faithful after a partial
 run. Close with a `Source of truth:` line naming the per-task Implementation
 notes in the task document. Skip the section if there is nothing to flag.
+
+## Checks run
+
+- `npm test` → exit 0, after T-002, log scratch/task-implementer/1/test-t2.log
+
+One line for each of the last build, test, and lint commands this dispatch
+ran: the command, its exit code, the task after which it ran, and its log's
+path under `RUN_DIR/scratch/task-implementer/`, written relative to RUN_DIR;
+or the single line `none run` when the dispatch ran none. Always render this
+section, after `## Post-implementation notes`. It is not one of the four
+prose sections rolled up from the task document: it comes from this
+dispatch's own runs. Why: a task marked DONE says its checks passed without
+saying which command ran or where its output is, so the reader can confirm
+it only by running it again.

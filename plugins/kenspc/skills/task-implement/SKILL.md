@@ -294,7 +294,8 @@ value is this one constant.
 Render the implementer's Schema D table verbatim — after slices, one
 Schema D merged from them: their rows in one table in document order, and
 each prose section the slices' entries joined under one heading
-(`## Decisions needing a home` reads `none` only when every slice's does):
+(`## Decisions needing a home` reads `none` only when every slice's does;
+`## Checks run` is the exception below):
 
 | # | Task ID | Status   | Files Touched | Commit  |
 |---|---------|----------|---------------|---------|
@@ -306,6 +307,12 @@ a home, and Post-implementation notes verbatim from the agent's output. These
 prose sections are roll-ups of the per-task `**Implementation notes:**` blocks
 now persisted in the task document; the orchestrator still renders them
 verbatim from the agent's output rather than re-reading the document.
+
+After the Post-implementation notes, render the agent's `## Checks run`
+section verbatim. After slices, render the last slice's section alone
+rather than joining the slices' entries. Why: the last slice's checks ran
+on the code every slice built, while an earlier slice's describe code that
+later slices changed.
 
 Then present a brief progress update to the user:
 
