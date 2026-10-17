@@ -117,10 +117,22 @@ suite-slots.sh run [--limit <n>] [--wait <seconds>] -- <command> [<arg>…]
 - **A holder file.** Each holder file records the wrapper's pid and its
   start time (`ps -o lstart= -p <pid>`), the command's pid and start time,
   the epoch second it was taken, the cwd, and the command's first 120
-  characters.
+  characters. The layout, which step 2's fixtures write by hand: the file
+  `<dir>/holder-<wrapper pid>`, one `key=value` line per field, in this
+  order — `wrapper_pid`, `wrapper_start`, `command_pid`, `command_start`,
+  `taken`, `cwd`, `command` — each value running to the end of its line.
+  The wrapper writes the file under the mutex with the two command fields
+  empty, starts the command, and then rewrites it with them filled in.
+  Each write goes to `<dir>/.tmp-<wrapper pid>` first and is renamed over
+  the holder file with `mv`, so a counting wrapper never reads a
+  half-written file.
 - **Stale holders.** A holder is stale when neither of its two pids is
-  alive with the recorded start time. A stale holder is moved aside by the
-  counting wrapper, under the mutex, and not counted. Why both pids: a
+  alive with the recorded start time; a holder whose command fields are
+  still empty is judged by its wrapper pid alone. A stale holder is moved
+  aside by the counting wrapper, under the mutex, and not counted: renamed
+  to `<dir>/reclaimed-<its file name>`, which the count's `holder-*`
+  pattern does not match, and kept as the evidence behind the log's
+  `reclaimed` line. Why both pids: a
   wrapper killed with SIGKILL runs no trap and leaves the command running,
   and that command still uses the ports. Why the start time: a pid reused
   after a reboot or a long run would otherwise keep a dead holder alive.
@@ -228,6 +240,10 @@ command's next words in order, whole word by whole word.
 
 - `bash <wrapper> run -- dotnet test` passes, since there `dotnet` is an
   argument of `bash` and not at a command position.
+- The prefix's first word is compared with the command word's base name,
+  as (a) and (e) compare `rm`, `gh`, and `git`, so
+  `/usr/local/share/dotnet/dotnet test` is denied too; the prefix's later
+  words are compared as written.
 - Quoted text and heredoc bodies stay arguments, as they are for (a) and
   (e).
 
@@ -246,8 +262,9 @@ It names no `.trash`. Like every hook denial, it is not a breach (preamble
 Why the hook: ruling 1. A worker's subagents never see the preamble. The
 hook fires for a subagent's call too, and the rails have reached
 subagents before only through it. Known misses go into the hook's header:
-a listed command reached through a script, `bash -c`, `make`, or an
-alias.
+a listed command reached through a script, `bash -c`, `make`, `eval`, a
+variable, or an alias, or after a wrapper the scan does not skip
+(`timeout`, `nice`), the misses (a) already lists.
 
 ### The SKILL.md text
 
@@ -290,7 +307,8 @@ alias.
 - **A long wait.** When busy returns for one command have spanned 30
   minutes, the worker sends the main session a `question <tag>:` quoting
   the last busy line. The main session rules: wait on, or stop the run
-  naming the holders. The question goes into the preamble's § 6
+  naming the holders (how it chooses: Open Questions 2). The question
+  goes into the preamble's § 6
   `Suite limit:` line. Why 30 minutes: it matches the worker's answer wait
   in § 1. A hung holder would otherwise hold the worker until its cap,
   with nothing in front of the main session but a quiet timeline.
@@ -338,7 +356,11 @@ scripts in that directory are.
 
 **What.** Extend `scripts/check-autopilot-scripts.sh` to cover
 `suite-slots.sh`, with `KENSPC_SUITE_SLOTS_DIR` pointing into the guard's
-own `mktemp -d` directory.
+own `mktemp -d` directory. Update its header: four helper scripts, the
+wrapper's fixtures in the fixture list, and eleven mutants in the
+`--self-test` paragraph. Every background holder a fixture starts is
+waited for or killed, by its pid, before the fixture ends, so no `sleep`
+outlives the guard.
 
 Fixtures, each asserting the exit code and, where named, the stderr line
 or the log line:
@@ -406,14 +428,20 @@ cleanup as its only recursive `rm`; git configuration masked).
 the marker, as § The driver specifies, on a fresh launch and on a resume.
 Refuse a non-empty `AUTOPILOT_SUITE_WRAPPER` that is not an absolute
 path, as `AUTOPILOT_WORKSPACE` is refused. Update the header's Environment
-and Exported lists with the Why.
+and Exported lists with the Why, and the header's paragraph on a caller's
+own stub, which today names the two exported variables a passing stub
+echoes: it names the six.
 
 Extend `--self-test`:
 
-- The stub echoes the four variables to stderr.
-- One launch with the inputs set shows each value.
+- Both built-in stubs echo the four variables to stderr.
+- One launch with the inputs set shows each value, the log variable as
+  `<logs>/selftest-suite-slots.log`.
 - One launch with the inputs unset, while the caller's environment holds
   stale `KENSPC_AUTOPILOT_SUITE_*` values, shows each variable empty.
+- A launch with `AUTOPILOT_SUITE_WRAPPER` set to a relative path returns
+  2, writes no `.session`, and names the variable, as the
+  `AUTOPILOT_WORKSPACE` refusal does.
 
 Mirror all of it in `run.ps1`.
 
@@ -447,7 +475,7 @@ wrapper path:
 
 - **Denied:** `dotnet test`, `dotnet test --filter X`, `cd a && dotnet test`,
   `sudo dotnet test`, `time pnpm test`, `echo x; pnpm test`,
-  `$(dotnet test)`.
+  `$(dotnet test)`, `/usr/local/share/dotnet/dotnet test`.
 - **Allowed:** `bash /w/suite-slots.sh run -- dotnet test`,
   `echo "dotnet test"`, `grep 'dotnet test' f`, `dotnet build`,
   `dotnet testx`, `pnpm install`, and a `dotnet test` inside a heredoc body.
@@ -475,13 +503,18 @@ text lists:
 - the field table and the field's grammar paragraph;
 - the settings stop;
 - the settings line template;
-- the copy paragraph;
+- the copy paragraph, and Phase 0's Inputs and Constraints, which count
+  "the three scripts" and "the three script copies";
+- the workspace tree, for `_prompts/<batch>-suite-slots.sh` and
+  `_logs/<batch>-suite-slots.log`;
 - the launch bullet, for the three inputs;
 - preamble § 3, for the lock directory;
 - preamble § 6, for the `Suite limit:` line and when it is omitted;
 - both S4 task blocks;
 - the corrected-case paragraph;
-- the long-wait question;
+- the long-wait question, and the main session's ruling on it (Open
+  Questions 2);
+- § The stop conditions, for the stop that ruling can end in;
 - § The driver;
 - the reviewer report template, for the `Suite slots:` line.
 
@@ -557,11 +590,15 @@ steps 1–6.
 
 - `plugins/kenspc/README.md` — § Autopilot: the `## Autopilot` field
   table, the driver's environment and exports, and the rails hook
-  paragraph (check (f) and its route); a sentence on the machine-wide lock
-  and the `/tmp/kenspc-suite-slots` directory. Steps 1, 3, 4, 5.
+  paragraph (check (f) and its route); the workspace tree and The drivers
+  paragraph, which name "the three scripts" copied per batch and the
+  files under `_logs/`; the reviewer report's `Suite slots:` line; a
+  sentence on the machine-wide lock and the `/tmp/kenspc-suite-slots`
+  directory, naming native Windows as unchecked (Risks). Steps 1, 3, 4, 5.
 - `CLAUDE.md`:
   - the Plugin Directory Layout tree and the File Structure `scripts/`
-    bullet, where "three helper scripts" becomes four (step 1);
+    bullet, where "three helper scripts" becomes four and
+    "`check-no-model-names.sh` scans all five" becomes six (step 1);
   - the hooks paragraph, for check (f) and the new exported variables
     (steps 3, 4);
   - the Sessions-not-agents paragraph, for the lock across batches
@@ -573,8 +610,14 @@ steps 1–6.
 - `plugins/kenspc/CHANGELOG.md` — an entry under the release this ships
   in (Open Questions 1). Steps 1–5.
 - `docs/roadmap.md` — item 32 leaves the file, since it ships. Step 7.
-- `docs/release-checklist.md` — row 11's driver self-test sentences, which
-  list what the self-test proves: the suite variables are added. Step 3.
+- `docs/release-checklist.md` — N/A for this document: no guard file is
+  added, so `guards run: 13` and `self-tests run: 12` hold (step 2); row
+  11's driver self-test sentences name only the pass line and the failing
+  stub's `.exit` red case, which step 3 leaves true, since a stub that
+  exits 3 fails the first launch's `.exit` check before any variable is
+  read; row 14's live hook probes stay true with check (f) inert when
+  `KENSPC_AUTOPILOT_SUITE_COMMANDS` is empty; and the smoke run leaves the
+  field out by the Testing Strategy's choice.
 - `README.md` — N/A for this document: its autopilot summary row names no
   driver variable or hook check, and no skill's summary changes.
 
@@ -605,7 +648,8 @@ steps 1–6.
   stop (§ The SKILL.md text, A long wait). The reviewer report's
   `Suite slots:` line shows the longest wait.
 - **A command the hook cannot see.** A listed command reached through a
-  script, `make`, or `bash -c` runs unwrapped. Mitigation: the preamble
+  script, `make`, `bash -c`, or another miss § The hook's new check lists
+  runs unwrapped. Mitigation: the preamble
   text binds the worker; S4's case files are wrapped by rule; the spec
   author lists the outer command a batch actually types (`pnpm test`, a
   `scripts/test.sh`). The miss is in the hook's header.
@@ -658,3 +702,13 @@ steps 1–6.
    names the work as planned separately, and 4.9.0's CHANGELOG
    introduction says "No … guard, or `## Autopilot` field", which folding
    this in would make false.
+2. The main session's ruling on the long-wait question (§ The SKILL.md
+   text, A long wait) has no rule yet. The plan says it rules "wait on,
+   or stop the run naming the holders", but not what tells the two apart
+   (a holder's age, whether its pids are a batch's live worker, the
+   holder's cwd), what follows "wait on" (the next question after a
+   further 30 minutes, or none), or where the stop is listed in § The
+   stop conditions — a numbered condition 12, or an eighth stop stated at
+   its own step. Step 5 writes the ruling and the stop as this answer
+   settles them. Found in review; the order in § How the main session
+   rules may settle the first part, the rest is a design choice.
