@@ -37,8 +37,7 @@ its number.
      `globals`, so the baseline sub-check can pass vacuously;
    - no release sub-check tests the numbered-attempt layout;
    - CLAUDE.md's `--plugin-dir` editing rule has no CHANGELOG line.
-   LOW: CLAUDE.md's run-dir paragraph omits the numbered attempts and the
-   rename condition; smoke rows 6 and 7 omit the delete bullet; the baseline
+   LOW: smoke rows 6 and 7 omit the delete bullet; the baseline
    sub-check is silent on a retried baseline; the CHANGELOG's "check 4" can
    read as Schema C row 4; the worker agents' runner config sits outside
    the attempt directory.
@@ -435,26 +434,23 @@ its number.
     directory, beside the ones the guard keeps for
     `claude-plugins-official` and the `instructionFiles` values, would let
     the skill cite it as the documentation writes it.
-27. The "session that cannot ask" sentence in the four skills that predate
-    it. The writing rule (CLAUDE.md § Writing Rules for Skill Content) has
-    every question a skill stops on state what a session that cannot ask
-    does instead; task-implement, task-review, generate-task, and
-    generate-guide carry no such sentence. Each stop needs its outcome
-    decided first, so this is a plan, not a wording pass:
-    - task-implement's batch confirmation — proceed, or end with the plan
-      it would have confirmed;
-    - a missing argument or an unreadable path in task-review,
-      generate-task, and generate-guide, and task-review's shallow-clone
-      stop that asks for a range;
-    - generate-task's task-list confirmation and its conflict check
-      (overwrite, create alongside, or cancel), and generate-guide's
-      overwrite-or-new prompt.
-    An autopilot worker is unaffected: its preamble sends such a point to
-    the main session, so the gap is a headless run of one of these skills
-    outside the autopilot. The October 2026 audit that found it also
-    reported stops without the sentence in generate-brief and
-    generate-plan, outside the ones those two skills already cover; they
-    were not checked line by line and are confirmed in the same plan.
+27. The "session that cannot ask" sentence in generate-brief and
+    generate-plan. The writing rule (AGENTS.md § Editing skill and agent
+    content) has every question a skill stops on state what a session that
+    cannot ask does instead. 4.10.2 added it to every stop this item named
+    in task-implement, task-review, generate-task, and generate-guide.
+    Still without it, found by a search for the two skills' questions:
+    - the question each asks when it is given no argument — generate-brief
+      what idea to think through, generate-plan what to plan;
+    - generate-plan's Level 4 question about which module to plan first.
+      generate-brief's matching question falls under its Discovery Mode
+      Detection, the older form of the same branch.
+    Each stop needs its outcome decided first, so this is a plan, not a
+    wording pass. generate-plan's discovery dialogue for an input that is
+    not a brief was not checked line by line and is confirmed in the same
+    plan. An autopilot worker is unaffected: its preamble sends such a
+    point to the main session, so the gap is a headless run of one of these
+    skills outside the autopilot.
 28. S3b on a condition in repo mode. The autopilot keeps the
     implementation, the standalone review, and the acceptance in separate
     sessions for two reasons: a session that reviews its own work reads its
@@ -518,9 +514,7 @@ its number.
       guard still passes and the check goes silent. The suggested remedy:
       check 5 of `check-run-contract.sh` requires both in `code-fixer.md`
       and `regression-verifier.md`, with a self-test mutant per carrier, and
-      CLAUDE.md's description of check 5 moves with it.
-    - CLAUDE.md's second-round paragraph does not name the take-back (R6,
-      LOW).
+      the guard's header names them with check 5's other literals.
     - The shared suite run's own writes into the tree go unreported (E13,
       LOW): the tree is recorded after the suite run, so a suite that writes
       a tracked file is not named anywhere.

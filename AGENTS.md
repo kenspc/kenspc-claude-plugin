@@ -186,7 +186,7 @@ passed every mechanical check. -->
 ### Guard scripts
 
 Guards run under the bash 3.2 that macOS ships as well as newer bash, so they
-avoid bash 4 features such as `declare -A`. A guard that escapes text in awk
+avoid bash 4 features such as associative arrays. A guard that escapes text in awk
 does it character by character, not through `gsub`: POSIX reads two
 backslashes in a `gsub` replacement as one, while the awk macOS ships writes
 both.
