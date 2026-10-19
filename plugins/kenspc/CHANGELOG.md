@@ -9,13 +9,17 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.10.3 — unreleased
+## 4.10.3 — 2026-10-19
 
 The repository's instruction files are reorganized: the maintainer
 contract moves from a 1304-line CLAUDE.md into AGENTS.md, which CLAUDE.md
 now imports, and the paragraphs that restated skill, agent, and guard
 behavior already written in those files, the plugin README, or this
-CHANGELOG are removed. No skill or agent behavior changes.
+CHANGELOG are removed. A new repository guard holds AGENTS.md to a
+200-line budget with the instruction lint from the kenspc-dev-setup
+repository. No skill or agent behavior changes: the plugin files touched
+are two agents' and one hook script's comments, so no smoke run was made
+for this release.
 
 ### Changed
 
