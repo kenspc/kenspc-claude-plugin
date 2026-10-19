@@ -50,6 +50,28 @@
   An autopilot worker asks the main session at these points, as before,
   so its runs are unchanged.
 
+### Fixed
+
+- **task-implement and task-review wait for an agent whose call came back
+  still running.** Both skills read every Agent call with
+  `run_in_background: false` as the agent's finished reply, while one
+  Claude Code 2.1.301 Desktop session saw a code-fixer call with that
+  setting return at once and run in the background. Read as a reply with
+  no statistics line, such a return let the run dispatch
+  regression-verifier while code-fixer still edited, and a reviewer whose
+  `angle-<n>.md` was not yet written would have been dispatched again,
+  two agents writing one angle. The `canonical:dispatch` block now says
+  that such a call's result is the completion notice that follows, to be
+  waited for with nothing dispatched meanwhile, and that a headless
+  session, which exits when its turn ends and stops the agent with it,
+  waits in place with a Bash loop instead of ending its turn; the
+  no-statistics-line and no-result-line clauses, the second fix round's
+  dispatch, and task-implement's task-implementer dispatch point at it.
+  Only the Desktop app has shown such a return; that the completion
+  notice reaches a headless session between two tool calls, as a
+  cross-session message does, is a reading, not measured. The maintainer
+  approved the wording after the 2026-10-19 prompt audit.
+
 ## 4.10.1 — 2026-10-19
 
 Prompt-text fixes from an audit of every skill, agent, and command against

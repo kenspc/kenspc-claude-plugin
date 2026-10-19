@@ -272,7 +272,9 @@ Then dispatch a subagent using the Agent tool:
 - prompt: the CONTEXT block from Step 2, with `RUN_DIR` filled in
 - run_in_background: false — the next step reads this agent's result in the
   same turn. A background call returns at once, and a headless session stops
-  the agent when it exits.
+  the agent when it exits. A call that comes back with its agent still
+  running is waited on as Phase 2's Code Review Phase says: its Schema D is
+  in the completion notice.
 
 The subagent implements all incomplete tasks within its own context and
 returns a Schema D summary — a slice's subagent, the incomplete tasks
@@ -487,6 +489,17 @@ each review angle, every call with `run_in_background: false`. Foreground
 calls sent in one message still run in parallel, and the next step reads all
 five results in this turn; a background call returns at once, and a headless
 session stops the agent when it exits.
+A call can still come back with its agent running despite the flag, as one
+Desktop session saw once. Its result is then the completion notice that
+follows, not the call's reply: wait for that notice before the checks
+below, and dispatch nothing meanwhile — not that agent again, and not the
+next step's. In a headless session, which exits when its turn ends and
+stops the agent with it, do not end the turn to wait: wait in place, one
+Bash call per iteration,
+`n=0; until [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done`, until the
+notice arrives between two calls. Why: the call's reply carries no report,
+so it reads as an agent that failed, and a re-dispatch would write the
+same angle beside it, or the next step would start while it still edits.
 Each reviewer is read-only on the working tree and writes only under
 `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
 files under `RUN_DIR/scratch/angle-<n>/`.
@@ -623,7 +636,9 @@ and Schema G's Fixes or Verification section renders that reply verbatim,
 as it came back; the run goes on to the next dispatch — after
 regression-verifier, the second fix round below, then Step 4. Why:
 counts or a result filled in without that line are made up, and they read
-as a step that finished.
+as a step that finished. A reply saying the agent is still running is none
+of these: wait for its completion notice, as the Code Review Phase says,
+and read that.
 
 <!-- canonical:second-round:start -->
 **Second fix round.** As soon as regression-verifier's first reply
@@ -646,7 +661,8 @@ second round:
    longer applies to it.
 2. Dispatch `code-fixer`, then `regression-verifier`, each afresh — new
    dispatches, not resumed agents — with `run_in_background: false` and the
-   CONTEXT block unchanged. code-fixer carries out only the `## Round 2`
+   CONTEXT block unchanged; a call that comes back with its agent still
+   running is waited on as the Code Review Phase says. code-fixer carries out only the `## Round 2`
    entries and updates `schema-b.md` in place; regression-verifier checks
    the round against them.
 3. When each returns, print its line in the form of its first-round line,

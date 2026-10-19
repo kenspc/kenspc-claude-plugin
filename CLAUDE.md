@@ -520,7 +520,15 @@ code-fixer dispatch with `run_in_background: false` returned at once and
 ran in the background, while the five reviewers before it and
 regression-verifier after it, with the same setting, held in the
 foreground; the session went on when the completion notice woke it, and
-the cause is not known. The interactive terminal CLI is not measured:
+the cause is not known. Since 4.10.2 the `canonical:dispatch` block of
+task-review and task-implement reads such a call's result from the
+completion notice and dispatches nothing until it arrives, and a headless
+session waits for it in place, with a Bash loop, rather than ending its
+turn, which would exit the session and stop the agent; the
+no-statistics-line and no-result-line clauses, the `canonical:second-round`
+dispatch, and task-implementer's dispatch point at it. That the notice
+reaches a headless session between two tool calls is a reading, not
+measured. The interactive terminal CLI is not measured:
 the 2.1.301 binary drops the parameter when its fork-mode gate is on, which
 its docs tie to that CLI (a reading of the binary), and there subagents
 ran asynchronously, each result handed back within the same turn (observed

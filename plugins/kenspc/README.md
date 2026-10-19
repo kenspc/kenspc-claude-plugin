@@ -1660,7 +1660,11 @@ on Windows.
   with the parameter omitted returned at once and ran the subagent in the
   background. Once, in another Desktop session the same day, a call with
   the parameter set to `false` still ran in the background, cause unknown;
-  the session went on when the subagent's completion notice woke it. The
+  the session went on when the subagent's completion notice woke it.
+  `/kenspc-task-implement` and `/kenspc-task-review` read such a call's
+  result from that notice and dispatch nothing until it arrives; a
+  headless session waits for it in place rather than ending its turn,
+  which would exit the session and stop the subagent. The
   interactive terminal CLI is not measured; Claude Code
   2.1.301 drops the parameter there when its fork mode is on, and
   subagents then run asynchronously and hand each result back — the
