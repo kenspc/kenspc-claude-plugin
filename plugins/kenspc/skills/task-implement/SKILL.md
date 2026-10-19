@@ -61,7 +61,9 @@ $ARGUMENTS format: PATH
 
 - PATH: the path to the task document (e.g., `docs/tasks/user-auth.md`).
 
-If the user omits the path, ask them to provide it.
+If the user omits the path, ask them to provide it. In a session that cannot
+ask (a system reminder to work without stopping), the run ends: its last
+message says the task document's path is missing.
 
 ## Phase 1: Implement via subagent
 
@@ -169,7 +171,13 @@ interface. Proceed?
 ```
 
 Wait for explicit confirmation before proceeding. If the user declines or
-wants to adjust scope, follow their instructions instead.
+wants to adjust scope, follow their instructions instead. In a session that
+cannot ask (a system reminder to work without stopping), the run still stops
+here: its last message prints the list in full, then the line
+`Implementation not started: awaiting confirmation.`, and says how to go on
+— run `/kenspc-task-implement <path>` again where the batch can be
+confirmed. Why: the batch changes the project's code, and invoking the skill
+does not confirm a list nobody has seen.
 
 ### Step 4: Prepare the run directory and dispatch the implementer
 

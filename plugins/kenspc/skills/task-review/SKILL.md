@@ -63,7 +63,9 @@ entire input as CUSTOM_INSTRUCTIONS.
 If $ARGUMENTS contains a file path:
 - Set REVIEW_SCOPE to "task".
 - Set TASK_FILE to the provided path.
-- Verify the file exists; if not, ask the user for the correct path.
+- Verify the file exists; if not, ask the user for the correct path. In a
+  session that cannot ask (a system reminder to work without stopping), the
+  run ends, naming the path it could not find.
 
 If $ARGUMENTS is empty or contains no file path:
 - Set REVIEW_SCOPE to "changes".
@@ -117,7 +119,10 @@ If $ARGUMENTS is empty or contains no file path:
     The same stop applies when `git merge-base <upstream sha> <HEAD sha>`
     prints nothing — unrelated histories, or a shallow clone whose fetched
     history does not reach the upstream. Why: there the empty tree would
-    make the whole repository the change set.
+    make the whole repository the change set. In a session that cannot ask
+    (a system reminder to work without stopping), the run ends at either
+    stop, its last message saying which one and that a range in
+    CUSTOM_INSTRUCTIONS lets the review run.
   - CUSTOM_INSTRUCTIONS that name commits or a range replace the default:
     mode `commits` with that range, pinned by SHA. Named paths narrow the
     set instead: it keeps the default's mode, base or range, and diff

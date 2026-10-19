@@ -195,9 +195,9 @@ finding:
 - Drive-by refactoring and style drift in the diff: flag changes to adjacent code that meet **all three** of the following conditions:
   1. Not required by the task, AND
   2. Not mechanically forced by the change (interface signature changes cascade to implementers; removing the last call to a function orphans imports; lint-mandated formatting changes), AND
-  3. Not convergence to the canonical project style (a "drift" toward documented style is correct, not drive-by).
+  3. Not the task's own lines written in the documented project style (a line the task edits anyway may follow the documented style; untouched adjacent code converged to it is drive-by).
 
-  Why: mechanically-forced cascading changes (condition 2 fails) and convergence to documented project style (condition 3 fails) are the task-required change itself, not drive-by — flagging them would force the implementer to leave the codebase in a broken state. Apply Surgical Changes per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; same detect-do-not-fix stance.
+  Why: mechanically-forced cascading changes (condition 2 fails) are the task-required change itself — flagging them would force the implementer to leave the codebase in a broken state — and a line the task edits anyway, written in the documented style (condition 3 fails), is the task's own line. Untouched adjacent code brought into the documented style is a follow-up, as Surgical Changes says. Apply Surgical Changes per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; same detect-do-not-fix stance.
 
 OUTPUT FORMAT (Schema A)
 Produce a structured report with two tables, with RUN_DIR the

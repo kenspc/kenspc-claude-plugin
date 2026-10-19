@@ -171,8 +171,10 @@ it — and nothing else: never a tracked file, never a file the user added
 during the session, never anything under `.kenspc/`. Why only the paths the
 skill wrote: an untracked file has no copy in git, so removing one the user
 saved while the diagnosis ran would lose it for good. Then ask, listing each
-attempt: the test's path, what it exercised, and what happened. If the
-removal is denied, the question names those files as left in place for the
+attempt: the test's path, what it exercised, and what happened. In a
+session that cannot ask (a system reminder to work without stopping), the
+run ends there instead, its last message listing each attempt the same way.
+If the removal is denied, the question names those files as left in place for the
 user to remove. The run ends with no task document or brief, no commit other
 than the one-time `.gitignore` commit when a reproduction script prepared
 the run directory (Constraints below), and no untracked test file left by
@@ -211,7 +213,10 @@ line, a bisect, reading a code path. Verify each in turn, record each outcome
 with its evidence (confirmed, or ruled out and by what), and converge on one
 root cause. When none survives and no new hypothesis is grounded in evidence,
 stop and ask the user — for a log, an environment detail, another
-reproduction — rather than guessing. Why: listing the hypotheses before
+reproduction — rather than guessing. In a session that cannot ask (a system
+reminder to work without stopping), the run ends there: its last message
+lists each hypothesis with the evidence that ruled it out, and what would
+let the diagnosis go on. Why: listing the hypotheses before
 testing any keeps the first plausible one from ending the search, and the
 recorded outcomes are the evidence that rules the alternatives out.
 

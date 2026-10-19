@@ -9,6 +9,47 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.10.2 — unreleased
+
+### Changed
+
+- **quality-reviewer flags adjacent code brought into the documented
+  style.** Its drive-by condition 3 exempted any "convergence to the
+  canonical project style", while the Surgical Changes principle the
+  writer agents carry tells them not to converge adjacent code in the
+  diff and to file a follow-up instead: a writer that did converge it was
+  never flagged. Condition 3 now exempts only the task's own lines written
+  in the documented style; untouched adjacent code converged to it is
+  drive-by. The quality-reviewer row of the applicability table in
+  `shared/code-craft-principles.md` says the same. The bullet keeps its
+  three conditions and `**all three**`, which
+  `check-quality-reviewer-bullet-structure.sh` holds. The maintainer ruled
+  the direction after the 2026-10-19 prompt audit, as for the entry below.
+- **Fifteen questions say what a session that cannot ask does.** The
+  repository's writing rule asks every question a skill puts to the user
+  to say so, and these did not:
+  - a missing or wrong input — the task document's path in task-implement
+    and task-review, task-review's range in a shallow clone or for
+    unrelated histories, the plan document's path in generate-task (twice),
+    the project path in generate-guide, and diagnose-bug's two stops (the
+    bug not reproduced, no hypothesis left) — ends the run, its last
+    message naming what is missing, and for diagnose-bug what was tried;
+  - task-implement's batch confirmation and generate-task's task-list
+    confirmation stop the run, as generate-plan's approval does: the list
+    printed in full, a `… not started: awaiting confirmation.` or
+    `… not written: awaiting confirmation.` line, and how to go on. Why:
+    the batch changes the project's code, and invoking the skill does not
+    confirm a list nobody has seen;
+  - a file that already exists — a task document in generate-task, a
+    brief in generate-brief, a guide in generate-guide — is kept, and the
+    new one is written alongside with the first free numeric suffix, as
+    generate-plan does; with no location for a brief or a guide, the run
+    ends with the document in its last message; and generate-guide writes
+    an unresolved setup gap into the guide as unconfirmed.
+
+  An autopilot worker asks the main session at these points, as before,
+  so its runs are unchanged.
+
 ## 4.10.1 — 2026-10-19
 
 Prompt-text fixes from an audit of every skill, agent, and command against

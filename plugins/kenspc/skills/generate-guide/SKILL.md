@@ -52,7 +52,9 @@ $ARGUMENTS format: PROJECT_PATH [CUSTOM_INSTRUCTIONS]
   supplements the standard guide sections (e.g., "include AxaiPay webhook
   testing" or "focus on EAS build").
 
-If no arguments are provided, ask the user which project path to target.
+If no arguments are provided, ask the user which project path to target. In
+a session that cannot ask (a system reminder to work without stopping), the
+run ends: its last message says the project path is missing.
 
 ## Phase 1: Generate the Guide
 
@@ -70,10 +72,16 @@ session.
 **DONE when**:
 - Output path and filename are resolved (priority: a convention in the
   project's instruction files → existing guide file with overwrite-or-new
-  prompt → ask the user).
+  prompt → ask the user). In a session that cannot ask (a system reminder
+  to work without stopping), an existing guide file is kept and the guide is
+  written alongside it with the first free numeric suffix; with no path from
+  either source, the run ends with the guide in its last message.
 - Document language is set (user-specified → English default).
 - Any unclear setup gaps have been raised with the user (deployment target,
   required accounts/credentials not in config, unscripted database setup).
+  In a session that cannot ask (a system reminder to work without
+  stopping), each gap is written into the guide as unconfirmed, where its
+  step would go, and listed in the final message.
 - The guide is written at the resolved path with all applicable sections
   (see template below); skipped sections include a brief reason.
 

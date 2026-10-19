@@ -1689,6 +1689,18 @@ on Windows.
   Probes that run code, the reproduction test's repeated runs, and the task
   document, the guide, and the diagnosis themselves stay in the main
   session.
+- **A session that cannot ask stops at a question rather than guessing.**
+  In a run nobody can answer — a headless `claude -p` session told to work
+  without stopping — `/kenspc-task-implement` and `/kenspc-task` stop at
+  their confirmation: the list printed in full, a line saying nothing was
+  started or written, and how to go on. A missing or wrong path, a range
+  `/kenspc-task-review` cannot work out in a shallow clone, and
+  `/kenspc-diagnose`'s two stops (the bug not reproduced, no hypothesis
+  left) end the run, the last message naming what is missing. An existing
+  task document, brief, or guide is kept and the new one gets the first
+  free numeric suffix (`<name>-2.md`), as `/kenspc-plan` already does. An
+  autopilot worker asks the main session at these points instead, so its
+  runs are unchanged (since 4.10.2).
 - **Branches.** The plugin does not create branches; the one branch it
   names is the first branch of a repository `/kenspc-init` creates with
   `git init`, which is `main`. Commits follow the

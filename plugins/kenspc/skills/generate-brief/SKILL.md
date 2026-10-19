@@ -145,7 +145,10 @@ default).
 **Output path resolution** (priority order):
 1. A brief or documentation directory the project's instruction files specify.
 2. `docs/briefs/` (create if missing).
-3. Ask the user where to save and what to name the file.
+3. Ask the user where to save and what to name the file. In a session that
+   cannot ask (a system reminder to work without stopping), the run ends
+   with the brief in its last message, naming why neither location could
+   be used.
 
 **Filename**: kebab-case derived from the brief's title. Examples:
 "users miss assignments" → `assignment-notifications.md`,
@@ -154,7 +157,10 @@ optional; drop it unless the directory contains other document types that
 could collide.
 
 **Conflict check**: if a file already exists at the target path, ask the
-user: overwrite, create alongside (with a suffix), or cancel.
+user: overwrite, create alongside (with a suffix), or cancel. In a session
+that cannot ask (a system reminder to work without stopping), create the
+file alongside with the first numeric suffix for which no file exists
+(`<name>-2.md`, then `<name>-3.md`, …) and say so in the final message.
 
 ### Brief template
 

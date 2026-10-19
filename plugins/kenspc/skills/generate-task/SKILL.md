@@ -48,7 +48,9 @@ $ARGUMENTS format: PLAN_PATH [PHASE] [CUSTOM_INSTRUCTIONS]
   "Phase 1 and 2"). If omitted, decompose the entire plan.
 - CUSTOM_INSTRUCTIONS: optional free-text that narrows scope or adds constraints.
 
-If no arguments are provided, ask the user for the plan document path.
+If no arguments are provided, ask the user for the plan document path. In a
+session that cannot ask (a system reminder to work without stopping), the
+run ends: its last message says the plan document's path is missing.
 
 ## Phase 1: Analyze
 
@@ -109,7 +111,9 @@ instruction files are its CLAUDE.md and AGENTS.md files — at the root, in
   output, base analysis on the plan's description of what those earlier
   phases will produce.
 - If the plan document does not exist, cannot be parsed, or has no
-  Implementation Steps section, ask the user for the correct path.
+  Implementation Steps section, ask the user for the correct path. In a
+  session that cannot ask (a system reminder to work without stopping), the
+  run ends, naming the path and what was wrong with it.
 - If a plan step's technical approach contradicts the existing codebase
   after reading the code, this is a plan-level issue. Stop and inform the
   user — it is not solvable at the task level.
@@ -249,6 +253,11 @@ N. Task N: Doc-sync — M documents, depends on Task 1-<N-1>
 Confirm, or adjust tasks before writing?
 ```
 
+In a session that cannot ask (a system reminder to work without stopping),
+the run still stops here: its last message prints the list in full, then
+the line `Task document not written: awaiting confirmation.`, and says how
+to go on — run `/kenspc-task` again where the list can be confirmed.
+
 **Output path resolution** (priority order):
 1. A task document location the project's instruction files specify.
 2. `docs/tasks/` (create if missing).
@@ -279,7 +288,10 @@ heading, so a translated anchor breaks the chain without an error.
 
 **Conflict check**: if writing a phase-specific file when a full-plan task
 file already exists for the same plan (or vice versa), ask the user:
-overwrite, create alongside, or cancel.
+overwrite, create alongside, or cancel. In a session that cannot ask (a
+system reminder to work without stopping), create the file alongside with
+the first numeric suffix for which no file exists (`<name>-2.md`, then
+`<name>-3.md`, …) and say so in the final message.
 
 ## Phase 3: Verify via review agent
 
