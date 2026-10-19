@@ -476,14 +476,29 @@ its number.
     Schema G verdict is FAIL, or PARTIAL for a reason other than BLOCKED
     tasks alone, or S3's review left a HIGH or MEDIUM row DEFERRED, and the
     reviewer report's `Standalone review:` line records whether it ran and
-    why. The default stays `on`. What remains is the trial:
-    - The maintainer writes `Standalone review: auto` in the next five
-      repo-mode dayaku-crm batches.
-    - The follow-up issues filed after each of those batches' releases are
-      compared by count and by severity with those of the batches before
-      4.7.0.
-    - S3b returns to `on` if HIGH or MEDIUM follow-ups rise; otherwise the
-      default may change to `auto`, in a later release.
+    why. 4.11.0 makes `auto` the repo-mode default without the planned
+    five-batch trial (maintainer's decision, 19 Oct 2026), on a read-back
+    of the 42 repo-mode dayaku-crm batches up to 19 Oct 2026, all run with
+    `on`:
+    - `auto` would have skipped S3b in 20 batches, 925 of S3b's 2038 wall
+      minutes; no S3 verdict was FAIL, and none was PARTIAL for BLOCKED
+      tasks alone.
+    - S3b reported no HIGH in those 20; it fixed 44 MEDIUM and 103 LOW
+      rows there. Its 5 HIGH rows (2 fixed, 3 deferred) all fall in the 22
+      batches `auto` still sends to S3b.
+    - 17 of those 22 trigger on a MEDIUM deferral alone, most of them
+      ruled by the main session because the row sat on a locked design.
+    - Not measured: what S4 and the releases would have met on a HEAD
+      without the skipped S3b fixes.
+    The scripts and their readme are in the maintainer's
+    `~/Projects/_smoke/_analysis/review-time-20261019/followup/`. What
+    remains is the check after the default changed:
+    - After the next five repo-mode dayaku-crm batches on 4.11.0 or later,
+      the maintainer re-runs that read-back: which batches skipped S3b and
+      on what trigger, and the follow-up issues filed after each release,
+      by count and severity, against the batches before 4.11.0.
+    - The default returns to `on` if HIGH or MEDIUM follow-ups rise in the
+      batches that skipped S3b.
 29. S4 runs each extracted command with `<shell> <file>` (4.6.0), outside
     the Bash tool's shell snapshot, so a command that relied on a function
     or an alias the tool's shell defines behaves differently there (the

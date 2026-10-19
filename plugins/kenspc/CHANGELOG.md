@@ -9,6 +9,30 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.11.0 — unreleased
+
+The autopilot's standalone review (S3b) now runs on a condition by
+default in `repo` mode. A read-back of 42 `repo`-mode batches of one
+product, all run with `Standalone review: on`, found that `auto` would
+have skipped S3b in 20 of them, about 45% of all S3b wall time, and that
+the standalone reviews of those 20 reported no HIGH finding; every HIGH
+they reported fell in a batch `auto` still sends to S3b. The trial the
+roadmap had planned before the change is replaced by a check after it
+(roadmap item 28).
+
+### Changed
+
+- `skills/autopilot/SKILL.md`: `Standalone review:` defaults to `auto` in
+  `repo` mode and stays `on` in `plugin` mode, where `off` and `auto` are
+  still the settings stop; a batch that sets the field explicitly runs as
+  before. The settings check is worded like `Walk:`'s, and the Why of the
+  `auto` condition now names the deferral that caught participants-portal's
+  missed HIGH (one MEDIUM row, not four findings).
+- Plugin README: the skill table, the `auto` paragraph, and the settings
+  list state the mode-dependent default.
+- `docs/release-checklist.md`: smoke row 11's seed writes
+  `Standalone review: on`, so S3b stays among the row's four workers.
+
 ## 4.10.3 — 2026-10-19
 
 The repository's instruction files are reorganized: the maintainer

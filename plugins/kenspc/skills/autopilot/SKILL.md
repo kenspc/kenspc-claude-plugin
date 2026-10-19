@@ -61,11 +61,17 @@ plugin still runs the text it started with — skills and agents load at
 session start, so a plugin edit is visible only to the next session.
 
 S3b runs unless, in repo mode, `Standalone review: off` is set, or
-`auto` is set and S3's own review does not trigger it (§ The verdict loop
-after S3b). Why the switch, and in repo mode only: S3's own review is
+`auto` — the repo-mode default — is in effect and S3's own review does
+not trigger it (§ The verdict loop after S3b). Why the switch, and in repo
+mode only: S3's own review is
 already five fresh subagents, so the first reason is mostly met inside S3,
 while the second — a session that edited the plugin still runs the text it
 started with — holds only in plugin mode, where S3b stays unconditional.
+Why `auto` is the repo-mode default: read back over 42 repo-mode batches
+of one product, the condition would have skipped S3b in 20, whose
+standalone reviews took about 45% of all S3b time and reported no HIGH
+finding; every HIGH the standalone reviews reported fell in a batch the
+condition still sends to S3b.
 
 ## Trigger Phrases
 
@@ -223,7 +229,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Acceptance:` | `none`, or one sub-bullet per case: a command or a case description, its PASS criterion after ` — PASS: `, and `(optional)` at the end of a case that may be cut | `none` |
 | `Acceptance record:` | a path (repo mode) the S4 results are written to | unset |
 | `Release preparation:` | `default`, `keep`, or sub-bullets of instructions | `default` |
-| `Standalone review:` | `on`, `off`, or `auto` (`off` and `auto` in repo mode only) | `on` |
+| `Standalone review:` | `on`, `off`, or `auto` (`off` and `auto` in repo mode only) | `auto` in repo mode, `on` in plugin mode |
 | `Walk:` | `on`, `off`, or one sub-bullet per flow, `- <flow> — must see: <what>` (`on` and the sub-bullets in repo mode only) | `on` in repo mode, `off` in plugin mode |
 | `Must read:` | paths every worker reads first | empty |
 | `Challenge seeds:` | sub-bullets S1 argues against | empty |
@@ -492,8 +498,9 @@ reminder to work without stopping), the run ends with the same message.
   the settings stop, naming the field and the value. Why a stop and not
   the default: the field is one the user wrote, and a run that read it as
   absent would spend the default budget the user meant to lower.
-- `Standalone review: off` or `auto` is set only in repo mode; in plugin
-  mode either is the settings stop, naming `Standalone review`. Why: a plugin-mode S3
+- `Standalone review:` is `on`, `off`, or `auto` in repo mode, and `on` or
+  absent in plugin mode; `off` or `auto` written in plugin mode is the
+  settings stop, naming `Standalone review`. Why: a plugin-mode S3
   edits the plugin while its own review runs the plugin's text from
   before those edits, so only a fresh session, S3b, reviews with the
   edited plugin.
@@ -1471,7 +1478,7 @@ records which, with the trigger or the reason. Why read from S3's own
 review: the condition is an artifact S3 already produced, so the main
 session judges nothing; the one HIGH a standalone review found that the
 implementation review had missed came from a batch whose implementation
-review had deferred four findings, which the condition catches. Why
+review had deferred a MEDIUM finding, which the condition catches. Why
 BLOCKED tasks alone do not trigger it: a review of a batch with a task
 not built adds nothing about that task. A batch the user judges risky —
 security, a data migration, concurrency — is written `on`. Passing: PASS, on to Phase 3.
