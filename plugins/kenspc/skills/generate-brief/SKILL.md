@@ -74,7 +74,7 @@ apply, distinguished by both input clarity and reminder pressure:
 
 | Mode | Trigger | Behavior |
 |---|---|---|
-| `full` | Default; no reminder conflict; Level 2+ input | Normal 3-5 round discussion |
+| `full` | Default; no reminder conflict; Level 2+ input | Normal discussion at the framework's depth for the input's level (Level 2: 3-5 rounds; Level 3: no round limit) |
 | `rapid-direct` | Level 1 input clarity per discovery-framework.md, regardless of reminder | Compress to 1-2 rounds; brief states `Discovery Mode: rapid-direct` |
 | `rapid-inferred (reminder-driven)` | Reminder forces no-question mode AND input is Level 2+ (would normally need discussion) | Skip discussion; brief states `Discovery Mode: rapid-inferred (reminder-driven)`; all non-direct-from-ROUGH_IDEA fields tagged `[Inferred from project context: ...]` or `[Inferred from prior session: ...]` |
 
@@ -109,8 +109,7 @@ project's instruction files, config files), the discovery framework at
   dimensions, four input clarity levels, conversation rules, and exit
   conditions as the structural guide.
 - Match the user's language (Chinese → Chinese, English → English).
-- One question at a time, especially for heavy questions; build on what the
-  user said.
+- One question at a time; build on what the user said.
 - When the user is uncertain, recommend an option with brief pros/cons rather
   than just laying choices out.
 - Apply the framework's Level 4 handling for too-broad scope: stop, suggest

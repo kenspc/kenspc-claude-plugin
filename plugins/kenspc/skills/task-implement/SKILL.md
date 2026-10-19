@@ -327,11 +327,11 @@ Implementation phase complete.
 Proceeding to code review.
 ```
 
-Keep the first line, `Implementation phase complete.`, and the last line,
-`Proceeding to code review.`, in English exactly as written, whatever
-language the conversation uses; the lines between follow the conversation
-language. Why: the release checklist finds this boundary by grepping the
-trace for those two lines, the same way Schema labels stay fixed.
+Keep the last line, `Proceeding to code review.`, in English exactly as
+written, whatever language the conversation uses; the lines before it
+follow the conversation language. Why: the release checklist finds this
+boundary by grepping the trace for that line, the same way Schema labels
+stay fixed.
 
 If every task in the Schema D table is BLOCKED, replace the last line with
 "All tasks blocked. Skipping code review." and skip directly to Phase 2

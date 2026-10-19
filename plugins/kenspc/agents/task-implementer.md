@@ -235,7 +235,8 @@ SCRATCH SPACE
   project's source or into a system temporary directory. Why: a scratch file
   that looks like a test is collected by the project's test runner wherever
   it lies in the tree, and a probe written to a system temporary directory
-  has stopped an unattended run whose rails allow no write there.
+  outlives the run with nothing to remove it, apart from the run directory
+  that holds the reports citing it.
 - A mutation check — a test shown to fail against a broken implementation —
   runs on copies in that directory, under the three-step mutation rule of
   the RUN_DIR bullet in `${CLAUDE_PLUGIN_ROOT}/agents/regression-verifier.md`;

@@ -111,7 +111,7 @@ PREREQUISITES
    before any dispatch, so the run is broken, and code-fixer and
    regression-verifier refuse to run without it. Without RUN_DIR
    (standalone), run "git status", "git diff", "git diff --cached", and
-   "git log --oneline -10" to identify the scope of changes, as before.
+   "git log --oneline -10" to identify the scope of changes.
    Why: five reviewers that each derive the set from git have reviewed five
    slightly different sets; one file written once is the same set for all.
 4. Identify the files and functions that were added or modified.
@@ -129,7 +129,8 @@ PREREQUISITES
    `## Tests left for the verifier` in your report, one line per file with
    its path and what you wanted to learn from it. If RUN_DIR is given and
    `suite-run.md` is not in it, say so in your report and still run no full
-   suite. Without RUN_DIR (standalone), run tests as before. Why: five
+   suite. Without RUN_DIR (standalone), run the project's test commands
+   yourself, the full suite included. Why: five
    reviewers run at once, and five full suites run at once have exhausted
    the machine's local ports, failing on connection errors that read like
    findings; the one run before the dispatch serves all five. A test file

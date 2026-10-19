@@ -199,9 +199,8 @@ framework loaded in Step 3:
 - Provide suggestions, alternatives, and trade-offs for the user to consider
   — when the user is uncertain, recommend rather than just laying out
   options.
-- Avoid asking too many questions at once. Two to four per round is the
-  upper bound; one at a time is preferred for heavy questions (per framework
-  Step 3).
+- One question at a time (framework Step 3): wait for the answer before
+  deciding what to ask next.
 - Avoid making assumptions on technical decisions — ask when unsure.
 - Do not attempt to write or outline the plan yet — this phase is pure
   discussion.

@@ -19,6 +19,40 @@
   one code-fixer dispatch with `false` ran in the background while the
   calls around it held, cause unknown, and the run went on when the
   completion notice woke it.
+- **The five reviewers' standalone instructions say what to run.** Their
+  shared PREREQUISITES section told a reviewer without `RUN_DIR` to find
+  the change set and to "run tests as before", a pointer to an earlier
+  version of the prompt the model never saw; item 5 now reads "run the
+  project's test commands yourself, the full suite included", which is
+  what each reviewer's description already said, and item 3 drops the
+  phrase. All five files changed together, as
+  `check-review-agent-drift.sh` requires. Found by the 2026-10-19 prompt
+  audit, like the four entries below.
+- **generate-plan and generate-brief ask one question at a time, as the
+  discovery framework says.** Both load `shared/discovery-framework.md`,
+  whose Step 3 rule is "One question at a time", and both had restated it
+  differently: generate-plan allowed two to four questions per round,
+  citing that same step, and generate-brief made it a preference for heavy
+  questions. Both now state the framework's rule.
+- **generate-brief's `full` mode follows the framework's depth for the
+  input's level.** The mode table capped every `full` discussion at three
+  to five rounds, the framework's figure for Level 2 input, while the
+  framework sets no round limit for Level 3 (vague) input, which `full`
+  also covers.
+
+### Fixed
+
+- **task-implementer's reason for keeping probes out of the system
+  temporary directory** said the autopilot's rails allow no write there;
+  the driver (`run.sh`) lists `$TMPDIR`, `/tmp`, and `/private/tmp` among
+  the write roots. The rule stands, with the reason
+  that still holds: a probe there outlives the run, apart from the reports
+  that cite it.
+- **task-implement's Step 5 pinned two lines to English for a check that
+  reads one.** It said the release checklist greps the trace for both
+  `Implementation phase complete.` and `Proceeding to code review.`; the
+  checklist's row 13 greps only the last line. Only that line is now kept
+  in English; the lines before it follow the conversation language.
 
 ## 4.10.0 — 2026-10-17
 
