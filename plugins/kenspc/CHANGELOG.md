@@ -9,7 +9,23 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.10.1 — unreleased
+## 4.10.1 — 2026-10-19
+
+Prompt-text fixes from an audit of every skill, agent, and command against
+the current model generation and the plugin's own shared files: rules that
+asked for code or plan content nobody requested, two skills that restated
+the discovery framework's question rule differently, reasons and
+descriptions the repository no longer bears out, two autopilot commands
+that fail as written, and dispatch announcements pinned to English. The
+README also records a Desktop dispatch that ran in the background despite
+`run_in_background: false`. No new agent, command, CONTEXT key, or
+`## Autopilot` field, and every skill keeps `version: 3.0.0`. Guard counts
+are unchanged: `guards run: 13`, `self-tests run: 12`.
+
+No acceptance run and no smoke run were made for this release: the changes
+are sentences of prompt text, no smoke row reaches most of them, and the
+one a smoke row reads, task-implement's `Proceeding to code review.` line,
+keeps its exact form. The pre-flight passed on the release tree.
 
 ### Changed
 
