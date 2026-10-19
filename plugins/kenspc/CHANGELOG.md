@@ -9,7 +9,25 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.10.2 — unreleased
+## 4.10.2 — 2026-10-19
+
+The second batch of prompt-text fixes from the 2026-10-19 audit, on the
+directions the maintainer ruled: quality-reviewer's drive-by rule now
+agrees with the writer agents' Surgical Changes principle, fifteen
+questions say what a session that cannot ask does, and task-implement and
+task-review wait for an agent whose foreground call came back still
+running. A measurement made for that last fix showed that a headless
+session does not stop a background agent when its turn ends, so the
+reason the skills gave for foreground dispatches since v3.5.1 is
+corrected. No new agent, command, CONTEXT key, or `## Autopilot` field,
+and every skill keeps `version: 3.0.0`. Guard counts are unchanged:
+`guards run: 13`, `self-tests run: 12`.
+
+No acceptance run and no smoke run were made for this release: the
+changes are sentences of prompt text, and the early return they guard
+against cannot be produced on demand. The headless wait was measured
+instead on Claude Code 2.1.302, with a deliberate background dispatch in
+`claude -p` sessions. The pre-flight passed on the release tree.
 
 ### Changed
 
