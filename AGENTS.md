@@ -1,3 +1,4 @@
+<!-- budget: lines=200 words=2400 -->
 # AGENTS.md
 
 Maintainer instructions for this repository. CLAUDE.md imports this file and
@@ -205,9 +206,10 @@ bash scripts/check-all.sh --self-test
 
 ## Workflow artifacts under docs/
 
-This repo dogfoods the plugin's chain: briefs land in `docs/briefs/`, plans
-in `docs/plans/`, task documents in `docs/tasks/`, and dry-run transcripts in
-`docs/dry-runs/`. These are transient — completed plans and task documents
+This repo dogfoods the plugin's chain. Under `docs/`, briefs land in
+`briefs/`, plans in `plans/`, task documents in `tasks/`, and dry-run
+transcripts in `dry-runs/`; the first three are often absent, since git
+keeps no empty directory. These are transient — completed plans and task documents
 are deleted once shipped, so an empty directory or a missing document named
 by an old commit is normal. Three documents are permanent:
 `docs/release-checklist.md`, `docs/roadmap.md` (an item leaves it when it

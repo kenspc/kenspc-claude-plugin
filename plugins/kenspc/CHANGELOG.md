@@ -33,6 +33,18 @@ CHANGELOG are removed. No skill or agent behavior changes.
   README's Effort levels section, which holds the rationale and the
   "last reviewed" date.
 
+### Added
+
+- Repository guard `check-instruction-lint.sh`: runs the instruction lint
+  copied from the kenspc-dev-setup repository
+  (`.claude/tests/instruction-lint.ps1`, with its fixtures) on AGENTS.md,
+  whose budget line holds it to 200 lines and 2400 words, with no all-caps
+  emphasis and no repo path that does not exist. The lint is PowerShell 7,
+  so `check-all.sh` now needs `pwsh`; without it the guard exits 2. The
+  release checklist's counts move to `guards run: 14` and
+  `self-tests run: 13`. `.gitignore` keeps `.claude/` ignored except
+  `.claude/tests/`.
+
 ## 4.10.2 — 2026-10-19
 
 The second batch of prompt-text fixes from the 2026-10-19 audit, on the

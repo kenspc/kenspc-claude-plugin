@@ -28,8 +28,8 @@ claude plugin validate --strict .
 claude plugin validate --strict ./plugins/kenspc
 
 # Every guard in main mode (JSON validity included, via check-json.sh), then
-# every guard's mutation regression fixture. Expect "guards run: 13" after the
-# main pass and "self-tests run: 12" as the last line.
+# every guard's mutation regression fixture. Expect "guards run: 14" after the
+# main pass and "self-tests run: 13" as the last line.
 bash scripts/check-all.sh --self-test
 )
 ```
@@ -40,8 +40,8 @@ All four must pass: 1 effort-override diff + 2 `claude plugin validate
 returns that command's exit code — without closing an interactive shell,
 which a bare `set -e` would do. The `check-all.sh` run
 covers every guard in main mode, JSON validity included via `check-json.sh`,
-and then every self-test fixture. Its output must include `guards run: 13`
-and end with `self-tests run: 12`; a different number means a guard or
+and then every self-test fixture. Its output must include `guards run: 14`
+and end with `self-tests run: 13`; a different number means a guard or
 fixture was added, removed, or no longer detected — find out which before
 continuing. If anything fails, fix it before proceeding to the smoke
 checklist.

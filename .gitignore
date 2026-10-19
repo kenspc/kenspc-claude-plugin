@@ -11,6 +11,7 @@ node_modules/
 # Temp files from skills
 *.tmp
 
-# Claude Code local state
-.claude/
+# Claude Code local state; .claude/tests/ holds the tracked instruction lint
+.claude/*
+!.claude/tests/
 .kenspc/
