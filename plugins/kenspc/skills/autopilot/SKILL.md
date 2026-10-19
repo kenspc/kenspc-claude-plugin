@@ -358,7 +358,7 @@ repository's to track.
 The driver is copied from `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/scripts/run.sh`
 to `_prompts/<batch>-run.sh`, and the copy's `--self-test` is run once,
 with `AUTOPILOT_CLAUDE` empty on that command
-(`AUTOPILOT_CLAUDE= bash _prompts/<batch>-run.sh --self-test`). Why the
+(`AUTOPILOT_CLAUDE= bash <workspace>/_prompts/<batch>-run.sh --self-test`). Why the
 copy: a plugin-mode S3 may edit the shipped driver itself, and a running
 batch keeps launching with the text it started with. Why the variable
 empty: the self-test launches whatever the variable names, and a value
@@ -2141,7 +2141,10 @@ written — and before the reports, the main session runs
 with the temp folder from the state file's `temp:` line; as the cmds dir,
 `<workspace>/_prompts/<batch>-s4-cmds` when Phase 3 extracted commands
 there, and `-` otherwise; after the root, in plugin mode, each seed project
-`<workspace>/<batch>-*`. Its output is saved to
+in the workspace whose name begins `<batch>-`, found by listing the
+workspace and written out path by path, never as a glob: under the Bash
+tool's zsh a glob that matches nothing aborts the whole command. Its
+output is saved to
 `<workspace>/_logs/<batch>-tmp-candidates.txt`. Each entry it lists is the
 batch's: new since the before list, no symbolic link, the user's own, and
 the self-test's directory, named by a prefix the batch's acceptance

@@ -305,6 +305,13 @@ of the tree, and a manifest change alters what the project builds.
   `Evidence:`, and a teardown script that drops what the prototype created
   goes with the prototype. Why: other work runs against the development
   database, and a schema change left there changes what it runs against.
+- A throwaway database is one the prototype creates for itself and drops in
+  its teardown: a database file under the location, or a new database on
+  the server the development database already uses — not a new database
+  server or container, unless the project's instruction files say how
+  throwaway databases are made. Why: a second server is one more process
+  on the machine that nobody tracks, and some machines run one shared
+  server for every project.
 - Rows written to existing development tables get no warning and no
   teardown; `Evidence:` names each such table. Why: the development
   database is there to be used, and the named tables tell the user which
@@ -460,7 +467,8 @@ grammar in the Writing rules for the brief in
   run's commits and why the question was not settled, as § The question
   says.
 - At the judgment point, the user's verdict came first.
-- The teardown ran, when there was one, and the tables it created are gone.
+- The teardown ran, when there was one, and the tables, or the throwaway
+  database, it created are gone.
   A teardown that fails, or leaves a table or column the prototype created,
   stops the run before the remove commit: the last message gives the error
   and names what is still there, and the run ends with the prototype still

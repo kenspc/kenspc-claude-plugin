@@ -39,6 +39,34 @@
   to five rounds, the framework's figure for Level 2 input, while the
   framework sets no round limit for Level 3 (vague) input, which `full`
   also covers.
+- **task-implementer's QUALITY CHECKLIST no longer asks for code nobody
+  requested.** Three lines pulled against the Simplicity First principle
+  the same agent inlines: null and boundary handling "at public function
+  entries" now applies where input enters from outside the module, not at
+  internal seams whose callers already validate; "externalize config
+  values to … config files" now names an unclear literal as a constant and
+  makes a value configurable only when the task asks; and the per-function
+  quota of one edge-case and one error-path test now covers the edge cases
+  and error paths a behavior actually has.
+- **plan-document-reviewer no longer treats a missing CRUD operation as a
+  gap.** Its Completeness check asked whether "all CRUD operations" were
+  covered, and the reviewer fixes missing steps directly in the plan, so
+  it could add endpoints the requirements never asked for. It now asks
+  whether each endpoint the requirements call for states its error
+  responses.
+- **The prototype skill says what a throwaway database is.** A database
+  file under the location, or a new database on the server the
+  development database already uses, dropped by the prototype's teardown —
+  not a new database server or container, unless the project's
+  instruction files say how throwaway databases are made. The skill used
+  one unasked in a session that cannot ask without saying how to make it,
+  and its teardown covered only the development database. The DONE line
+  now checks that the throwaway database is gone too.
+- **task-implement and task-review announce their dispatches in the
+  conversation's language.** Three quoted English sentences ("Dispatching
+  5 review agents now." and the implementer's) would be reproduced
+  verbatim in conversations held in another language; nothing parses them, unlike the
+  fixed progress lines, which stay in English.
 
 ### Fixed
 
@@ -53,6 +81,30 @@
   `Implementation phase complete.` and `Proceeding to code review.`; the
   checklist's row 13 greps only the last line. Only that line is now kept
   in English; the lines before it follow the conversation language.
+- **Two autopilot commands that failed as written.** The driver's
+  self-test was given as `bash _prompts/<batch>-run.sh`, a path relative to
+  the workspace that does not resolve from the repository root, where the
+  main session works; it now names `<workspace>/_prompts/`, as every other
+  helper call does. The temp-folder sweep named the plugin-mode seed
+  projects as `<workspace>/<batch>-*`; under the Bash tool's zsh a glob
+  that matches nothing aborts the whole command, so a batch with no seed
+  would skip the sweep. The seeds are now listed and written out path by
+  path.
+- **Four skill descriptions matched what the skills do.** task-review
+  listed "security" among its five angles and left out requirements; its
+  `argument-hint` lacked the custom-instructions argument its command and
+  its Arguments section take; task-implement said it runs "without user
+  interaction" though it asks one batch confirmation; and generate-plan
+  said it "adapts to project-specific templates", a step the v3 rewrite
+  removed.
+- **regression-verifier's Schema C row 1 is labelled "Every issue ID
+  accounted for".** It read "All accountability rows fixed", while the
+  check passes with DEFERRED and NOT APPLICABLE rows; the final report
+  renders the label verbatim.
+- **A guard comment in `shared/code-craft-principles.md` that no guard
+  backs is removed.** It pinned four phrases to "Task 12's relocation grep
+  contract"; no script under `scripts/` reads them, and the task document
+  is gone. The phrases themselves are unchanged.
 
 ## 4.10.0 — 2026-10-17
 

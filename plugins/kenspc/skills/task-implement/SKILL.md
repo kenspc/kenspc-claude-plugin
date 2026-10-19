@@ -2,7 +2,7 @@
 name: task-implement
 description: >
   Automated batch implementation: auto-implements ALL incomplete tasks from a task
-  document without user interaction, then runs automated code review. Only use when
+  document after one batch confirmation, then runs automated code review. Only use when
   the user explicitly requests automated/batch task implementation.
 version: 3.0.0
 argument-hint: <path-to-task-file>
@@ -255,8 +255,8 @@ report written, which suits the review agents, but task-implementer's first
 write there may be a shell command such as `cp`, which does not create a
 missing directory.
 
-Tell the user: "Starting task implementation. Dispatching implement agent
-now."
+Tell the user, in the conversation's language, that implementation is
+starting and the implementer is being dispatched.
 
 Then dispatch a subagent using the Agent tool:
 - Agent name: `task-implementer`
@@ -420,7 +420,8 @@ locked across all 5 — that section is not edited here.
 
 ### Step 2: Dispatch the review agents
 
-Tell the user: "Dispatching 5 review agents now."
+Tell the user, in the conversation's language, that the five reviewers are
+being dispatched.
 
 <!-- canonical:dispatch:start -->
 ## Code Review Phase (unconditional)

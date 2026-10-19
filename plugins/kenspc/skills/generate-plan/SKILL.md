@@ -2,7 +2,7 @@
 name: generate-plan
 description: >
   Generate a comprehensive plan document (计划书/計劃書) from requirements,
-  backlog items, or specs. Adapts to project-specific templates. Includes
+  backlog items, or specs. Adapts its format to the type of plan. Includes
   collaborative discussion, self-challenge, and automated verification via
   review agent. Three phases: Discover, Plan, Verify.
   Trigger on: "write a plan", "generate plan", "写计划书", "编写计划",

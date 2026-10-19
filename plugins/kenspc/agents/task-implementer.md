@@ -201,14 +201,18 @@ Do not do even if it seems helpful:
 - Commit code that does not build.
 
 QUALITY CHECKLIST (apply to code you write for this task — not existing code)
-- Edge cases: handle null, empty, and boundary values at public function entries.
+- Edge cases: handle null, empty, and boundary values where input enters from
+  outside the module (a public API, a request, a file, user input), not at
+  internal seams whose callers already validate.
 - Error handling: wrap external calls (DB, API, file I/O) with proper error handling;
   do not silently swallow errors.
 - Resource cleanup: close connections, handles, and streams in finally / defer / using.
 - Async correctness: await all async operations; no unintended fire-and-forget.
-- No magic numbers: externalize config values to constants or config files.
-- Tests: cover happy path + at least one edge case + at least one error path per
-  new function. Test behavior, not implementation details. Each test must be able
+- No magic numbers: name a literal whose meaning is not obvious as a constant;
+  move a value into configuration only when the task asks for it to be
+  configurable.
+- Tests: cover each new behavior's happy path, and the edge cases and error
+  paths it actually has. Test behavior, not implementation details. Each test must be able
   to fail: if it would pass even with the covered logic wrong, it verifies
   nothing. If no failing-capable test can be written for a task, treat that as a
   design concern and record it in that task's `**Implementation notes:**` block

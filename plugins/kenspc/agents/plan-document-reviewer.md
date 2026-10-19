@@ -70,8 +70,9 @@ one):
      discovery?
    - Are there obvious scenarios, edge cases, or failure modes that the plan
      ignores?
-   - If the plan includes API endpoints: are all CRUD operations and error
-     responses covered?
+   - If the plan includes API endpoints: does each endpoint the requirements
+     call for state its error responses? An operation the requirements do not
+     ask for is not a gap.
    - If the plan includes data models: are relationships, constraints, and
      indexes considered?
    - Are there missing steps between the stated phases (e.g., database
