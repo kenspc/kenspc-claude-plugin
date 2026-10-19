@@ -9,7 +9,7 @@
 # evidence). Output is a single JSON Lines record appended
 # to ${HOME}/.claude/kenspc/missed-reviews.log.
 #
-# Design boundary (per project CLAUDE.md "Plugin Design Lessons"):
+# Design boundary (per project AGENTS.md "Plugin Design Lessons"):
 # hooks are for post-hoc telemetry, not workflow state-machine
 # guarding. This script never blocks session exit, never prints to
 # stdout / stderr, and tolerates every error path silently.

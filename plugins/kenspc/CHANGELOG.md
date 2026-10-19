@@ -9,6 +9,30 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.10.3 — unreleased
+
+The repository's instruction files are reorganized: the maintainer
+contract moves from a 1304-line CLAUDE.md into AGENTS.md, which CLAUDE.md
+now imports, and the paragraphs that restated skill, agent, and guard
+behavior already written in those files, the plugin README, or this
+CHANGELOG are removed. No skill or agent behavior changes.
+
+### Changed
+
+- `agents/task-implementer.md` and `agents/code-fixer.md`: the guard
+  comment above `CODE-CRAFT PRINCIPLES` points at the writer-agent header
+  convention in repo-root AGENTS.md instead of CLAUDE.md.
+- `hooks/scripts/session-end-telemetry.sh`: its design-boundary comment
+  points at AGENTS.md.
+- Repository guards: `check-run-contract.sh`'s check 6 and its self-test
+  hold the reviewer invariant sentence in AGENTS.md instead of CLAUDE.md;
+  the headers of `check-no-model-names.sh`, `check-run-contract.sh`,
+  `check-instruction-files.sh`, and `check-all.sh` gain the reasons that
+  only CLAUDE.md had stated.
+- `docs/release-checklist.md`: the effort-override review reads the plugin
+  README's Effort levels section, which holds the rationale and the
+  "last reviewed" date.
+
 ## 4.10.2 — 2026-10-19
 
 The second batch of prompt-text fixes from the 2026-10-19 audit, on the

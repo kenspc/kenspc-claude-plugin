@@ -68,22 +68,22 @@
 #   6. The reviewer invariant sentence ("Each reviewer is read-only on the
 #      working tree and writes only under `RUN_DIR`: …"). It lives in four
 #      places: the five reviewers' ROLE, the canonical dispatch block of
-#      task-review and task-implement, the plugin README, and CLAUDE.md.
+#      task-review and task-implement, the plugin README, and AGENTS.md.
 #      check-review-agent-drift.sh holds the five ROLE sections identical and
 #      check-canonical-dispatch.sh the two dispatch blocks, but nothing tied
-#      one family to the other, and nothing held the README or CLAUDE.md
+#      one family to the other, and nothing held the README or AGENTS.md
 #      copy. The reference is extracted from agents/requirements-reviewer.md
 #      at run time — the lines from the one that begins with the sentence's
 #      opening words through the first line that ends in a period — and
 #      whitespace-normalized: every run of spaces, tabs, CR, and LF becomes
 #      one space, leading and trailing space dropped. plugins/kenspc/README.md,
-#      CLAUDE.md, and skills/task-review/SKILL.md, normalized the same way,
+#      AGENTS.md, and skills/task-review/SKILL.md, normalized the same way,
 #      must each contain it (check-canonical-dispatch.sh carries task-review's
 #      copy to task-implement). The reference is extracted rather than copied
 #      into this guard: a literal here would be one more copy to keep in
 #      step, and with an extracted reference, rewording the ROLE sentence
 #      fails every copy not yet updated. Normalizing makes re-wrapping and
-#      CLAUDE.md's list indentation irrelevant.
+#      AGENTS.md's list indentation irrelevant.
 #   7. The rulings.md entry grammar (bounded by
 #      `<!-- canonical:rulings-grammar:start/end -->`), its four entry forms
 #      — FIX, FIX with the `; DEFER rest — <reason>` tail, DEFER, and NOT
@@ -93,7 +93,10 @@
 #      agents/code-fixer.md and agents/regression-verifier.md, which parse
 #      it. Check 5 holds only the file's name, so an action word reworded in
 #      one carrier would leave a skill writing rulings the agents read
-#      another way while every other check passes.
+#      another way while every other check passes. The FIX entry with the
+#      DEFER-rest tail sits second in the block so that the DEFER entry
+#      still occurs on one line of each carrier, where the self-test
+#      rewords it; the tail itself is held by the byte-identity alone.
 #   8. The second-fix-round step (bounded by
 #      `<!-- canonical:second-round:start/end -->`) is byte-identical in
 #      skills/task-review/SKILL.md, its Step 7 and the reference, and
@@ -138,7 +141,7 @@
 #                  one under .kenspc/runs/<run-id>/ after a review run).
 #   --self-test    Run the mutation regression fixture. Copies the eleven
 #                  target files (the five above, the other four reviewers,
-#                  plugins/kenspc/README.md, and CLAUDE.md) into a temp
+#                  plugins/kenspc/README.md, and AGENTS.md) into a temp
 #                  workdir, confirms
 #                  `change-set.md` is present in the four files check 5
 #                  reads, `pre-fix/index.txt` in its two, `rulings.md` and
@@ -184,7 +187,7 @@
 #                  in each of its three carriers in turn, and
 #                  `writes only under` changed to `writes only below` in the
 #                  README's copy of the reviewer invariant sentence, in
-#                  CLAUDE.md's, in task-review's, and in the reference
+#                  AGENTS.md's, in task-review's, and in the reference
 #                  itself, one file at a time, and `RUN_DIR/scratch/angle-<n>/`
 #                  changed to `RUN_DIR/tmp/angle-<n>/` on the last line of the
 #                  README's copy, so an extraction that stops short of the
@@ -215,7 +218,7 @@ QUALITY_REL="plugins/kenspc/agents/quality-reviewer.md"
 BUG_REL="plugins/kenspc/agents/bug-reviewer.md"
 TEST_REL="plugins/kenspc/agents/test-reviewer.md"
 README_REL="plugins/kenspc/README.md"
-CLAUDE_REL="CLAUDE.md"
+AGENTS_REL="AGENTS.md"
 CHANGE_SET_NAME="change-set.md"
 PRE_FIX_INDEX="pre-fix/index.txt"
 RULINGS_NAME="rulings.md"
@@ -581,9 +584,9 @@ run_main_logic() {
     echo "OK    no-command forms — named in regression-verifier, task-review, task-implement"
 
     # Check 6: the reviewer invariant sentence in its three copies.
-    local readme="$repo_root/$README_REL" claude_md="$repo_root/$CLAUDE_REL"
+    local readme="$repo_root/$README_REL" agents_md="$repo_root/$AGENTS_REL"
     local invariant copy
-    for f in "$readme" "$claude_md"; do
+    for f in "$readme" "$agents_md"; do
         if [[ ! -f "$f" ]]; then
             echo "ERROR: missing file $f" >&2
             return 2
@@ -595,7 +598,7 @@ run_main_logic() {
         return 2
     fi
     missing=0
-    for f in "$readme" "$claude_md" "$review"; do
+    for f in "$readme" "$agents_md" "$review"; do
         copy=$(normalize_ws "$f")
         if [[ "$copy" != *"$invariant"* ]]; then
             echo "DRIFT reviewer invariant sentence — $f does not contain it" >&2
@@ -610,7 +613,7 @@ run_main_logic() {
         echo "reviewer and every copy together." >&2
         return 1
     fi
-    echo "OK    reviewer invariant sentence — plugins/kenspc/README.md, CLAUDE.md, and task-review contain the reviewers' ROLE sentence"
+    echo "OK    reviewer invariant sentence — plugins/kenspc/README.md, AGENTS.md, and task-review contain the reviewers' ROLE sentence"
     return 0
 }
 
@@ -652,7 +655,7 @@ run_self_test() {
     local rel
     for rel in "$FIXER_REL" "$REVIEW_REL" "$IMPLEMENT_REL" "$VERIFIER_REL" "$REVIEWER_REL" \
                "$EDGE_REL" "$QUALITY_REL" "$BUG_REL" "$TEST_REL" \
-               "$README_REL" "$CLAUDE_REL"; do
+               "$README_REL" "$AGENTS_REL"; do
         mkdir -p "$WORK/$(dirname "$rel")"
         cp "$REPO_ROOT/$rel" "$WORK/$rel"
     done
@@ -987,7 +990,7 @@ run_self_test() {
     # Check 6: one word of the reviewer invariant sentence changed in each
     # copy in turn, and in the reference itself, which every copy then
     # fails to contain.
-    for rel in "$README_REL" "$CLAUDE_REL" "$REVIEW_REL" "$REVIEWER_REL"; do
+    for rel in "$README_REL" "$AGENTS_REL" "$REVIEW_REL" "$REVIEWER_REL"; do
         mutate_and_expect "invariant sentence in $rel" "$rel" \
             "writes only under" "writes only below" || return $?
     done

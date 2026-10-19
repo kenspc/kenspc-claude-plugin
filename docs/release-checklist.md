@@ -48,7 +48,7 @@ checklist.
 
 ## Docs currency (manual)
 
-CLAUDE.md (§ Subagent Review Architecture) records why two files
+The plugin README (§ Effort levels) records why two files
 override the session's effort — `task-implementer` and `code-fixer` at
 `high`, one level above the generation's default effort — and carries a
 "last reviewed" date against
@@ -56,7 +56,7 @@ Anthropic's effort guidance. Confirm each override's rationale still holds
 for the current Claude generation, and that the two agents still sit one
 level above its default — move them when the default moves, and drop an
 override whose reason no longer applies — and update that date (also in
-`plugin.json` and the README Effort levels section) before tagging.
+`plugin.json`) before tagging.
 
 ## Smoke checklist (manual, ~10 minutes)
 

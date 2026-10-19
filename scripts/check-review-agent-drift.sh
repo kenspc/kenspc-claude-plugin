@@ -3,7 +3,7 @@
 #
 # Verifies that the 5 review-angle agents share byte-identical CONTEXT YOU
 # WILL RECEIVE, ROLE, PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, and
-# REPORT DELIVERY sections. Project CLAUDE.md flags drift between these
+# REPORT DELIVERY sections. Project AGENTS.md flags drift between these
 # sections as a bug; this script is the mechanical guard. ROLE, CONTEXT YOU
 # WILL RECEIVE, and REPORT DELIVERY joined in v3.5.0: they carry the RUN_DIR
 # contract and the reviewers' one permitted write. It also checks that each
@@ -122,7 +122,7 @@ fi
 if [[ "$drift_found" -ne 0 ]]; then
     echo "" >&2
     echo "Drift detected. The 5 review-angle agents must keep their shared" >&2
-    echo "sections (${SECTIONS[*]}) byte-identical (per project CLAUDE.md" >&2
+    echo "sections (${SECTIONS[*]}) byte-identical (per project AGENTS.md" >&2
     echo "maintenance note). Apply the same edit to all 5 files." >&2
     exit 1
 fi

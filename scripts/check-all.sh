@@ -5,7 +5,7 @@
 # itself) in main mode, reports PASS/FAIL per script, and ends the pass
 # with a `guards run: N` line. Single entry point for pre-commit and
 # pre-flight runs, so adding a new guard script never requires updating
-# command lists in CLAUDE.md — new check-*.sh files are picked up
+# command lists in AGENTS.md — new check-*.sh files are picked up
 # automatically. The release checklist pins the expected N, so a guard
 # that disappears or stops matching the glob changes a visible number.
 #
@@ -16,7 +16,8 @@
 #                  "--self-test" argument), then print how many ran. Guards
 #                  without a fixture are listed as skipped rather than passed,
 #                  so a fixture that disappears shows up as a changed count.
-#                  The release checklist runs this form before tagging.
+#                  The release checklist runs this form before tagging and
+#                  pins the closing `self-tests run: N` count as well.
 #
 # Exit code 0: every guard passed (and, with --self-test, every fixture).
 # Exit code 1: at least one guard or fixture failed (its output is printed).

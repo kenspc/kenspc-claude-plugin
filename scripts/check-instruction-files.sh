@@ -6,7 +6,9 @@
 # (the reference), and every other file that uses the term carries the same
 # sentence, so each agent and skill has it at dispatch time without depending
 # on a runtime Read — the reason the writer agents inline the code-craft
-# principles (check-code-craft-canonical.sh).
+# principles (check-code-craft-canonical.sh). The definition's operative
+# part — whether or not Claude Code loaded the files — is what an agent
+# that skipped a runtime Read would get wrong.
 #
 # The check:
 #

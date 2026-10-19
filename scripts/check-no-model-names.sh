@@ -30,7 +30,13 @@
 #      init-project names the setting's values verbatim, since a user has to
 #      type them, and the marketplace, whose plugins it enables by
 #      `<plugin>@claude-plugins-official`. `${CLAUDE_PLUGIN_ROOT}` never
-#      matches (underscore, not hyphen).
+#      matches (underscore, not hyphen). The Claude in Chrome MCP server's
+#      identifier, as in its tool names, also holds `claude-` and a letter,
+#      so the autopilot skill names that tool in prose only (4.7.0). No
+#      exclusion was added for it: an identifier spelled around the rule
+#      would defeat it.
+#
+# CHANGELOG and docs/ are out of scope.
 #
 # Trailing carriage returns are stripped first so CRLF checkouts on Windows
 # parse the frontmatter delimiters the same way as LF checkouts.
