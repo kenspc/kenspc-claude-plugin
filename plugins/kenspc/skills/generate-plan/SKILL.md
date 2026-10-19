@@ -463,8 +463,7 @@ Then dispatch a subagent using the Agent tool:
 - description: "Review plan document"
 - prompt: the CONTEXT block above
 - run_in_background: false — the next step reads this agent's result in the
-  same turn. A background call returns at once, and a headless session stops
-  the agent when it exits.
+  same turn. A background call returns at once, before its result exists.
 
 The subagent executes the entire review (all four angles, in order) within
 its own context and returns the summary. No state file is written by the

@@ -333,19 +333,21 @@ can leave the tree clean and the diff's hash equal on another commit.
 Dispatch **5 subagents in a single message** using the Agent tool, one for
 each review angle, every call with `run_in_background: false`. Foreground
 calls sent in one message still run in parallel, and the next step reads all
-five results in this turn; a background call returns at once, and a headless
-session stops the agent when it exits.
+five results in this turn; a background call returns at once, before its
+result exists.
 A call can still come back with its agent running despite the flag, as one
 Desktop session saw once. Its result is then the completion notice that
 follows, not the call's reply: wait for that notice before the checks
 below, and dispatch nothing meanwhile — not that agent again, and not the
-next step's. In a headless session, which exits when its turn ends and
-stops the agent with it, do not end the turn to wait: wait in place, one
-Bash call per iteration,
+next step's. In a headless session, do not end the turn to wait: wait in
+place, one Bash call per iteration,
 `n=0; until [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done`, until the
-notice arrives between two calls. Why: the call's reply carries no report,
-so it reads as an agent that failed, and a re-dispatch would write the
-same angle beside it, or the next step would start while it still edits.
+notice arrives after one of those calls. Why: the call's reply carries no
+report, so it reads as an agent that failed, and a re-dispatch would write
+the same angle beside it, or the next step would start while it still
+edits; and a headless session whose turn ends while an agent runs answers
+the notice in a new turn, whose result alone `--output-format json`
+prints (Claude Code 2.1.302).
 Each reviewer is read-only on the working tree and writes only under
 `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
 files under `RUN_DIR/scratch/angle-<n>/`.
@@ -481,8 +483,7 @@ Dispatch a single subagent:
 - prompt: the CONTEXT block from Step 2, unchanged — code-fixer reads the 5
   reports from RUN_DIR itself.
 - run_in_background: false — the next step reads this agent's result in the
-  same turn. A background call returns at once, and a headless session stops
-  the agent when it exits.
+  same turn. A background call returns at once, before its result exists.
 
 The fix agent deduplicates overlapping findings, applies fixes, commits each
 one — except in an `uncommitted` run, below — and
@@ -535,8 +536,7 @@ After the fix agent returns, dispatch a single subagent:
 - prompt: the CONTEXT block from Step 2, unchanged — regression-verifier
   reads the 5 reports and schema-b.md from RUN_DIR itself.
 - run_in_background: false — the next step reads this agent's result in the
-  same turn. A background call returns at once, and a headless session stops
-  the agent when it exits.
+  same turn. A background call returns at once, before its result exists.
 
 The regression agent verifies:
 - every issue ID from the 5 reports is accounted for in schema-b.md, and the

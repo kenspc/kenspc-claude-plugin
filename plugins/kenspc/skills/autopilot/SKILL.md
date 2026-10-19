@@ -2375,8 +2375,9 @@ subagents, each with `run_in_background: false`. A subagent you dispatch
 dispatches none and starts no `claude -p`; in its prompt this rail reads:
 you are a subagent of an autopilot worker — dispatch no subagent and start
 no `claude -p`. You yourself still launch a nested session where your task
-block tells you to. Why: a background subagent is stopped when this
-headless session exits, and its result never reaches you; a subagent that
+block tells you to. Why: a background subagent's result reaches you only
+in a new turn after this one ends, and the driver keeps only the last
+turn's result, so what you reported before it is lost; a subagent that
 nests, or starts a headless session of its own, leaves the rails text one
 level behind, and a `claude -p` it starts is a session of its own that no
 nesting limit reaches — Claude Code computes the depth per process, a

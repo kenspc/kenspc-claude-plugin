@@ -975,8 +975,10 @@ process and may dispatch subagents, each with `run_in_background: false`,
 while a subagent it dispatches dispatches none and starts no `claude -p` —
 in the subagent's prompt the rail reads "you are a subagent of an
 autopilot worker — dispatch no subagent and start no `claude -p`". A
-background subagent is stopped when the headless worker exits, its result
-lost; a subagent that nests, or starts a headless session of its own,
+background subagent's result reaches the headless worker only in a new
+turn after the worker's turn ends, and the driver keeps only the last
+turn's result, so the worker's report before it is lost (measured on
+Claude Code 2.1.302); a subagent that nests, or starts a headless session of its own,
 leaves the rails text one level behind, and a `claude -p` it starts is a
 session of its own that no nesting limit reaches. The worker itself still
 launches the nested sessions its task block names (`plugin`-mode S4). The
@@ -1664,7 +1666,9 @@ on Windows.
   `/kenspc-task-implement` and `/kenspc-task-review` read such a call's
   result from that notice and dispatch nothing until it arrives; a
   headless session waits for it in place rather than ending its turn,
-  which would exit the session and stop the subagent. The
+  since a `claude -p` session whose turn ends while a subagent runs
+  answers the notice in a new turn, and `--output-format json` prints
+  only that turn's result (measured on Claude Code 2.1.302). The
   interactive terminal CLI is not measured; Claude Code
   2.1.301 drops the parameter there when its fork mode is on, and
   subagents then run asynchronously and hand each result back — the

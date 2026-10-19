@@ -320,8 +320,7 @@ Then dispatch a subagent using the Agent tool:
 - description: "Review task document"
 - prompt: the CONTEXT block above
 - run_in_background: false — the next step reads this agent's result in the
-  same turn. A background call returns at once, and a headless session stops
-  the agent when it exits.
+  same turn. A background call returns at once, before its result exists.
 
 ### Step 2: Render the result table (Schema E) and present the summary
 

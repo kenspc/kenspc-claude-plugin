@@ -507,8 +507,7 @@ itself still launches the nested sessions its task block names
 
 Every Agent dispatch in the skills sets `run_in_background: false`
 (v3.5.1): each skill reads the agent's result in the same turn, while a
-background call returns at once and is stopped when a headless session
-exits. Foreground calls sent in one message still run in parallel, which is
+background call returns at once, before its result exists. Foreground calls sent in one message still run in parallel, which is
 how the five reviewers are dispatched. The parameter exists in headless
 (`claude -p`) and SDK sessions, and in a Claude Code 2.1.301 Desktop
 session, measured on 2026-10-17: there a call with
@@ -524,11 +523,19 @@ the cause is not known. Since 4.10.2 the `canonical:dispatch` block of
 task-review and task-implement reads such a call's result from the
 completion notice and dispatches nothing until it arrives, and a headless
 session waits for it in place, with a Bash loop, rather than ending its
-turn, which would exit the session and stop the agent; the
-no-statistics-line and no-result-line clauses, the `canonical:second-round`
-dispatch, and task-implementer's dispatch point at it. That the notice
-reaches a headless session between two tool calls is a reading, not
-measured. The interactive terminal CLI is not measured:
+turn; the no-statistics-line and no-result-line clauses, the
+`canonical:second-round` dispatch, and task-implementer's dispatch point
+at it. Measured on Claude Code 2.1.302 (2026-10-19), with a deliberate
+background dispatch standing in for the early return: a `claude -p`
+session waiting in place got the notice right after the Bash call during
+which the agent finished; one that ended its turn did not exit or stop the
+agent, but answered the notice in a second turn and exited after it, and
+with `--output-format json` its stdout held only that second turn's
+result. That last point is the reason to wait in place. The earlier
+reading, that a headless session stops a background agent when it exits,
+which this file, the skills' dispatch bullets, and the autopilot preamble
+carried from v3.5.1 to 4.10.1, does not hold on 2.1.302; older versions
+are not measured. The interactive terminal CLI is not measured:
 the 2.1.301 binary drops the parameter when its fork-mode gate is on, which
 its docs tie to that CLI (a reading of the binary), and there subagents
 ran asynchronously, each result handed back within the same turn (observed

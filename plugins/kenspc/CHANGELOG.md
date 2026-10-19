@@ -63,14 +63,28 @@
   two agents writing one angle. The `canonical:dispatch` block now says
   that such a call's result is the completion notice that follows, to be
   waited for with nothing dispatched meanwhile, and that a headless
-  session, which exits when its turn ends and stops the agent with it,
-  waits in place with a Bash loop instead of ending its turn; the
+  session waits in place with a Bash loop instead of ending its turn; the
   no-statistics-line and no-result-line clauses, the second fix round's
   dispatch, and task-implement's task-implementer dispatch point at it.
-  Only the Desktop app has shown such a return; that the completion
-  notice reaches a headless session between two tool calls, as a
-  cross-session message does, is a reading, not measured. The maintainer
-  approved the wording after the 2026-10-19 prompt audit.
+  Only the Desktop app has shown such a return. The headless wait was
+  measured on Claude Code 2.1.302, with a deliberate background dispatch
+  standing in for it: a `claude -p` session waiting in place got the
+  notice right after the Bash call during which the agent finished. The
+  maintainer approved the wording after the 2026-10-19 prompt audit.
+- **The reason given for foreground dispatches no longer says a headless
+  session stops a background agent.** Since v3.5.1 the dispatch bullets of
+  generate-plan, generate-task, generate-guide, task-review, and
+  task-implement, the `canonical:dispatch` block, the autopilot preamble,
+  the plugin README, and CLAUDE.md said that a headless session stops a
+  background agent when it exits. On Claude Code 2.1.302 it does not: a
+  `claude -p` session whose turn ended while an agent ran stayed alive,
+  answered the agent's completion notice in a second turn, and exited
+  after it, and with `--output-format json` its stdout held only that
+  second turn's result. The bullets now say that a background call
+  returns before its result exists; the headless wait and the autopilot
+  preamble give the second-turn result as their reason, which is why a
+  worker's report written before the notice would be lost. Older versions
+  are not measured.
 
 ## 4.10.1 — 2026-10-19
 
