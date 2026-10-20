@@ -2220,8 +2220,8 @@ the reports, the main session builds the `Merge danger` section by the
 block below, in the User report's language, over
 `<baseline sha>..<last sha>`, the header's `<how chosen>` reading
 `the batch, baseline to last commit`. The plan is the spec, read with
-`git show <hash>:<path>` as the reviewer report's Spec line names it, since
-S6 may have removed it; the deployment document is read at the last sha,
+`git show <hash>:<path>`, the path and hash from the state file's `spec:`
+field, since S6 may have removed it; the deployment document is read at the last sha,
 `git show <last sha>:<path>`. It writes the section to
 `<workspace>/_logs/<batch>-merge-danger.md` and the state file's line
 `merge danger: <n> one-way, <u> unclear, <m> two-way — <that path>`, with
