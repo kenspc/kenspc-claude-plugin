@@ -197,18 +197,21 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
      note lists.
 - Input: code-fixer.md at Step 0's commit.
 - Output: the edited file.
-- Acceptance:
-  - `grep -c 'after each fix to catch breakage early' plugins/kenspc/agents/code-fixer.md`
-    prints 0, after printing 1 before the edit;
-  - `grep -c 'the narrowed command you used' plugins/kenspc/agents/code-fixer.md` prints 0,
-    after printing 1 before the edit;
+- Acceptance — phrase counts here and in Step 2 are taken over the file with its line breaks
+  joined, since the file wraps at about 78 columns and a plain `grep -c` misses a phrase split
+  across two lines: `tr '\n' ' ' < plugins/kenspc/agents/code-fixer.md | tr -s ' ' | grep -o
+  '<phrase>' | wc -l`. The phrase `verify your fixes with a narrowed command if you need to`,
+  which wraps in the file before the edit, counts 1 under this form (the positive control).
+  - `after each fix to catch breakage early` counts 0, after counting 1 before the edit;
+  - `the narrowed command you used` counts 0, after counting 1 before the edit;
   - the new bullets each carry a `Why:`;
   - `bash scripts/check-all.sh` exits 0.
 
 ### Step 2 — code-fixer.md: mutation checks (T1)
 
 - Do:
-  1. Add a PROCESSING APPROACH bullet, after the per-fix bullet of Step 1:
+  1. Add one PROCESSING APPROACH bullet, after the per-fix bullet of Step 1, written as prose
+     like the bullets around it (no nested list), carrying these points:
      - A fix for a finding that reports a surviving mutant is proved by running that mutant
        against the new or changed test. Take the mutant's definition from the reporting
        reviewer's rig under `RUN_DIR/scratch/angle-<n>/` — its diff or the script that applies
@@ -223,23 +226,27 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
        carries `not mutation-checked` after the em-dash.
      - A mutant already run in this run is not run again unless the code it mutates changed
        after that run.
-     - Whether "run" here spans a second fix round is Open Questions 4; the bullet states the
-       maintainer's answer.
      - Why:
        - the reviewer measured the finding's mutant, so killing it is the proof the fix needs,
          and its rig is already built;
        - one run swept 33 mutants again at the end, each already killed during the fixes,
          which took four minutes of whole-suite runs;
        - the cap is task-implementer's, which keeps the checks from exhausting the run.
+
+     Before writing it, settle Open Questions 4 (whether "run" spans a second fix round) with
+     the maintainer; the bullet states the answer.
   2. In the PER-ISSUE OUTPUT CONTRACT `action` field, add the form
      `FIXED — not mutation-checked`, joined with other parts by `; ` as the existing forms are.
-     State that counts still classify by the leading word.
+     Extend the field's existing sentence "Counts classify an action by its leading word, so a
+     reason or a document suffix never changes the bucket" to name the `not mutation-checked`
+     suffix too.
 - Input: code-fixer.md after Step 1.
 - Output: the edited file.
 - Acceptance:
-  - `grep -c 'at most three per run' plugins/kenspc/agents/code-fixer.md` prints 1;
-  - `grep -c 'not mutation-checked' plugins/kenspc/agents/code-fixer.md` prints at least 2 (the
-    bullet and the contract);
+  - `at most three per run` counts 1 (Step 1's joined-lines form), after counting 0 before the
+    edit;
+  - `not mutation-checked` counts at least 2 (the bullet and the contract), after counting 0
+    before the edit;
   - the Schema B example between the `example:schema-b` markers is unchanged
     (`git diff -U0` shows no hunk there);
   - `bash scripts/check-all.sh` exits 0.
@@ -249,7 +256,8 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
 - Do: in § How the main session rules, after the paragraph on departing from a spec sentence,
   add a paragraph headed **A ruling on a review's findings.** Its content:
   - A FIX entry in `rulings.md` names the change and, at most, the checks of the code it
-    touches: the Acceptance commands, or the reviewer's mutants, whose files the fix edits.
+    touches: the Acceptance commands whose command text names, or runs a test file of, a file
+    the fix edits, and the reviewer's mutants of a file the fix edits.
   - When the `Acceptance:` field names cases, a ruling in a review that S4's first run follows —
     S3's review, S3b, or a narrowed review of Phase 2 — does not ask code-fixer to run every
     Acceptance command again, or every mutant. S4 runs every case after Phase 2's last fix, and
@@ -281,7 +289,12 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
 - Input: Steps 1–3 done.
 - Output: the edited documents.
 - Acceptance:
-  - each listed document's change is present;
+  - each listed document's change is present: in `plugins/kenspc/README.md`,
+    `not mutation-checked` occurs in the `Final checks:` bullet and the Autopilot paragraph
+    names S4 and the Phase 3 narrowed review; `grep -c '^## 4.12.0 — unreleased$'
+    plugins/kenspc/CHANGELOG.md` prints 1; `grep -c '^34\. ' docs/roadmap.md` prints 1;
+  - the documents marked N/A show no change (`git -C <repo> diff --name-only` lists none of
+    them);
   - the CHANGELOG entry lists every change with its reason (AGENTS.md: review summaries list
     every change and why) and cites the analysis directory as its evidence.
 
@@ -312,7 +325,10 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
      session id and `total_cost_usd`. A session without `--plugin-dir` runs the installed
      4.11.0 copy; a headless session in the default permission mode has its Bash and Edit calls
      denied, since nobody can approve them.
-  4. Read code-fixer's transcript and the run directory.
+  4. Read code-fixer's transcript — under
+     `~/.claude/projects/<the seed path, encoded>/<session id from the JSON>/subagents/`, the
+     `agent-*.jsonl` file whose first prompt is code-fixer's CONTEXT block — and the run
+     directory `.kenspc/runs/<run-id>/` in the seed.
 - Expected cost: USD 3–5, by the 4.11.0 row-6 smoke runs.
 - Input: the edited plugin.
 - Output: a record at `docs/dry-runs/code-fixer-trims-smoke.md`, with the run directory path,
@@ -361,10 +377,14 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
   unreleased entries are headed until the release commit dates them, with an opening paragraph
   and a `### Changed` subsection: T1, T2, T3, T4a, each with its reason and the analysis it
   rests on. Steps 1–3.
-- `docs/roadmap.md`: a new item after 33, "Whether the code-fixer trims (4.12.0) cut its time".
-  - Baseline: the 46 dispatches from 2026-10-12, as in `classify-since-1012.out` and
-    `../fixer/aggregate.out`.
-  - The scripts: `fixer-trims/classify_calls.py` with its date argument.
+- `docs/roadmap.md`: a new item 34, after item 33, "Whether the code-fixer trims (4.12.0) cut
+  its time". Paths are under the maintainer's
+  `~/Projects/_smoke/_analysis/review-time-20261019/followup/`, as item 33 names its own.
+  - Baseline: the 46 dispatches from 2026-10-12, as in `fixer-trims/classify-since-1012.out`
+    and `fixer/aggregate.out`.
+  - The scripts: `fixer-trims/classify_calls.py`, run as its usage line gives it
+    (`classify_calls.py <dir holding common.py> [out.json] [since YYYY-MM-DD]`), with the
+    release date of 4.12.0 as the date argument.
   - What to compare, and the guardrails: section 5 of the analysis README.
   - When: after 30 code-fixer dispatches on 4.12.0 or later.
   - Steps 1–3.
