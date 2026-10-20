@@ -67,6 +67,11 @@ PREREQUISITES
    BLOCKED with the reason.
 3. Read the task document. Identify all incomplete tasks.
 4. Run "git log --oneline -10" to understand what has already been implemented.
+5. Read `${CLAUDE_PLUGIN_ROOT}/shared/review-bar.md` before the first task: it
+   holds what the five review agents check right after this run, each angle
+   followed by an `At write time` list. Why: a gap the review finds costs a
+   review row, a code-fixer edit, and a regression-verifier check, where the
+   same test or comment written with the code costs one edit.
 
 DONE CRITERIA
 - Every incomplete task has a final status (DONE or BLOCKED) recorded in the
@@ -81,6 +86,8 @@ DONE CRITERIA
   task's code+status commit. The Schema D prose sections are assembled by
   re-reading those persisted blocks back from the document at roll-up time, not
   recalled from context.
+- Every task this run marks DONE has a `Test map:` sub-bullet in its
+  `**Implementation notes:**` block (QUALITY CHECKLIST).
 - The Schema D summary lists every processed task with its final status, files
   touched, and commit hash.
 - The Schema D summary carries the `## Decisions needing a home` section, with
@@ -96,7 +103,8 @@ Before processing incomplete tasks, scan for any task already marked DONE or
 BLOCKED that has no `**Implementation notes:**` block on disk — for example a
 task whose status flip committed but whose block write was lost to a mid-run
 stall, or a task completed before this convention existed. For each such task,
-backfill a minimal block (a `Decisions:`/`Changes/tradeoffs:` pair for DONE, a
+backfill a minimal block (a `Decisions:`/`Changes/tradeoffs:` pair for DONE, with
+no `Test map:`, which records checks made while the task ran; a
 `- Blocked:` line for BLOCKED) reconstructed from git history for that task, and
 commit it in its own task-document-only commit. If the rationale cannot be
 recovered, record `Decisions: not recoverable (block lost before persistence)`
@@ -138,9 +146,10 @@ are:
   line. For a DONE task the block captures `Decisions:` (non-trivial choices and
   their rationale; "none" if trivial) and `Changes/tradeoffs:` (deviations from
   or elaborations beyond the task spec, plus any accepted tradeoffs; "none" if
-  nothing notable) — these sub-bullets are the illustrative shape, not a mandated
-  checklist, and `Changes/tradeoffs` is not a file list (the touched-files
-  enumeration stays in the Schema D `## Tasks` table and in git). Include the
+  nothing notable) — these two sub-bullets are the illustrative shape, not a
+  mandated checklist, and `Changes/tradeoffs` is not a file list (the touched-files
+  enumeration stays in the Schema D `## Tasks` table and in git) — and the
+  `Test map:` the QUALITY CHECKLIST requires. Include the
   code changes, the status update, and the notes block in the same git commit.
   Why: this makes each task's rationale durable on disk before the next task
   starts, so a mid-run stall cannot lose the reasoning behind work already
@@ -212,14 +221,36 @@ QUALITY CHECKLIST (apply to code you write for this task — not existing code)
   move a value into configuration only when the task asks for it to be
   configurable.
 - Tests: cover each new behavior's happy path, and the edge cases and error
-  paths it actually has. Test behavior, not implementation details. Each test must be able
+  paths it actually has. Each branch, guard, and limit the task adds or
+  alters, each rule the task document or its plan states for this task, and
+  each behavior one of the task's `Decisions:` settles (an input it accepts
+  or refuses that the task left open), has a test that fails when that piece
+  is removed or changed; a limit is
+  tested at the limit and one past it. Test behavior, not implementation details. Each test must be able
   to fail: if it would pass even with the covered logic wrong, it verifies
   nothing. If no failing-capable test can be written for a task, treat that as a
   design concern and record it in that task's `**Implementation notes:**` block
   rather than shipping a tautological test.
+- Test map: before committing a DONE task, write a `Test map:` sub-bullet in
+  its `**Implementation notes:**` block, one line per piece the Tests item
+  names: `<piece> (<file>:<line>) → <test file>::<test name>`, or
+  `→ none: <reason>` where no test of this task holds it — a later task's
+  test does, or the design concern above. Where you are unsure the
+  named test fails when the piece breaks — its fixture gives the same answer
+  either way, or it reaches the piece only through another path — prove it
+  with a mutation check (SCRATCH SPACE), at most three per task, and end the
+  line `(mutation-checked)`; a further unsure line ends `(unchecked)`. A task
+  that adds or alters no behavior, such as a Doc-sync task, writes
+  `Test map: none (no behavior added or altered)`. Why: the test reviewer
+  removes or changes each such piece and reports every one that no test
+  catches, and it found some in most reviews of implemented work; naming the
+  test for each piece is where a missing one shows. The cap keeps the checks
+  from exhausting the run's context, which has stopped an implementer
+  partway before.
 - Security: validate and sanitize user-facing inputs; no hardcoded secrets.
 
-Before committing each task, verify your implementation against this checklist.
+Before committing each task, verify your implementation against this checklist
+and against the `At write time` lists of the review bar (PREREQUISITES step 5).
 
 SCRATCH SPACE
 - Every probe, copy, mutant, and runner config you write goes under

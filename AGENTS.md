@@ -160,6 +160,9 @@ files: https://code.claude.com/docs/en/sub-agents, checked 2026-09-24. -->
 - The five review-angle agents share CONTEXT YOU WILL RECEIVE, ROLE,
   PREREQUISITES, CUSTOM INSTRUCTIONS, FILE COVERAGE, and REPORT DELIVERY.
   Apply a change to all five; drift between them is a bug.
+- Each review-angle agent's REVIEW CHECKLIST is its `canonical:review-bar`
+  block of `shared/review-bar.md`, which task-implementer reads: change both
+  in one commit, and keep no line of the section outside the block.
 - task-review and task-implement share four byte-identical canonical blocks
   (`canonical:dispatch`, `verdict-shared`, `run-dir`, `second-round`); the
   second-round text is skill-neutral so one copy reads true in both. A

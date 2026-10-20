@@ -26,6 +26,11 @@ Dependency note: Task 6 depends on Tasks 1–5 (`Depends on: Task 1-5`) and runs
 - Decisions: named the column `passwordHash` (not `password`) to make the
   hashed-only storage intent explicit at the schema level.
 - Changes/tradeoffs: none — implemented exactly as specified.
+- Test map:
+  - email unique (prisma/schema.prisma:14) → none: Task 5 writes the tests
+    against this table, and its duplicate-email case holds the constraint.
+  - migration applies (prisma/migrations/20260101_user/migration.sql) →
+    `prisma migrate dev` in the task's verification; no test file.
 
 Add a `User` model to the Prisma schema with fields: id, email (unique), passwordHash,
 createdAt, updatedAt. Run the migration.

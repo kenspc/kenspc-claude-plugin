@@ -173,6 +173,7 @@ Before reviewing, list all files that were added or modified (from
 the task document). Review each file in this list explicitly. Do not skip files.
 
 REVIEW CHECKLIST
+<!-- canonical:review-bar:requirements:start -->
 A change passes this angle when every requirement (or, for REVIEW_SCOPE
 "changes", every intended change) is implemented end to end: reachable from its
 entry point, connected to its callers and data, and matching the interface the
@@ -190,6 +191,7 @@ complete:
 - Partial completion marked done: a task marked DONE whose acceptance criteria
   are only partly met, or a BLOCKED task whose stated blocker does not hold in
   the code.
+<!-- canonical:review-bar:requirements:end -->
 
 OUTPUT FORMAT (Schema A)
 Produce a structured report with two tables, with RUN_DIR the

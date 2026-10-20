@@ -9,8 +9,10 @@
 #   2. plugins/kenspc/references/task-document-example.md (the demonstrated block
 #                                                          users copy from)
 #
-# The DONE block shape uses two load-bearing sub-bullet labels — `Decisions:`
-# and `Changes/tradeoffs:`. The agent prescribes them and the example doc
+# The DONE block shape uses three load-bearing sub-bullet labels —
+# `Decisions:`, `Changes/tradeoffs:`, and `Test map:` (since 4.11.0, named so
+# rather than `Tests:`, a word too common for a presence check to fail on).
+# The agent prescribes them and the example doc
 # demonstrates them; if a future edit renames one label in one file but not
 # the other, the example silently drifts from what the live agent writes and a
 # user copying the example would author the wrong shape. A byte-identity guard
@@ -49,7 +51,7 @@ run_main_logic() {
 
     local files=("$agent_file" "$example_file")
     # Load-bearing sub-bullet labels of the DONE Implementation notes block.
-    local labels=("Decisions:" "Changes/tradeoffs:")
+    local labels=("Decisions:" "Changes/tradeoffs:" "Test map:")
 
     local f
     for f in "${files[@]}"; do
@@ -77,13 +79,13 @@ run_main_logic() {
     if [[ "$drift_found" -ne 0 ]]; then
         echo "" >&2
         echo "The per-task Implementation notes sub-bullet labels (Decisions:," >&2
-        echo "Changes/tradeoffs:) must stay in sync between the live agent" >&2
+        echo "Changes/tradeoffs:, Test map:) must stay in sync between the live agent" >&2
         echo "(agents/task-implementer.md) and the demonstrated example" >&2
         echo "(references/task-document-example.md). Restore the missing label." >&2
         return 1
     fi
 
-    echo "OK    notes-format-sync — both DONE-block labels present in agent and example"
+    echo "OK    notes-format-sync — all three DONE-block labels present in agent and example"
     return 0
 }
 

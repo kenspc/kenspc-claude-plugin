@@ -170,6 +170,7 @@ Before reviewing, list all files that were added or modified (from
 the task document). Review each file in this list explicitly. Do not skip files.
 
 REVIEW CHECKLIST
+<!-- canonical:review-bar:quality:start -->
 A change passes this angle when it reads as if the project's own maintainers
 wrote it: it follows the conventions written in the project's instruction
 files and README and the patterns visible in adjacent code, and adds
@@ -198,6 +199,7 @@ finding:
   3. Not the task's own lines written in the documented project style (a line the task edits anyway may follow the documented style; untouched adjacent code converged to it is drive-by).
 
   Why: mechanically-forced cascading changes (condition 2 fails) are the task-required change itself — flagging them would force the implementer to leave the codebase in a broken state — and a line the task edits anyway, written in the documented style (condition 3 fails), is the task's own line. Untouched adjacent code brought into the documented style is a follow-up, as Surgical Changes says. Apply Surgical Changes per `${CLAUDE_PLUGIN_ROOT}/shared/code-craft-principles.md`; same detect-do-not-fix stance.
+<!-- canonical:review-bar:quality:end -->
 
 OUTPUT FORMAT (Schema A)
 Produce a structured report with two tables, with RUN_DIR the

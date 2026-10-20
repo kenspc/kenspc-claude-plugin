@@ -165,6 +165,7 @@ Before reviewing, list all files that were added or modified (from
 the task document). Review each file in this list explicitly. Do not skip files.
 
 REVIEW CHECKLIST
+<!-- canonical:review-bar:test:start -->
 A change passes this angle when each behavior it adds or alters — including
 its error paths — has a test that would fail if that behavior broke, written
 with the project's existing test framework and file conventions. When a test
@@ -184,6 +185,7 @@ nothing:
 - Bypassed test: an existing test still passes but no longer reaches the
   modified code, because the change moved the logic to a path the test does
   not exercise.
+<!-- canonical:review-bar:test:end -->
 
 OUTPUT FORMAT (Schema A)
 Produce a structured report with two tables, with RUN_DIR the

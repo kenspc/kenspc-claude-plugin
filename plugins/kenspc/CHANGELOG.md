@@ -20,7 +20,55 @@ they reported fell in a batch `auto` still sends to S3b. The trial the
 roadmap had planned before the change is replaced by a check after it
 (roadmap item 28).
 
+task-implementer now writes to the bar the review checks. A read-back of
+1005 review findings from 96 reviews of the same product found 472 (47%)
+that name a branch, guard, limit, or planned rule no test held: removed or
+changed, the suite stayed green. They were 430 of the 716 rows code-fixer
+fixed, and 40 of 44 reviews of freshly implemented tasks reported at least
+one. The implementer had been told to test "the error paths", but not that
+the test reviewer removes each piece to see a test fail, nor eleven other
+checks the five reviewers name. The read-back is kept outside
+the repository, at `~/Projects/_smoke/_analysis/review-time-20261019/`
+(its README, then `followup/README.md`).
+
+### Added
+
+- `shared/review-bar.md`: the five review-angle agents' REVIEW CHECKLISTs,
+  each between `canonical:review-bar:<angle>` markers and word for word the
+  agent's own, each followed by an `At write time` list for the implementer
+  (for example: connect a new piece to its entry point, refuse when a guard's
+  own check fails, invalidate the caches a write changes).
+- `scripts/check-review-bar-canonical.sh`: each block identical in the file
+  and in its agent, no line of an agent's REVIEW CHECKLIST outside its block
+  (a check added below the block would never reach the implementer), and
+  task-implementer naming the file; `--self-test` breaks each in turn.
+
 ### Changed
+
+- `agents/task-implementer.md`: reads the review bar before the first task
+  (PREREQUISITES step 5) and checks each task against its `At write time`
+  lists. The Tests item names its unit: each branch, guard, and limit the
+  task adds or alters, each rule the task document or plan states for it, and
+  each behavior one of its own `Decisions:` settles, has a test that fails
+  when the piece is removed or changed, limits tested at the limit and one
+  past it. The decided behaviors joined after the smoke run: an implementer
+  that decided to accept leading zeros in a number left them untested, and
+  two reviewers reported it. Each task marked DONE gains a `Test map:`
+  sub-bullet naming that test per piece, or `none: <reason>`; a piece whose
+  test it is unsure of gets a mutation check, at most three per task, the
+  rest marked `(unchecked)`. The cap keeps the checks from exhausting the
+  dispatch's context. Backfilled blocks carry no Test map.
+- The five review-angle agents: REVIEW CHECKLIST wrapped in the canonical
+  markers; no wording changed. None is told to use the Test map, which they
+  see only as part of the task document's Implementation notes, so a review
+  still checks the code, not the implementer's account of it.
+- `references/task-document-example.md`: Task 1's notes show a `Test map:`.
+- `scripts/check-notes-format-sync.sh`: checks the `Test map:` label in the
+  agent and the example too (named so rather than `Tests:`, a word too common
+  for a presence check to fail on).
+- AGENTS.md and the plugin README describe the review bar and the Test map.
+- `docs/release-checklist.md`: `guards run: 15`, `self-tests run: 14`; smoke
+  row 6 checks the Test map, the mutation cap, and the Read of the review bar.
 
 - `skills/autopilot/SKILL.md`: `Standalone review:` defaults to `auto` in
   `repo` mode and stays `on` in `plugin` mode, where `off` and `auto` are

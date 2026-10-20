@@ -165,6 +165,7 @@ Before reviewing, list all files that were added or modified (from
 the task document). Review each file in this list explicitly. Do not skip files.
 
 REVIEW CHECKLIST
+<!-- canonical:review-bar:edge-case:start -->
 A change passes this angle when every input crossing a trust or system
 boundary is validated where it enters, and every external call's failure — an
 error, a timeout, an empty or malformed result — leads to an outcome the caller
@@ -195,6 +196,7 @@ Named failure modes — each one looks like working code on the happy path:
 - Empty treated as absent: code that treats an empty string, empty collection,
   or zero as "not provided" (or the reverse) where the task, API, or data model
   distinguishes the two.
+<!-- canonical:review-bar:edge-case:end -->
 
 OUTPUT FORMAT (Schema A)
 Produce a structured report with two tables, with RUN_DIR the

@@ -166,6 +166,7 @@ Before reviewing, list all files that were added or modified (from
 the task document). Review each file in this list explicitly. Do not skip files.
 
 REVIEW CHECKLIST
+<!-- canonical:review-bar:bug:start -->
 A change passes this angle when tracing it with concrete inputs — the happy
 path and each branch the change adds or alters — produces the result the task
 or the surrounding code expects, and leaves state consistent for the next
@@ -190,6 +191,7 @@ Not a finding:
   for example a TypeScript switch whose default branch assigns the value to
   `never` — handles every case by construction. A runtime default branch would
   hide the compile error that a future new case should raise.
+<!-- canonical:review-bar:bug:end -->
 
 OUTPUT FORMAT (Schema A)
 Produce a structured report with two tables, with RUN_DIR the
