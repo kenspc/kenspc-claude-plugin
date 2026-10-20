@@ -41,8 +41,10 @@
 #                  SKILL.md files into a temp workdir and runs the main
 #                  check (must exit 0); then, recopying the sources after
 #                  each mutation and running the check again (must exit 0):
-#                  (a) one word changed inside the block of the task-review
-#                  copy (must exit 1, naming byte-identity alone); (b) the
+#                  (a) one word changed inside the block of one copy, each
+#                  copy in turn (must exit 1, naming byte-identity alone,
+#                  and, for a task-implement or autopilot copy, that file's
+#                  path); (b) the
 #                  anchor `none named` replaced identically in all three
 #                  copies (must exit 1, naming the anchor check alone — in
 #                  one copy it would fail byte-identity first, and the
@@ -228,14 +230,20 @@ copy_sources() {
 }
 
 # Run the main check on the workdir; expect the given exit code, and, for a
-# failure, exactly the one named label among the three. Prints a FAIL line
-# and returns 1 on any other result.
+# failure, exactly the one named label among the three, and the optional
+# fourth argument's text in the output. Prints a FAIL line and returns 1 on
+# any other result.
 expect_result() {
-    local want_rc="$1" want_label="$2" what="$3"
+    local want_rc="$1" want_label="$2" what="$3" want_text="${4:-}"
     local out rc label
     out=$( ( run_main_logic "$WORK" ) 2>&1 ) && rc=0 || rc=$?
     if [[ "$rc" -ne "$want_rc" ]]; then
         echo "FAIL  self-test $what: expected exit $want_rc, got $rc" >&2
+        printf '%s\n' "$out" >&2
+        return 1
+    fi
+    if [[ -n "$want_text" && "$out" != *"$want_text"* ]]; then
+        echo "FAIL  self-test $what: output does not name $want_text" >&2
         printf '%s\n' "$out" >&2
         return 1
     fi
@@ -293,15 +301,24 @@ run_self_test() {
     # Positive path.
     expect_result 0 "" "positive path (unmutated copies)" || return 1
 
-    # (a) One word changed inside one copy's block: byte-identity alone.
-    mutate_block "$review_copy" "$word_from" "$word_to"
-    if [[ "$(extract_block "$review_copy")" != *"$word_to"* ]]; then
-        echo "FAIL  self-test: mutation (a) did not apply inside the block of $review_copy" >&2
-        return 2
-    fi
-    expect_result 1 "$LABEL_IDENTITY" "mutation (a), one word changed in one block" || return 1
-    copy_sources
-    expect_result 0 "" "revert after (a)" || return 1
+    # (a) One word changed inside one copy's block, each copy in turn:
+    # byte-identity alone. A carrier's own mutation must name that carrier,
+    # so a carrier dropped from the comparison loop is caught.
+    local want
+    for f in "$review_copy" "$WORK/$IMPL_REL" "$WORK/$AUTOPILOT_REL"; do
+        mutate_block "$f" "$word_from" "$word_to"
+        if [[ "$(extract_block "$f")" != *"$word_to"* ]]; then
+            echo "FAIL  self-test: mutation (a) did not apply inside the block of $f" >&2
+            return 2
+        fi
+        want=""
+        if [[ "$f" != "$review_copy" ]]; then
+            want="$f diverges"
+        fi
+        expect_result 1 "$LABEL_IDENTITY" "mutation (a), one word changed in the block of $f" "$want" || return 1
+        copy_sources
+        expect_result 0 "" "revert after (a)" || return 1
+    done
 
     # (b) An anchor replaced identically in all three copies: anchors alone.
     for f in "$review_copy" "$WORK/$IMPL_REL" "$WORK/$AUTOPILOT_REL"; do

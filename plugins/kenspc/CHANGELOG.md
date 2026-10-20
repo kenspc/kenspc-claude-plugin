@@ -72,10 +72,11 @@ code can answer from.
   placement inside the fenced templates only — `## Merge danger` between
   `## Verdict` and `## Next steps` in Schema F and Schema G, and a
   `- Merge danger:` line in the reviewer report. Its `--self-test` runs
-  four mutations — a word changed in one copy, an anchor replaced in all
-  three, the heading moved after `## Next steps`, and the reviewer-report
-  field removed — and asserts each fails its own check alone. The release
-  checklist's counts move to `guards run: 16` and `self-tests run: 15`.
+  four mutations — a word changed in each copy in turn, an anchor replaced
+  in all three, the heading moved after `## Next steps`, and the
+  reviewer-report field removed — and asserts each fails its own check
+  alone. The release checklist's counts move to `guards run: 16` and
+  `self-tests run: 15`.
 
 ### Changed
 
