@@ -704,7 +704,9 @@ section; this skill names the range and the plan it reads.
   The header's `<how chosen>` reads `since the task document was added`.
   When the `git log` command prints nothing, the header reads
   `Range: not determined — no commit added the task document`, and the
-  section holds one `unclear` row saying so. In a shallow clone
+  section holds one `unclear` row saying so and no catch-all row, counted
+  as 0 one-way, 1 unclear, 0 two-way. Why no catch-all: its zeros would
+  assert a range nobody read. In a shallow clone
   (`git rev-parse --is-shallow-repository` prints `true`), the header reads
   `Range: not determined — shallow clone` instead, with the same one row.
   Why: the clone's oldest fetched commit lists every file as added, so the
