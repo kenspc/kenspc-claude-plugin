@@ -757,6 +757,12 @@ PASS / FAIL / PARTIAL / BLOCKED — one paragraph rationale.
 BLOCKED applies when every task in Schema D is BLOCKED; in that case the
 Code Review / Fixes / Verification sections are omitted.
 
+## Merge danger
+
+(Built by the `canonical:merge-danger` block below, over the range and
+plan this skill names above the block; rendered under every verdict,
+BLOCKED included.)
+
 ## Next steps
 
 Bulleted list (failed verifications, deferred issues, blocked task
@@ -818,6 +824,150 @@ left in an earlier message is missing from it; and the release checklist
 reads each log a Schema C row names. A final report that pointed back at
 Step 5's Schema D left out its `## Checks run`, and one that shortened the
 test row's Detail dropped the log path the agent had given.
+
+**The `## Merge danger` range and plan.** The block below builds the
+section; this skill names the range and the plan it reads. The range is
+`<the oldest commit that added TASK_FILE>..HEAD`, with HEAD read when the
+report is rendered, and the commit found as code-fixer finds it:
+`git log --diff-filter=A --reverse --format=%H -- <TASK_FILE> | head -n 1`.
+The header's `<how chosen>` reads `since the task document was added`.
+When that command prints nothing, the header reads
+`Range: not determined — no commit added the task document`, and the
+section holds one `unclear` row saying so. The plan is the path on the task
+document's `Related plan:` line, repository-relative: `none named` when the
+document has no such line, and `<path> (not found)` when the path does not
+exist at HEAD. With every task BLOCKED, the section is still rendered over
+this range. Why the document's whole history, not this run's commits: a
+task document implemented across several runs leaves as a whole, and
+`/kenspc-task`'s reviewer and `/kenspc-diagnose` both commit the document
+before any implementation, so its oldest adding commit marks where the
+batch starts without a new pin. Why under BLOCKED: the commits earlier runs
+made still leave with the document.
+
+<!-- canonical:merge-danger:start -->
+**Merge danger.** The `Merge danger` section tells the user, in plain
+words, which changes in the run's range cannot be undone and how far a
+failure would reach, and every claim in it names the file and line it rests
+on. The orchestrating session builds it itself, before the final report,
+with no agent dispatched; the skill that carries this block, the carrier,
+names the run's range and the plan outside it. Why: the work is a file
+list, a read of the matched files, and a read of two documents, and a
+dispatch costs more than it does.
+
+- **Inputs.** The run's range; the deployment document — the one the
+  project's instruction files name, otherwise `docs/deployment.md` — whose
+  `## Migrations` and `## Rollback` sections answer whether a change can be
+  undone in one step, and every path it names is a signal; and, in the plan
+  the carrier names, the section whose heading begins `## Risks`. Without a
+  deployment document the built-in signals stand alone; without a plan, or
+  in a plan with no such section, `plan-risk` has no input and matches
+  nothing. Why: the project's own one-way doors are written in its
+  deployment document, and the plan's risks were judged before the code was
+  written; the final report is where both would otherwise be lost.
+- **Signals.** Eight, each with a fixed English name, checked over every
+  file in the range:
+
+  | Signal | Read from | Matches |
+  |---|---|---|
+  | `schema` | the file list and the files | a path the deployment document's Migrations section names, a path with a `migration` or `schema` segment, or a changed file holding DDL |
+  | `removal` | the file list and removed lines | a path with status `D` or `R`; a removed line that declared a public symbol, a field, a column, or a route |
+  | `contract` | the changed files | a file that defines what another program calls or reads: routes and handlers, OpenAPI, GraphQL, or protobuf schemas, a package's exported entry point, a CLI's flags, a webhook or message format |
+  | `config` | the file list | configuration, an environment example, a CI workflow, a container or infrastructure file |
+  | `dependency` | the file list | a package manifest or lock file |
+  | `outside-write` | added lines | code that writes data outside the repository: a database, a queue, an external API, a file outside the working tree, a message or email sent |
+  | `deploy-doc` | the deployment document | a path or rule the document names that the range touches |
+  | `plan-risk` | the plan's Risks | a risk whose subject a changed file touches |
+
+  Path signals are matched on the file list alone: `schema`'s path part,
+  `removal`'s `D` and `R` statuses, `config`, `dependency`, and
+  `deploy-doc`. Content signals are matched on lines the session reads:
+  `contract`, `outside-write`, `plan-risk`, and the content parts of
+  `schema` (DDL) and `removal` (a removed declaration). Why: a path match
+  can be checked by re-running it; a content judgement can only be checked
+  by reading the evidence, so the reader needs to know which is which.
+- **Reading.** First the range's file list,
+  `git diff --name-status <range>`; then, file by file, only the added and
+  removed lines, `git diff -U0 <range> -- <path>` — or the commands the
+  carrier names for a range that ends at the working tree. A file whose
+  `-U0` diff the session did not read, for any reason, stopping to protect
+  its context included, is named in an `unclear` row and never counted in a
+  `two-way` row. Why: the orchestrating session has a context to protect,
+  and a file nobody read cannot be called reversible.
+- **Labels.** `two-way`: one `git revert` of the change's commits — or a
+  discard of an uncommitted change — followed by the project's usual
+  release, restores the state before the change, with no data lost and
+  nobody outside the team needing to act. `one-way`: it does not.
+  `unclear`: the evidence read does not settle it, and the row names what
+  would. Why one step: a fixed test is what lets two readers label the same
+  change alike. Why `unclear`: without it, a session that lacks the
+  evidence guesses `two-way`.
+- **Rows.** One row per change that matched a signal, not one per file: a
+  change that spans several files is one row that lists them all. Each row
+  gives its label and the change in plain words, then three answers in the
+  report's language — what users see or do differently; whether it can be
+  undone in one step, and why; who a failure reaches: this machine only,
+  the team, the product's users, or people and systems outside it — then
+  one short technical line, and `Evidence:` with the signal names and each
+  `file:line` the row rests on. An `unclear` row also names the missing
+  evidence. A signal-matched row without a `file:line` is not written; an
+  `unclear` row that has none to give — for files whose diff was not read,
+  or for a range not determined — names the files or the cause in its
+  place. Why one row per change: a batch that touches many configuration
+  files would otherwise fill the section with rows that say one thing. Why
+  the evidence: a door named without evidence cannot be checked, and the
+  user decides from this section alone.
+- **Catch-all.** The last row, labelled `two-way`, covers every changed
+  file no signal matched: their count, the range, and each signal's count
+  over those files — path signals first, then content signals — each zero,
+  which is what the row asserts and what a reader re-runs to check. It
+  never says "low risk". When every file matched a signal, the row is still
+  written, over zero files. Why: a zero the reader can re-run is evidence,
+  "low risk" is not, and the split shows which zeros one command checks and
+  which rest on reading.
+- **Header.** Before the rows: `Range: <range> (<how chosen>)`,
+  `Deployment document: <path | not found>`,
+  `Plan: <path | <path> (not found) | none named>`, then, on its own line,
+  `Count: <n> one-way, <u> unclear, <m> two-way`, which counts rows, the
+  catch-all among the `two-way` ones. `Plan:` reads `none named` when the
+  carrier names no plan, and `<path> (not found)` when the named path does
+  not exist where the carrier reads it. Why: the header says what the rows
+  were read against, so a missing input shows as missing rather than as a
+  change that matched nothing.
+- **Language.** Fixed in English whatever the report's language: the
+  heading `Merge danger`, the labels `one-way`, `two-way`, and `unclear`,
+  and the eight signal names. Everything else — the header's field names,
+  the three answers, `Evidence:`, the empty-range line — follows the
+  report's language. Why: a fixed heading and fixed labels are what a
+  search, a guard, and a count can find; the rest is written for the user.
+- **Empty range.** A range that holds no change makes the section one line:
+  `none — the range holds no change`. Why: a header and a catch-all over no
+  file would read as a change that was checked and found safe.
+- **Not a gate.** The section changes no verdict and asks nothing. Why: the
+  report already gates on correctness; this section informs the decision
+  to let the work out, which stays the user's.
+
+A rendered section, below its heading:
+
+```
+Range: 3f2a1c0..9b7e4d2 (since the task document was added) · Deployment document: docs/deployment.md · Plan: docs/plans/auth-plan.md
+Count: 1 one-way, 1 unclear, 2 two-way
+
+1. `one-way` — the users table loses its legacy_token column
+   - What users see or do: nothing changes for them
+   - Undo in one step: no — the migration drops the column and its data; docs/deployment.md § Rollback restores code only
+   - Who a failure reaches: every user who still signs in with a legacy token
+   - Detail: migration 0042 drops users.legacy_token
+   - Evidence: schema, removal — db/migrations/0042_drop_legacy_token.sql:3, docs/deployment.md:41
+2. `unclear` — the session cookie's lifetime moves to configuration
+   - …
+   - Missing evidence: whether production sets SESSION_TTL; .env.example:12 does not say
+   - Evidence: config — src/config.ts:18, .env.example:12
+3. `two-way` — the login form's error text
+   - …
+   - Evidence: contract — src/routes/auth.ts:40
+4. `two-way` — every other change (7 files): no signal matched in 3f2a1c0..9b7e4d2 — paths: schema 0, removal 0, config 0, dependency 0, deploy-doc 0; content: contract 0, outside-write 0, plan-risk 0
+```
+<!-- canonical:merge-danger:end -->
 
 #### Verdict determination
 
@@ -891,7 +1041,8 @@ test row's Detail dropped the log path the agent had given.
   Verdict determination says — it is a ruling not carried out too, and
   under a PASS it would reach the reader only in a row-1 Detail.
 - **BLOCKED** — every task in Schema D is BLOCKED; Code Review / Fixes /
-  Verification sections are omitted from the report.
+  Verification sections are omitted from the report, and Merge danger is
+  still rendered.
 
 The Next steps bullets must give the user enough detail to act on every
 HIGH or MEDIUM DEFERRED, BLOCKED, or unresolved item, and every task the

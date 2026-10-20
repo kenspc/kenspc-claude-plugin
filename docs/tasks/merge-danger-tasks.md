@@ -158,7 +158,26 @@ File: `plugins/kenspc/skills/task-review/SKILL.md`.
 
 ### Task 2: task-implement — the copied block, Schema G, and the range rule
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The block was copied mechanically (extracted from task-review by its
+    markers and spliced in with awk) rather than retyped, and checked with
+    `diff` of the two extractions, which prints nothing.
+  - The range-and-plan paragraph sits above the block, as in task-review,
+    and adds a Why for rendering under BLOCKED: the commits earlier runs
+    made still leave with the document.
+- Changes/tradeoffs:
+  - The Verdict determination's BLOCKED bullet now says Merge danger is
+    still rendered, since it described the sections a BLOCKED report keeps.
+  - The block's first paragraph had one over-long line left by Task 1's
+    last wording edit; it is re-wrapped in both carriers in this commit
+    (task-review's copy is touched for that only), so the copies stay
+    byte-identical.
+- Test map: none (no behavior added or altered) — skill prose; the block's
+  byte-identity with task-review and the Schema G placement are held by
+  Task 5's `scripts/check-merge-danger-canonical.sh`.
 
 Depends on: Task 1
 

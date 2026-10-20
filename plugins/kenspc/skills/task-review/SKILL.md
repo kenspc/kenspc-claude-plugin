@@ -735,8 +735,9 @@ words, which changes in the run's range cannot be undone and how far a
 failure would reach, and every claim in it names the file and line it rests
 on. The orchestrating session builds it itself, before the final report,
 with no agent dispatched; the skill that carries this block, the carrier,
-names the run's range and the plan outside it. Why: the work is a file list, a read of the matched
-files, and a read of two documents, and a dispatch costs more than it does.
+names the run's range and the plan outside it. Why: the work is a file
+list, a read of the matched files, and a read of two documents, and a
+dispatch costs more than it does.
 
 - **Inputs.** The run's range; the deployment document — the one the
   project's instruction files name, otherwise `docs/deployment.md` — whose
