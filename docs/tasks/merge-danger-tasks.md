@@ -54,12 +54,16 @@ File: `plugins/kenspc/skills/task-review/SKILL.md`.
      change, plus the project's usual release restores the prior state, no
      data lost, nobody outside the team needing to act), `one-way`,
      `unclear` (the row names the missing evidence).
-   - Rows: one per change that matched a signal; the three answers in the
-     report's language (what users see or do, undo in one step and why, who
-     a failure reaches); one short technical line; `Evidence:` with signal
-     names and each `file:line`. A signal-matched row without a `file:line`
-     is not written; an `unclear` row for unread files or an undetermined
-     range names the files or the cause instead.
+   - Rows: one per change that matched a signal, not one per file — a
+     change spanning several files is one row listing them all (the plan's
+     Noise risk); the label and the change in plain words; the three
+     answers in the report's language (what users see or do, undo in one
+     step and why, who a failure reaches — this machine only, the team, the
+     product's users, or people and systems outside it); one short
+     technical line; `Evidence:` with signal names and each `file:line`. A
+     signal-matched row without a `file:line` is not written; an `unclear`
+     row for unread files or an undetermined range names the files or the
+     cause instead.
    - Catch-all: the last row, `two-way`, the file count, the range, and each
      signal's count over its files, path signals then content signals.
    - Header: `Range: <range> (<how chosen>)`,
@@ -101,6 +105,8 @@ File: `plugins/kenspc/skills/task-review/SKILL.md`.
   labels with the one-step definition, the row, catch-all, header, and
   empty-range formats, the fixed-English rule, and the not-a-gate rule, each
   rule with a Why.
+- The row rule states one row per change, with a change spanning several
+  files listing them all in that one row.
 - The block names no task-review-specific term (`REVIEW_SCOPE`,
   `change-set.md`, `Schema F`, `TASK_FILE`), so it reads true in all three
   carriers.
@@ -193,8 +199,16 @@ File: `plugins/kenspc/skills/autopilot/SKILL.md`.
   and "The reports", and names the range, the spec via `git show`, the
   `_logs` file, the state-file line, and the catch-all rule for the batch's
   removed documents.
-- The state-file template holds the `merge danger:` line; the reviewer
-  report template holds `- Merge danger:` after `- Files changed:`.
+- Phase 4's **Inputs** and **DONE when** name
+  `_logs/<batch>-merge-danger.md` and the state file's `merge danger:`
+  line.
+- The state-file template and its prose list hold the `merge danger:` line;
+  the reviewer report template holds `- Merge danger:` after
+  `- Files changed:`, and the prose below the template says the field is
+  read from the state file's `merge danger:` line.
+- The User report's `### Merge danger` subsection follows the
+  `### Main-session rulings` list, and the text says the one-page limit
+  does not count it.
 - The closing sentence's count appears in Phase 4's last paragraph, § Exit,
   and the gates table, each conditioned on `<n>` + `<u>` above zero; no new
   question or gate is added.
@@ -295,13 +309,16 @@ no other file):
   paragraphs: the three questions, the labels and the one-step definition,
   the signals, the deployment document, the `Related plan:` line, and that
   it is not a gate (plan steps 1–4).
-- `AGENTS.md` § Editing skill and agent content — the
+- `AGENTS.md` § Editing skill and agent content › Skills — a bullet for the
   `canonical:merge-danger` block: three carriers, the guard that holds them,
   and that a change applies to all three in one commit, in at most three
-  lines or merged into § Agents' sentence that task-review and
-  task-implement "share four byte-identical canonical blocks", which stops
-  being true once both carry a fifth (plan steps 1–3, 5). The lint holds
-  AGENTS.md to 200 lines.
+  lines or merged into an existing bullet; § Agents' sentence that
+  task-review and task-implement "share four byte-identical canonical
+  blocks" stops being true once both carry a fifth, and names
+  `canonical:merge-danger` as shared with the autopilot as well — the
+  natural place to merge the bullet (plan steps 1–3, 5). The file stands at
+  197 of the 200 lines its budget line allows, and
+  `scripts/check-instruction-lint.sh` fails above it.
 - `plugins/kenspc/CHANGELOG.md` — a `## 4.13.0 — unreleased` entry for the
   section, the `Related plan:` line, and the guard (all plan steps).
 - `docs/release-checklist.md` § Pre-flight — `guards run: 16`,
