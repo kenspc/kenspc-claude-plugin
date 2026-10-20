@@ -116,9 +116,10 @@ Facts verified against the current files on 2026-10-20 that shape the design:
    release to the user also says how many changes cannot be undone and
    points at the section.
 7. **A third label, `unclear`**, for a change whose evidence does not settle
-   it; the row names the missing evidence, and the counts and the closing
-   sentence count it with `one-way`. Why: without it, a model that lacks the
-   evidence guesses `two-way`.
+   it; the row names the missing evidence. The `Count:` line and the
+   reviewer-report field give it its own count, `<u>`; the closing sentence
+   counts it together with `one-way` (`<n>` + `<u>`). Why: without it, a
+   model that lacks the evidence guesses `two-way`.
 8. **generate-task writes `Related plan: \`<PLAN_PATH>\``** in each task
    document's Context, the path repository-relative. The review skills read
    the plan from that line; a task document without it gets
@@ -225,9 +226,15 @@ Count: 1 one-way, 1 unclear, 2 two-way
   before any implementation, so the rule finds the batch's start without a
   new pin. With every task BLOCKED, task-implement still renders the
   section.
-- **task-review's "changes" run** uses `RUN_DIR/change-set.md`'s `Range:`
-  or, for `Mode: uncommitted`, its `Base:` against the working tree — the
-  fixes included, since they are part of what leaves. In an uncommitted run,
+- **task-review's "changes" run** covers the change set with its fixes,
+  since they are part of what leaves. For `Mode: commits`, the range runs
+  from the first SHA of `RUN_DIR/change-set.md`'s `Range:` to HEAD at the
+  time the report is rendered, so code-fixer's fix commits are in it, and
+  the header's `<how chosen>` names the recorded range and `to HEAD, the fix
+  commits included`. For `Mode: uncommitted`, its `Base:` against the
+  working tree, where the fixes stay uncommitted. Paths named in
+  CUSTOM_INSTRUCTIONS do not narrow the section: every file in the range
+  leaves together, reviewed or not. In an uncommitted run,
   `git diff --name-status <Base>` lists no untracked file, so the file list
   is `git -c core.quotePath=false status --porcelain -uall` with paths under
   `.kenspc/` dropped, as Step 1 reads it; tracked files are read with
@@ -356,7 +363,10 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
   file stands at 197 of the 200 lines its `<!-- budget: lines=200 words=2400 -->`
   line allows, and `scripts/check-instruction-lint.sh` fails above it, so
   the bullet takes at most three lines, or is merged into an existing
-  bullet.
+  bullet. § Agents' sentence that task-review and task-implement "share four
+  byte-identical canonical blocks" stops being true once both carry a
+  fifth; it names `canonical:merge-danger` as shared with the autopilot as
+  well — the natural place to merge the bullet.
 - `plugins/kenspc/CHANGELOG.md` — a `## 4.13.0 — unreleased` entry for the
   section, the `Related plan:` line, and the guard (all steps).
 - `docs/release-checklist.md` § Pre-flight — `guards run: 16`,
