@@ -163,7 +163,8 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
        changed, and the test files that exercise the changed code — the tests the fix added or
        changed, and the test files that import or call the changed module. No whole suite after
        a single fix. When the project's test runner cannot run selected files, its whole test
-       command runs instead. Why: a broken fix found at once is withdrawn alone, while one
+       command runs instead; when its linter takes no file arguments, its whole lint command
+       does. Why: a broken fix found at once is withdrawn alone, while one
        found later is tangled with the fixes made on top of it, and the touched code's tests
        find it at a fraction of a whole suite's cost; one run wrapped lint, the type check and
        the whole suite into a script it ran before each of its 18 commits.
@@ -181,11 +182,17 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
   3. In DONE CRITERIA, change "A final build / test / lint run was performed after the last fix"
      to name a whole run as the project configures it, with the `.kenspc/` exclusion as the only
      narrowing.
+  4. In OUTPUT FORMAT's Scratch-pollution note paragraph, change "the narrowed command you used
+     to verify your fixes" to name the final whole run's `.kenspc/`-excluding command. Why: once
+     per-fix checks are narrowed by design, "the narrowed command" no longer says which one the
+     note lists.
 - Input: code-fixer.md at Step 0's commit.
 - Output: the edited file.
 - Acceptance:
   - `grep -c 'after each fix to catch breakage early' plugins/kenspc/agents/code-fixer.md`
     prints 0, after printing 1 before the edit;
+  - `grep -c 'the narrowed command you used' plugins/kenspc/agents/code-fixer.md` prints 0,
+    after printing 1 before the edit;
   - the new bullets each carry a `Why:`;
   - `bash scripts/check-all.sh` exits 0.
 
@@ -207,6 +214,8 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
        carries `not mutation-checked` after the em-dash.
      - A mutant already run in this run is not run again unless the code it mutates changed
        after that run.
+     - Whether "run" here spans a second fix round is Open Questions 4; the bullet states the
+       maintainer's answer.
      - Why:
        - the reviewer measured the finding's mutant, so killing it is the proof the fix needs,
          and its rig is already built;
@@ -314,6 +323,9 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
   6. regression-verifier returns CLEAN.
   - If the test reviewer reports no surviving mutant, check 1 cannot be judged. Then change the
     seed so that it does and run again, at most once more, before recording.
+  - A check that fails is recorded as FAIL with the transcript or run-directory evidence, and
+    the plan stops there: the record goes to the maintainer, who decides whether Steps 1–3 are
+    revised and Steps 5–6 run again.
 
 Dependencies: Step 0 first. Steps 1 and 2 edit one file, so they run one after the other.
 Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6 needs 5.
@@ -328,10 +340,13 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
   - a mutant a reviewer reported is proved on the reviewer's rig, with at most three of
     code-fixer's own checks per run and `not mutation-checked` on a row past the cap.
   - Steps 1–2.
-- `plugins/kenspc/README.md`, the autopilot section that describes `rulings.md` (it begins
-  "`rulings.md` carries a ruling on the reviewers' findings to code-fixer"). Add that the
-  autopilot's main session leaves batch-wide Acceptance and mutation sweeps to S4 and
-  regression-verifier. Step 3.
+- `plugins/kenspc/README.md`, the Autopilot section's paragraph on rulings in a review (it
+  begins "A worker running a review — S3's review phase, S3b, or a narrowed review —"). Add
+  that the main session's rulings in S3's review, S3b, and Phase 2's narrowed reviews leave
+  batch-wide Acceptance and mutation sweeps to S4 and regression-verifier, while a Phase 3
+  narrowed review's rulings are unchanged. Step 3. (The Run directory section's `rulings.md`
+  bullet describes the file for every orchestrator, not the autopilot's rulings, so Step 3
+  leaves it true.)
 - `plugins/kenspc/CHANGELOG.md`: a `## 4.12.0` entry — Changed: T1, T2, T3, T4a, each with its
   reason and the analysis it rests on. Steps 1–3.
 - `docs/roadmap.md`: a new item after 33, "Whether the code-fixer trims (4.12.0) cut its time".
@@ -400,3 +415,10 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
    - This plan leaves those rulings as they are today. Leaving the sweep out there too would
      need a full S4 re-run after the Phase 3 fix, or an accepted gap; that is a separate
      decision.
+4. Whether T1's "at most three per run" and "a mutant already run in this run" span a review's
+   second fix round.
+   - A second round is a new code-fixer dispatch on the same `RUN_DIR` (INPUTS, `## Round 2`),
+     and code-fixer.md uses "run" for the review run as a whole and for one dispatch alike.
+   - Counting per review run would have the round-2 dispatch read round 1's attempt
+     directories to count; counting per dispatch gives a second round its own three.
+   - Step 2's bullet has to say which before it is written; the maintainer decides.
