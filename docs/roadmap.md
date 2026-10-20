@@ -634,3 +634,14 @@ its number.
     narrowed per-fix check let a break through to the final run, which the
     transcripts show as a final run that fails after the per-fix runs
     passed.
+35. The release checklist's run-directory sub-check 6 asks the trace to
+    show "the unmutated baseline running first and passing", while the
+    agents' rule (test-reviewer's, code-fixer's, regression-verifier's
+    RUN_DIR paragraph) makes the baseline and the control a gate on
+    counting a mutant, not on run order. In the 4.12.0 smoke the test
+    reviewer ran its baseline, control and mutants in one vitest run; the
+    baseline passed, the control failed, and its report counted survivors
+    after both, which the maintainer counted as passing
+    (`docs/dry-runs/code-fixer-trims-smoke.md`). Settle which the checklist
+    means: reword the sub-check to the gate the agents state, or have the
+    agents run the baseline and the control before their mutants.
