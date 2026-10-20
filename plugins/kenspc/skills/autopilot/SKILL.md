@@ -770,7 +770,8 @@ clarification numbers recorded in the spec and the rulings that have no
 clarification commit, what S6's return left for the
 user — each failed check with the commits it names, the work S6 left
 undone for a point raised after the removal, and a change S6 left to the
-spec, with the lines the status command printed (Phase 4) — and the next
+spec, with the lines the status command printed (Phase 4) — the Merge
+danger counts and the path of the section's file (Phase 4), and the next
 action.
 Every ruling is recorded under `questions answered:`, whoever made it — a
 worker's question, a choice on a confirmation, a point the main session
@@ -816,6 +817,7 @@ open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
 clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]][; no clarification commit (S6 left the spec changed): <tag>: <one line>[, <tag>: <one line>…]]
 S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone> | spec left changed: <the lines the status command printed, joined by " / ">>[; …] | none
+merge danger: <n> one-way, <u> unclear, <m> two-way — <workspace>/_logs/<batch>-merge-danger.md   (once Phase 4 has built it)
 next: <the next action>
 ```
 
@@ -1974,13 +1976,16 @@ asked — in any order when S6 removes nothing (below) — the batch's temp
 entries removed, and the two reports.
 
 **Inputs**: `Release preparation:`, `Version:`, the mode; the state file,
-its `temp:` line included, and the before list it names;
-`<batch>-costs.txt`; every worker's JSON.
+its `temp:` and `merge danger:` lines included, and the before list it
+names; `_logs/<batch>-merge-danger.md`; `<batch>-costs.txt`; every
+worker's JSON.
 
 **DONE when** the final message carries both reports and ends with
 `Autopilot finished — <baseline sha>..<last sha>`, the reviewer report
-is also at `_logs/<batch>-report.md`, and the state file's `temp:` line
-carries the removal's counts.
+is also at `_logs/<batch>-report.md`, the state file's `temp:` line
+carries the removal's counts, and the Merge danger section is at
+`_logs/<batch>-merge-danger.md`, with the state file's `merge danger:`
+line carrying its counts and that path.
 
 **Repo mode.** `Release preparation: default` — S6 makes one commit,
 `docs: remove batch <name> plan and tasks`, that `git rm`s the batch's plan
@@ -2210,6 +2215,151 @@ the skill does not override that. Why no `--`: such a wrapper refused it
 as an unknown option and removed nothing, and every path the script prints
 begins with `/`, so none can be read as an option.
 
+**Merge danger.** Once the batch's temp entries are removed, and before
+the reports, the main session builds the `Merge danger` section by the
+block below, in the User report's language, over
+`<baseline sha>..<last sha>`, the header's `<how chosen>` reading
+`the batch, baseline to last commit`. The plan is the spec, read with
+`git show <hash>:<path>` as the reviewer report's Spec line names it, since
+S6 may have removed it; the deployment document is read at the last sha,
+`git show <last sha>:<path>`. It writes the section to
+`<workspace>/_logs/<batch>-merge-danger.md` and the state file's line
+`merge danger: <n> one-way, <u> unclear, <m> two-way — <that path>`, with
+zero counts for a range that holds no change; both reports are built from
+these two, not from memory. Why: the reports are written after a long
+batch whose conversation may have been compacted, and the file is what
+survives. The batch's own documents that S6's removal or release commit
+`git rm`s — a spec committed before the baseline, a tracked brief — show
+as `D` in the range; they match no signal, `removal` included, and the
+catch-all row counts and names them. Why: every spec-entry batch removes
+its spec by design, and a `removal` row for it would sit in every report;
+the task documents S2 added and S6 removed leave no trace in the range.
+
+<!-- canonical:merge-danger:start -->
+**Merge danger.** The `Merge danger` section tells the user, in plain
+words, which changes in the run's range cannot be undone and how far a
+failure would reach, and every claim in it names the file and line it rests
+on. The orchestrating session builds it itself, before the final report,
+with no agent dispatched; the skill that carries this block, the carrier,
+names the run's range and the plan outside it. Why: the work is a file
+list, a read of the matched files, and a read of two documents, and a
+dispatch costs more than it does.
+
+- **Inputs.** The run's range; the deployment document — the one the
+  project's instruction files name, otherwise `docs/deployment.md` — whose
+  `## Migrations` and `## Rollback` sections answer whether a change can be
+  undone in one step, and every path it names is a signal; and, in the plan
+  the carrier names, the section whose heading begins `## Risks`. Without a
+  deployment document the built-in signals stand alone; without a plan, or
+  in a plan with no such section, `plan-risk` has no input and matches
+  nothing. Why: the project's own one-way doors are written in its
+  deployment document, and the plan's risks were judged before the code was
+  written; the final report is where both would otherwise be lost.
+- **Signals.** Eight, each with a fixed English name, checked over every
+  file in the range:
+
+  | Signal | Read from | Matches |
+  |---|---|---|
+  | `schema` | the file list and the files | a path the deployment document's Migrations section names, a path with a `migration` or `schema` segment, or a changed file holding DDL |
+  | `removal` | the file list and removed lines | a path with status `D` or `R`; a removed line that declared a public symbol, a field, a column, or a route |
+  | `contract` | the changed files | a file that defines what another program calls or reads: routes and handlers, OpenAPI, GraphQL, or protobuf schemas, a package's exported entry point, a CLI's flags, a webhook or message format |
+  | `config` | the file list | configuration, an environment example, a CI workflow, a container or infrastructure file |
+  | `dependency` | the file list | a package manifest or lock file |
+  | `outside-write` | added lines | code that writes data outside the repository: a database, a queue, an external API, a file outside the working tree, a message or email sent |
+  | `deploy-doc` | the deployment document | a path or rule the document names that the range touches |
+  | `plan-risk` | the plan's Risks | a risk whose subject a changed file touches |
+
+  Path signals are matched on the file list alone: `schema`'s path part,
+  `removal`'s `D` and `R` statuses, `config`, `dependency`, and
+  `deploy-doc`. Content signals are matched on lines the session reads:
+  `contract`, `outside-write`, `plan-risk`, and the content parts of
+  `schema` (DDL) and `removal` (a removed declaration). Why: a path match
+  can be checked by re-running it; a content judgement can only be checked
+  by reading the evidence, so the reader needs to know which is which.
+- **Reading.** First the range's file list,
+  `git diff --name-status <range>`; then, file by file, only the added and
+  removed lines, `git diff -U0 <range> -- <path>` — or the commands the
+  carrier names for a range that ends at the working tree. A file whose
+  `-U0` diff the session did not read, for any reason, stopping to protect
+  its context included, is named in an `unclear` row and never counted in a
+  `two-way` row. Why: the orchestrating session has a context to protect,
+  and a file nobody read cannot be called reversible.
+- **Labels.** `two-way`: one `git revert` of the change's commits — or a
+  discard of an uncommitted change — followed by the project's usual
+  release, restores the state before the change, with no data lost and
+  nobody outside the team needing to act. `one-way`: it does not.
+  `unclear`: the evidence read does not settle it, and the row names what
+  would. Why one step: a fixed test is what lets two readers label the same
+  change alike. Why `unclear`: without it, a session that lacks the
+  evidence guesses `two-way`.
+- **Rows.** One row per change that matched a signal, not one per file: a
+  change that spans several files is one row that lists them all. Each row
+  gives its label and the change in plain words, then three answers in the
+  report's language — what users see or do differently; whether it can be
+  undone in one step, and why; who a failure reaches: this machine only,
+  the team, the product's users, or people and systems outside it — then
+  one short technical line, and `Evidence:` with the signal names and each
+  `file:line` the row rests on. An `unclear` row also names the missing
+  evidence. A signal-matched row without a `file:line` is not written; an
+  `unclear` row that has none to give — for files whose diff was not read,
+  or for a range not determined — names the files or the cause in its
+  place. Why one row per change: a batch that touches many configuration
+  files would otherwise fill the section with rows that say one thing. Why
+  the evidence: a door named without evidence cannot be checked, and the
+  user decides from this section alone.
+- **Catch-all.** The last row, labelled `two-way`, covers every changed
+  file no signal matched: their count, the range, and each signal's count
+  over those files — path signals first, then content signals — each zero,
+  which is what the row asserts and what a reader re-runs to check. It
+  never says "low risk". When every file matched a signal, the row is still
+  written, over zero files. Why: a zero the reader can re-run is evidence,
+  "low risk" is not, and the split shows which zeros one command checks and
+  which rest on reading.
+- **Header.** Before the rows: `Range: <range> (<how chosen>)`,
+  `Deployment document: <path | not found>`,
+  `Plan: <path | <path> (not found) | none named>`, then, on its own line,
+  `Count: <n> one-way, <u> unclear, <m> two-way`, which counts rows, the
+  catch-all among the `two-way` ones. `Plan:` reads `none named` when the
+  carrier names no plan, and `<path> (not found)` when the named path does
+  not exist where the carrier reads it. Why: the header says what the rows
+  were read against, so a missing input shows as missing rather than as a
+  change that matched nothing.
+- **Language.** Fixed in English whatever the report's language: the
+  heading `Merge danger`, the labels `one-way`, `two-way`, and `unclear`,
+  and the eight signal names. Everything else — the header's field names,
+  the three answers, `Evidence:`, the empty-range line — follows the
+  report's language. Why: a fixed heading and fixed labels are what a
+  search, a guard, and a count can find; the rest is written for the user.
+- **Empty range.** A range that holds no change makes the section one line:
+  `none — the range holds no change`. Why: a header and a catch-all over no
+  file would read as a change that was checked and found safe.
+- **Not a gate.** The section changes no verdict and asks nothing. Why: the
+  report already gates on correctness; this section informs the decision
+  to let the work out, which stays the user's.
+
+A rendered section, below its heading:
+
+```
+Range: 3f2a1c0..9b7e4d2 (since the task document was added) · Deployment document: docs/deployment.md · Plan: docs/plans/auth-plan.md
+Count: 1 one-way, 1 unclear, 2 two-way
+
+1. `one-way` — the users table loses its legacy_token column
+   - What users see or do: nothing changes for them
+   - Undo in one step: no — the migration drops the column and its data; docs/deployment.md § Rollback restores code only
+   - Who a failure reaches: every user who still signs in with a legacy token
+   - Detail: migration 0042 drops users.legacy_token
+   - Evidence: schema, removal — db/migrations/0042_drop_legacy_token.sql:3, docs/deployment.md:41
+2. `unclear` — the session cookie's lifetime moves to configuration
+   - …
+   - Missing evidence: whether production sets SESSION_TTL; .env.example:12 does not say
+   - Evidence: config — src/config.ts:18, .env.example:12
+3. `two-way` — the login form's error text
+   - …
+   - Evidence: contract — src/routes/auth.ts:40
+4. `two-way` — every other change (7 files): no signal matched in 3f2a1c0..9b7e4d2 — paths: schema 0, removal 0, config 0, dependency 0, deploy-doc 0; content: contract 0, outside-write 0, plan-risk 0
+```
+<!-- canonical:merge-danger:end -->
+
 **The reports**, both in the final message:
 
 - `## User report` — the conversation's language, at most one page: what
@@ -2233,7 +2383,11 @@ begins with `/`, so none can be read as an option.
   one-page limit does not count this list.
   Why: the user reviews every ruling from the reports before anything
   leaves the machine, and a limit that cut the list would cut the part the
-  user must read.
+  user must read. After that list, under the heading `### Merge danger`,
+  the section as `_logs/<batch>-merge-danger.md` holds it; the one-page
+  limit does not count it either. Why: it is what the user reads before
+  the tag, and a limit that cut it would cut the changes that cannot be
+  undone.
 - `## Reviewer report` — English, the fixed fields in this order (Templates
   § The reviewer report). The total-cost line reports the measured sum of
   the workers' last cumulative `total_cost_usd`, plus, in plugin mode, the
@@ -2269,7 +2423,12 @@ The reviewer report is built from the state file, not from memory, and also
 written to `_logs/<batch>-report.md`; the state file records its last
 transition; the final message gives the sentence that the tag, the push,
 and the release are the user's, and its last line is
-`Autopilot finished — <baseline sha>..<last sha>` (Exit says why). In a
+`Autopilot finished — <baseline sha>..<last sha>` (Exit says why). When
+`<n>` + `<u>` on the state file's `merge danger:` line is above zero, that
+sentence also says how many changes cannot be undone or are unclear, and
+that the `Merge danger` section lists them; it stays a statement, not a
+question. Why: the count is what the user weighs before the tag, and the
+release stays the user's without a new gate. In a
 session that cannot ask (a system reminder to work without stopping), the
 run ends the same way: the two reports, the sentence that leaves the tag,
 push, and release to the user, and the finish line last.
@@ -3384,6 +3543,7 @@ decisions the user has yet to see.
   <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed) | no clarification commit (S6 left the spec changed)>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
 - Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
+- Merge danger: <n> one-way, <u> unclear, <m> two-way
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode — the two count lines, and each pre-flight command beside them with its exit code, `<command> → exit <n>`, a non-zero one named as a pre-flight failure — or none: no checklist>
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check | none named; S3b is the last review, the walk follows | none named; S3 is the last review, the walk follows
 - Walk: <off | walked (<tag>[, <tag>…]): <flow> PASS|FAIL[ — <classification>]; …; <walk.md path> | nothing to walk: <reason> | not walked: <reason> | walk: cut by budget>
@@ -3420,6 +3580,11 @@ that has none because an S6 that removed nothing left the spec changed,
 `none` when the main session ruled nothing. Why: it is the list the user
 reads before the tag and the push, so every ruling the run made without
 the user is on it.
+
+The `Merge danger` field is read from the state file's `merge danger:`
+line, its three counts as they stand (Phase 4, Merge danger). Why: the
+field is English and fixed whatever the user report's language, and the
+state file is what survives a compacted conversation.
 
 The `Suite slots` line is read from `<workspace>/_logs/<batch>-suite-slots.log`:
 `<a>` counts its `acquired` lines, `<b>` its `busy` lines, `<s>` sums the
@@ -3504,13 +3669,16 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | S4w ended `walk tool unavailable` | How to go on: fix the walk tool, or write `Walk: off` and go on | The run ends with the reason |
 | A rail breach (stop condition 6) | Nothing when the main session rules it benign (§ A breach the main session rules benign): the worker is resumed; any other breach, how to go on | A benign breach the same; any other, the run ends with the reason |
 | Any other stop condition, or a stop stated at its own step | How to go on | The run ends with the reason |
-| The final gate | Tag, push, release | The run ends with the two reports and the finish line |
+| The final gate | Tag, push, release — no question: the closing sentence leaves them to the user and, when `<n>` + `<u>` on the state file's `merge danger:` line is above zero, says how many changes cannot be undone or are unclear and that the `Merge danger` section lists them | The run ends with the two reports and the finish line |
 
 ## Exit
 
 On a finish, the final message holds `## User report` — its
-`Main-session rulings` list included — `## Reviewer report`, every default a session that cannot ask took in place of a question, then
-the sentence that the tag, the push, and the release are the user's, and
+`Main-session rulings` list and its `Merge danger` subsection included — `## Reviewer report`, every default a session that cannot ask took in place of a question, then
+the sentence that the tag, the push, and the release are the user's —
+which, when `<n>` + `<u>` on the state file's `merge danger:` line is
+above zero, also says how many changes cannot be undone or are unclear and
+that the `Merge danger` section lists them, as a statement — and
 ends with `Autopilot finished — <baseline sha>..<last sha>` as its last
 line, as the stop line is the last line on a stop. Why the last line: a
 reader, and a grep over the trace, look for a run's end marker on the

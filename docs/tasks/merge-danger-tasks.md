@@ -210,7 +210,35 @@ File: `plugins/kenspc/skills/task-implement/SKILL.md`.
 
 ### Task 3: autopilot — the copied block and its three places
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The section is written in the User report's language (the
+    conversation's), since the `_logs` file is what the User report's
+    `### Merge danger` subsection renders; the reviewer report carries only
+    the English count field.
+  - The autopilot's header `<how chosen>` reads
+    `the batch, baseline to last commit`, and an empty range records zero
+    counts on the state-file line, so the reviewer field always has three
+    numbers — two forms the plan left open.
+  - The final-gate row of the gates table carries the count in its Asks
+    column, worded "no question", since the gate asks nothing and the
+    cannot-ask column already ends the run with the two reports.
+- Changes/tradeoffs:
+  - § Exit's first sentence also names the User report's `Merge danger`
+    subsection beside its rulings list, since it lists what the final
+    message holds.
+  - The reviewer-report prose gains a short paragraph after the
+    `Main-session rulings` paragraph, with a Why, rather than a clause in
+    an existing paragraph.
+  - The carrier's `**Merge danger.**` paragraph is followed by the block,
+    whose own first paragraph also opens `**Merge danger.**`; left as is,
+    since the block must stay byte-identical and the task names the
+    carrier paragraph's label.
+- Test map: none (no behavior added or altered) — skill prose; the block's
+  byte-identity and the reviewer-report template's `- Merge danger:` line
+  are held by Task 5's `scripts/check-merge-danger-canonical.sh`.
 
 Depends on: Task 1
 
