@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.12.1 (unreleased)
+## 4.12.1 — 2026-10-20
 
 code-fixer now checks the claims a batch's note makes about the batch as a
 whole after each fix. A read-back of one product's batches, 29 Sep to 19 Oct
@@ -38,6 +38,13 @@ were readings of the count as the branch's. Not fixed: a sentence that names
 the changed code and that the fix made false — "the page holds the file it
 names" — was left as it was in the replay as in the original run (the
 roadmap's item on Doc-sync corrections the fix's own sections miss).
+
+The three replays, each loading the plugin with `--plugin-dir`, served as
+the release smoke, since only code-fixer's text changed; no smoke row was
+run apart from them. They ran before the last change, which only made the
+command that finds the task document's commit take the oldest one
+(`--reverse … | head -n 1`); each replay's task document had been added
+once, so the old and the new command name the same commit there.
 
 ### Changed
 
