@@ -200,8 +200,9 @@ PREREQUISITES
    RULES says; otherwise, and in a "changes" run, no document enters it this
    way. When the status is DONE, also find each listed document's batch
    passage: the lines added to it since the oldest commit that added the
-   task document (`git log --diff-filter=A --format=%H -- <TASK_FILE>`, then
-   `git diff <that commit> -- <path>`). A task document no commit added has
+   task document (`git log --diff-filter=A --reverse --format=%H --
+   <TASK_FILE> | head -n 1`, then `git diff <that commit> -- <path>`; git
+   log lists the newest first). A task document no commit added has
    no batch passage.
 3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md`. Its files are
    the change under review and the boundary of the fixes; its Mode decides

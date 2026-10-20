@@ -630,7 +630,12 @@ its number.
     dispatches; one project. Not measured by these scripts: whether a
     narrowed per-fix check let a break through to the final run, which the
     transcripts show as a final run that fails after the per-fix runs
-    passed.
+    passed. Counted apart: 4.12.1 has code-fixer read each Doc-sync
+    document's batch passage after every fix, which adds reading time back
+    in "task" runs whose Doc-sync task is DONE; the comparison charges those
+    reads (the `git diff` of a listed document and the reads that follow it)
+    to their own line, so the trims are not judged on time the new rule
+    added.
 35. The release checklist's run-directory sub-check 6 asks the trace to
     show "the unmutated baseline running first and passing", while the
     agents' rule (test-reviewer's, code-fixer's, regression-verifier's
