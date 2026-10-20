@@ -2,14 +2,14 @@
 # check-doc-sync-anchors.sh
 #
 # Anchor guard for the planning chain: presence for six anchors across
-# eleven files, and one exact count. Two paths run through it. The
+# twelve files, and one exact count. Two paths run through it. The
 # documentation path: a plan's Documentation impact element becomes the task
 # document's Doc-sync task, whose promotion step reports what it could not
 # place under Decisions needing a home. The open-question path: a brief's
 # Open Questions entry marked `needs prototype` is what generate-plan stops
 # on and what the prototype skill settles, and the Prototype line the skill
 # writes into an answered entry is copied from generate-brief's grammar.
-# Five load-bearing anchors carry those paths across eleven files, and a
+# Five load-bearing anchors carry those paths across twelve files, and a
 # sixth, `## Checks run`, carries task-implementer's check evidence into the
 # report task-implement renders; every file in an anchor's group must keep
 # it:
@@ -27,6 +27,7 @@
 #       plugins/kenspc/references/task-document-example.md
 #       plugins/kenspc/agents/task-document-reviewer.md
 #       plugins/kenspc/agents/task-implementer.md
+#       plugins/kenspc/agents/code-fixer.md
 #   `Decisions needing a home`  (the Schema D / Schema G section)
 #       plugins/kenspc/agents/task-implementer.md
 #       plugins/kenspc/skills/task-implement/SKILL.md
@@ -81,7 +82,7 @@
 # derivation.
 #
 # Optional flag:
-#   --self-test    Run the mutation regression fixture. Copies the eleven
+#   --self-test    Run the mutation regression fixture. Copies the twelve
 #                  target files into a temp workdir, confirms `Doc-sync` is
 #                  present in the copied task example, the Prototype line in
 #                  the copied prototype skill and generate-brief, and the
@@ -124,6 +125,7 @@ ANCHOR_CHECKS=(
     "Doc-sync|plugins/kenspc/references/task-document-example.md"
     "Doc-sync|plugins/kenspc/agents/task-document-reviewer.md"
     "Doc-sync|plugins/kenspc/agents/task-implementer.md"
+    "Doc-sync|plugins/kenspc/agents/code-fixer.md"
     "Decisions needing a home|plugins/kenspc/agents/task-implementer.md"
     "Decisions needing a home|plugins/kenspc/skills/task-implement/SKILL.md"
     "## Checks run|plugins/kenspc/agents/task-implementer.md"
@@ -213,7 +215,7 @@ run_main_logic() {
 
 # --- Self-test mode ---------------------------------------------------------
 #
-# Mutation regression fixture. Copies the eleven target files into a temp
+# Mutation regression fixture. Copies the twelve target files into a temp
 # workdir, runs the main check (expect 0), then six mutations, each
 # restored by recopying (expect 1 each): `Doc-sync` renamed to `Docsync` in
 # the task example (the label is then absent from that file); the prototype

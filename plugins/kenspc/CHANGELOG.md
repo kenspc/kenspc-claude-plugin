@@ -9,6 +9,52 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.12.1 (unreleased)
+
+code-fixer now checks the claims a batch's note makes about the batch as a
+whole after each fix. A read-back of one product's batches, 29 Sep to 19 Oct
+2026, traced the 44 second-review findings of a stale decision-record
+sentence: 18 were made false by a first-review code-fixer commit made after
+the Doc-sync task, in 14 batches, and in every one the document was on the
+Doc-sync task's list, the task was DONE, and code-fixer's reply carried its
+`Doc-sync documents:` line. Nine of the 18 were claims about the batch as a
+whole — that its code was the reference build's byte for byte, how many tests
+ran, what a test held, what was measured — which name no changed file, so
+the rule's search for sections naming the changed code never reached them.
+The other 26 were false when written or came from second-review fixes,
+where the rule does not apply. The read-back is kept outside the
+repository, at `~/Projects/_smoke/_analysis/review-time-20261019/`.
+
+Three of those first reviews were replayed with the new text, each a
+headless code-fixer dispatch on a clone at the review's starting commit with
+the original reports and rulings. In all three code-fixer found the batch
+passages by the task document's commit. In participant-import-portal it
+corrected the note's byte-for-byte claim in the fix's own commit, where the
+original run had replied `none affected by the fixes`. In api-upkeep and
+api-fixes, where a fix that changed only tests had grown a set of tests the
+note counts, it read the sentence and left it, since the note defines
+"Measured" as run on the reference build, so the two second-review findings
+were readings of the count as the branch's. Not fixed: a sentence that names
+the changed code and that the fix made false — "the page holds the file it
+names" — was left as it was in the replay as in the original run (the
+roadmap's item on Doc-sync corrections the fix's own sections miss).
+
+### Changed
+
+- `agents/code-fixer.md`, PREREQUISITES item 2 and FIXING RULES: in a "task"
+  run whose Doc-sync task is DONE, code-fixer finds each listed document's
+  batch passage — the lines added to it since the commit that added the task
+  document — and after each fix reads it whatever it names, besides the
+  sections naming the changed code; a fix that changes only tests is
+  included. What it may change is unchanged: only a sentence the fix made
+  false, in the fix's own commit.
+- `scripts/check-doc-sync-anchors.sh`: the `Doc-sync` group lists
+  `agents/code-fixer.md`, which finds the task by its `### Task N: Doc-sync`
+  heading; twelve files, where it had eleven (the roadmap's item on Doc-sync
+  follow-ups).
+- `README.md`: the Documentation path paragraph says code-fixer also checks
+  the batch's own note.
+
 ## 4.12.0 — 2026-10-20
 
 code-fixer spends less of its time on checks, and task-review's progress

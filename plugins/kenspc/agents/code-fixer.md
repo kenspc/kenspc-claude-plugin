@@ -198,7 +198,11 @@ PREREQUISITES
    a task document written in any language, while a label can be translated.
    When the status is DONE, those documents are in the fix scope as FIXING
    RULES says; otherwise, and in a "changes" run, no document enters it this
-   way.
+   way. When the status is DONE, also find each listed document's batch
+   passage: the lines added to it since the oldest commit that added the
+   task document (`git log --diff-filter=A --format=%H -- <TASK_FILE>`, then
+   `git diff <that commit> -- <path>`). A task document no commit added has
+   no batch passage.
 3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md`. Its files are
    the change under review and the boundary of the fixes; its Mode decides
    how fixes land (see FIXING RULES).
@@ -342,8 +346,15 @@ FIXING RULES
 - In a "task" run whose Doc-sync task is DONE (PREREQUISITES item 2), after
   each fix, read the parts of each listed document that describe the changed
   code — the sections naming the changed function, option, command, message,
-  or file. A sentence, list item, or table row there that states the
-  behavior the fix changed is now false: correct it, in the document's own
+  or file — and each listed document's batch passage (PREREQUISITES item 2),
+  whatever it names, since a batch's note states claims about the batch as
+  a whole: that its code matches a reference build, how many tests ran or
+  passed, what a test holds or that none does, what was measured and what
+  was only read from the code. A fix can make such a claim false without
+  naming anything in it, and a fix that changes only tests is no exception,
+  since it changes the counts and what the suite holds. A sentence, list
+  item, or table row there that states the behavior the fix changed, or a
+  claim the fix made untrue, is now false: correct it, in the document's own
   language, in the fix's own commit, whose body names the document
   (`Updates <path> to match the fix.`). Change nothing else: no new section
   or paragraph, no text the fix did not make false, no behavior the document

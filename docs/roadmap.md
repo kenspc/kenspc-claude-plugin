@@ -187,10 +187,7 @@ its number.
     `20260926-160144-changes/`, and `20260926-163655-changes/` (git-ignored;
     only in the maintainer's macOS checkout). Whether each stays is the
     maintainer's call:
-    - Guards: `check-doc-sync-anchors.sh`'s `Doc-sync` group does not list
-      `code-fixer.md`, which now finds the task by its
-      `### Task N: Doc-sync` heading — one array entry, counts unchanged;
-      and `check-run-contract.sh`'s check 5 looks for `pre-fix/index.txt`
+    - Guards: `check-run-contract.sh`'s check 5 looks for `pre-fix/index.txt`
       in `code-fixer.md` and `regression-verifier.md` but not in
       `task-review/SKILL.md`, whose Schema F Next steps now names it.
     - Smoke candidates, each a seeded headless run at every release: row 7
@@ -645,3 +642,16 @@ its number.
     (`docs/dry-runs/code-fixer-trims-smoke.md`). Settle which the checklist
     means: reword the sub-check to the gate the agents state, or have the
     agents run the baseline and the control before their mutants.
+36. Doc-sync corrections the fix's own sections miss. After 4.12.1 code-fixer
+    reads each listed document's batch passage, but a sentence about the
+    changed code itself can still be left false: in the replay of the
+    participant-import-portal first review (dayaku-crm, 2026-10-07),
+    fixing "send the file the picker holds" left DD-001's "It is not a
+    controlled input: the page holds the file it names" as it was, as the
+    original run had. Five of the 18 stale-sentence findings a first-review
+    fix caused were of this kind, with mixed causes (one a ruling's own
+    wording), so one replay does not show whether the rule or the reading is
+    at fault. Replays and the read-back:
+    `~/Projects/_smoke/dd-stale-replay/` and
+    `~/Projects/_smoke/_analysis/review-time-20261019/`. Settle by replaying
+    the case a few times before changing the rule.
