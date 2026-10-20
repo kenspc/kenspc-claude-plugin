@@ -157,10 +157,12 @@ The block states, each rule with its Why:
   content judgement can only be checked by reading the evidence, so the
   reader needs to know which is which.
 - **Reading.** `git diff --name-status <range>` first, then
-  `git diff -U0 <range>` for the added and removed lines only. A range too
-  large to read in full gets an `unclear` row naming the files not read,
-  never a `two-way` for them. Why: the orchestrating session has a context
-  to protect, and a file nobody read cannot be called reversible.
+  `git diff -U0 <range> -- <path>` for the added and removed lines only,
+  file by file. A file whose `-U0` diff the session did not read, for any
+  reason — it stopped to protect its context included — is named in an
+  `unclear` row, never counted in a `two-way` row. Why: the orchestrating
+  session has a context to protect, and a file nobody read cannot be called
+  reversible.
 - **Labels.** `two-way`: one `git revert` of the change's commits (or a
   discard of an uncommitted change), followed by the project's usual
   release, restores the state before the change, with no data lost and
@@ -172,11 +174,15 @@ The block states, each rule with its Why:
   differently, whether it can be undone in one step and why, who a failure
   reaches (this machine only, the team, the product's users, or people and
   systems outside it); one short technical line; and `Evidence:` with the
-  signal name and each `file:line` it rests on. A row without a `file:line`
-  is not written. Why: a door named without evidence cannot be checked, and
-  the user decides from this section alone.
+  signal name and each `file:line` it rests on. A signal-matched row
+  without a `file:line` is not written; an `unclear` row that has none to
+  give — for files whose diff was not read, or for a range not determined
+  — names the files or the cause in its place. Why: a door named without
+  evidence cannot be checked, and the user decides from this section alone.
 - **Catch-all.** The last row, `two-way`, covers every changed file no
-  signal matched: the file count, the range, and each signal with its count.
+  signal matched: the file count, the range, and each signal, path signals
+  then content signals, with its count over those files — zero for each,
+  which is what the row asserts and what a reader re-runs to check.
 - **Header.** `Range: <range> (<how chosen>)`,
   `Deployment document: <path | not found>`,
   `Plan: <path | <path> (not found) | none named>`,
@@ -273,10 +279,13 @@ guards:
    SKILL.md files.
 2. Anchors inside the block, each at least once: `one-way`, `two-way`,
    `unclear`, `Evidence:`, `not found`, `none named`.
-3. Placement: in task-implement's Schema G and task-review's Schema F
-   templates, a `## Merge danger` line after `## Verdict` and before
-   `## Next steps`; in the autopilot's reviewer-report template, a
-   `- Merge danger:` field.
+3. Placement: inside the fenced template of task-implement's Schema G
+   (Step 4) and of task-review's Schema F (Step 8), a `## Merge danger`
+   line after `## Verdict` and before `## Next steps`; inside the fenced
+   template of the autopilot's § The reviewer report, a `- Merge danger:`
+   field. The check reads only those fenced blocks, so a `## Merge danger`
+   line elsewhere in a file, in the canonical block included, neither
+   satisfies nor fails it.
 4. `--self-test`: copy the three files to a temp workdir, pass; change one
    word inside the block of one copy (must fail: byte-identity); replace an
    anchor inside the block identically in all three copies (must fail: the
@@ -293,35 +302,46 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
 
 1. **Write the block and Schema F (task-review).** Add the
    `canonical:merge-danger` block to `skills/task-review/SKILL.md` Step 8,
-   holding every rule under "The definition", each with its Why; add
+   between the paragraph after the Schema F template ("Render every section
+   above in full…") and `#### Verdict determination`, holding every rule
+   under "The definition", each with its Why; add
    `## Merge danger` to the Schema F template between `## Verdict` and
    `## Next steps`; add, outside the block, task-review's range and plan
    rules for both kinds of run.
    - Input: this plan's Technical Approach.
    - Output: the edited SKILL.md.
    - Acceptance: the block holds all eight signal names, the Reading rule,
-     the three labels, the one-step definition, the row and catch-all formats, the header, the
-     empty-range line, and the not-a-gate rule; Schema F lists the heading
-     between `## Verdict` and `## Next steps`; the range rule covers
+     the three labels, the one-step definition, the row and catch-all
+     formats, the header, the empty-range line, and the not-a-gate rule;
+     Schema F lists the heading between `## Verdict` and `## Next steps`;
+     the range rule covers
      "changes" (both modes) and "task" runs, including a task document no
      commit added.
 2. **Schema G (task-implement).** Copy the block byte for byte into
-   `skills/task-implement/SKILL.md` Step 4; add the heading to Schema G at
-   the same place; add the task-run range and plan rule outside the block,
-   worded as task-review's "task" run rule. Depends on step 1.
+   `skills/task-implement/SKILL.md` Step 4, between the paragraph after the
+   Schema G template ("Render every section above in full…") and
+   `#### Verdict determination`; add the heading to Schema G between
+   `## Verdict` and `## Next steps`, stating that it is rendered when the
+   verdict is BLOCKED too; add the task-run range and plan rule outside the
+   block, worded as task-review's "task" run rule. Depends on step 1.
    - Acceptance: `diff` of the two blocks is empty; the range rule names the
      oldest commit that added TASK_FILE and the not-determined case; the
      all-BLOCKED case is stated.
-3. **The autopilot.** Copy the block into `skills/autopilot/SKILL.md`
-   Phase 4; add the build step (range, spec via `git show`, the
+3. **The autopilot.** In `skills/autopilot/SKILL.md` Phase 4, add a
+   `**Merge danger.**` paragraph between "The batch's temp entries" and
+   "The reports", followed by the copied block; the paragraph holds the
+   build step (range, spec via `git show`, the
    `_logs/<batch>-merge-danger.md` file, the state-file line and its entry
    in § The state file's template and its prose list of what the file
    holds; Phase 4's **Inputs** and **DONE when** name the file and the
-   line; the exclusion of the batch's own removed documents); the User report's
-   `### Merge danger` subsection, outside the one-page limit; the reviewer
-   report's `- Merge danger:` field in § The reviewer report; the closing
-   sentence's count in Phase 4, Exit, and the gates table's final-gate row.
-   Depends on step 1.
+   line; the exclusion of the batch's own removed documents); the User
+   report's `### Merge danger` subsection, after the `### Main-session rulings`
+   list and outside the one-page limit; the reviewer report's
+   `- Merge danger:` field in § The reviewer report's template, after
+   `- Files changed:`, with a sentence saying it is read from the
+   state-file line; the closing sentence's count in Phase 4's last
+   paragraph (The reports) and in § Exit's finish paragraph, and the gates
+   table's final-gate row. Depends on step 1.
    - Acceptance: the block is identical to step 1's; the closing sentence
      names the count only when `one-way` plus `unclear` is above zero; the
      reviewer report states the field is read from the state-file line.
@@ -342,6 +362,11 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
      ends `self-tests run: 15`.
 6. **Doc-sync.** The documents under Documentation impact. Depends on
    steps 1–5.
+   - Acceptance: each listed document carries the change its entry names;
+     `bash scripts/check-instruction-lint.sh` exits 0 with AGENTS.md at or
+     under 200 lines; `bash scripts/check-all.sh --self-test` exits 0 and
+     prints the counts `docs/release-checklist.md` now pins
+     (`guards run: 16`, `self-tests run: 15`).
 
 ## Documentation impact
 
