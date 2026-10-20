@@ -302,7 +302,21 @@ File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 4: generate-task — the `Related plan:` line
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The DONE bullet says the path is written relative to the repository
+    root "whatever form the argument took". Why: PLAN_PATH may arrive
+    absolute, and the review skills read the line as a repository-relative
+    path at HEAD.
+- Changes/tradeoffs:
+  - The Document language paragraph's Why now names all three readers in
+    order (task-implementer, the review skills, task-document-reviewer),
+    re-wrapping its sentence.
+- Test map: none (no behavior added or altered) — skill prose; no guard
+  holds the `Related plan:` line (the plan names none), and smoke row 5
+  checks it at release.
 
 File: `plugins/kenspc/skills/generate-task/SKILL.md`.
 

@@ -231,6 +231,11 @@ reference format at
 - When the plan's Documentation impact names documents, the task document
   ends with the Doc-sync task, written from the Doc-sync Task template
   (Phase 1).
+- The task document opens with a `## Context` section that carries the
+  line ``Related plan: `<PLAN_PATH>` ``, the path written relative to the
+  repository root whatever form the argument took. Why: the review skills'
+  `Merge danger` section reads the plan's Risks through this line, and a
+  task document does not otherwise name its plan.
 - Dependency note is included at the top of the document if any task has a
   `Depends on` annotation. A phase-specific document for a later phase
   carries a Dependency note naming the earlier phases' task documents it
@@ -273,10 +278,12 @@ plan's language gives `task-document-reviewer`'s Consistency with the
 project's instruction files angle a plugin-side anchor without the plugin
 imposing a language. The anchors other agents parse stay exactly as
 written, whatever the document's language: the `**Status:**` line and its
-value, the `Depends on:` line, and the `### Task N: Doc-sync` heading. Why:
-`task-implementer` reads a task's state and dependencies from the first
-two, and `task-document-reviewer` recognizes the Doc-sync task by the
-heading, so a translated anchor breaks the chain without an error.
+value, the `Depends on:` line, the `Related plan:` line, and the
+`### Task N: Doc-sync` heading. Why: `task-implementer` reads a task's
+state and dependencies from the first two, the review skills find the plan
+by the `Related plan:` label, and `task-document-reviewer` recognizes the
+Doc-sync task by the heading, so a translated anchor breaks the chain
+without an error.
 
 **Filename**: derive the base name from the plan filename by removing the
 `.md` extension and any trailing `-plan` suffix. Examples:
