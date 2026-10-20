@@ -702,9 +702,14 @@ section; this skill names the range and the plan it reads.
   When that commit is the root commit, git's empty tree
   (`git hash-object -t tree /dev/null`) stands in for its parent.
   The header's `<how chosen>` reads `since the task document was added`.
-  When that command prints nothing, the header reads
+  When the `git log` command prints nothing, the header reads
   `Range: not determined — no commit added the task document`, and the
-  section holds one `unclear` row saying so. The plan is the path on the
+  section holds one `unclear` row saying so. In a shallow clone
+  (`git rev-parse --is-shallow-repository` prints `true`), the header reads
+  `Range: not determined — shallow clone` instead, with the same one row.
+  Why: the clone's oldest fetched commit lists every file as added, so the
+  command can name it, and the range would stop at history the clone did
+  not fetch, or be empty. The plan is the path on the
   task document's `Related plan:` line, repository-relative: `none named`
   when the document has no such line, and `<path> (not found)` when the
   path does not exist at HEAD. Why the document's whole history, not this

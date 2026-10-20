@@ -832,10 +832,16 @@ changes are in it, with HEAD read when the report is rendered, and the
 commit found as code-fixer finds it:
 `git log --diff-filter=A --reverse --format=%H -- <TASK_FILE> | head -n 1`.
 When that commit is the root commit, git's empty tree
-(`git hash-object -t tree /dev/null`) stands in for its parent. The header's `<how chosen>` reads `since the task document was added`.
-When that command prints nothing, the header reads
+(`git hash-object -t tree /dev/null`) stands in for its parent. The
+header's `<how chosen>` reads `since the task document was added`.
+When the `git log` command prints nothing, the header reads
 `Range: not determined — no commit added the task document`, and the
-section holds one `unclear` row saying so. The plan is the path on the task
+section holds one `unclear` row saying so. In a shallow clone
+(`git rev-parse --is-shallow-repository` prints `true`), the header reads
+`Range: not determined — shallow clone` instead, with the same one row.
+Why: the clone's oldest fetched commit lists every file as added, so the
+command can name it, and the range would stop at history the clone did not
+fetch, or be empty. The plan is the path on the task
 document's `Related plan:` line, repository-relative: `none named` when the
 document has no such line, and `<path> (not found)` when the path does not
 exist at HEAD. With every task BLOCKED, the section is still rendered over
