@@ -54,8 +54,10 @@
 #                  exit 1, naming placement alone and that schema's
 #                  template); (d) the `- Merge danger:` line removed
 #                  from the autopilot copy's reviewer report template (must
-#                  exit 1, naming placement alone). The temp workdir is
-#                  removed at the end.
+#                  exit 1, naming placement alone); (e) `## Merge danger`
+#                  moved above `## Verdict` in the task-review copy's
+#                  template (must exit 1, naming placement alone). The temp
+#                  workdir is removed at the end.
 #                  Exit 0 on self-test pass, 1 on unexpected results, 2 on
 #                  fixture-stale.
 
@@ -381,6 +383,29 @@ run_self_test() {
     expect_result 1 "$LABEL_PLACEMENT" "mutation (d), - Merge danger: removed from the reviewer report" || return 1
     copy_sources
     expect_result 0 "" "revert after (d)" || return 1
+
+    # (e) ## Merge danger moved above ## Verdict in the Schema F template:
+    # placement alone, so the "after ## Verdict" half of the order is held.
+    awk -v h="$REVIEW_HEADING" '
+        state == 0 && $0 ~ h { state = 1 }
+        state == 1 && /^```/ { state = 2; print; next }
+        state == 2 && /^```/ { state = 3 }
+        state == 2 && $0 == "## Merge danger" { next }
+        state == 2 && $0 == "## Verdict" { print "## Merge danger"; print ""; print; next }
+        { print }
+    ' "$review_copy" > "$review_copy.moved"
+    mv "$review_copy.moved" "$review_copy"
+    local moved_verdict
+    tpl=$(extract_template "$review_copy" "$REVIEW_HEADING")
+    moved_merge=$(line_of "## Merge danger" "$tpl")
+    moved_verdict=$(line_of "## Verdict" "$tpl")
+    if [[ -z "$moved_merge" || -z "$moved_verdict" || "$moved_merge" -ge "$moved_verdict" ]]; then
+        echo "FAIL  self-test: mutation (e) did not move ## Merge danger above ## Verdict in $review_copy" >&2
+        return 2
+    fi
+    expect_result 1 "$LABEL_PLACEMENT" "mutation (e), ## Merge danger above ## Verdict" || return 1
+    copy_sources
+    expect_result 0 "" "revert after (e)" || return 1
 
     echo "OK    self-test passed for $(basename "$0")"
     return 0
