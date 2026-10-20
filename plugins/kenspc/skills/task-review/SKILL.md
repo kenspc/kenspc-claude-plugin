@@ -412,6 +412,15 @@ user following the run needs to know which agent returned, its counts, and
 where its report is; the fixed form, opening with the agent's name, is what
 the release checklist finds in the trace.
 
+Print each of these lines as plain text, its own line, without the
+backticks this file sets it in, and print it as soon as its agent — or
+the five reviewers together — has returned and been checked, before any
+other dispatch. Why: two runs printed the code-fixer and
+regression-verifier lines inside backticks, so they no longer opened with
+the agent's name, and one of them printed no `Reviewers returned` line at
+all before dispatching code-fixer; the user then saw no counts until the
+final report.
+
 ### Step 5: Dispatch fix agent
 
 **Rulings on the findings.** A ruling on the reviewers' findings, given
@@ -665,6 +674,17 @@ reviewer recommendations). Each HIGH or MEDIUM DEFERRED issue gets its own
 bullet; LOW DEFERRED issues share one bullet with their count and the path of
 schema-b.md.
 ```
+
+Render every section above in full in this one message: code-fixer's reply
+as it came back, its `Final checks:` line and its table headings
+included, and Schema C with each Detail cell as the agent wrote it, its
+command, exit code, and log path kept. A pointer to an earlier message, a
+renamed column, or a shortened line or cell is not a rendering. Why: the
+final report is read alone — a headless run returns only the text after its
+last tool call, and an autopilot worker's report is that text — and the
+release checklist reads each log a Schema C row names. Two final reports
+dropped log paths the agents had given: one from the `Final checks:` line,
+one from the test row's Detail.
 
 #### Verdict determination
 

@@ -72,6 +72,17 @@ dispatches (the roadmap's item on the code-fixer trims).
 - `README.md`: the Run directory bullet on code-fixer's `Final checks:` line
   and the Autopilot paragraph on rulings in a review describe the above.
 
+### Fixed
+
+- `skills/task-review/SKILL.md`: the `… returned —` progress lines are
+  plain text, each printed as soon as its agent has returned and been
+  checked, and the final report renders code-fixer's reply and Schema C in
+  full, every log path kept. The release smoke's two `/kenspc-task-review`
+  runs printed the code-fixer and regression-verifier lines inside
+  backticks, one printed no `Reviewers returned` line, and their reports
+  dropped log paths the agents had given. 4.11.0 fixed the same in
+  task-implement only.
+
 ## 4.11.0 — 2026-10-20
 
 The autopilot's standalone review (S3b) now runs on a condition by
