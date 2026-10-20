@@ -602,3 +602,35 @@ its number.
     task's acceptance criteria. dayaku-crm's own test rules, added to its
     AGENTS.md files while 4.11.0 was built, repeat some of the bar's
     generic sentences; trimming them is the project's call.
+34. Whether the code-fixer trims (4.12.0) cut its time. Baseline: a
+    read-back of the 46 code-fixer dispatches in dayaku-crm batches from
+    12 Oct 2026 (after the project's full-suite rule) to 19 Oct 2026, 9.6
+    hours charged: mutation checks 13%, build, test, and lint 18%, waits on
+    background checks 10%, Acceptance re-runs 4%. The scripts and their
+    readme are in the maintainer's
+    `~/Projects/_smoke/_analysis/review-time-20261019/followup/`:
+    `fixer-trims/classify_calls.py`, run as its usage line gives it
+    (`classify_calls.py <dir holding common.py> [out.json] [since YYYY-MM-DD]`)
+    with 4.12.0's release date as the date argument, against
+    `fixer-trims/classify-since-1012.out`, and `fixer/aggregate.py` for the
+    per-row regression against `fixer/aggregate.out`, once
+    `fixer/inventory.py` is limited to the same dates (it takes no date
+    today). After 30 code-fixer
+    dispatches on 4.12.0 or later, the maintainer re-runs them and compares,
+    per fixed row and per row that reports a surviving mutant:
+    - active minutes per dispatch, and the hours of mutation checks, build,
+      test, and lint, waits, and Acceptance re-runs;
+    - whole-suite test runs per dispatch, and mutation runs per mutant row;
+    - how many `rulings.md` files ask for every Acceptance command, or for
+      mutants of files the fix does not edit, against 41 and 30 of 68.
+    Guardrails, which must not get worse: regression-verifier's row 3 FAIL
+    rate and its HAS ISSUES rate, the second-round rate, S4 failures, and
+    the follow-up issues labelled `found-by-agent` after each release; rows
+    reading `not mutation-checked` are counted too. Known limits: 4.11.0's
+    review bar lowers the number of findings, and so code-fixer's time, on
+    its own, which is why the comparison is per row; `auto` skips S3b in
+    about half the batches, so S3 dispatches are compared with S3
+    dispatches; one project. Not measured by these scripts: whether a
+    narrowed per-fix check let a break through to the final run, which the
+    transcripts show as a final run that fails after the per-fix runs
+    passed.

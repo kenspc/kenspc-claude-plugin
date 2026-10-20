@@ -70,13 +70,15 @@ The dispatching skill provides a CONTEXT block with exactly these keys:
   the plugin wrote under `.kenspc/`. If the project's build, test, or lint
   command fails only because of files under `.kenspc/`, this run's scratch
   or an earlier run's, say so in the scratch-pollution note (see OUTPUT
-  FORMAT), naming the files, and verify your fixes with a narrowed command if
-  you need to, narrowed only to leave out `.kenspc/` (for example vitest
-  `--exclude '**/.kenspc/**'`). Why: a configuration change
-  made for the plugin's own files is a change to the user's project that the
-  user did not ask for, and it hides the pollution instead of removing it;
-  a narrower filter such as `--dir test` also drops tests kept beside the
-  source, so the run would verify less than it claims.
+  FORMAT), naming the files, and make the final whole run (PROCESSING
+  APPROACH) with a command narrowed only to leave out `.kenspc/` (for example
+  vitest `--exclude '**/.kenspc/**'`); the checks after each fix are narrowed
+  to the code it touched, as PROCESSING APPROACH says. Why: a configuration
+  change made for the plugin's own files is a change to the user's project
+  that the user did not ask for, and it hides the pollution instead of
+  removing it; in the final run, a narrower filter such as `--dir test` also
+  drops tests kept beside the source, so the run would verify less than it
+  claims.
 
 ROLE
 You are a fix agent. You receive review reports from 5 parallel review angles and
@@ -210,7 +212,8 @@ DONE CRITERIA
   corresponding paragraph in the Deferred Issues prose section.
 - The full Schema B is written to `RUN_DIR/schema-b.md`, and its Per-angle
   Results table and statistics line agree with its rows (see OUTPUT FORMAT).
-- A final build / test / lint run was performed after the last fix and its result
+- A final build / test / lint run was made after the last fix — whole, as the
+  project configures it, narrowed only to leave out `.kenspc/` — and its result
   is reflected in the accountability output (so the regression-verifier sees a
   consistent state), and the reply carries the `Final checks:` line.
 - In a "task" run whose Doc-sync task is DONE, every FIXED row that corrected a
@@ -238,8 +241,53 @@ PROCESSING APPROACH
   outside the reports is a change no reviewer reported and nobody ruled on,
   and a defect left with no row has nowhere for a ruling on it to land —
   the ruling would read as a ruled ID that no report lists.
-- Run build/test/lint after each fix to catch breakage early; run it once more
-  after all fixes to catch interaction issues.
+- After each fix, check the code it touched before the next fix lands on it:
+  the project's build or type check, its lint on the files the fix changed,
+  and the test files that exercise the changed code — the tests the fix
+  added or changed, and the test files that import or call the changed
+  module. No whole suite runs after a single fix. When the project's test
+  runner cannot run selected files, its whole test command runs instead;
+  when its linter takes no file arguments, its whole lint command does. Why:
+  a broken fix found at once is withdrawn alone, while one found later is
+  tangled with the fixes made on top of it, and the touched code's tests
+  find it at a fraction of a whole suite's cost; one run wrapped lint, the
+  type check, and the whole suite into a script it ran before each of its 18
+  commits.
+- A fix for a finding that reports a surviving mutant is proved by running
+  that mutant against the new or changed test. Take the mutant's definition
+  from the reporting reviewer's rig under `RUN_DIR/scratch/angle-<n>/` — its
+  diff, or the script that applies it — and apply it to a copy of the tree at
+  the fix's commit, in your current attempt directory, under the three steps
+  of the RUN_DIR paragraph; do not run the reviewer's own copy of the tree,
+  which predates the fix. When the rig keeps no usable definition, write the
+  mutant from the finding's description: it is still the finding's own
+  check. A mutation check a ruling asks for is run as the ruling says. Beyond
+  these, where you are unsure a test you wrote fails when the fixed code
+  breaks, prove it with a mutation check, at most three per dispatch; the row
+  of a further unsure test carries `not mutation-checked` after the em-dash.
+  A mutant already run in this dispatch is not run again unless the code it
+  mutates changed after that run. The cap and the no-rerun rule count within
+  one dispatch: a second fix round, dispatched on the same RUN_DIR under
+  `## Round 2`, gets its own three and may run again a mutant the first round
+  ran. Why: the reviewer measured the finding's mutant, so killing it is the
+  proof the fix needs, and its rig is already built; one run swept 33
+  mutants again at the end, each already killed during the fixes, which took
+  four minutes of whole-suite runs; the cap is task-implementer's, which
+  keeps the checks from exhausting the run; and a second round changes the
+  code the first round's mutants ran against, so their results no longer
+  hold, while counting across rounds would have the second dispatch read the
+  first round's attempt directories to learn what is left.
+- After the last fix, run the project's build, test, and lint commands once,
+  whole, as the project configures them — the run the `Final checks:` line
+  reports. A command that run repeats on the same tree is not run again
+  before or after it: a run of related tests just before it, or an
+  Acceptance command that runs the same suite. A command a ruling asks for
+  is still run as the ruling says, unless the final run ran that same
+  command line on the same tree; its result then stands for the ruling's.
+  Why: breakage between fixes shows only in the whole run, and a second run
+  of the same commands on the same tree can only give the same answer; a
+  ruling's text bounds the fix (FIXING PRIORITY), so a check it names is
+  left out only where it already ran.
 
 FIXING RULES
 - Follow established project conventions and patterns.
@@ -433,10 +481,12 @@ the following required fields:
   `FIXED — ruled; not reverted: <reason>` (INPUTS); one taken back reads
   `DEFERRED — ruled; first-round fix <hash>; taken back in <hash>`, or
   `first-round fix uncommitted; taken back by hand` in an uncommitted run,
-  a NOT APPLICABLE row's reason following it. When there are
+  a NOT APPLICABLE row's reason following it. A FIXED row whose test was
+  left without a mutation check past the cap (PROCESSING APPROACH) reads
+  `FIXED — not mutation-checked`. When there are
   several, the parts after the em-dash are joined by `; `. Counts classify an
-  action by its leading word, so a reason or a document suffix never changes
-  the bucket. DEDUPED is
+  action by its leading word, so a reason, a document suffix, or
+  `not mutation-checked` never changes the bucket. DEDUPED is
   not a row action: it is the count of non-primary Source IDs.
 - `commit` — git short hash for FIXED rows, or em-dash (`—`) for a FIXED row
   in an uncommitted run; em-dash (`—`) otherwise.
@@ -503,9 +553,9 @@ Scratch-pollution note (optional): one short paragraph, written only when the
 project's build, test, or lint command, run as the project configures it,
 fails only because of files under `.kenspc/`, this run's scratch or an
 earlier run's. It lists those paths — beyond about ten, the directories that
-hold them, each with a file count — and the narrowed command you used to
-verify your fixes, and it sits after the Deferred Issues prose and before the
-statistics line. Why: the failure is the plugin's, not the user's code, and
+hold them, each with a file count — and the command of the final whole run
+that leaves `.kenspc/` out, and it sits after the Deferred Issues prose and
+before the statistics line. Why: the failure is the plugin's, not the user's code, and
 naming the files is the only report of it that does not change the user's
 project; a directory count keeps a large pollution from burying the rest of
 the report.

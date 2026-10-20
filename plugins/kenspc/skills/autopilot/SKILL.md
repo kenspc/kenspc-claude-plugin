@@ -1242,6 +1242,25 @@ test shows false would otherwise be built as written, or sent to a user
 who has taken the evidence-backed recommendation nearly every time; the
 list puts every such departure in front of the user before the tag.
 
+**A ruling on a review's findings.** A FIX entry in `rulings.md` names the
+change and, at most, the checks of the code it touches: the Acceptance
+commands whose command text names, or runs a test file of, a file the fix
+edits, and the reviewer's mutants of a file the fix edits. When the
+`Acceptance:` field names cases, a ruling in a review that S4's first run
+follows — S3's review, S3b, or a narrowed review of Phase 2 — does not ask
+code-fixer to run every Acceptance command again, or every mutant: S4 runs
+every case after Phase 2's last fix, and regression-verifier runs the
+whole build, test, and lint after code-fixer. A spec sentence or locked
+point that every Acceptance command passes after the fixes is met by S4's
+run. A narrowed review in Phase 3 is followed only by an `-s4b` run of the
+failed case, so its rulings are not bound by this paragraph; with
+`Acceptance: none` there is no S4 run, and a ruling may ask for the
+commands the spec names. Why: in one product's batches, 41 of 68 rulings
+asked code-fixer to re-run Acceptance commands, up to all 33 of them, and
+30 asked it to re-run mutants; the sweeps ran one at a time after its last
+commit, made up most of its waiting, and repeated what S4 and
+regression-verifier ran next.
+
 Every ruling is recorded: under the state file's `questions answered:`,
 marked `(main session)`, and as a clarification entry in the spec that
 names the main session as the ruler, committed as Phase 2's Constraints

@@ -9,6 +9,69 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.12.0 — unreleased
+
+code-fixer spends less of its time on checks. A read-back of 99 code-fixer
+dispatches in one product's batches, 29 Sep to 19 Oct 2026, charged each
+tool call its duration plus the model time before it: checks of one kind or
+another took about half of code-fixer's time — mutation checks 15.5%,
+build, test, and lint 13%, waits on checks running in the background 9%,
+Acceptance re-runs 3%, and the scripts written to run them 4% — while
+reading the five reports took 1% and the edits about 9%. The mutation checks
+and Acceptance sweeps came from two places: rulings that asked for them (30
+and 41 of 68 `rulings.md` files) and code-fixer's own choice, with no
+ruling asking. The per-fix whole suites came from a rule that named no
+breadth. The read-back is kept outside the repository, at
+`~/Projects/_smoke/_analysis/review-time-20261019/followup/fixer-trims/`
+(its README, with the scripts and four hand readings of eight dispatches).
+Whether the changes cut the time is measured after the next code-fixer
+dispatches (the roadmap's item on the code-fixer trims).
+
+### Changed
+
+- `agents/code-fixer.md`, PROCESSING APPROACH: after each fix, the checks
+  cover the code it touched — the build or type check, lint on the changed
+  files, and the test files that exercise the changed code — with the whole
+  test or lint command only where the runner or linter takes no file
+  arguments. The rule had said "Run build/test/lint after each fix" with no
+  breadth and no reason, and one run wrapped lint, the type check, and the
+  whole suite into a script it ran before each of its 18 commits. The rule
+  now carries its reason: a broken fix found at once is withdrawn alone.
+- `agents/code-fixer.md`, PROCESSING APPROACH and DONE CRITERIA: the final
+  run after the last fix stays whole, as the project configures it, narrowed
+  only to leave out `.kenspc/`; a command it repeats on the same tree — a run
+  of related tests just before it, an Acceptance command running the same
+  suite — is not run again, and one a ruling asks for is left out only when
+  the final run ran that same command line. Two runs repeated the final
+  suite on the same tree, about five minutes in one. The RUN_DIR paragraph's
+  narrowing sentence and the scratch-pollution note now name the final run,
+  since "the narrowed command you used to verify your fixes" no longer says
+  which command once the per-fix checks are narrowed by design.
+- `agents/code-fixer.md`, PROCESSING APPROACH and the PER-ISSUE OUTPUT
+  CONTRACT: a fix for a finding that reports a surviving mutant is proved by
+  running that mutant, its definition taken from the reviewer's rig and
+  applied to a copy at the fix's commit in code-fixer's own scratch; checks a
+  ruling asks for run as it says; beyond those, code-fixer makes at most
+  three mutation checks of its own per dispatch, task-implementer's cap, and
+  a test left unchecked past it reads `FIXED — not mutation-checked`, a
+  suffix the counts ignore; a mutant already run in the dispatch is not run
+  again unless its code changed. A second fix round, a new dispatch, gets
+  its own three (maintainer's ruling). The file had said how to run a
+  mutation check but not when, with no cap: one run swept 33 mutants again
+  at the end, each already killed during the fixes.
+- `skills/autopilot/SKILL.md`, § How the main session rules: a new paragraph,
+  A ruling on a review's findings. A FIX entry names the change and at most
+  the checks of the code it touches; in S3's review, S3b, and Phase 2's
+  narrowed reviews it leaves batch-wide Acceptance and mutation sweeps to S4,
+  which runs every case after Phase 2's last fix, and to
+  regression-verifier. A locked point that every Acceptance command passes
+  after the fixes is met by S4's run. A Phase 3 narrowed review, followed only
+  by an `-s4b` run of the failed case, and any review under
+  `Acceptance: none` rule as before. code-fixer carries out a FIX ruling's
+  text as written, so the cut belongs where the ruling is written.
+- `README.md`: the Run directory bullet on code-fixer's `Final checks:` line
+  and the Autopilot paragraph on rulings in a review describe the above.
+
 ## 4.11.0 — 2026-10-20
 
 The autopilot's standalone review (S3b) now runs on a condition by

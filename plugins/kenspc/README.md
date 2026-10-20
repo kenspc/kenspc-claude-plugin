@@ -512,7 +512,16 @@ review reuses the same directory (since 4.3.0):
   `Final checks: <command> → exit <n>, log <path>[; …]` for its final
   build, test, and lint run, logs under `scratch/code-fixer/`, or
   `Final checks: none run (no fix applied)`; the line is not written to
-  `schema-b.md`. In `/kenspc-task-implement`, task-implementer's summary
+  `schema-b.md`. Since 4.12.0 that line reports one whole run after the last
+  fix, narrowed only to leave out `.kenspc/`, while the checks after each fix
+  cover the code it touched: the build or type check, lint on the changed
+  files, and the tests that exercise them. A fix for a surviving mutant a
+  reviewer reported is proved by running that mutant against the new test,
+  its definition taken from the reviewer's rig and run in code-fixer's own
+  scratch on a copy at the fix's commit; beyond that and what a ruling asks
+  for, code-fixer makes at most three mutation checks of its own per
+  dispatch (a second fix round gets its own three), and the row of a test it
+  left unchecked past the cap reads `FIXED — not mutation-checked`. In `/kenspc-task-implement`, task-implementer's summary
   ends with `## Checks run`: the last build, test, and lint commands it
   ran, each with its exit code, the task after which it ran, and its log
   under `scratch/task-implementer/`, or `none run`; the final report renders
@@ -1256,7 +1265,14 @@ the same stops. Before it rules on S3b's findings, the main session reads
 S3's `rulings.md`, whose path S3b's task block names, and rules a finding
 an earlier DEFER or NOT APPLICABLE entry covered the same way, citing the
 entry, so a finding S3's review deferred and S3b found again is not ruled
-twice, two ways (since 4.7.0).
+twice, two ways (since 4.7.0). A FIX ruling names, beyond the change, at
+most the checks of the code the fix touches: the Acceptance commands that
+name or test a file it edits, and the reviewer's mutants of such a file. In
+S3's review, S3b, and Phase 2's narrowed reviews, the main session leaves
+batch-wide Acceptance and mutation sweeps to S4, which runs every case after
+Phase 2's last fix, and to regression-verifier; a Phase 3 narrowed review,
+followed only by an `-s4b` run of the failed case, rules as before, and so
+does any review when the spec says `Acceptance: none` (since 4.12.0).
 
 **BLOCKED tasks (since 4.7.0).** At S3's return the main session reads
 every task's status from the committed task document, whatever
