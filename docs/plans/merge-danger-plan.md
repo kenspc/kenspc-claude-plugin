@@ -120,9 +120,13 @@ Facts verified against the current files on 2026-10-20 that shape the design:
    sentence count it with `one-way`. Why: without it, a model that lacks the
    evidence guesses `two-way`.
 8. **generate-task writes `Related plan: \`<PLAN_PATH>\``** in each task
-   document's Context. The review skills read the plan from that line; a
-   task document without it gets `Plan: none named` in the header, with no
-   guess from file names.
+   document's Context, the path repository-relative. The review skills read
+   the plan from that line; a task document without it gets
+   `Plan: none named` in the header, with no guess from file names. A named
+   plan that does not exist at HEAD — a shipped plan is deleted — gets
+   `Plan: <path> (not found)`, and `plan-risk` has no input. The line stays
+   `Related plan:` in English whatever the task document's language, as the
+   other parsed anchors do.
 
 ### The definition (the canonical block's content)
 
@@ -173,7 +177,8 @@ The block states, each rule with its Why:
 - **Catch-all.** The last row, `two-way`, covers every changed file no
   signal matched: the file count, the range, and each signal with its count.
 - **Header.** `Range: <range> (<how chosen>)`,
-  `Deployment document: <path | not found>`, `Plan: <path | none named>`,
+  `Deployment document: <path | not found>`,
+  `Plan: <path | <path> (not found) | none named>`,
   then `Count: <n> one-way, <u> unclear, <m> two-way`.
 - **Empty range.** The section is one line: `none — the range holds no
   change`.
@@ -237,7 +242,13 @@ Count: 1 one-way, 1 unclear, 2 two-way
   line `merge danger: <n> one-way, <u> unclear, <m> two-way — <that path>`;
   both reports are built from these, as the reviewer report is built from
   the state file. Why: the reports are written after a long batch whose
-  conversation may have been compacted; the file is what survives.
+  conversation may have been compacted; the file is what survives. The
+  batch's own documents that S6's removal or release commit `git rm`s — a
+  spec committed before the baseline, a tracked brief — show as `D` in the
+  range; they match no signal and are counted in the catch-all row, which
+  names them. Why: every spec-entry batch removes its spec by design, and a
+  `removal` row for it would sit in every report; the task documents S2
+  added and S6 removed leave no trace in the range.
 
 ### Room to grow
 
@@ -259,9 +270,14 @@ guards:
    templates, a `## Merge danger` line after `## Verdict` and before
    `## Next steps`; in the autopilot's reviewer-report template, a
    `- Merge danger:` field.
-4. `--self-test`: copy the three files to a temp workdir, pass, mutate an
-   anchor inside the block (must fail), move `## Merge danger` after
-   `## Next steps` in one copy (must fail), revert (must pass).
+4. `--self-test`: copy the three files to a temp workdir, pass; change one
+   word inside the block of one copy (must fail: byte-identity); replace an
+   anchor inside the block identically in all three copies (must fail: the
+   anchor check alone, since the copies still match); move
+   `## Merge danger` after `## Next steps` in one copy (must fail:
+   placement); revert each mutation before the next (must pass). Why the
+   anchor mutation in all three copies: in one copy it fails byte-identity
+   first, and the anchor check would never be shown to fail.
 
 `check-all.sh` picks it up by its name; the release checklist's counts move
 from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
@@ -292,7 +308,9 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
 3. **The autopilot.** Copy the block into `skills/autopilot/SKILL.md`
    Phase 4; add the build step (range, spec via `git show`, the
    `_logs/<batch>-merge-danger.md` file, the state-file line and its entry
-   in § The state file's template); the User report's
+   in § The state file's template and its prose list of what the file
+   holds; Phase 4's **Inputs** and **DONE when** name the file and the
+   line; the exclusion of the batch's own removed documents); the User report's
    `### Merge danger` subsection, outside the one-page limit; the reviewer
    report's `- Merge danger:` field in § The reviewer report; the closing
    sentence's count in Phase 4, Exit, and the gates table's final-gate row.
@@ -302,14 +320,17 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
      reviewer report states the field is read from the state-file line.
 4. **generate-task's `Related plan:` line.** In
    `skills/generate-task/SKILL.md` Phase 2, the task document's Context
-   carries `Related plan: \`<PLAN_PATH>\``, with a Why naming the reader
-   (the review skills' Merge danger section). Independent of steps 1–3.
+   carries `Related plan: \`<PLAN_PATH>\``, the path repository-relative,
+   with a Why naming the reader (the review skills' Merge danger section);
+   Phase 2's **Document language** paragraph adds `Related plan:` to the
+   anchors that stay exactly as written. Independent of steps 1–3.
    - Acceptance: Phase 2's DONE list names the line; its form matches
-     `references/task-document-example.md:15`.
+     `references/task-document-example.md:15`; the Document language
+     paragraph lists it among the parsed anchors.
 5. **The guard.** Write `scripts/check-merge-danger-canonical.sh` as under
    "Guard". Depends on steps 1–3.
    - Acceptance: `bash scripts/check-merge-danger-canonical.sh` exits 0;
-     `--self-test` exits 0 and its two mutations each fail the main check;
+     `--self-test` exits 0 and its three mutations each fail the main check;
      `bash scripts/check-all.sh --self-test` prints `guards run: 16` and
      ends `self-tests run: 15`.
 6. **Doc-sync.** The documents under Documentation impact. Depends on
