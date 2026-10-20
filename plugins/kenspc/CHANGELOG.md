@@ -40,7 +40,8 @@ code can answer from.
   section is not a gate. The block is skill-neutral, with a rendered
   example. Schema F gains `## Merge danger` between `## Verdict` and
   `## Next steps`. Outside the block, the range: a "task" run reads from the
-  oldest commit that added the task document to HEAD, with an `unclear` row
+  oldest commit that added the task document, that commit included, to
+  HEAD, with an `unclear` row
   when no commit added it, and the plan from the task document's
   `Related plan:` line; a "changes" run reads the change set to HEAD with
   the fix commits (`Mode: commits`) or its base against the working tree,

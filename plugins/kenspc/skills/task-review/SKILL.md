@@ -695,9 +695,12 @@ one from the test row's Detail.
 section; this skill names the range and the plan it reads.
 
 - A "task" run: the range is
-  `<the oldest commit that added TASK_FILE>..HEAD`, with HEAD read when the
-  report is rendered, and the commit found as code-fixer finds it:
+  `<the oldest commit that added TASK_FILE>^..HEAD`, so that commit's own
+  changes are in it, with HEAD read when the report is rendered, and the
+  commit found as code-fixer finds it:
   `git log --diff-filter=A --reverse --format=%H -- <TASK_FILE> | head -n 1`.
+  When that commit is the root commit, git's empty tree
+  (`git hash-object -t tree /dev/null`) stands in for its parent.
   The header's `<how chosen>` reads `since the task document was added`.
   When that command prints nothing, the header reads
   `Range: not determined — no commit added the task document`, and the
@@ -708,7 +711,10 @@ section; this skill names the range and the plan it reads.
   run's commits: a task document implemented across several runs leaves as
   a whole, and `/kenspc-task`'s reviewer and `/kenspc-diagnose` both commit
   the document before any implementation, so its oldest adding commit
-  marks where the batch starts without a new pin.
+  marks where the batch starts without a new pin. Why its parent: a task
+  document written by hand and left uncommitted is added by the first
+  task's own commit, code and status together, and a range that started
+  at that commit would leave that task's changes out.
 - A "changes" run with `Mode: commits`: the range runs from the first SHA
   of `change-set.md`'s `Range:` to HEAD, read when the report is rendered,
   so code-fixer's fix commits are in it; the header's `<how chosen>` names
