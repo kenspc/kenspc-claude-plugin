@@ -9,9 +9,10 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.12.0 — unreleased
+## 4.12.0 — 2026-10-20
 
-code-fixer spends less of its time on checks. A read-back of 99 code-fixer
+code-fixer spends less of its time on checks, and task-review's progress
+lines and final report now render as task-implement's do. A read-back of 99 code-fixer
 dispatches in one product's batches, 29 Sep to 19 Oct 2026, charged each
 tool call its duration plus the model time before it: checks of one kind or
 another took about half of code-fixer's time — mutation checks 15.5%,
@@ -26,6 +27,23 @@ breadth. The read-back is kept outside the repository, at
 (its README, with the scripts and four hand readings of eight dispatches).
 Whether the changes cut the time is measured after the next code-fixer
 dispatches (the roadmap's item on the code-fixer trims).
+
+The release smoke ran the two rows these changes touch, with
+`--plugin-dir` on throwaway seeds, recorded in
+`docs/dry-runs/code-fixer-trims-smoke.md`; the other rows did not run.
+- Row 7 (`/kenspc-task-review`, a JavaScript seed with vitest) first ran
+  twice for the plan's own checks of code-fixer, which passed. Both runs
+  failed row 7 itself on the orchestrator's progress lines and its report's
+  log paths, fixed under Fixed below; the third run passed. The test
+  reviewer's mutation baseline, run in one vitest call with its mutants
+  rather than before them, was counted as passing by the maintainer (the
+  roadmap's item on run-directory sub-check 6).
+- Row 11 (`/kenspc-autopilot`, a headless `repo`-mode batch with sonnet
+  workers at effort low, both drivers' self-tests and red cases, the task
+  document and preamble cases) ran once and passed.
+- Not exercised: row 6, since task-implement did not change and code-fixer
+  ran under row 7; the new ruling paragraph's main case, since row 11's
+  seed is `Acceptance: none`; a fix past the mutation cap.
 
 ### Changed
 
