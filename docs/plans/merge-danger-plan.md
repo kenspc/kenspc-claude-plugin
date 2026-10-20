@@ -70,7 +70,7 @@ Facts verified against the current files on 2026-10-20 that shape the design:
   fixed fields), and a sentence that the tag, the push, and the release are
   the user's (Phase 4, The reports; Exit).
 - A task document does not name its plan: `generate-task` writes no such
-  line, although `references/task-document-example.md:16` carries
+  line, although `references/task-document-example.md:15` carries
   `Related plan: \`docs/plans/auth-plan.md\``.
 - `/kenspc-init` writes `docs/deployment.md` with `## Migrations` and
   `## Rollback` sections (`skills/init-project/templates/deployment.md.tmpl`).
@@ -222,7 +222,11 @@ Count: 1 one-way, 1 unclear, 2 two-way
   section.
 - **task-review's "changes" run** uses `RUN_DIR/change-set.md`'s `Range:`
   or, for `Mode: uncommitted`, its `Base:` against the working tree — the
-  fixes included, since they are part of what leaves. The plan is
+  fixes included, since they are part of what leaves. In an uncommitted run,
+  `git diff --name-status <Base>` lists no untracked file, so the file list
+  is `git -c core.quotePath=false status --porcelain -uall` with paths under
+  `.kenspc/` dropped, as Step 1 reads it; tracked files are read with
+  `git diff -U0 <Base> -- <path>` and untracked files whole. The plan is
   `none named`.
 - **autopilot.** In Phase 4, after the temp-entry removal and before the
   reports, the main session builds the section over
@@ -301,7 +305,7 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
    carries `Related plan: \`<PLAN_PATH>\``, with a Why naming the reader
    (the review skills' Merge danger section). Independent of steps 1–3.
    - Acceptance: Phase 2's DONE list names the line; its form matches
-     `references/task-document-example.md:16`.
+     `references/task-document-example.md:15`.
 5. **The guard.** Write `scripts/check-merge-danger-canonical.sh` as under
    "Guard". Depends on steps 1–3.
    - Acceptance: `bash scripts/check-merge-danger-canonical.sh` exits 0;
@@ -327,7 +331,11 @@ from `guards run: 15` / `self-tests run: 14` to `16` / `15`.
   it is not a gate (steps 1–4).
 - `AGENTS.md` § Editing skill and agent content › Skills — a bullet for the
   `canonical:merge-danger` block: three carriers, the guard that holds them,
-  and that a change applies to all three in one commit (steps 1–3, 5).
+  and that a change applies to all three in one commit (steps 1–3, 5). The
+  file stands at 197 of the 200 lines its `<!-- budget: lines=200 words=2400 -->`
+  line allows, and `scripts/check-instruction-lint.sh` fails above it, so
+  the bullet takes at most three lines, or is merged into an existing
+  bullet.
 - `plugins/kenspc/CHANGELOG.md` — a `## 4.13.0 — unreleased` entry for the
   section, the `Related plan:` line, and the guard (all steps).
 - `docs/release-checklist.md` § Pre-flight — `guards run: 16`,
