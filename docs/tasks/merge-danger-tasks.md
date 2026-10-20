@@ -342,7 +342,56 @@ File: `plugins/kenspc/skills/generate-task/SKILL.md`.
 
 ### Task 5: The guard `check-merge-danger-canonical.sh`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Byte-identity compares each carrier against task-review's block (the
+    copy Task 1 wrote first), printing a diff per diverging file.
+  - The placement check finds each template as the first fenced block
+    after its heading, matched as `### Step 8: ... (Schema F)`,
+    `### Step 4: ... (Schema G)`, and `### The reviewer report`; the
+    Schema G regex names the schema because task-implement has two
+    `### Step 4:` headings. A missing heading or fence is exit 2, like
+    missing markers.
+  - Each failing check prints its own label (`DRIFT … byte-identity`,
+    `MISSING … anchor`, `MISPLACED … placement`), and the self-test
+    asserts that a mutation's run names its check and no other — the
+    plan's "the anchor check alone" made mechanical.
+  - The self-test's temp workdir follows the other guards' form
+    (`mktemp -d` with an EXIT trap that removes it), as the task asks.
+- Changes/tradeoffs:
+  - A fourth self-test mutation, (d), removes the autopilot reviewer
+    report's `- Merge danger:` line; the task's three mutations left that
+    branch with no test that fails when it is removed. `check-all.sh`
+    still counts one self-test per guard, so the pinned counts (16 / 15)
+    are unchanged.
+  - The file is mode 100644, as the other guards are; `check-all.sh` runs
+    each with `bash`.
+  - Known gap: mutation (a) changes the task-review copy and (c) the
+    Schema F template, so a regression that dropped task-implement or the
+    autopilot from one of the loops alone would not be caught by the
+    self-test; the task fixes "one copy" per mutation.
+- Test map:
+  - byte-identity check (scripts/check-merge-danger-canonical.sh:147) →
+    scripts/check-merge-danger-canonical.sh::--self-test mutation (a)
+  - anchor check (scripts/check-merge-danger-canonical.sh:168) →
+    scripts/check-merge-danger-canonical.sh::--self-test mutation (b)
+    (mutation-checked)
+  - Schema F/G order check (scripts/check-merge-danger-canonical.sh:121) →
+    scripts/check-merge-danger-canonical.sh::--self-test mutation (c)
+    (mutation-checked)
+  - reviewer report `- Merge danger:` check
+    (scripts/check-merge-danger-canonical.sh:207) →
+    scripts/check-merge-danger-canonical.sh::--self-test mutation (d)
+    (mutation-checked)
+  - missing file, markers, or template → exit 2
+    (scripts/check-merge-danger-canonical.sh:137, :142, :111, :202) →
+    none: no fixture removes an input; the control mutant of the mutation
+    check (a nonexistent REVIEW_REL) showed exit 2 by hand
+  - bash 3.2: `/bin/bash scripts/check-merge-danger-canonical.sh
+    --self-test` exits 0; `bash scripts/check-all.sh --self-test` prints
+    `guards run: 16` and `self-tests run: 15`
 
 Depends on: Task 1-3
 
