@@ -49,9 +49,10 @@
 #                  copies (must exit 1, naming the anchor check alone — in
 #                  one copy it would fail byte-identity first, and the
 #                  anchor check would never be shown to fail); (c)
-#                  `## Merge danger` moved after `## Next steps` in the
-#                  task-review copy's template (must exit 1, naming
-#                  placement alone); (d) the `- Merge danger:` line removed
+#                  `## Merge danger` moved after `## Next steps` in one
+#                  Schema template, Schema F's and then Schema G's (must
+#                  exit 1, naming placement alone and that schema's
+#                  template); (d) the `- Merge danger:` line removed
 #                  from the autopilot copy's reviewer report template (must
 #                  exit 1, naming placement alone). The temp workdir is
 #                  removed at the end.
@@ -332,27 +333,33 @@ run_self_test() {
     copy_sources
     expect_result 0 "" "revert after (b)" || return 1
 
-    # (c) ## Merge danger moved after ## Next steps in the Schema F template.
-    awk -v h="$REVIEW_HEADING" '
-        state == 0 && $0 ~ h { state = 1 }
-        state == 1 && /^```/ { state = 2; print; next }
-        state == 2 && /^```/ { state = 3 }
-        state == 2 && $0 == "## Merge danger" { next }
-        state == 2 && $0 == "## Next steps" { print; print ""; print "## Merge danger"; next }
-        { print }
-    ' "$review_copy" > "$review_copy.moved"
-    mv "$review_copy.moved" "$review_copy"
-    local tpl moved_merge moved_next
-    tpl=$(extract_template "$review_copy" "$REVIEW_HEADING")
-    moved_merge=$(line_of "## Merge danger" "$tpl")
-    moved_next=$(line_of "## Next steps" "$tpl")
-    if [[ -z "$moved_merge" || -z "$moved_next" || "$moved_merge" -le "$moved_next" ]]; then
-        echo "FAIL  self-test: mutation (c) did not move ## Merge danger after ## Next steps in $review_copy" >&2
-        return 2
-    fi
-    expect_result 1 "$LABEL_PLACEMENT" "mutation (c), ## Merge danger after ## Next steps" || return 1
-    copy_sources
-    expect_result 0 "" "revert after (c)" || return 1
+    # (c) ## Merge danger moved after ## Next steps in one Schema template,
+    # each in turn; the failure must name that template's schema, so a
+    # template dropped from the placement loop is caught.
+    local tpl moved_merge moved_next spec copy heading name
+    for spec in "$review_copy|$REVIEW_HEADING|Schema F" "$WORK/$IMPL_REL|$IMPL_HEADING|Schema G"; do
+        copy="${spec%%|*}"; heading="${spec#*|}"
+        name="${heading#*|}"; heading="${heading%%|*}"
+        awk -v h="$heading" '
+            state == 0 && $0 ~ h { state = 1 }
+            state == 1 && /^```/ { state = 2; print; next }
+            state == 2 && /^```/ { state = 3 }
+            state == 2 && $0 == "## Merge danger" { next }
+            state == 2 && $0 == "## Next steps" { print; print ""; print "## Merge danger"; next }
+            { print }
+        ' "$copy" > "$copy.moved"
+        mv "$copy.moved" "$copy"
+        tpl=$(extract_template "$copy" "$heading")
+        moved_merge=$(line_of "## Merge danger" "$tpl")
+        moved_next=$(line_of "## Next steps" "$tpl")
+        if [[ -z "$moved_merge" || -z "$moved_next" || "$moved_merge" -le "$moved_next" ]]; then
+            echo "FAIL  self-test: mutation (c) did not move ## Merge danger after ## Next steps in $copy" >&2
+            return 2
+        fi
+        expect_result 1 "$LABEL_PLACEMENT" "mutation (c), ## Merge danger after ## Next steps in $name" "$name template" || return 1
+        copy_sources
+        expect_result 0 "" "revert after (c)" || return 1
+    done
 
     # (d) The reviewer report template's `- Merge danger:` field removed
     # from the autopilot copy: placement alone.
