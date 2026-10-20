@@ -140,8 +140,9 @@ run_main_logic() {
             echo "ERROR: missing file $f" >&2
             return 2
         fi
-        block=$(extract_block "$f")
-        if [[ -z "$block" ]]; then
+        # Both markers, each checked: with the end marker missing, the sed
+        # range would run to the end of the file and read as drift.
+        if ! grep -qF -- "$START_MARKER" "$f" || ! grep -qF -- "$END_MARKER" "$f"; then
             echo "ERROR: canonical:merge-danger markers not found in $f" >&2
             return 2
         fi
