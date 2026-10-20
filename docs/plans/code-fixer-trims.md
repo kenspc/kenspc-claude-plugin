@@ -9,7 +9,7 @@ caught. Four changes, from the analysis in
 
 - **T1** — mutation checks: one per finding that reports a surviving mutant, with the mutant
   taken from the reviewer's rig; what a ruling asks for; at most three of code-fixer's own per
-  run; no re-sweep.
+  dispatch; no re-sweep within a dispatch.
 - **T2** — the autopilot main session's rulings stop asking code-fixer for batch-wide
   Acceptance or mutation sweeps that S4 and regression-verifier already run.
 - **T3** — per-fix checks narrowed to the code the fix touched; the whole suite once, after the
@@ -90,8 +90,9 @@ No guard script reads the paragraphs changed.
 - Rejected: no own checks at all. It saves most, but leaves a test the fixer wrote and doubts
   with no proof but regression-verifier's optional check 4.
 - Rejected: no cap. That is today's behavior.
-- The cap of three per run matches task-implementer's per-task cap (maintainer's choice,
-  2026-10-20).
+- The cap of three per dispatch matches task-implementer's per-task cap (maintainer's choice,
+  2026-10-20). A second fix round is a new dispatch and gets its own three (maintainer's ruling
+  on Open Questions 4, 2026-10-20).
 - A test left unchecked under the cap says so in its row, `not mutation-checked`, as
   task-implementer's Test map says `(unchecked)`.
 
@@ -222,19 +223,22 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
        the three below.
      - A mutation check a ruling asks for is run as the ruling says.
      - Beyond these, where you are unsure a test you wrote fails when the fixed code breaks,
-       prove it with a mutation check, at most three per run. A further unsure test's row
+       prove it with a mutation check, at most three per dispatch. A further unsure test's row
        carries `not mutation-checked` after the em-dash.
-     - A mutant already run in this run is not run again unless the code it mutates changed
-       after that run.
+     - A mutant already run in this dispatch is not run again unless the code it mutates
+       changed after that run.
+     - The cap and the no-rerun rule count within one dispatch: a second fix round, dispatched
+       on the same `RUN_DIR` under `## Round 2`, gets its own three and may run again a mutant
+       the first round ran.
      - Why:
        - the reviewer measured the finding's mutant, so killing it is the proof the fix needs,
          and its rig is already built;
        - one run swept 33 mutants again at the end, each already killed during the fixes,
          which took four minutes of whole-suite runs;
-       - the cap is task-implementer's, which keeps the checks from exhausting the run.
-
-     Before writing it, settle Open Questions 4 (whether "run" spans a second fix round) with
-     the maintainer; the bullet states the answer.
+       - the cap is task-implementer's, which keeps the checks from exhausting the run;
+       - a second round changes the code the first round's mutants ran against, so their
+         results no longer hold, and counting across rounds would have the second dispatch read
+         the first round's attempt directories to know what is left.
   2. In the PER-ISSUE OUTPUT CONTRACT `action` field, add the form
      `FIXED — not mutation-checked`, joined with other parts by `; ` as the existing forms are.
      Extend the field's existing sentence "Counts classify an action by its leading word, so a
@@ -243,8 +247,9 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
 - Input: code-fixer.md after Step 1.
 - Output: the edited file.
 - Acceptance:
-  - `at most three per run` counts 1 (Step 1's joined-lines form), after counting 0 before the
-    edit;
+  - `at most three per dispatch` counts 1 (Step 1's joined-lines form), after counting 0 before
+    the edit;
+  - `gets its own three` counts 1, after counting 0 before the edit;
   - `not mutation-checked` counts at least 2 (the bullet and the contract), after counting 0
     before the edit;
   - the Schema B example between the `example:schema-b` markers is unchanged
@@ -364,7 +369,8 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
   - per-fix checks cover the touched code;
   - a fix for a mutant a reviewer reported is proved by running that mutant, its definition
     taken from the reviewer's rig, in code-fixer's own scratch, with at most three of
-    code-fixer's own checks per run and `not mutation-checked` on a row past the cap.
+    code-fixer's own checks per dispatch (a second fix round gets its own three) and
+    `not mutation-checked` on a row past the cap.
   - Steps 1–2.
 - `plugins/kenspc/README.md`, the Autopilot section's paragraph on rulings in a review (it
   begins "A worker running a review — S3's review phase, S3b, or a narrowed review —"). Add
@@ -447,10 +453,7 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
    - This plan leaves those rulings as they are today. Leaving the sweep out there too would
      need a full S4 re-run after the Phase 3 fix, or an accepted gap; that is a separate
      decision.
-4. Whether T1's "at most three per run" and "a mutant already run in this run" span a review's
-   second fix round.
-   - A second round is a new code-fixer dispatch on the same `RUN_DIR` (INPUTS, `## Round 2`),
-     and code-fixer.md uses "run" for the review run as a whole and for one dispatch alike.
-   - Counting per review run would have the round-2 dispatch read round 1's attempt
-     directories to count; counting per dispatch gives a second round its own three.
-   - Step 2's bullet has to say which before it is written; the maintainer decides.
+4. Settled (maintainer, 2026-10-20): T1's cap and its no-rerun rule count per dispatch.
+   - A second round is a new code-fixer dispatch on the same `RUN_DIR` (INPUTS, `## Round 2`);
+     it gets its own three, and the no-rerun rule applies within one dispatch.
+   - Step 2's bullet states it.
