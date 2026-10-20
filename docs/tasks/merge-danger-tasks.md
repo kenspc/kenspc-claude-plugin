@@ -434,7 +434,47 @@ scripts).
 
 ### Task 6: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Task 2: Merge danger is rendered under every verdict, BLOCKED
+    included — promoted into `plugins/kenspc/README.md` § Skills, the
+    task-implement row.
+  - Task 3: the closing sentence's count is a statement, not a question
+    (the final-gate row's "no question") — promoted into
+    `plugins/kenspc/README.md` § Autopilot, "The reports".
+  - Task 3: the section follows the report's language, the heading,
+    labels, and signal names excepted — promoted into
+    `plugins/kenspc/README.md` § Recommended Workflow, the
+    `**Merge danger.**` paragraph.
+  - Task 4: the `Related plan:` path is written relative to the repository
+    root whatever form the argument took — promoted into
+    `plugins/kenspc/README.md` § Skills, the generate-task row, and
+    `docs/release-checklist.md` smoke row 5.
+  - Task 5: each self-test mutation must fail its own check alone, and a
+    fourth mutation covers the reviewer-report field — promoted into
+    `plugins/kenspc/CHANGELOG.md` 4.13.0, the guard's entry.
+  - Local, not promoted: Task 1's rendered example, "carrier" wording,
+    catch-all counting and zero-file row, header layout, uncommitted header
+    form, and `<how chosen>` wording; Task 2's mechanical copy; Task 3's
+    `<how chosen>` wording and zero counts for an empty range; Task 5's
+    reference copy, heading regexes, temp-workdir form, file mode, and its
+    known self-test gap.
+  - Needs a home: none.
+- Changes/tradeoffs:
+  - AGENTS.md: the § Agents bullet on the shared canonical blocks now names
+    five blocks and the autopilot's copy of `merge-danger` with its guard,
+    merged there rather than a new § Skills bullet; the lint reads 199/200
+    lines.
+  - README § Skills: the autopilot row ("Two reports at the end: …") is
+    not on the task's list and was not edited; § Autopilot carries the
+    change instead.
+  - Release checklist rows 6 and 7 name the eight signals and say the
+    check is by signal name and `file:line`, not the `Evidence:` label;
+    row 11 adds the `_logs` file, the state-file line, and the closing
+    sentence's condition.
+- Test map: none (no behavior added or altered)
 
 Depends on: Task 1-5
 

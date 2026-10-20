@@ -9,6 +9,81 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.13.0 — unreleased
+
+The three reports read before a batch leaves — task-implement's final report
+(Schema G), task-review's (Schema F), and the autopilot's final message —
+gain a `Merge danger` section: which changes cannot be undone in one step,
+and how far a failure would reach, each claim with the `file:line` it rests
+on. Risk was judged earlier in the chain — a plan's Risks and Mitigations,
+task-implementer's AUTONOMY BOUNDARIES, the autopilot's note on risky
+batches — and no final report carried it. The format follows the Merge
+Danger section of Matt Pocock's `pr` skill (one-way and two-way doors, and
+blast radius), recast as three questions a reader who does not read the
+code can answer from.
+
+### Added
+
+- `skills/task-review/SKILL.md`, Step 8: the `canonical:merge-danger` block,
+  which defines the section — its inputs (the run's range, the deployment
+  document the project's instruction files name or `docs/deployment.md`,
+  and the plan's `## Risks` section); eight signals with fixed English
+  names, `schema`, `removal`, `contract`, `config`, `dependency`,
+  `outside-write`, `deploy-doc`, and `plan-risk`, split into path signals
+  and content signals; the reading order (`git diff --name-status`, then
+  `git diff -U0` file by file, and an `unclear` row for any file not read);
+  the labels `two-way`, `one-way`, and `unclear`, with the one-step
+  definition; one row per change, with three plain-language answers and an
+  `Evidence:` line of signals and `file:line`s; a last catch-all `two-way`
+  row with each signal's count; a header naming the range, the deployment
+  document, the plan, and the counts; the empty-range line; and that the
+  section is not a gate. The block is skill-neutral, with a rendered
+  example. Schema F gains `## Merge danger` between `## Verdict` and
+  `## Next steps`. Outside the block, the range: a "task" run reads from the
+  oldest commit that added the task document to HEAD, with an `unclear` row
+  when no commit added it, and the plan from the task document's
+  `Related plan:` line; a "changes" run reads the change set to HEAD with
+  the fix commits (`Mode: commits`) or its base against the working tree,
+  untracked files included (`Mode: uncommitted`), with no plan, and paths
+  in CUSTOM_INSTRUCTIONS do not narrow it.
+- `skills/task-implement/SKILL.md`, Step 4: the same block, byte for byte;
+  Schema G gains `## Merge danger` between `## Verdict` and `## Next steps`,
+  rendered under every verdict, BLOCKED included; the range and plan follow
+  task-review's "task" run rule.
+- `skills/autopilot/SKILL.md`, Phase 4: the same block, after a
+  `**Merge danger.**` paragraph — once the temp entries are removed and
+  before the reports, the main session builds the section over
+  `<baseline sha>..<last sha>`, with the spec read by `git show` as the plan
+  and the deployment document read at the last sha, and writes it to
+  `_logs/<batch>-merge-danger.md` and the state file's new
+  `merge danger: <n> one-way, <u> unclear, <m> two-way — <path>` line, from
+  which both reports are built. The spec and brief the release commit
+  removes count in the catch-all row, not as removals. The User report
+  gains a `### Merge danger` subsection after the rulings list, outside its
+  one-page limit; the reviewer report gains `- Merge danger:` after
+  `- Files changed:`; and when `<n>` + `<u>` is above zero, the closing
+  sentence that leaves the tag, push, and release to the user says how
+  many changes cannot be undone or are unclear (Phase 4, § Exit, and the
+  gates table's final-gate row) — a statement, not a question.
+- `scripts/check-merge-danger-canonical.sh`: holds the block byte-identical
+  in the three skills, checks the anchors `one-way`, `two-way`, `unclear`,
+  `Evidence:`, `not found`, and `none named` inside it, and checks
+  placement inside the fenced templates only — `## Merge danger` between
+  `## Verdict` and `## Next steps` in Schema F and Schema G, and a
+  `- Merge danger:` line in the reviewer report. Its `--self-test` runs
+  four mutations — a word changed in one copy, an anchor replaced in all
+  three, the heading moved after `## Next steps`, and the reviewer-report
+  field removed — and asserts each fails its own check alone. The release
+  checklist's counts move to `guards run: 16` and `self-tests run: 15`.
+
+### Changed
+
+- `skills/generate-task/SKILL.md`, Phase 2: the task document's
+  `## Context` carries ``Related plan: `<plan path>` ``, the path relative
+  to the repository root, and the label joins the anchors that stay in
+  English whatever the document's language, since the review skills find
+  the plan by it.
+
 ## 4.12.1 — 2026-10-20
 
 code-fixer now checks the claims a batch's note makes about the batch as a

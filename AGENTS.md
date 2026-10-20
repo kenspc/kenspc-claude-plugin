@@ -163,9 +163,11 @@ files: https://code.claude.com/docs/en/sub-agents, checked 2026-09-24. -->
 - Each review-angle agent's REVIEW CHECKLIST is its `canonical:review-bar`
   block of `shared/review-bar.md`, which task-implementer reads: change both
   in one commit, and keep no line of the section outside the block.
-- task-review and task-implement share four byte-identical canonical blocks
-  (`canonical:dispatch`, `verdict-shared`, `run-dir`, `second-round`); the
-  second-round text is skill-neutral so one copy reads true in both. A
+- task-review and task-implement share five byte-identical canonical blocks
+  (`canonical:dispatch`, `verdict-shared`, `run-dir`, `second-round`,
+  `merge-danger`), the last two skill-neutral so one copy reads true in each
+  carrier; the autopilot carries `merge-danger` too, which
+  `check-merge-danger-canonical.sh` holds: change all three in one commit. A
   carrier that stops stating the `canonical:rulings-grammar` block points at
   task-review's Step 5 by path and holds no copy, and `check-run-contract.sh`'s
   check 7 and its self-test drop that carrier in the same commit.
