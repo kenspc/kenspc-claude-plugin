@@ -7,8 +7,9 @@ sweeps, and the waits on them — while each rule behind them keeps the failure 
 caught. Four changes, from the analysis in
 `~/Projects/_smoke/_analysis/review-time-20261019/followup/fixer-trims/README.md`:
 
-- **T1** — mutation checks: one per finding that reports a surviving mutant, on the reviewer's
-  rig; what a ruling asks for; at most three of code-fixer's own per run; no re-sweep.
+- **T1** — mutation checks: one per finding that reports a surviving mutant, with the mutant
+  taken from the reviewer's rig; what a ruling asks for; at most three of code-fixer's own per
+  run; no re-sweep.
 - **T2** — the autopilot main session's rulings stop asking code-fixer for batch-wide
   Acceptance or mutation sweeps that S4 and regression-verifier already run.
 - **T3** — per-fix checks narrowed to the code the fix touched; the whole suite once, after the
@@ -20,7 +21,9 @@ Out of scope:
 - code-fixer still fixes LOW findings, and the Standalone review default (cea1910) is unchanged.
   Both were decided elsewhere.
 - regression-verifier, the five reviewers, task-review, task-implement, and the Schema B
-  format are unchanged.
+  layout (its tables, columns, example and statistics line) are unchanged. Step 2 adds one
+  action suffix, `not mutation-checked`, which no count reads, since counts classify an action
+  by its leading word.
 - Which of CUSTOM_INSTRUCTIONS and `rulings.md` wins when they conflict on a check is not
   decided here (Open Questions 1).
 
@@ -73,7 +76,7 @@ No guard script reads the paragraphs changed.
 - `check-code-craft-canonical.sh` reads the CODE-CRAFT block.
 - Neither block is touched.
 
-**T1 — why "the finding's mutant, on the reviewer's rig".**
+**T1 — why "the finding's mutant, from the reviewer's rig".**
 - A test reviewer's finding of this kind is itself a measured mutant, and the reviewer keeps its
   rig under `RUN_DIR/scratch/angle-<n>/`: the mutant script and a `diff-<m>.txt` per mutant in
   the recent runs.
@@ -129,6 +132,9 @@ No guard script reads the paragraphs changed.
   HAS ISSUES and a second round, which costs more than the run saved.
 - What goes is the same commands run twice on the same tree. A second run there can only give
   the same answer.
+- A command a ruling asks for stays binding (T2's first point), so T4a skips it only when the
+  final run ran that same command line on the same tree. An Acceptance command that runs the
+  suite through another command line is cut at the source, by T2, not by code-fixer.
 
 ## Implementation Steps
 
@@ -171,9 +177,12 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
      - **After the last fix:** the project's build, test and lint commands once, whole, as the
        project configures them — the run the `Final checks:` line reports. A command that run
        repeats on the same tree is not run again before or after it: a related-tests run just
-       before it, or an Acceptance command that runs the same suite. Why: interaction breakage
+       before it, or an Acceptance command that runs the same suite. A command a ruling asks
+       for is still run as the ruling says, unless the final run ran that same command line on
+       the same tree; its result then stands for the ruling's. Why: interaction breakage
        between fixes shows only in the whole run, and a second run of the same commands on the
-       same tree can only give the same answer.
+       same tree can only give the same answer; a ruling's text bounds the fix (FIXING
+       PRIORITY), so a check it names is cut only where it was already run.
   2. In the RUN_DIR paragraph, change "verify your fixes with a narrowed command if you need to,
      narrowed only to leave out `.kenspc/`" so that it governs the final whole run. The `.kenspc/`
      exclusion stays the only narrowing allowed there; the per-fix checks are narrowed as
@@ -337,7 +346,8 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
   the Per-angle Results table"). Add that:
   - the final line reports one whole run after the last fix;
   - per-fix checks cover the touched code;
-  - a mutant a reviewer reported is proved on the reviewer's rig, with at most three of
+  - a fix for a mutant a reviewer reported is proved by running that mutant, its definition
+    taken from the reviewer's rig, in code-fixer's own scratch, with at most three of
     code-fixer's own checks per run and `not mutation-checked` on a row past the cap.
   - Steps 1–2.
 - `plugins/kenspc/README.md`, the Autopilot section's paragraph on rulings in a review (it
@@ -347,8 +357,10 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
   narrowed review's rulings are unchanged. Step 3. (The Run directory section's `rulings.md`
   bullet describes the file for every orchestrator, not the autopilot's rulings, so Step 3
   leaves it true.)
-- `plugins/kenspc/CHANGELOG.md`: a `## 4.12.0` entry — Changed: T1, T2, T3, T4a, each with its
-  reason and the analysis it rests on. Steps 1–3.
+- `plugins/kenspc/CHANGELOG.md`: a `## 4.12.0 — unreleased` entry above `## 4.11.0`, as
+  unreleased entries are headed until the release commit dates them, with an opening paragraph
+  and a `### Changed` subsection: T1, T2, T3, T4a, each with its reason and the analysis it
+  rests on. Steps 1–3.
 - `docs/roadmap.md`: a new item after 33, "Whether the code-fixer trims (4.12.0) cut its time".
   - Baseline: the 46 dispatches from 2026-10-12, as in `classify-since-1012.out` and
     `../fixer/aggregate.out`.
