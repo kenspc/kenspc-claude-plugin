@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # check-doc-sync-anchors.sh
 #
-# Anchor guard for the planning chain: presence for six anchors across
-# twelve files, and one exact count. Two paths run through it. The
+# Anchor guard for the planning chain: presence for seven anchors across
+# thirteen files, and one exact count. Two paths run through it. The
 # documentation path: a plan's Documentation impact element becomes the task
 # document's Doc-sync task, whose promotion step reports what it could not
 # place under Decisions needing a home. The open-question path: a brief's
@@ -11,7 +11,9 @@
 # writes into an answered entry is copied from generate-brief's grammar.
 # Five load-bearing anchors carry those paths across twelve files, and a
 # sixth, `## Checks run`, carries task-implementer's check evidence into the
-# report task-implement renders; every file in an anchor's group must keep
+# report task-implement renders, and a seventh, `Related plan:`, carries the
+# plan's path from the task document generate-task writes to the review
+# skills' Merge danger section; every file in an anchor's group must keep
 # it:
 #
 #   `Documentation impact`      (the plan element)
@@ -42,6 +44,11 @@
 #       Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>`
 #       plugins/kenspc/skills/generate-brief/SKILL.md
 #       plugins/kenspc/skills/prototype/SKILL.md
+#   `Related plan:`             (the task document's line naming its plan)
+#       plugins/kenspc/skills/generate-task/SKILL.md
+#       plugins/kenspc/references/task-document-example.md
+#       plugins/kenspc/skills/task-review/SKILL.md
+#       plugins/kenspc/skills/task-implement/SKILL.md
 #
 # One file writes an anchor, another checks it, a third renders or greps it.
 # If a future edit renames an anchor in one file but not the others, the
@@ -82,12 +89,12 @@
 # derivation.
 #
 # Optional flag:
-#   --self-test    Run the mutation regression fixture. Copies the twelve
+#   --self-test    Run the mutation regression fixture. Copies the thirteen
 #                  target files into a temp workdir, confirms `Doc-sync` is
 #                  present in the copied task example, the Prototype line in
 #                  the copied prototype skill and generate-brief, and the
 #                  leftovers command twice in the prototype skill (exit 2 if
-#                  not), and runs the main check (must exit 0). Then six
+#                  not), and runs the main check (must exit 0). Then seven
 #                  mutations, each restored by recopying before the next,
 #                  must each exit 1: `Doc-sync` renamed to `Docsync` in the
 #                  copied task example; "`<location>`, removed in the next
@@ -97,8 +104,10 @@
 #                  commands alone with `--ignored=matching` changed to
 #                  `--ignored`; and a third copy of the leftovers command
 #                  appended on the line that holds the first, so a count by
-#                  line would still read two; and `## Checks run` renamed
-#                  to `## Checks made` in the copied task-implement skill.
+#                  line would still read two; `## Checks run` renamed
+#                  to `## Checks made` in the copied task-implement skill;
+#                  and `Related plan:` renamed to `Related-plan:` in the
+#                  copied task-review skill.
 #                  Then the main check runs on
 #                  the reverted copy (must exit 0). Opt-in: invocation with
 #                  no arguments behaves unchanged. Exit 0 on self-test pass,
@@ -135,6 +144,10 @@ ANCHOR_CHECKS=(
     "needs prototype|plugins/kenspc/skills/prototype/SKILL.md"
     'Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>`|plugins/kenspc/skills/generate-brief/SKILL.md'
     'Prototype: `<short hash>` — `<location>`, removed in the next commit; `git show <short hash>`|plugins/kenspc/skills/prototype/SKILL.md'
+    "Related plan:|plugins/kenspc/skills/generate-task/SKILL.md"
+    "Related plan:|plugins/kenspc/references/task-document-example.md"
+    "Related plan:|plugins/kenspc/skills/task-review/SKILL.md"
+    "Related plan:|plugins/kenspc/skills/task-implement/SKILL.md"
 )
 
 # The exact-count check: this literal occurs exactly LEFTOVERS_WANT times in
@@ -185,9 +198,9 @@ run_main_logic() {
     if [[ "$drift_found" -ne 0 ]]; then
         echo "" >&2
         echo "The planning-chain anchors (Documentation impact, Doc-sync," >&2
-        echo "Decisions needing a home, ## Checks run, needs prototype, and the Prototype" >&2
-        echo "line) must stay spelled the same in every file that writes, checks, or" >&2
-        echo "renders them." >&2
+        echo "Decisions needing a home, ## Checks run, needs prototype, the Prototype" >&2
+        echo "line, and Related plan:) must stay spelled the same in every file that" >&2
+        echo "writes, checks, or renders them." >&2
         echo "Restore the missing label, or change it in every file of its group and in" >&2
         echo "this guard together." >&2
     fi
@@ -208,23 +221,24 @@ run_main_logic() {
         return 1
     fi
 
-    echo "OK    doc-sync-anchors — all six anchors present in every file of their groups"
+    echo "OK    doc-sync-anchors — all seven anchors present in every file of their groups"
     echo "OK    leftovers command — exactly $LEFTOVERS_WANT occurrences in $LEFTOVERS_REL"
     return 0
 }
 
 # --- Self-test mode ---------------------------------------------------------
 #
-# Mutation regression fixture. Copies the twelve target files into a temp
-# workdir, runs the main check (expect 0), then six mutations, each
+# Mutation regression fixture. Copies the thirteen target files into a temp
+# workdir, runs the main check (expect 0), then seven mutations, each
 # restored by recopying (expect 1 each): `Doc-sync` renamed to `Docsync` in
 # the task example (the label is then absent from that file); the prototype
 # skill's Prototype line changed to "removed in a later commit", then
 # generate-brief's; the first leftovers command alone given `--ignored` for
 # `--ignored=matching` (the count drops to one); and a third leftovers
 # command appended on the first one's line (the count rises to three, where
-# a count by line would read two); and `## Checks run` renamed in the
-# task-implement skill. Finally the reverted copy (expect 0).
+# a count by line would read two); `## Checks run` renamed in the
+# task-implement skill; and `Related plan:` renamed in the task-review
+# skill. Finally the reverted copy (expect 0).
 # The presence check is presence-only by design, so renaming only the example's
 # `### Task 6: Doc-sync` heading is not caught while its closing note still
 # says `Doc-sync`.
@@ -410,6 +424,25 @@ run_self_test() {
     cp "$REPO_ROOT/$checks_rel" "$checks_file"
     if [[ "$rc" -ne 1 ]]; then
         echo "FAIL  self-test negative path (Checks run renamed): expected exit 1 on mutated copy, got $rc" >&2
+        return 1
+    fi
+
+    # Mutation 7: the plan line's label renamed in a skill that reads it.
+    local plan_rel='plugins/kenspc/skills/task-review/SKILL.md'
+    local plan_file="$WORK/$plan_rel"
+    if ! grep -qF -- 'Related plan:' "$plan_file"; then
+        echo "FAIL  self-test fixture stale: 'Related plan:' not found in $plan_file" >&2
+        return 2
+    fi
+    sed -i.bak 's|Related plan:|Related-plan:|g' "$plan_file" && rm "$plan_file.bak"
+    if grep -qF -- 'Related plan:' "$plan_file"; then
+        echo "FAIL  self-test: Related plan mutation did not apply in $plan_file" >&2
+        return 2
+    fi
+    ( run_main_logic "$WORK" ) >/dev/null 2>&1 && rc=0 || rc=$?
+    cp "$REPO_ROOT/$plan_rel" "$plan_file"
+    if [[ "$rc" -ne 1 ]]; then
+        echo "FAIL  self-test negative path (Related plan renamed): expected exit 1 on mutated copy, got $rc" >&2
         return 1
     fi
 
