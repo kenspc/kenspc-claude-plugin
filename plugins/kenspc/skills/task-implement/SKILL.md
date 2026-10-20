@@ -700,6 +700,14 @@ which agent returned, its counts, and where its report is; the fixed form,
 opening with the agent's name, is what the release checklist finds in the
 trace, as it finds the Phase 1 boundary lines.
 
+Print each of these lines as plain text, its own line, without the
+backticks this file sets it in, and print it as soon as its agent — or
+the five reviewers together — has returned and been checked, before any
+other dispatch. Why: a run printed the code-fixer and regression-verifier
+lines inside backticks, so they no longer opened with the agent's name,
+and printed no `Reviewers returned` line at all before dispatching
+code-fixer; the user then saw no counts until the final report.
+
 ### Step 4: Render the consolidated final report (Schema G)
 
 Render the final consolidated report using Schema G:
@@ -797,6 +805,19 @@ instructions reaches the next run without a CUSTOM_INSTRUCTIONS line, and a
 CLAUDE.md created beside an AGENTS.md stops Claude Code's default mode from
 reading that AGENTS.md.
 ```
+
+Render every section above in full in this one message, even where Phase 1
+Step 5 or a dispatch line printed part of it already: Schema D with each of
+its sections under its own heading, `## Decisions needing a home` and
+`## Checks run` among them, and Schema C with each Detail cell as the agent
+wrote it, its command, exit code, and log path kept. A pointer such as
+"listed in full above", or a shortened cell, is not a rendering. Why: the
+final report is read alone. A headless run returns only the text after its
+last tool call, and an autopilot worker's report is that text, so a section
+left in an earlier message is missing from it; and the release checklist
+reads each log a Schema C row names. A final report that pointed back at
+Step 5's Schema D left out its `## Checks run`, and one that shortened the
+test row's Detail dropped the log path the agent had given.
 
 #### Verdict determination
 

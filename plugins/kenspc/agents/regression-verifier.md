@@ -372,7 +372,7 @@ it only by running it again.
 |---|----------------------------------|------------|----------------------------------------------------------|
 | 1 | Every issue ID accounted for     | PASS       | —                                                        |
 | 2 | Build succeeds                   | PASS       | `npm run build` → exit 0, log scratch/regression-verifier/1/build.log |
-| 3 | Tests pass                       | PASS       | `npm test` → exit 0, log scratch/regression-verifier/1/test.log; `test/orders.integration.test.ts` (angle-4.md): covered by the full run |
+| 3 | Tests pass                       | PASS       | `npm test` → exit 0, log scratch/regression-verifier/1/npm-test.log; `test/orders.integration.test.ts` (angle-4.md): covered by the full run |
 | 4 | Lint passes                      | PASS       | no lint command in the project                           |
 | 5 | No regressions in non-fix files  | PASS       | —                                                        |
 

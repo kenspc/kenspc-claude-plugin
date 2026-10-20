@@ -45,9 +45,12 @@ the repository, at `~/Projects/_smoke/_analysis/review-time-20261019/`
 
 ### Changed
 
-- `agents/task-implementer.md`: reads the review bar before the first task
-  (PREREQUISITES step 5) and checks each task against its `At write time`
-  lists. The Tests item names its unit: each branch, guard, and limit the
+- `agents/task-implementer.md`: reads the review bar before anything else
+  (PREREQUISITES step 1, the other steps renumbered 2–5), a DONE criterion
+  holds it to that, and it checks each task against the bar's
+  `At write time` lists. The read first sat last in the list, and one of
+  four smoke runs went from the task document straight to writing code
+  without it. The Tests item names its unit: each branch, guard, and limit the
   task adds or alters, each rule the task document or plan states for it, and
   each behavior one of its own `Decisions:` settles, has a test that fails
   when the piece is removed or changed, limits tested at the limit and one
@@ -80,6 +83,26 @@ the repository, at `~/Projects/_smoke/_analysis/review-time-20261019/`
   list state the mode-dependent default.
 - `docs/release-checklist.md`: smoke row 11's seed writes
   `Standalone review: on`, so S3b stays among the row's four workers.
+
+### Fixed
+
+All three found by this release's smoke row 6, which failed on them.
+
+- `skills/task-implement/SKILL.md`: the final report (Schema G) renders
+  every section in full in its one message — Schema D with its
+  `## Decisions needing a home` and `## Checks run` headings, Schema C
+  with each Detail cell as the agent wrote it. The run had pointed back at
+  the Schema D printed after Phase 1 ("listed in full above") and dropped
+  the log path from the test row, and a headless run's result, an
+  autopilot worker's report, holds only the last message.
+- `agents/regression-verifier.md`: the Schema C example names its test log
+  `npm-test.log`, not `test.log`, a name its own scratch-naming rule
+  forbids; the verifier had copied it.
+- `skills/task-implement/SKILL.md`: the `… returned —` lines are printed as
+  plain text, without the backticks the skill sets them in, each as soon as
+  its agent (or the five reviewers) has returned and been checked, before
+  the next dispatch. The re-run of row 6 had printed two of them inside
+  backticks and left out `Reviewers returned` altogether.
 
 ## 4.10.3 — 2026-10-19
 

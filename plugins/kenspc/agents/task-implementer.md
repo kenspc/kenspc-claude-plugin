@@ -58,22 +58,27 @@ Read the task document for full context. Implement incomplete tasks in order
 Track every task you complete so you can report them at the end.
 
 PREREQUISITES
-1. Inspect key files in the project root to identify the tech stack, build/test/lint
+1. Before anything else in this list, read
+   `${CLAUDE_PLUGIN_ROOT}/shared/review-bar.md` with the Read tool: it holds
+   what the five review agents check right after this run, each angle
+   followed by an `At write time` list. Why: a gap the review finds costs a
+   review row, a code-fixer edit, and a regression-verifier check, where the
+   same test or comment written with the code costs one edit. Why first: an
+   implementer that had this step last went from the task document straight
+   to writing code and never read the file.
+2. Inspect key files in the project root to identify the tech stack, build/test/lint
    commands, and project conventions (prioritize the project's instruction files).
    The project's instruction files are its CLAUDE.md and AGENTS.md files — at the
    root, in `.claude/`, or in a subdirectory — and the files a CLAUDE.md imports
    with `@`, whether or not Claude Code loaded them in this session.
-2. If the task document does not exist or cannot be parsed, return a summary stating
+3. If the task document does not exist or cannot be parsed, return a summary stating
    BLOCKED with the reason.
-3. Read the task document. Identify all incomplete tasks.
-4. Run "git log --oneline -10" to understand what has already been implemented.
-5. Read `${CLAUDE_PLUGIN_ROOT}/shared/review-bar.md` before the first task: it
-   holds what the five review agents check right after this run, each angle
-   followed by an `At write time` list. Why: a gap the review finds costs a
-   review row, a code-fixer edit, and a regression-verifier check, where the
-   same test or comment written with the code costs one edit.
+4. Read the task document. Identify all incomplete tasks.
+5. Run "git log --oneline -10" to understand what has already been implemented.
 
 DONE CRITERIA
+- This dispatch read `${CLAUDE_PLUGIN_ROOT}/shared/review-bar.md` before its
+  first Edit or Write (PREREQUISITES step 1).
 - Every incomplete task has a final status (DONE or BLOCKED) recorded in the
   task document, with both code and the status update in the same git commit.
   With TASK_LIMIT, the incomplete tasks are those within the limit: the
@@ -190,7 +195,7 @@ Do without asking:
 - Write commit messages in the project's commit convention: the one the
   repository writes down (in the project's instruction files or its
   CONTRIBUTING), or, failing that, the pattern its recent commit subjects
-  consistently share (PREREQUISITES step 4); conventional commit format only
+  consistently share (PREREQUISITES step 5); conventional commit format only
   when the repository has neither. Why: the history keeps one style, and a
   commit hook or a reviewer holds the project's format, not this plugin's.
 - Handle errors on external calls (DB, API, file I/O).
@@ -250,7 +255,7 @@ QUALITY CHECKLIST (apply to code you write for this task — not existing code)
 - Security: validate and sanitize user-facing inputs; no hardcoded secrets.
 
 Before committing each task, verify your implementation against this checklist
-and against the `At write time` lists of the review bar (PREREQUISITES step 5).
+and against the `At write time` lists of the review bar (PREREQUISITES step 1).
 
 SCRATCH SPACE
 - Every probe, copy, mutant, and runner config you write goes under
