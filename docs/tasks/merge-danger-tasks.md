@@ -26,7 +26,44 @@ are written as rationale-anchored prose, each with its "Why: ..." (AGENTS.md
 
 ### Task 1: task-review — the canonical block, Schema F, and the range rules
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The block carries the plan's rendered example (below its rules, headed
+    "A rendered section, below its heading:") without the heading line.
+    Why: the nested row shape is hard to hold from prose alone, and the
+    heading level differs by carrier (`##` in Schema F and G, `###` in the
+    autopilot's User report).
+  - The block names "the carrier" once as "the skill that carries this
+    block" and lets the carrier override the Reading commands "for a range
+    that ends at the working tree". Why: task-review's `Mode: uncommitted`
+    reads the file list from `git status --porcelain -uall`, which the
+    block's `git diff --name-status <range>` cannot express, and the block
+    must stay skill-neutral.
+  - The `Count:` line counts rows, the catch-all among the `two-way` ones,
+    and the catch-all is written even over zero files. Why: the plan's
+    example counts it (2 two-way with one ordinary two-way row), and a
+    missing last row would read as one never checked.
+  - Header layout follows the plan's example: Range, Deployment document,
+    and Plan on one line separated by ` · `, `Count:` on its own line.
+  - The range-and-plan rules sit outside the block, just above it, in a
+    `**The `## Merge danger` range and plan.**` paragraph; the uncommitted
+    header reads `Range: <Base sha> to the working tree (uncommitted, the
+    fixes included)`, a form the plan left open.
+  - The "task" run's `<how chosen>` reads `since the task document was
+    added`, the plan example's wording.
+- Changes/tradeoffs:
+  - Each rule got its own Why, including two the plan states without one
+    (the one-step definition, the empty-range line); the instruction-files
+    definition sentence is not repeated inside the block, since each
+    carrier already holds it.
+  - The empty-range line follows the report's language (the fixed-English
+    list is the heading, the labels, and the signal names only).
+- Test map: none (no behavior added or altered) — the change is skill
+  prose; its byte-identity, anchors, and placement are held by Task 5's
+  `scripts/check-merge-danger-canonical.sh`, and `bash scripts/check-all.sh`
+  exits 0.
 
 File: `plugins/kenspc/skills/task-review/SKILL.md`.
 
