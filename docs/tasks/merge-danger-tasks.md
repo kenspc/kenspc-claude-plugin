@@ -325,7 +325,10 @@ no other file):
   `self-tests run: 15` (plan step 5); § Smoke checklist rows 5, 6, 7, and
   11 — row 5 sees the `Related plan:` line; rows 6 and 7 see
   `## Merge danger` between `## Verdict` and `## Next steps`, each
-  non-catch-all row with an `Evidence:` line; row 11 sees the User report
+  non-catch-all row with an evidence line naming at least one signal by its
+  fixed English name and a `file:line` — not the label `Evidence:`, which
+  follows the report's language, so the check holds in a smoke run in any
+  language; row 11 sees the User report
   subsection, the reviewer report field, and
   `_logs/<batch>-merge-danger.md` (plan steps 1–5).
 
