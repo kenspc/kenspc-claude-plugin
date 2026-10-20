@@ -98,11 +98,16 @@ No guard script reads the paragraphs changed.
   breaking that rule.
 - The cut belongs where the ruling is written: autopilot SKILL § How the main session rules.
 - What protects the batch is unchanged:
-  - S4 runs every `Acceptance:` case after the last fix, on the S3b HEAD (or S3's when S3b does
-    not run).
+  - S4's first run, in Phase 3, runs every `Acceptance:` case after Phase 2's last fix, on the
+    S3b HEAD (or S3's when S3b does not run).
   - regression-verifier runs the whole build, test and lint right after code-fixer.
 - A locked point that every Acceptance command passes after the fixes is met by S4's run, so a
   ruling that leaves the sweep to S4 does not depart from it.
+- The rule covers only the reviews S4's first run follows: S3's review, S3b, and the narrowed
+  reviews of Phase 2. A narrowed review in Phase 3 (after an S5 that fixed an acceptance FAIL)
+  is followed by an `-s4b` run of the failed case alone (autopilot SKILL § Phase 3,
+  Classification), so no full sweep follows its code-fixer, and its rulings keep today's
+  behavior (Open Questions 3).
 - Exception: with `Acceptance: none` there is no S4 run, and the ruling may ask for what the
   spec names.
 
@@ -134,10 +139,12 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
 
 - Do: run `git -C <repo> status --short`, then for each file below
   `git -C <repo> log -1 --format=%h -- <file>`.
-- Input: the repository at `3d2a696`.
+- Input: the repository at `3d2a696`, or at a later commit whose commits since `3d2a696` touch
+  only this plan (`git -C <repo> diff --name-only 3d2a696 HEAD` lists only
+  `docs/plans/code-fixer-trims.md`).
 - Output: the status and four hashes.
 - Acceptance:
-  - the tree is clean, apart from this plan;
+  - the tree is clean (the plan is committed by its review);
   - the hashes are the ones at planning time:
     - `plugins/kenspc/shared/code-craft-principles.md` `0051d0e`
     - `plugins/kenspc/agents/code-fixer.md` `bb42780`
@@ -225,11 +232,14 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
   add a paragraph headed **A ruling on a review's findings.** Its content:
   - A FIX entry in `rulings.md` names the change and, at most, the checks of the code it
     touches: the Acceptance commands, or the reviewer's mutants, whose files the fix edits.
-  - When the `Acceptance:` field names cases, a ruling does not ask code-fixer to run every
-    Acceptance command again, or every mutant. S4 runs every case after the last fix, and
+  - When the `Acceptance:` field names cases, a ruling in a review that S4's first run follows —
+    S3's review, S3b, or a narrowed review of Phase 2 — does not ask code-fixer to run every
+    Acceptance command again, or every mutant. S4 runs every case after Phase 2's last fix, and
     regression-verifier runs the whole build, test and lint after code-fixer.
   - A spec sentence or locked point that every Acceptance command passes after the fixes is met
     by S4's run.
+  - A narrowed review in Phase 3 is followed only by an `-s4b` run of the failed case, so its
+    rulings are not bound by this paragraph.
   - With `Acceptance: none` there is no S4 run, and a ruling may ask for the commands the spec
     names.
   - Why: in one product's batches, 41 of 68 rulings asked code-fixer to re-run Acceptance
@@ -240,9 +250,11 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
 - Output: the edited file.
 - Acceptance:
   - the paragraph sits inside § How the main session rules;
-  - it names S4 and regression-verifier;
+  - it names S4 and regression-verifier, and the Phase 3 narrowed review it leaves out;
   - it carries a `Why:`;
-  - the rulings grammar block is untouched (`check-run-contract.sh` passes);
+  - `git -C <repo> diff -U0 -- plugins/kenspc/skills/autopilot/SKILL.md` shows one hunk, inside
+    § How the main session rules (the file carries no rulings grammar block, so
+    `check-run-contract.sh` does not read it);
   - `bash scripts/check-all.sh` exits 0.
 
 ### Step 4 — Documentation
@@ -268,15 +280,20 @@ rules). The edits are made in a session started without `--plugin-dir` (CLAUDE.m
 ### Step 6 — Smoke: one task-review run on a seed
 
 - Do:
-  1. Make a seed under `~/Projects/_smoke/code-fixer-trims-smoke/`: a small Node project with
-     vitest and two source files.
-  2. Commit a change to it that adds:
+  1. Make a seed under `~/Projects/_smoke/code-fixer-trims-smoke/`: a git repository holding a
+     small Node project with vitest and two source files, whose `package.json` gives `build`,
+     `test` (`vitest run`) and `lint` scripts, each exiting 0. Commit it as the base commit.
+  2. Commit, as one commit on top of the base, a change that adds:
      - a function with a branch its new test does not hold, so the test reviewer finds a
        surviving mutant;
      - a second defect in the other file, a plain bug.
-  3. Run `/kenspc-task-review` on that change from a headless `claude -p` session in the seed,
-     with `--plugin-dir <repo>/plugins/kenspc`, so the edited agents run. A session without
-     `--plugin-dir` runs the installed 4.11.0 copy.
+     With the tree clean, task-review's default range is then `HEAD~1..HEAD`, this commit.
+  3. Run `/kenspc-task-review` on that change from a headless session in the seed:
+     `claude -p "/kenspc-task-review" --plugin-dir <repo>/plugins/kenspc --permission-mode
+     bypassPermissions --output-format json`, so the edited agents run and the JSON carries the
+     session id and `total_cost_usd`. A session without `--plugin-dir` runs the installed
+     4.11.0 copy; a headless session in the default permission mode has its Bash and Edit calls
+     denied, since nobody can approve them.
   4. Read code-fixer's transcript and the run directory.
 - Expected cost: USD 3–5, by the 4.11.0 row-6 smoke runs.
 - Input: the edited plugin.
@@ -377,3 +394,9 @@ Step 3 is independent of Steps 1–2. Step 4 needs 1–3. Step 5 needs 4. Step 6
 2. Whether regression-verifier's check 4 should read the `not mutation-checked` suffix as where
    to look first. Not part of this plan; the verifier reads the action's leading word, which the
    suffix does not change.
+3. Whether a narrowed review in Phase 3 should also leave Acceptance sweeps out of its rulings.
+   - Its code-fixer is followed by an `-s4b` run of the failed case alone, not by a full S4
+     run, so T2's reason (S4 runs every case after the last fix) does not hold there.
+   - This plan leaves those rulings as they are today. Leaving the sweep out there too would
+     need a full S4 re-run after the Phase 3 fix, or an accepted gap; that is a separate
+     decision.
