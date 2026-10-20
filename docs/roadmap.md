@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.11.0)
+## Next minor (4.12.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -173,9 +173,13 @@ its number.
    Step 5 is the Phase 1 → Phase 2 boundary, whose transition sometimes
    failed to trigger in 3.0.2 and whose `Proceeding to code review.` line
    smoke row 13 looks for in the trace; changing what that boundary prints
-   needs an acceptance of its own. The choice left: Step 5 prints only its
-   progress update and Schema D is rendered once, in Schema G, or both
-   renders stay.
+   needs an acceptance of its own. 4.11.0 settled the Schema G half:
+   Schema G renders Schema D in full whatever Step 5 printed, since a run
+   that pointed back at Step 5 left its `## Checks run` out of the only
+   message a headless run returns. The choice left: Step 5 prints only its
+   progress update, or both renders stay. In two of the four 4.11.0 smoke
+   runs of row 6, Step 5 printed neither Schema D nor its progress update,
+   which row 13 would fail.
 10. Doc-sync follow-ups, left out of 3.8.2, which has code-fixer correct a
     DONE Doc-sync task's documents in the fix commits. The review rows are
     in `schema-b.md` of the batch's review runs
@@ -570,3 +574,31 @@ its number.
       the suite unwrapped, which the hook denies. Open: whether the worker
       asks the main session or stops, and whether the main session rules
       or it is a new stop condition (with the README Stops entry).
+33. Whether the review bar and the Test map (4.11.0) cut the gaps the
+    review finds. Baseline: a read-back of 1005 findings from 96
+    dayaku-crm reviews, 29 Sep to 19 Oct 2026, classified 472 (47%) as a
+    branch, guard, limit, or planned rule no test held; 271 of them came
+    from the 44 reviews of freshly implemented tasks (run ids ending
+    `-tasks`), about 6.2 a review, and they were 430 of the 716 rows
+    code-fixer fixed. The scripts and their readme are in the maintainer's
+    `~/Projects/_smoke/_analysis/review-time-20261019/` (`classify.py`,
+    then `summarize.py`). After the next five repo-mode dayaku-crm batches
+    on 4.11.0 or later, the maintainer re-runs them and compares:
+    - test-gap rows per `-tasks` review against 6.2, and their share of
+      the rows code-fixer fixed against 430 of 716;
+    - S3's implementation minutes per batch against `rows.json`: the bar
+      adds about 3.5k tokens to each implementer dispatch (a 2.2k-word
+      read and 0.4k words of prompt), and the Test map adds work per task;
+    - how many implementer dispatches read `shared/review-bar.md` before
+      their first edit (one of four smoke runs skipped it while it was the
+      last prerequisite), and how many Test map lines end `(unchecked)`.
+    Known limits: the classification is about 85–90% where a second reader
+    would put it, a `-tasks` suffix is not always the role, and it is one
+    project. A gap whose fix lies outside the task's stated scope — reusing
+    a helper another file keeps private — stays, since the implementer may
+    not edit that file; every 4.11.0 smoke run of row 6 deferred one. If
+    the rate does not fall, the next step is the option the design left
+    out: generate-task maps each locked-design statement to a test in the
+    task's acceptance criteria. dayaku-crm's own test rules, added to its
+    AGENTS.md files while 4.11.0 was built, repeat some of the bar's
+    generic sentences; trimming them is the project's call.

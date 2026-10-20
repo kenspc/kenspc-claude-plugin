@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.11.0 — unreleased
+## 4.11.0 — 2026-10-20
 
 The autopilot's standalone review (S3b) now runs on a condition by
 default in `repo` mode. A read-back of 42 `repo`-mode batches of one
@@ -18,7 +18,7 @@ have skipped S3b in 20 of them, about 45% of all S3b wall time, and that
 the standalone reviews of those 20 reported no HIGH finding; every HIGH
 they reported fell in a batch `auto` still sends to S3b. The trial the
 roadmap had planned before the change is replaced by a check after it
-(roadmap item 28).
+(the roadmap's item on S3b on a condition in repo mode).
 
 task-implementer now writes to the bar the review checks. A read-back of
 1005 review findings from 96 reviews of the same product found 472 (47%)
@@ -29,7 +29,25 @@ one. The implementer had been told to test "the error paths", but not that
 the test reviewer removes each piece to see a test fail, nor eleven other
 checks the five reviewers name. The read-back is kept outside
 the repository, at `~/Projects/_smoke/_analysis/review-time-20261019/`
-(its README, then `followup/README.md`).
+(its README, then `followup/README.md`). Whether the change cuts those
+gaps is measured after the next dayaku-crm batches (the roadmap's item on
+the review bar's effect).
+
+The release smoke ran the two rows these changes touch, with
+`--plugin-dir` on throwaway seeds; the other rows did not run. Row 6
+(`/kenspc-task-implement`, a TypeScript seed with vitest) failed three
+times — on the final report's rendering, on the dispatch lines, and on an
+implementer that skipped the review bar — each fixed under Fixed and
+Changed below and run again, and passed on the fourth run, which also
+exercised a fix that updated a Doc-sync document and the `HAS ISSUES`
+line; the task document with no TODO task ran apart. Row 11
+(`/kenspc-autopilot`, a headless `repo`-mode batch with sonnet workers at
+effort low, both drivers' self-tests and red cases) ran once and passed
+once the checklist's transcript check let through the main session's
+prescribed removal of its own temp entries. Not exercised: the
+`repo`-mode `auto` default itself, since row 11 writes
+`Standalone review: on` to keep S3b among its workers; a run with a task
+forced BLOCKED; a CRLF `.gitignore`.
 
 ### Added
 
@@ -71,8 +89,12 @@ the repository, at `~/Projects/_smoke/_analysis/review-time-20261019/`
   for a presence check to fail on).
 - AGENTS.md and the plugin README describe the review bar and the Test map.
 - `docs/release-checklist.md`: `guards run: 15`, `self-tests run: 14`; smoke
-  row 6 checks the Test map, the mutation cap, and the Read of the review bar.
-
+  row 6 checks the Test map, the mutation cap, and the Read of the review
+  bar. Row 11's transcript check lets through the main session's `rm -rf`
+  of the batch's own temp entries, which the autopilot skill prescribes,
+  when every path is a listed candidate under the recorded temp folder and
+  the final message reports the outcome; any other recursive `rm` in the
+  main session still fails the row.
 - `skills/autopilot/SKILL.md`: `Standalone review:` defaults to `auto` in
   `repo` mode and stays `on` in `plugin` mode, where `off` and `auto` are
   still the settings stop; a batch that sets the field explicitly runs as
