@@ -684,3 +684,16 @@ its number.
     that names the run id, because nothing in a run directory or state file
     names it; a recorded id would make the mapping a lookup, with no
     `manual` fallback for an autopilot run. Deferred by the retro brief.
+40. Retro guard gaps, deferred by the review of the retro batch (each
+    mutant named is in that run's `scratch/angle-5/1/mutants.json`):
+    - a run confirmed only through a resume's `<tag>-r<k>.json` is
+      untested (mutant `resume-json-ignored` survives): add a run inside
+      bat3-s3's window that only `bat3-s3-r1.json` names;
+    - an s3 or s3b session with no `.exit` has no fixture, so its `other`
+      row's `unmeasured` branch is untested (mutant
+      `split-unmeasured-other` survives): add one in a batch whose window
+      holds no run;
+    - the guard pins `TZ=UTC`, so a UTC transcript timestamp read as local
+      time cannot fail it (mutant `transcript-utc-as-local` survives): run
+      the time case again under `TZ=Etc/GMT-8` with a copy of
+      `claude-config/` whose timestamps are moved by −8 h.
