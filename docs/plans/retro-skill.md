@@ -63,8 +63,8 @@ every judgement.
 
 | Phase | Who | Output (under `RETRO_DIR`) |
 |---|---|---|
-| 0 Locate | main session | `retro-dir` created, previous record found, window fixed |
-| 1 Extract | scripts | `findings.tsv`, `runs.tsv`, `time.tsv`, `notes.tsv`, `extract.md` (anomalies, coverage) |
+| 0 Locate | main session | `retro-dir` created, previous record found, window spec fixed (the argument, or the default) |
+| 1 Extract | scripts | `findings.tsv`, `runs.tsv` (with the window applied), `time.tsv`, `notes.tsv`, `extract.md` (anomalies, coverage), then `sample.tsv`, `slice-<n>.tsv`, and `kinds.tsv` when a previous record exists |
 | 2 Classify | `retro-classifier` agents, parallel | `kinds.tsv` (first retro only), `labels-<n>.tsv` |
 | 3 Rank and draft | script, then main session | `rank.md`, `proposal-<n>.md` |
 | 4 Verify | `retro-verifier` agents, parallel | verdict per proposal, in each agent's reply |
@@ -90,10 +90,16 @@ the standard library only. Python, because the inputs are Markdown tables
 with escaped pipes and JSONL transcripts. In bash 3.2 and awk, plus a
 PowerShell twin, that parsing is where the manual retro went wrong. If
 `python3` is missing, the skill stops and says so; it does not fall back.
+The scripts run on Python 3.9 or newer. Why: `/usr/bin/python3` on macOS is
+3.9.6, so syntax added after 3.9 (`match`, `X | Y` type unions evaluated at
+run time) would fail on the maintainer's own machine.
 
 #### `extract_findings.py <repo> <out>`
 
-- **Input:** every `.kenspc/runs/*/schema-b.md` and its `angle-<n>.md`.
+- **Input:** every `.kenspc/runs/*/schema-b.md` and its `angle-<n>.md`, in
+  the repository and in each worktree `git -C <repo> worktree list` names.
+  Why: a worktree batch writes its run directories in the worktree, and they
+  leave with it unless copied back.
 - **Parsing:**
   - split on unescaped `|` only;
   - map columns from the header row, not fixed indexes;
@@ -107,24 +113,45 @@ PowerShell twin, that parsing is where the manual retro went wrong. If
 - **Output columns:** key, run, row, sources, severity, action, file,
   short_label, description.
 
-#### `map_runs.py <repo> <workspace> <out>`
+#### `map_runs.py <repo> <workspace> <window> <out>`
 
-Maps each run directory to a batch and a role.
+Maps each run directory to a batch and a role, and marks it in or out of
+the window.
 
-- **Autopilot runs:** search for the run id as a string in
-  `<workspace>/_logs/<tag>.json` and `<tag>-r<k>.json`. A hit gives the
-  tag; the tag gives the batch and the role.
+- **Autopilot runs:** two conditions together.
+  1. The candidates are the role sessions whose wall window contains the
+     run id's timestamp. A session's window runs from its timeline line
+     `start <tag> pid <pid> session <id> at <time> cwd <dir> …` in
+     `<workspace>/_logs/<batch>-timeline.log` to the mtime of
+     `<workspace>/_logs/<tag>.exit`, open-ended when that file is missing.
+  2. Among the candidates, the run id appears as a string in the session's
+     `<workspace>/_logs/<tag>.json` or a resume's `<tag>-r<k>.json`. A
+     candidate with no json at all (a dead worker writes none) is searched
+     in its transcript instead, `<session id>.jsonl` under
+     `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/`.
+
+  One match gives the tag; the tag gives the batch and the role. Two or
+  more matches are treated as no match (below), and the run is listed in
+  `extract.md` as an anomaly.
   - Why this rule: nothing inside a run directory names its batch. The
     run-id suffix is not the role: two `-tasks` runs were S3b and three
-    `-changes` runs were manual. The json search is how the manual retro's
-    verification mapped them correctly, and it does not depend on the
-    project's path, so worktree batches match too.
-- **Runs with no hit** are role `manual`, each its own batch keyed by run
+    `-changes` runs were manual. A json search alone is ambiguous: on
+    dayaku-crm, seven run ids appear in two or three jsons, a later role of
+    the same batch (`-s3c`, `-s3b`, a resume) or a non-batch replay session.
+    The window plus the json mention is how the manual retro's verification
+    mapped them correctly (`followup/verify/sessions.py`). Neither condition
+    depends on the project's path, so worktree batches match too.
+- **Runs with no match** are role `manual`, each its own batch keyed by run
   id. A manual re-review of an autopilot batch's code therefore counts as a
   second batch. `rank.md` marks every ranked item whose batches include a
   manual run, so drafting and verification can see when "two batches" is
   one piece of work.
-- **Time window:** taken from the run id's timestamp.
+- **Time window:** taken from the run id's timestamp. `<window>` is the
+  spec Phase 0 fixed (`last <n>`, `since <timestamp>`, or `all`); a batch is
+  in the window when its earliest run is. `runs.tsv` carries an `in_window`
+  column, and every later script reads only in-window rows. Why: `last <n>`
+  counts batches, which exist only once runs are mapped, so the window
+  cannot be applied before this script.
 
 #### `measure_time.py <workspace> <runs.tsv> <out>`
 
@@ -161,6 +188,17 @@ section, tag, text):
 These are context for drafting a cause. They are not ranked. Older state
 files lack some lines and carry free-form lines; missing sections are
 recorded as absent, not as an error.
+
+#### `slice_findings.py <retro dir> [<previous record>]`
+
+Prepares the classifier inputs from the in-window rows of `findings.tsv`.
+
+- `sample.tsv`: up to 200 rows for the `derive` dispatch, drawn from every
+  in-window batch in proportion to its row count. Written only when there is
+  no previous record.
+- `slice-<n>.tsv`: every in-window row, in run order, cut into slices of at
+  most 120 rows.
+- `kinds.tsv`: given a previous record, copied from its Kinds table.
 
 #### `rank.py <retro dir>`
 
@@ -213,8 +251,8 @@ opening reports.
   the window's batches. It writes `kinds.tsv`: 15–30 kinds plus `other`,
   each with a one-sentence definition that says which kind wins where two
   could be confused.
-- **Later retros:** `kinds.tsv` is copied from the previous record's Kinds
-  table.
+- **Later retros:** `slice_findings.py` copies `kinds.tsv` from the
+  previous record's Kinds table.
 - **Classifying:**
   - findings are cut into slices of at most 120 rows and classified in
     parallel, one dispatch per slice, `run_in_background: false`;
@@ -347,10 +385,12 @@ opening reports.
 
 ### Step 1 — Extraction scripts and their guard
 
-- **What:** the six scripts above, plus fixtures under
+- **What:** the seven scripts above, plus fixtures under
   `scripts/fixtures/retro/` in this repository (not shipped). The fixtures
   are:
   - a run directory whose angle row holds `\|`;
+  - a run id named in two sessions' jsons, only one of whose windows
+    contains it, and a run whose only candidate session has no json;
   - a schema-b whose Action carries `— ruled`;
   - a stats line that disagrees by one;
   - an S3/S3b duplicate pair;
@@ -361,7 +401,9 @@ opening reports.
 
   `scripts/check-retro-scripts.sh` runs the scripts on the fixtures and
   compares their outputs with expected files. Its `--self-test` mutates the
-  pipe split and the span union, and expects both mutants to fail.
+  pipe split and the span union, and expects both mutants to fail. Like
+  `check-instruction-lint.sh` with `pwsh`, the guard exits 2 when `python3`
+  is missing, never 0.
 - **Input:** the record formats above; the manual retro's
   `followup/verify/parse.py` as the reference parser.
 - **Output:** scripts, fixtures, the guard; `check-all.sh` picks the guard
@@ -391,8 +433,10 @@ opening reports.
   - Why-prose rules.
 - **Depends on:** Step 1, for the file shapes the agents read.
 - **Acceptance:**
-  - Each agent dispatched without `RETRO_DIR` refuses on its prerequisite
-    check.
+  - In a session started with `claude --plugin-dir ./plugins/kenspc` from
+    this repository, each agent dispatched without `RETRO_DIR` refuses on its
+    prerequisite check. Why that session: a plain session runs the installed
+    plugin copy, which has no retro agents.
   - `check-no-model-names.sh` passes, since both have `model: inherit`.
 
 ### Step 3 — SKILL.md and the command
@@ -405,6 +449,11 @@ opening reports.
     task-implement have. Why: the skill dispatches agents, and a subagent
     cannot;
   - scripts addressed through the skill's base directory;
+  - the definition sentence of `shared/instruction-files.md`, verbatim,
+    wherever SKILL.md or an agent uses the term "instruction files". Why:
+    `check-instruction-files.sh` fails any file under `skills/`, `agents/`,
+    or `commands/` that uses the term without it, and the layer order and
+    the check commands both lean on the term;
   - `commands/kenspc-retro.md`.
 - **Depends on:** Steps 1–2.
 - **Acceptance:**
@@ -412,13 +461,29 @@ opening reports.
     declares;
   - every stop opens with "In a session that cannot ask (a system reminder
     to work without stopping), …";
-  - `claude plugin validate --strict ./plugins/kenspc` passes.
+  - `claude plugin validate --strict ./plugins/kenspc` passes;
+  - `bash scripts/check-all.sh` passes, `check-instruction-files.sh` and
+    `check-no-model-names.sh` included.
 
 ### Step 4 — Stability re-check at the shipped slice size
 
-- **What:** run Phase 1–3 twice on dayaku-crm's 20 most recent batches,
-  with independent classifier dispatches at 120-row slices against one
-  derived `kinds.tsv`.
+- **What:** classify dayaku-crm's 20 most recent batches twice against one
+  derived `kinds.tsv`, with fresh classifier dispatches at 120-row slices,
+  in a `claude --plugin-dir ./plugins/kenspc` session. The skill's own run
+  would derive new kinds each time, since dayaku-crm has no record, so the
+  steps are run by hand:
+  1. Phase 1's scripts with window `last 20`, then one `derive` dispatch.
+  2. Run A: one `classify` dispatch per `slice-<n>.tsv`.
+  3. Run B: the same rows shuffled with a fixed seed into a scratch copy,
+     cut into 120-row slices, one fresh `classify` dispatch per slice, same
+     `kinds.tsv`.
+  4. The comparison: the prototype's `rank.py`
+     (`git show 78e797e:prototypes/finding-classification/rank.py`), run
+     from a scratch directory holding run A's labels as `labels-A-<n>.tsv`,
+     run B's as `labels-B-<n>.tsv`, `window.tsv` (key, batch, severity)
+     from `findings.tsv` joined to `runs.tsv`, and `manual.tsv` (key, kind)
+     from the manual retro's `labels.tsv`. It prints the top-five overlap,
+     each shared kind's row overlap, and PASS or FAIL.
 - **Depends on:** Step 3.
 - **Acceptance:** the brief's bar holds:
   - at least four of the two runs' top five findings kinds are the same;
@@ -429,11 +494,15 @@ opening reports.
 
 ### Step 5 — End-to-end acceptance on dayaku-crm
 
-- **What:** `/kenspc-retro` in an interactive session, on a clone of
-  dayaku-crm under `~/Projects/_smoke/retro-accept/`.
+- **What:** `/kenspc-retro` in an interactive session started with
+  `claude --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc`
+  in a clone of dayaku-crm under `~/Projects/_smoke/retro-accept/`.
   - The clone's `.kenspc/runs` is a symlink to the real one, which is
     56 GB and too large to copy, read-only in use.
   - The workspace is the real `~/Projects/_smoke/`.
+  - Before the run, the clone's dependencies are installed with the
+    commands dayaku-crm's instruction files name, so the per-proposal
+    checks run in the clone as they do in the real checkout.
   - The maintainer approves one proposal and rejects one.
 - **Depends on:** Step 4.
 - **Acceptance:**
@@ -534,6 +603,14 @@ opening reports.
 - **The record grammar drifts** between the writing and reading sides. It
   is written once in SKILL.md, and `rank.py` parses only the Kinds table
   and the adopted items' measure lines. Step 5's second run is the check.
+- **Run directories of a removed worktree are gone.** A worktree batch
+  writes its run directories in the worktree, and `extract_findings.py`
+  reads only the worktrees that still exist. dayaku-crm's worktree runs
+  survive because they sit in the main checkout's `.kenspc/runs/`, every
+  directory with the same mtime of 2026-10-20 11:04 (a reading: they were
+  copied back then). Elsewhere such batches are missing from the findings;
+  `extract.md` and the record's Window and coverage section list the
+  worktrees read, so the gap is stated rather than hidden.
 - **A project without autopilot batches** gets findings only. The time
   list is empty, its two slots pass to findings, and `extract.md` says so.
 - **Windows without python3.** The skill stops with the reason.
