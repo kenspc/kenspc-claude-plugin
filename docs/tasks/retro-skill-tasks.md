@@ -508,6 +508,12 @@ Then the plan's phases, in its terms (plan § Technical Approach).
   `canonical:run-dir` block, pointed to by its markers in
   `plugins/kenspc/skills/task-review/SKILL.md`, not copied (AGENTS.md
   § Skills: written once and referenced);
+- make sure `.kenspc/retros/` is git-ignored with the Ignore check bullet
+  of the same `canonical:run-dir` block, pointed to by its markers, not
+  copied, with the probe path `.kenspc/retros/probe`. Exit 1 appends
+  `.kenspc/` and commits it as that bullet does. Why: a project that
+  ignores only `.kenspc/runs/` would otherwise show the retro's working
+  files in `git status`;
 - find the newest record under `docs/retros/` (the one whose Window line
   ends latest);
 - fix the window spec from the argument, or the default `since` the newest
@@ -774,9 +780,13 @@ the next `--resume`. The replies:
 
 If the first run's session takes the cannot-ask branch instead of asking
 (its record lists every proposal as `pending`), the scripted replies cannot
-reach it. Mark this task BLOCKED, naming that plan Step 5 calls for an
-interactive run in which the maintainer decides, and leave the clone in
-place with its path in the `- Blocked:` line. Do the same, with the count,
+reach it. Mark this task BLOCKED and leave the clone in place, with its
+path in the `- Blocked:` line. That line gives the maintainer the
+interactive re-run: start
+`claude --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc`
+in the clone, then run `/kenspc-retro`. The scripted replies count as the
+maintainer's decisions only when the session asks (plan Step 5, as ruled by
+the user on 2026-10-21). Do the same, with the count,
 when the first run puts fewer than two proposals to the user, since the
 second run's follow-up check needs an adopted item and its no-repeat check
 a rejected one.
@@ -857,7 +867,9 @@ no other file):
     verification: retro";
   - "six others are orchestration-only" → eight;
   - "3.0.0 in all ten skills" → eleven (both mentions);
-  - the record grammar joins the "Written once" list.
+  - the record grammar joins the "Written once" list;
+  - retro joins diagnose-bug and prototype among the skills that reference
+    the `canonical:run-dir` block by its markers.
 
   The file is at 199 of its 200-line budget, so these merge into existing
   lines with no net growth.

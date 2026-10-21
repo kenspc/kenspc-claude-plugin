@@ -73,8 +73,13 @@ every judgement.
 
 - **Where the working files go.** `RETRO_DIR` is
   `.kenspc/retros/<YYYYMMDD-HHMMSS>/`.
-  - It sits beside `.kenspc/runs/`, so it is git-ignored like the run
-    directories.
+  - It sits beside `.kenspc/runs/`. Phase 0 makes sure it is git-ignored,
+    using the ignore check of the `canonical:run-dir` block (referenced by
+    its markers in task-review's SKILL.md, not copied) with the probe path
+    `.kenspc/retros/probe`. Exit 1 appends `.kenspc/` and commits it, as
+    that block does. Why: a project may ignore only `.kenspc/runs/`, and
+    then the retro's working files would show up in `git status` and could
+    be swept into a commit.
   - It is deliberately not under `runs/`, so a later retro's extraction
     never reads it as a run.
   - Scratch file names follow the `canonical:run-dir` naming rule (no name
@@ -405,7 +410,10 @@ opening reports.
 
 ### Window and arguments
 
-- **Arguments:** `/kenspc-retro [last <n> | since <YYYY-MM-DD> | all] [Workspace: <dir>]`.
+- **Arguments:** `/kenspc-retro [last <n> | since <YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS> | all] [Workspace: <dir>]`.
+- **The `since` bound.** A timestamp excludes its own moment, so a
+  timestamp copied from a record never counts that record's last batch
+  again. A date includes the whole day, which matches "from that day on".
 - **Default window:** batches whose earliest run starts after the last run
   timestamp on the newest record's Window line, or the 20 most recent
   batches when there is no record. Why the timestamp, not the record's
@@ -551,9 +559,21 @@ opening reports.
 
 ### Step 5 — End-to-end acceptance on dayaku-crm
 
-- **What:** `/kenspc-retro` in an interactive session started with
-  `claude --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc`
+- **What:** `/kenspc-retro` in a headless session,
+  `claude -p --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc`,
   in a clone of dayaku-crm whose root is `~/Projects/_smoke/retro-accept/`.
+  Each question is answered with a scripted reply through
+  `claude -p --resume <session id> "<reply>"`. The scripted replies count
+  as the maintainer's decisions for this acceptance (ruled by the user,
+  2026-10-21).
+  - Why headless: the step runs unattended under task-implement, whose
+    implementer cannot hold a conversation.
+  - If the session takes the cannot-ask branch instead of asking, every
+    proposal comes out `pending` and the replies never reach it. The step
+    then stops as BLOCKED. Its report gives the interactive command for the
+    maintainer to re-run it by hand:
+    `claude --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc`
+    in the clone, then `/kenspc-retro`.
   - The clone's `.kenspc/runs` is a symlink to the real one, which is
     56 GB and too large to copy, read-only in use.
   - The workspace is the real `~/Projects/_smoke/`.
@@ -611,7 +631,10 @@ opening reports.
     verification: retro";
   - "six others are orchestration-only" → eight;
   - "3.0.0 in all ten skills" → eleven (both mentions);
-  - the record grammar joins the "Written once" list.
+  - the record grammar joins the "Written once" list;
+  - retro joins diagnose-bug and prototype in the list of skills that
+    reference the `canonical:run-dir` block by its markers, so a move of
+    the block updates retro's pointers too.
 
   The file is at 199 of 200 lines, so these changes merge into existing
   lines with no net growth. Steps 2–3.
