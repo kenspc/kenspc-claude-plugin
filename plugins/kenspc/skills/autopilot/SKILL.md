@@ -2314,7 +2314,10 @@ dispatch costs more than it does.
   never says "low risk". When every file matched a signal, the row is still
   written, over zero files. Why: a zero the reader can re-run is evidence,
   "low risk" is not, and the split shows which zeros one command checks and
-  which rest on reading.
+  which rest on reading. When the carrier determines no range, no
+  catch-all row is written: the carrier's one `unclear` row stands
+  alone. Why: zeros over a range nobody read would assert a check that
+  never ran.
 - **Header.** Before the rows: `Range: <range> (<how chosen>)`,
   `Deployment document: <path | not found>`,
   `Plan: <path | <path> (not found) | none named>`, then, on its own line,

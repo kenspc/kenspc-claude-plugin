@@ -200,10 +200,16 @@ PREREQUISITES
    RULES says; otherwise, and in a "changes" run, no document enters it this
    way. When the status is DONE, also find each listed document's batch
    passage: the lines added to it since the oldest commit that added the
-   task document (`git log --diff-filter=A --reverse --format=%H --
-   <TASK_FILE> | head -n 1`, then `git diff <that commit> -- <path>`; git
-   log lists the newest first). A task document no commit added has
-   no batch passage.
+   task document after the newest commit that deleted it (that deleting
+   commit from `git log --diff-filter=D -1 --format=%H -- <TASK_FILE>`,
+   then `git log --diff-filter=A --reverse --format=%H <deleting
+   commit>..HEAD -- <TASK_FILE> | head -n 1`, with `<deleting commit>..HEAD`
+   left out when the first command prints nothing, then
+   `git diff <that adding commit> -- <path>`; git log lists the newest
+   first, hence `--reverse`). Why after the deletion: a shipped batch's task
+   document is removed at release, and a later batch that reuses its path
+   would otherwise take the earlier batch's lines as its own. A task
+   document no commit added has no batch passage.
 3. If REVIEW_SCOPE is "changes": read `RUN_DIR/change-set.md`. Its files are
    the change under review and the boundary of the fixes; its Mode decides
    how fixes land (see FIXING RULES).

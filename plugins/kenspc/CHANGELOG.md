@@ -40,9 +40,12 @@ code can answer from.
   section is not a gate. The block is skill-neutral, with a rendered
   example. Schema F gains `## Merge danger` between `## Verdict` and
   `## Next steps`. Outside the block, the range: a "task" run reads from the
-  oldest commit that added the task document, that commit included, to
-  HEAD, with an `unclear` row
-  when no commit added it, and the plan from the task document's
+  oldest commit that added the task document after the newest commit that
+  deleted it, that commit included, to HEAD, so a batch that reuses the path
+  of a task document an earlier batch shipped and deleted starts at its own
+  commit; when no commit added the document, or in a shallow clone, the
+  header says the range was not determined and one `unclear` row stands
+  alone, with no catch-all row; and the plan from the task document's
   `Related plan:` line; a "changes" run reads the change set to HEAD with
   the fix commits (`Mode: commits`) or its base against the working tree,
   untracked files included (`Mode: uncommitted`), with no plan, and paths
@@ -85,7 +88,19 @@ code can answer from.
   `## Context` carries ``Related plan: `<plan path>` ``, the path relative
   to the repository root, and the label joins the anchors that stay in
   English whatever the document's language, since the review skills find
-  the plan by it.
+  the plan by it. `scripts/check-doc-sync-anchors.sh` gains a
+  `Related plan:` anchor group over generate-task, the task-document
+  example, task-review, and task-implement, with a self-test mutation.
+- `agents/code-fixer.md`: a Doc-sync document's batch passage starts at the
+  oldest commit that added the task document after the newest commit that
+  deleted it, not at the oldest commit that ever added it. A batch that
+  reused the path of a task document an earlier batch had shipped and
+  deleted took that earlier batch's lines as its own. In a linear history
+  this is the newest commit that added the document, so a task document
+  deleted and added again within one batch now gives the shorter passage
+  4.12.1's oldest-add lookup was meant to avoid; that case needs a manual
+  `git rm`, while a reused path follows from every release removing its
+  task documents.
 
 ## 4.12.1 — 2026-10-20
 

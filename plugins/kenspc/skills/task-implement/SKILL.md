@@ -827,10 +827,17 @@ test row's Detail dropped the log path the agent had given.
 
 **The `## Merge danger` range and plan.** The block below builds the
 section; this skill names the range and the plan it reads. The range is
-`<the oldest commit that added TASK_FILE>^..HEAD`, so that commit's own
+`<the commit that added TASK_FILE>^..HEAD`, so that commit's own
 changes are in it, with HEAD read when the report is rendered, and the
-commit found as code-fixer finds it:
-`git log --diff-filter=A --reverse --format=%H -- <TASK_FILE> | head -n 1`.
+commit found as code-fixer finds it: the oldest commit that added
+TASK_FILE after the newest commit that deleted it,
+`git log --diff-filter=A --reverse --format=%H <deleting commit>..HEAD -- <TASK_FILE> | head -n 1`,
+the deleting commit being what
+`git log --diff-filter=D -1 --format=%H -- <TASK_FILE>` prints, and
+`<deleting commit>..HEAD` left out when that prints nothing. Why after the
+deletion: a shipped batch's task document is removed at release, and a
+later batch that reuses its path would otherwise start at the earlier
+batch and report changes that already left as leaving now.
 When that commit is the root commit, git's empty tree
 (`git hash-object -t tree /dev/null`) stands in for its parent. The
 header's `<how chosen>` reads `since the task document was added`.
@@ -850,8 +857,8 @@ exist at HEAD. With every task BLOCKED, the section is still rendered over
 this range. Why the document's whole history, not this run's commits: a
 task document implemented across several runs leaves as a whole, and
 `/kenspc-task`'s reviewer and `/kenspc-diagnose` both commit the document
-before any implementation, so its oldest adding commit marks where the
-batch starts without a new pin. Why its parent: a task document written by
+before any implementation, so that adding commit marks where the batch
+starts without a new pin. Why its parent: a task document written by
 hand and left uncommitted is added by the first task's own commit, code
 and status together, and a range that started at that commit would leave
 that task's changes out. Why under BLOCKED: the commits earlier runs
@@ -936,7 +943,10 @@ dispatch costs more than it does.
   never says "low risk". When every file matched a signal, the row is still
   written, over zero files. Why: a zero the reader can re-run is evidence,
   "low risk" is not, and the split shows which zeros one command checks and
-  which rest on reading.
+  which rest on reading. When the carrier determines no range, no
+  catch-all row is written: the carrier's one `unclear` row stands
+  alone. Why: zeros over a range nobody read would assert a check that
+  never ran.
 - **Header.** Before the rows: `Range: <range> (<how chosen>)`,
   `Deployment document: <path | not found>`,
   `Plan: <path | <path> (not found) | none named>`, then, on its own line,
