@@ -9,3 +9,5 @@ key	run	row	sources	severity	action	file	short_label	description
 20261004-120000-beta-tasks#3	20261004-120000-beta-tasks	3	X1	LOW	DEFERRED	src/y.ts:7	source letter with no angle	source letter with no angle
 20261004-120000-beta-tasks#4	20261004-120000-beta-tasks	4	—	LOW	DEFERRED	src/y.ts:8	source with no ID	source with no ID
 20261005-070000-nostats-tasks#1	20261005-070000-nostats-tasks	1	V2	LOW	FIXED	src/w.ts:1	a schema-b with no stats line	a schema-b with no stats line
+20261006-150000-gamma-tasks#1	20261006-150000-gamma-tasks	1	F1	LOW	FIXED	src/g.ts:1	run named by two candidate sessions	run named by two candidate sessions
+review-notes#1	review-notes	1	V1	LOW	DEFERRED	src/n.ts:1	run id with no timestamp	run id with no timestamp

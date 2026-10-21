@@ -1,0 +1,2 @@
+start bat4-s3 pid 401 session 44444444-0000-0000-0000-000000000003 at 2026-10-06 14:00:00 cwd /fixture/repo prompt /fixture/_prompts/bat4-s3.md budget USD 10
+end   bat4-s3 exit 0

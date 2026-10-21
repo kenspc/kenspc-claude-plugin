@@ -286,17 +286,14 @@ def worktrees(repo, anomalies):
     return paths
 
 
-def main(argv):
-    if len(argv) != 3:
-        sys.stderr.write("usage: extract_findings.py <repo> <out>\n")
-        return 2
-    repo, out = argv[1], argv[2]
-    if not os.path.isdir(repo):
-        sys.stderr.write("extract_findings.py: not a directory: %s\n" % repo)
-        return 2
-    os.makedirs(out, exist_ok=True)
-    anomalies = []
-    rows = []
+def run_dirs(repo, anomalies):
+    """Return the run directories to read and the count read per tree.
+
+    A run directory is one with a schema-b.md under .kenspc/runs/ of the
+    repository or one of its worktrees. map_runs.py maps the same list, so
+    both scripts take it from here.
+    """
+    runs = []
     read = []
     runs_seen = {}
     for tree in worktrees(repo, anomalies):
@@ -313,8 +310,25 @@ def main(argv):
                 continue
             runs_seen[run] = tree
             count += 1
-            rows.extend(parse_run(run_dir, run, anomalies))
+            runs.append((run, run_dir))
         read.append((tree, count))
+    return runs, read
+
+
+def main(argv):
+    if len(argv) != 3:
+        sys.stderr.write("usage: extract_findings.py <repo> <out>\n")
+        return 2
+    repo, out = argv[1], argv[2]
+    if not os.path.isdir(repo):
+        sys.stderr.write("extract_findings.py: not a directory: %s\n" % repo)
+        return 2
+    os.makedirs(out, exist_ok=True)
+    anomalies = []
+    runs, read = run_dirs(repo, anomalies)
+    rows = []
+    for run, run_dir in runs:
+        rows.extend(parse_run(run_dir, run, anomalies))
     rows.sort(key=lambda r: (r["run"], int(r["row"])))
 
     with open(os.path.join(out, "findings.tsv"), "w", encoding="utf-8",
@@ -326,8 +340,8 @@ def main(argv):
     counts = ", ".join("%s %d" % (a, sum(1 for r in rows if r["action"] == a))
                        for a in ACTIONS)
     lines = ["# Extraction notes", "",
-             "Findings: %d rows from %d runs (%s)." % (len(rows),
-                                                       len(runs_seen), counts),
+             "Findings: %d rows from %d runs (%s)." % (len(rows), len(runs),
+                                                       counts),
              "", "## Worktrees read", ""]
     lines += ["- `%s`: %d run directories with a schema-b.md" % (tree, count)
               for tree, count in read]

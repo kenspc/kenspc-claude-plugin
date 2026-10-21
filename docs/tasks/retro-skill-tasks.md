@@ -184,7 +184,77 @@ Files to create:
 
 ### Task 2: Run-to-batch mapping script with the window
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - map_runs.py takes its run list from extract_findings.py's new
+    `run_dirs()` (repository and worktrees, schema-b.md present, duplicates
+    skipped), loaded by file path with importlib, since `python3 -I` leaves
+    the script's directory off `sys.path`. One enumeration, so both scripts
+    read the same runs.
+  - Candidates are not filtered by the session's `cwd`, unlike the manual
+    retro's `sessions.py`; the window plus the json mention alone mapped all
+    96 dayaku-crm runs as runmap.tsv does (the plan: neither condition
+    depends on the project's path).
+  - A run id with no `YYYYMMDD-HHMMSS` prefix is left out of runs.tsv and
+    listed as an anomaly, since no window can hold it.
+  - `last <n>` needs n ≥ 1; `last 0`, an impossible date, and any other
+    form exit 2 as a usage error.
+  - map_runs.py appends a `## Window (map_runs.py)` section (window, batch
+    and run counts, timelines read, first and last run timestamps) and its
+    anomalies to extract.md, and on a re-run replaces what it appended
+    before, so the window question's re-run leaves one section. It prints
+    the window lines too.
+  - `in_window` is written `true`/`false`; manual runs leave tag and
+    session empty; runs.tsv is sorted by run id.
+  - A batch whose tag lacks a `-s…` part keeps the whole tag as batch and
+    role (no such tag exists in the logs read).
+- Changes/tradeoffs:
+  - extract_findings.py gained `run_dirs()` (moved out of `main`); its
+    anomaly order now lists enumeration anomalies first, and the fixture
+    expectations were reordered to match.
+  - The extraction fixture tree gained two runs (`gamma`, named by two
+    candidates; `review-notes`, no timestamp), which raised the expected
+    extraction counts.
+  - Real-data check: on dayaku-crm with `all`, every one of runmap.tsv's 96
+    runs has runmap's batch and role (the three unmapped as `manual` with the
+    run id as batch), no anomaly; `last 20` marks exactly 20 batches in
+    window.
+- Test map:
+  - window containment of candidates (map_runs.py:228) →
+    check-retro-scripts.sh::map all runs.tsv (alpha: named by bat1-s3 and
+    bat1-s3c, only bat1-s3's window holds it)
+  - transcript searched only for a candidate with no json
+    (map_runs.py:134) → check-retro-scripts.sh::map all runs.tsv (`changes`
+    via bat1-s3b's transcript) and map all extract.md (bat5-s2's transcript
+    not searched) (mutation-checked)
+  - open-ended window without `.exit`, two matches → manual and anomaly
+    (map_runs.py:238) → check-retro-scripts.sh::map all runs.tsv, map all
+    extract.md (gamma: bat4-s3 and replay-s3)
+  - batch and role from the tag, `-r<k>` removed (map_runs.py:147) →
+    check-retro-scripts.sh::map all runs.tsv (beta via bat3-s3-r1)
+  - no candidate → manual (map_runs.py:242) → check-retro-scripts.sh::map
+    all runs.tsv (nostats)
+  - run id with no timestamp (map_runs.py:223) →
+    check-retro-scripts.sh::map all extract.md
+  - batch window by its earliest run (map_runs.py:249) →
+    check-retro-scripts.sh::map since 2026-10-02 runs.tsv (bat1 out though
+    its second run is on that date)
+  - `last <n>` (map_runs.py:166) → check-retro-scripts.sh::map last 2
+    runs.tsv
+  - `since <timestamp>` strict (map_runs.py:160) →
+    check-retro-scripts.sh::map since 2026-10-04T12:00:00 runs.tsv (bat3,
+    whose earliest run equals it, out)
+  - `since <date>` inclusive (map_runs.py:163) →
+    check-retro-scripts.sh::map since 2026-10-02 runs.tsv
+  - `all` → check-retro-scripts.sh::map all runs.tsv
+  - re-run replaces the window section (map_runs.py:172) →
+    check-retro-scripts.sh::map all extract.md (after `last 2` in the same
+    directory)
+  - unreadable window and wrong arguments exit 2 (map_runs.py:80, 194) →
+    check-retro-scripts.sh::map with window 'last 0' / 'since 2026-13-01' /
+    'some', map with three arguments
 
 Depends on: Task 1
 
