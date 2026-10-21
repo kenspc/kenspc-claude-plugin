@@ -56,6 +56,7 @@ Exit codes
 Standard library only; runs on Python 3.9 or newer.
 """
 import glob
+import importlib.util
 import os
 import re
 import sys
@@ -87,13 +88,28 @@ def read_tsv(path):
     return [dict(zip(header, line.split("\t"))) for line in lines[1:] if line]
 
 
+def load_extract_findings():
+    """Load extract_findings.py from beside this file, by path.
+
+    python3 -I leaves the script's own directory off sys.path, so a plain
+    import would not find it.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "extract_findings.py")
+    spec = importlib.util.spec_from_file_location("extract_findings", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def table_rows(lines):
-    """Return the cells of a Markdown table's body rows."""
-    rows = []
-    for line in lines[2:]:
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        rows.append(cells)
-    return rows
+    """Return the cells of a Markdown table's body rows.
+
+    Split on unescaped pipes outside code spans, as the review tables are,
+    so a definition holding `\\|` keeps its whole text.
+    """
+    split_cells = load_extract_findings().split_cells
+    return [split_cells(line.strip()) for line in lines[2:]]
 
 
 def read_record(path):

@@ -18,7 +18,7 @@ No previous record.
 |---|---|
 | test-gap | No test fails when a branch, guard, or limit the change adds is removed; wins over doc-drift when a test claims the behavior. |
 | doc-drift | A document or comment describes behavior the code does not have. |
-| stale-check | A check script still passes after the behavior it guards changed. |
+| stale-check | A check script still passes after the behavior it guards changed, read as pass \| fail. |
 | one-batch | A problem that only one batch could have. |
 | other | No kind fits. |
 

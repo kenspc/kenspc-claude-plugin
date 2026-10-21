@@ -81,7 +81,8 @@
 # to findings (five selected). Without a record, three findings items and two
 # time items are selected and the next time item, exactly 10% below the last
 # selected, is a runner-up. With record.md (the fixture record, whose lines
-# the retro skill's record grammar matches), the rejected kind whose batch
+# the retro skill's record grammar matches and one of whose Kinds definitions
+# holds `\|`, copied whole into kinds.tsv), the rejected kind whose batch
 # count has not grown is skipped, so findings pass a slot to time, and the
 # next time item, 10.1% below, is not a runner-up; the rejected kind whose
 # count grew is marked and kept, the adopted kind and time measures print then
@@ -89,9 +90,9 @@
 # adopted time item's rows unmeasured, its now reads `not measured in this
 # window`. A generated fixture of 403 rows checks the slice size at the limit
 # and past it and the proportional, seeded 200-row sample, where a one-row
-# batch gets a row only from the rule that every batch gets at least one.
-# The record grammar's line forms the scripts read are looked up verbatim
-# in the skill's SKILL.md and, filled in, matched with rank.py's patterns.
+# batch gets a row only from the rule that every batch gets at least one. The
+# record grammar's line forms the scripts read are looked up verbatim in the
+# skill's SKILL.md and, filled in, matched with rank.py's patterns.
 # The temp directory's path is written `<work>` before each diff.
 #
 # Exit code 0: every output matched its expected file.
