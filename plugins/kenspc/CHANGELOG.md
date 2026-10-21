@@ -25,7 +25,12 @@ recent batches shared 4 of their top five kinds, with row overlaps of 81–91%
 (`docs/dry-runs/retro-stability.md`). An end-to-end run on a dayaku-crm
 clone adopted one proposal, rejected three, and a second run printed the
 adopted item's measure then and now and did not repeat the rejected ones
-(`docs/dry-runs/retro-acceptance.md`).
+(`docs/dry-runs/retro-acceptance.md`). The two manifests' descriptions and
+the root README name the retro skill; `plugin.json` and the root README
+count thirteen subagents.
+Release-checklist row 1 counts eleven commands, a new row 13 runs
+`/kenspc-retro last 3` headless on a dayaku-crm clone as a session that
+cannot ask, the end-to-end row becomes 14, and the rails-hook row 15.
 
 ### Added
 
