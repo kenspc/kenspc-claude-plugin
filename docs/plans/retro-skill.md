@@ -110,6 +110,9 @@ run time) would fail on the maintainer's own machine.
 - **Description:** joined through the primary Source ID to the matching
   angle row (R=1, E=2, Q=3, B=4, T=5). Sources F and V have no angle row
   and keep `short_label` as their description.
+- **`rulings.md` is not parsed.** A ruling already shows in Schema B's
+  Action (`— ruled`), which is all ranking needs. The verifier reads
+  `rulings.md` as a raw record when a proposal's cause rests on a ruling.
 - **Output columns:** key, run, row, sources, severity, action, file,
   short_label, description.
 
@@ -172,6 +175,9 @@ the window.
 - **Usage-limit exits:** a session that ended on a usage limit is measured
   only to its `.exit`. The resume is its own start line, so the pause
   between them is never counted.
+- **No `.exit`:** a session with a start line but no `<tag>.exit` has no
+  end on the clock. Its wall time is `unmeasured`, counted in `extract.md`'s
+  coverage line, never estimated.
 
 #### `state_notes.py <workspace> <runs.tsv> <out>`
 
@@ -340,22 +346,36 @@ opening reports.
   answerable in one word: adopt or reject, and a reason for a rejection.
 - **Applying an adopted project-file proposal:**
   - the change is made, then its own commit (default subject
-    `chore(retro): <summary>`);
+    `chore(retro): <summary>`), staging only the files the proposal names;
   - its undo is `git revert <hash>`, written into the record;
   - before that commit, the project's own check commands are run, as its
-    instruction files or config define them.
+    instruction files or config define them. A project that defines none
+    gets the record line "no check commands defined".
+- **A failed check or a rejected commit.** The proposal's changes are
+  restored from `HEAD` (`git restore --staged --worktree` on the files it
+  names that `HEAD` has; a file the proposal created is removed), the
+  proposal is recorded as `failed` with the failing check's or
+  hook's output lines, and the user is asked whether to go on to the next
+  proposal or stop. In a session that cannot ask (a system reminder to work
+  without stopping), no project file is changed, so only the record commit
+  can fail; the run then stops with the hook's message and leaves the record
+  file uncommitted in the working tree.
 - **The record:** `docs/retros/<YYYY-MM-DD>.md`, committed last (default
-  subject `docs(retro): record <date> retro`). Commit subjects are adapted
+  subject `docs(retro): record <date> retro`). When a record for that date
+  already exists, the name gains `-<n>` (`2026-10-21-2.md`); the newest
+  record is the one whose Window line ends latest. Commit subjects are adapted
   to the repository's convention: the one its instruction files or
   CONTRIBUTING write down, or else the pattern its recent subjects share.
   The record grammar is written once, in `skills/retro/SKILL.md`, and the
   next retro reads it from there. Sections:
-  - Window and coverage;
+  - Window and coverage (a Window line with the first and last run
+    timestamps in the window);
   - Follow-up (each previous adopted item: measure then, measure now);
   - Kinds (table: kind, definition);
   - Adopted (all proposal fields, commit hash, undo);
   - Rejected (fields and the user's reason);
   - Dropped by verification (reason);
+  - Pending (all proposal fields), Failed (the check's lines);
   - Runner-ups;
   - For the kenspc plugin;
   - For your global files.
@@ -363,12 +383,17 @@ opening reports.
   more batches than the record states.
 - **In a session that cannot ask:** every verified proposal is recorded as
   `pending`. No project file changes, and only the record is committed.
+- **A pending or failed proposal is proposed again** at the next retro if it
+  still passes the bar, and gets no follow-up line, since nothing changed.
 
 ### Window and arguments
 
 - **Arguments:** `/kenspc-retro [last <n> | since <YYYY-MM-DD> | all] [Workspace: <dir>]`.
-- **Default window:** batches whose runs start after the newest record's
-  date, or the 20 most recent batches when there is no record.
+- **Default window:** batches whose earliest run starts after the last run
+  timestamp on the newest record's Window line, or the 20 most recent
+  batches when there is no record. Why the timestamp, not the record's
+  date: a batch that ran on the record's date, before or after the retro,
+  would otherwise be counted twice or never.
 - **Default workspace:** `~/Projects/_smoke/`, as in the autopilot.
 - **A window with fewer than two batches** stops after Phase 1, with the
   counts. The bar cannot be met.
@@ -490,7 +515,8 @@ opening reports.
   - each shared kind's rows overlap by at least 60%.
 
   On a failure, the slice size drops to 60 rows, the prototype's tested
-  size, and the step repeats.
+  size, and the step repeats. A failure at 60 rows stops the plan for the
+  user's ruling, with both runs' `rank.py` output.
 
 ### Step 5 — End-to-end acceptance on dayaku-crm
 
@@ -537,7 +563,9 @@ opening reports.
   - agents table and INTERNAL note;
   - a retro section covering `docs/retros/`, `.kenspc/retros/`, python3,
     and the record;
-  - Run directory gains `.kenspc/retros/`.
+  - Run directory gains `.kenspc/retros/`;
+  - Requirements gains `python3` 3.9 or newer for `/kenspc-retro`, beside
+    the autopilot's own requirement line.
 
   Steps 2–3.
 - `AGENTS.md`:
@@ -573,7 +601,8 @@ opening reports.
   Steps 1, 3.
 - `docs/roadmap.md` — two items planned: the autopilot final-report line
   on batches since the last retro, and run-directory ids in the state
-  file. Both were deferred by the brief. Step 6.
+  file. Both were deferred by the brief. Item 9's two mentions of smoke
+  row 13 become row 14, following the checklist's renumbering. Step 6.
 - `docs/dry-runs/README.md` — N/A for this document: the label convention
   does not change.
 - `plugins/kenspc/references/plan-document-example.md`,
