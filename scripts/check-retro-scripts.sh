@@ -74,22 +74,22 @@
 # ranked), a kind whose batches include a manual run (marked), `new:`
 # labels resolved through new-kinds.tsv to a kind and to `other` (names
 # written with and without `new:`) and one it does not list, an unlabelled
-# row, labels outside the window, a duplicate label, an unmeasured time
-# row, and a time item in one batch. A generated three-row case pairs a
-# DEFERRED s3 row with an s3b row on its file and kind in another batch
-# (kept). Without a record, three findings
-# items and two time items are selected and the next time item, exactly
-# 10% below the last selected, is a runner-up. With record.md (the fixture
-# record, whose lines the retro skill's record grammar matches), the
-# rejected kind whose batch count has not grown is skipped, so findings
-# pass a slot to time, and the next time item, 10.1% below, is not a
-# runner-up; the rejected kind whose count grew is marked and kept, the
-# adopted kind and time measures print then and now, and the Pending and
-# Failed sections' lines are not read; with the adopted time item's rows
-# unmeasured, its now reads `not measured in this window`. A generated fixture of 403 rows
-# checks the slice size at the limit and past it and the proportional,
-# seeded 200-row sample, where a one-row batch gets a row only from the
-# rule that every batch gets at least one.
+# row, labels outside the window, a duplicate label, an unmeasured time row,
+# and a time item in one batch. A generated three-row case pairs a DEFERRED s3
+# row with an s3b row on its file and kind in another batch (kept); another,
+# with no time.tsv and five kinds in two batches, passes the time list's slots
+# to findings (five selected). Without a record, three findings items and two
+# time items are selected and the next time item, exactly 10% below the last
+# selected, is a runner-up. With record.md (the fixture record, whose lines
+# the retro skill's record grammar matches), the rejected kind whose batch
+# count has not grown is skipped, so findings pass a slot to time, and the
+# next time item, 10.1% below, is not a runner-up; the rejected kind whose
+# count grew is marked and kept, the adopted kind and time measures print then
+# and now, and the Pending and Failed sections' lines are not read; with the
+# adopted time item's rows unmeasured, its now reads `not measured in this
+# window`. A generated fixture of 403 rows checks the slice size at the limit
+# and past it and the proportional, seeded 200-row sample, where a one-row
+# batch gets a row only from the rule that every batch gets at least one.
 # The temp directory's path is written `<work>` before each diff.
 #
 # Exit code 0: every output matched its expected file.
@@ -473,6 +473,33 @@ run_cases() {
             echo "OK    rank keeps an s3b row whose s3 twin is in another batch"
         else
             echo "FAIL  rank across batches: test-gap is not ranked with 2 rows in 2 batches" >&2
+            fail=1
+        fi
+    else
+        fail=1
+    fi
+    # With no time.tsv the time list is empty, so its two slots pass to the
+    # findings list: five kinds in two batches give five findings items.
+    local notime="$out/rank-no-time" k b
+    mkdir -p "$notime"
+    printf '%s\n' "run	batch	role	tag	session	in_window" \
+        "20261001-100000-b1-tasks	b1	s3	b1-s3	s1	true" \
+        "20261002-100000-b2-tasks	b2	s3	b2-s3	s2	true" > "$notime/runs.tsv"
+    printf '%s\n' "key	run	row	sources	severity	action	file	short_label	description" \
+        > "$notime/findings.tsv"
+    printf '%s\n' "key	kind" > "$notime/labels-1.tsv"
+    for b in 1 2; do
+        for k in 1 2 3 4 5; do
+            printf '%s\n' "2026100$b-100000-b$b-tasks#$k	2026100$b-100000-b$b-tasks	$k	T1	LOW	FIXED	src/k$k.ts:1	label	description" \
+                >> "$notime/findings.tsv"
+            printf '%s\n' "2026100$b-100000-b$b-tasks#$k	kind-$k" >> "$notime/labels-1.tsv"
+        done
+    done
+    if run_ok "rank with no time list" "$scripts/rank.py" "$notime"; then
+        if [[ "$(grep -c '^[0-9]\. findings ' "$notime/rank.md")" -eq 5 ]]; then
+            echo "OK    rank with no time list selects five findings items"
+        else
+            echo "FAIL  rank with no time list: the time list's slots did not pass to findings" >&2
             fail=1
         fi
     else
