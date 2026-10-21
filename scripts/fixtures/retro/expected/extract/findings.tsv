@@ -1,0 +1,11 @@
+key	run	row	sources	severity	action	file	short_label	description
+20261001-100000-alpha-tasks#1	20261001-100000-alpha-tasks	1	T1	MEDIUM	FIXED	src/parse.ts:12	parser test misses the escaped pipe	No test splits a row whose cell holds a \| b outside code or `a \| b` inside it, so a split on every pipe passes.
+20261001-100000-alpha-tasks#2	20261001-100000-alpha-tasks	2	R1, B2	LOW	DEFERRED	src/export.ts:40	export skips the empty list	Export returns early on `items.length === 0 || !items`, so the empty file the task asks for is never written.
+20261001-100000-alpha-tasks#3	20261001-100000-alpha-tasks	3	F1	LOW	FIXED	src/export.ts:3	fixer left a stale import	fixer left a stale import
+20261002-090000-changes#1	20261002-090000-changes	1	Q2	HIGH	FIXED	src/net.ts:8	second retry helper	A second retry helper beside the shared `withRetry`.
+20261002-090000-changes#2	20261002-090000-changes	2	E1	MEDIUM	NOT APPLICABLE	src/net.ts:20	timeout not handled	timeout not handled
+20261002-090000-changes#3	20261002-090000-changes	3	Q4, T1	LOW	DEFERRED	src/net.ts:30	name differs from its neighbours	name differs from its neighbours
+20261004-120000-beta-tasks#2	20261004-120000-beta-tasks	2	V1	MEDIUM	FIXED	src/y.ts:5	verifier caught a reverted guard	verifier caught a reverted guard
+20261004-120000-beta-tasks#3	20261004-120000-beta-tasks	3	X1	LOW	DEFERRED	src/y.ts:7	source letter with no angle	source letter with no angle
+20261004-120000-beta-tasks#4	20261004-120000-beta-tasks	4	—	LOW	DEFERRED	src/y.ts:8	source with no ID	source with no ID
+20261005-070000-nostats-tasks#1	20261005-070000-nostats-tasks	1	V2	LOW	FIXED	src/w.ts:1	a schema-b with no stats line	a schema-b with no stats line

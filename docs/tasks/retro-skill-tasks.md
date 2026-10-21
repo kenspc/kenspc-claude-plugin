@@ -35,7 +35,77 @@ Dependency note:
 
 ### Task 1: Findings extraction script and the retro scripts guard
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - A `|` inside a code span does not split a cell, beside the `\|` rule.
+    On dayaku-crm five angle-5 rows write code such as `a || b` in their
+    description cell unescaped; a split on every unescaped pipe gave each
+    7 cells against a 5-cell header and broke the "no anomaly" acceptance.
+    A backtick run opens a span only when the same run closes it on the
+    line (CommonMark). The schema-b counts are the same either way.
+  - An angle row is matched on its whole `#` ID (`T3`), the form every
+    dayaku-crm angle table uses; a bare-number `#` would surface as a
+    "Source ID with no angle row" anomaly rather than a silent miss.
+  - A row whose primary Source ID cannot be joined (no angle file, no angle
+    row, an unknown letter, an unreadable ID) keeps `short_label` as its
+    description, as F and V rows do, and is listed as an anomaly.
+  - A run id present in the repository and in a worktree is read once, from
+    the first tree listed (the repository), and the skipped copy is listed
+    as an anomaly, so a copied-back worktree run is not counted twice.
+  - A failed `git worktree list` (not a repository, git missing) reads the
+    repository alone and lists the failure as an anomaly.
+  - The recount compares the stats line's unique total as well as its three
+    action counts with the rows read.
+  - extract.md also opens with a `Findings:` line (rows, runs, action
+    counts) for the main session.
+- Changes/tradeoffs:
+  - The fixture tree keeps run directories under `runs/`, not
+    `.kenspc/runs/`, because this repository's `.gitignore` ignores
+    `.kenspc/` at any depth; the guard copies them into a temp git
+    repository with one worktree.
+  - The guard's own temp path is written `<work>` before each diff.
+  - Beyond the four named fixtures, the tree holds a reordered header, a
+    missing angle file, a row with an extra cell, a non-numeric `#`,
+    unreadable Source IDs, a header lacking columns, a missing stats line,
+    a run directory with no schema-b.md, and a run id in both trees.
+  - Real-data check: `python3 -I extract_findings.py ~/Projects/Diagnohab/dayaku-crm <out>`
+    gave 1005 rows over the 96 runmap run ids, FIXED 716 / DEFERRED 256 /
+    NOT APPLICABLE 33, and `none` under anomalies, under `/usr/bin/python3`
+    3.9.6.
+- Test map:
+  - unescaped-pipe split, `\|` kept (extract_findings.py:62) →
+    check-retro-scripts.sh::extract findings.tsv (alpha T1) and the
+    self-test's pipe-split mutant
+  - code-span pipe kept (extract_findings.py:76) →
+    check-retro-scripts.sh::extract findings.tsv (alpha R1) (mutation-checked)
+  - columns mapped from the header (extract_findings.py:178) →
+    check-retro-scripts.sh::extract findings.tsv (the `changes` run's
+    reordered header)
+  - emphasis stripped from Severity and Action, word before `—`
+    (extract_findings.py:129-134) → check-retro-scripts.sh::extract
+    findings.tsv (alpha #1-#3, `changes` #2)
+  - primary Source ID join, F/V keep short_label
+    (extract_findings.py:210) → check-retro-scripts.sh::extract findings.tsv
+    (alpha #2, #3; beta #2)
+  - anomalies: cell count, `#` not a number, missing angle file, no angle
+    row, unknown letter, unreadable ID, header lacking columns
+    (extract_findings.py:141-243) → check-retro-scripts.sh::extract
+    extract.md
+  - recount and missing stats line (extract_findings.py:245) →
+    check-retro-scripts.sh::extract extract.md (unique total
+    mutation-checked)
+  - worktrees read, duplicate run id skipped (extract_findings.py:263, 310)
+    → check-retro-scripts.sh::extract extract.md (duplicate skip
+    mutation-checked)
+  - failed worktree list (extract_findings.py:275) →
+    check-retro-scripts.sh::extract outside git
+  - usage errors exit 2 (extract_findings.py:290-296) →
+    check-retro-scripts.sh::extract with one argument, extract on a missing
+    repository
+  - python3 missing exits 2 (check-retro-scripts.sh:52) →
+    check-retro-scripts.sh --self-test (empty PATH case)
 
 Create `plugins/kenspc/skills/retro/scripts/extract_findings.py <repo> <out>`.
 
