@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.14.0)
+## Next minor (4.15.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -697,3 +697,11 @@ its number.
       time cannot fail it (mutant `transcript-utc-as-local` survives): run
       the time case again under `TZ=Etc/GMT-8` with a copy of
       `claude-config/` whose timestamps are moved by −8 h.
+41. Retro follow-ups from the 4.14.0 release smoke (row 13):
+    - the record grammar has no place for why the selected items yielded no
+      proposal; the run added a `- Drafting:` line under Window and
+      coverage, outside the grammar. Give the reasons a defined line or
+      section;
+    - row 13's window held no proposal, so its `pending` path was not
+      exercised; pick a window that yields one (a wider `last <n>`, or a
+      `since` before the project's newest rules).

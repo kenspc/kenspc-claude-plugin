@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.14.0 — unreleased
+## 4.14.0 — 2026-10-21
 
 A retrospective skill, `retro`, started only by `/kenspc-retro`. It looks
 back over a window of finished batches, measures where the review findings
@@ -31,6 +31,13 @@ count thirteen subagents.
 Release-checklist row 1 counts eleven commands, a new row 13 runs
 `/kenspc-retro last 3` headless on a dayaku-crm clone as a session that
 cannot ask, the end-to-end row becomes 14, and the rails-hook row 15.
+The release smoke was row 13, run on the release tree after the review's
+fixes (about USD 1.9): no question was asked, the record held every
+section with `none` under Adopted, Rejected, and Pending, the clone gained
+only the record in one commit, and the real checkout was unchanged. No
+proposal met the bar in that window, since the three recurring kinds were
+already answered by rules the project added the day after it, so the
+cannot-ask path that records proposals as `pending` was not exercised.
 
 ### Added
 
