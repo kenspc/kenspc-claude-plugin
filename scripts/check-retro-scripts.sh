@@ -75,7 +75,9 @@
 # labels resolved through new-kinds.tsv to a kind and to `other` (names
 # written with and without `new:`) and one it does not list, an unlabelled
 # row, labels outside the window, a duplicate label, an unmeasured time
-# row, and a time item in one batch. Without a record, three findings
+# row, and a time item in one batch. A generated three-row case pairs a
+# DEFERRED s3 row with an s3b row on its file and kind in another batch
+# (kept). Without a record, three findings
 # items and two time items are selected and the next time item, exactly
 # 10% below the last selected, is a runner-up. With record.md (the fixture
 # record, whose lines the retro skill's record grammar matches), the
@@ -447,6 +449,30 @@ run_cases() {
             echo "OK    rank with an unmeasured adopted time item"
         else
             echo "FAIL  rank with an unmeasured adopted time item: its follow-up line is not 'not measured in this window'" >&2
+            fail=1
+        fi
+    else
+        fail=1
+    fi
+    # The S3/S3b merge holds within one batch: b2's s3b row on the file and
+    # kind of b1's DEFERRED s3 row is kept, so test-gap ranks in two batches.
+    local across="$out/rank-across"
+    mkdir -p "$across"
+    printf '%s\n' "run	batch	role	tag	session	in_window" \
+        "20261001-100000-b1-tasks	b1	s3	b1-s3	s1	true" \
+        "20261001-120000-changes	b1	s3b	b1-s3b	s2	true" \
+        "20261002-120000-changes	b2	s3b	b2-s3b	s3	true" > "$across/runs.tsv"
+    printf '%s\n' "key	run	row	sources	severity	action	file	short_label	description" \
+        "20261001-100000-b1-tasks#1	20261001-100000-b1-tasks	1	T1	MEDIUM	DEFERRED	src/a.ts:1	label 1	description 1" \
+        "20261002-120000-changes#1	20261002-120000-changes	1	T1	LOW	FIXED	src/a.ts:5	label 2	description 2" \
+        > "$across/findings.tsv"
+    printf '%s\n' "key	kind" "20261001-100000-b1-tasks#1	test-gap" \
+        "20261002-120000-changes#1	test-gap" > "$across/labels-1.tsv"
+    if run_ok "rank across batches" "$scripts/rank.py" "$across"; then
+        if grep -qxF '| 1 | test-gap | 3 | 2 | 2 |  | yes |  |' "$across/rank.md"; then
+            echo "OK    rank keeps an s3b row whose s3 twin is in another batch"
+        else
+            echo "FAIL  rank across batches: test-gap is not ranked with 2 rows in 2 batches" >&2
             fail=1
         fi
     else
