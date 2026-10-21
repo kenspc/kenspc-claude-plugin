@@ -40,7 +40,8 @@
 # The mapping fixtures, a workspace's _logs and a transcript tree under
 # claude-config/ (read through CLAUDE_CONFIG_DIR), hold a run id named in two
 # sessions' jsons, only one of whose windows holds it; a run whose only
-# candidate has no json, but whose transcript names it; a run named by two
+# candidate's json is empty (a worker that died before printing), but whose
+# transcript names it; a run named by two
 # candidates' jsons, one with no .exit (open-ended), beside a third candidate
 # whose json does not name it and whose transcript, never searched, does
 # (manual, an anomaly); a resume's json (role without -r<k>); a run with no

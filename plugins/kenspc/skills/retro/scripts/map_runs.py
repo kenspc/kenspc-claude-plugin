@@ -22,7 +22,7 @@ Mapping, for each run
      naive local time, as the run id's is.
   2. Confirmation: the run id appears as a string in the candidate's
      <tag>.json or a resume's <tag>-r<k>.json; a candidate with no json at
-     all is searched in its transcript, <session id>.jsonl under
+     all, or only empty ones, is searched in its transcript, <session id>.jsonl under
      ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/.
   One confirmed candidate gives the tag: the batch is the tag without its
   last `-s...` part, and the role is that part without `-r<k>`. No confirmed
@@ -136,7 +136,9 @@ def names_run(candidate, run, logs, transcripts):
     jsons = [os.path.join(logs, candidate["tag"] + ".json")]
     jsons += glob.glob(os.path.join(glob.escape(logs),
                                     glob.escape(candidate["tag"]) + "-r[0-9]*.json"))
-    jsons = [j for j in jsons if os.path.isfile(j)]
+    # The driver creates <tag>.json at launch, so a worker that died before
+    # printing leaves it empty: such a file counts as no json.
+    jsons = [j for j in jsons if os.path.isfile(j) and os.path.getsize(j) > 0]
     if jsons:
         return any(run in read_text(j) for j in jsons)
     pattern = os.path.join(glob.escape(transcripts), "*",
