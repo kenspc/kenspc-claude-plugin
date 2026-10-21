@@ -806,7 +806,62 @@ Files to create:
 
 ### Task 6: The retro SKILL.md and the /kenspc-retro command
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The main session may print a time item's `time.tsv` and `notes.tsv`
+    rows by batch name with a one-line `awk` filter, beside findings rows
+    through `show_rows.py`. The scope rule allows only rows printed by key,
+    and a time item's cause must rest on record lines (state notes, role
+    minutes) that show_rows.py does not print; no review report, run
+    directory, log, or transcript is opened by the main session.
+  - The window question is asked only when the arguments name no window;
+    a window under two batches stops right after the window is settled
+    (before measure_time.py), since nothing later can meet the bar; no
+    record is written then.
+  - A fourth cannot-ask sentence sits at the "go on or stop" question after
+    a failed check, as AGENTS.md asks of every stop that asks; it says the
+    question is never reached there, since such a session changes no
+    project file. The three stops the task names each carry theirs.
+  - A rejected record commit asks, in an interactive session, whether to
+    commit again once the user has fixed what the hook names, or stop with
+    the record uncommitted.
+  - The record grammar's template shows only the kind forms of the parsed
+    lines; the exact forms the scripts read (Window line, Kinds header,
+    Measure and Batches lines, kind and time) are listed once below it,
+    without inline annotations a writer could copy into a line.
+  - The kenspc repository is recognized by
+    `plugins/kenspc/.claude-plugin/plugin.json` at the root.
+  - The grammar adds `- Item:`, `- Anomalies:`, and `- Check commands:`
+    lines and a brief-shaped K<n> block (Problem, Evidence, Proposed
+    change, Expected effect) for the plugin landing place; none is parsed.
+  - A slice whose labels file is missing or whose dispatch refused is
+    dispatched once more; a second failure stops the run.
+  - An item that yields no proposal passes its slot to the next unselected
+    candidate in its own list not skipped by the record, then to the other
+    list.
+  - A Stops and questions table summarizes the gates; each gate keeps its
+    own sentence.
+- Changes/tradeoffs:
+  - The SKILL.md carries the instruction-files definition sentence once, at
+    its first use (the layer order).
+  - `claude plugin validate --strict ./plugins/kenspc` passes; it prints
+    one plugin-directory warning, ICON_MISSING for plugin.json, which this
+    task does not touch.
+- Test map:
+  - CONTEXT blocks hold exactly each agent's keys (SKILL.md Phase 2,
+    Phase 4) → none: prompt text, checked by reading against both agents'
+    CONTEXT YOU WILL RECEIVE; Task 8 runs the dispatches
+  - cannot-ask sentence at each stop → none: prompt text, checked by
+    joining SKILL.md's lines and finding the sentence at the window
+    question, the proposal decision, the failed-check question, and the
+    record commit
+  - parsed record lines match `scripts/fixtures/retro/record.md` → none:
+    checked by reading; Task 8's second run reads a record the skill wrote
+  - instruction-files sentence, no model names → check-instruction-files.sh,
+    check-no-model-names.sh (check-all.sh)
+  - the phases' behavior → none: Task 8's end-to-end acceptance runs them
 
 Depends on: Task 1-5
 
