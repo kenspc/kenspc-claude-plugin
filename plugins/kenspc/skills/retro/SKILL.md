@@ -102,8 +102,13 @@ The scripts are addressed as
 3. The previous record is the newest file under `<root>/docs/retros/`:
    the one whose `Window:` line (the record grammar below) ends latest.
    `grep -H '^Window: ' <root>/docs/retros/*.md` prints each; the second
-   timestamp on the line is the end, and ISO timestamps sort as text. No
-   such file, or none with a `Window:` line, means no previous record.
+   timestamp on the line is the end, and ISO timestamps sort as text.
+   Records whose ends are equal — two retros over one window — are told
+   apart by file name: the later date, then the higher `-<n>` suffix, a
+   name with none counting as 1. Why: `grep` lists `2026-10-21-2.md`
+   before `2026-10-21.md`, and the older of the two would bring back the
+   newer one's rejections and measure the wrong adopted items. No such
+   file, or none with a `Window:` line, means no previous record.
 4. The window spec is the argument's, or `since <the previous record's last
    run timestamp>` (the second timestamp of its `Window:` line), or, with no
    record, `last 20`. Why the timestamp and not the record's date: a batch
