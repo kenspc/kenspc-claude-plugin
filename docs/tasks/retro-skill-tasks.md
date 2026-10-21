@@ -1053,7 +1053,32 @@ Files to create:
 
 ### Task 7: Stability re-check at the shipped slice size
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The headless session ran with `--permission-mode acceptEdits
+    --allowedTools=Bash`, the prompt placed before the flags (a first launch
+    with the prompt after `--allowedTools` exited at once: the flag took the
+    prompt as a second tool name).
+  - Run B's shuffle (seed 42, the prototype's) and the comparison
+    directory's `window.tsv` / `manual.tsv` were made by two small helper
+    scripts written into the scratch directory before the launch; the
+    prompt had the session run them, so the steps stayed the session's.
+  - The run is PASS at 120 rows, so `SLICE_ROWS` stays 120 and
+    SKILL.md is unchanged.
+- Changes/tradeoffs:
+  - Session `c1653b8c-4d39-408a-9d7b-2ee7bf043adb`, USD 3.98, about 5
+    minutes: 365 rows in 4 slices (120, 120, 120, 5), top five shared 4 of
+    5, row overlaps 81–91%, per-row agreement 91%. A 120-row slice cost
+    162–184 k subagent tokens, against about 95 k for the prototype's 61
+    rows; a 5-row slice about 55 k, the fixed part per dispatch.
+  - The fifth place is a near-tie (run A: unverified-record 27 against
+    stale-document 26), which rank.py's runner-up line would show.
+  - The scratch directory `~/Projects/_smoke/retro-stability/` was
+    removed; the session log, prompt, and `rank.py` result were kept under
+    this run's `scratch/task-implementer/25/`.
+- Test map: none (no behavior added or altered)
 
 Depends on: Task 6
 
