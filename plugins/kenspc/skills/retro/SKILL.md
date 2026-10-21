@@ -318,10 +318,14 @@ For each adopted proposal whose landing place is a project file, in order:
    wipe them, as removing a created file would delete one the user
    already had.
 2. Make the change in the files the proposal names.
-3. Run the project's check commands — the ones its instruction files or
-   its config files define (a `check` or `test` script, a documented
-   command), read there and never assumed from the stack. A project that
-   defines none gets the record line `no check commands defined`.
+3. Run every check command the project defines — the ones its instruction
+   files or its config files define (a `check` or `test` script, a
+   documented command; lint, build, and test alike), read there and never
+   assumed from the stack — none left out because the change looks too
+   small to break it. A project that defines none gets the record line
+   `no check commands defined`. Why: the commit rests on these commands
+   alone, and whether a change breaks a test is what running the tests
+   finds out.
 4. Commit, staging only the proposal's files, with the default subject
    `chore(retro): <summary>`. Its undo, `git revert <hash>`, goes into the
    record.
