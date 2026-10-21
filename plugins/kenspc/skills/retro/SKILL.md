@@ -345,6 +345,13 @@ convention requires a scope from a fixed list rejects `chore(retro):`.
 - A rejected item is not proposed again unless its batch count grew:
   `rank.py` skips it and passes its slot on. Why: the user already weighed
   it on the same evidence.
+- The record's `## Rejected` section also repeats each rejected entry of
+  the previous record whose item this run did not put to the user: its
+  Item line, its `Batches:` line with the count unchanged, and its
+  `Reason:` line prefixed `carried from <the previous record's file
+  name>:`. Why: `rank.py` reads only the newest record, so a rejection
+  left out of it would be proposed again two retros later on the same
+  evidence.
 - Pending and failed items are proposed again when they still pass the
   bar, and get no Follow-up line, since nothing changed.
 
@@ -466,7 +473,8 @@ then repeat a rejected proposal or lose an adopted one's follow-up.
 - The Kinds table holds every row of `kinds.tsv` and each kind Phase 3
   created from a `new:` name.
 - The `Batches:` line carries the item's batch count in this window, from
-  `rank.md`; the next retro marks the item and skips it while its count has
+  `rank.md`, or, for a rejection carried from the previous record, that
+  record's count; the next retro marks the item and skips it while its count has
   not grown. A time item's batches are those it was measured in.
 - The `Measure:` line carries the value from `rank.md`: a kind's cost, or a
   time item's total minutes divided by its batches, to one decimal. The
