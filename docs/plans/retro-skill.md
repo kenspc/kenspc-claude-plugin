@@ -143,7 +143,8 @@ the window.
     dayaku-crm, seven run ids appear in two or three jsons, a later role of
     the same batch (`-s3c`, `-s3b`, a resume) or a non-batch replay session.
     The window plus the json mention is how the manual retro's verification
-    mapped them correctly (`followup/verify/sessions.py`). Neither condition
+    mapped them correctly (`followup/verify/sessions.py` in the manual
+    retro's directory, ~/Projects/_smoke/_analysis/review-time-20261019/). Neither condition
     depends on the project's path, so worktree batches match too.
 - **Runs with no match** are role `manual`, each its own batch keyed by run
   id. A manual re-review of an autopilot batch's code therefore counts as a
@@ -184,8 +185,9 @@ the window.
 
 #### `state_notes.py <workspace> <runs.tsv> <out>`
 
-Copies these sections of each batch's state file into `notes.tsv` (batch,
-section, tag, text):
+Copies these sections of each batch's state file,
+`<workspace>/_logs/<batch>-state.md`, into `notes.tsv` (batch, section,
+tag, text):
 
 - `rail observations:`
 - `worker lessons:`
@@ -211,7 +213,8 @@ Prepares the classifier inputs from the in-window rows of `findings.tsv`.
 
 #### `rank.py <retro dir> [<previous record>]`
 
-- **Inputs:** the labels, `findings.tsv`, `runs.tsv` and `time.tsv`.
+- **Inputs:** the labels, `findings.tsv`, `runs.tsv`, `time.tsv`, and
+  `new-kinds.tsv` when the main session has written it.
 - **Mechanical de-duplication:** within one batch, an S3b row counts once
   if the same batch's S3 has a DEFERRED row with the same file (path
   without line) and the same kind. The rule merges rarely and can be
@@ -256,7 +259,10 @@ opening reports.
 - **New INTERNAL agent `retro-classifier`:**
   - `tools: Read, Write, Grep, Glob`, `model: inherit`, no `effort:`;
   - CONTEXT keys `RETRO_DIR`, `MODE` (`derive` | `classify`), `INPUT`,
-    `KINDS`, `OUTPUT`;
+    `KINDS`, `OUTPUT`. In `derive` mode `INPUT` is `sample.tsv`, `KINDS` is
+    `none`, and `OUTPUT` is `kinds.tsv`; in `classify` mode `INPUT` is one
+    `slice-<n>.tsv`, `KINDS` is `kinds.tsv`, and `OUTPUT` is
+    `labels-<n>.tsv` (columns key, kind);
   - writes only its `OUTPUT` under `RETRO_DIR`.
 - **First retro of a project** (no record under `docs/retros/`): one
   `derive` dispatch reads a stratified sample of up to 200 findings from
@@ -270,7 +276,10 @@ opening reports.
     parallel, one dispatch per slice, `run_in_background: false`;
   - a slice may label a row `new:<name>` when no kind fits;
   - the main session adds such a name to the kinds only when it was used
-    in at least two batches; otherwise its rows become `other`.
+    in at least two batches; otherwise its rows become `other`. `rank.py`
+    lists each `new:` name with its batches; the main session writes its
+    decisions to `new-kinds.tsv` (name, then a kind or `other`), which
+    `rank.py` applies on its next run. The labels files are never edited.
 - **Why 120 rows, against the prototype's 61:** each 61-row slice cost
   about 95 k tokens, most of it fixed per-agent overhead. Larger slices
   were not tested, so Step 4 re-runs the prototype's stability check at
@@ -325,7 +334,8 @@ opening reports.
 
 - **New INTERNAL agent `retro-verifier`:**
   - `tools: Read, Bash, Grep, Glob`, `model: inherit`, no `effort:`;
-  - CONTEXT keys `RETRO_DIR`, `PROPOSAL`, `PROJECT_PATH`, `WORKSPACE`.
+  - CONTEXT keys `RETRO_DIR`, `PROPOSAL` (the path of one
+    `proposal-<n>.md`), `PROJECT_PATH`, `WORKSPACE`.
 - **Dispatch:** one per proposal, in parallel, `run_in_background: false`.
 - **What it does:** it did not draft the proposal. It re-reads the cited
   raw lines in the run directories and logs, not the extracted tables. It
@@ -444,22 +454,26 @@ opening reports.
   `check-instruction-lint.sh` with `pwsh`, the guard exits 2 when `python3`
   is missing, never 0.
 - **Input:** the record formats above; the manual retro's
-  `followup/verify/parse.py` as the reference parser.
+  `followup/verify/parse.py` as the reference parser. The manual retro's
+  files named in this step are under
+  `~/Projects/_smoke/_analysis/review-time-20261019/`, and dayaku-crm is
+  `~/Projects/Diagnohab/dayaku-crm`.
 - **Output:** scripts, fixtures, the guard; `check-all.sh` picks the guard
   up by glob.
 - **Acceptance:**
   - `bash scripts/check-all.sh --self-test` passes, and reports guards and
     self-tests one higher than the release checklist's current 16 and 15.
-  - Run on dayaku-crm, `extract_findings.py` gives 1005 rows, FIXED 716 /
-    DEFERRED 256 / NOT APPLICABLE 33, and no anomaly.
+  - Run on dayaku-crm, over the 96 run ids `followup/verify/runmap.tsv`
+    lists (a run added since is left out of the comparison),
+    `extract_findings.py` gives 1005 rows, FIXED 716 / DEFERRED 256 /
+    NOT APPLICABLE 33, and no anomaly.
   - Run on dayaku-crm, `map_runs.py` agrees with
     `followup/verify/runmap.tsv` for every run:
     - the same batch;
-    - role `s3` / `s3b` where runmap says S3 / S3b;
-    - `s3c` / `s3d` where runmap's groups say narrowed;
-    - `manual` for runmap's three manual runs.
-  - Run on dayaku-crm, `measure_time.py` matches `rows.json`'s per-role
-    wall minutes within 1 minute per session.
+    - the same role as runmap's role column (`s3`, `s3b`, `s3c`, `s3d`);
+    - `manual` for the three runs runmap leaves unmapped (`-`).
+  - Run on dayaku-crm, `measure_time.py` matches `rows.json`'s wall minutes
+    within 1 minute for every batch and role `rows.json` lists.
   - `check-no-model-names.sh` passes over the scripts.
 
 ### Step 2 — The two agents
@@ -522,7 +536,9 @@ opening reports.
      from a scratch directory holding run A's labels as `labels-A-<n>.tsv`,
      run B's as `labels-B-<n>.tsv`, `window.tsv` (key, batch, severity)
      from `findings.tsv` joined to `runs.tsv`, and `manual.tsv` (key, kind)
-     from the manual retro's `labels.tsv`. It prints the top-five overlap,
+     from the manual retro's `categories.tsv` (in
+     `~/Projects/_smoke/_analysis/review-time-20261019/`, as the prototype's
+     `prepare.py` built it). It prints the top-five overlap,
      each shared kind's row overlap, and PASS or FAIL.
 - **Depends on:** Step 3.
 - **Acceptance:** the brief's bar holds:
@@ -537,13 +553,15 @@ opening reports.
 
 - **What:** `/kenspc-retro` in an interactive session started with
   `claude --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc`
-  in a clone of dayaku-crm under `~/Projects/_smoke/retro-accept/`.
+  in a clone of dayaku-crm whose root is `~/Projects/_smoke/retro-accept/`.
   - The clone's `.kenspc/runs` is a symlink to the real one, which is
     56 GB and too large to copy, read-only in use.
   - The workspace is the real `~/Projects/_smoke/`.
   - Before the run, the clone's dependencies are installed with the
     commands dayaku-crm's instruction files name, so the per-proposal
     checks run in the clone as they do in the real checkout.
+  - The first run takes the default window, the 20 most recent batches,
+    at the window question.
   - The maintainer approves one proposal and rejects one.
 - **Depends on:** Step 4.
 - **Acceptance:**
