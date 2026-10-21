@@ -1160,7 +1160,45 @@ Files to create or modify:
 
 ### Task 8: End-to-end acceptance on a dayaku-crm clone
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Sessions ran with `--permission-mode acceptEdits
+    --allowedTools=Bash,Read,Grep,Glob`: a first launch with Bash alone was
+    refused its Read of SKILL.md, since the clone is an untrusted
+    workspace, and stopped without touching the clone.
+  - Both runs asked about all their proposals in one message, so the
+    scripted replies were given in one line in the scripted order: the
+    first proposal adopted, every other rejected with
+    "acceptance-test rejection".
+  - The second run stopped once on a question the skill does not have (the
+    window equals the record's: stop without a record, or finish). The
+    reply `B` (finish) kept to the task: the second run exists to check the
+    follow-up and the no-repeat rule, which need it finished.
+  - Dependencies: a `pnpm install` (named as Install) and a `dotnet build`
+    (named as Build, which restores the API's packages); the instruction
+    files name no separate API install command.
+- Changes/tradeoffs:
+  - First run (session 1dfe363b-2aa1-41ad-a49f-393e574f0a90, USD 6.99):
+    window `last 20` at the window question; four verified proposals and
+    one dropped; commits `0b0dfccc` (adopted) then `12ad6086` (record);
+    every grammar section present; the coverage line in `extract.md`.
+  - Second run (session a34d61a8-76eb-4a49-b835-a578815a19ad, USD 6.29):
+    Follow-up `untested-rule` cost 55 then, 68 now; the three rejected
+    kinds marked and skipped (counts 13/13, 7/7, 6/6), none re-proposed;
+    record `fb788be5`.
+  - `git -C ~/Projects/Diagnohab/dayaku-crm status --porcelain` was empty
+    before and after; the symlink was removed first, the real
+    `.kenspc/runs/` still holds 96 run directories, and the clone is gone.
+    Logs, records, and both RETRO_DIRs are kept under this run's
+    `scratch/task-implementer/26/`.
+  - Observed skill behavior, not fixed here: proposals put in one message
+    rather than one at a time; an improvised stop before drafting when the
+    window equals the record's; a subset of the check commands run
+    (`pnpm lint`, not `pnpm test`, with the reason recorded); a cost moving
+    55 → 68 when the same window is classified twice.
+- Test map: none (no behavior added or altered)
 
 Depends on: Task 7
 
