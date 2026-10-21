@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.13.0)
+## Next minor (4.14.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -660,3 +660,16 @@ its number.
     `~/Projects/_smoke/dd-stale-replay/` and
     `~/Projects/_smoke/_analysis/review-time-20261019/`. Settle by replaying
     the case a few times before changing the rule.
+37. Merge danger follow-ups, left out of 4.13.0 (its review and smoke,
+    `docs/dry-runs/merge-danger-smoke.md`):
+    - A task-review "changes" run in `Mode: commits` whose range comes from
+      CUSTOM_INSTRUCTIONS and ends before HEAD reads the section to HEAD, so
+      commits after the reviewed range that nobody reviewed are counted too;
+      the header shows the range read. Decide between keeping it, reading
+      the two ranges apart, or naming the fix commits on their own line.
+    - `check-merge-danger-canonical.sh` exits 2 when a carrier's markers are
+      missing, and no self-test mutation exercises that path.
+    - Not exercised by the smoke: the autopilot closing sentence with
+      `<n>` + `<u>` above zero, the not-determined range forms, and a
+      `Mode: uncommitted` review. A row-11 seed with a one-way change would
+      cover the first.

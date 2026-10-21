@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.13.0 — unreleased
+## 4.13.0 — 2026-10-21
 
 The three reports read before a batch leaves — task-implement's final report
 (Schema G), task-review's (Schema F), and the autopilot's final message —
@@ -21,6 +21,15 @@ batches — and no final report carried it. The format follows the Merge
 Danger section of Matt Pocock's `pr` skill (one-way and two-way doors, and
 blast radius), recast as three questions a reader who does not read the
 code can answer from.
+
+The release smoke ran release-checklist rows 5, 6, 7, and 11 headless with
+the new text loaded through `--plugin-dir`, about USD 13.5
+(`docs/dry-runs/merge-danger-smoke.md`): a migration that drops a column was
+reported `one-way` with its migration, removed export, and plan-risk lines
+as evidence, and the autopilot's four places carried the same counts. Row
+11's exception for the main session's removal of its own temp entries asked
+the user report to name the removed entry, which the autopilot skill does
+not ask; the checklist now asks what the skill asks.
 
 ### Added
 
