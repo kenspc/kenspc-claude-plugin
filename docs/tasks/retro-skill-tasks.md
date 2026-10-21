@@ -183,7 +183,7 @@ Files to create or modify:
     columns): role `manual` and the run id as its batch.
 - Run on dayaku-crm with `last 20`, exactly 20 distinct batches have
   `in_window` true.
-- `bash scripts/check-no-model-names.sh` passes.
+- `bash scripts/check-all.sh` passes, `check-no-model-names.sh` included.
 
 ---
 
@@ -266,7 +266,7 @@ Files to create or modify:
   `rows.json` lists.
 - `state_notes.py` on `~/Projects/_smoke/_logs/ui-alignment-1-state.md`
   writes an `absent` row for `merge danger:` and no error.
-- `bash scripts/check-no-model-names.sh` passes.
+- `bash scripts/check-all.sh` passes, `check-no-model-names.sh` included.
 
 ---
 
@@ -386,7 +386,7 @@ Files to create or modify:
 - In a run over the fixture record, the rejected kind whose batch count
   has not grown does not appear among the selected items, and the one
   whose count has grown does.
-- `bash scripts/check-no-model-names.sh` passes.
+- `bash scripts/check-all.sh` passes, `check-no-model-names.sh` included.
 
 ---
 
@@ -419,8 +419,12 @@ Create two INTERNAL agents, shaped like
   `OUTPUT` `labels-<n>.tsv`): writes one row per input row, columns key and
   kind. It uses `other` only when no kind fits, and `new:<name>` sparingly.
 - It reads nothing but `INPUT` and `KINDS`, and writes only `OUTPUT`.
-  - Why: independence between slices is what the stability check (brief
-    entry 1, prototype `78e797e`) measured.
+  - Why, in the agent's own words (AGENTS.md § Editing skill and agent
+    content: evidence is stated, not cited as a record, since the user's
+    project has neither this repository's brief nor its prototype commit):
+    slices classified by separate dispatches ranked the same top kinds
+    because no dispatch saw another's labels; a dispatch that read other
+    slices' files would couple them and void that stability.
 
 #### `plugins/kenspc/agents/retro-verifier.md`
 
@@ -440,8 +444,11 @@ Create two INTERNAL agents, shaped like
   - `ADJUSTED`, with corrected numbers and an effect cut to its ceiling;
   - or `FAILS`, with the record line that breaks the premise.
 - It writes nothing.
-  - Why: the manual retro's wrong premises (an estimated ~50% saving that
-    was 3%; cause (b), not (a)) were caught by re-reading raw records.
+  - Why, in the agent's own words (same rule): in a retro done by hand, two
+    proposals rested on wrong premises — an expected saving of about 50%
+    that the records capped at 3%, and a stated cause the records
+    contradicted — and only re-reading the raw records caught them; an
+    agent that could edit could also make the records fit.
 
 Files to create:
 
@@ -496,7 +503,11 @@ Then the plan's phases, in its terms (plan § Technical Approach).
 
 **Phase 0 — Locate:**
 
-- create `RETRO_DIR` = `.kenspc/retros/<YYYYMMDD-HHMMSS>/`;
+- create `RETRO_DIR` = `.kenspc/retros/<YYYYMMDD-HHMMSS>/`; its file
+  names follow the naming rule in the Scratch space bullet of the
+  `canonical:run-dir` block, pointed to by its markers in
+  `plugins/kenspc/skills/task-review/SKILL.md`, not copied (AGENTS.md
+  § Skills: written once and referenced);
 - find the newest record under `docs/retros/` (the one whose Window line
   ends latest);
 - fix the window spec from the argument, or the default `since` the newest
@@ -557,9 +568,10 @@ Then the plan's phases, in its terms (plan § Technical Approach).
 
 - **Deciding:** one question per proposal (adopt, or reject with a reason).
 - **Applying:**
-  - run the project's check commands before each adopted proposal's commit;
-    a project that defines none gets the record line
-    `no check commands defined`;
+  - run the project's check commands, as its instruction files or config
+    files define them (read, never assumed from a stack), before each
+    adopted proposal's commit; a project that defines none gets the
+    record line `no check commands defined`;
   - one commit per adopted project-file proposal, staging only its files;
   - default subject `chore(retro): <summary>`;
   - its undo, `git revert <hash>`, goes into the record.
@@ -702,7 +714,8 @@ On FAIL:
 
 1. Set `SLICE_ROWS = 60` in `slice_findings.py`, change every mention of
    the 120-row slice size in `plugins/kenspc/skills/retro/SKILL.md` to 60,
-   and repeat once.
+   and repeat once. `bash scripts/check-all.sh` passes before that change
+   is committed (AGENTS.md § Checks).
 2. A second FAIL stops the task as BLOCKED, with both runs' verdict lines
    in its Implementation notes, for the user's ruling.
 
