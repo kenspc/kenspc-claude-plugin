@@ -1,0 +1,22 @@
+## 20261001-100000-b1-tasks#3
+key: 20261001-100000-b1-tasks#3
+run: 20261001-100000-b1-tasks
+row: 3
+sources: T2
+severity: HIGH
+action: FIXED
+file: src/c.ts:5
+short_label: label 3
+description: description 3
+
+## 20261004-100000-changes#1
+key: 20261004-100000-changes#1
+run: 20261004-100000-changes
+row: 1
+sources: E1
+severity: MEDIUM
+action: FIXED
+file: src/e.ts:7
+short_label: label 17
+description: description 17
+

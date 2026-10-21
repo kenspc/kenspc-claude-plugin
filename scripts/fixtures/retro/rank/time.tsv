@@ -1,0 +1,17 @@
+batch	role	kind	minutes	status
+b1	s2	wall	10.0	measured
+b2	s2	wall	10.0	measured
+b1	s3	wall	100.0	measured
+b1	s3	kenspc:task-implementer	50.0	measured
+b1	s3	kenspc:code-fixer	45.0	measured
+b1	s3	other	5.0	measured
+b2	s3	wall	100.0	measured
+b2	s3	kenspc:task-implementer	50.0	measured
+b2	s3	kenspc:code-fixer	45.0	measured
+b2	s3	other	5.0	measured
+b1	s3b	wall	40.4	measured
+b2	s3b	wall	40.5	measured
+b1	s3c	wall	30.0	measured
+b3	s3	wall		unmeasured
+b3	s3	other		unmeasured
+old	s3	wall	500.0	measured

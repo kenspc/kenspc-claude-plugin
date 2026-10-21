@@ -1,0 +1,19 @@
+key	run	row	sources	severity	action	file	short_label	description
+20260901-100000-old-tasks#1	20260901-100000-old-tasks	1	T1	HIGH	FIXED	src/o.ts:1	label 0	description 0
+20261001-100000-b1-tasks#1	20261001-100000-b1-tasks	1	T1	MEDIUM	DEFERRED	src/a.ts:10	label 1	description 1
+20261001-100000-b1-tasks#2	20261001-100000-b1-tasks	2	Q1	LOW	FIXED	docs/x.md:3	label 2	description 2
+20261001-100000-b1-tasks#3	20261001-100000-b1-tasks	3	T2	HIGH	FIXED	src/c.ts:5	label 3	description 3
+20261001-100000-b1-tasks#4	20261001-100000-b1-tasks	4	B1	LOW	FIXED	src/z.ts:1	label 4	description 4
+20261001-120000-changes#1	20261001-120000-changes	1	T1	MEDIUM	FIXED	src/a.ts:22	label 5	description 5
+20261001-120000-changes#2	20261001-120000-changes	2	Q1	LOW	FIXED	src/a.ts:30	label 6	description 6
+20261001-120000-changes#3	20261001-120000-changes	3	R1	LOW	FIXED	src/y.ts:2	label 7	description 7
+20261002-100000-b2-tasks#1	20261002-100000-b2-tasks	1	T1	MEDIUM	FIXED	src/b.ts:4	label 8	description 8
+20261002-100000-b2-tasks#2	20261002-100000-b2-tasks	2	Q1	MEDIUM	DEFERRED	docs/y.md:1	label 9	description 9
+20261002-100000-b2-tasks#3	20261002-100000-b2-tasks	3	B1	LOW	FIXED	src/w.ts:9	label 10	description 10
+20261002-120000-changes#1	20261002-120000-changes	1	T1	LOW	FIXED	src/b.ts:8	label 11	description 11
+20261002-120000-changes#2	20261002-120000-changes	2	E1	LOW	FIXED	src/e.ts:1	label 12	description 12
+20261003-100000-b3-tasks#1	20261003-100000-b3-tasks	1	T1	HIGH	FIXED	src/d.ts:1	label 13	description 13
+20261003-100000-b3-tasks#2	20261003-100000-b3-tasks	2	R1	LOW	FIXED	src/f.ts:2	label 14	description 14
+20261003-100000-b3-tasks#3	20261003-100000-b3-tasks	3	E1	LOW	DEFERRED	src/g.ts:3	label 15	description 15
+20261003-100000-b3-tasks#4	20261003-100000-b3-tasks	4	Q1	LOW	FIXED	src/h.ts:1	label 16	description 16
+20261004-100000-changes#1	20261004-100000-changes	1	E1	MEDIUM	FIXED	src/e.ts:7	label 17	description 17

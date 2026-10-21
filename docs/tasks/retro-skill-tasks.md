@@ -482,7 +482,92 @@ Files to create or modify:
 
 ### Task 4: Slicing, ranking, and row-display scripts
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - The record lines the scripts parse, fixed in
+    `scripts/fixtures/retro/record.md` for Task 6 to copy:
+    - `Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>` (the first
+      such line in the file);
+    - the `## Kinds` table, header `| kind | definition |`;
+    - under `## Adopted`, one line per item:
+      ``- Measure: kind `<kind>` cost = <n>`` or
+      ``- Measure: time `<item>` minutes per batch = <n>``;
+    - under `## Rejected`, one line per item:
+      ``- Batches: kind `<kind>` = <n>`` or ``- Batches: time `<item>` = <n>``.
+    Sections are told apart by their `## ` headings, so the same line forms
+    under `## Pending` or `## Failed` are not read.
+  - A time item is named by its role (`s3b`, from a `wall` row) or by
+    role and subagent kind (`s3/kenspc:code-fixer`, `s3/other`); `other` is
+    a time candidate (the S3 session's own time), unlike the findings
+    list's `other`. A time item's measure is minutes per batch (its total
+    over the batches it was measured in); its keys are its batches.
+  - The record parser lives in rank.py (`read_record()`), and
+    slice_findings.py loads rank.py by path for the Kinds table, so the
+    grammar is parsed in one place.
+  - new-kinds.tsv's name column is accepted with or without `new:`; an
+    unresolved name stays as the kind `new:<name>`.
+  - The runner-up test is `last − next ≤ 10% of last`, compared after
+    rounding to 6 places, so a gap of exactly 10% (100 against 90) counts
+    despite float error; `RUNNER_UP_SHARE = 0.10`.
+  - The sample uses largest-remainder quotas, then gives every batch at
+    least one row from the largest share while the total allows; seed
+    `SAMPLE_SEED = 20261021`. With 200 rows or fewer in the window the
+    sample is every row.
+  - Sample and slice rows carry key, sources, severity, action, file,
+    short_label, description (run and row are inside the key).
+  - rank.md also holds a Label check (in-window, labelled, unlabelled keys,
+    labels outside the window, duplicate labels, unknown severities), the
+    full ranked lists with selected and record columns, so the main
+    session can take the next item when drafting drops one, and a Keys
+    section; the record is named by its file name.
+  - show_rows.py exits 1 when a key is not in findings.tsv, still printing
+    the keys it found.
+  - slice_findings.py exits 2 for a record with no `## Kinds` table.
+- Changes/tradeoffs:
+  - The guard generates the 403-row slicing fixture at run time rather
+    than storing it.
+  - rank.md's Keys section lists every ranked kind's keys, which on a
+    thousand-finding window is most keys; the task requires it.
+- Test map:
+  - S3/S3b de-duplication on DEFERRED, same file, same kind
+    (rank.py:208) → check-retro-scripts.sh::rank rank.md (one merge; the
+    different-kind and the FIXED same-file pairs kept)
+  - kinds in at least two batches, `other` never ranked, cost weights
+    (rank.py:227-244) → check-retro-scripts.sh::rank rank.md (one-batch
+    and `other` absent; test-gap 11)
+  - `new:` labels with and without an entry (rank.py:195) →
+    check-retro-scripts.sh::rank rank.md (New kinds table; port-race adds
+    a HIGH row to test-gap)
+  - manual mark (rank.py:241) → check-retro-scripts.sh::rank rank.md
+    (stale-check)
+  - time list, share, batches ≥ 2 (rank.py:246-273) →
+    check-retro-scripts.sh::rank rank.md (s3c and unmeasured rows absent)
+  - selection 3+2 and the passed slot (rank.py:291) →
+    check-retro-scripts.sh::rank rank.md (3+2) and rank with a record
+    rank.md (2+3)
+  - runner-up within 10%, at the limit and past it (rank.py:301) →
+    check-retro-scripts.sh::rank rank.md (90 against 100) and rank with a
+    record rank.md (80.9 against 90, none) (mutation-checked)
+  - rejected item skipped unless grown, marked either way (rank.py:275) →
+    check-retro-scripts.sh::rank with a record rank.md
+  - follow-up measures then and now, record sections scoped
+    (rank.py:97-133) → check-retro-scripts.sh::rank with a record rank.md
+  - slices at most `SLICE_ROWS` in run order (slice_findings.py:109) →
+    check-retro-scripts.sh::slice slice-1.tsv, slice large (120 and past)
+  - proportional seeded sample, at least one per batch
+    (slice_findings.py:61) → check-retro-scripts.sh::slice large
+    (mutation-checked), slice sample.tsv
+  - kinds.tsv from a record, no sample.tsv (slice_findings.py:113) →
+    check-retro-scripts.sh::slice with a record kinds.tsv, slice with a
+    record writes no sample.tsv
+  - record without a Kinds table exits 2 → check-retro-scripts.sh::slice
+    with a record that has no Kinds table
+  - show_rows prints rows, absent key exits 1 (show_rows.py:24-46) →
+    check-retro-scripts.sh::show rows, show rows of an absent key
+  - usage errors exit 2 → check-retro-scripts.sh::slice_findings.py /
+    rank.py / show_rows.py with no argument, rank on a missing directory
 
 Depends on: Task 1-3
 

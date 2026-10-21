@@ -1,0 +1,8 @@
+run	batch	role	tag	session	in_window
+20260901-100000-old-tasks	old	s3	old-s3	s-old	false
+20261001-100000-b1-tasks	b1	s3	b1-s3	s-b1-3	true
+20261001-120000-changes	b1	s3b	b1-s3b	s-b1-3b	true
+20261002-100000-b2-tasks	b2	s3	b2-s3	s-b2-3	true
+20261002-120000-changes	b2	s3b	b2-s3b	s-b2-3b	true
+20261003-100000-b3-tasks	b3	s3	b3-s3	s-b3-3	true
+20261004-100000-changes	20261004-100000-changes	manual			true
