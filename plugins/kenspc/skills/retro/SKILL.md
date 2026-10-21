@@ -504,8 +504,8 @@ then repeat a rejected proposal or lose an adopted one's follow-up.
   record's count; the next retro marks the item and skips it while its count has
   not grown. A time item's batches are those it was measured in.
 - The `Measure:` line carries the value from `rank.md`: a kind's cost, or a
-  time item's total minutes divided by its batches, to one decimal. The
-  next retro prints it as "then" beside its own "now".
+  time item's minutes per batch as its Selected line prints it. The next
+  retro prints it as "then" beside its own "now".
 
 ## Stops and questions
 

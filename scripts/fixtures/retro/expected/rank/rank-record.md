@@ -27,9 +27,9 @@ Window: 2026-10-01T10:00:00 to 2026-10-04T10:00:00; 4 batches, 1 of them a manua
 
 1. findings `test-gap`: cost 11, 3 batches
 2. findings `stale-check`: cost 3, 2 batches, includes a manual run; rejected: batches 1 then, 2 now
-3. time `s3`: cost 200.0, 2 batches
-4. time `s3/kenspc:task-implementer`: cost 100.0, 2 batches
-5. time `s3/kenspc:code-fixer`: cost 90.0, 2 batches
+3. time `s3`: cost 200.0, 2 batches, 100.0 minutes per batch
+4. time `s3/kenspc:task-implementer`: cost 100.0, 2 batches, 50.0 minutes per batch
+5. time `s3/kenspc:code-fixer`: cost 90.0, 2 batches, 45.0 minutes per batch
 
 ## Runner-ups
 

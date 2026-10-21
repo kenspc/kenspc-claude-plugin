@@ -30,8 +30,10 @@ Selection: up to 3 findings items and up to 2 time items; a list with
 fewer candidates passes its unused slots to the other, 5 at most. A list's
 next candidate within 10% of its last selected cost is printed as a
 runner-up: at the cut, a near-tie is a coin toss the user should see.
-Every ranked item whose batches include a `manual` run is marked, and
-every ranked item lists its record keys (time items: their batches).
+A selected time item also shows its minutes per batch, the value a record's
+Measure line carries. Every ranked item whose batches include a `manual`
+run is marked, and every ranked item lists its record keys (time items:
+their batches).
 
 With a previous record
   Each adopted item's measure is printed then (from the record) and now; a
@@ -366,8 +368,12 @@ def render(data, kept, merges, new_seen, checks, f_ranked, t_ranked,
                [("time", i) for i in chosen_t]
     out += ["", "## Selected", ""]
     for n, (kind, item) in enumerate(selected, 1):
-        out.append("%d. %s `%s`: cost %s, %d batches%s%s" % (
+        # A time item's measure is per batch, printed here so the record's
+        # Measure line and the next retro's "now" round the same way.
+        out.append("%d. %s `%s`: cost %s, %d batches%s%s%s" % (
             n, kind, item["name"], number(item["cost"]), len(item["batches"]),
+            ", %.1f minutes per batch" % (item["cost"] / len(item["batches"]))
+            if item["type"] == "time" else "",
             ", includes a manual run" if item["manual"] else "",
             "; " + item["record"] if item.get("record") else ""))
     if not selected:
