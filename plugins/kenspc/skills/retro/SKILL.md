@@ -116,7 +116,11 @@ The scripts are addressed as
    otherwise be counted twice or never, and `since` with a timestamp
    excludes its own moment.
 5. The workspace is the argument's `Workspace:` directory, or
-   `~/Projects/_smoke/`.
+   `~/Projects/_smoke/`. A `Workspace:` the user named that holds no
+   `_logs/` directory stops the run, naming the path. Why: the mapping
+   finds no session there without an error, so every run would become a
+   `manual` batch of its own, and one piece of work reviewed twice would
+   meet the two-batch bar.
 
 ## Phase 1 — Extract
 
@@ -128,7 +132,8 @@ other than 0 with its stderr:
 3. The window question, only when the arguments named no window. Read the
    window lines `map_runs.py` printed and ask one question: "The default
    window `<spec>` holds <n> batches, from <first run date> to <last run
-   date>. Run it, or name another window (`last <n>`, `since <date>`,
+   date>, with <t> timelines read from `<workspace>`. Run it, or name
+   another window (`last <n>`, `since <date>`,
    `all`)?" A window the user names re-runs step 2 with it, and its lines
    replace the earlier ones in `extract.md`. In a session that cannot ask
    (a system reminder to work without stopping), the default window is
@@ -495,6 +500,7 @@ then repeat a rejected proposal or lose an adopted one's follow-up.
 | Stop | When | In a session that cannot ask |
 |---|---|---|
 | python3 missing or older than 3.9 | Prerequisites | stops with the reason |
+| A named workspace with no `_logs/` | Phase 0 | stops with the path |
 | The window question | Phase 1, no window argument | the default window |
 | Fewer than two batches | Phase 1 | stops with the counts |
 | Each proposal's decision | Phase 5 | recorded `pending`, no project file changes |
