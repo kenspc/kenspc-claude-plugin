@@ -1288,7 +1288,61 @@ Files to create:
 
 ### Task 9: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Promoted (Task 3): subagent spans are cut to the role's session
+    windows, so a usage-limit pause is never counted → plugin README
+    § Retro (Time) and CHANGELOG 4.14.0.
+  - Promoted (Task 7): the 120-row slice size held at the stability check
+    → plugin README § Retro (Ranking), naming the dry-run record.
+  - Promoted (Task 2): a run no session names, or two do, is its own batch
+    with role `manual`, and the ranking marks items whose batches include
+    one → plugin README § Retro (Batches and roles).
+  - Promoted (Task 4): the record lines the next retro reads (Window,
+    Kinds, Measure, Batches) and what it does with them → plugin README
+    § Retro (The record); the record grammar joins AGENTS.md's Written once
+    list.
+  - Promoted (Task 8): the skill adds `docs/retros/` to no document table
+    of the project, and classifying the same window twice can move a kind's
+    cost → plugin README § Retro (The record, Reading a follow-up); the
+    untrusted-workspace Read refusal → release-checklist row 13's command
+    (`--allowedTools=Bash,Read,Grep,Glob`).
+  - Needs a home (Task 4): a change to the record grammar's parsed lines
+    changes `scripts/fixtures/retro/record.md` and rank.py's
+    `read_record()` in the same commit → AGENTS.md § Skills, the Written
+    once bullet; it did not fit AGENTS.md's 200-line budget (199 used), and
+    the guard's header states the fixture's tie to the grammar meanwhile.
+  - Local: Task 1's code-span pipe rule, duplicate-run and failed
+    worktree-list handling; Task 2's importlib loading, no cwd filter,
+    `true`/`false`, section replacement; Task 3's `wall` kind and
+    transcript-presence test; Task 4's runner-up rounding, sample quotas,
+    parser in rank.py; Task 5's refusal wording and reply blocks; Task 6's
+    awk row printing, fourth cannot-ask sentence, kenspc-repository test;
+    Task 7's and Task 8's launch flags.
+- Changes/tradeoffs:
+  - AGENTS.md stays at 199 of 200 lines: the retro pattern bullet replaced
+    a line saved by joining the autopilot pattern onto one line, and the
+    Written once bullet keeps its 10 lines, so the fixture-record note went
+    to "Needs a home" above.
+  - Release checklist: row 1 counts 11 commands; the pinned counts are
+    `guards run: 17` / `self-tests run: 16`; the new row 13 is
+    `/kenspc-retro last 3` on a clone, as a session that cannot ask; the
+    end-to-end row is 14 (with its sub-criteria heading) and the rails-hook
+    row 15; nothing else in the file referred to rows 13 or 14. The
+    effort diff is unchanged.
+  - Roadmap: items 38 (the autopilot final-report line on batches since the
+    last retro) and 39 (run-directory ids in the state file); item 9's two
+    mentions of smoke row 13 are row 14.
+  - plugin.json names retro before the autopilot clause and counts
+    thirteen subagents; its version stays 4.13.0. marketplace.json's
+    top-level description gains retro; its plugin-entry summary is
+    unchanged.
+  - The plugin README's INTERNAL note points the two retro agents at
+    `/kenspc-retro`; its Commands table escapes the pipes of the argument
+    hint.
+- Test map: none (no behavior added or altered)
 
 Depends on: Task 1-8
 

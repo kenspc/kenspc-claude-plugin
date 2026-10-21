@@ -9,6 +9,77 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.14.0 — unreleased
+
+A retrospective skill, `retro`, started only by `/kenspc-retro`. It looks
+back over a window of finished batches, measures where the review findings
+and the session time went, ranks the problems that recurred across batches,
+has each proposed change verified against the raw records before the user
+sees it, applies the ones the user adopts, and commits a record the next
+retro starts from. It replaces a retro done by hand in October 2026, whose
+one-off shell parsing of the review tables, with escaped pipes in their
+cells, went wrong, and two of whose premises held only until the raw records
+were read again. The stability of classifying findings in separate slices was checked
+again at the shipped slice size, 120 rows: two runs over dayaku-crm's 20 most
+recent batches shared 4 of their top five kinds, with row overlaps of 81–91%
+(`docs/dry-runs/retro-stability.md`). An end-to-end run on a dayaku-crm
+clone adopted one proposal, rejected three, and a second run printed the
+adopted item's measure then and now and did not repeat the rejected ones
+(`docs/dry-runs/retro-acceptance.md`).
+
+### Added
+
+- `skills/retro/SKILL.md`: the retro skill, `disable-model-invocation: true`,
+  the first skill the model does not invoke. Six phases: locate (the run's
+  working directory `.kenspc/retros/<YYYYMMDD-HHMMSS>/`, made sure to be
+  git-ignored with the `canonical:run-dir` block's ignore check; the newest
+  record under `docs/retros/`; the window, by default `since` that record's
+  last run timestamp or `last 20`; the workspace, by default
+  `~/Projects/_smoke/`), extract (the scripts, and the window question
+  after the mapping), classify (one `derive` dispatch on a first retro, one
+  `classify` dispatch per slice), rank and draft (at most five proposals,
+  each for the largest cause group of its item that spans two batches),
+  verify (one verifier per proposal), and decide, apply, record (one
+  question per proposal; one commit per adopted project-file change after
+  the project's check commands; the record committed last). It holds the
+  record grammar, written once; the next retro reads its Window line, its
+  Kinds table, each adopted item's Measure line, and each rejected item's
+  Batches line, so it prints each adopted measure then and now and skips a
+  rejected item whose batch count has not grown. Each stop states what a
+  session that cannot ask does: the default window; every proposal
+  `pending`, no project file changed; a rejected record commit left
+  uncommitted.
+- `commands/kenspc-retro.md`: `/kenspc-retro [last <n> | since <date> | all] [Workspace: <dir>]`.
+- `agents/retro-classifier.md` (INTERNAL): derives 15–30 kinds of recurring
+  problem plus `other` from a sample, each with a definition that settles
+  its border with another kind, or labels one slice of findings against
+  them. It reads only its input and the kinds and writes only its output,
+  since separately classified slices rank the same top kinds only while no
+  dispatch sees another's labels.
+- `agents/retro-verifier.md` (INTERNAL): re-reads the raw records behind
+  one proposal — the run directories, `rulings.md`, the workspace's logs —
+  recounts its counts, tests its cause, checks whether two cited batches
+  are one piece of work, and cuts its expected effect to the ceiling the
+  window's numbers allow; returns HOLDS, ADJUSTED, or FAILS, and writes
+  nothing.
+- `skills/retro/scripts/`, python3 3.9 or newer, standard library only, run
+  with `python3 -I`: `extract_findings.py` (every Schema B row of the
+  repository's and its worktrees' runs, joined to its angle row, split on
+  unescaped pipes outside code spans, recounted against each stats line),
+  `map_runs.py` (each run's batch and role from the session whose time
+  window holds it and whose json or transcript names it, else `manual`;
+  the window), `measure_time.py` (role wall minutes from the timeline to
+  `.exit`, never `duration_ms`; the S3/S3b subagent split as the union of
+  transcript spans cut to the session windows, so a usage-limit pause is
+  not counted), `state_notes.py`, `slice_findings.py`, `rank.py`, and
+  `show_rows.py`.
+- `scripts/check-retro-scripts.sh`: runs the seven scripts on the fixtures
+  under `scripts/fixtures/retro/` and diffs each output against its expected
+  file; its `--self-test` turns it red with two mutants (a plain split on
+  `|`, and the span union replaced with a sum) and checks that it exits 2
+  with no `python3` on the PATH. `check-all.sh` now runs 17 guards and 16
+  self-tests.
+
 ## 4.13.0 — 2026-10-21
 
 The three reports read before a batch leaves — task-implement's final report

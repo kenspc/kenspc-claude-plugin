@@ -6,7 +6,10 @@ generation.
 
 ## Skills
 
-Skills activate automatically when Claude Code detects a matching task context.
+Skills activate automatically when Claude Code detects a matching task context,
+except retro, which runs only when you type `/kenspc-retro`: its SKILL.md sets
+`disable-model-invocation: true`, since a retro reads every review run in its
+window and dispatches agents, far more than any request should start in passing.
 
 | Skill | Description |
 |-------|-------------|
@@ -20,6 +23,7 @@ Skills activate automatically when Claude Code detects a matching task context.
 | task-review | Parallel multi-angle code review (5 review agents → fix agent → regression verification). Before the reviewers, runs the project's test commands once for all five (`suite-run.md`) and records the working tree's state; a tracked file a reviewer changed stops the review before the fix agent, naming the files, while an unchanged tree asks nothing. A ruling you give after the fix agent has started runs one second fix round — the fix agent and the verifier again, on that ruling alone (see Run directory). Works with a task document for requirements context, or standalone to review the change set it computes once — your uncommitted changes, or the commits ahead of your upstream (see Known behavior). Accepts custom instructions to narrow scope. The final report carries a `Merge danger` section between the verdict and the next steps, over the task document's history or over the change set with the fixes included — paths in the custom instructions do not narrow it (see [Recommended Workflow](#recommended-workflow)). |
 | generate-guide | Generates comprehensive, beginner-friendly project setup and deployment guides with automated multi-dimensional post-generation review via review agent. |
 | autopilot | Runs one batch of the kenspc chain unattended, from a spec or a brief to a local release preparation. Two entries: a spec (a plan document) runs unattended from task decomposition on; a brief first gets a design session whose decision table you rule on, after which the spec is committed and the rest runs unattended. Two modes: `repo` (the default — the workers use the installed plugin, acceptance is the commands the brief names or nothing, and release preparation is one commit that removes the batch's plan and task documents, after a clarification commit for each question the release-preparation session asked) and `plugin` (declared, or detected from a marketplace layout — the workers load the worktree's plugin with `--plugin-dir`, acceptance runs on a seed project and files `docs/dry-runs/<batch>-acceptance.md`, and release preparation is the repository's). One headless session per role — task decomposition, implementation, standalone review (which `repo` mode by default runs only when the implementation's own review calls for it, `Standalone review: auto`; `on` always runs it, `off` skips it), acceptance, a runtime walk of the batch's user-facing flows in a browser (`repo` mode, on by default, `Walk: off` to skip it), fix on demand, release preparation, and design at brief entry — each started through the driver script that ships with the skill and talking to your session by cross-session messages. Two human gates: the decisions on a brief's design table, and the tag, push, and release after the reports; between them your session rules every point the spec leaves open, except the stop conditions, and records each ruling for you to review before the tag. Two reports at the end: a one-page user report in your language, and a reviewer report of fixed shape with a total-cost line. Needs v2.1.271 or later (see [Requirements](#requirements)). |
+| retro | A retrospective over a window of finished batches, started only by `/kenspc-retro` (see [Retro](#retro)). Shipped python3 scripts extract every review finding of the window's runs and the autopilot workspace's session time; `retro-classifier` agents sort the findings into kinds of recurring problem, one dispatch per 120-row slice; a script ranks the kinds and time items seen in at least two batches and picks at most five; each proposed change is checked against the raw records by a `retro-verifier` agent before you see it; you adopt or reject each one; each adopted change in your project is its own commit, after your check commands; and a record under `docs/retros/` carries the numbers the next retro checks it against. |
 
 ## Commands
 
@@ -41,19 +45,20 @@ duplicate them as a competing routing surface.
 | `/kenspc-task-review` | `/kenspc-task-review [path-to-task-file] [custom instructions]` |
 | `/kenspc-guide` | `/kenspc-guide <project-path> [custom instructions]` |
 | `/kenspc-autopilot` | `/kenspc-autopilot <path to a spec or a brief>` |
+| `/kenspc-retro` | `/kenspc-retro [last <n> \| since <date> \| all] [Workspace: <dir>]` |
 
 Skills can also be invoked via `/kenspc:init-project`,
 `/kenspc:generate-brief`, `/kenspc:prototype`,
 `/kenspc:generate-plan`, `/kenspc:generate-task`, `/kenspc:diagnose-bug`,
 `/kenspc:task-implement`, `/kenspc:task-review`, `/kenspc:generate-guide`,
-and `/kenspc:autopilot`.
+`/kenspc:autopilot`, and `/kenspc:retro`.
 
 ## Plugin Structure
 
 ```
 plugins/kenspc/
     .claude-plugin/
-    agents/               # 11 reusable subagents
+    agents/               # 13 reusable subagents
     commands/
     hooks/
     references/
@@ -81,10 +86,12 @@ where their description marks them safe to invoke standalone.
 | `plan-document-reviewer` | Doc reviewer | No | Reviews generated plan documents |
 | `guide-document-reviewer` | Doc reviewer | No | Reviews generated guide documents |
 | `task-document-reviewer` | Doc reviewer | No | Reviews generated task documents (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files) |
+| `retro-classifier` | Worker | No | Sorts a retro's findings into kinds: derives the kinds from a sample, or labels one slice against them; reads only its input and the kinds, writes only its output |
+| `retro-verifier` | Verifier | No | Checks one retro proposal against the raw records (run directories, rulings, the workspace's logs) and returns HOLDS, ADJUSTED, or FAILS; read-only by design |
 
 Agents marked "Standalone: No" are orchestration-only — their description starts
 with `INTERNAL:` and their body refuses on missing CONTEXT. Invoke them through
-the parent slash command instead.
+the parent slash command instead: `/kenspc-retro` for the two retro agents.
 
 Each reviewer is read-only on the working tree and writes only under
 `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
@@ -680,6 +687,11 @@ review reuses the same directory (since 4.3.0):
   Its probes live in `scratch/orchestrator/`, one numbered subdirectory per
   attempt, under the naming rules above; the diagnosis never edits your
   source to test a hypothesis.
+- `/kenspc-retro` keeps its working files beside the run directories, in
+  `.kenspc/retros/<YYYYMMDD-HHMMSS>/`, and not under `runs/`, so a later
+  retro never reads them as a run. It makes sure `.kenspc/retros/` is
+  ignored with the same check (the one-time `.gitignore` commit when it is
+  not). See [Retro](#retro).
 - Runs accumulate: nothing is deleted automatically. Remove old run
   directories when you no longer need them. After upgrading from v3.5.x,
   remove the run directories it left: their probe files can carry
@@ -1609,6 +1621,100 @@ copies and runs `run.sh`, and
 nothing picks a driver by platform until `run.ps1` has passed acceptance
 on Windows.
 
+## Retro
+
+`/kenspc-retro [last <n> | since <date> | all] [Workspace: <dir>]` looks back
+over a window of finished batches: it measures where the review findings and
+the session time went, proposes at most five changes to your project's
+environment, has each one checked against the raw records before you see it,
+applies the ones you adopt, and commits a record the next retro starts from.
+It runs only when you type the command.
+
+- **python3.** The extraction is a set of python3 scripts shipped in
+  `skills/retro/scripts/`, standard library only, run with `python3 -I`; they
+  need Python 3.9 or newer (`/usr/bin/python3` on macOS is 3.9.6). Without
+  it the skill stops and says so; there is no fallback.
+- **The window.** A batch is in the window when its earliest run is.
+  `last <n>` takes the n most recent batches; `since <YYYY-MM-DD>` the
+  batches whose earliest run is on or after that day; `since
+  <YYYY-MM-DDTHH:MM:SS>` those strictly after that moment; `all` every
+  batch. Without an argument the default is `since` the last run timestamp
+  of the newest record under `docs/retros/`, or `last 20` when there is
+  none, and the skill states the window's batch count and dates and asks
+  whether to run it; a session that cannot ask runs the default. A window
+  with fewer than two batches stops with the counts and writes no record.
+- **Batches and roles.** Nothing in a run directory names its batch, so
+  each run is matched to the autopilot workspace's logs (`Workspace:`,
+  default `~/Projects/_smoke/`): the role session whose time window (its
+  timeline `start` line to its `<tag>.exit`) holds the run id's time and
+  whose result json — or transcript, when it wrote no json — names the run
+  id. A run no session names, or that two do, is a batch of its own with
+  role `manual`, and the ranking marks every item whose batches include
+  one, since a manual re-review of an autopilot batch is one piece of work
+  counted twice. Runs in the repository's worktrees are read too; a removed
+  worktree's runs are gone, and `extract.md` lists the worktrees read.
+- **Time.** Each role session's wall minutes run from its timeline `start`
+  line to its `<tag>.exit` mtime, resumes summed into the role; the
+  sessions' own `duration_ms` is never used. Inside S3 and S3b, each
+  subagent kind's minutes are the union of its transcripts' spans, each
+  span cut to the role's session windows, so a usage-limit pause is never
+  counted. A session whose transcripts Claude Code has pruned keeps its role
+  minutes, and its split is `unmeasured`; a session with no `.exit` is
+  `unmeasured` too. `extract.md`'s coverage line counts both.
+- **Working files.** Everything the run makes goes under
+  `.kenspc/retros/<YYYYMMDD-HHMMSS>/` (see Run directory): the findings,
+  the run-to-batch map, the time and state-file notes, `extract.md`
+  (anomalies, window, coverage), the classifier's slices and labels,
+  `rank.md`, and the proposals. The main session reads only `extract.md`,
+  `rank.md`, the proposals, and rows a script prints by key, never a
+  review report: a window of about a thousand findings would not fit in
+  its context.
+- **Ranking.** Findings are sorted into kinds of recurring problem by
+  `retro-classifier` agents, one dispatch per 120-row slice (the size the
+  stability check passed at, `docs/dry-runs/retro-stability.md` in this
+  repository). A kind counts when it appears in at least two batches; its
+  cost is HIGH 3, MEDIUM 2, LOW 1 per finding, with an S3b finding counted
+  once when the same batch's S3 deferred one on the same file and kind;
+  `other` is never ranked. Time items — roles, and S3/S3b subagent kinds —
+  count when measured in at least two batches, by their total minutes. Up to
+  three findings items and two time items are selected, a short list's
+  slots passing to the other, at most five; the next candidate within 10% of
+  a list's last selected cost is shown as a runner-up.
+- **Proposals.** Each selected item becomes a proposal only when a concrete
+  cause spans at least two batches: the file and layer it changes, what
+  changes in the next batch, how to undo it, the measure the next retro
+  reads, and the expected effect. A `retro-verifier` agent re-reads the raw
+  records for each proposal and returns HOLDS, ADJUSTED (corrected numbers,
+  the effect cut to its ceiling), or FAILS; a failed proposal is not shown
+  and goes into the record as dropped. A change to the kenspc plugin or to
+  your global files is written into the record as a suggestion, not
+  applied, except in the kenspc repository itself, where plugin files are
+  project files.
+- **Deciding and applying.** Each proposal is a question: adopt, or reject
+  with a reason. An adopted change in your project runs your check commands
+  first (the ones your instruction files or config name; none is recorded as
+  such) and is its own commit, undone with `git revert <hash>`; a failed
+  check or a rejected commit restores the files and records the proposal as
+  `failed`. In a session that cannot ask, every proposal is recorded as
+  `pending`, no project file changes, and only the record is committed.
+- **The record.** `docs/retros/<YYYY-MM-DD>.md` (a second one on the same
+  date gets `-2`), committed last, in the grammar written once in the
+  skill's SKILL.md: Window and coverage, Follow-up, Kinds, Adopted,
+  Rejected, Dropped by verification, Pending, Failed, Runner-ups, For the
+  kenspc plugin, For your global files. The next retro reads its `Window:`
+  line, its Kinds table, each adopted item's `Measure:` line, and each
+  rejected item's `Batches:` line: it classifies against the same kinds,
+  prints each adopted item's measure then and now, and does not propose a
+  rejected item again unless its batch count grew. Pending and failed items
+  are proposed again while they still meet the bar. The skill adds
+  `docs/retros/` to no document table of yours; list it in your
+  instruction files' documents table yourself if they keep one.
+- **Reading a follow-up.** Classifying the same window twice can move a
+  kind's cost (55 and 68 for one kind in the acceptance run) while batch
+  counts hold, so a follow-up's change says something about the adopted
+  change only when the window holds batches run after it; over the same
+  batches it is classification noise.
+
 ## Known behavior
 
 - **Review scope without a task document.** With `/kenspc-task-review` and no
@@ -2175,6 +2281,9 @@ on Windows.
   messaging, the idle-notice subscription (`notify_when_idle`), the own-name
   line of `ListAgents`, and notices to headless senders. The plugin's
   minimum above is unchanged — every other skill runs on it.
+- `/kenspc-retro` needs `python3` 3.9 or newer on the PATH: its extraction
+  scripts are python3, standard library only, and it stops without them.
+  Verified on macOS only.
 
 **Recommended:**
 - `gh`, installed and logged in, for `/kenspc-init`'s GitHub step (creating

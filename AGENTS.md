@@ -8,11 +8,11 @@ adds only what is specific to Claude Code.
 
 A Claude Code plugin marketplace. Its primary plugin, `kenspc`
 (`plugins/kenspc/`), provides skills for project initialization, briefs,
-plans, prototypes, task decomposition, bug diagnosis, guides, and task
-implementation with automatic code review; its autopilot skill runs one batch
-of that chain unattended through headless sessions. Each SKILL.md and agent
-file is the authority for its own behavior, and the plugin README documents
-it for users.
+plans, prototypes, task decomposition, bug diagnosis, guides, retrospectives,
+and task implementation with automatic code review; its autopilot skill runs
+one batch of that chain unattended through headless sessions. Each SKILL.md
+and agent file is the authority for its own behavior, and the plugin README
+documents it for users.
 
 The `description` of each entry in `.claude-plugin/marketplace.json`'s
 `plugins` list is the registry-list summary (one short sentence); the
@@ -32,10 +32,10 @@ without.
 - Parallel MapReduce: task-review, and task-implement's review — five
   review-angle agents, then `code-fixer`, then `regression-verifier`,
   exchanging reports through `.kenspc/runs/<run-id>/`.
-- Sessions, not agents: the autopilot runs one headless `claude -p` session
-  per role.
+- Parallel classification, then verification: retro.
+- Sessions, not agents: the autopilot, a headless `claude -p` session per role.
 
-The five review-angle agents are standalone-safe; the six others are
+The five review-angle agents are standalone-safe; the eight others are
 orchestration-only, their first description sentence `INTERNAL: ...`.
 Each reviewer is read-only on the working tree and writes only under
 `RUN_DIR`: its report at `RUN_DIR/angle-<n>.md`, and probe and temporary
@@ -97,9 +97,9 @@ and `commands/`.
   `AGENTS.md`. Why: a session working in this repository would load a
   `CLAUDE.md` as a memory file, and an `AGENTS.md` too wherever Claude Code
   reads AGENTS.md itself.
-- The per-skill `version` stays `3.0.0` in all ten skills; bump it only on an
-  architecture-generation rewrite, all ten together. The plugin version in
-  `plugin.json` is the one bumped each release.
+- The per-skill `version` stays `3.0.0` in all eleven skills; bump it only
+  on an architecture-generation rewrite, all eleven together. The plugin
+  version in `plugin.json` is the one bumped each release.
 <!-- The field denotes the v3 architecture generation, not a change counter.
 Syncing ten files every release is churn that had drifted anyway. Plugin
 4.0.0 was a version choice, not a rewrite, so the field stayed 3.0.0. -->
@@ -113,14 +113,14 @@ Syncing ten files every release is churn that had drifted anyway. Plugin
   the main session keeps the full transcript to draft the brief or plan.
 - Written once and referenced, never copied: the run-directory preparation
   (task-review's and task-implement's `canonical:run-dir` block, which
-  diagnose-bug and prototype reference by its markers), the Open Questions
-  entry grammar (generate-brief's Writing rules), and the `## Autopilot`
-  section grammar (the autopilot skill, read by generate-plan by path). A
-  move or rename of one of these updates every pointer to it in the same
-  commit — including those in `agents/task-implementer.md` and the mutation
-  rule's pointer in `diagnose-bug/SKILL.md`. The one repeated piece, the
-  Prototype line, stays byte-identical in `generate-brief/SKILL.md` and
-  `prototype/SKILL.md`.
+  diagnose-bug, prototype, and retro reference by its markers), the Open
+  Questions entry grammar (generate-brief's Writing rules), the `## Autopilot`
+  section grammar (the autopilot skill, read by generate-plan by path), and
+  the retro record grammar (retro's SKILL.md). A move or rename of one of
+  these updates every pointer to it in the same commit — including those in
+  `agents/task-implementer.md` and the mutation rule's pointer in
+  `diagnose-bug/SKILL.md`. The one repeated piece, the Prototype line, stays
+  byte-identical in `generate-brief/SKILL.md` and `prototype/SKILL.md`.
 - Name scratch files outside the patterns test runners, linters, and
   compilers collect; a tool that trips over them is a plugin defect, never a
   reason to change the user's configuration.

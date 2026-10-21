@@ -172,14 +172,14 @@ its number.
    orchestrator's context the same way. It was left out of 3.8.2 because
    Step 5 is the Phase 1 → Phase 2 boundary, whose transition sometimes
    failed to trigger in 3.0.2 and whose `Proceeding to code review.` line
-   smoke row 13 looks for in the trace; changing what that boundary prints
+   smoke row 14 looks for in the trace; changing what that boundary prints
    needs an acceptance of its own. 4.11.0 settled the Schema G half:
    Schema G renders Schema D in full whatever Step 5 printed, since a run
    that pointed back at Step 5 left its `## Checks run` out of the only
    message a headless run returns. The choice left: Step 5 prints only its
    progress update, or both renders stay. In two of the four 4.11.0 smoke
    runs of row 6, Step 5 printed neither Schema D nor its progress update,
-   which row 13 would fail.
+   which row 14 would fail.
 10. Doc-sync follow-ups, left out of 3.8.2, which has code-fixer correct a
     DONE Doc-sync task's documents in the fix commits. The review rows are
     in `schema-b.md` of the batch's review runs
@@ -673,3 +673,14 @@ its number.
       `<n>` + `<u>` above zero, the not-determined range forms, and a
       `Mode: uncommitted` review. A row-11 seed with a one-way change would
       cover the first.
+38. A line in the autopilot's final report on batches since the last retro:
+    how many batches have finished since the last run timestamp on the
+    newest record's `Window:` line under `docs/retros/`, so the user sees
+    when a `/kenspc-retro` is due. Deferred by the retro brief; the retro
+    skill (4.14.0) runs only when typed.
+39. Run-directory ids in the autopilot state file: each review run a batch's
+    sessions write, recorded under its tag. The retro's `map_runs.py` maps a
+    run to its batch from session time windows and a json or transcript
+    that names the run id, because nothing in a run directory or state file
+    names it; a recorded id would make the mapping a lookup, with no
+    `manual` fallback for an autopilot run. Deferred by the retro brief.

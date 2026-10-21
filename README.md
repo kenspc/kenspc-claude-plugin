@@ -32,8 +32,9 @@ Opinionated software development workflows — discovery brief, plan before you 
 | task-review | Parallel 5-agent code review (MapReduce) with fix consolidation and regression verification |
 | generate-guide | Beginner-friendly project guide generation with multi-dimensional review |
 | autopilot | Runs one batch unattended from a spec or a brief to a local release preparation — one headless session per role, driven by cross-session messages; two human gates |
+| retro | Hand-started retrospective over a window of finished batches: ranks the problems that recurred across batches (python3 extraction scripts, parallel classifier agents), has each proposed change verified against the raw records, applies the ones you adopt, and commits a record the next retro checks |
 
-**Commands:** `/kenspc-init`, `/kenspc-brief`, `/kenspc-prototype`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-diagnose`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`, `/kenspc-autopilot`
+**Commands:** `/kenspc-init`, `/kenspc-brief`, `/kenspc-prototype`, `/kenspc-plan`, `/kenspc-task`, `/kenspc-diagnose`, `/kenspc-task-implement`, `/kenspc-task-review`, `/kenspc-guide`, `/kenspc-autopilot`, `/kenspc-retro`
 
 See the [plugin README](./plugins/kenspc/README.md) for full documentation, usage examples, and design principles.
 
@@ -61,7 +62,7 @@ plugins/
   kenspc/                 # Plugin directory
     .claude-plugin/
       plugin.json
-    agents/               # 11 reusable subagents
+    agents/               # 13 reusable subagents
     skills/
     commands/
     hooks/
