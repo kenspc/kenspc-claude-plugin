@@ -271,6 +271,11 @@ CONTEXT
 - `ADJUSTED`: write the corrected numbers and the effect cut to its ceiling
   into the proposal file, and show it with them.
 - `HOLDS`: show it as drafted.
+- No `VERDICT:` line — a refusal, a dispatch error, or a reply without
+  one: dispatch that verifier once more; a second reply without one counts
+  as `FAILS`, with the reason `not verified` and the reply's first line.
+  Why: an unverified proposal shown as drafted is what this phase exists
+  to prevent.
 
 Why before the user sees anything: in a retro done by hand, two proposals
 rested on premises the records contradicted, and a proposal the user has
