@@ -296,7 +296,11 @@ already weighed is harder to drop than one never shown.
 ### Deciding
 
 Put each verified proposal to the user on its own, in one question
-answerable in one word: adopt, or reject with a reason. In a session that
+answerable in one word: adopt, or reject with a reason — one message per
+proposal, the next sent once the previous one is answered. Why: each
+decision then rests on that proposal's evidence and verdict alone, while a
+message holding them all invites one line that answers every proposal at
+once, where the record needs each rejection's own reason. In a session that
 cannot ask (a system reminder to work without stopping), every verified
 proposal is recorded as `pending`, no project file changes, and only the
 record is committed.
