@@ -687,7 +687,45 @@ Files to create or modify:
 
 ### Task 5: The classifier and verifier agents
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Each refusal names every missing key ("missing: RETRO_DIR"), then
+    points at /kenspc-retro, in the shape of plan-document-reviewer's
+    refusal. Each agent also refuses unusable values: the classifier a MODE
+    other than derive/classify, an unreadable or empty INPUT, an unreadable
+    KINDS in classify mode, KINDS other than `none` in derive mode, and an
+    OUTPUT outside RETRO_DIR; the verifier an unreadable PROPOSAL or a
+    PROJECT_PATH or RETRO_DIR that is not a directory.
+  - kinds.tsv: header `kind`, `definition`, 15–30 kinds in lowercase
+    hyphenated names, then `other` / `No kind fits.`; labels: header
+    `key`, `kind`, every INPUT key once in INPUT's order.
+  - Both agents end with a fixed reply block, since the main session reads
+    only the reply: the classifier's rows, kinds used, `other` count, and
+    `new:` names; the verifier's VERDICT, Counts, Cause, Batches, Ceiling,
+    and (FAILS) Breaking line as `path:line`.
+  - The verifier may use RETRO_DIR's tables only to locate records, never
+    as evidence, and Bash only for read-only commands with no redirect into
+    a file; its fourth check (the ceiling) states how to compute it for a
+    findings item and for a time item.
+  - Neither file uses the term "instruction files", so neither carries its
+    definition sentence.
+- Changes/tradeoffs:
+  - Acceptance run: `claude -p --plugin-dir ./plugins/kenspc --output-format json "<prompt>"`
+    (session 229af25d-2f81-4151-8fff-0adf0865bd66, USD 0.56) dispatched
+    each agent with a CONTEXT block lacking RETRO_DIR. The subagents' own
+    transcripts show each handing back its refusal naming RETRO_DIR as
+    missing.
+- Test map:
+  - prerequisite check refuses a missing key and names it
+    (retro-classifier.md:9, retro-verifier.md:9) → the headless acceptance
+    run above (transcripts of session 229af25d…); no test file, since the
+    agents are prompts
+  - value checks, derive and classify behavior, the verifier's checks and
+    verdicts → none: prompt behavior with no test harness in this
+    repository; Task 7 runs the classifier for real, and Task 8 runs both
+    through the skill
 
 Depends on: Task 4
 
