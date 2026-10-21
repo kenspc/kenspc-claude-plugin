@@ -1675,7 +1675,10 @@ It runs only when you type the command.
   repository). A kind counts when it appears in at least two batches; its
   cost is HIGH 3, MEDIUM 2, LOW 1 per finding, with an S3b finding counted
   once when the same batch's S3 deferred one on the same file and kind;
-  `other` is never ranked. Time items — roles, and S3/S3b subagent kinds —
+  `other` is never ranked. A label that is not one of the run's kinds — a
+  misspelled kind, a blank — is listed in `rank.md`'s Label check and its
+  slice is classified again, so it cannot rank as a kind of its own.
+  Time items — roles, and S3/S3b subagent kinds —
   count when measured in at least two batches, by their total minutes. Up to
   three findings items and two time items are selected, a short list's
   slots passing to the other, at most five; the next candidate within 10% of
@@ -1705,7 +1708,11 @@ It runs only when you type the command.
   line, its Kinds table, each adopted item's `Measure:` line, and each
   rejected item's `Batches:` line: it classifies against the same kinds,
   prints each adopted item's measure then and now, and does not propose a
-  rejected item again unless its batch count grew. Pending and failed items
+  rejected item again unless its share of the window's batches grew and it
+  is in at least two batches. Measures are per batch — a kind's cost per
+  window batch, a time item's minutes per batch it was measured in —
+  because the default window holds only the batches since the last record,
+  and a whole-window number would fall with the window alone. Pending and failed items
   are proposed again while they still meet the bar. The skill adds
   `docs/retros/` to no document table of yours; list it in your
   instruction files' documents table yourself if they keep one.

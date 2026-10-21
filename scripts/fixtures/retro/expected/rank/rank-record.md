@@ -7,6 +7,7 @@ Window: 2026-10-01T10:00:00 to 2026-10-04T10:00:00; 4 batches, 1 of them a manua
 - in-window rows: 17
 - labelled: 16
 - unlabelled: 1 (`20261003-100000-b3-tasks#4`)
+- labels outside kinds.tsv: 0 (none)
 - labels outside the window: 2
 - duplicate labels: 1
 - unknown severity: 0
@@ -25,11 +26,11 @@ Window: 2026-10-01T10:00:00 to 2026-10-04T10:00:00; 4 batches, 1 of them a manua
 
 ## Selected
 
-1. findings `test-gap`: cost 11, 3 batches
-2. findings `stale-check`: cost 3, 2 batches, includes a manual run; rejected: batches 1 then, 2 now
-3. time `s3`: cost 200.0, 2 batches, 100.0 minutes per batch
-4. time `s3/kenspc:task-implementer`: cost 100.0, 2 batches, 50.0 minutes per batch
-5. time `s3/kenspc:code-fixer`: cost 90.0, 2 batches, 45.0 minutes per batch
+1. findings `test-gap`: cost 11, 3 of 4 batches, 2.75 cost per batch
+2. findings `stale-check`: cost 3, 2 of 4 batches, 0.75 cost per batch, includes a manual run; rejected: batches 1 of 20 then (5%), 2 of 4 now (50%)
+3. time `s3`: cost 200.0, 2 of 4 batches, 100.0 minutes per batch
+4. time `s3/kenspc:task-implementer`: cost 100.0, 2 of 4 batches, 50.0 minutes per batch
+5. time `s3/kenspc:code-fixer`: cost 90.0, 2 of 4 batches, 45.0 minutes per batch
 
 ## Runner-ups
 
@@ -40,8 +41,8 @@ none
 | rank | kind | cost | rows | batches | manual | selected | record |
 |---|---|---|---|---|---|---|---|
 | 1 | test-gap | 11 | 5 | 3 |  | yes |  |
-| 2 | doc-drift | 4 | 3 | 2 |  |  | rejected: batches 2 then, 2 now; skipped |
-| 3 | stale-check | 3 | 2 | 2 | yes | yes | rejected: batches 1 then, 2 now |
+| 2 | doc-drift | 4 | 3 | 2 |  |  | rejected: batches 1 of 2 then (50%), 2 of 4 now (50%); skipped |
+| 3 | stale-check | 3 | 2 | 2 | yes | yes | rejected: batches 1 of 20 then (5%), 2 of 4 now (50%) |
 
 ## Time list
 
@@ -60,7 +61,7 @@ Previous record `record.md`, window 2026-09-01T10:00:00 to 2026-09-28T16:30:00.
 
 | item | measure | then | now |
 |---|---|---|---|
-| kind `test-gap` | cost | 15 | 11 |
+| kind `test-gap` | cost per batch | 0.75 | 2.75 |
 | time `s2` | minutes per batch | 12.0 | 10.0 |
 
 ## Keys

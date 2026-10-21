@@ -81,13 +81,17 @@
 # with no time.tsv and five kinds in two batches, passes the time list's slots
 # to findings (five selected). Without a record, three findings items and two
 # time items are selected and the next time item, exactly 10% below the last
-# selected, is a runner-up. With record.md (the fixture record, whose lines
+# selected, is a runner-up; with no kinds.tsv, the Label check says it was
+# not checked. With record.md (the fixture record, whose lines
 # the retro skill's record grammar matches and one of whose Kinds definitions
 # holds `\|`, copied whole into kinds.tsv), the rejected kind whose batch
-# count has not grown is skipped, so findings pass a slot to time, and the
+# count grew but whose share of the window's batches did not (1 of 2, then
+# 2 of 4) is skipped, so findings pass a slot to time, and the
 # next time item, 10.1% below, is not a runner-up; the rejected kind whose
-# count grew is marked and kept, the adopted kind and time measures print then
-# and now, and the Pending and Failed sections' lines are not read; with the
+# share grew (1 of 20, then 2 of 4) is marked and kept, the adopted kind's
+# cost per batch and time item's minutes per batch print then and now, and
+# the Pending and Failed sections' lines are not read; a label kinds.tsv does
+# not hold is listed by the Label check; with the
 # adopted time item's rows unmeasured, its now reads `not measured in this
 # window`. A generated fixture of 403 rows checks the slice size at the limit
 # and past it and the proportional, seeded 200-row sample, where a one-row
@@ -445,6 +449,25 @@ run_cases() {
     else
         fail=1
     fi
+    # A misspelled kind: the unlabelled row gets the label `test-gaps`, which
+    # kinds.tsv (copied from the record) does not hold, so the Label check
+    # lists it rather than letting it rank as a kind of its own.
+    local typo="$out/rank-typo"
+    mkdir -p "$typo"
+    cp "$recorded/"* "$typo/"
+    printf 'key\tkind\n20261003-100000-b3-tasks#4\ttest-gaps\n' > "$typo/labels-9.tsv"
+    if run_ok "rank with a misspelled label" "$scripts/rank.py" "$typo" \
+            "$FIXTURES/record.md"; then
+        if grep -qxF -e '- labels outside kinds.tsv: 1 (`20261003-100000-b3-tasks#4`)' \
+                "$typo/rank.md"; then
+            echo "OK    rank lists a label kinds.tsv does not hold"
+        else
+            echo "FAIL  rank with a misspelled label: the Label check does not list it" >&2
+            fail=1
+        fi
+    else
+        fail=1
+    fi
     # The adopted time item with no measured row in this window: its "now"
     # is no number, since an unmeasured session is not zero minutes.
     local unmeasured="$out/rank-unmeasured"
@@ -589,10 +612,10 @@ spec.loader.exec_module(rank)
 text = open(skill, encoding="utf-8").read()
 forms = [
     ("Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>", rank.WINDOW_LINE),
-    ("- Measure: kind `<kind>` cost = <n>", rank.MEASURE_LINE),
+    ("- Measure: kind `<kind>` cost per batch = <n>", rank.MEASURE_LINE),
     ("- Measure: time `<item>` minutes per batch = <n>", rank.MEASURE_LINE),
-    ("- Batches: kind `<kind>` = <n>", rank.BATCHES_LINE),
-    ("- Batches: time `<item>` = <n>", rank.BATCHES_LINE),
+    ("- Batches: kind `<kind>` = <n> of <m>", rank.BATCHES_LINE),
+    ("- Batches: time `<item>` = <n> of <m>", rank.BATCHES_LINE),
 ]
 problems = []
 for form, pattern in forms:
@@ -600,7 +623,7 @@ for form, pattern in forms:
         problems.append("SKILL.md lacks %r" % form)
     filled = (form.replace("<YYYY-MM-DDTHH:MM:SS>", "2026-10-01T10:00:00")
               .replace("<kind>", "test-gap").replace("<item>", "s3")
-              .replace("<n>", "3"))
+              .replace("<n>", "3").replace("<m>", "20"))
     if not pattern.match(filled):
         problems.append("rank.py does not read %r" % filled)
 if "| kind | definition |" not in text or "\n## Kinds\n" not in text:

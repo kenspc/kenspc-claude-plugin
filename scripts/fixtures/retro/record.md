@@ -26,18 +26,18 @@ No previous record.
 
 ### A1: Require a failing-capable test for each new branch
 
-- Item: kind `test-gap`, 3 batches, cost 15.
-- Measure: kind `test-gap` cost = 15
+- Item: kind `test-gap`, 3 of 20 batches, cost 15.
+- Measure: kind `test-gap` cost per batch = 0.75
 - Where it went wrong: `20260910-100000-a-tasks#3`, `20260915-100000-b-tasks#1`; 7 rows in 3 batches.
 - Changes: `AGENTS.md` § Tests, layer 6, since no check can see a missing test.
 - Next batch: the implementer writes the test with the branch.
 - Undo: `git revert 1111111`
 - Commit: 1111111
-- Expected effect: the kind's cost falls by up to 6, its ceiling in this window.
+- Expected effect: the kind's cost per batch falls by up to 0.30, its ceiling in this window.
 
 ### A2: Start S2 from the plan's step list
 
-- Item: time `s2`, 2 batches, 24.0 minutes.
+- Item: time `s2`, 2 of 20 batches, 24.0 minutes.
 - Measure: time `s2` minutes per batch = 12.0
 - Where it went wrong: S2 re-read the brief in both batches.
 - Changes: `docs/autopilot-notes.md`, layer 5.
@@ -50,14 +50,14 @@ No previous record.
 
 ### R1: Lint every Markdown link
 
-- Item: kind `doc-drift`, 2 batches, cost 4.
-- Batches: kind `doc-drift` = 2
+- Item: kind `doc-drift`, 1 of 2 batches, cost 2.
+- Batches: kind `doc-drift` = 1 of 2
 - Reason: the links are checked at release.
 
 ### R2: Re-run each check script after its target changes
 
-- Item: kind `stale-check`, 1 batch, cost 2.
-- Batches: kind `stale-check` = 1
+- Item: kind `stale-check`, 1 of 20 batches, cost 2.
+- Batches: kind `stale-check` = 1 of 20
 - Reason: one batch is not a pattern yet.
 
 ## Dropped by verification
@@ -70,16 +70,16 @@ No previous record.
 
 ### P1: Name the test file in each task
 
-- Item: kind `test-gap`, 3 batches, cost 15.
-- Measure: kind `test-gap` cost = 99
-- Batches: kind `test-gap` = 1
+- Item: kind `test-gap`, 3 of 20 batches, cost 15.
+- Measure: kind `test-gap` cost per batch = 99
+- Batches: kind `test-gap` = 1 of 1
 
 ## Failed
 
 ### F1: Add a pre-commit link check
 
-- Item: kind `doc-drift`, 2 batches, cost 4.
-- Batches: kind `doc-drift` = 9
+- Item: kind `doc-drift`, 2 of 9 batches, cost 4.
+- Batches: kind `doc-drift` = 9 of 9
 - Failing check: `bash scripts/check-all.sh` exited 1: `FAIL scripts/check-json.sh`.
 
 ## Runner-ups

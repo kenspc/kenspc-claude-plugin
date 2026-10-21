@@ -197,8 +197,11 @@ before its file exists.
 ## Phase 3 — Rank and draft
 
 1. `python3 -I ${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/rank.py <RETRO_DIR> [<previous record>]`,
-   then read `rank.md`. Its Label check names unlabelled rows; any other
-   than zero sends their slice back to Phase 2 step 3.
+   then read `rank.md`. Its Label check names unlabelled rows and labels
+   that `kinds.tsv` does not hold (a misspelled kind, a blank label); a
+   count of either other than zero sends their slice back to Phase 2 step 3.
+   Why the second: a misspelled kind ranks as a kind of its own and splits
+   the real kind's cost.
 2. Resolve the `new:` names in `rank.md`'s New kinds table into
    `<RETRO_DIR>/new-kinds.tsv` (header `name`, `kind`), then run `rank.py`
    again:
@@ -237,11 +240,13 @@ before its file exists.
    - the file and layer it changes, and why that layer;
    - what changes in the next batch;
    - how to undo it;
-   - the measure the next retro reads — a kind's de-duplicated cost or a
-     time item's minutes per batch — and its current value from `rank.md`;
+   - the measure the next retro reads — a kind's cost per batch or a time
+     item's minutes per batch — and its current value from `rank.md`'s
+     Selected line;
    - the expected effect;
    - the item, as the record names it (`kind \`<kind>\`` or
-     `time \`<item>\``), with its batch count and cost.
+     `time \`<item>\``), with its batches out of the window's batches and
+     its cost.
 5. The layer. The project's instruction files are its CLAUDE.md and
    AGENTS.md files — at the root, in `.claude/`, or in a subdirectory — and
    the files a CLAUDE.md imports with `@`, whether or not Claude Code loaded
@@ -369,12 +374,16 @@ convention requires a scope from a fixed list rejects `chore(retro):`.
 
 ### Rules about earlier proposals
 
-- A rejected item is not proposed again unless its batch count grew:
-  `rank.py` skips it and passes its slot on. Why: the user already weighed
-  it on the same evidence.
+- A rejected item is not proposed again unless its share of the window's
+  batches grew and it is in at least two batches now: `rank.py` skips it
+  and passes its slot on. Why: the user already weighed it on the same
+  evidence. Why the share, not the count: the default window holds only the
+  batches since the last record, usually fewer, so a count could almost
+  never grow; and why two batches as well: in a small window one batch
+  already makes a large share.
 - The record's `## Rejected` section also repeats each rejected entry of
   the previous record whose item this run did not put to the user: its
-  Item line, its `Batches:` line with the count unchanged, and its
+  Item line, its `Batches:` line with both numbers unchanged, and its
   `Reason:` line prefixed `carried from <the previous record's file
   name>:`. Why: `rank.py` reads only the newest record, so a rejection
   left out of it would be proposed again two retros later on the same
@@ -402,7 +411,7 @@ Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>
 
 | item | measure | then | now |
 |---|---|---|---|
-| kind `<kind>` | cost | <n> | <n> |
+| kind `<kind>` | cost per batch | <n> | <n> |
 | time `<item>` | minutes per batch | <n> | <n> |
 
 (or: No previous record. — copied from rank.md's Follow-up section)
@@ -417,8 +426,8 @@ Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>
 
 ### A<n>: <summary>
 
-- Item: kind `<kind>`, <n> batches, cost <n>.
-- Measure: kind `<kind>` cost = <n>
+- Item: kind `<kind>`, <n> of <m> batches, cost <n>.
+- Measure: kind `<kind>` cost per batch = <n>
 - Where it went wrong: <record keys and counts>
 - Changes: <file>, layer <n> (<layer>): <why that layer>; landing place <1, 2, or 3>.
 - Next batch: <what changes>
@@ -431,7 +440,7 @@ Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>
 ### R<n>: <summary>
 
 - Item: <as under Adopted>
-- Batches: kind `<kind>` = <n>
+- Batches: kind `<kind>` = <n> of <m>
 - <the other proposal fields, as under Adopted, without Undo and Commit>
 - Reason: <the user's reason>
 
@@ -481,14 +490,15 @@ the value:
   last run timestamps of the window, from `extract.md`'s window lines;
 - the `## Kinds` table, its header `| kind | definition |`;
 - under `## Adopted`, one per item:
-  `` - Measure: kind `<kind>` cost = <n> `` or
+  `` - Measure: kind `<kind>` cost per batch = <n> `` or
   `` - Measure: time `<item>` minutes per batch = <n> ``;
-- under `## Rejected`, one per item: `` - Batches: kind `<kind>` = <n> `` or
-  `` - Batches: time `<item>` = <n> ``.
+- under `## Rejected`, one per item:
+  `` - Batches: kind `<kind>` = <n> of <m> `` or
+  `` - Batches: time `<item>` = <n> of <m> ``.
 
 A time item writes ``time `<item>` `` where the template shows
 ``kind `<kind>` ``; its Item line reads
-`` - Item: time `<item>`, <n> batches, <n> minutes. ``
+`` - Item: time `<item>`, <n> of <m> batches, <n> minutes. ``
 
 The scripts tell the sections apart by their `## ` headings, so the same
 line forms under Pending or Failed are not read. Why written exactly: a
@@ -499,13 +509,18 @@ then repeat a rejected proposal or lose an adopted one's follow-up.
 - `<n>` in an item heading counts from 1 within its section.
 - The Kinds table holds every row of `kinds.tsv` and each kind Phase 3
   created from a `new:` name.
-- The `Batches:` line carries the item's batch count in this window, from
-  `rank.md`, or, for a rejection carried from the previous record, that
-  record's count; the next retro marks the item and skips it while its count has
-  not grown. A time item's batches are those it was measured in.
-- The `Measure:` line carries the value from `rank.md`: a kind's cost, or a
-  time item's minutes per batch as its Selected line prints it. The next
-  retro prints it as "then" beside its own "now".
+- The `Batches:` line carries the item's batches out of the window's
+  batches (`<n> of <m>`) as `rank.md`'s Selected line prints them, or, for
+  a rejection carried from the previous record, that record's two numbers;
+  the next retro marks the item and skips it while its share has not grown
+  or it is in fewer than two batches. A time item's batches are those it
+  was measured in.
+- The `Measure:` line carries the per-batch value from `rank.md`'s Selected
+  line: a kind's cost per batch (its cost over all the window's batches),
+  or a time item's minutes per batch (over the batches it was measured in).
+  The next retro prints it as "then" beside its own "now". Why per batch:
+  two retros' windows differ in size, and a whole-window cost would fall
+  with the window alone.
 
 ## Stops and questions
 

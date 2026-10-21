@@ -5,14 +5,19 @@ Usage
   python3 -I rank.py <retro dir> [<previous record>]
 
 Reads, from <retro dir>: labels-<n>.tsv (key, kind), findings.tsv,
-runs.tsv, time.tsv, and new-kinds.tsv (name, kind or `other`) when present.
-Writes <retro dir>/rank.md.
+runs.tsv, time.tsv, and kinds.tsv and new-kinds.tsv (name, kind or `other`)
+when present. Writes <retro dir>/rank.md.
 
 Labels
   A `new:<name>` label resolves through new-kinds.tsv, whose name column is
   written with or without the `new:` prefix. A name it does not list stays
   its own kind, `new:<name>`; rank.md lists every `new:` name with its
   batches. The labels files are never edited.
+  With kinds.tsv, the Label check lists every in-window label that is not
+  one of its kinds, not `other`, and not `new:` (a blank label included):
+  a misspelled kind would otherwise rank as a kind of its own and split the
+  real kind's cost. Without kinds.tsv, the line says the check was skipped,
+  so a run that lost it shows that in rank.md.
 
 De-duplication
   Within one batch, an s3b row counts once when the same batch's s3 has a
@@ -30,26 +35,36 @@ Selection: up to 3 findings items and up to 2 time items; a list with
 fewer candidates passes its unused slots to the other, 5 at most. A list's
 next candidate within 10% of its last selected cost is printed as a
 runner-up: at the cut, a near-tie is a coin toss the user should see.
-A selected time item also shows its minutes per batch, the value a record's
-Measure line carries. Every ranked item whose batches include a `manual`
-run is marked, and every ranked item lists its record keys (time items:
-their batches).
+A selected item also shows its batches out of the window's batches and its
+value per batch (a kind's cost per batch, a time item's minutes per batch),
+the values a record's Batches and Measure lines carry. Every ranked item
+whose batches include a `manual` run is marked, and every ranked item lists
+its record keys (time items: their batches).
+
+Per batch, because two retros' windows differ in size: the default window
+holds only the batches since the last record, so a whole-window cost or a
+batch count would fall or stay flat with the window alone.
+  - A kind's cost per batch is its cost over all the window's batches.
+  - A time item's minutes per batch are over the batches it was measured
+    in.
 
 With a previous record
   Each adopted item's measure is printed then (from the record) and now; a
   time item with no measured row in this window prints `not measured in
   this window` as now.
-  Each ranked item the record rejected is marked with its batch count then
-  and now; one whose count has not grown is skipped, and its slot passes
-  on. Pending and failed items are not marked.
+  Each ranked item the record rejected is marked with its batches out of
+  the window's batches, then and now. It is proposed again only when its
+  share of the window's batches grew and it is in at least two batches now;
+  otherwise it is skipped and its slot passes on. Pending and failed items
+  are not marked.
 
 The record lines this script reads (the retro skill's record grammar):
   Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>
   the `## Kinds` table, columns kind and definition
-  under `## Adopted`:  - Measure: kind `<kind>` cost = <n>
+  under `## Adopted`:  - Measure: kind `<kind>` cost per batch = <n>
                        - Measure: time `<item>` minutes per batch = <n>
-  under `## Rejected`: - Batches: kind `<kind>` = <n>
-                       - Batches: time `<item>` = <n>
+  under `## Rejected`: - Batches: kind `<kind>` = <n> of <m>
+                       - Batches: time `<item>` = <n> of <m>
 
 Exit codes
   0  rank.md was written
@@ -77,9 +92,10 @@ WINDOW_LINE = re.compile(
     r"^Window: (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d) to "
     r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)")
 MEASURE_LINE = re.compile(
-    r"^- Measure: (?:(kind) `([^`]+)` cost|(time) `([^`]+)` minutes per batch)"
-    r" = (\d+(?:\.\d+)?)\s*$")
-BATCHES_LINE = re.compile(r"^- Batches: (kind|time) `([^`]+)` = (\d+)\s*$")
+    r"^- Measure: (?:(kind) `([^`]+)` cost per batch"
+    r"|(time) `([^`]+)` minutes per batch) = (\d+(?:\.\d+)?)\s*$")
+BATCHES_LINE = re.compile(
+    r"^- Batches: (kind|time) `([^`]+)` = (\d+) of (\d+)\s*$")
 RUN_TIME = re.compile(r"^(\d{4})(\d\d)(\d\d)-(\d\d)(\d\d)(\d\d)")
 
 
@@ -119,7 +135,7 @@ def read_record(path):
 
     Returns a dict: window (first, last) or None; kinds [(kind,
     definition)]; measures [(type, item, value)] from `## Adopted`;
-    rejected [(type, item, batches)] from `## Rejected`.
+    rejected [(type, item, batches, window batches)] from `## Rejected`.
     """
     with open(path, encoding="utf-8") as handle:
         lines = handle.read().splitlines()
@@ -146,7 +162,8 @@ def read_record(path):
             match = BATCHES_LINE.match(line)
             if match:
                 record["rejected"].append(
-                    (match.group(1), match.group(2), int(match.group(3))))
+                    (match.group(1), match.group(2), int(match.group(3)),
+                     int(match.group(4))))
     for cells in table_rows(kinds_table):
         if len(cells) >= 2 and cells[0]:
             record["kinds"].append((cells[0], cells[1]))
@@ -192,10 +209,14 @@ def load(retro):
         for row in read_tsv(new_kinds):
             resolve[new_name(row.get("name", "").strip())] = \
                 row.get("kind", "").strip()
+    kinds_path = os.path.join(retro, "kinds.tsv")
+    kinds = ({row.get("kind", "").strip() for row in read_tsv(kinds_path)}
+             if os.path.isfile(kinds_path) else None)
     time_path = os.path.join(retro, "time.tsv")
     times = read_tsv(time_path) if os.path.isfile(time_path) else []
     return {"runs": runs, "window_runs": window_runs, "findings": findings,
             "labels": labels, "duplicates": duplicates, "resolve": resolve,
+            "kinds": kinds,
             "times": [t for t in times if t["batch"] in
                       {runs[r]["batch"] for r in window_runs}]}
 
@@ -231,10 +252,18 @@ def classify(data):
             continue
         kept.append(row)
     window_keys = {f["key"] for f in data["findings"]}
+    kinds = data["kinds"]
+    if kinds is None:
+        outside = "not checked: no kinds.tsv"
+    else:
+        outside = sorted(k for k in window_keys if k in labels
+                         and labels[k] not in kinds and labels[k] != OTHER
+                         and not labels[k].startswith(NEW))
     checks = {
         "in-window rows": len(window_keys),
         "labelled": sum(1 for k in window_keys if k in labels),
         "unlabelled": sorted(k for k in window_keys if k not in labels),
+        "labels outside kinds.tsv": outside,
         "labels outside the window": sum(1 for k in labels
                                          if k not in window_keys),
         "duplicate labels": data["duplicates"],
@@ -292,17 +321,33 @@ def time_list(items, total):
     return ranked
 
 
-def mark_rejected(ranked, rejected):
-    """Mark rejected items; return the candidates left for selection."""
-    then = {(kind, item): count for kind, item, count in rejected}
+def share(count, total):
+    return "%d%%" % round(100.0 * count / total) if total else "-"
+
+
+def mark_rejected(ranked, rejected, window_batches):
+    """Mark rejected items; return the candidates left for selection.
+
+    A rejected item comes back only when its share of the window's batches
+    grew and it is in at least two batches now. Why the share: a count over
+    a smaller window could almost never grow. Why two batches too: in a
+    small window one batch already makes a large share.
+    """
+    then = {(kind, item): (count, total)
+            for kind, item, count, total in rejected}
     left = []
     for item in ranked:
         before = then.get((item["type"], item["name"]))
         if before is not None:
+            count, total = before
             now = len(item["batches"])
-            item["record"] = "rejected: batches %d then, %d now%s" % (
-                before, now, "" if now > before else "; skipped")
-            if now <= before:
+            back = (now >= MIN_BATCHES and total > 0
+                    and now * total > count * window_batches)
+            item["record"] = (
+                "rejected: batches %d of %d then (%s), %d of %d now (%s)%s"
+                % (count, total, share(count, total), now, window_batches,
+                   share(now, window_batches), "" if back else "; skipped"))
+            if not back:
                 continue
         left.append(item)
     return left
@@ -331,11 +376,24 @@ def number(value):
     return ("%d" % value) if isinstance(value, int) else ("%.1f" % value)
 
 
+def per_batch(item, total):
+    """A selected item's measure: cost per window batch, or minutes per
+    batch measured."""
+    if item["type"] == "time":
+        return "%.1f minutes per batch" % (item["cost"] / len(item["batches"]))
+    return "%.2f cost per batch" % (item["cost"] / total)
+
+
+def window_batches(data):
+    runs = data["runs"]
+    return {runs[r]["batch"] for r in data["window_runs"]}
+
+
 def render(data, kept, merges, new_seen, checks, f_ranked, t_ranked,
            f_left, t_left, chosen_f, chosen_t, follow, record_path, record):
     runs = data["runs"]
     in_runs = sorted(data["window_runs"])
-    batches = {runs[r]["batch"] for r in in_runs}
+    batches = window_batches(data)
     manual = {runs[r]["batch"] for r in in_runs if runs[r]["role"] == "manual"}
     out = ["# Ranking", ""]
     if in_runs:
@@ -346,7 +404,9 @@ def render(data, kept, merges, new_seen, checks, f_ranked, t_ranked,
         out.append("Window: no run in the window.")
     out += ["", "## Label check", ""]
     for name, value in checks.items():
-        if isinstance(value, list):
+        if isinstance(value, str):
+            out.append("- %s: %s" % (name, value))
+        elif isinstance(value, list):
             shown = ", ".join("`%s`" % k for k in value) if value else "none"
             out.append("- %s: %d (%s)" % (name, len(value), shown))
         else:
@@ -368,12 +428,12 @@ def render(data, kept, merges, new_seen, checks, f_ranked, t_ranked,
                [("time", i) for i in chosen_t]
     out += ["", "## Selected", ""]
     for n, (kind, item) in enumerate(selected, 1):
-        # A time item's measure is per batch, printed here so the record's
-        # Measure line and the next retro's "now" round the same way.
-        out.append("%d. %s `%s`: cost %s, %d batches%s%s%s" % (
+        # The per-batch measure and the batches out of the window are printed
+        # here so the record's Measure and Batches lines and the next retro's
+        # "now" round the same way.
+        out.append("%d. %s `%s`: cost %s, %d of %d batches, %s%s%s" % (
             n, kind, item["name"], number(item["cost"]), len(item["batches"]),
-            ", %.1f minutes per batch" % (item["cost"] / len(item["batches"]))
-            if item["type"] == "time" else "",
+            len(batches), per_batch(item, len(batches)),
             ", includes a manual run" if item["manual"] else "",
             "; " + item["record"] if item.get("record") else ""))
     if not selected:
@@ -452,14 +512,17 @@ def main(argv):
     f_left, t_left = f_ranked, t_ranked
     follow = []
     if record is not None:
+        total_batches = len(window_batches(data))
         f_left = mark_rejected(f_ranked, [r for r in record["rejected"]
-                                          if r[0] == "kind"])
+                                          if r[0] == "kind"], total_batches)
         t_left = mark_rejected(t_ranked, [r for r in record["rejected"]
-                                          if r[0] == "time"])
+                                          if r[0] == "time"], total_batches)
         for kind, item, then in record["measures"]:
             if kind == "kind":
-                now = kinds.get(item, {}).get("cost", 0)
-                follow.append((kind, item, "cost", then, "%d" % now))
+                cost = kinds.get(item, {}).get("cost", 0)
+                now = ("%.2f" % (cost / total_batches) if total_batches
+                       else "no batch in this window")
+                follow.append((kind, item, "cost per batch", then, now))
             else:
                 # No measured row is not zero minutes: the sessions may lack
                 # .exit or their transcripts, so print no number for it.

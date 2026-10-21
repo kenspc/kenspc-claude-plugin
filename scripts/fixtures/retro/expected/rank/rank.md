@@ -7,6 +7,7 @@ Window: 2026-10-01T10:00:00 to 2026-10-04T10:00:00; 4 batches, 1 of them a manua
 - in-window rows: 17
 - labelled: 16
 - unlabelled: 1 (`20261003-100000-b3-tasks#4`)
+- labels outside kinds.tsv: not checked: no kinds.tsv
 - labels outside the window: 2
 - duplicate labels: 1
 - unknown severity: 0
@@ -25,11 +26,11 @@ Window: 2026-10-01T10:00:00 to 2026-10-04T10:00:00; 4 batches, 1 of them a manua
 
 ## Selected
 
-1. findings `test-gap`: cost 11, 3 batches
-2. findings `doc-drift`: cost 4, 2 batches
-3. findings `stale-check`: cost 3, 2 batches, includes a manual run
-4. time `s3`: cost 200.0, 2 batches, 100.0 minutes per batch
-5. time `s3/kenspc:task-implementer`: cost 100.0, 2 batches, 50.0 minutes per batch
+1. findings `test-gap`: cost 11, 3 of 4 batches, 2.75 cost per batch
+2. findings `doc-drift`: cost 4, 2 of 4 batches, 1.00 cost per batch
+3. findings `stale-check`: cost 3, 2 of 4 batches, 0.75 cost per batch, includes a manual run
+4. time `s3`: cost 200.0, 2 of 4 batches, 100.0 minutes per batch
+5. time `s3/kenspc:task-implementer`: cost 100.0, 2 of 4 batches, 50.0 minutes per batch
 
 ## Runner-ups
 

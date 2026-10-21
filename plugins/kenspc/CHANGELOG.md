@@ -50,7 +50,13 @@ cannot ask, the end-to-end row becomes 14, and the rails-hook row 15.
   record grammar, written once; the next retro reads its Window line, its
   Kinds table, each adopted item's Measure line, and each rejected item's
   Batches line, so it prints each adopted measure then and now and skips a
-  rejected item whose batch count has not grown. Each stop states what a
+  rejected item unless its share of the window's batches grew and it is in
+  at least two batches. Measures are per batch (a kind's cost per window
+  batch, a time item's minutes per measured batch) and a Batches line reads
+  `<n> of <m>`, because the default window holds only the batches since the
+  last record and a whole-window number would fall with the window alone.
+  `rank.md`'s Label check also lists labels `kinds.tsv` does not hold, whose
+  slices are classified again. Each stop states what a
   session that cannot ask does: the default window; every proposal
   `pending`, no project file changed; a rejected record commit left
   uncommitted.
