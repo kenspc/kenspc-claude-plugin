@@ -142,7 +142,11 @@ other than 0 with its stderr:
 4. A window with fewer than two batches stops here, with the counts: the
    window's batches and runs, and how many batches `all` would hold. Why:
    the bar is a problem seen in at least two batches, which such a window
-   cannot meet; the run writes no record.
+   cannot meet; the run writes no record. A window whose batches the
+   previous record already covered — an explicit `last 20` right after a
+   `last 20` retro — is not a stop: the run goes on to its record. Why: the
+   window is the user's choice, and a stop this skill does not define has
+   no branch for a session that cannot ask, which would end with no record.
 5. `python3 -I ${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/measure_time.py <workspace> <RETRO_DIR>/runs.tsv <RETRO_DIR>`
 6. `python3 -I ${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/state_notes.py <workspace> <RETRO_DIR>/runs.tsv <RETRO_DIR>`
 7. `python3 -I ${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/slice_findings.py <RETRO_DIR> [<previous record>]`
