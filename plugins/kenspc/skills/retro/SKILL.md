@@ -290,12 +290,20 @@ record is committed.
 
 For each adopted proposal whose landing place is a project file, in order:
 
-1. Make the change in the files the proposal names.
-2. Run the project's check commands — the ones its instruction files or
+1. Run `git status --porcelain -- <each file the proposal names>`. A file
+   it lists — uncommitted changes, or an untracked file at a path the
+   proposal would create — leaves the proposal unapplied: no file is
+   touched, and it is recorded as `failed`, with the paths and their
+   status lines. Why: the commit below would carry the user's own edits
+   under the retro's subject, and the restore after a failed check would
+   wipe them, as removing a created file would delete one the user
+   already had.
+2. Make the change in the files the proposal names.
+3. Run the project's check commands — the ones its instruction files or
    its config files define (a `check` or `test` script, a documented
    command), read there and never assumed from the stack. A project that
    defines none gets the record line `no check commands defined`.
-3. Commit, staging only the proposal's files, with the default subject
+4. Commit, staging only the proposal's files, with the default subject
    `chore(retro): <summary>`. Its undo, `git revert <hash>`, goes into the
    record.
 
