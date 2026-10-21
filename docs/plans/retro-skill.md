@@ -26,7 +26,8 @@ window of finished batches and does five things:
 **Out of scope:**
 
 - Editing kenspc plugin files or the user's global files from a retro run.
-  Both are output only.
+  Both are output only, except that plugin files are project files when the
+  project is the kenspc repository itself (see Proposals).
 - A line in the autopilot's final report about retro timing.
 - Recording run-directory ids in the autopilot state file.
 - Transcript-wide tool-economy analysis.
@@ -150,7 +151,9 @@ the window.
   manual run, so drafting and verification can see when "two batches" is
   one piece of work.
 - **Time window:** taken from the run id's timestamp. `<window>` is the
-  spec Phase 0 fixed (`last <n>`, `since <timestamp>`, or `all`); a batch is
+  spec Phase 0 fixed (`last <n>`, `since <date or timestamp>`, or `all`;
+  the default window is `since` the previous record's last run timestamp);
+  a batch is
   in the window when its earliest run is. `runs.tsv` carries an `in_window`
   column, and every later script reads only in-window rows. Why: `last <n>`
   counts batches, which exist only once runs are mapped, so the window
@@ -206,7 +209,7 @@ Prepares the classifier inputs from the in-window rows of `findings.tsv`.
   most 120 rows.
 - `kinds.tsv`: given a previous record, copied from its Kinds table.
 
-#### `rank.py <retro dir>`
+#### `rank.py <retro dir> [<previous record>]`
 
 - **Inputs:** the labels, `findings.tsv`, `runs.tsv` and `time.tsv`.
 - **Mechanical de-duplication:** within one batch, an S3b row counts once
@@ -238,7 +241,10 @@ Prepares the classifier inputs from the in-window rows of `findings.tsv`.
 - **Also printed:** for every ranked item, the record keys that make it up.
 - **Previous record:** given one, `rank.py` computes each adopted
   proposal's measure in the new window, so the follow-up check reads
-  numbers, not impressions.
+  numbers, not impressions. It also marks each ranked kind the record
+  rejected, with the batch count then and now, so the no-repeat rule is
+  applied from numbers; a marked kind whose count has not grown is skipped
+  and its slot passes on.
 
 #### `show_rows.py <retro dir> <key>…`
 
@@ -308,8 +314,8 @@ opening reports.
   2. the kenspc plugin: a brief-shaped section in the record, for a
      separate session to take to `/kenspc-plan`;
   3. the user's global files: a suggestion in words in the record.
-  The skill never writes outside the project repository except
-  `RETRO_DIR`'s parent `.kenspc/`.
+  The skill writes nothing outside the project repository. Inside it, it
+  writes only `RETRO_DIR`, the files of adopted proposals, and the record.
 - **When the project is the kenspc repository itself,** plugin files are
   project files. Such proposals are landing place 1, and the record says
   so. Why: the brief left this to the plan. Treating them as project files
@@ -379,8 +385,9 @@ opening reports.
   - Runner-ups;
   - For the kenspc plugin;
   - For your global files.
-- **A rejected proposal is not proposed again** unless its kind now spans
-  more batches than the record states.
+- **A rejected proposal is not proposed again** unless its kind (or, for
+  a time item, its role or subagent kind) now spans more batches than the
+  record states.
 - **In a session that cannot ask:** every verified proposal is recorded as
   `pending`. No project file changes, and only the record is committed.
 - **A pending or failed proposal is proposed again** at the next retro if it
@@ -394,6 +401,13 @@ opening reports.
   batches when there is no record. Why the timestamp, not the record's
   date: a batch that ran on the record's date, before or after the retro,
   would otherwise be counted twice or never.
+- **The window question.** With no window argument, the skill runs
+  `map_runs.py` with the default window, states the window's batch count
+  and first and last dates, and asks whether to run it or name another; a
+  window the user names re-runs `map_runs.py` with it. The question comes
+  after `map_runs.py` because batches exist only once runs are mapped. In a
+  session that cannot ask (a system reminder to work without stopping), the
+  default window is used.
 - **Default workspace:** `~/Projects/_smoke/`, as in the autopilot.
 - **A window with fewer than two batches** stops after Phase 1, with the
   counts. The bar cannot be met.
@@ -473,7 +487,8 @@ opening reports.
   - a top-level-session bullet in its Prerequisites, as task-review and
     task-implement have. Why: the skill dispatches agents, and a subagent
     cannot;
-  - scripts addressed through the skill's base directory;
+  - scripts addressed as `${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/<name>.py`,
+    the way the autopilot addresses its driver;
   - the definition sentence of `shared/instruction-files.md`, verbatim,
     wherever SKILL.md or an agent uses the term "instruction files". Why:
     `check-instruction-files.sh` fails any file under `skills/`, `agents/`,
@@ -514,9 +529,9 @@ opening reports.
   - at least four of the two runs' top five findings kinds are the same;
   - each shared kind's rows overlap by at least 60%.
 
-  On a failure, the slice size drops to 60 rows, the prototype's tested
-  size, and the step repeats. A failure at 60 rows stops the plan for the
-  user's ruling, with both runs' `rank.py` output.
+  On a failure, the slice size drops to 60 rows, about the prototype's
+  tested 61-row slices, and the step repeats. A failure at 60 rows stops
+  the plan for the user's ruling, with both runs' `rank.py` output.
 
 ### Step 5 — End-to-end acceptance on dayaku-crm
 
@@ -537,8 +552,12 @@ opening reports.
   - `extract.md` reports coverage;
   - no file outside the clone changed (`git status` in the real dayaku-crm
     is unchanged);
-  - a second `/kenspc-retro all` run reads the record. It shows the adopted
-    item's measure then and now, and does not re-propose the rejected item.
+  - a second run, `/kenspc-retro last 20`, reads the record. It shows the
+    adopted item's measure then and now, and does not re-propose the
+    rejected item. Why `last 20`: it is the first run's window, so the
+    rejected kind spans the batches the record states. A wider window such
+    as `all` may show it in more batches, which the no-repeat rule allows
+    to be proposed again, and the default window would hold no batch.
 
 ### Step 6 — Documentation sync
 
@@ -630,8 +649,9 @@ opening reports.
   `extract.md` and the record says how many sessions were unmeasured, so a
   smaller time share is not read as an improvement.
 - **The record grammar drifts** between the writing and reading sides. It
-  is written once in SKILL.md, and `rank.py` parses only the Kinds table
-  and the adopted items' measure lines. Step 5's second run is the check.
+  is written once in SKILL.md, and the scripts parse only the Window line,
+  the Kinds table, the adopted items' measure lines, and the rejected
+  items' kind and batch count. Step 5's second run is the check.
 - **Run directories of a removed worktree are gone.** A worktree batch
   writes its run directories in the worktree, and `extract_findings.py`
   reads only the worktrees that still exist. dayaku-crm's worktree runs
