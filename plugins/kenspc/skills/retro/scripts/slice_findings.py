@@ -32,9 +32,9 @@ import os
 import random
 import sys
 
-# Rows per classify dispatch. The prototype's stability check held at 61
-# rows; 120 halves the dispatches, and the stability re-check at the shipped
-# size decides whether it stays.
+# Rows per classify dispatch. Two classifications of one window in
+# 120-row slices ranked mostly the same top kinds, and 120 needs half the
+# dispatches that 61-row slices did.
 SLICE_ROWS = 120
 SAMPLE_ROWS = 200
 SAMPLE_SEED = 20261021
