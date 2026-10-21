@@ -34,7 +34,9 @@ Every ranked item whose batches include a `manual` run is marked, and
 every ranked item lists its record keys (time items: their batches).
 
 With a previous record
-  Each adopted item's measure is printed then (from the record) and now.
+  Each adopted item's measure is printed then (from the record) and now; a
+  time item with no measured row in this window prints `not measured in
+  this window` as now.
   Each ranked item the record rejected is marked with its batch count then
   and now; one whose count has not grown is skipped, and its slot passes
   on. Pending and failed items are not marked.
@@ -437,10 +439,12 @@ def main(argv):
                 now = kinds.get(item, {}).get("cost", 0)
                 follow.append((kind, item, "cost", then, "%d" % now))
             else:
+                # No measured row is not zero minutes: the sessions may lack
+                # .exit or their transcripts, so print no number for it.
                 found = t_items.get(item)
-                now = found["cost"] / len(found["batches"]) if found else 0.0
-                follow.append((kind, item, "minutes per batch", then,
-                               "%.1f" % now))
+                now = ("%.1f" % (found["cost"] / len(found["batches"]))
+                       if found else "not measured in this window")
+                follow.append((kind, item, "minutes per batch", then, now))
     chosen_f, chosen_t = select(f_left, t_left)
     text = render(data, kept, merges, new_seen, checks, f_ranked, t_ranked,
                   f_left, t_left, chosen_f, chosen_t, follow, record_path,

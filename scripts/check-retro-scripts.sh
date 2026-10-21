@@ -81,7 +81,8 @@
 # pass a slot to time, and the next time item, 10.1% below, is not a
 # runner-up; the rejected kind whose count grew is marked and kept, the
 # adopted kind and time measures print then and now, and the Pending and
-# Failed sections' lines are not read. A generated fixture of 403 rows
+# Failed sections' lines are not read; with the adopted time item's rows
+# unmeasured, its now reads `not measured in this window`. A generated fixture of 403 rows
 # checks the slice size at the limit and past it and the proportional,
 # seeded 200-row sample, where a one-row batch gets a row only from the
 # rule that every batch gets at least one.
@@ -416,6 +417,25 @@ run_cases() {
             "$FIXTURES/record.md"; then
         compare "$recorded/rank.md" "$FIXTURES/expected/rank/rank-record.md" \
             "rank with a record rank.md" || fail=1
+    else
+        fail=1
+    fi
+    # The adopted time item with no measured row in this window: its "now"
+    # is no number, since an unmeasured session is not zero minutes.
+    local unmeasured="$out/rank-unmeasured"
+    mkdir -p "$unmeasured"
+    cp "$FIXTURES/rank/"* "$unmeasured/"
+    awk 'BEGIN { FS = OFS = "\t" } $2 == "s2" { $4 = ""; $5 = "unmeasured" } 1' \
+        "$FIXTURES/rank/time.tsv" > "$unmeasured/time.tsv"
+    if run_ok "rank with an unmeasured adopted time item" "$scripts/rank.py" \
+            "$unmeasured" "$FIXTURES/record.md"; then
+        if grep -qxF '| time `s2` | minutes per batch | 12.0 | not measured in this window |' \
+                "$unmeasured/rank.md"; then
+            echo "OK    rank with an unmeasured adopted time item"
+        else
+            echo "FAIL  rank with an unmeasured adopted time item: its follow-up line is not 'not measured in this window'" >&2
+            fail=1
+        fi
     else
         fail=1
     fi
