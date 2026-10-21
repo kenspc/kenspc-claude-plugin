@@ -145,6 +145,12 @@ Create `plugins/kenspc/skills/retro/scripts/map_runs.py <repo> <workspace> <wind
   or `all`.
 - A batch is in the window when its earliest run's timestamp is in it.
 - `last <n>` counts batches by their earliest run.
+- `since <YYYY-MM-DDTHH:MM:SS>` takes batches whose earliest run is
+  strictly after the timestamp. Why: the default window passes the previous
+  record's last run timestamp, and an inclusive bound would count that
+  record's last batch a second time when its earliest run is that run.
+- `since <YYYY-MM-DD>` takes batches whose earliest run is on or after that
+  date.
 
 **Output:** `<out>/runs.tsv`, columns: run, batch, role, tag, session,
 in_window. Anomalies are appended to `<out>/extract.md`.
@@ -156,7 +162,9 @@ Add guard cases and fixtures under `scripts/fixtures/retro/`:
 - a run whose only candidate session has no json, but its transcript names
   the run;
 - a run with no candidate (expected `manual`);
-- a window fixture for each of `last <n>`, `since`, and `all`.
+- a window fixture for each of `last <n>`, `since`, and `all`;
+- a batch whose earliest run equals the `since` timestamp (expected out of
+  the window).
 
 Files to create or modify:
 
@@ -169,9 +177,10 @@ Files to create or modify:
 - `bash scripts/check-retro-scripts.sh` and its `--self-test` exit 0, with
   the new cases.
 - Run on dayaku-crm with `all`, every run `runmap.tsv` lists has:
-  - the same batch as runmap;
-  - the same role as runmap's role column (`s3`, `s3b`, `s3c`, `s3d`);
-  - `manual` for the three runs runmap leaves unmapped (`-`).
+  - the same batch as runmap, and the same role as runmap's role column
+    (`s3`, `s3b`, `s3c`, `s3d`);
+  - for the three runs runmap leaves unmapped (`-` in its batch and role
+    columns): role `manual` and the run id as its batch.
 - Run on dayaku-crm with `last 20`, exactly 20 distinct batches have
   `in_window` true.
 - `bash scripts/check-no-model-names.sh` passes.
@@ -188,6 +197,9 @@ Depends on: Task 2
 
 Writes `<out>/time.tsv`, columns: batch, role, kind, minutes, status.
 
+- **Sessions measured:** every role session with a `start` line in the
+  timeline of each batch `runs.tsv` marks in-window, including roles that
+  wrote no run directory (`s2`, `s4`, `s6`).
 - **Role session wall minutes** run from the timeline `start <tag> … at`
   time to the mtime of `<tag>.exit`.
   - Resumes `<tag>-r<k>` are summed into their role.
@@ -207,7 +219,9 @@ Writes `<out>/time.tsv`, columns: batch, role, kind, minutes, status.
   - A session with no transcript directory gets status `unmeasured` for
     its split; its role row keeps its minutes.
 - **Coverage.** Append a line to `<out>/extract.md`: sessions measured,
-  sessions with an unmeasured split, sessions with no `.exit`.
+  sessions with an unmeasured split, sessions with no `.exit`. When no
+  in-window batch has a timeline (a project without autopilot batches), the
+  line says so and that the time list is empty.
 
 #### `state_notes.py <workspace> <runs.tsv> <out>`
 
@@ -469,6 +483,15 @@ Create `plugins/kenspc/skills/retro/SKILL.md`, frontmatter:
   dispatches agents.
 - python3 3.9 or newer, or the skill stops and says so.
 
+**Scope of reads and writes:**
+
+- The main session reads only `extract.md`, `rank.md`, the proposal files,
+  and rows it asks `show_rows.py` to print by key; it never opens raw
+  reports. Why: a window of about a thousand findings does not fit in the
+  session's context.
+- The skill writes nothing outside the project repository. Inside it, it
+  writes only `RETRO_DIR`, the files of adopted proposals, and the record.
+
 Then the plan's phases, in its terms (plan § Technical Approach).
 
 **Phase 0 — Locate:**
@@ -485,7 +508,10 @@ Then the plan's phases, in its terms (plan § Technical Approach).
 - run the scripts in order: `extract_findings.py`, `map_runs.py`,
   `measure_time.py`, `state_notes.py`, `slice_findings.py`;
 - address each as `${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/<name>.py`;
-- the window question comes after `map_runs.py`;
+- the window question comes after `map_runs.py`, with no window argument:
+  it states the window's batch count and first and last dates and asks
+  whether to run it or name another; a window the user names re-runs
+  `map_runs.py` with it;
 - a window with fewer than two batches stops with the counts.
 
 **Phase 2 — Classify:**
@@ -498,14 +524,27 @@ Then the plan's phases, in its terms (plan § Technical Approach).
 **Phase 3 — Rank and draft:**
 
 - run `rank.py`;
-- resolve `new:` names into `new-kinds.tsv` and run `rank.py` again;
-- for each selected item, draft `proposal-<n>.md` with the plan's fields;
+- resolve `new:` names into `new-kinds.tsv` and run `rank.py` again:
+  first merge names that different slices gave the same new kind; a name
+  used in at least two batches becomes a kind, any other goes to `other`;
+  the labels files are never edited;
+- for each selected item, draft `proposal-<n>.md` with these fields:
+  - where it went wrong: record keys and counts;
+  - the file and layer it changes, and why that layer;
+  - what changes in the next batch;
+  - how to undo it;
+  - the measure the next retro reads (a kind's de-duplicated cost or a
+    role's minutes per batch) and its current value;
+  - the expected effect;
 - split a kind by concrete cause and draft only for the largest cause group
   spanning at least two batches;
 - a time item needs a record-backed cause in two batches;
 - the layer order is the project's own rule, else the default six-layer
   order;
-- the landing place is project file, kenspc plugin, or global hint;
+- the landing place is a project file (applied after approval), the kenspc
+  plugin (a brief-shaped section in the record, for a separate session to
+  take to `/kenspc-plan`), or the user's global files (a suggestion in
+  words in the record);
 - in the kenspc repository itself, plugin files are project files.
 
 **Phase 4 — Verify:**
@@ -519,15 +558,21 @@ Then the plan's phases, in its terms (plan § Technical Approach).
 - **Deciding:** one question per proposal (adopt, or reject with a reason).
 - **Applying:**
   - run the project's check commands before each adopted proposal's commit;
+    a project that defines none gets the record line
+    `no check commands defined`;
   - one commit per adopted project-file proposal, staging only its files;
-  - default subject `chore(retro): <summary>`.
+  - default subject `chore(retro): <summary>`;
+  - its undo, `git revert <hash>`, goes into the record.
 - **On a failed check or a rejected commit:**
-  - restore the proposal's files from HEAD and remove any file it created;
-  - record the proposal as `failed`;
-  - ask whether to go on.
-- **The record:** written and committed last, default subject
-  `docs(retro): record <date> retro`. A second record on one date gets a
-  `-<n>` suffix.
+  - restore the proposal's files from HEAD
+    (`git restore --staged --worktree` on the files it names that HEAD has)
+    and remove any file it created;
+  - record the proposal as `failed`, with the failing check's or hook's
+    output lines;
+  - ask whether to go on to the next proposal or stop.
+- **The record:** `docs/retros/<YYYY-MM-DD>.md`, written and committed
+  last, default subject `docs(retro): record <date> retro`. A second record
+  on one date gets a `-<n>` suffix (`2026-10-21-2.md`).
 - Commit subjects are adapted to the repository's convention. The SKILL.md
   says where that convention is found: the one its instruction files or
   CONTRIBUTING write down, or else the pattern its recent commit subjects
@@ -535,14 +580,16 @@ Then the plan's phases, in its terms (plan § Technical Approach).
 
 **The record grammar,** written once here. Its sections:
 
-- Window and coverage;
-- Follow-up;
-- Kinds;
-- Adopted;
-- Rejected;
-- Dropped by verification;
-- Pending;
-- Failed;
+- Window and coverage: a Window line with the first and last run
+  timestamps in the window, the coverage counts from `extract.md`, and the
+  worktrees read;
+- Follow-up: each previous adopted item, its measure then and now;
+- Kinds: a table of kind and definition;
+- Adopted: all proposal fields, the commit hash, and the undo;
+- Rejected: the proposal fields and the user's reason;
+- Dropped by verification: the reason;
+- Pending: all proposal fields;
+- Failed: the proposal fields and the failing check's or hook's lines;
 - Runner-ups;
 - For the kenspc plugin;
 - For your global files.
@@ -553,7 +600,8 @@ Task 4 exactly.
 **Rules about earlier proposals:**
 
 - A rejected item is not proposed again unless its batch count grew.
-- Pending and failed items are proposed again when they still pass the bar.
+- Pending and failed items are proposed again when they still pass the bar,
+  and get no Follow-up line, since nothing changed.
 
 **Every stop where the skill asks** opens its no-ask branch with "In a
 session that cannot ask (a system reminder to work without stopping), …".
@@ -610,6 +658,13 @@ agents, so drive the run from a headless top-level session:
 Run it in a scratch directory under `~/Projects/_smoke/retro-stability/`,
 outside this repository.
 
+The run outlasts one Bash call, which the tool caps at 10 minutes, so
+start the session detached and wait on it in bounded steps:
+`(nohup claude -p --output-format json … < /dev/null > <log> 2>&1 & echo $! > <pid file>)`,
+then repeat `timeout 570 caffeinate -w <pid>` until `ps -p <pid>` finds no
+process. Keep the log and the pid file in the scratch directory; the log's
+json holds the session id and the result.
+
 The prompt has the session do these steps:
 
 1. Run `extract_findings.py`, `map_runs.py` (window `last 20`) and
@@ -629,8 +684,10 @@ The prompt has the session do these steps:
      `runs.tsv`;
    - `manual.tsv` (key, kind), from the manual retro's `categories.tsv`.
 
-Record the run in `docs/dry-runs/retro-stability.md`. Follow
-`docs/dry-runs/README.md`'s label convention, and include:
+Record the run in `docs/dry-runs/retro-stability.md`. The label
+convention in `docs/dry-runs/README.md` governs per-hunk reviewer
+evaluations and does not apply here: quote `rank.py`'s verdict lines as it
+prints them. Include:
 
 - the command;
 - the top-five tables;
@@ -643,8 +700,9 @@ public. Kind names and counts only.
 
 On FAIL:
 
-1. Set `SLICE_ROWS = 60` in `slice_findings.py`, change the plan-matching
-   "120" in `plugins/kenspc/skills/retro/SKILL.md` to 60, and repeat once.
+1. Set `SLICE_ROWS = 60` in `slice_findings.py`, change every mention of
+   the 120-row slice size in `plugins/kenspc/skills/retro/SKILL.md` to 60,
+   and repeat once.
 2. A second FAIL stops the task as BLOCKED, with both runs' verdict lines
    in its Implementation notes, for the user's ruling.
 
@@ -682,35 +740,54 @@ Depends on: Task 7
   used read-only.
 - Install the clone's dependencies with the commands dayaku-crm's
   instruction files name.
-- Record `git -C ~/Projects/Diagnohab/dayaku-crm status --porcelain`
-  before the run.
+- Record, before the run:
+  - `git -C ~/Projects/Diagnohab/dayaku-crm status --porcelain`;
+  - the clone's `git rev-parse HEAD`;
+  - the number of run directories in
+    `~/Projects/Diagnohab/dayaku-crm/.kenspc/runs/`.
 
 **First run.** Drive the retro with a headless session in the clone:
-`claude -p --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc "/kenspc-retro"`.
+`claude -p --output-format json --plugin-dir /Users/kenspc/Projects/KENSPC/claude-plugin/plugins/kenspc "/kenspc-retro"`.
 Answer each question the session ends a turn on with
-`claude -p --resume <session id> "<reply>"`:
+`claude -p --output-format json --resume <session id> "<reply>"`. Start
+each call detached and wait on it as Task 7 describes, with its log and pid
+file in your scratch directory; each log's json gives the session id for
+the next `--resume`. The replies:
 
 - the window question: "run the default window";
 - the first proposal: "adopt";
 - the second proposal: "reject: acceptance-test rejection";
 - any further proposal: "reject: acceptance-test rejection".
 
-**Second run:** `/kenspc-retro last 20`, driven the same way. Answer the
-window question with "run it", and reject every proposal.
+If the first run's session takes the cannot-ask branch instead of asking
+(its record lists every proposal as `pending`), the scripted replies cannot
+reach it. Mark this task BLOCKED, naming that plan Step 5 calls for an
+interactive run in which the maintainer decides, and leave the clone in
+place with its path in the `- Blocked:` line. Do the same, with the count,
+when the first run puts fewer than two proposals to the user, since the
+second run's follow-up check needs an adopted item and its no-repeat check
+a rejected one.
+
+**Second run:** `/kenspc-retro last 20`, driven the same way. The window
+argument means no window question is asked; reject every proposal.
 
 Record both runs in `docs/dry-runs/retro-acceptance.md`, with:
 
 - the commands;
 - the session ids;
 - each question and reply;
-- `git -C ~/Projects/_smoke/retro-accept log --oneline` after each run;
+- `git -C ~/Projects/_smoke/retro-accept log --oneline <setup HEAD>..HEAD`
+  after each run; the range keeps dayaku-crm's own history, a private
+  project's, out of this public repository;
 - the record file's section headings;
 - the cost.
 
 Include no finding description text.
 
-Remove the clone when the record is written. The symlink goes with it, and
-the real run directories are untouched.
+Remove the clone when the record is written. First remove the
+`.kenspc/runs` symlink itself (its path with no trailing slash) and confirm
+the real directory still holds the number of run directories recorded at
+setup; then remove the clone.
 
 Files to create:
 
@@ -730,8 +807,8 @@ Files to create:
 - The second run's proposals do not include the first run's rejected
   item.
 - `~/Projects/_smoke/retro-accept/` no longer exists, and
-  `~/Projects/Diagnohab/dayaku-crm/.kenspc/runs/` still holds its 96 run
-  directories.
+  `~/Projects/Diagnohab/dayaku-crm/.kenspc/runs/` still holds the number of
+  run directories recorded at setup.
 
 ---
 
@@ -759,7 +836,8 @@ no other file):
   - a retro section on `docs/retros/`, `.kenspc/retros/`, python3, and the
     record;
   - Run directory gains `.kenspc/retros/`;
-  - Requirements gains `python3` 3.9 or newer for `/kenspc-retro`.
+  - Requirements gains `python3` 3.9 or newer for `/kenspc-retro`, beside
+    the autopilot's own requirement line.
 - `AGENTS.md` (plan Steps 2–3):
   - project overview lists retro;
   - Orchestration patterns gain "Parallel classification, then
