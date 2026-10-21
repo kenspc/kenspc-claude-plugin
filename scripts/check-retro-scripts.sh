@@ -148,7 +148,10 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
-WORK="$(cd "$(mktemp -d)" && pwd -P)"
+# Assigned alone, so a failed mktemp stops the script under set -e instead
+# of leaving WORK as the current directory for the trap to remove.
+WORK="$(mktemp -d)"
+WORK="$(cd "$WORK" && pwd -P)"
 
 export HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/home" GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME"
