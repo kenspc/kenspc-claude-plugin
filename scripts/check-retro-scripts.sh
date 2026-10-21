@@ -90,13 +90,16 @@
 # window`. A generated fixture of 403 rows checks the slice size at the limit
 # and past it and the proportional, seeded 200-row sample, where a one-row
 # batch gets a row only from the rule that every batch gets at least one.
+# The record grammar's line forms the scripts read are looked up verbatim
+# in the skill's SKILL.md and, filled in, matched with rank.py's patterns.
 # The temp directory's path is written `<work>` before each diff.
 #
 # Exit code 0: every output matched its expected file.
 # Exit code 1: an output differed (the diff is printed), or a self-test
 #              mutant passed.
-# Exit code 2: python3 is not on PATH, a script or fixture is missing, or a
-#              self-test mutation did not apply (the fixture is stale).
+# Exit code 2: python3 is not on PATH, a script, fixture, or SKILL.md is
+#              missing, or a self-test mutation did not apply (the
+#              fixture is stale).
 #              A missing python3 is never a pass: a guard that silently did
 #              not run would read as one, as check-instruction-lint.sh treats
 #              a missing pwsh.
@@ -126,6 +129,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCRIPTS="$REPO_ROOT/plugins/kenspc/skills/retro/scripts"
 FIXTURES="$SCRIPT_DIR/fixtures/retro"
+SKILL="$REPO_ROOT/plugins/kenspc/skills/retro/SKILL.md"
 SCRIPT_NAMES="extract_findings.py map_runs.py measure_time.py state_notes.py
 slice_findings.py rank.py show_rows.py"
 
@@ -143,6 +147,10 @@ for dir in repo/runs worktree-runs workspace/_logs claude-config rank expected; 
 done
 if [[ ! -f "$FIXTURES/record.md" ]]; then
     echo "ERROR: missing fixture record $FIXTURES/record.md" >&2
+    exit 2
+fi
+if [[ ! -f "$SKILL" ]]; then
+    echo "ERROR: missing skill file $SKILL" >&2
     exit 2
 fi
 
@@ -564,6 +572,44 @@ if problems:
             fail=1
         fi
     else
+        fail=1
+    fi
+
+    # The record grammar in SKILL.md and rank.py's parser: each line form the
+    # skill lists for the scripts appears there verbatim and, filled in,
+    # matches the pattern rank.py reads it with.
+    if python3 -I -c '
+import importlib.util, sys
+skill, rank_path = sys.argv[1:3]
+spec = importlib.util.spec_from_file_location("rank", rank_path)
+rank = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rank)
+text = open(skill, encoding="utf-8").read()
+forms = [
+    ("Window: <YYYY-MM-DDTHH:MM:SS> to <YYYY-MM-DDTHH:MM:SS>", rank.WINDOW_LINE),
+    ("- Measure: kind `<kind>` cost = <n>", rank.MEASURE_LINE),
+    ("- Measure: time `<item>` minutes per batch = <n>", rank.MEASURE_LINE),
+    ("- Batches: kind `<kind>` = <n>", rank.BATCHES_LINE),
+    ("- Batches: time `<item>` = <n>", rank.BATCHES_LINE),
+]
+problems = []
+for form, pattern in forms:
+    if form not in text:
+        problems.append("SKILL.md lacks %r" % form)
+    filled = (form.replace("<YYYY-MM-DDTHH:MM:SS>", "2026-10-01T10:00:00")
+              .replace("<kind>", "test-gap").replace("<item>", "s3")
+              .replace("<n>", "3"))
+    if not pattern.match(filled):
+        problems.append("rank.py does not read %r" % filled)
+if "| kind | definition |" not in text or "\n## Kinds\n" not in text:
+    problems.append("SKILL.md lacks the ## Kinds table header")
+if problems:
+    sys.stderr.write("; ".join(problems) + "\n")
+    sys.exit(1)
+' "$SKILL" "$scripts/rank.py"; then
+        echo "OK    record grammar: SKILL.md line forms match rank.py"
+    else
+        echo "FAIL  record grammar: SKILL.md and rank.py disagree" >&2
         fail=1
     fi
 
