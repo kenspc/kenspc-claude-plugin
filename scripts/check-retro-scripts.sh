@@ -57,7 +57,8 @@
 # pause not counted, and a subagent span across the pause cut to the two
 # session windows), a session with no .exit (its role unmeasured), two
 # overlapping subagent spans of one kind (united, never summed), a
-# meta.json whose transcript is gone, transcript lines that are not json or
+# meta.json whose transcript is gone, a meta.json that is not json beside
+# its transcript (kind `unknown`), transcript lines that are not json or
 # carry no timestamp, an S3b session with a transcript but no subagents, an
 # S3b session with no transcript (split unmeasured), and a window whose
 # batches are all manual (the coverage line says the time list is empty).
