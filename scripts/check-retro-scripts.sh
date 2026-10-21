@@ -10,6 +10,11 @@
 #   2. map_runs.py          each run directory's batch and role, from the
 #                           autopilot workspace's logs, and the window, into
 #                           runs.tsv
+#   3. measure_time.py      each in-window batch's role wall minutes and the
+#                           S3/S3b subagent split, into time.tsv, with a
+#                           coverage line in extract.md
+#   4. state_notes.py       sections of each batch's state file, into
+#                           notes.tsv
 #
 # It runs each script on the fixtures under scripts/fixtures/retro/ and diffs
 # each output against the expected file there. The fixture repository is
@@ -40,6 +45,20 @@
 # unreadable windows. `last 2` and then `all` run into one directory, whose
 # extract.md must hold a single window section. The .exit files get their
 # mtimes from workspace/exit-times.txt with touch -t, since git keeps none.
+#
+# The time fixtures hold a role with a resume after a usage-limit .json (its
+# pause not counted, and a subagent span across the pause cut to the two
+# session windows), a session with no .exit (its role unmeasured), two
+# overlapping subagent spans of one kind (united, never summed), a
+# meta.json whose transcript is gone, transcript lines that are not json or
+# carry no timestamp, an S3b session with a transcript but no subagents, an
+# S3b session with no transcript (split unmeasured), and a window whose
+# batches are all manual (the coverage line says the time list is empty).
+# The state files are one in the current shape, with a `merge danger:` line
+# and its file, and one in the old free-form shape: `Note:` lines, a
+# heading with its text on the same line, an entry naming no tag, and no
+# `skipped gates:` or `merge danger:` line. The guard runs with TZ=UTC,
+# since transcript timestamps are UTC and the timelines local time.
 # The temp directory's path is written `<work>` before each diff.
 #
 # Exit code 0: every output matched its expected file.
@@ -55,7 +74,8 @@
 #   --self-test    Copies the scripts into the temp directory, checks that
 #                  the unmutated copies pass, then turns the guard red with
 #                  each mutant of the copies — the unescaped-pipe split
-#                  replaced with a plain split on `|` — which must fail. It
+#                  replaced with a plain split on `|`, and the span union
+#                  replaced with a sum — which must fail. It
 #                  also runs this guard with PATH set to an empty directory,
 #                  which must exit 2.
 #
@@ -75,7 +95,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCRIPTS="$REPO_ROOT/plugins/kenspc/skills/retro/scripts"
 FIXTURES="$SCRIPT_DIR/fixtures/retro"
-SCRIPT_NAMES="extract_findings.py map_runs.py"
+SCRIPT_NAMES="extract_findings.py map_runs.py measure_time.py state_notes.py"
 
 for name in $SCRIPT_NAMES; do
     if [[ ! -f "$SCRIPTS/$name" ]]; then
@@ -101,6 +121,10 @@ WORK="$(cd "$(mktemp -d)" && pwd -P)"
 
 export HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/home" GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME"
+# Transcript timestamps are UTC, while timelines and the .exit mtimes set
+# below are local time; UTC as the local zone keeps the fixture's minutes
+# the same in every zone.
+export TZ=UTC
 
 git_q() {
     git -c user.name=fixture -c user.email=fixture@example.invalid \
@@ -265,6 +289,44 @@ run_cases() {
         && rc=0 || rc=$?
     expect_usage "$rc" "map with three arguments" || fail=1
 
+    # measure_time.py and state_notes.py on the `all` window, then
+    # measure_time.py on `last 2`, whose batches are all manual.
+    local timed="$out/time" script
+    mkdir -p "$timed" "$out/time-manual"
+    cp "$map/runs.tsv" "$map/extract.md" "$timed/"
+    if run_ok "time all" "$scripts/measure_time.py" "$WS" "$timed/runs.tsv" "$timed"; then
+        compare "$timed/time.tsv" "$FIXTURES/expected/time/time.tsv" \
+            "time all time.tsv" || fail=1
+        compare "$timed/extract.md" "$FIXTURES/expected/time/extract.md" \
+            "time all extract.md" || fail=1
+    else
+        fail=1
+    fi
+    cp "$FIXTURES/expected/map/runs-last-2.tsv" "$out/time-manual/runs.tsv"
+    if run_ok "time manual only" "$scripts/measure_time.py" "$WS" \
+            "$out/time-manual/runs.tsv" "$out/time-manual"; then
+        compare "$out/time-manual/time.tsv" \
+            "$FIXTURES/expected/time/time-manual.tsv" "time manual only time.tsv" || fail=1
+        compare "$out/time-manual/extract.md" \
+            "$FIXTURES/expected/time/extract-manual.md" "time manual only extract.md" || fail=1
+    else
+        fail=1
+    fi
+    if run_ok "notes all" "$scripts/state_notes.py" "$WS" "$timed/runs.tsv" "$timed"; then
+        compare "$timed/notes.tsv" "$FIXTURES/expected/time/notes.tsv" \
+            "notes all notes.tsv" || fail=1
+    else
+        fail=1
+    fi
+    for script in measure_time.py state_notes.py; do
+        python3 -I "$scripts/$script" "$WS" "$timed/runs.tsv" >/dev/null 2>&1 \
+            && rc=0 || rc=$?
+        expect_usage "$rc" "$script with two arguments" || fail=1
+        python3 -I "$scripts/$script" "$WS" "$WORK/absent.tsv" "$out/x" \
+            >/dev/null 2>&1 && rc=0 || rc=$?
+        expect_usage "$rc" "$script on a missing runs.tsv" || fail=1
+    done
+
     return "$fail"
 }
 
@@ -315,6 +377,9 @@ run_self_test() {
     run_mutant pipe-split extract_findings.py \
         'parts = split_unescaped(line.rstrip("\r\n"))' \
         'parts = line.rstrip("\r\n").split("|")' || fail=1
+    run_mutant span-union measure_time.py \
+        'minutes(union_seconds(kinds[kind]))' \
+        'minutes(sum(last - first for first, last in kinds[kind]))' || fail=1
 
     PATH="$WORK/empty-path" "$BASH" "$SCRIPT_DIR/check-retro-scripts.sh" \
         >/dev/null 2>&1 && rc=0 || rc=$?

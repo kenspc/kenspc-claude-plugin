@@ -2,3 +2,5 @@ start bat3-s3 pid 301 session 33333333-0000-0000-0000-000000000003 at 2026-10-04
 end   bat3-s3 exit 1
 start bat3-s3-r1 pid 302 session 33333333-0000-0000-0000-000000000003 at 2026-10-04 11:50:00 cwd /fixture/repo prompt /fixture/_prompts/bat3-s3-r1.md budget USD 9 r
 end   bat3-s3-r1 exit 0
+start bat3-s3b pid 303 session 33333333-0000-0000-0000-00000000003b at 2026-10-04 12:40:00 cwd /fixture/repo prompt /fixture/_prompts/bat3-s3b.md budget USD 10
+end   bat3-s3b exit 0

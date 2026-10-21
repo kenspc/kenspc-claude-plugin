@@ -1,0 +1,14 @@
+batch	role	kind	minutes	status
+bat1	s3	wall	35.0	measured
+bat1	s3	kenspc:task-implementer	4.0	measured
+bat1	s3	kenspc:test-reviewer	20.0	measured
+bat1	s3	other	11.0	measured
+bat1	s3b	wall	40.0	measured
+bat1	s3b	other	40.0	measured
+bat1	s3c	wall	60.0	measured
+bat1	s4	wall		unmeasured
+bat3	s3	wall	60.0	measured
+bat3	s3	kenspc:task-implementer	35.0	measured
+bat3	s3	other	25.0	measured
+bat3	s3b	wall	20.0	measured
+bat3	s3b	other		unmeasured

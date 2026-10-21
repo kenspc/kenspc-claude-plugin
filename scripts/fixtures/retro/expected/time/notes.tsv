@@ -1,0 +1,13 @@
+batch	section	tag	text
+bat1	rail observations	bat1-s3	bat1-s3: hook denied a relative redirect; rerun with an absolute path
+bat1	rail observations	bat1-s3b	bat1-s3b: none
+bat1	worker lessons	bat1-s3	bat1-s3: give acceptance commands an existing $TMPDIR
+bat1	questions answered	bat1-s3	bat1-s3: batch gate (3 tasks) → yes (main session)
+bat1	questions answered	bat1-s3	bat1-s3 (review, 2 findings): FIX T1 → FIX (main session)
+bat1	skipped gates	bat1-s3	S3 bat1-s3: recorded
+bat1	merge danger		1 one-way, 0 unclear, 2 two-way — /fixture/_logs/bat1-merge-danger.md; file <work>/workspace/_logs/bat1-merge-danger.md
+bat3	rail observations	bat3-s3	bat3-s3: none
+bat3	worker lessons		none recorded
+bat3	questions answered		confirm the task list? → yes
+bat3	skipped gates		absent
+bat3	merge danger		absent

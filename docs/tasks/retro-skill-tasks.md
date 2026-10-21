@@ -329,7 +329,77 @@ Files to create or modify:
 
 ### Task 3: Time measurement and state-file notes scripts
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions:
+  - Each subagent span is cut to the role's session windows (start line to
+    `.exit`, open-ended without one) before the union. On dayaku-crm,
+    api-foundation's S3 task-implementer span ran across the usage-limit
+    pause between `-s3` and `-s3-r1` (125.7 min against 102.7 min of role
+    wall time, `other` −56); cut, it is 61.2 and `other` 8.5. This keeps the
+    plan's rule that the pause is never counted.
+  - A role's wall row has kind `wall`; status is `measured` or
+    `unmeasured`; minutes carry one decimal.
+  - A session counts as having transcripts when `<session id>.jsonl` or a
+    `<session id>/` directory exists under `projects/*/`; with neither, the
+    role's split is one `other` row, status `unmeasured`. A session that
+    has a transcript but dispatched no subagent gets `other` = its wall.
+  - A role with a session lacking `.exit` has its `wall` and `other` rows
+    `unmeasured`; its subagent kinds are still measured.
+  - A meta.json whose `.jsonl` is gone is skipped; an unreadable meta.json
+    counts as kind `unknown`.
+  - measure_time.py and state_notes.py reuse map_runs.py's start-line
+    pattern and tag split (loaded by path); both take the in-window
+    batches whose role is not `manual`.
+  - state_notes.py keeps each entry's text as written and fills `tag` with
+    the batch's role tag named before the entry's first colon (empty when
+    none); text on a heading line (`worker lessons: none recorded`) is a
+    row too; a section present with no entries writes no row; a batch with
+    no state file gets `absent` for every section; the merge-danger file
+    is added as `; file <path>`.
+  - The coverage line reads: batches with a timeline, role sessions read,
+    sessions with an unmeasured subagent split, sessions with no `.exit`.
+- Changes/tradeoffs:
+  - Real-data check, dayaku-crm, window `all`: 226 dayaku-crm role rows of
+    rows.json agree within 1 minute. rows.json also lists 65 role rows of 12
+    batches with no dayaku-crm run (kenspc and smoke batches, e.g.
+    `batch-k-autopilot-rulings`, `word-stats`): the manual retro read every
+    timeline in `_logs`, while the window holds only batches mapped from
+    dayaku-crm's runs, so those rows are outside the comparison.
+  - `state_notes.py` on the `all` window wrote `ui-alignment-1	merge
+    danger		absent` and exited 0.
+  - The fixture workspace gained `bat1-s4` (no `.exit`) and `bat3-s3b` (no
+    transcript); the mapping expectations did not change.
+  - measure_time.py and state_notes.py append to extract.md rather than
+    replacing an earlier copy of their line; the skill runs each once.
+- Test map:
+  - wall minutes, resumes summed into the role, usage-limit pause not
+    counted (measure_time.py:186-202) → check-retro-scripts.sh::time all
+    time.tsv (bat3 s3 = 20 + 40)
+  - no `.exit` → unmeasured (measure_time.py:194) →
+    check-retro-scripts.sh::time all time.tsv (bat1 s4)
+  - span union, never sum (measure_time.py:70) →
+    check-retro-scripts.sh::time all time.tsv (bat1 s3 test-reviewer 20.0)
+    and the self-test's span-union mutant
+  - spans cut to session windows (measure_time.py:132, 214) →
+    check-retro-scripts.sh::time all time.tsv (bat3 implementer 35.0)
+    (mutation-checked)
+  - `other` = wall − union (measure_time.py:224) →
+    check-retro-scripts.sh::time all time.tsv (bat1 s3 11.0, bat1 s3b 40.0)
+  - no transcript → split unmeasured, role row kept (measure_time.py:210,
+    215) → check-retro-scripts.sh::time all time.tsv (bat3 s3b)
+  - transcript lines without json or timestamp, meta.json without jsonl
+    (measure_time.py:88, 108) → check-retro-scripts.sh::time all time.tsv
+  - coverage line, and its no-timeline form (measure_time.py:236) →
+    check-retro-scripts.sh::time all extract.md, time manual only
+    extract.md
+  - sections copied with tag and text, old shape, `absent` rows, merge
+    danger with its file (state_notes.py:55-93) →
+    check-retro-scripts.sh::notes all notes.tsv
+  - usage errors exit 2 (measure_time.py:148, state_notes.py:96) →
+    check-retro-scripts.sh::measure_time.py / state_notes.py with two
+    arguments, on a missing runs.tsv
 
 Depends on: Task 2
 

@@ -1,0 +1,3 @@
+{"type":"user","timestamp":"2026-10-01T09:56:00.000Z","message":{"role":"user","content":"CONTEXT"}}
+not json, skipped
+{"type":"assistant","timestamp":"2026-10-01T10:00:00.000Z","message":{"role":"assistant","content":"done"}}

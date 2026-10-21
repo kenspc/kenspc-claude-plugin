@@ -5,3 +5,4 @@ end   bat1-s3b exit 1
 start bat1-s3c pid 103 session 11111111-0000-0000-0000-00000000003c at 2026-10-02 10:00:00 cwd /fixture/repo prompt /fixture/_prompts/bat1-s3c.md budget USD 10
 end   bat1-s3c exit 0
 Note: a free-form line the mapping ignores.
+start bat1-s4 pid 104 session 11111111-0000-0000-0000-000000000004 at 2026-10-02 12:00:00 cwd /fixture/repo prompt /fixture/_prompts/bat1-s4.md budget USD 10
