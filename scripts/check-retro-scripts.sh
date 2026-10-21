@@ -47,8 +47,9 @@
 # (manual, an anomaly); a resume's json (role without -r<k>); a run with no
 # candidate (manual); a run id with no timestamp; and windows `last 2`,
 # `all`, `since <timestamp>` equal to a batch's earliest run (out), `since
-# <date>` after a batch's earliest run but on a later run's date (out), and
-# unreadable windows. `last 2` and then `all` run into one directory, whose
+# <date>` after a batch's earliest run but on a later run's date (out),
+# `since <date>` on a batch's earliest run's date (in), and unreadable
+# windows. `last 2` and then `all` run into one directory, whose
 # extract.md must hold a single window section. The .exit files get their
 # mtimes from workspace/exit-times.txt with touch -t, since git keeps none.
 #
@@ -343,6 +344,17 @@ run_cases() {
             fail=1
         fi
     done
+    # `since <date>` is inclusive: bat3, whose earliest run is on that date,
+    # is in the window, as with `since 2026-10-02`.
+    mkdir -p "$out/map-since-batch-date"
+    if run_ok "map since 2026-10-04" "$scripts/map_runs.py" "$REPO" "$WS" \
+            "since 2026-10-04" "$out/map-since-batch-date"; then
+        compare "$out/map-since-batch-date/runs.tsv" \
+            "$FIXTURES/expected/map/runs-since-date.tsv" \
+            "map since 2026-10-04 runs.tsv" || fail=1
+    else
+        fail=1
+    fi
     for window in "last 0" "since 2026-13-01" "some"; do
         python3 -I "$scripts/map_runs.py" "$REPO" "$WS" "$window" "$out/x" \
             >/dev/null 2>&1 && rc=0 || rc=$?
