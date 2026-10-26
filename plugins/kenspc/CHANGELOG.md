@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.14.1 — unreleased
+## 4.14.1 — 2026-10-26
 
 The skills that talk with the user no longer fix the reply language to the
 language the user writes in: the user's own instructions on reply language
@@ -22,7 +22,13 @@ way. The brief and diagnose-bug's documents likewise follow the user's
 instructions on document language before the conversation's language, since
 a user can want replies in one language and documents in another. Rules
 that keep a line, a heading, or a file in English whatever the conversation
-language are unchanged.
+language are unchanged. The release also stops the retro scripts writing a
+bytecode cache into the plugin's own directory, which had made the release
+pre-flight fail on its second run.
+
+No smoke row was run: only rule text in skill bodies and the retro scripts
+changed, no frontmatter, and the plugin loader's validation passed. The
+pre-flight ran twice in a row before the release edits and once after them.
 
 ### Changed
 
