@@ -284,8 +284,9 @@ Small fixes can skip all skills and be implemented directly: a fix you can alrea
 
 `/kenspc-init [project description]` prepares a project for the chain in one
 run. The description is optional; whatever it answers is not asked. Its
-first message names the language the run talks in — the language you wrote
-in — and every question and the final message stay in it; the files are
+first message names the language the run talks in — the one your
+instructions set for replies, or else the language you wrote in — and every
+question and the final message stay in it; the files are
 written in English unless you ask for another language, since coding agents
 and team members who join later read them.
 

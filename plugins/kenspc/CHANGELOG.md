@@ -9,6 +9,39 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.14.1 — unreleased
+
+The skills that talk with the user no longer fix the reply language to the
+language the user writes in: the user's own instructions on reply language
+decide, and the language of the user's message stands in only without one.
+A user whose instruction files say to reply in one language whatever they
+write in met skill text that said to match the user's language, with a
+per-language example, a more specific rule that may outweigh theirs.
+That it does was suspected, not measured; the neutral rule is right either
+way. The brief and diagnose-bug's documents likewise follow the user's
+instructions on document language before the conversation's language, since
+a user can want replies in one language and documents in another. Rules
+that keep a line, a heading, or a file in English whatever the conversation
+language are unchanged.
+
+### Changed
+
+- `shared/discovery-framework.md` Step 3, generate-brief's Phase 1 rules,
+  diagnose-bug's Phase 1, and prototype's Writing rules: the reply language
+  follows the user's instructions on reply language, and without one
+  matches the user's language. The per-language examples are gone.
+- generate-brief's Writing rules for the brief and diagnose-bug's Writing
+  rules for the document: the document language follows the user's
+  instructions on document language, standing or given during the
+  conversation, and without one is the conversation's language.
+- init-project's § Language: the first message names the language the
+  user's instructions set for replies, or without one the language of the
+  user's message or the DESCRIPTION. The README's Project setup says the
+  same.
+- autopilot's Writing rules: the user report and the conversation follow
+  the user's instructions on reply language; the main-session rulings list
+  under the user report is in the user report's language.
+
 ## 4.14.0 — 2026-10-21
 
 A retrospective skill, `retro`, started only by `/kenspc-retro`. It looks

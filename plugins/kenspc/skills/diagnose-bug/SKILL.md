@@ -190,7 +190,10 @@ passes silently in the user's own suite and asserts that the bug is absent.
   The reproduction test is the only project file it creates. Why: the
   diagnosis reads the user's code; any other change would belong to neither
   the fix nor the user's own work in progress.
-- Match the user's language in the conversation.
+- Follow the user's instructions on reply language; without one, match the
+  user's language. Why: a user who has said which language to reply in has
+  already decided; the language they write in stands in only when they have
+  not.
 
 ## Phase 2: Diagnose
 
@@ -519,8 +522,11 @@ gates on the suite stays red until someone acts.
 
 These apply to the task document and to the brief.
 
-- Language: the language of the diagnosis conversation, unless the user
-  asks otherwise.
+- Language: follow the user's instructions on document language, standing
+  or given during the diagnosis; without one, the language of the diagnosis
+  conversation. Why: a user can want replies in one language and documents
+  in another, and a standing rule on document language is the same choice
+  as asking for one here, made in advance.
 - Anchors stay exactly as written, whatever the document's language: the
   `**Status:**` line and its value, the `Depends on:` line,
   `### Task N: Doc-sync`, and the `## Diagnosis` heading with its nine

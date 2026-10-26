@@ -108,7 +108,10 @@ project's instruction files, config files), the discovery framework at
 - Read `${CLAUDE_PLUGIN_ROOT}/shared/discovery-framework.md` and use its five
   dimensions, four input clarity levels, conversation rules, and exit
   conditions as the structural guide.
-- Match the user's language (Chinese → Chinese, English → English).
+- Follow the user's instructions on reply language; without one, match the
+  user's language. Why: a user who has said which language to reply in has
+  already decided; the language they write in stands in only when they have
+  not.
 - One question at a time; build on what the user said.
 - When the user is uncertain, recommend an option with brief pros/cons rather
   than just laying choices out.
@@ -226,8 +229,11 @@ insufficient; the field's presence is the anchor.]
 
 - **Why**: the brief is the input to downstream planning. Specificity now
   prevents the plan from solving the wrong problem.
-- Default language: match the user's language during Discovery, unless the
-  user asks for another language.
+- Default language: follow the user's instructions on document language,
+  standing or given during Discovery; without one, the language of the
+  Discovery conversation. Why: a user can want replies in one language and
+  documents in another, and a standing rule on document language is the
+  same choice as asking for one here, made in advance.
 - Be specific and concrete. "Improve performance" is not an Outcome; "API
   p95 under 200ms during checkout" is.
 - Do not invent dimensions not actually discussed. If Stakes was inferred

@@ -101,13 +101,16 @@ With no arguments the interview asks as usual; it is not a stop.
 
 ## Language
 
-- The run's first message names the conversation language: the language of
-  the user's message, or of the DESCRIPTION when there is no message.
+- The run's first message names the conversation language: the language the
+  user's instructions set for replies, or, without one, the language of the
+  user's message, or of the DESCRIPTION when there is no message.
   Every question after it — an AskUserQuestion's question, header, options,
   and descriptions too — and the final message are in that language; only
   what goes into the files follows the next bullet. Why: a run that had
   read English templates and tool output drifted into English twice; an
-  anchor stated at the start holds where a rule alone did not.
+  anchor stated at the start holds where a rule alone did not. The user's
+  instructions come first because a user who has said which language to
+  reply in has already decided.
 - The files the run writes are in English, unless the user asks for another
   language. Why: they are read by coding agents and by team members who join
   later, and English is the language both are most likely to share. This

@@ -592,7 +592,10 @@ plan to keep.
 
 ## Writing rules
 
-- Match the user's language in the conversation.
+- Follow the user's instructions on reply language; without one, match the
+  user's language. Why: a user who has said which language to reply in has
+  already decided; the language they write in stands in only when they have
+  not.
 - The brief entry is in the brief's language, with its status words and
   labels exactly as written. Why: generate-plan finds an unresolved entry by
   its status word, and a translated one breaks the chain without an error.

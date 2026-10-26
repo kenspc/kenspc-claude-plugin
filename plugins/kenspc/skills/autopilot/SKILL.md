@@ -2380,7 +2380,7 @@ Count: 1 one-way, 1 unclear, 2 two-way
   and the cost. Then, under the
   heading `### Main-session rulings — review before the tag and the push`,
   the rulings of the reviewer report's `Main-session rulings` line, one
-  line each in the user's language — the question, the ruling, and its
+  line each in the user report's language — the question, the ruling, and its
   clarification, or that it has no clarification commit because the spec
   was already removed or because S6 left the spec changed — or `none`; the
   one-page limit does not count this list.
@@ -3712,7 +3712,9 @@ later run of the same batch reads where this one stopped.
   project's instruction files or its CONTRIBUTING), or, failing that, the
   pattern its recent commit subjects consistently share. The preamble's
   § 6 carries the rule to the workers (Templates § The preamble says why).
-- The user report and the conversation are in the user's language.
+- The user report and the conversation follow the user's instructions on
+  reply language; without one, they are in the user's language. Why: a user
+  who has said which language to reply in has already decided.
 - The fixed lines — the settings line, the launch and return lines, the
   question and answer first lines, the stop and finish lines, the report
   headings — are in English whatever the conversation's language. Why: the

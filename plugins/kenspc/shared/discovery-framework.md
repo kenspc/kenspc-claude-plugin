@@ -32,7 +32,7 @@ Not a questionnaire. Use these to decide what to ask, in what order.
 - **One question at a time.** Wait for the answer before deciding what to ask next.
 - **Build on what the user said.** Reference their words; show you were listening.
 - **When the user is uncertain, recommend.** Offer 2-3 options with brief pros/cons and pick one. Don't lay options out and walk away.
-- **Match the user's language.** Chinese → Chinese, English → English, mixed → follow the dominant.
+- **Follow the user's instructions on reply language; without one, match the user's language.** Mixed → follow the dominant. Why: a user who has said which language to reply in has already decided; the language they write in stands in only when they have not.
 - **No round limit.** Depth adapts to clarity level.
 - **Do not produce output during Discovery.** No drafts, outlines, or templates. Resist jumping ahead — Discovery's job is to surface intent, not to start the deliverable.
 
