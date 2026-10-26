@@ -116,6 +116,8 @@ def load_extract_findings():
                         "extract_findings.py")
     spec = importlib.util.spec_from_file_location("extract_findings", path)
     module = importlib.util.module_from_spec(spec)
+    # No __pycache__ beside the scripts, inside the plugin.
+    sys.dont_write_bytecode = True
     spec.loader.exec_module(module)
     return module
 

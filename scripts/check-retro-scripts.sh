@@ -99,10 +99,13 @@
 # record grammar's line forms the scripts read are looked up verbatim in the
 # skill's SKILL.md and, filled in, matched with rank.py's patterns.
 # The temp directory's path is written `<work>` before each diff.
+# After the cases, the scripts' directory holds no __pycache__: the scripts
+# load each other by path, and a cache written beside them lands in the
+# plugin's own directory, where check-instruction-files.sh reads every file.
 #
 # Exit code 0: every output matched its expected file.
-# Exit code 1: an output differed (the diff is printed), or a self-test
-#              mutant passed.
+# Exit code 1: an output differed (the diff is printed), a __pycache__ was
+#              left beside the scripts, or a self-test mutant passed.
 # Exit code 2: python3 is not on PATH, a script, fixture, or SKILL.md is
 #              missing, or a self-test mutation did not apply (the
 #              fixture is stale).
@@ -114,8 +117,9 @@
 #   --self-test    Copies the scripts into the temp directory, checks that
 #                  the unmutated copies pass, then turns the guard red with
 #                  each mutant of the copies — the unescaped-pipe split
-#                  replaced with a plain split on `|`, and the span union
-#                  replaced with a sum — which must fail. It
+#                  replaced with a plain split on `|`, the span union
+#                  replaced with a sum, and map_runs.py's
+#                  sys.dont_write_bytecode set to False — which must fail. It
 #                  also runs this guard with PATH set to an empty directory,
 #                  which must exit 2.
 #
@@ -603,7 +607,7 @@ if problems:
     # The record grammar in SKILL.md and rank.py's parser: each line form the
     # skill lists for the scripts appears there verbatim and, filled in,
     # matches the pattern rank.py reads it with.
-    if python3 -I -c '
+    if python3 -I -B -c '
 import importlib.util, sys
 skill, rank_path = sys.argv[1:3]
 spec = importlib.util.spec_from_file_location("rank", rank_path)
@@ -659,6 +663,11 @@ if problems:
         expect_usage "$rc" "$script on a missing runs.tsv" || fail=1
     done
 
+    if [[ -d "$scripts/__pycache__" ]]; then
+        echo "FAIL  bytecode: $scripts/__pycache__ exists after the run" >&2
+        fail=1
+    fi
+
     return "$fail"
 }
 
@@ -712,6 +721,9 @@ run_self_test() {
     run_mutant span-union measure_time.py \
         'minutes(union_seconds(kinds[kind]))' \
         'minutes(sum(last - first for first, last in kinds[kind]))' || fail=1
+    run_mutant bytecode map_runs.py \
+        'sys.dont_write_bytecode = True' \
+        'sys.dont_write_bytecode = False' || fail=1
 
     PATH="$WORK/empty-path" "$BASH" "$SCRIPT_DIR/check-retro-scripts.sh" \
         >/dev/null 2>&1 && rc=0 || rc=$?

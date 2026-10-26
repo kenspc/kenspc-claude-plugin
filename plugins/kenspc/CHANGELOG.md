@@ -42,6 +42,19 @@ language are unchanged.
   the user's instructions on reply language; the main-session rulings list
   under the user report is in the user report's language.
 
+### Fixed
+
+- retro's scripts load each other by path, and each load wrote a
+  `__pycache__` beside them, inside the plugin's own directory — in an
+  installed copy on every retro run, and in this repository on every run of
+  `check-retro-scripts.sh`, after which `check-instruction-files.sh`, which
+  reads every file under the plugin, failed on the bytecode. The release
+  pre-flight therefore failed whenever it ran a second time. The four
+  loaders set `sys.dont_write_bytecode` before loading, the guard's own
+  load of `rank.py` runs `python3 -B`, and `check-retro-scripts.sh` fails
+  when a `__pycache__` is left beside the scripts, with a self-test mutant
+  that turns the switch off in `map_runs.py`.
+
 ## 4.14.0 — 2026-10-21
 
 A retrospective skill, `retro`, started only by `/kenspc-retro`. It looks

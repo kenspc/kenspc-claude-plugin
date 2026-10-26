@@ -47,6 +47,8 @@ def load_rank():
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rank.py")
     spec = importlib.util.spec_from_file_location("rank", path)
     module = importlib.util.module_from_spec(spec)
+    # No __pycache__ beside the scripts, inside the plugin.
+    sys.dont_write_bytecode = True
     spec.loader.exec_module(module)
     return module
 
