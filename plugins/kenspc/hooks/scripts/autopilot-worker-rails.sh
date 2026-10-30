@@ -71,8 +71,10 @@
 #       stays after a cd that fails; a cd with no word, cd -, a word that
 #       opens with -, more than one word, or a word that is no literal path,
 #       and a cd joined by ||, leave it unknown, and so does a || later in
-#       the same list after a cd that moved it at a &&; and a cd before a |
-#       or a lone & moves nothing (bash runs it in a subshell). Not judged: a relative
+#       the same list after a cd that moved it at a &&; a cd before a | or
+#       a lone & moves nothing (bash runs it in a subshell), and so does a
+#       cd in the body of an if, while, until, for, select, or case
+#       command, a { } group, or a function. Not judged: a relative
 #       target while the directory is unknown, a target holding any other
 #       expansion (a ~ naming another user too), a command substitution, a
 #       glob or a brace, or single-quoted text with a leading ~ or a $ in it
@@ -148,8 +150,10 @@
 # interpreter-level deletes (python, node, perl), git clean, and writes
 # through Bash other than a redirection (cp, mv, tee, an interpreter's own
 # writes); a redirection whose relative target follows a cd inside a
-# subshell or a pipeline, a cd after a keyword or a { (then cd, { cd), or
-# a pushd, read against the directory before it, or follows a cd whose
+# subshell, a pipeline, the body of an if, while, until, for, select, or
+# case command, a { } group, or a function, a cd after a keyword or a {
+# (then cd, { cd), or a pushd, which are not tracked and so read against
+# the directory before it, or follows a cd whose
 # target is not a literal, a cd joined by ||, or a || after a cd in its
 # list, not judged; remote git
 # through git lfs,
@@ -238,7 +242,7 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # holds the single quote.
 RM_AWK=$JSON_AWK'
 function flush() { if (inw) { nw++; w[nw] = cur; wq[nw] = cq; wd[nw] = cd }; cur = ""; inw = 0; cq = 0; cd = 0 }
-function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; if (sp == 0 && nw > base) { cmdn = 1; cdword() }; nw = base }
+function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; if (sp == 0 && nw > base) { cmdn = 1; kwd(); cdword() }; nw = base }
 # cdword() runs at the end of each top-level simple command and sets pend:
 # "\001" when the command is no cd; otherwise the directory the cd moves
 # to, or "" when the hook cannot read its target as one literal path (no
@@ -250,13 +254,31 @@ function endcmd() { flush(); if (nw > base && found == "") { check(); redir() };
 # wider one the scanner cannot read.
 function cdword(   a) {
   pend = "\001"
-  if (w[base + 1] != "cd") return
+  if (w[base + 1] != "cd" || kd > 0) return
   pend = ""
   if (nw != base + 2) return
   a = w[base + 2]
   if (a == "" || a ~ /^-/ || a ~ /[$`*?[{~]/ || a ~ /[\t\n]/ || index(a, "\002") > 0) return
   if (a ~ /^\//) pend = collapse(a)
   else if (wdir ~ /^\//) pend = collapse(wdir "/" a)
+}
+# kwd() follows the compound commands open at the top level: kd counts the
+# if, while, until, for, select, and case commands, the { } groups, and
+# the function bodies open around the command, read from its unquoted
+# leading words, and a cd while kd > 0 moves nothing (cdword). Why: a cd in
+# a body runs only when the body does, and a cd in a function body only
+# when the function is called, so a redirection after the body is read
+# against the directory before it.
+function kwd(   i, x) {
+  for (i = base + 1; i <= nw; i++) {
+    if (wq[i] || wd[i]) return
+    x = w[i]
+    if (x ~ /^(if|while|until|\{)$/) { kd++; continue }
+    if (x ~ /^(for|select|case)$/) { kd++; return }
+    if (x ~ /^(fi|done|esac|\})$/) { if (kd > 0) kd--; continue }
+    if (x == "function") { i++; continue }
+    if (x !~ /^(then|else|elif|do|!)$/) return
+  }
 }
 # cdsep(s): s is the separator after a top-level command and the character
 # after it. A pending cd moves the tracked directory, wdir, after &&; after
@@ -548,7 +570,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; lcd = 0; ntest = 0
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; lcd = 0; ntest = 0; kd = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }

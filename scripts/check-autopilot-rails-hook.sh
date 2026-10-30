@@ -71,7 +71,10 @@
 # echo a > ../../y.log (denied), and 6500 such cd commands to distinct
 # paths, then a > to /etc (denied, timed) — and against the input's
 # cwd or not at all — (cd /; echo a) > y.log, cd / | cat > y.log, and
-# cd / & echo a > y.log (allowed), and cd "$D", cd / ||, cd -, cd with no
+# cd / & echo a > y.log (allowed), cd b on a line of its own in the body
+# of an if, for, while, until, or case command, a { } group, or a function,
+# then echo a > ../../y.log after the body, from the temporary a/ (denied,
+# read against a/), and cd "$D", cd / ||, cd -, cd with no
 # word, cd / x, cd /*/, cd ~, and cd / && false ||, each then a relative
 # target that the input's cwd would deny or the cd's word would place
 # outside (allowed, the directory unknown); gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
@@ -662,6 +665,39 @@ run_fixtures() {
     fx "$hook" "(cd /; echo a) > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" '(cd /; echo a) > y.log'
     fx "$hook" "cd / | cat > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / | cat > y.log'
     fx "$hook" "cd / & echo a > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / & echo a > y.log'
+    # A cd on a line of its own in the body of a compound command or a
+    # function moves nothing: b/ exists under the temporary real/a/, so a
+    # cd read as top-level would move the directory there and allow the >.
+    fx_deny "$hook" "a cd in an if body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'if false; then
+  cd b
+fi
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a for body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'for i in 1; do
+  cd b
+done
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a while body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'while false; do
+  cd b
+done
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in an until body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'until true; do
+  cd b
+done
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a case arm moves nothing" "$WORK/real" Bash "$WORK/real/a" $'case x in
+  y)
+  cd b
+  ;;
+esac
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a { } group moves nothing" "$WORK/real" Bash "$WORK/real/a" $'{
+  cd b
+}
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a function body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'f() {
+  cd b
+}
+echo a > ../../y.log'
     # A cd the hook cannot read as one literal path, or joined by ||,
     # leaves the directory unknown, and a relative target is not judged.
     fx "$hook" "${CD_UNKNOWN_LABELS[0]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd "$D" && echo a > ../../y.log'
