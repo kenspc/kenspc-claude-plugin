@@ -66,7 +66,10 @@
 # ../y.log from the repository root (allowed, no existence test after
 # &&), cd / && echo a > y.log, cd / then a line end, cd / && (echo a >
 # y.log), cd - && cd / && echo a > y.log, and, from the repository root,
-# cd sub 2>/dev/null && echo a > ../../outside/x (denied) — against the
+# cd sub 2>/dev/null && echo a > ../../outside/x, and, from the temporary
+# a/, cd out && echo a > ../y.log, out/ a link there to a directory beside
+# real/ and the roots real/ alone (denied, the .. read from the link's
+# target) — against the
 # directory before a cd joined by ; whose target is no directory —
 # cd nonexist/a/b/c; echo a > ../../../../y.log and cd /nonexistent-dir;
 # echo a > ../../y.log (denied), and 6500 such cd commands to distinct
@@ -242,8 +245,8 @@ FX_TMPDIR=$FX_BASE/tmpdir/
 WORK=""
 cleanup() {
     [[ -n "${WORK:-}" && -d "$WORK" ]] || return 0
-    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/time.txt" "$WORK/link" "$WORK/real/deep" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp" "$WORK/hook/SKILL.md" "$WORK/hook/SKILL.md.tmp"
-    rmdir "$WORK/real/a/b" "$WORK/real/a" "$WORK/real" "$WORK/hook" 2>/dev/null || true
+    rm -f "$WORK/input.json" "$WORK/stderr.txt" "$WORK/time.txt" "$WORK/link" "$WORK/real/deep" "$WORK/real/a/out" "$WORK/hook/rails.sh" "$WORK/hook/rails.sh.tmp" "$WORK/hook/SKILL.md" "$WORK/hook/SKILL.md.tmp"
+    rmdir "$WORK/real/a/b" "$WORK/real/a" "$WORK/real" "$WORK/hook" "$WORK/outside/b" "$WORK/outside" 2>/dev/null || true
     rmdir "$WORK" 2>/dev/null || true
 }
 
@@ -256,6 +259,10 @@ make_work() {
     mkdir -p "$WORK/real/a/b"
     ln -s "$WORK/real" "$WORK/link"
     ln -s "$WORK/real/a/b" "$WORK/real/deep"
+    # A link inside real/ to a directory outside it, for the cd fixture
+    # whose .. is read from the link's target.
+    mkdir -p "$WORK/outside/b"
+    ln -s "$WORK/outside/b" "$WORK/real/a/out"
     # $TMPDIR as the driver writes it (with the trailing slash macOS gives
     # it); the fixture stands in the temporary directory's parent when
     # TMPDIR is unset.
@@ -666,6 +673,10 @@ run_fixtures() {
     # A redirection on a cd is no word of it: cd sub 2>/dev/null moves the
     # directory to sub, where ../../outside/x lies outside every root.
     fx_deny "$hook" "cd sub 2>/dev/null && a relative >, read against sub" "$rr" Bash "$FX_REPO" 'cd sub 2>/dev/null && echo a > ../../outside/x'
+    # A cd to an existing directory moves to its physical path: out/ under
+    # the temporary real/a/ links to outside/b, beside real/, so bash writes
+    # ../y.log to outside/y.log, outside the roots real/ alone.
+    fx_deny "$hook" "cd into a link that points outside the roots && a .. read from the link's target" "$WORK/real" Bash "$WORK/real/a" 'cd out && echo a > ../y.log'
     # A cd joined by ; to a path that is no directory leaves the directory
     # where it was, as bash stays after a cd that fails.
     fx_deny "$hook" "cd to a relative path that does not exist; a relative > read against the directory before it" "$rr" Bash "$FX_REPO/sub" 'cd nonexist/a/b/c; echo a > ../../../../y.log'

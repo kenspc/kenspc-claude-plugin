@@ -63,7 +63,10 @@
 #       the input's cwd. A top-level simple command cd <word>, its word one
 #       literal path (no $, backtick, glob character, or ~), moves it,
 #       resolved against the current one (an absolute word even when the
-#       current one is unknown), in two cases: joined by && with no ||
+#       current one is unknown), to the physical path of its target (links
+#       resolved, as cd -P and pwd -P give it) when the target is an
+#       existing directory as the hook runs, since the kernel opens a
+#       relative target from there, in two cases: joined by && with no ||
 #       before it in its and-or list, for the commands joined to it by &&
 #       after it, a subshell among them included; and alone in its list,
 #       joined by ; (a line end counts as ;), past the list when its target
@@ -298,6 +301,31 @@ function cdword(   a, k, n, x, p) {
   if (a == "" || a ~ /^-/ || a ~ /[$`*?[{~]/ || a ~ /[\t\n]/) return
   if (a ~ /^\//) pend = collapse(a)
   else if (wdir ~ /^\//) pend = collapse(wdir "/" a)
+  if (pend != "") pend = phys(pend)
+}
+# phys(p): the physical path of the absolute path p, its links resolved
+# as cd -P and pwd -P give it, when p is an existing directory as the hook
+# runs, by cd -P in a shell, each path once; p as it stands when it is no
+# directory; and "\001", a cd that moves nothing, past the 200 tests one
+# call gets (isdir). The paths it finds are kept in dseen for isdir. Why:
+# the kernel opens a relative target from the physical directory, so after
+# a cd into a link to outside/b, ../y.log lands in outside/, while the
+# path as written collapsed it to the directory that holds the link,
+# inside the roots. A target that does not exist yet (mkdir -p x && cd x)
+# keeps its path as written.
+function phys(p,   i, ch, q, cmd, r) {
+  if (p in pseen) return pseen[p]
+  if (ntest >= 200) return "\001"
+  ntest++; q = sq
+  for (i = 1; i <= length(p); i++) { ch = substr(p, i, 1); q = q ((ch == sq) ? sq "\\" sq sq : ch) }
+  cmd = "cd -P " q sq " 2>/dev/null && pwd -P"
+  r = ""
+  if ((cmd | getline r) <= 0) r = ""
+  close(cmd)
+  dseen[p] = (r != "")
+  if (r != "") dseen[r] = 1
+  pseen[p] = (r != "") ? r : p
+  return pseen[p]
 }
 # kwd() follows the compound commands open at the top level: kd counts the
 # if, while, until, for, select, and case commands, the { } groups, and
