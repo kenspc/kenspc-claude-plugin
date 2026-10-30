@@ -78,7 +78,8 @@
 # cwd or not at all — (cd /; echo a) > y.log, cd / | cat > y.log, and
 # cd / & echo a > y.log, and true | cd /; echo a > y.log (allowed),
 # true | cd b; echo a > ../../y.log from the temporary a/ (denied), cd b on a line of its own in the body
-# of an if, for, while, until, or case command, a { } group, or a function,
+# of an if, for, while, until, select, or case command, a { } group, or a
+# function written f() { or function f {,
 # then echo a > ../../y.log after the body, from the temporary a/ (denied,
 # read against a/), against the directory before the list after a cd
 # whose run is not certain — cd / || echo a > ../../y.log, and from the
@@ -735,6 +736,14 @@ echo a > ../../y.log'
     fx_deny "$hook" "a cd in a function body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'f() {
   cd b
 }
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a function f { body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'function f {
+  cd b
+}
+echo a > ../../y.log'
+    fx_deny "$hook" "a cd in a select body moves nothing" "$WORK/real" Bash "$WORK/real/a" $'select x in a; do
+  cd b
+done
 echo a > ../../y.log'
     # A cd the hook cannot read as one literal path leaves the directory
     # unknown, and a relative target is not judged.
