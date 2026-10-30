@@ -42,7 +42,7 @@
 # with `Acceptance`, and with `Release checks`), `Release checks` asked of a
 # spec without that field, span-led entries beside a command, an entry that
 # opens with prose and holds a code span later, a field name other than the
-# two, four arguments, the wrong arguments, an unreadable spec — every
+# two, an empty field argument, four arguments, the wrong arguments, an unreadable spec — every
 # extractor fixture's second line, `span-led:`, held as well as its counts
 # line; a path
 # with a space, a changed path, the same with GIT_LITERAL_PATHSPECS=1 in the
@@ -885,6 +885,13 @@ run_checks() {
     [[ "$rc" -eq 2 ]] || fail "extract: field Bogus exited $rc, expected 2"
     [[ -s "$WORK/err" ]] || fail "extract: field Bogus gave no reason on stderr"
     [[ ! -e "$out" ]] || fail "extract: field Bogus wrote [$(ls -A "$out" | tr '\n' ' ')]"
+    # An empty third argument is a field other than the two, not the
+    # default.
+    out="$WORK/out-$runs-empty-field"
+    rc=0
+    bash "$ex" "$FX/spec-both.md" "$out" "" >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: an empty field argument exited $rc, expected 2"
+    [[ ! -e "$out" ]] || fail "extract: an empty field argument wrote [$(ls -A "$out" | tr '\n' ' ')]"
     out="$WORK/out-$runs-four"
     rc=0
     bash "$ex" "$FX/spec-both.md" "$out" Acceptance extra >/dev/null 2>"$WORK/err" || rc=$?

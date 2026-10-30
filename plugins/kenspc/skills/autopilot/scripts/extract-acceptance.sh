@@ -71,7 +71,9 @@ if [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; then
 fi
 spec=$1
 out=$2
-field=${3:-Acceptance}
+# ${3-…}, not ${3:-…}: an empty third argument is a field other than the
+# two, not the default.
+field=${3-Acceptance}
 if [ "$field" != "Acceptance" ] && [ "$field" != "Release checks" ]; then
   echo "extract-acceptance.sh: the field must be Acceptance or Release checks, not: $field" >&2
   exit 2
