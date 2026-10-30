@@ -3441,8 +3441,11 @@ KENSPC_AUTOPILOT_SUITE_LOG       <logs>/<batch>-suite-slots.log when AUTOPILOT_S
 
 Every worker starts with `--name <tag>`,
 `--settings '{"crossSessionInbound":"accept"}'`,
-`--permission-mode bypassPermissions`, `--output-format json`, stdin from
-`/dev/null`; a fresh launch passes `--session-id`, a resume `--resume`.
+`--permission-mode bypassPermissions`, `--output-format json`, and the
+prompt on stdin — the prompt file, byte for byte, never a terminal, and in
+no argument; a fresh launch passes `--session-id`, a resume `--resume`.
+Why stdin: a prompt passed as an argument shows in `ps` and `pgrep -f`,
+whose patterns then matched the workers themselves in four batches.
 `--model` is passed when `AUTOPILOT_MODEL` is non-empty, `--effort` when
 `AUTOPILOT_EFFORT` is, and `--plugin-dir` when `AUTOPILOT_PLUGIN_DIR` is,
 on a fresh launch and on a resume alike; the empty string counts as unset.

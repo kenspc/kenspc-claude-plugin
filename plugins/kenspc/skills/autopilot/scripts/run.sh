@@ -9,8 +9,11 @@
 #
 #   <tag>          the worker's session name (--name) and the stem of its files
 #   <cwd>          the directory the worker runs in
-#   <prompt-file>  the prompt, read from this file with cat; it is never typed
-#                  on this script's command line, so no caller has to quote it
+#   <prompt-file>  the prompt, which arrives on the worker's stdin from this
+#                  file, byte for byte; it is never typed on this script's
+#                  command line or the worker's, so no caller has to quote
+#                  it and no process list shows it. A relative path is
+#                  resolved before the change to <cwd>.
 #   --resume <session-id>
 #                  resume that session instead of starting a fresh one; the
 #                  fallback for a worker that has already exited
@@ -93,9 +96,9 @@
 #                   "<tag> <session_id> <total_cost_usd>" after each <tag>.exit
 #
 # Always passed: --name <tag>, --settings '{"crossSessionInbound":"accept"}',
-# --permission-mode bypassPermissions, --output-format json; stdin from
-# /dev/null. A fresh launch passes --session-id <uuid>. No continue flag is
-# ever passed: a resume names its session explicitly.
+# --permission-mode bypassPermissions, --output-format json; stdin from the
+# prompt file, never a terminal. A fresh launch passes --session-id <uuid>.
+# No continue flag is ever passed: a resume names its session explicitly.
 # Why --model and --effort go on both paths: a worker started without them
 # resolves its model and effort from its own settings, not from the session
 # that started it, and a resume keeps the model but not the effort — a
@@ -177,7 +180,7 @@ new_uuid() {
 # launch <tag> <cwd> <prompt-file> <resume-session-id or empty>
 # Starts the worker and prints "started <tag> pid <pid> session <id>".
 launch() {
-  local tag dir prompt_file resume logs batch exe prompt session pid stamp extra roots top
+  local tag dir prompt_file resume logs batch exe session pid stamp extra roots top pdir
   local suite_limit suite_commands suite_wrapper suite_log
   tag=$1; dir=$2; prompt_file=$3; resume=$4
   logs=${AUTOPILOT_LOGS:-$HOME/Projects/_smoke/_logs}
@@ -190,10 +193,20 @@ launch() {
   [ -n "$tag" ] || die "the tag is empty"
   [ -d "$dir" ] || die "cannot cd to $dir"
   [ -f "$prompt_file" ] || die "no prompt file $prompt_file"
-  # An empty prompt — no content, or whitespace only, which cat strips to
-  # nothing — would start a paid session with no instructions, which dies
-  # and is resumed into an empty transcript before the stop.
+  [ -r "$prompt_file" ] || die "cannot read $prompt_file"
+  # An empty prompt — no content, or whitespace only — would start a paid
+  # session with no instructions, which dies and is resumed into an empty
+  # transcript before the stop.
   grep -q '[^[:space:]]' "$prompt_file" || die "empty prompt file $prompt_file"
+  # The file is opened as the worker's stdin after the change to <cwd>,
+  # where a relative path would name another file.
+  case $prompt_file in
+    /*) ;;
+    *)
+      pdir=$(cd "$(dirname "$prompt_file")" && pwd) || die "cannot resolve the directory of $prompt_file"
+      prompt_file=$pdir/$(basename "$prompt_file")
+      ;;
+  esac
   # A workspace that is not an absolute path — a ~ form passed in quotes,
   # or a relative one — is refused: the rails hook skips a root that does
   # not start with /, so it would deny every write the worker made to the
@@ -220,7 +233,6 @@ launch() {
   if [ -n "$suite_limit" ]; then
     suite_log=$logs/$batch-suite-slots.log
   fi
-  prompt=$(cat "$prompt_file") || die "cannot read $prompt_file"
 
   # A launch under a tag whose earlier worker still runs — its pid live and
   # its exit file not yet written — would overwrite that worker's files and
@@ -267,10 +279,10 @@ launch() {
     args+=(--effort "$AUTOPILOT_EFFORT")
   fi
   if [ -n "$resume" ]; then
-    cmd=("$exe" -p --resume "$session" "$prompt" "${args[@]}")
+    cmd=("$exe" -p --resume "$session" "${args[@]}")
     extra="$extra resume"
   else
-    cmd=("$exe" -p "$prompt" --session-id "$session" "${args[@]}")
+    cmd=("$exe" -p --session-id "$session" "${args[@]}")
   fi
   if command -v caffeinate >/dev/null 2>&1; then
     cmd=(caffeinate -i "${cmd[@]}")
@@ -305,7 +317,7 @@ launch() {
     export KENSPC_AUTOPILOT_SUITE_COMMANDS="$suite_commands"
     export KENSPC_AUTOPILOT_SUITE_WRAPPER="$suite_wrapper"
     export KENSPC_AUTOPILOT_SUITE_LOG="$suite_log"
-    "${cmd[@]}" > "$logs/$tag.json" 2> "$logs/$tag.err" < /dev/null
+    "${cmd[@]}" > "$logs/$tag.json" 2> "$logs/$tag.err" < "$prompt_file"
     status=$?
     printf '%s\n' "$status" > "$logs/$tag.exit"
     printf 'end   %s exit %s\n' "$tag" "$status" >> "$logs/$batch-timeline.log"
@@ -468,11 +480,18 @@ selftest_suite_vars() {
 # self-s-test-s1.exit in place, that file still present right after the
 # launch, a .exit not reading 0 after the wait, and a
 # self-s-test-timeline.log without its start or end line (the batch-name
-# default keeps a name that holds "-s") — naming the first item that fails.
+# default keeps a name that holds "-s"); then, for a launch under
+# selftest-s19 of a stub that records its stdin and its arguments, given
+# the prompt file by a relative path from a directory other than its cwd,
+# and a resume of it under selftest-s19-r1 through the command line, a
+# .exit missing or not reading 0 after the wait, a stdin that differs from
+# the prompt file by a byte (a quote, a backtick, a non-ASCII character,
+# and the trailing newline in it), an argument that holds the prompt, or a
+# resume not passed --resume — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG PETAG PSTAG PRTAG plugin_case n exit_status session flag
   local WSDIR W1TAG W2TAG W3TAG S1TAG S2TAG repo_top
-  local first_session first_pid refusal rc self FTAG saved_exe bad started
+  local first_session first_pid refusal rc self FTAG saved_exe bad started ITAG t
   base=$(mktemp -d "${TMPDIR:-/tmp}/autopilot-selftest.XXXXXX") || die "cannot create a directory under ${TMPDIR:-/tmp}"
   # This script's own absolute path, resolved before the first launch
   # changes the working directory: the resume launch below runs it as the
@@ -550,10 +569,9 @@ STUB
     || { echo "self-test failed: a launch with a missing executable returned $rc ($([ -f "$LOGS/$TAG.session" ] && echo ".session written" || echo "no .session")), expected 2 and no .session" >&2; return 1; }
   printf '%s\n' "$refusal" | grep -qF -- "no executable $base/no-such-claude" \
     || { echo "self-test failed: the refusal of a missing executable does not name $base/no-such-claude" >&2; return 1; }
-  # An empty prompt file, and one of only whitespace (cat strips the
-  # trailing newlines, so the worker would start with a blank prompt), are
-  # refused the same way: the paid empty session the guard exists to
-  # prevent.
+  # An empty prompt file, and one of only whitespace (the worker would
+  # start with a blank prompt), are refused the same way: the paid empty
+  # session the guard exists to prevent.
   : > "$base/empty.md" || die "cannot write the empty prompt file"
   printf '\n  \n' > "$base/blank.md" || die "cannot write the blank prompt file"
   for bad in empty blank; do
@@ -919,6 +937,62 @@ sys.exit(0 if isinstance(d,dict) and "result" in d else 1)' "$LOGS/$TAG.json" 2>
     || { echo "self-test failed: $LOGS/self-s-test-timeline.log has no start line for $BTAG (the batch-name default)" >&2; return 1; }
   grep -q "^end   $BTAG exit 0\$" "$LOGS/self-s-test-timeline.log" 2>/dev/null \
     || { echo "self-test failed: $LOGS/self-s-test-timeline.log has no end line for $BTAG" >&2; return 1; }
+
+  # The prompt arrives on the worker's stdin byte for byte — a quote, a
+  # backtick, a non-ASCII character, and the trailing newline included —
+  # and no argument holds it, on a launch given the prompt file by a
+  # relative path from another directory than the worker's cwd, and on a
+  # resume through the command line. A stub of its own records its stdin
+  # and its arguments, one per line, under the tag it was given. Why: an
+  # argument shows the prompt to ps and pgrep -f, whose patterns then
+  # matched the workers themselves.
+  ITAG=selftest-s19
+  mkdir -p "$base/capture" "$base/sub" || die "cannot create the stdin case's directories"
+  printf 'STDINMARKER: reply "ok", run `true`, caf\303\251.\n' > "$base/stdin-prompt.md" \
+    || die "cannot write the stdin case's prompt file"
+  cat > "$base/stub/stdin" <<'STUB'
+#!/bin/sh
+# Stub for the stdin case: copies its stdin and its arguments, one per
+# line, to $KENSPC_SELFTEST_CAPTURE/<the --name value>.stdin and .argv.
+name=""; id=""; prev=""
+for a in "$@"; do
+  case $prev in
+    --name) name=$a ;;
+    --session-id|--resume) id=$a ;;
+  esac
+  prev=$a
+done
+cat > "$KENSPC_SELFTEST_CAPTURE/$name.stdin"
+for a in "$@"; do printf '%s\n' "$a"; done > "$KENSPC_SELFTEST_CAPTURE/$name.argv"
+printf '{"type":"result","subtype":"success","is_error":false,"result":"stub ok","session_id":"%s","total_cost_usd":0.01,"num_turns":1}\n' "$id"
+exit 0
+STUB
+  chmod +x "$base/stub/stdin" || die "cannot make the stdin stub executable"
+  KENSPC_SELFTEST_CAPTURE=$base/capture; export KENSPC_SELFTEST_CAPTURE
+  saved_exe=$AUTOPILOT_CLAUDE; AUTOPILOT_CLAUDE=$base/stub/stdin
+  cd "$base" || die "cannot cd to $base"
+  launch "$ITAG" "$base/sub" stdin-prompt.md "" > /dev/null
+  AUTOPILOT_CLAUDE=$saved_exe
+  n=0; until [ -f "$LOGS/$ITAG.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ "$(cat "$LOGS/$ITAG.exit" 2>/dev/null)" = "0" ] \
+    || { echo "self-test failed: $LOGS/$ITAG.exit does not read 0 after the wait (a relative prompt path opened after the cd?)" >&2; return 1; }
+  session=$(cat "$LOGS/$ITAG.session")
+  AUTOPILOT_LOGS=$LOGS AUTOPILOT_BATCH=selftest AUTOPILOT_CLAUDE=$base/stub/stdin \
+    bash "$self" "$ITAG-r1" "$base/sub" "$base/stdin-prompt.md" --resume "$session" > /dev/null \
+    || { echo "self-test failed: the resume launch of $ITAG-r1 through the command line did not return 0" >&2; return 1; }
+  n=0; until [ -f "$LOGS/$ITAG-r1.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ "$(cat "$LOGS/$ITAG-r1.exit" 2>/dev/null)" = "0" ] \
+    || { echo "self-test failed: $LOGS/$ITAG-r1.exit does not read 0 after the wait" >&2; return 1; }
+  for t in "$ITAG" "$ITAG-r1"; do
+    cmp -s "$base/stdin-prompt.md" "$base/capture/$t.stdin" \
+      || { echo "self-test failed: the stub launched under $t did not receive the prompt file on stdin byte for byte" >&2; return 1; }
+    [ -s "$base/capture/$t.argv" ] \
+      || { echo "self-test failed: the stub launched under $t recorded no arguments" >&2; return 1; }
+    ! grep -qF STDINMARKER "$base/capture/$t.argv" \
+      || { echo "self-test failed: an argument of the launch under $t holds the prompt" >&2; return 1; }
+  done
+  grep -qx -- '--resume' "$base/capture/$ITAG-r1.argv" \
+    || { echo "self-test failed: the stdin case's resume was not passed --resume" >&2; return 1; }
 
   echo "self-test passed"
   return 0

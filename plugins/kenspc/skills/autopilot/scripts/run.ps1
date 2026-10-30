@@ -1,4 +1,4 @@
-#Requires -Version 7.3
+#Requires -Version 7.4
 # run.ps1 — the PowerShell mirror of run.sh, the autopilot skill's driver.
 # Starts one headless worker session in the background and returns at once;
 # the worker's exit is recorded in a file, never reported over a socket.
@@ -11,18 +11,22 @@
 #
 #   <tag>          the worker's session name (--name) and the stem of its files
 #   <cwd>          the directory the worker runs in
-#   <prompt-file>  the prompt, read from this file with Get-Content -Raw inside
-#                  the worker's own pwsh; it is never typed on a command line,
-#                  so no caller has to quote it
+#   <prompt-file>  the prompt, which arrives on the worker's stdin: the
+#                  worker's own pwsh reads this file's bytes and pipes them
+#                  to the worker unchanged; it is never typed on a command
+#                  line, so no caller has to quote it and no process list
+#                  shows it
 #   --resume <session-id>
 #                  resume that session instead of starting a fresh one; the
 #                  fallback for a worker that has already exited
 #
-# PowerShell 7.3 or later (pwsh). Why the #Requires line: pwsh 7.0 to 7.2
+# PowerShell 7.4 or later (pwsh). Why the #Requires line: pwsh 7.0 to 7.2
 # pass arguments to a native program the legacy way, which drops the double
 # quotes inside a value, so the worker would receive the --settings value as
-# {crossSessionInbound:accept}, which is not JSON, and a prompt stripped of
-# its double quotes; and under Windows PowerShell 5.1 $IsWindows is $null, so
+# {crossSessionInbound:accept}, which is not JSON; piping raw bytes to a
+# native program is standard only from pwsh 7.4 (an experimental feature
+# before it), and an older pwsh would pass the prompt as text, not as the
+# file's bytes; and under Windows PowerShell 5.1 $IsWindows is $null, so
 # the hidden-window branch below would silently not apply, and the pwsh this
 # script starts may not exist there. An older PowerShell does not run the
 # script at all: it names the required version and exits 1. The arguments
@@ -125,7 +129,8 @@
 #                   "<tag> <session_id> <total_cost_usd>" after each <tag>.exit
 #
 # Always passed: --name <tag>, --settings '{"crossSessionInbound":"accept"}',
-# --permission-mode bypassPermissions, --output-format json; an empty stdin.
+# --permission-mode bypassPermissions, --output-format json; stdin: the
+# prompt file's bytes, piped by the worker's own pwsh, never a terminal.
 # A fresh launch passes --session-id <uuid>. No continue flag is ever passed:
 # a resume names its session explicitly.
 # Why --model and --effort go on both paths: a worker started without them
@@ -170,9 +175,9 @@
 # executable; the self-test also launches a failing stub of its own, so a
 # status other than 0 is seen to reach <tag>.exit, a slow one, so a launch
 # read through a command substitution is seen to return while its worker
-# runs, and, on macOS and Linux, a native #!/bin/sh one, so the -p and
-# --settings values are seen to reach a native program, as the installed
-# claude is one, byte for byte. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
+# runs, and, on macOS and Linux, native #!/bin/sh ones, so the --settings
+# value and the prompt on stdin are seen to reach a native program, as the
+# installed claude is one, byte for byte. A caller who sets AUTOPILOT_CLAUDE to a stub of their own
 # exercises the failure path; a stub of theirs that is meant to pass writes
 # its arguments, "cwd=<its working directory, logical or physical path>",
 # and the six exported variables as "KENSPC_AUTOPILOT_WORKER=<value>",
@@ -197,7 +202,7 @@
 # Exit status of a launch: 0 once the worker has been started; 2 on a usage
 # or environment error, or when <tag>.pid names a live process and <tag>.exit
 # is absent — an earlier worker under the same tag still running (nothing
-# started); 1 from PowerShell itself when it is older than 7.3. The worker's
+# started); 1 from PowerShell itself when it is older than 7.4. The worker's
 # own status goes to <tag>.exit. Self-test: 0 on pass, 1 on the first
 # missing or wrong item.
 
@@ -222,16 +227,18 @@ try {
     Set-Location -LiteralPath __CWD__ -ErrorAction Stop
     $caffeinate = __CAFFEINATE__
     if ($caffeinate) { $null = Start-Process -FilePath $caffeinate -ArgumentList @('-i', '-w', "$PID") }
-    $prompt = (Get-Content -Raw -LiteralPath __PROMPT__ -ErrorAction Stop) -replace '(\r?\n)+\z', ''
+    # Read before the call: a pipeline starts the worker even when the
+    # read in front of it fails, which would start a session with no prompt.
+    $promptBytes = Get-Content -AsByteStream -Raw -LiteralPath __PROMPT__ -ErrorAction Stop
     $env:KENSPC_AUTOPILOT_WORKER = '1'
     $env:KENSPC_AUTOPILOT_WRITE_ROOTS = __ROOTS__
     $env:KENSPC_AUTOPILOT_SUITE_LIMIT = __SUITELIMIT__
     $env:KENSPC_AUTOPILOT_SUITE_COMMANDS = __SUITECOMMANDS__
     $env:KENSPC_AUTOPILOT_SUITE_WRAPPER = __SUITEWRAPPER__
     $env:KENSPC_AUTOPILOT_SUITE_LOG = __SUITELOG__
-    $argv = @('-p', $prompt, __SESSION__, '--name', __TAG__, '--settings', __SETTINGS__, '--permission-mode', 'bypassPermissions', '--output-format', 'json'__OPTIONAL__)
+    $argv = @('-p', __SESSION__, '--name', __TAG__, '--settings', __SETTINGS__, '--permission-mode', 'bypassPermissions', '--output-format', 'json'__OPTIONAL__)
     $global:LASTEXITCODE = 0
-    $null | & __EXE__ @argv > __JSON__ 2> __ERR__
+    $promptBytes | & __EXE__ @argv > __JSON__ 2> __ERR__
     $status = $LASTEXITCODE
 } catch {
     # The reason also goes to <tag>.err: this pwsh's own stderr, the
@@ -628,8 +635,7 @@ function Invoke-Refused {
 # .launch.* files present, .launch.out and .launch.err empty; .err showing
 # every always-passed flag with the id .session holds and cwd=<the launch's
 # cwd>, and none of the five optional flags; .json's session_id equal to
-# .session; a failing stub's status 3 in .exit and the end line, and the
-# multi-line prompt it received as its -p value; a launch with
+# .session; a failing stub's status 3 in .exit and the end line; a launch with
 # AUTOPILOT_MODEL and AUTOPILOT_EFFORT set, its .exit present after the wait
 # and its .err showing --model <value> and --effort <value>; a launch with
 # both set to the empty string, its .exit present after the wait and
@@ -662,8 +668,8 @@ function Invoke-Refused {
 # command line whose .pid and timeline writes fail returning 0 with its
 # started line, both failures on stderr, and .exit reading 0; on macOS and
 # Linux, a
-# native stub's .exit reading 0 and the -p and --settings values it received
-# equal, byte for byte, to that prompt and the settings JSON; a resume
+# native stub's .exit reading 0 and the --settings value it received equal,
+# byte for byte, to the settings JSON; a resume
 # launch through the command line with the five optional variables and
 # AUTOPILOT_WORKSPACE set, its .err showing --name <tag>, their flags, the
 # marker, and roots holding the workspace;
@@ -679,8 +685,14 @@ function Invoke-Refused {
 # and logs directory hold a space, a single quote, and a right single
 # quotation mark; a launch whose cwd,
 # prompt file, and logs directory are relative to the caller's location,
-# its .exit reading 0 and its .json holding "result"; and a launch read
-# through a command substitution returning while its slow stub still runs.
+# its .exit reading 0 and its .json holding "result"; on macOS and Linux, a
+# native stub launched under selftest-s19 with the prompt file given by a
+# relative path, and resumed under selftest-s19-r1 through the command
+# line, each with its .exit reading 0, the stdin it received equal, byte
+# for byte, to the prompt file (a double quote, a backtick, a non-ASCII
+# character, and the trailing newline in it), no argument holding the
+# prompt, and the resume passed --resume; and a launch read through a
+# command substitution returning while its slow stub still runs.
 function Invoke-SelfTest {
     $tempRoot = [System.IO.Path]::GetTempPath()
     $base = Join-Path $tempRoot ('autopilot-selftest-' + [System.IO.Path]::GetRandomFileName().Replace('.', ''))
@@ -733,12 +745,9 @@ exit 0
     # A second stub that exits 3, for the status check, and a third that stays
     # alive five seconds, for the command-substitution check; written whatever
     # AUTOPILOT_CLAUDE names, so a caller's stub is used for the passing
-    # launches only. The second one also writes the prompt it receives, its
-    # -p value, to a file of its own, so the prompt check runs whatever
-    # AUTOPILOT_CLAUDE names too.
+    # launches only.
     $failStub = Join-Path $stubDir 'fail.ps1'
-    $promptSeen = Join-Path $base 'prompt-seen.txt'
-    Write-LfFile $failStub "[System.IO.File]::WriteAllText($(ConvertTo-Literal $promptSeen), [string]`$args[1])`nWrite-Error (`$args -join ' ')`nWrite-Error `"KENSPC_AUTOPILOT_WORKER=`$env:KENSPC_AUTOPILOT_WORKER`"`nWrite-Error `"KENSPC_AUTOPILOT_WRITE_ROOTS=`$env:KENSPC_AUTOPILOT_WRITE_ROOTS`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_LIMIT=`$env:KENSPC_AUTOPILOT_SUITE_LIMIT`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_COMMANDS=`$env:KENSPC_AUTOPILOT_SUITE_COMMANDS`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_WRAPPER=`$env:KENSPC_AUTOPILOT_SUITE_WRAPPER`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_LOG=`$env:KENSPC_AUTOPILOT_SUITE_LOG`"`nexit 3`n"
+    Write-LfFile $failStub "Write-Error (`$args -join ' ')`nWrite-Error `"KENSPC_AUTOPILOT_WORKER=`$env:KENSPC_AUTOPILOT_WORKER`"`nWrite-Error `"KENSPC_AUTOPILOT_WRITE_ROOTS=`$env:KENSPC_AUTOPILOT_WRITE_ROOTS`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_LIMIT=`$env:KENSPC_AUTOPILOT_SUITE_LIMIT`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_COMMANDS=`$env:KENSPC_AUTOPILOT_SUITE_COMMANDS`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_WRAPPER=`$env:KENSPC_AUTOPILOT_SUITE_WRAPPER`"`nWrite-Error `"KENSPC_AUTOPILOT_SUITE_LOG=`$env:KENSPC_AUTOPILOT_SUITE_LOG`"`nexit 3`n"
     $slowStub = Join-Path $stubDir 'slow.ps1'
     Write-LfFile $slowStub "Start-Sleep -Seconds 5`nexit 0`n"
     # A fourth that throws, for the check that a failure inside the worker's
@@ -987,11 +996,6 @@ exit 0
     # A worker's non-zero status reaches .exit and the timeline's end line:
     # the skill reads both, and a driver that always wrote 0 would report
     # every failed worker as a success. The failing stub exits 3 at once.
-    # Its prompt file has several lines, a double quote, and a trailing blank
-    # line, and the stub's -p value is the file's whole content with the
-    # trailing line breaks removed, as run.sh's $(cat) reads it: a driver
-    # that passed the path, or the file's lines as separate values, would
-    # start every worker with the wrong prompt.
     $failTag = 'selftest-s2'
     $multiPrompt = Join-Path $base 'multi.md'
     Write-LfFile $multiPrompt "First line.`nSay `"hi`" and stop.`n`n"
@@ -1005,11 +1009,6 @@ exit 0
     }
     if (-not (Test-FileLine $timeline "^end   $failTag exit 3$")) {
         Stop-SelfTest "$timeline has no end line with exit 3 for $failTag"
-    }
-    $expectedPrompt = "First line.`nSay `"hi`" and stop."
-    $seen = if (Test-Path -LiteralPath $promptSeen -PathType Leaf) { [System.IO.File]::ReadAllText($promptSeen) } else { $null }
-    if ($seen -cne $expectedPrompt) {
-        Stop-SelfTest "the worker of $failTag received the prompt `"$seen`", expected the content of $multiPrompt without its trailing line breaks"
     }
 
     # A fresh launch with AUTOPILOT_MODEL and AUTOPILOT_EFFORT set carries
@@ -1251,22 +1250,20 @@ exit 0
     # claude is one. Every stub above is a .ps1 run inside the worker's own
     # pwsh, which takes its arguments as PowerShell values, so an argument
     # passing that dropped the double quotes inside a value would pass them
-    # all and break only the real worker's --settings JSON and prompt. The
-    # native stub writes the -p and --settings values it receives to files
-    # beside it, compared byte for byte with the prompt, which holds double
-    # quotes, and the settings JSON. A Windows .cmd stub is not launched here:
+    # all and break only the real worker's --settings JSON. The native stub
+    # writes the --settings value it receives to a file beside it, compared
+    # byte for byte with the settings JSON. A Windows .cmd stub is not launched here:
     # its argument passing is checked on Windows itself.
     if (-not $IsWindows) {
         $nativeTag = 'selftest-s7'
         $nativeStub = Join-Path $stubDir 'native.sh'
         Write-LfFile $nativeStub (@'
 #!/bin/sh
-# Native stub for run.ps1 --self-test: writes the -p and --settings values it
-# receives to files beside it, prints a result object, exits 0.
+# Native stub for run.ps1 --self-test: writes the --settings value it
+# receives to a file beside it, prints a result object, exits 0.
 dir=$(dirname "$0")
 while [ "$#" -gt 1 ]; do
     case $1 in
-        -p) printf '%s' "$2" > "$dir/native-prompt.txt" ;;
         --settings) printf '%s' "$2" > "$dir/native-settings.txt" ;;
     esac
     shift
@@ -1284,7 +1281,6 @@ exit 0
             Stop-SelfTest "$nativeExit does not read 0 after a launch through the native stub $nativeStub"
         }
         $nativeChecks = @(
-            @{ Flag = '-p'; File = 'native-prompt.txt'; Want = $expectedPrompt },
             @{ Flag = '--settings'; File = 'native-settings.txt'; Want = $SettingsValue }
         )
         foreach ($check in $nativeChecks) {
@@ -1484,6 +1480,81 @@ exit 0
     }
     if (-not (Test-ResultJson (Join-Path $logsDir "$relTag.json"))) {
         Stop-SelfTest "$(Join-Path $logsDir "$relTag.json") is not a JSON object holding `"result`" after a launch with relative paths"
+    }
+
+    # On macOS and Linux, the prompt arrives on a native worker's stdin byte
+    # for byte — a double quote, a backtick, a non-ASCII character, and the
+    # trailing newline included — and no argument holds it, on a launch
+    # given the prompt file by a relative path from another directory than
+    # the worker's cwd, and on a resume through the command line. The stub
+    # records its stdin and its arguments, one per line, under the tag it
+    # was given. Why a native stub: the bytes piped to the worker reach a
+    # native program's stdin, as the installed claude is one, while a .ps1
+    # stub runs inside the worker's own pwsh and reads the pipe as objects. Why the check: an argument shows the prompt to ps
+    # and pgrep -f, whose patterns then matched the workers themselves. A
+    # Windows native stub is not launched here, as for selftest-s7.
+    if (-not $IsWindows) {
+        $stdinTag = 'selftest-s19'
+        $captureDir = Join-Path $base 'capture'
+        $null = [System.IO.Directory]::CreateDirectory($captureDir)
+        $null = [System.IO.Directory]::CreateDirectory((Join-Path $base 'stdin-cwd'))
+        $stdinPrompt = Join-Path $base 'stdin-prompt.md'
+        Write-LfFile $stdinPrompt "STDINMARKER: reply `"ok`", run ``true``, caf$([char]0xE9).`n"
+        $stdinStub = Join-Path $stubDir 'stdin.sh'
+        Write-LfFile $stdinStub (@'
+#!/bin/sh
+# Native stub for run.ps1 --self-test: copies its stdin and its arguments,
+# one per line, to <its directory>/../capture/<the --name value>.stdin and
+# .argv, prints a result object, exits 0.
+dir=$(dirname "$0")/../capture
+name=""; prev=""
+for a in "$@"; do
+    [ "$prev" = "--name" ] && name=$a
+    prev=$a
+done
+cat > "$dir/$name.stdin"
+for a in "$@"; do printf '%s\n' "$a"; done > "$dir/$name.argv"
+printf '%s\n' '{"type":"result","subtype":"success","is_error":false,"result":"stub ok","total_cost_usd":0.01,"num_turns":1}'
+exit 0
+'@ + "`n")
+        [System.IO.File]::SetUnixFileMode($stdinStub, [System.IO.UnixFileMode]'UserRead, UserWrite, UserExecute')
+        $env:AUTOPILOT_CLAUDE = $stdinStub
+        Push-Location -LiteralPath $base
+        $null = Invoke-Launch $stdinTag (Join-Path $base 'stdin-cwd') 'stdin-prompt.md' ''
+        Pop-Location
+        $stdinExit = Join-Path $logsDir "$stdinTag.exit"
+        Wait-ExitFile $stdinExit
+        if ((Read-FileText $stdinExit) -cne '0') {
+            $env:AUTOPILOT_CLAUDE = $savedExe
+            Stop-SelfTest "$stdinExit does not read 0 after a launch through the stdin stub $stdinStub"
+        }
+        $stdinSession = Read-FileText (Join-Path $logsDir "$stdinTag.session")
+        $null = & pwsh -NoProfile -File $self "$stdinTag-r1" (Join-Path $base 'stdin-cwd') $stdinPrompt --resume $stdinSession
+        $rc = $LASTEXITCODE
+        $env:AUTOPILOT_CLAUDE = $savedExe
+        if ($rc -ne 0) { Stop-SelfTest "the resume launch of $stdinTag-r1 through the command line returned $rc, expected 0" }
+        Wait-ExitFile (Join-Path $logsDir "$stdinTag-r1.exit")
+        $wantBytes = [System.IO.File]::ReadAllBytes($stdinPrompt)
+        foreach ($t in $stdinTag, "$stdinTag-r1") {
+            $seenFile = Join-Path $captureDir "$t.stdin"
+            # Assigned, not taken from an if expression, which turns the
+            # bytes of an empty file into $null.
+            $seenBytes = [byte[]]::new(0)
+            if (Test-Path -LiteralPath $seenFile -PathType Leaf) { $seenBytes = [System.IO.File]::ReadAllBytes($seenFile) }
+            if ([Convert]::ToBase64String($seenBytes) -cne [Convert]::ToBase64String($wantBytes)) {
+                Stop-SelfTest "the stub launched under $t received `"$($Utf8NoBom.GetString($seenBytes))`" on stdin, expected $stdinPrompt byte for byte"
+            }
+            $argvFile = Join-Path $captureDir "$t.argv"
+            if (-not (Test-Path -LiteralPath $argvFile -PathType Leaf) -or ([System.IO.FileInfo]::new($argvFile)).Length -eq 0) {
+                Stop-SelfTest "the stub launched under $t recorded no arguments"
+            }
+            if ([System.IO.File]::ReadAllText($argvFile).Contains('STDINMARKER')) {
+                Stop-SelfTest "an argument of the launch under $t holds the prompt"
+            }
+        }
+        if (-not (Test-FileLine (Join-Path $captureDir "$stdinTag-r1.argv") '^--resume$')) {
+            Stop-SelfTest "the stdin case's resume was not passed --resume"
+        }
     }
 
     # A launch read through a command substitution returns while its worker
