@@ -1174,6 +1174,7 @@ file equal to the first extraction, runs each from the repository root at
 that commit — in `repo` mode through the suite-slot wrapper when
 `Suite limit:` lists its prefix — and replies with each check's file and
 exit code. The user report lists each release check with its exit code,
+or says `not run — <why>` when no S6 ran or S6 returned no check results,
 and a failed one — an exit other than 0, or a re-extraction that did not
 match and so ran nothing — is named in the report's first lines. No S5
 runs for it: the checks test the release commits, and what to do about a

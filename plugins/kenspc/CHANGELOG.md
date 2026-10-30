@@ -34,8 +34,9 @@ items 42, 46, 48, and 49.
   `_prompts/<batch>-release-cmds/` (a description there is the settings
   stop); both S6 blocks extract it again after the last commit, compare
   the files, run each check from the repository root, and reply with each
-  exit code. The user report lists each check with its exit code, names a
-  failed one in its first lines, and no S5 runs for it.
+  exit code. The user report lists each check with its exit code, or
+  `not run — <why>` when no S6 ran or S6 returned no check results, names
+  a failed one in its first lines, and no S5 runs for it.
 - autopilot: `extract-acceptance.sh <spec> <out dir> [<field>]` takes
   `Acceptance` (the default) or `Release checks` as its third argument,
   and prints a second line, `span-led: none` or `span-led: <nn>, …`, naming

@@ -871,7 +871,7 @@ open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
 clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]][; no clarification commit (S6 left the spec changed): <tag>: <one line>[, <tag>: <one line>…]]
 S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone> | spec left changed: <the lines the status command printed, joined by " / ">>[; …] | none
-release checks: <<nn>.cmd → exit <n>[, <nn>.cmd → exit <n>…] | not run: <the extraction's output, the listings, or the cmp output>>   (once S6 has returned, when Release checks: names checks)
+release checks: <<nn>.cmd → exit <n>[, <nn>.cmd → exit <n>…] | not run: <the extraction's output, the listings, or the cmp output> | not run — <why: no S6 ran (<the reason>) | S6 returned no check results>>   (once S6 has returned, or once the run ends with no S6, when Release checks: names checks)
 merge danger: <n> one-way, <u> unclear, <m> two-way — <workspace>/_logs/<batch>-merge-danger.md   (once Phase 4 has built it)
 next: <the next action>
 ```
@@ -2130,7 +2130,11 @@ exit code, and a FAIL — an exit other than 0, or a re-extraction that did
 not match and so ran nothing — is named in the report's first lines. The
 main session launches no S5 for a failed release check. Why: the checks
 test the release commits, and what to do about a failed one before the
-tag is the user's call. Why extracted, not typed into the block: the
+tag is the user's call. When no S6 runs — the bare `keep`, or a run that
+ends before S6 — or S6's reply carries no check results, the state file's
+`release checks:` line and the user report say `not run — <why>`. Why: a
+user who asked for release checks would otherwise read a report with no
+check result and no FAIL. Why extracted, not typed into the block: the
 checks are often long commands, and the shipped extractor run twice and
 compared is the step that keeps a retyped command from drifting.
 
@@ -2469,7 +2473,8 @@ Count: 1 one-way, 1 unclear, 2 two-way
 - `## User report` — the conversation's language, at most one page: a
   failed release check first, in its opening lines (Phase 4, Release
   checks); what the batch built, the release commit, each release check
-  with its exit code when `Release checks:` names checks, what needs the
+  with its exit code when `Release checks:` names checks, or
+  `not run — <why>` when no S6 ran or S6 returned no check results, what needs the
   user (tag, push,
   release; any stop or deferred item; a question not received, with the
   cause the worker quoted or the causes to check; a failed check at S6's
