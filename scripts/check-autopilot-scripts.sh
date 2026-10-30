@@ -5,8 +5,9 @@
 # beside its driver:
 #
 #   1. plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh
-#        writes each `Acceptance:` case of a spec's `## Autopilot` section to
-#        <nn>.cmd (one code span) or <nn>.case (a description)
+#        writes each `Acceptance:` (or `Release checks:`) case of a spec's
+#        `## Autopilot` section to <nn>.cmd (one code span) or <nn>.case (a
+#        description), and names the span-led cases on a second line
 #   2. plugins/kenspc/skills/autopilot/scripts/zero-diff.sh
 #        compares a list of paths between a baseline and HEAD
 #   3. plugins/kenspc/skills/autopilot/scripts/temp-candidates.sh
@@ -36,7 +37,14 @@
 # before and inside the section (backtick and tilde fences, a longer fence
 # around a shorter one, a column-0 `# ` comment and a `## ` line inside them,
 # a backtick line whose info string holds a backtick, a column-0 fence inside
-# the field, an unclosed fence), the wrong arguments, an unreadable spec; a path
+# the field, an unclosed fence), a section holding both an `Acceptance:` and
+# a `Release checks:` field (each extracted alone, with no field argument,
+# with `Acceptance`, and with `Release checks`), `Release checks` asked of a
+# spec without that field, span-led entries beside a command, an entry that
+# opens with prose and holds a code span later, a field name other than the
+# two, four arguments, the wrong arguments, an unreadable spec — every
+# extractor fixture's second line, `span-led:`, held as well as its counts
+# line; a path
 # with a space, a changed path, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
@@ -76,9 +84,11 @@
 #
 # Optional flag:
 #   --self-test    Copies the four scripts into the temp directory and turns
-#                  the guard red with eleven mutants of the copies — the
+#                  the guard red with thirteen mutants of the copies — the
 #                  padding stripping removed from the extractor, its
 #                  continuation joining removed, its fence tracking removed,
+#                  its field argument ignored (always `Acceptance`), its
+#                  span-led test dropped (the line always `none`),
 #                  zero-diff.sh's paths passed to git diff as one word,
 #                  temp-candidates.sh's before-list filter, origin
 #                  comparison, and symlink exclusion each removed, and
@@ -249,6 +259,30 @@ cat > "$FX/spec-fence-ends.md" <<'EOF'
   - `echo after` — PASS: exit 0
 EOF
 printf '## Autopilot\n\n```py\n# usage\n- Acceptance:\n  - `echo x` — PASS: ok\n' > "$FX/spec-unclosed.md"
+# Both fields in one section, the second with a note: each is extracted
+# alone, by its own name.
+cat > "$FX/spec-both.md" <<'EOF'
+## Autopilot
+
+- Acceptance:
+  - `echo acc` — PASS: exit 0
+- Release checks (after the last commit):
+  - `echo rel1` — PASS: exit 0
+  - `echo rel2` — PASS: exit 0
+- Budget: USD 10
+EOF
+# A command, then two entries that open with a code span and hold words
+# after it (span-led), and one that opens with prose and holds a span later.
+cat > "$FX/spec-spanled.md" <<'EOF'
+## Autopilot
+
+- Acceptance:
+  - `echo one` — PASS: exit 0
+  - `dotnet build` from the root — PASS: x
+  - run `npm test` from the root — PASS: green
+  - ``a `b` c`` then more — PASS: y
+EOF
+printf '## Autopilot\n\n- Acceptance:\n  - run `npm test` from the root — PASS: green\n' > "$FX/spec-prose.md"
 printf '# Spec\n\n## Implementation Steps\n\n- Acceptance: none\n' > "$FX/spec-nosection.md"
 printf '# Spec\n\n## Autopilot\n\n- Budget: USD 10\n' > "$FX/spec-nofield.md"
 printf '# Spec\n\n## Autopilot\n\n- Acceptance: run the suite\n- Budget: USD 10\n' > "$FX/spec-inline.md"
@@ -381,6 +415,18 @@ expect_content() {
     if ! cmp -s "$WORK/want" "$file"; then
         fail "$(basename "$file") holds [$(tr -d '\n' < "$file")], expected [$want]"
     fi
+}
+
+# expect_lines <what> <counts line> <span-led line>: the extractor's stdout,
+# held in $stdout, is those two lines and no more.
+expect_lines() {
+    local what=$1 want1=$2 want2=$3 got1 got2 n
+    got1=$(printf '%s\n' "$stdout" | sed -n 1p)
+    got2=$(printf '%s\n' "$stdout" | sed -n 2p)
+    n=$(printf '%s\n' "$stdout" | wc -l | tr -d ' ')
+    [[ "$got1" == "$want1" ]] || fail "extract: $what printed [$got1] on its first line, expected [$want1]"
+    [[ "$got2" == "$want2" ]] || fail "extract: $what printed [$got2] on its second line, expected [$want2]"
+    [[ "$n" -eq 2 ]] || fail "extract: $what printed $n lines, expected 2"
 }
 
 # --- The wrapper's fixtures ---------------------------------------------------
@@ -733,7 +779,7 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-cases.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: cases fixture exited $rc, expected 0 ($(cat "$WORK/err"))"
-    [[ "$stdout" == "commands: 7, cases: 1" ]] || fail "extract: cases fixture printed [$stdout], expected [commands: 7, cases: 1]"
+    expect_lines "cases fixture" "commands: 7, cases: 1" "span-led: none"
     listing=$(cd "$out" 2>/dev/null && ls | tr '\n' ' ') || listing="(no out dir)"
     [[ "$listing" == "01.cmd 02.cmd 03.cmd 04.cmd 05.cmd 06.cmd 07.cmd 08.case " ]] \
         || fail "extract: cases fixture wrote [$listing]"
@@ -752,9 +798,77 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-spans.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: spans fixture exited $rc, expected 0"
-    [[ "$stdout" == "commands: 0, cases: 2" ]] || fail "extract: spans fixture printed [$stdout], expected [commands: 0, cases: 2]"
+    expect_lines "spans fixture" "commands: 0, cases: 2" "span-led: 01, 02"
     expect_content "$out/01.case" '`npm test` passes, then `npm run lint`'
     expect_content "$out/02.case" '`echo x'
+
+    # Both fields in one section: with no field argument, and with
+    # Acceptance, only Acceptance's case is written; with Release checks,
+    # only that field's two.
+    local fld
+    for fld in "" Acceptance; do
+        out="$WORK/out-$runs-both-acc$fld"
+        rc=0
+        if [[ -z "$fld" ]]; then
+            stdout=$(bash "$ex" "$FX/spec-both.md" "$out" 2>"$WORK/err") || rc=$?
+        else
+            stdout=$(bash "$ex" "$FX/spec-both.md" "$out" "$fld" 2>"$WORK/err") || rc=$?
+        fi
+        [[ "$rc" -eq 0 ]] || fail "extract: both-fields fixture [${fld:-no field}] exited $rc, expected 0 ($(cat "$WORK/err"))"
+        expect_lines "both-fields fixture [${fld:-no field}]" "commands: 1, cases: 0" "span-led: none"
+        listing=$(cd "$out" 2>/dev/null && ls | tr '\n' ' ') || listing="(no out dir)"
+        [[ "$listing" == "01.cmd " ]] || fail "extract: both-fields fixture [${fld:-no field}] wrote [$listing]"
+        expect_content "$out/01.cmd" 'echo acc'
+    done
+    out="$WORK/out-$runs-both-rel"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-both.md" "$out" "Release checks" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: both-fields fixture [Release checks] exited $rc, expected 0 ($(cat "$WORK/err"))"
+    expect_lines "both-fields fixture [Release checks]" "commands: 2, cases: 0" "span-led: none"
+    listing=$(cd "$out" 2>/dev/null && ls | tr '\n' ' ') || listing="(no out dir)"
+    [[ "$listing" == "01.cmd 02.cmd " ]] || fail "extract: both-fields fixture [Release checks] wrote [$listing]"
+    expect_content "$out/01.cmd" 'echo rel1'
+    expect_content "$out/02.cmd" 'echo rel2'
+
+    # Release checks read from a spec that has only Acceptance: exit 2, the
+    # reason naming the field read, no file written.
+    out="$WORK/out-$runs-norel"
+    rc=0
+    bash "$ex" "$FX/spec-cases.md" "$out" "Release checks" >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: Release checks absent exited $rc, expected 2"
+    grep -qF 'no Release checks: field' "$WORK/err" || fail "extract: Release checks absent: the reason does not name the field [$(cat "$WORK/err")]"
+    listing=$(cd "$out" 2>/dev/null && ls -A | tr '\n' ' ') || listing=""
+    [[ -z "$listing" ]] || fail "extract: Release checks absent wrote [$listing]"
+
+    # Span-led entries are cases named on the second line; an entry that
+    # opens with prose and holds a span later is a case not named there.
+    out="$WORK/out-$runs-spanled"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-spanled.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: span-led fixture exited $rc, expected 0 ($(cat "$WORK/err"))"
+    expect_lines "span-led fixture" "commands: 1, cases: 3" "span-led: 02, 04"
+    expect_content "$out/02.case" '`dotnet build` from the root'
+    expect_content "$out/03.case" 'run `npm test` from the root'
+    out="$WORK/out-$runs-prose"
+    rc=0
+    stdout=$(bash "$ex" "$FX/spec-prose.md" "$out" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "extract: prose fixture exited $rc, expected 0"
+    expect_lines "prose fixture" "commands: 0, cases: 1" "span-led: none"
+    expect_content "$out/01.case" 'run `npm test` from the root'
+
+    # A field name other than the two, and a fourth argument: exit 2, with
+    # no out dir made and no file written.
+    out="$WORK/out-$runs-bogus"
+    rc=0
+    bash "$ex" "$FX/spec-both.md" "$out" Bogus >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: field Bogus exited $rc, expected 2"
+    [[ -s "$WORK/err" ]] || fail "extract: field Bogus gave no reason on stderr"
+    [[ ! -e "$out" ]] || fail "extract: field Bogus wrote [$(ls -A "$out" | tr '\n' ' ')]"
+    out="$WORK/out-$runs-four"
+    rc=0
+    bash "$ex" "$FX/spec-both.md" "$out" Acceptance extra >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "extract: four arguments exited $rc, expected 2"
+    [[ ! -e "$out" ]] || fail "extract: four arguments wrote [$(ls -A "$out" | tr '\n' ' ')]"
 
     # A deeper-indented bullet is a continuation of its case, and a second
     # ## Autopilot section's field is not read.
@@ -762,7 +876,7 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-more.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: more fixture exited $rc, expected 0"
-    [[ "$stdout" == "commands: 1, cases: 1" ]] || fail "extract: more fixture printed [$stdout], expected [commands: 1, cases: 1]"
+    expect_lines "more fixture" "commands: 1, cases: 1" "span-led: none"
     listing=$(cd "$out" 2>/dev/null && ls | tr '\n' ' ') || listing="(no out dir)"
     [[ "$listing" == "01.case 02.cmd " ]] || fail "extract: more fixture wrote [$listing]"
     expect_content "$out/02.cmd" 'echo z'
@@ -773,7 +887,7 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-fenced.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: fenced fixture exited $rc, expected 0 ($(cat "$WORK/err"))"
-    [[ "$stdout" == "commands: 1, cases: 1" ]] || fail "extract: fenced fixture printed [$stdout], expected [commands: 1, cases: 1]"
+    expect_lines "fenced fixture" "commands: 1, cases: 1" "span-led: none"
     expect_content "$out/01.cmd" 'echo fenced'
     expect_content "$out/02.case" 'run it by hand'
 
@@ -782,7 +896,7 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-fence-ends.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: fence-ends fixture exited $rc, expected 0"
-    [[ "$stdout" == "commands: 1, cases: 0" ]] || fail "extract: fence-ends fixture printed [$stdout], expected [commands: 1, cases: 0]"
+    expect_lines "fence-ends fixture" "commands: 1, cases: 0" "span-led: none"
     expect_content "$out/01.cmd" 'echo first'
 
     # An unclosed fence: exit 2, its line named in the reason.
@@ -796,7 +910,7 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-crlf.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: CRLF fixture exited $rc, expected 0"
-    [[ "$stdout" == "commands: 1, cases: 0" ]] || fail "extract: CRLF fixture printed [$stdout]"
+    expect_lines "CRLF fixture" "commands: 1, cases: 0" "span-led: none"
     expect_content "$out/01.cmd" 'echo a'
 
     # The wrong arguments, and a spec that cannot be read: exit 2.
@@ -812,7 +926,7 @@ run_checks() {
     rc=0
     stdout=$(bash "$ex" "$FX/spec-none.md" "$out" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "extract: none fixture exited $rc, expected 0"
-    [[ "$stdout" == "commands: 0, cases: 0" ]] || fail "extract: none fixture printed [$stdout]"
+    expect_lines "none fixture" "commands: 0, cases: 0" "span-led: none"
     listing=$(cd "$out" 2>/dev/null && ls -A | tr '\n' ' ') || listing="(no out dir)"
     [[ -z "$listing" ]] || fail "extract: none fixture wrote [$listing]"
 
@@ -1016,26 +1130,38 @@ run_self_test() {
     run_checks "$m_ex" "$zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 4: the paths passed to git diff as one word.
+    # Mutant 4: the field argument ignored, so Acceptance is always read.
+    name="field argument ignored"
+    mutate "$ex" "$m_ex" 's/-v field="\$field"/-v field=Acceptance/' "$name"
+    run_checks "$m_ex" "$zd" "$tc" "$ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 5: the span-led test dropped, so the second line is always none.
+    name="span-led test dropped"
+    mutate "$ex" "$m_ex" '/led = led (led == ""/d' "$name"
+    run_checks "$m_ex" "$zd" "$tc" "$ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 6: the paths passed to git diff as one word.
     name="paths read as one word"
     mutate "$zd" "$m_zd" 's/HEAD -- "\${paths\[@\]}"/HEAD -- "${paths[*]}"/' "$name"
     run_checks "$ex" "$m_zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 5: the before list no longer filters, so entries older than the
+    # Mutant 7: the before list no longer filters, so entries older than the
     # batch are listed.
     name="before-list filter removed"
     mutate "$tc" "$m_tc" 's/if grep -qxF -- "\$name" "\$before"; then/if false; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 6: any clone counts, whatever its origin.
+    # Mutant 8: any clone counts, whatever its origin.
     name="origin comparison removed"
     mutate "$tc" "$m_tc" 's/if \[ "\$p" = "\$r" \]; then/if :; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 7: a symbolic link is judged by what it points to.
+    # Mutant 9: a symbolic link is judged by what it points to.
     name="symlink exclusion removed"
     mutate "$tc" "$m_tc" 's/if \[ ! -L "\$e" \] && \[ -O "\$e" \]; then/if [ -O "$e" ]; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
@@ -1045,25 +1171,25 @@ run_self_test() {
     # scripts' fixtures cannot see a change to the wrapper, and each full
     # pass pays the wrapper fixtures' sleeps again.
 
-    # Mutant 8: every caller enters, whatever the count.
+    # Mutant 10: every caller enters, whatever the count.
     name="count check always true"
     mutate "$ss" "$m_ss" 's/if \[ "\$live" -lt "\$limit" \]; then # count check/if true; then # count check/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 9: a stale holder is counted as live, never reclaimed.
+    # Mutant 11: a stale holder is counted as live, never reclaimed.
     name="stale-holder reclaim removed"
     mutate "$ss" "$m_ss" 's/if holder_alive; then # live-holder check/if true; then # live-holder check/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 10: the holder file outlives the wrapper.
+    # Mutant 12: the holder file outlives the wrapper.
     name="release on exit removed"
     mutate "$ss" "$m_ss" 's/\[ "\$holder_written" -eq 1 \] && rm -f "\$holder" # release on exit/: # release on exit/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 11: a nested call waits for a slot like any other.
+    # Mutant 13: a nested call waits for a slot like any other.
     name="nesting check removed"
     mutate "$ss" "$m_ss" 's/if \[ "\${KENSPC_SUITE_SLOT_HELD:-}" = 1 \]; then/if false; then/' "$name"
     run_slot_only "$m_ss" 2>/dev/null

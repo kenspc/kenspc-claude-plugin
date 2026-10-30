@@ -30,7 +30,22 @@ can run or read, and name the acceptance case that holds the task later.
 
 ### Task 1: Extractor field argument and span-led line
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the field name is checked before the out dir is made, so a bad field (like a wrong argument count) writes no directory at all, not just no file. The label regex is built once in `BEGIN` from the field name (`"^- " field "( \\(.*\\))?:"`), so both fields share one match and one note form. A span-led case is one whose text before ` — PASS: ` opens with a backtick, an unclosed span included (it is a `.case` that opens with a backtick run); the list is comma-and-space separated, `span-led: 02, 04`.
+- Changes/tradeoffs: the task says every existing fixture's second line is `span-led: none`; the spans fixture's two cases both open with a backtick run (`` `npm test` passes, then … `` and an unclosed `` `echo x ``), so that fixture expects `span-led: 01, 02`, which also holds the list form with two entries. `Acceptance: none` (and `Release checks: none`) prints `span-led: none` too, so every exit-0 run prints two lines. Added beyond the spec: `Release checks` asked of a spec without that field (exit 2, reason names the field) and a four-argument call (exit 2, no out dir); an explicit `Acceptance` third argument is run beside the default.
+- Test map:
+  - field argument selects the field (extract-acceptance.sh:74, :146, :169) → scripts/check-autopilot-scripts.sh::"extract: both-fields fixture [Release checks]" and self-test mutant "field argument ignored"
+  - default field is Acceptance, explicit Acceptance the same (extract-acceptance.sh:74) → scripts/check-autopilot-scripts.sh::"extract: both-fields fixture [no field]" / "[Acceptance]"
+  - note form on the selected label (extract-acceptance.sh:146) → scripts/check-autopilot-scripts.sh::"extract: both-fields fixture [Release checks]" (its label carries a note)
+  - bad field refused before any write (extract-acceptance.sh:75) → scripts/check-autopilot-scripts.sh::"extract: field Bogus" (mutation-checked)
+  - more than three arguments refused (extract-acceptance.sh:68) → scripts/check-autopilot-scripts.sh::"extract: four arguments" (mutation-checked)
+  - stderr reason names the field read (extract-acceptance.sh:196, :199) → scripts/check-autopilot-scripts.sh::"extract: Release checks absent" (mutation-checked; :199's wording has no Release-checks fixture, the inline/empty-field fixtures hold only its exit 2)
+  - span-led line lists span-led cases (extract-acceptance.sh:214, :218) → scripts/check-autopilot-scripts.sh::"extract: span-led fixture", "extract: spans fixture" and self-test mutant "span-led test dropped"
+  - prose-then-span is not span-led (extract-acceptance.sh:214) → scripts/check-autopilot-scripts.sh::"extract: prose fixture"
+  - `none` field prints the second line (extract-acceptance.sh:197) → scripts/check-autopilot-scripts.sh::"extract: none fixture"
+  - second line held in every existing fixture (check-autopilot-scripts.sh expect_lines) → the seven converted assertions; `grep -c '== "commands: [0-9]*, cases: [0-9]*" ]]'` prints 0 (7 at HEAD before the task)
 
 Plan Step 1. Files: `plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh`,
 `scripts/check-autopilot-scripts.sh`.
