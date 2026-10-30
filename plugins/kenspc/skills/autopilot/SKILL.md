@@ -2987,6 +2987,12 @@ FAIL, its cost.
   by the file the main session's extraction wrote for it: a `<nn>.cmd` as
   "the command in `<nn>.cmd`" with its PASS criterion, and a `<nn>.case` —
   a description, not one code span — with its text, as the field holds it.
+  The block's run paragraph keeps `<shell> <file>` for the `.cmd` and
+  `.corrected.cmd` files and has S4 run a `.case` as its text describes,
+  in its own session, replying with each command it ran for it, its exit
+  code, and PASS or FAIL against the criterion. Why: two batches' S4
+  stopped to ask how to run a description case, since the block said to
+  run every case as `<shell> <file>`.
   The bracketed paragraphs are written when `Acceptance record:`
   names a path — the first on the first run, the second on an `-s4b`
   re-run, after an S5 fix or of a corrected case (Phase 3), which lists the
@@ -3031,8 +3037,10 @@ appended — so the comparison is seen able to fail. When the extraction
 exits non-zero, the file names differ, or a file differs, run nothing and
 reply with its output, the listings, or the cmp output.
 
-Then run each case yourself, in the order listed, a command as
-`<shell> <file>`, the file being in <workspace>/_prompts/<batch>-s4-cmds/:
+Then run each case yourself, in the order listed. `<shell> <file>` is the
+form for a `<nn>.cmd` or `<nn>.corrected.cmd`, the file being in
+<workspace>/_prompts/<batch>-s4-cmds/; a `<nn>.case` is a description,
+which you run as its text describes, in this session:
 [A file that holds one of the Suite limit commands — <the prefixes, each in
 backticks, joined by ", "> — its words in order as whole words, anywhere in
 the file, runs instead as
@@ -3055,7 +3063,8 @@ locations § 3 names is a breach.
 
 Reply with the cmp lines, then, for each case: its file, its exit code,
 and the evidence it leaves — the files, logs, or clones it writes, by
-path.
+path. For a `<nn>.case`, its lines name each command you ran for it with
+its exit code, and PASS or FAIL judged against its criterion.
 [Write the same lines to <Acceptance record: path> and commit that file
 alone, `docs: add batch <batch> acceptance record`; the repository changes
 in no other way.]

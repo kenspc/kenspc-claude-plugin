@@ -152,7 +152,15 @@ Plan Step 2. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 3: S4 runs a description case
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the reply rule for a `.case` is a sentence added to the block's existing reply paragraph ("Reply with the cmp lines, …") rather than to the run paragraph, so the run paragraph says how each kind runs and the reply paragraph what each kind's lines hold.
+- Changes/tradeoffs: the task places "the S4 bullet below the block"; in the skill each step's bullet sits above its block, so the sentence went into the `**S4, repo mode**` bullet that introduces the block (after its description of how a `<nn>.case` is listed).
+- Test map:
+  - `<shell> <file>` limited to `.cmd`/`.corrected.cmd`, `.case` run as described in this session (SKILL.md:3040) → none: skill prose, held later by acceptance case A3
+  - a `.case`'s reply lines (SKILL.md:3066) → none: skill prose, held later by acceptance case A3
+  - the S4 bullet's rule and reason (SKILL.md:2990) → none: skill prose, held by the reviewers' reading
 
 Plan Step 3. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
