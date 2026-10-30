@@ -1265,9 +1265,10 @@ before the first paid session, into `_prompts/<batch>-trial-cmds/`, as a
 start check — in brief entry after S1 commits the spec and before S2 —
 so a spec the script misreads stops the run before anything is spent,
 not at acceptance. A `span-led:` list other than `none` is a question to
-you before any worker launches (since 4.15.0), quoting each entry: stop
-to fix the spec, with nothing spent, or run the entries as description
-cases. Unattended, the run stops there instead, naming each entry and the
+you before any worker launches — in brief entry, before S2 is launched;
+only S1 has run — (since 4.15.0), quoting each entry: stop to fix the
+spec, with nothing spent (in brief entry, nothing past S1), or run the
+entries as description cases. Unattended, the run stops there instead, naming each entry and the
 words after its span, since those words may say where or how the command
 runs and the skill does not guess them. S4 extracts the
 commands again into a directory of its own, shows `cmp` equal for every

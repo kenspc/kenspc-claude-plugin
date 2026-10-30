@@ -775,13 +775,16 @@ reminder to work without stopping), the run ends with the same message.
   counts: it names each `<nn>.case` whose text opens with a code span, an
   entry such as `` `dotnet build` from the root — PASS: … `` that has
   words between the span and ` — PASS: `. A list other than `none` is a
-  question to the user before any worker launches, quoting each entry as
-  the spec writes it, with two answers: stop to fix the spec, with nothing
-  spent; or run the entries as description cases, which the state file
+  question to the user before any worker launches — in brief entry,
+  before S2 is launched; only S1 has run (Phase 1, step 6) — quoting each
+  entry as the spec writes it, with two answers: stop to fix the spec,
+  with nothing spent (in brief entry, nothing past S1); or run the entries
+  as description cases, which the state file
   records under `questions answered:`, under S4's tag, one line per entry
   ending `(user)`, and which S4's block then lists as description cases.
   In a session that cannot ask (a system reminder to work without
-  stopping), the run stops before the first launch, its final message
+  stopping), the run stops before the first launch (in brief entry,
+  before S2 is launched; only S1 has run), its final message
   naming each entry and the words after its span, and the state file's
   `stops:` line records it. Why a question and not a default: the words
   after a span may say where or how the command runs — a directory, a
@@ -921,7 +924,10 @@ The flow:
    `git show <S1 hash>:<spec path>`, saved to
    `<workspace>/_prompts/<batch>-spec.md`; a failure is the same stop, and
    a `span-led:` list other than `none` the same question, before S2 is
-   launched. In either mode, a `Release checks:` field other than `none`
+   launched; only S1 has run. In a session that cannot ask (a system
+   reminder to work without stopping), the run stops there, before S2 is
+   launched, its final message naming each entry and the words after its
+   span, and the state file's `stops:` line records it. In either mode, a `Release checks:` field other than `none`
    is saved and extracted the same way (Phase 0 § The start checks), its
    failure or `.case` the same stop, before S2 is launched.
 

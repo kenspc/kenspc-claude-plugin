@@ -44,10 +44,11 @@ items 42, 46, 48, and 49.
   an exit other than 0 stops every caller, and a span-led entry is a
   question, not a malformed field.
 - autopilot: Phase 0 asks about a span-led `Acceptance:` entry before any
-  worker launches — stop to fix the spec, or run the entries as
-  description cases, recorded in the state file. A session that cannot
-  ask stops before the first launch, naming each entry and the words after
-  its span. The stops stated at their own steps count eight.
+  worker launches (in brief entry, before S2; only S1 has run) — stop to
+  fix the spec, or run the entries as description cases, recorded in the
+  state file. A session that cannot ask stops before the first launch (in
+  brief entry, before S2), naming each entry and the words after its
+  span. The stops stated at their own steps count eight.
 - autopilot: a `Zero diff:` path written with a leading `!` is an
   exclusion. `zero-diff.sh` passes each path as `:(literal)<path>` and
   each exclusion as `:(exclude,literal)<path>` (git 1.9 or later), prints
