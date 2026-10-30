@@ -691,8 +691,12 @@ function Invoke-Refused {
 # line, each with its .exit reading 0, the stdin it received equal, byte
 # for byte, to the prompt file (a double quote, a backtick, a non-ASCII
 # character, and the trailing newline in it), no argument holding the
-# prompt, and the resume passed --resume; and a launch read through a
-# command substitution returning while its slow stub still runs.
+# prompt, and the resume passed --resume; on every platform, a .ps1 stub
+# launched under selftest-s20 and resumed under selftest-s20-r1 through the
+# command line, the same: each .exit reading 0, the bytes piped to it equal
+# to the prompt file, no argument holding the prompt, and the resume passed
+# --resume; and a launch read through a command substitution returning
+# while its slow stub still runs.
 function Invoke-SelfTest {
     $tempRoot = [System.IO.Path]::GetTempPath()
     $base = Join-Path $tempRoot ('autopilot-selftest-' + [System.IO.Path]::GetRandomFileName().Replace('.', ''))
@@ -1555,6 +1559,66 @@ exit 0
         if (-not (Test-FileLine (Join-Path $captureDir "$stdinTag-r1.argv") '^--resume$')) {
             Stop-SelfTest "the stdin case's resume was not passed --resume"
         }
+    }
+
+    # On every platform, the prompt reaches a .ps1 stub through the pipe and
+    # no argument holds it, on a launch and on a resume through the command
+    # line. The stub, run inside the worker's own pwsh, receives the piped
+    # bytes as objects and writes them back as bytes, and its arguments one
+    # per line, under the tag it was given. Why on every platform: the
+    # native case above runs on macOS and Linux only, so on Windows nothing
+    # else would catch a launch that piped nothing or put the prompt back
+    # into an argument.
+    $psTag = 'selftest-s20'
+    $psCapture = Join-Path $base 'capture-ps'
+    $null = [System.IO.Directory]::CreateDirectory($psCapture)
+    $psPrompt = Join-Path $base 'ps-stdin-prompt.md'
+    Write-LfFile $psPrompt "PSSTDINMARKER: reply `"ok`", run ``true``, caf$([char]0xE9).`n"
+    $psStub = Join-Path $stubDir 'stdin.ps1'
+    Write-LfFile $psStub (@'
+# Stub for run.ps1 --self-test: writes the bytes piped to it and its
+# arguments, one per line, to <its directory>/../capture-ps/<the --name
+# value>.stdin and .argv, prints a result object, exits 0.
+$dir = Join-Path (Split-Path -Parent $PSCommandPath) '../capture-ps'
+$name = ''
+for ($i = 0; $i -lt $args.Count - 1; $i++) { if ($args[$i] -ceq '--name') { $name = $args[$i + 1] } }
+[System.IO.File]::WriteAllBytes((Join-Path $dir "$name.stdin"), [byte[]]@($input))
+[System.IO.File]::WriteAllText((Join-Path $dir "$name.argv"), (($args | ForEach-Object { "$_`n" }) -join ''))
+'{"type":"result","subtype":"success","is_error":false,"result":"stub ok","total_cost_usd":0.01,"num_turns":1}'
+exit 0
+'@ + "`n")
+    $env:AUTOPILOT_CLAUDE = $psStub
+    $null = Invoke-Launch $psTag $base $psPrompt ''
+    $psExit = Join-Path $logsDir "$psTag.exit"
+    Wait-ExitFile $psExit
+    if ((Read-FileText $psExit) -cne '0') {
+        $env:AUTOPILOT_CLAUDE = $savedExe
+        Stop-SelfTest "$psExit does not read 0 after a launch through the stub $psStub"
+    }
+    $psSession = Read-FileText (Join-Path $logsDir "$psTag.session")
+    $null = & pwsh -NoProfile -File $self "$psTag-r1" $base $psPrompt --resume $psSession
+    $rc = $LASTEXITCODE
+    $env:AUTOPILOT_CLAUDE = $savedExe
+    if ($rc -ne 0) { Stop-SelfTest "the resume launch of $psTag-r1 through the command line returned $rc, expected 0" }
+    Wait-ExitFile (Join-Path $logsDir "$psTag-r1.exit")
+    $wantBytes = [System.IO.File]::ReadAllBytes($psPrompt)
+    foreach ($t in $psTag, "$psTag-r1") {
+        $seenFile = Join-Path $psCapture "$t.stdin"
+        $seenBytes = [byte[]]::new(0)
+        if (Test-Path -LiteralPath $seenFile -PathType Leaf) { $seenBytes = [System.IO.File]::ReadAllBytes($seenFile) }
+        if ([Convert]::ToBase64String($seenBytes) -cne [Convert]::ToBase64String($wantBytes)) {
+            Stop-SelfTest "the .ps1 stub launched under $t received `"$($Utf8NoBom.GetString($seenBytes))`" through the pipe, expected $psPrompt byte for byte"
+        }
+        $argvFile = Join-Path $psCapture "$t.argv"
+        if (-not (Test-Path -LiteralPath $argvFile -PathType Leaf) -or ([System.IO.FileInfo]::new($argvFile)).Length -eq 0) {
+            Stop-SelfTest "the .ps1 stub launched under $t recorded no arguments"
+        }
+        if ([System.IO.File]::ReadAllText($argvFile).Contains('PSSTDINMARKER')) {
+            Stop-SelfTest "an argument of the .ps1 stub's launch under $t holds the prompt"
+        }
+    }
+    if (-not (Test-FileLine (Join-Path $psCapture "$psTag-r1.argv") '^--resume$')) {
+        Stop-SelfTest "the .ps1 stdin case's resume was not passed --resume"
     }
 
     # A launch read through a command substitution returns while its worker
