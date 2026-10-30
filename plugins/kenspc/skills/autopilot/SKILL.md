@@ -175,7 +175,8 @@ carry the line. Why: nothing downstream reads a headless session's reply
 **Constraints**: this phase writes only under the workspace and `$TMPDIR` —
 the driver copy, its self-test files, the four script copies, the
 temp folder's before list, the `Zero diff:` paths file, the trial
-extraction's spec copy and `<batch>-trial-cmds/`, the state file —
+extraction's spec copy and `<batch>-trial-cmds/`, the release checks'
+`<batch>-release-cmds/`, the state file —
 and nothing into the repository. Why: every failing check is a stop, and a stop before the first
 launch leaves the repository as the run found it.
 
@@ -228,6 +229,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Run facts:` | sub-bullets of free text: measured facts of the machine that bind every worker and are not the spec's constraints (one heavy suite at a time, a shared `$TMPDIR`) | empty |
 | `Acceptance:` | `none`, or one sub-bullet per case: a command or a case description, its PASS criterion after ` — PASS: `, and `(optional)` at the end of a case that may be cut | `none` |
 | `Acceptance record:` | a path (repo mode) the S4 results are written to | unset |
+| `Release checks:` | `none`, or one sub-bullet per check in `Acceptance:`'s grammar, each one code span, its PASS criterion after ` — PASS: `; S6 runs them after its last commit (Phase 4, Release checks) | `none` |
 | `Release preparation:` | `default`, `keep`, or sub-bullets of instructions | `default` |
 | `Standalone review:` | `on`, `off`, or `auto` (`off` and `auto` in repo mode only) | `auto` in repo mode, `on` in plugin mode |
 | `Walk:` | `on`, `off`, or one sub-bullet per flow, `- <flow> — must see: <what>` (`on` and the sub-bullets in repo mode only) | `on` in repo mode, `off` in plugin mode |
@@ -345,8 +347,12 @@ the whole tree; `$TMPDIR` is for anything else.
                 <batch>-extract-acceptance.sh, <batch>-zero-diff.sh,
                 <batch>-temp-candidates.sh, <batch>-suite-slots.sh,
                 <batch>-zero-diff.txt, <batch>-preamble.md, <batch>-<tag>-task.md,
-                the assembled <batch>-<tag>.md, and S4's <batch>-spec.md,
-                <batch>-trial-cmds/, and <batch>-s4-cmds/ (repo mode)
+                the assembled <batch>-<tag>.md, <batch>-spec.md (repo
+                mode, and in plugin mode when Release checks: names
+                checks), S4's <batch>-trial-cmds/ and <batch>-s4-cmds/
+                (repo mode), and <batch>-release-cmds/ and S6's
+                <batch>-<tag>-release-recheck/ (when Release checks:
+                names checks)
   _logs/        <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                 <batch>-timeline.log  <batch>-costs.txt
                 <batch>-state.md  <batch>-report.md
@@ -737,7 +743,8 @@ reminder to work without stopping), the run ends with the same message.
   session saves `git show <baseline>:<spec path>` to
   `<workspace>/_prompts/<batch>-spec.md`, runs
   `bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-trial-cmds`,
-  and holds its exit and its `commands:` and `cases:` counts to the field
+  and holds its exit and the `commands:` and `cases:` counts on its first
+  line to the field
   as Phase 3 § Repo mode holds its own extraction; an exit other than 0,
   or a count that differs, is the stop naming the script's reason or the
   counts. In brief entry the spec does not exist yet, and the same trial
@@ -764,6 +771,20 @@ reminder to work without stopping), the run ends with the same message.
   after a span may say where or how the command runs — a directory, a
   server it needs — and the skill does not guess them; an entry of this
   shape was extracted as a description with no warning in five batches.
+- When the section holds a `Release checks:` field other than `none`, in
+  either mode — in brief entry before S2, as the `Acceptance:` trial runs
+  (Phase 1, step 6) — the main session saves the spec to
+  `<workspace>/_prompts/<batch>-spec.md`, in plugin mode too, and runs
+  `bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-release-cmds "Release checks"`,
+  the directory S6 compares its own extraction against. An exit other
+  than 0 is the stop naming the script's reason. A field that yields any
+  `.case` is the settings stop, naming each case — a span-led entry
+  included, so the `span-led:` question above is not asked for this field.
+  Why: a release check is a command S6 runs from its file, and a
+  description there is a value outside the field's grammar. An absent
+  field, or `none`, runs no extraction. Why: the extractor exits 2 when
+  the spec has no such field, and an absent `Release checks:` is the
+  default, not an error.
 
 Why before anything is written: an unattended run on the wrong base or a
 dirty tree is spent money, and every check is a condition a worker assumes.
@@ -786,7 +807,8 @@ clarification numbers recorded in the spec and the rulings that have no
 clarification commit, what S6's return left for the
 user — each failed check with the commits it names, the work S6 left
 undone for a point raised after the removal, and a change S6 left to the
-spec, with the lines the status command printed (Phase 4) — the Merge
+spec, with the lines the status command printed (Phase 4) — each release
+check's file and exit code (Phase 4, Release checks), the Merge
 danger counts and the path of the section's file (Phase 4), and the next
 action.
 Every ruling is recorded under `questions answered:`, whoever made it — a
@@ -833,6 +855,7 @@ open questions:
   <the step that needs the answer>: <the question, one line> (<time raised>)
 clarifications recorded: <numbers>[; no clarification commit (the spec was already removed): <tag>: <one line>[, <tag>: <one line>…]][; no clarification commit (S6 left the spec changed): <tag>: <one line>[, <tag>: <one line>…]]
 S6 return: <failed check: <the check> (<the commits it names>) | undone: <the point> — <the work S6 left undone> | spec left changed: <the lines the status command printed, joined by " / ">>[; …] | none
+release checks: <<nn>.cmd → exit <n>[, <nn>.cmd → exit <n>…] | not run: <the extraction's output, the listings, or the cmp output>>   (once S6 has returned, when Release checks: names checks)
 merge danger: <n> one-way, <u> unclear, <m> two-way — <workspace>/_logs/<batch>-merge-danger.md   (once Phase 4 has built it)
 next: <the next action>
 ```
@@ -882,7 +905,9 @@ The flow:
    `git show <S1 hash>:<spec path>`, saved to
    `<workspace>/_prompts/<batch>-spec.md`; a failure is the same stop, and
    a `span-led:` list other than `none` the same question, before S2 is
-   launched.
+   launched. In either mode, a `Release checks:` field other than `none`
+   is saved and extracted the same way (Phase 0 § The start checks), its
+   failure or `.case` the same stop, before S2 is launched.
 
 S1's task block carries: the draft-spec task — the shape of a decided spec
 with an empty decision column, the design table's options and leanings,
@@ -1789,7 +1814,8 @@ as Phase 0 read the section — `git show <baseline>:<spec path>` in spec
 entry, `git show <S1 hash>:<spec path>` in brief entry, run in the
 repository — to `<workspace>/_prompts/<batch>-spec.md`, runs
 `bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-s4-cmds`,
-and checks that the `commands:` and `cases:` counts it prints equal the
+and checks that the `commands:` and `cases:` counts it prints on its
+first line equal the
 numbers of command cases and of other cases it reads in the field — a
 command case being a sub-bullet whose text before ` — PASS: ` is one code
 span. A count that differs, or an exit other than 0, is the stop for a
@@ -2049,6 +2075,22 @@ confirmation, and the two count lines alone may be missing when a command
 before them failed. Why:
 stack-agnostic in form — the checklist and the project's instruction files
 are read — and the repository's own procedure in substance.
+
+**Release checks.** When `Release checks:` names checks, both S6 blocks
+carry the release-check paragraph (Templates § The task blocks): after its
+last commit, S6 extracts the checks again into
+`<workspace>/_prompts/<batch>-<tag>-release-recheck/`, compares them with
+`<batch>-release-cmds/` as S4 compares its own, runs each from the
+repository root at that commit, and replies with each check's file and
+exit code; the main session records them on the state file's
+`release checks:` line. The user report lists each release check with its
+exit code, and a FAIL — an exit other than 0, or a re-extraction that did
+not match and so ran nothing — is named in the report's first lines. The
+main session launches no S5 for a failed release check. Why: the checks
+test the release commits, and what to do about a failed one before the
+tag is the user's call. Why extracted, not typed into the block: the
+checks are often long commands, and the shipped extractor run twice and
+compared is the step that keeps a retyped command from drifting.
 
 The zero-diff check runs again before S6 is launched, over
 `<baseline>..HEAD` as it then stands, and not after S6's commit; its exit
@@ -2382,8 +2424,11 @@ Count: 1 one-way, 1 unclear, 2 two-way
 
 **The reports**, both in the final message:
 
-- `## User report` — the conversation's language, at most one page: what
-  the batch built, the release commit, what needs the user (tag, push,
+- `## User report` — the conversation's language, at most one page: a
+  failed release check first, in its opening lines (Phase 4, Release
+  checks); what the batch built, the release commit, each release check
+  with its exit code when `Release checks:` names checks, what needs the
+  user (tag, push,
   release; any stop or deferred item; a question not received, with the
   cause the worker quoted or the causes to check; a failed check at S6's
   return, with the commits it names — a non-zero pre-flight exit code
@@ -3214,7 +3259,11 @@ did not fix, its ID, `not fixed`, and why.
   `the removal commit below` with the removal paragraph and
   `the removal commit the instructions below make` when the list makes it;
   its second when the list says `keep`. Why the list's removal governs:
-  Phase 4, Repo mode.
+  Phase 4, Repo mode. The release-check paragraph is written when
+  `Release checks:` names checks (Phase 4, Release checks), `<tag>` being
+  S6's own and `<shell>` filled in as the repo-mode S4 block fills it; its
+  bracketed suite-slot part is written when `Suite limit:` is set, as in
+  the repo-mode S4 block, and in repo mode only, since the field is.
 
 ````
 ## Task: release preparation for batch <batch>
@@ -3241,6 +3290,28 @@ removal and the bump in one subject — and change nothing else.]
 [Then carry out these instructions, each committed in the repository's
 convention:
 <the Release preparation: sub-bullets>]
+[After your last commit, run the release checks. They are in files,
+written by <workspace>/_prompts/<batch>-extract-acceptance.sh from
+<workspace>/_prompts/<batch>-spec.md into
+<workspace>/_prompts/<batch>-release-cmds/. First extract them again
+yourself, with the same copy, into a directory of your own:
+
+    bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-<tag>-release-recheck "Release checks"
+
+It must exit 0, and show `ls` of both directories naming the same files.
+For every file it writes, show `cmp` reporting it equal to the file of the
+same name in <workspace>/_prompts/<batch>-release-cmds/, then show one
+`cmp` of two files that differ reporting the difference — two of the
+files, or, with one file, that file against a copy under $TMPDIR with a
+line appended — so the comparison is seen able to fail. When the
+extraction exits non-zero, the file names differ, or a file differs, run
+nothing and reply with its output, the listings, or the cmp output.
+Then run each check as `<shell> <file>` from the repository root at that
+commit, the file being in <workspace>/_prompts/<batch>-release-cmds/[; a file that holds one of the Suite limit commands — <the prefixes, each
+in backticks, joined by ", "> — its words in order as whole words,
+anywhere in the file, runs instead as
+`bash <workspace>/_prompts/<batch>-suite-slots.sh run -- <shell> <file>`], and reply with the cmp lines and each check's file and its exit code.
+A failing check is reported, not fixed: the tag is the user's call.]
 Reply with each commit's hash and subject.
 ````
 
@@ -3251,6 +3322,10 @@ Reply with each commit's hash and subject.
   classified a FAIL as a behavior deviation and drafted a line for it; the
   bracketed checklist items when `docs/release-checklist.md` exists —
   without it, the reviewer report's counts field reads `none: no checklist`.
+  The release-check paragraph is written when `Release checks:` names
+  checks (Phase 4, Release checks), `<tag>` being S6's own and `<shell>`
+  filled in as the repo-mode S4 block fills it; it has no suite-slot part,
+  since `Suite limit:` is repo mode only.
 
 ````
 ## Task: release preparation for batch <batch>, version <Version:>
@@ -3283,6 +3358,25 @@ release commit in the repository's convention:
   <brief path>].
 
 [Run the checklist's pre-flight block; its two count lines and each command's exit code go in your reply.]
+[After your last commit, run the release checks. They are in files,
+written by <workspace>/_prompts/<batch>-extract-acceptance.sh from
+<workspace>/_prompts/<batch>-spec.md into
+<workspace>/_prompts/<batch>-release-cmds/. First extract them again
+yourself, with the same copy, into a directory of your own:
+
+    bash <workspace>/_prompts/<batch>-extract-acceptance.sh <workspace>/_prompts/<batch>-spec.md <workspace>/_prompts/<batch>-<tag>-release-recheck "Release checks"
+
+It must exit 0, and show `ls` of both directories naming the same files.
+For every file it writes, show `cmp` reporting it equal to the file of the
+same name in <workspace>/_prompts/<batch>-release-cmds/, then show one
+`cmp` of two files that differ reporting the difference — two of the
+files, or, with one file, that file against a copy under $TMPDIR with a
+line appended — so the comparison is seen able to fail. When the
+extraction exits non-zero, the file names differ, or a file differs, run
+nothing and reply with its output, the listings, or the cmp output.
+Then run each check as `<shell> <file>` from the repository root at that
+commit, the file being in <workspace>/_prompts/<batch>-release-cmds/, and reply with the cmp lines and each check's file and its exit code.
+A failing check is reported, not fixed: the tag is the user's call.]
 No tag, no push, no release: those are the user's. Reply with each
 commit's hash and subject[, the two count lines, and each pre-flight
 command with its exit code, `<command> → exit <n>`].

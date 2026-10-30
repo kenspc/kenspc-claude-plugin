@@ -186,7 +186,16 @@ Plan Step 3. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 4: `Release checks:` field, extraction, S6 run, and report
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the S6 release-check paragraph copies the repo-mode S4 block's re-extraction wording (`ls` of both directories, `cmp` of each file, one `cmp` shown able to fail, run nothing on a mismatch), so the two re-checks read alike; the repo-mode S6 copy carries the S4 block's suite-slot bracket inside it, the plugin-mode copy none. The checks' results are kept on a new state-file line, `release checks:`, since the user report is built after a wake and the state file is the turn's only reliable memory. A failed release check counts a re-extraction that did not match (which ran nothing) as well as an exit other than 0. A span-led entry under `Release checks:` needs no question of its own: it is a `.case`, so it is the settings stop, and the start check says the `span-led:` question is not asked for this field (the sentence Task 2 left to this task).
+- Changes/tradeoffs: beyond the spec: Phase 1 step 6 names the `Release checks:` extraction for brief entry in either mode; Phase 0's Constraints line names `<batch>-release-cmds/`; the trial-extraction start check and Phase 3's repo-mode check now say they read the counts "on its first line", so every `commands:` parse names the first line; the Phase 4 paragraph adds a reason for extracting rather than retyping the checks. A non-zero extractor exit at the Phase 0 release extraction is the stop naming the script's reason, as for the `Acceptance:` trial.
+- Test map:
+  - label table row and default (SKILL.md:232) → none: skill prose, held by the reviewers' reading
+  - Phase 0 extraction, both modes, `.case` settings stop, no extraction for absent/`none` (SKILL.md:774) → none: skill prose, held later by acceptance case A3 (its release check); the extractor's field argument itself is held by Task 1's fixtures
+  - S6 re-check paragraph, both blocks (SKILL.md:3293, :3361) and their bullets (SKILL.md:3262, :3325) → none: skill prose, held later by acceptance case A3; `grep -c 'release-recheck'` prints 4
+  - Phase 4 report line, FAIL placement, no S5 (SKILL.md:2079, :2428) and state line (SKILL.md:858) → none: skill prose, held later by acceptance case A3 ("the user report lists the release check with its exit code")
 
 Depends on: Task 1
 
