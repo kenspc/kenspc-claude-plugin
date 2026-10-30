@@ -70,7 +70,10 @@
 #       is an existing directory as the hook runs, as bash stays after a cd
 #       that fails. The end of the list (;, a line end, or a lone &) and a
 #       || later in it put the directory back where it was before the list,
-#       since bash runs what follows them whether the cd ran or not. Every
+#       since bash runs what follows them whether the cd ran or not; a ;, a
+#       line end, or a lone & inside the body of a compound command ends no
+#       list and keeps the directory, as the body runs where its list had
+#       moved. Every
 #       other literal cd moves nothing: one after a ||, one alone whose
 #       target is no directory or past the 200 directory tests one call
 #       gets, one past the first 200 cd commands of the call, one in any
@@ -329,9 +332,10 @@ function kwd(   i, x) {
 # | or a lone &, which bash runs in a subshell; pin marks the command after
 # a | (or |&), the next element of a pipeline, whose cd moves nothing
 # either (cdword). Inside a compound command body (kd > 0), where a cd
-# moves nothing, a ; or a lone & still puts wdir back to ldir but begins
-# no list: the body is one command of the list around it, so a || before
-# the body still keeps a cd after it from moving wdir. A line end with
+# moves nothing, a ; (a line end too) or a lone & keeps wdir and begins
+# no list: the body runs in the directory its list had reached, and it is
+# one command of the list around it, so a || before the body still keeps
+# a cd after it from moving wdir. A line end with
 # no command since the last separator (after &&, ||, or |, where bash
 # reads on) ends nothing (cmdn). Why no test after &&: a cd that fails
 # before && stops the commands joined to it.
@@ -345,10 +349,10 @@ function cdsep(s,   k) {
   cmdn = 0
   if (k == "a" && pend != "\001" && !lor) wdir = pend
   else if (k == "o") { wdir = ldir; lor = 1 }
-  else if (k == "e" || k == "b") {
+  else if ((k == "e" || k == "b") && kd == 0) {
     if (k == "e" && !lop && pend != "\001" && (pend == "" || pend == wdir || isdir(pend))) wdir = pend
     else wdir = ldir
-    if (kd == 0) { ldir = wdir; lop = 0; lor = 0 }
+    ldir = wdir; lop = 0; lor = 0
   }
   if (k == "a" || k == "o") lop = 1
   pin = (k == "p")

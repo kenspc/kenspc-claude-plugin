@@ -82,7 +82,12 @@
 # temporary a/, each then echo a > ../../y.log, cd b && true; and cd b &&
 # true then a line end, cd b && true &, true || cd b &&, false && cd b;,
 # and cd b && false ||, and from <repository>/sub cd / || if true; then
-# true; fi && cd tmp && echo a > ../../y.log (denied) — and cd "$D",
+# true; fi && cd tmp && echo a > ../../y.log (denied) — against the
+# directory a cd before a compound command reached, a ; or a line end in
+# its body keeping it — from <repository>/sub, cd / && then a { } group,
+# an if body, or a for body holding true; echo a > y.log, a { } group
+# holding the two on lines of their own, and cd / && { true; } && echo a
+# > y.log (denied) — and cd "$D",
 # cd -, cd with no word, cd / x, cd /*/, and cd ~, each then a relative
 # target that the input's cwd would deny or the cd's word would place
 # outside (allowed, the directory unknown); gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
@@ -746,6 +751,14 @@ echo a > ../../y.log'
     # the if still keeps cd tmp from moving the directory: bash runs it in
     # /, after cd / succeeded, and writes /y.log.
     fx_deny "$hook" "cd / || an if body, then cd tmp && a relative >, read against the directory before the list" "$rr" Bash "$FX_REPO/sub" 'cd / || if true; then true; fi && cd tmp && echo a > ../../y.log'
+    # A ; or a line end inside a compound command body keeps the tracked
+    # directory: from <repository>/sub, each body runs in / after cd /
+    # succeeded, so bash writes /y.log.
+    fx_deny "$hook" "cd / && a { } group, a ; in it, then a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && { true; echo a > y.log; }'
+    fx_deny "$hook" "cd / && an if body, a ; in it, then a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && if true; then true; echo a > y.log; fi'
+    fx_deny "$hook" "cd / && a for body, a ; in it, then a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && for i in 1; do true; echo a > y.log; done'
+    fx_deny "$hook" "cd / && a { } group, a line end in it, then a relative >, read against /" "$rr" Bash "$FX_REPO/sub" $'cd / && {\n  true\n  echo a > y.log\n}'
+    fx_deny "$hook" "cd / && { true; } && a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && { true; } && echo a > y.log'
     # 8000 redirections to a relative target in the repository (about
     # 24 KB, under the cap, so it is scanned), then one to /etc, decided in
     # under half the hook's timeout.
