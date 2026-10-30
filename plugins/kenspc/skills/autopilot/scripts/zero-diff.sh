@@ -101,6 +101,12 @@ if [ "$included" -eq 0 ]; then
   exit 2
 fi
 
+# The pathspec variables of the caller's environment are dropped. Why:
+# with GIT_LITERAL_PATHSPECS=1, git reads :(literal)<path> as a file name,
+# matches nothing, and prints an empty stat, a pass with nothing compared;
+# the glob and case variables would change what a literal path matches.
+unset GIT_LITERAL_PATHSPECS GIT_GLOB_PATHSPECS GIT_NOGLOB_PATHSPECS GIT_ICASE_PATHSPECS
+
 if ! top=$(git rev-parse --show-toplevel 2>/dev/null) || ! cd -- "$top"; then
   echo "zero-diff.sh: not inside a git repository" >&2
   exit 2

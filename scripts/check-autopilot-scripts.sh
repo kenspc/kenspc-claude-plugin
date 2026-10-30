@@ -45,7 +45,8 @@
 # two, four arguments, the wrong arguments, an unreadable spec — every
 # extractor fixture's second line, `span-led:`, held as well as its counts
 # line; a path
-# with a space, a changed path, an unchanged path, a path absent at the
+# with a space, a changed path, the same with GIT_LITERAL_PATHSPECS=1 in the
+# environment, an unchanged path, a path absent at the
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
 # paths file, one of whitespace-only lines, a baseline that is not a commit, a
@@ -978,6 +979,14 @@ run_checks() {
     [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths, 0 excluded" ]] \
         || fail "zero-diff: changed path's first line is not [compared: 2 paths, 0 excluded]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the changed path"
+
+    # zero-diff: the same changed path with GIT_LITERAL_PATHSPECS=1 in the
+    # environment, under which git would read :(literal)<path> as a file
+    # name and print an empty stat.
+    rc=0
+    stdout=$(cd "$REPO" && GIT_LITERAL_PATHSPECS=1 bash "$zd" "$BASE" "$FX/paths-changed.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: changed path with GIT_LITERAL_PATHSPECS=1 exited $rc, expected 1"
+    printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: with GIT_LITERAL_PATHSPECS=1, the stat does not name the changed path"
 
     # zero-diff: a path with a space before it, as a split on a comma leaves
     # it, and one with a space after it are trimmed and compared.
