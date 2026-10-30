@@ -79,7 +79,8 @@
 #       or case command, a { } group, or a function. A cd with no
 #       word, cd -, a word that opens with -, more than one word, or a word
 #       that is no literal path leaves the directory unknown where a
-#       literal cd would move it. Not judged: a relative
+#       literal cd would move it; a redirection on a cd (cd sub
+#       2>/dev/null) is judged and is no word of it. Not judged: a relative
 #       target while the directory is unknown, a target holding any other
 #       expansion (a ~ naming another user too), a command substitution, a
 #       glob or a brace, or single-quoted text with a leading ~ or a $ in it
@@ -255,7 +256,13 @@ function endcmd() { flush(); if (nw > base && found == "") { check(); redir() };
 # "\001" when the command is no cd; otherwise the directory the cd moves
 # to, or "" when the hook cannot read its target as one literal path (no
 # word, cd -, a word that opens with -, more than one word, or a word
-# holding $, a backtick, a glob character, a brace, or ~). cdsep() applies
+# holding $, a backtick, a glob character, a brace, or ~). The words of a
+# redirection on the cd (2>/dev/null, >&2, < f, and its target when that
+# is a word of its own) are no words of it: redir() has judged them, and
+# a word glued before a > (cd sub>f) is the word of the cd. Why: bash
+# moves to sub for cd sub 2>/dev/null, so counting the redirection as a
+# second word left the directory unknown and every later relative target
+# unjudged. cdsep() applies
 # it at the separator that follows. Past the first 200 cd commands it
 # reads (ncd), a cd sets "\001" too and so moves nothing. Why a cap: each
 # cd joined by && lengthens the tracked path, which collapse() walks
@@ -264,13 +271,28 @@ function endcmd() { flush(); if (nw > base && found == "") { check(); redir() };
 # the denials this tracking removes were all cd <literal> && … > <relative>,
 # and a narrower rule that the scoping of bash cannot contradict is safer than a
 # wider one the scanner cannot read.
-function cdword(   a) {
+function cdword(   a, k, n, x, p) {
   pend = "\001"
   if (w[base + 1] != "cd" || kd > 0 || pin || ++ncd > 200) return
   pend = ""
-  if (nw != base + 2) return
-  a = w[base + 2]
-  if (a == "" || a ~ /^-/ || a ~ /[$`*?[{~]/ || a ~ /[\t\n]/ || index(a, "\002") > 0) return
+  n = 0
+  for (k = base + 2; k <= nw; k++) {
+    x = w[k]
+    if ((p = index(x, "\002")) > 0) {
+      if (substr(x, 1, p - 1) !~ /^[0-9]*[&<]?$/) { n++; a = substr(x, 1, p - 1) }
+      while ((p = index(x, "\002")) > 0) x = substr(x, p + 1)
+      if (x == "" || x == "|" || x == "&") k++
+      continue
+    }
+    if (x ~ /^[0-9]*</) {
+      sub(/^[0-9]*<+&?/, "", x)
+      if (x == "") k++
+      continue
+    }
+    n++; a = x
+  }
+  if (n != 1) return
+  if (a == "" || a ~ /^-/ || a ~ /[$`*?[{~]/ || a ~ /[\t\n]/) return
   if (a ~ /^\//) pend = collapse(a)
   else if (wdir ~ /^\//) pend = collapse(wdir "/" a)
 }

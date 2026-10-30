@@ -65,7 +65,8 @@
 # roots the temporary real/ (allowed), mkdir -p x && cd x && echo a >
 # ../y.log from the repository root (allowed, no existence test after
 # &&), cd / && echo a > y.log, cd / then a line end, cd / && (echo a >
-# y.log), and cd - && cd / && echo a > y.log (denied) — against the
+# y.log), cd - && cd / && echo a > y.log, and, from the repository root,
+# cd sub 2>/dev/null && echo a > ../../outside/x (denied) — against the
 # directory before a cd joined by ; whose target is no directory —
 # cd nonexist/a/b/c; echo a > ../../../../y.log and cd /nonexistent-dir;
 # echo a > ../../y.log (denied), and 6500 such cd commands to distinct
@@ -657,6 +658,9 @@ run_fixtures() {
     fx_deny "$hook" "cd / then a line end, a relative > read against /" "$rr" Bash "$FX_REPO/sub" $'cd /\necho a > y.log'
     fx_deny "$hook" "cd / && a subshell holding a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && (echo a > y.log)'
     fx_deny "$hook" "cd - leaves the directory unknown, a later cd / sets it" "$rr" Bash "$FX_REPO/sub" 'cd - && cd / && echo a > y.log'
+    # A redirection on a cd is no word of it: cd sub 2>/dev/null moves the
+    # directory to sub, where ../../outside/x lies outside every root.
+    fx_deny "$hook" "cd sub 2>/dev/null && a relative >, read against sub" "$rr" Bash "$FX_REPO" 'cd sub 2>/dev/null && echo a > ../../outside/x'
     # A cd joined by ; to a path that is no directory leaves the directory
     # where it was, as bash stays after a cd that fails.
     fx_deny "$hook" "cd to a relative path that does not exist; a relative > read against the directory before it" "$rr" Bash "$FX_REPO/sub" 'cd nonexist/a/b/c; echo a > ../../../../y.log'
