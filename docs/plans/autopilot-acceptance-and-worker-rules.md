@@ -514,6 +514,33 @@ in Discover), and the stdin question was settled by the probe.
    task rewords only item 11's "the empty stdin" and carries Step 10's
    criterion that `bash scripts/check-all.sh --self-test` counts match
    `docs/release-checklist.md`.
+5. (S3; ruled by the main session) S3's uncommitted Task 8 edit put two
+   apostrophes ("bash's scoping", "the input's cwd as cdsep()") into
+   comments inside the rails hook's single-quoted `RM_AWK` program, which
+   ended the shell quote; the hook then exited 2 on every call, and the
+   worker, which runs that hook through `--plugin-dir`, could make no Bash
+   or Edit call to fix it. The main session reworded the two comments
+   ("the scoping of bash", "the cwd of the input") in the working tree and
+   committed nothing; `bash -n` then exited 0, and the hook allowed
+   `git status` (exit 0) and denied `rm -rf /x` (exit 2) under the worker
+   marker. The rest of the Task 8 edit stays as S3 left it, for S3 to
+   finish, test, and commit. Why: no worker could act while the hook was
+   broken, and the reword changes comment text only. From here on, an
+   edit to the hook is made on a scratch copy, checked with `bash -n` and
+   `scripts/check-autopilot-rails-hook.sh`, then copied into place.
+6. (S3, Task 7 BLOCKED; ruled by the main session) `run.ps1` delivers the
+   prompt by having its inner script pipe the file's raw bytes to the
+   native `claude` (`Get-Content -AsByteStream -Raw -LiteralPath <prompt> |
+   & <exe> @argv`), not through `Start-Process -RedirectStandardInput`, and
+   its `#Requires -Version` moves from 7.3 to 7.4, with the header's reason
+   and the plugin README's "PowerShell 7.3 or later" updated. Evidence:
+   S3's probe on pwsh 7.6.7 (macOS) showed `-RedirectStandardInput` adds a
+   line end (150,000 bytes in, 150,001 read), so Step 7's byte-for-byte
+   self-test fails; the byte pipe passed the whole `run.ps1 --self-test`.
+   Why: Step 7 asks for the prompt byte for byte, the pipe is still the
+   process's standard input (Decision 3), and PowerShell 7.3 is out of
+   support. This departs from § The driver and stdin's "through its
+   process start's standard input" on that evidence.
 
 ## Autopilot
 
