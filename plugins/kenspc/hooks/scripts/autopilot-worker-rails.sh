@@ -170,7 +170,11 @@
 # it, or follows a cd whose run is not certain — one after a ||, or one
 # joined by && read past the end of its list or past a later || — read
 # against the directory before its list, or follows a cd whose target is
-# not a literal, not judged; remote git
+# not a literal, not judged; a relative cd word read against the tracked
+# directory where an exported CDPATH sends the shell to another one, and
+# a cd in the last element of a pipeline, which zsh (the Bash tool's
+# shell on macOS) runs in the current shell, read as moving nothing, as
+# bash runs it; remote git
 # through git lfs,
 # git submodule update --remote, or a git alias; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
