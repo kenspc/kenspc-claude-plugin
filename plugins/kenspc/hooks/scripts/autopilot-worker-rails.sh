@@ -73,9 +73,10 @@
 #       since bash runs what follows them whether the cd ran or not. Every
 #       other literal cd moves nothing: one after a ||, one alone whose
 #       target is no directory or past the 200 directory tests one call
-#       gets, one in any element of a pipeline or before a lone & (bash runs
-#       it in a subshell), and one in the body of an if, while, until, for,
-#       select, or case command, a { } group, or a function. A cd with no
+#       gets, one past the first 200 cd commands of the call, one in any
+#       element of a pipeline or before a lone & (bash runs it in a
+#       subshell), and one in the body of an if, while, until, for, select,
+#       or case command, a { } group, or a function. A cd with no
 #       word, cd -, a word that opens with -, more than one word, or a word
 #       that is no literal path leaves the directory unknown where a
 #       literal cd would move it. Not judged: a relative
@@ -157,11 +158,12 @@
 # subshell, a pipeline, the body of an if, while, until, for, select, or
 # case command, a { } group, or a function, a cd after a keyword or a {
 # (then cd, { cd), a cd reached through builtin cd, command cd, or an
-# assignment before it (VAR=x cd), or a pushd, which are not tracked and so
-# read against the directory before it, or follows a cd whose run is not
-# certain — one after a ||, or one joined by && read past the end of its
-# list or past a later || — read against the directory before its list,
-# or follows a cd whose target is not a literal, not judged; remote git
+# assignment before it (VAR=x cd), a cd past the first 200 of the call, or
+# a pushd, which are not tracked and so read against the directory before
+# it, or follows a cd whose run is not certain — one after a ||, or one
+# joined by && read past the end of its list or past a later || — read
+# against the directory before its list, or follows a cd whose target is
+# not a literal, not judged; remote git
 # through git lfs,
 # git submodule update --remote, or a git alias; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
@@ -254,13 +256,17 @@ function endcmd() { flush(); if (nw > base && found == "") { check(); redir() };
 # to, or "" when the hook cannot read its target as one literal path (no
 # word, cd -, a word that opens with -, more than one word, or a word
 # holding $, a backtick, a glob character, a brace, or ~). cdsep() applies
-# it at the separator that follows. Why only a literal at the top level:
+# it at the separator that follows. Past the first 200 cd commands it
+# reads (ncd), a cd sets "\001" too and so moves nothing. Why a cap: each
+# cd joined by && lengthens the tracked path, which collapse() walks
+# whole, so 5000 of them took about 17 seconds, past the timeout of the
+# hook, where a run denies nothing. Why only a literal at the top level:
 # the denials this tracking removes were all cd <literal> && … > <relative>,
 # and a narrower rule that the scoping of bash cannot contradict is safer than a
 # wider one the scanner cannot read.
 function cdword(   a) {
   pend = "\001"
-  if (w[base + 1] != "cd" || kd > 0 || pin) return
+  if (w[base + 1] != "cd" || kd > 0 || pin || ++ncd > 200) return
   pend = ""
   if (nw != base + 2) return
   a = w[base + 2]
@@ -586,7 +592,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; ldir = wdir; lop = 0; lor = 0; ntest = 0; kd = 0; pin = 0
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; ldir = wdir; lop = 0; lor = 0; ncd = 0; ntest = 0; kd = 0; pin = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }

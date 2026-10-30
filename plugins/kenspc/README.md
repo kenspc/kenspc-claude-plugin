@@ -2147,7 +2147,8 @@ It runs only when you type the command.
   by `;` or a line end when its target is an existing directory; the end
   of the list and a `||` later in it put the directory back where it was
   before the list, and a `cd` after a `||` moves nothing, since bash runs
-  what follows them whether the `cd` ran or not; a `cd` the hook cannot
+  what follows them whether the `cd` ran or not, as does a `cd` past the
+  first 200 of a call; a `cd` the hook cannot
   read as one literal path (no word, `cd -`, an option, more than one
   word, a `$`, a glob, or `~`) leaves the directory
   unknown, and a

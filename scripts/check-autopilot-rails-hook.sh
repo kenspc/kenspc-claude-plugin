@@ -69,7 +69,8 @@
 # directory before a cd joined by ; whose target is no directory —
 # cd nonexist/a/b/c; echo a > ../../../../y.log and cd /nonexistent-dir;
 # echo a > ../../y.log (denied), and 6500 such cd commands to distinct
-# paths, then a > to /etc (denied, timed) — and against the input's
+# paths, then a > to /etc, and 5000 cd a commands joined by &&, then a >
+# to /etc (denied, timed) — and against the input's
 # cwd or not at all — (cd /; echo a) > y.log, cd / | cat > y.log, and
 # cd / & echo a > y.log, and true | cd /; echo a > y.log (allowed),
 # true | cd b; echo a > ../../y.log from the temporary a/ (denied), cd b on a line of its own in the body
@@ -666,6 +667,12 @@ run_fixtures() {
     # cap on the tests this took about 13 seconds.
     t=$(awk 'BEGIN { for (i = 0; i < 6500; i++) printf "cd a%d; ", i }')
     fx_timed "$hook" "6500 cd commands to distinct paths that do not exist, then a > to /etc, decided in time" 2.5 "$t echo a > /etc/x" "redirects output outside" "$rr"
+    # 5000 cd a commands joined by && (about 40 KB), then a > to /etc,
+    # decided in under half the hook's timeout: each tracked cd lengthens
+    # the path collapsed at the next one, and with no cap on the tracked cd
+    # commands this took about 17 seconds.
+    t=$(awk 'BEGIN { for (i = 0; i < 5000; i++) printf "cd a && " }')
+    fx_timed "$hook" "5000 cd commands joined by &&, then a > to /etc, decided in time" 2.5 "$t echo a > /etc/x" "redirects output outside" "$rr"
     # A cd inside a subshell, before a |, or before a lone & moves nothing
     # for the redirections after it.
     fx "$hook" "(cd /; echo a) > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" '(cd /; echo a) > y.log'

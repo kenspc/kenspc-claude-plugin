@@ -100,7 +100,8 @@ items 42, 46, 48, and 49.
   joined to it by `&&`, a subshell among them included, or one alone in
   its list and joined by `;` or a line end when its target is an existing
   directory. The end of the list and a later `||` put the directory back
-  where it was before the list, and a `cd` after a `||` moves nothing. A
+  where it was before the list, and a `cd` after a `||` or past the first
+  200 of a call moves nothing. A
   `cd` it cannot read as one literal path leaves the directory unknown and
   the target unjudged; a `cd` inside a subshell or
   before a `|` or a lone `&` moves nothing. `check-autopilot-rails-hook.sh`
