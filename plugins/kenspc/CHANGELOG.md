@@ -103,8 +103,10 @@ items 42, 46, 48, and 49.
   where it was before the list, and a `cd` after a `||` or past the first
   200 of a call moves nothing. A
   `cd` it cannot read as one literal path leaves the directory unknown and
-  the target unjudged; a `cd` inside a subshell or
-  before a `|` or a lone `&` moves nothing. `check-autopilot-rails-hook.sh`
+  the target unjudged; a `cd` inside a subshell, in any element of a
+  pipeline, before a lone `&`, or in the body of a compound command or a
+  function moves nothing, and a `cd` reached through `builtin cd`,
+  `command cd`, or `VAR=x cd` is not tracked. `check-autopilot-rails-hook.sh`
   gains the cd fixtures and a tenth hook-copy mutant, the cd tracking
   removed, which must turn each fixture the reading changes red.
 

@@ -2153,8 +2153,10 @@ It runs only when you type the command.
   word, a `$`, a glob, or `~`) leaves the directory
   unknown, and a
   relative target after it is not judged, while a `cd`
-  inside a subshell or before a `|` or a lone `&` moves nothing, as bash
-  runs it in a subshell; a
+  inside a subshell, in any element of a pipeline, or before a lone `&`
+  moves nothing, as bash runs it in a subshell, and so does a `cd` in the
+  body of an `if`, `while`, `until`, `for`, `select`, or `case` command, a
+  `{ }` group, or a function; a
   target holding any other expansion, a command substitution, or a glob,
   or single-quoted text that begins with `~` or holds a `$`, is not judged
   (other single-quoted text is literal and judged), `/dev/null`, `/dev/stdout`,
@@ -2179,9 +2181,14 @@ It runs only when you type the command.
   (`trap 'rm -rf "$d"' EXIT`), interpreter-level deletes
   (Python, Node, Perl), `git clean`, and writes through Bash other than a
   redirection (`cp`, `mv`, `tee`, an interpreter's own writes), and a
-  redirection whose relative target follows a `cd` inside a subshell or
-  a pipeline, a `cd` after a keyword or a `{` (`then cd`, `{ cd`), or a
-  `pushd`, which it reads against the directory before it; also an
+  redirection whose relative target follows a `cd` inside a subshell, a
+  pipeline, the body of a compound command or a function, or past the
+  first 200 of a call, a `cd` after a keyword or a `{` (`then cd`,
+  `{ cd`), a `cd` reached through `builtin cd`, `command cd`, or an
+  assignment before it (`VAR=x cd`), or a `pushd`, which it reads against
+  the directory before it, or a `cd` whose run is not certain (after a
+  `||`, or joined by `&&` and read past the end of its list or a later
+  `||`), which it reads against the directory before its list; also an
   `rm` reached through a variable or an alias,
   or spelled through the escapes of `$'…'` (`$'\x72m'`),
   an `rm` after a redirection written before the command name
