@@ -707,6 +707,35 @@ its number.
     - row 13's window held no proposal, so its `pending` path was not
       exercised; pick a window that yields one (a wider `last <n>`, or a
       `since` before the project's newest rules).
+42. Rails-hook `cd` tracking gaps, deferred by the reviews of 4.15.0
+    (the batch's clarifications 9–11). Each is no looser than the hook
+    before 4.15.0, which read every relative target against the input's
+    cwd, but each judges a write against the wrong directory:
+    - a `cd` after `||`, or followed by `||`:
+      `false || cd /etc && echo a > passwd` and
+      `cd /etc && false || echo a > passwd` are allowed (F3);
+    - a `cd` inside a compound body moves nothing:
+      `if true; then cd /etc; fi; echo a > passwd` is allowed (SG1, which
+      the security-guidance hook flagged HIGH);
+    - a `||` inside a compound body resets the tracked directory:
+      `cd / && { false || echo a > y.log; }` is allowed (F1);
+    - an exported `CDPATH`, and zsh running a pipeline's last element in
+      the current shell, are not modelled.
+    One design covers them: a set of candidate directories in place of the
+    single tracked one, a relative target denied when it lands outside the
+    roots from any candidate. Also a false deny on the safe side:
+    `cd out && cd .. && echo a > y.log` (F2).
+43. Follow-ups from the 4.15.0 acceptance
+    (`docs/dry-runs/autopilot-acceptance-and-worker-rules-acceptance.md`):
+    - `APPEND_SP` on a nested autopilot's launch line reaches every worker
+      of the nested batch, so a case that tests whether workers ask freely
+      cannot set it (A3's "S4 asked no question" is weaker for it);
+    - the re-check directory names `<batch>-<tag>-recheck` and
+      `<batch>-<tag>-release-recheck` repeat the batch name, since a tag
+      already begins with it;
+    - a worker put its last question under `## Question for the main
+      session` in its final message without sending it (S3's verdict
+      question), so the main session found it only in the reply.
 
 ## Field suggestions (not yet scheduled)
 
@@ -719,17 +748,17 @@ reading of its own, it says so. The harvest, with each source's transcript
 path, timestamp, and quote, is in the maintainer's
 `~/Projects/_smoke/_analysis/field-suggestions-20261030/` (`dayaku-crm.md`,
 `jawatankosong.md`, `others.md`); the IDs in brackets are its entry IDs.
-Items 46 and 47 are workarounds that every plan or launch prompt repeats
+Items 48 and 49 are workarounds that every plan or launch prompt repeats
 rather than requests for a change.
 
-42. The reason an issue is closed without code [D4]. When Discover rules an
+44. The reason an issue is closed without code [D4]. When Discover rules an
     issue "comment and close, no code", the reason should be written down
     when it is ruled; in dayaku-crm upkeep-sweep (26 Oct) it was not, and
     the after-run session read the planning transcript to close four or
     five issues. The record it names, `.kenspc/probes/<batch>/DISCOVER.md`,
     is dayaku-crm's own convention, which its plan prompts ask for; whether
     generate-plan needs a place for such rulings is the first question.
-43. Review rulings, as autopilot main sessions met them:
+45. Review rulings, as autopilot main sessions met them:
     - A ruling that names one file of a finding that lists two [J1].
       code-fixer fixed only the named file, and the other half became a
       follow-up (JawatanKosong dx-3c-uploads S3b, finding E3, 21 Oct).
@@ -755,7 +784,7 @@ rather than requests for a change.
       what the shared CUSTOM_INSTRUCTIONS forbid, such as starting the app,
       gives code-fixer two conflicting instructions unless it says it
       overrides them (seo-3, 24 Oct).
-44. What code-fixer and the review agents are told:
+46. What code-fixer and the review agents are told:
     - code-fixer does not see the plan's locked Acceptance commands or its
       `Zero diff:` list [D6]. An S3b fix moved a function a locked command
       names, which cost an S5, an S3c, and an S4b (dayaku-crm
@@ -768,7 +797,7 @@ rather than requests for a change.
       suite while regression-verifier needed one, and S3 lifted the line
       for the verifier in a note after the CONTEXT block (dayaku-crm
       production-prep, 28 Oct).
-45. Session-handling lessons that a review of the global instructions
+47. Session-handling lessons that a review of the global instructions
     (29 Oct; basic-memory `meta/Global Rule Proposals From Other Repos`)
     left to this plugin as workflow rather than global rules [O7b, O7c,
     O7e], with one older lesson of the same kind [O12]. The target in the
@@ -786,8 +815,8 @@ rather than requests for a change.
       the rule (dayaku-crm, before 15 Oct).
     The same review left three more to the plugin — the heartbeat interval,
     no cron while waiting on an answer, and subagents not running the full
-    suite; they are items 46 and 47.
-46. The main session's own usage-limit stop [D16, O7a, O7f]. Every
+    suite; they are items 48 and 49.
+48. The main session's own usage-limit stop [D16, O7a, O7f]. Every
     dayaku-crm plan and autopilot launch since 15 Oct opens by telling the
     session to set three CronCreate wake-ups 45 minutes apart, then wait
     for the five-hour reset and go on without asking; plan sessions set
@@ -796,7 +825,7 @@ rather than requests for a change.
     worker's usage-limit end, not the main session's. JawatanKosong's
     planning session keeps a 45-minute heartbeat to keep its cache warm,
     which the user declined to make a global rule ("not for now", 25 Oct).
-47. The whole-suite gate across sessions [D11, O7d]. dayaku-crm runs every
+49. The whole-suite gate across sessions [D11, O7d]. dayaku-crm runs every
     whole suite only on another session's go, since two projects share the
     Mac, and 4.10.0's `Suite limit:` lock has not replaced it: every batch
     since ran `suite limit none`. Subagents cannot send messages, so
