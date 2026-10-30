@@ -71,8 +71,9 @@
 #       stays after a cd that fails; a cd with no word, cd -, a word that
 #       opens with -, more than one word, or a word that is no literal path,
 #       and a cd joined by ||, leave it unknown, and so does a || later in
-#       the same list after a cd that moved it at a &&; a cd before a | or
-#       a lone & moves nothing (bash runs it in a subshell), and so does a
+#       the same list after a cd that moved it at a &&; a cd in any element
+#       of a pipeline, or before a lone &, moves nothing (bash runs it in a
+#       subshell), and so does a
 #       cd in the body of an if, while, until, for, select, or case
 #       command, a { } group, or a function. Not judged: a relative
 #       target while the directory is unknown, a target holding any other
@@ -254,7 +255,7 @@ function endcmd() { flush(); if (nw > base && found == "") { check(); redir() };
 # wider one the scanner cannot read.
 function cdword(   a) {
   pend = "\001"
-  if (w[base + 1] != "cd" || kd > 0) return
+  if (w[base + 1] != "cd" || kd > 0 || pin) return
   pend = ""
   if (nw != base + 2) return
   a = w[base + 2]
@@ -286,7 +287,9 @@ function kwd(   i, x) {
 # existing directory (isdir), and otherwise wdir stays where it was, since
 # bash carries on after a cd that failed and the old directory then holds;
 # after || it leaves wdir unknown (""), and before a | or a lone & it moves
-# nothing, since bash runs the cd in a subshell there. A || later in the
+# nothing, since bash runs the cd in a subshell there; pin marks the
+# command after a | (or |&), the next element of a pipeline, whose cd
+# moves nothing either (cdword), as bash runs each element in a subshell. A || later in the
 # same list, after a cd that moved wdir at a &&, leaves wdir unknown too
 # (lcd), since the command after it also runs when that cd failed; the
 # list ends at a ; or a lone &. A line end with no command since the last
@@ -308,6 +311,7 @@ function cdsep(s,   k) {
   }
   if (k == "o" && lcd) wdir = ""
   if (k == "e" || k == "b") lcd = 0
+  pin = (k == "p")
   pend = "\001"
 }
 # isdir(p): whether the absolute path p is an existing directory when the
@@ -570,7 +574,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; lcd = 0; ntest = 0; kd = 0
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; lcd = 0; ntest = 0; kd = 0; pin = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }
