@@ -489,7 +489,11 @@ selftest_suite_vars() {
 # .exit missing or not reading 0 after the wait, a stdin that differs from
 # the prompt file by a byte (a quote, a backtick, a non-ASCII character,
 # and the trailing newline in it), an argument that holds the prompt, or a
-# resume not passed --resume — naming the first item that fails.
+# resume not passed --resume; then, for a launch under selftest-s19-c given
+# the prompt by a relative path with a directory part while CDPATH is
+# exported to a directory holding a same-named subdirectory with another
+# prompt, a .exit missing or not reading 0 after the wait, or a stdin that
+# differs from the intended prompt file — naming the first item that fails.
 self_test() {
   local base LOGS TAG RTAG BTAG MTAG ETAG XTAG YTAG PETAG PSTAG PRTAG plugin_case n exit_status session flag
   local WSDIR W1TAG W2TAG W3TAG S1TAG S2TAG repo_top
@@ -995,6 +999,29 @@ STUB
   done
   grep -qx -- '--resume' "$base/capture/$ITAG-r1.argv" \
     || { echo "self-test failed: the stdin case's resume was not passed --resume" >&2; return 1; }
+
+  # The same launch under <tag>-c, given pdir/stdin-prompt.md, with CDPATH
+  # exported to a directory that holds a pdir/ of its own with another
+  # prompt in it: the stub must still receive the file beside the
+  # self-test's cwd. Why: cd searches an exported CDPATH first and echoes
+  # the directory it found, so a resolution that kept CDPATH would open the
+  # other prompt, or a path of two lines.
+  mkdir -p "$base/pdir" "$base/decoy/pdir" || die "cannot create the CDPATH case's directories"
+  cp "$base/stdin-prompt.md" "$base/pdir/stdin-prompt.md" \
+    || die "cannot write the CDPATH case's prompt file"
+  printf 'DECOY: the prompt an exported CDPATH would find.\n' > "$base/decoy/pdir/stdin-prompt.md" \
+    || die "cannot write the CDPATH case's decoy prompt"
+  AUTOPILOT_CLAUDE=$base/stub/stdin
+  cd "$base" || die "cannot cd to $base"
+  CDPATH=$base/decoy; export CDPATH
+  launch "$ITAG-c" "$base/sub" pdir/stdin-prompt.md "" > /dev/null
+  unset CDPATH
+  AUTOPILOT_CLAUDE=$saved_exe
+  n=0; until [ -f "$LOGS/$ITAG-c.exit" ] || [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
+  [ "$(cat "$LOGS/$ITAG-c.exit" 2>/dev/null)" = "0" ] \
+    || { echo "self-test failed: $LOGS/$ITAG-c.exit does not read 0 after the wait (the relative prompt path resolved through CDPATH?)" >&2; return 1; }
+  cmp -s "$base/pdir/stdin-prompt.md" "$base/capture/$ITAG-c.stdin" \
+    || { echo "self-test failed: the stub launched under $ITAG-c with CDPATH exported did not receive the prompt file on stdin byte for byte" >&2; return 1; }
 
   echo "self-test passed"
   return 0
