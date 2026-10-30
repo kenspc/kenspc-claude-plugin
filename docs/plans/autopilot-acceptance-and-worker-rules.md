@@ -203,7 +203,8 @@ last.
 
 ### Step 1: The extractor's field argument and span-led line
 
-- **Do:** in `scripts/extract-acceptance.sh`, the optional third argument
+- **Do:** in `plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh`,
+  the optional third argument
   selects the field (`Acceptance` or `Release checks`; any other value is
   exit 2); the label match takes the field's name, note included; the
   second output line lists span-led cases; the stderr reasons that name
@@ -285,8 +286,9 @@ last.
   paragraph, "Writing a check", stating with a reason each: an `Acceptance:`
   or `Release checks:` command is one code span alone before ` — PASS: `; a
   check over the lines the batch added, or one proving a name is gone,
-  excludes `docs/plans/` and `docs/tasks/` (the spec's and the task
-  document's directories), since both sit in the tree until S6 removes them;
+  excludes the spec's and the task document's paths — `docs/plans/` and
+  `docs/tasks/` where the chain writes them — since both sit in the tree
+  until S6 removes them;
   a check finds a commit by its subject, never by its position, since S6 and
   later fixes add commits. In generate-plan's Autopilot element, the
   pre-print check's third item ("every `Acceptance:` sub-bullet holds
@@ -332,16 +334,27 @@ last.
 
 ### Step 8: The rails hook follows a literal `cd` (no dependency)
 
-- **Do:** `hooks/scripts/autopilot-worker-rails.sh` as § The rails hook and
-  `cd` says, header included.
+- **Do:** `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh` as § The
+  rails hook and `cd` says, header included.
 - **Guard:** `scripts/check-autopilot-rails-hook.sh` fixtures, as simulated
-  tool-input JSON with a cwd inside the repository root: `cd <root>/x &&
-  echo a > ../y.log` allowed; `cd / && echo a > y.log` denied;
-  `cd x; echo a > ../../y.log` judged from `x`; `(cd /; echo) > y.log`
-  judged from the input's cwd; `cd "$D" && echo a > y.log` not judged;
-  `cd x | cat > y.log` judged from the input's cwd; `cd / || echo a > y.log`
-  not judged; `cd - && echo a > y.log` and `cd && echo a > y.log` not
-  judged. Self-test mutant: the `cd` tracking removed.
+  tool-input JSON whose cwd is `<root>/sub`, `<root>` the fixture's
+  repository root and the only write root that matters here; each outcome
+  differs from what the other reading would give:
+  - `cd <root>/sub/x && echo a > ../../y.log` allowed (`<root>/y.log`;
+    read from the input's cwd it would lie outside the root);
+  - `cd x; echo a > ../../y.log` allowed, the same way;
+  - `cd / && echo a > y.log` denied (`/y.log`);
+  - `(cd /; echo a) > y.log` allowed: the redirection is read from the
+    input's cwd, not from `/`;
+  - `cd / | cat > y.log` allowed, the same way;
+  - `cd "$D" && echo a > ../../y.log`, `cd / || echo a > ../../y.log`,
+    `cd - && echo a > ../../y.log`, and `cd && echo a > ../../y.log`
+    allowed: the directory is unknown and the target not judged, where the
+    input's cwd would deny it.
+
+  Self-test mutant: the `cd` tracking removed, which reads every target
+  from the input's cwd and so turns the first three fixtures and the last
+  group red.
 - **Acceptance:** the guard and its self-test exit 0; acceptance case A5
   passes.
 
@@ -349,7 +362,10 @@ last.
 
 - **Do:** in the preamble:
   - § 1: the first line is `question <tag>: …` with `<tag>` filled in as the
-    worker's own tag, at the same time and in the same way as `<role>`;
+    worker's own tag (`<batch>-s3`, not a topic label), at the same time
+    and in the same way as `<role>` — when `_prompts/<batch>-<tag>.md` is
+    assembled at the launch (§ Launch, wait, return) — and § 1 says the tag
+    is that literal value;
     § The message protocol says the answer's first line repeats the tag of
     the question's first line as written, whatever it is.
   - § 3: after "No resource the brief does not name", one sentence: a
@@ -357,10 +373,10 @@ last.
     a browser build the work needs, that the machine does not hold is asked
     for, and `<main name>` fetches it and answers with a local path; this
     is a route, not a new rail. A package neither names is a new
-    dependency, which stays stop condition 7 (a). Phase 2 § How the main session rules gains how the main
-    session answers it: fetch it, check it against the registry's integrity
-    hash where the registry publishes one, place it in the workspace, and
-    answer with its path.
+    dependency, which stays stop condition 7 (a). Phase 2 § How the main
+    session rules gains how the main session answers it: fetch it, check
+    it against the registry's integrity hash where the registry publishes
+    one, place it in the workspace, and answer with its path.
   - § 3, at "write them into every subagent prompt": a summary with a path
     to the full text does not meet the rule, with the reason — a subagent
     may never read the file, and the rails hook holds only part of the rails.
@@ -383,9 +399,8 @@ last.
 Each script change is held by its guard's fixtures and a self-test mutant
 that must turn the guard red (Steps 1, 6, 7, 8); each guard's header,
 which lists its fixtures and counts its self-test mutants, is updated with
-them. The skill-text changes are
-held by the acceptance cases below, run as nested headless sessions on
-seeds, and by the reviewers' reading. The stdin change, which every later
+them. The skill-text changes are held by the acceptance cases below, run
+as nested headless sessions on seeds, and by the reviewers' reading. The stdin change, which every later
 launch depends on, was probed before this plan (§ The stdin probe) and is
 exercised live by every worker of acceptance case A3, which the nested
 main session launches through its own copy of HEAD's driver (A2 stops
@@ -480,7 +495,7 @@ in Discover), and the stdin question was settled by the probe.
 - Zero diff: plugins/kenspc/agents/, plugins/kenspc/shared/, plugins/kenspc/commands/, plugins/kenspc/references/, plugins/kenspc/hooks/hooks.json, plugins/kenspc/skills/task-review/, plugins/kenspc/skills/task-implement/, plugins/kenspc/skills/generate-brief/, plugins/kenspc/skills/generate-task/, plugins/kenspc/skills/diagnose-bug/, plugins/kenspc/skills/prototype/, plugins/kenspc/skills/retro/, plugins/kenspc/skills/init-project/, plugins/kenspc/skills/generate-guide/, plugins/kenspc/skills/autopilot/scripts/suite-slots.sh, plugins/kenspc/skills/autopilot/scripts/temp-candidates.sh
 - Acceptance:
   - A1 (guards): `bash scripts/check-all.sh`, `bash scripts/check-all.sh --self-test`, `bash plugins/kenspc/skills/autopilot/scripts/run.sh --self-test`, and `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test` at the batch's HEAD — PASS: every command exits 0, the two drivers print `self-test passed`, and the self-test counts equal `docs/release-checklist.md`'s
-  - A2 (the span-led question, a session that cannot ask): a nested repo-mode autopilot, headless, launched with `AUTOPILOT_PLUGIN_DIR` the plugin directory, so it runs HEAD's skill and copies HEAD's driver, on a one-task seed whose spec's `Acceptance:` holds one entry: the code span `true`, then the words `from the seed's root`, then its PASS criterion — PASS: the run ends before any worker starts (no `start` line in its timeline), its final message names the entry and the words after the span, and its state file records the stop
+  - A2 (the span-led question, a session that cannot ask): a nested repo-mode autopilot, headless, made a session that cannot ask with `APPEND_SP="Work without stopping; do not ask clarifying questions."` on its launch line, launched with `AUTOPILOT_PLUGIN_DIR` the plugin directory, so it runs HEAD's skill and copies HEAD's driver, on a one-task seed whose spec's `Acceptance:` holds one entry: the code span `true`, then the words `from the seed's root`, then its PASS criterion — PASS: the run ends before any worker starts (no `start` line in its timeline), its final message names the entry and the words after the span, and its state file records the stop
   - A3 (a description case and a release check): a nested repo-mode autopilot, headless, as A2, on a one-task seed with `Standalone review: off`, `Walk: off`, `Acceptance:` holding one command and one description case whose text holds A4's marker word, and `Release checks:` holding one check, the code span `git log --format=%s | grep -q 'remove batch'` (the commit found by its subject, as Step 5's writing rule asks) with the criterion exit 0 — PASS: S4 runs the description case without a question to the main session and replies with the commands it ran and their exit codes; S6 replies with the release check's file and exit 0; the user report lists the release check with its exit code
   - A4 (no prompt on the command line): during A3, while the nested run's S4 runs, `ps -axo args` grepped in the bracket form (`grep -c '[M]ARKER'`) for a marker word that only A3's description case text holds — text the nested S4's task block copies into its prompt as written, and that the nested autopilot's own launch prompt does not hold — PASS: the count is 0, and the same grep for the nested S4's session id, the positive control, counts at least 1
   - A5 (the hook live): a session started through HEAD's `plugins/kenspc/skills/autopilot/scripts/run.sh` (not the batch's driver copy, which is the installed version's), with `AUTOPILOT_PLUGIN_DIR` the plugin directory and `AUTOPILOT_WORKSPACE` the workspace, its cwd a throwaway seed one level under the workspace, `<workspace>/<batch>-a5/`, whose prompt runs `mkdir -p <workspace>/a5/x && cd <workspace>/a5/x && echo a > ../../a5.log` — a target that, read against the seed's cwd, lies outside every root — and then `cd / && echo b > a5-denied.log` — PASS: the first command runs and `<workspace>/a5.log` holds `a`; the second is denied with `autopilot rails:` in its error, and neither `/a5-denied.log` nor `<workspace>/<batch>-a5/a5-denied.log` exists
