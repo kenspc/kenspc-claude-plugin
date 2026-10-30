@@ -5,7 +5,7 @@ the CHANGELOG records it from then on. The remaining items are renumbered
 when one leaves, so text outside this file names an item by its subject, not
 its number.
 
-## Next minor (4.15.0)
+## Next minor (4.16.0)
 
 1. Whether to merge bug-reviewer and edge-case-reviewer: decide once 3.5.x
    has three or more runs with angle-labelled data (left open in G6-b).
@@ -719,47 +719,17 @@ reading of its own, it says so. The harvest, with each source's transcript
 path, timestamp, and quote, is in the maintainer's
 `~/Projects/_smoke/_analysis/field-suggestions-20261030/` (`dayaku-crm.md`,
 `jawatankosong.md`, `others.md`); the IDs in brackets are its entry IDs.
-Items 49–51 are workarounds that every plan or launch prompt repeats rather
-than requests for a change.
+Items 46 and 47 are workarounds that every plan or launch prompt repeats
+rather than requests for a change.
 
-42. Acceptance commands and the `## Autopilot` section, as batches met them:
-    - Description cases in S4 [J5]. When the extraction writes only
-      `<nn>.case` files, the S4 block still says to run each case as
-      `<shell> <file>` and says nothing on how to judge a description, so
-      S4 stopped to ask (JawatanKosong fix-1-security, 22 Oct; seo-phase-2,
-      25 Oct).
-    - An entry with words after its code span [J6]. `` `dotnet build` from
-      the repository root — PASS: … `` extracts as a description case, not
-      a command, with no warning; five JawatanKosong batches (fix-6, seo-1,
-      seo-2, fix-7, seo-phase-2). State it in the section grammar, or have
-      Phase 0's trial extraction name an entry that opens with a code span
-      but extracts as a case.
-    - Checks that count the batch's own documents [D5, J16]. A check over
-      the lines added since the baseline, or one proving a deleted name is
-      gone, matches the batch's plan and task document; the plan session's
-      rehearsal on the reference build, which holds no plan, cannot catch
-      it. Suggested: exclude `docs/plans/` and `docs/tasks/` from the start
-      (dayaku-crm home-dashboard, 27 Oct; JawatanKosong dx-1-layout and
-      dx-3b-masters, 20–21 Oct).
-    - Release checks that find a commit by position [D3]. `git diff HEAD~2
-      HEAD~1` or "the last five commits" fail once any commit follows the
-      release preparation. Suggested: find the commit by its subject, or
-      check the release commit itself (dayaku-crm ui-alignment-2, 22 Oct;
-      upkeep-sweep, 26 Oct; production-prep, 28 Oct).
-    - S6's release checks are typed into its task block, where S4's
-      commands are extracted from the plan at the baseline [D21]
-      (dayaku-crm home-dashboard, 27 Oct).
-    - `zero-diff.sh` compares whole paths and takes no exclusion, so a plan
-      that keeps a directory unchanged but for one file lists every other
-      file [D20] (dayaku-crm reports-pages, 16 Oct).
-43. The reason an issue is closed without code [D4]. When Discover rules an
+42. The reason an issue is closed without code [D4]. When Discover rules an
     issue "comment and close, no code", the reason should be written down
     when it is ruled; in dayaku-crm upkeep-sweep (26 Oct) it was not, and
     the after-run session read the planning transcript to close four or
     five issues. The record it names, `.kenspc/probes/<batch>/DISCOVER.md`,
     is dayaku-crm's own convention, which its plan prompts ask for; whether
     generate-plan needs a place for such rulings is the first question.
-44. Review rulings, as autopilot main sessions met them:
+43. Review rulings, as autopilot main sessions met them:
     - A ruling that names one file of a finding that lists two [J1].
       code-fixer fixed only the named file, and the other half became a
       follow-up (JawatanKosong dx-3c-uploads S3b, finding E3, 21 Oct).
@@ -785,7 +755,7 @@ than requests for a change.
       what the shared CUSTOM_INSTRUCTIONS forbid, such as starting the app,
       gives code-fixer two conflicting instructions unless it says it
       overrides them (seo-3, 24 Oct).
-45. What code-fixer and the review agents are told:
+44. What code-fixer and the review agents are told:
     - code-fixer does not see the plan's locked Acceptance commands or its
       `Zero diff:` list [D6]. An S3b fix moved a function a locked command
       names, which cost an S5, an S3c, and an S4b (dayaku-crm
@@ -798,29 +768,7 @@ than requests for a change.
       suite while regression-verifier needed one, and S3 lifted the line
       for the verifier in a note after the CONTEXT block (dayaku-crm
       production-prep, 28 Oct).
-46. Worker rules:
-    - No network [J2]. The preamble does not say that a dependency from the
-      network is fetched by the main session. S2 found Quill 2.0.3 missing
-      and asked; the main session ran `npm pack` and checked the integrity
-      hash (JawatanKosong dx-3c-uploads, 21 Oct). The implementers of fix-3
-      and fix-7 met the same with a Playwright browser.
-    - Question tags [J7]. Workers opened questions with topic labels
-      (`question batch-gate:`, `question s3b-narrow-rulings:`), and an
-      answer came back under the worker's tag, not the question's, which
-      S3c matched by content (JawatanKosong seo-2, 23 Oct). Suggested:
-      answers echo the question's tag.
-    - Rails text in subagent prompts [D8]. Workers wrote the rails in full
-      once, to a file under the run directory, and gave each dispatch a
-      short form and the path; nothing breached, and a worker asked whether
-      the preamble accepts that form (dayaku-crm user-guide-part-2, 16 Oct;
-      home-dashboard, 27 Oct).
-    - S4w screenshots [J4]. The Playwright MCP's output directory is shared
-      by every session on the Mac, and an S4w that moved its screenshots by
-      glob caught 12 files from another walk (JawatanKosong
-      dx-3e-remove-devextreme, 22 Oct). Suggested: the S4w block names a
-      batch-unique prefix and moves files by exact name. The relative-name
-      half is item 31's F1.
-47. Session-handling lessons that a review of the global instructions
+45. Session-handling lessons that a review of the global instructions
     (29 Oct; basic-memory `meta/Global Rule Proposals From Other Repos`)
     left to this plugin as workflow rather than global rules [O7b, O7c,
     O7e], with one older lesson of the same kind [O12]. The target in the
@@ -838,24 +786,8 @@ than requests for a change.
       the rule (dayaku-crm, before 15 Oct).
     The same review left three more to the plugin — the heartbeat interval,
     no cron while waiting on an answer, and subagents not running the full
-    suite; they are items 50 and 51.
-48. The rails hook reads a relative redirect that follows a `cd` in the same
-    command against the input's cwd [D10, J14]. Its header lists the case
-    among its known misses; workers were denied or warned in four batches
-    and now write every redirect as an absolute path (dayaku-crm
-    reports-pages, 16 Oct, and ui-alignment-1, 19 Oct; JawatanKosong
-    fix-2-uploads, 22 Oct, and seo-2, 23 Oct). No item plans the fix.
-49. `run.sh` passes the worker's prompt as an argument
-    (`cmd=("$exe" -p "$prompt" …)`), so `ps` and `pgrep -f` show the whole
-    prompt, and a check that greps the process list for `vitest` or
-    `testhost` matches the workers themselves [D9]. dayaku-crm plans carry
-    anchored patterns and "never `pgrep -f`" in every prompt, and workers
-    relearned it in user-guide-part-2 (16 Oct), ui-alignment-1 and -2
-    (19 and 22 Oct), and home-dashboard (27 Oct). A reading no session
-    proposed: passing the prompt on stdin or from a file would remove the
-    cause; the driver's empty stdin (item 11) and `run.ps1` would need the
-    same look.
-50. The main session's own usage-limit stop [D16, O7a, O7f]. Every
+    suite; they are items 46 and 47.
+46. The main session's own usage-limit stop [D16, O7a, O7f]. Every
     dayaku-crm plan and autopilot launch since 15 Oct opens by telling the
     session to set three CronCreate wake-ups 45 minutes apart, then wait
     for the five-hour reset and go on without asking; plan sessions set
@@ -864,7 +796,7 @@ than requests for a change.
     worker's usage-limit end, not the main session's. JawatanKosong's
     planning session keeps a 45-minute heartbeat to keep its cache warm,
     which the user declined to make a global rule ("not for now", 25 Oct).
-51. The whole-suite gate across sessions [D11, O7d]. dayaku-crm runs every
+47. The whole-suite gate across sessions [D11, O7d]. dayaku-crm runs every
     whole suite only on another session's go, since two projects share the
     Mac, and 4.10.0's `Suite limit:` lock has not replaced it: every batch
     since ran `suite limit none`. Subagents cannot send messages, so

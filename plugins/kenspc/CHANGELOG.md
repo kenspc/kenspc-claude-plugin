@@ -9,7 +9,7 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
-## 4.15.0 — unreleased
+## 4.15.0 — 2026-10-30
 
 The autopilot reads its acceptance commands more carefully, gains release
 checks, and passes each worker its prompt on stdin; the worker rules gain
@@ -25,6 +25,13 @@ arrives on stdin. The rails hook denied redirections after
 `cd <literal> && …` in four batches, reading the relative target against
 the call's working directory; it now follows a literal `cd`. Roadmap
 items 42, 46, 48, and 49.
+
+The release smoke was the batch's acceptance run, cases A1–A5
+(`docs/dry-runs/autopilot-acceptance-and-worker-rules-acceptance.md`): the
+guards and both drivers' self-tests, a nested batch that stopped on a
+span-led entry, one that ran a description case and a release check, the
+process list holding no prompt text, and the rails hook live. Only the
+plan's clarifications changed after it, so no separate smoke row was run.
 
 ### Added
 

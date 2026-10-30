@@ -1,6 +1,6 @@
 {
   "name": "kenspc-claude-plugin",
-  "description": "Claude Code plugins for an opinionated plan-before-code workflow: project initialization, discovery brief, prototypes, plan, task decomposition, bug diagnosis, batch implementation, multi-angle code review, retrospectives that rank recurring problems across batches and propose verified changes, and unattended batch runs to a release preparation with a model and effort per role, rails that reach every subagent, and a main session that rules every point the spec leaves open.",
+  "description": "Claude Code plugins for an opinionated plan-before-code workflow: project initialization, discovery brief, prototypes, plan, task decomposition, bug diagnosis, batch implementation, multi-angle code review, retrospectives that rank recurring problems across batches and propose verified changes, and unattended batch runs to a release preparation with a model and effort per role, acceptance and release checks taken from the spec, rails that reach every subagent, and a main session that rules every point the spec leaves open.",
   "owner": {
     "name": "Sim Poh Chuan",
     "email": "kenspc@hotmail.com"
