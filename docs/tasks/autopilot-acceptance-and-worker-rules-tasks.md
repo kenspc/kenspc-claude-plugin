@@ -62,6 +62,11 @@ In `check-autopilot-scripts.sh`, add fixtures and assertions:
   named on the `span-led:` line (`span-led: none` when it is the only one);
 - a bad field name, exit 2, no file written.
 
+The existing extractor assertions that compare the whole stdout with the
+counts line (`[[ "$stdout" == "commands: <n>, cases: <m>" ]]`, seven of
+them today) compare the first line with the counts and the second line with
+`span-led: none`, so the new line is held in every existing fixture too.
+
 Add two self-test mutants of the extractor copy: the field argument ignored
 (always `Acceptance`), and the span-led test dropped (the line always
 `none`). Update the guard's header: the fixture list, and the mutant count
@@ -71,9 +76,13 @@ and list in the `--self-test` paragraph (eleven becomes thirteen).
 - `bash scripts/check-autopilot-scripts.sh` exits 0.
 - `bash scripts/check-autopilot-scripts.sh --self-test` exits 0, and its
   output shows each of the two new mutants turning the guard red.
-- Run by hand on a spec whose `Acceptance:` holds one command and the
-  span-led entry above, the extractor prints `commands: 1, cases: 1` on its
-  first line and `span-led: 02` on its second.
+- Run by hand on a spec whose `Acceptance:` holds one command and then the
+  span-led entry above, in that order, the extractor prints
+  `commands: 1, cases: 1` on its first line and `span-led: 02` on its
+  second.
+- `grep -c '== "commands: [0-9]*, cases: [0-9]*" ]]' scripts/check-autopilot-scripts.sh`
+  prints 0: no assertion still compares the whole stdout with the counts
+  line alone (before the change it prints 7, the positive control).
 - `bash plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh <spec> <dir> Bogus`
   exits 2 and writes no file.
 - `bash scripts/check-all.sh` exits 0.
@@ -274,8 +283,10 @@ directory changed (exit 0); a non-excluded sibling changed (exit 1); a
 bracketed path still read literally with the new form; a paths file of
 exclusions only (exit 2). Two self-test mutants of the zero-diff copy: the
 exclusion dropped (the `!` path compared as a plain path), and the literal
-magic dropped. Update the header's fixture list and mutant count and list
-(thirteen becomes fifteen, counting from Task 1).
+magic dropped. The existing zero-diff assertions on the count line
+(`compared: 2 paths`, `compared: 1 paths`) expect the new form
+(`compared: 2 paths, 0 excluded`). Update the header's fixture list and
+mutant count and list (thirteen becomes fifteen, counting from Task 1).
 
 In the autopilot skill: the label table's `Zero diff:` row describes the
 `!` form; Phase 2 § The zero-diff check holds `<n>` to the field's paths
@@ -288,8 +299,13 @@ check resolves an exclusion by its path without the `!`.
 - `bash scripts/check-autopilot-scripts.sh` exits 0.
 - `bash scripts/check-autopilot-scripts.sh --self-test` exits 0, and its
   output shows each of the two new mutants turning the guard red.
-- `grep -n 'compared:' plugins/kenspc/skills/autopilot/SKILL.md` shows every
-  reading of the count line in the `<n> paths, <m> excluded` form.
+- `grep -n 'compared: [0-9<n>]* paths"' scripts/check-autopilot-scripts.sh`
+  finds no assertion on the old count form (before the change it finds the
+  existing ones, the positive control).
+- Each line `grep -n 'compared:' plugins/kenspc/skills/autopilot/SKILL.md`
+  finds that reads the count either names both counts (`<n>` paths and
+  `<m>` excluded) or reads it "as § The zero-diff check reads them", and
+  § The zero-diff check names both.
 - `bash scripts/check-all.sh` exits 0.
 
 ---
@@ -456,7 +472,10 @@ no other file):
   — `Release checks:`, the span-led question, description cases in S4, the
   `!` form of `Zero diff:`, the prompt on stdin, the network route, the
   question-tag echo, batch-unique screenshot names, and the hook's `cd`
-  handling (Steps 2–9); and the skills table's generate-plan row, which
+  handling (Steps 2–9) — including the README's descriptions of the two
+  scripts' output, which today say they print `commands: <n>, cases: <m>`
+  and `compared: <n> paths`, and gain the `span-led:` line and the
+  `<m> excluded` count (Steps 1 and 6); and the skills table's generate-plan row, which
   names the pre-print checks — `Release checks:` and the span-to-PASS check
   (Step 5).
 - `plugins/kenspc/CHANGELOG.md` § a new `## 4.15.0 — unreleased` entry above
