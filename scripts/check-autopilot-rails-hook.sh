@@ -77,7 +77,8 @@
 # to /etc (denied, timed) — and against the input's
 # cwd or not at all — (cd /; echo a) > y.log, cd / | cat > y.log, and
 # cd / & echo a > y.log, and true | cd /; echo a > y.log (allowed),
-# true | cd b; echo a > ../../y.log from the temporary a/ (denied), cd b on a line of its own in the body
+# true | cd b; echo a > ../../y.log and true |& cd b; echo a > ../../y.log
+# from the temporary a/ (denied), cd b on a line of its own in the body
 # of an if, for, while, until, select, or case command, a { } group, or a
 # function written f() { or function f {,
 # then echo a > ../../y.log after the body, from the temporary a/ (denied,
@@ -704,6 +705,7 @@ run_fixtures() {
     # from the temporary a/, neither does cd b to the existing b/.
     fx "$hook" "true | cd /; echo a > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" 'true | cd /; echo a > y.log'
     fx_deny "$hook" "a cd after a | moves nothing" "$WORK/real" Bash "$WORK/real/a" 'true | cd b; echo a > ../../y.log'
+    fx_deny "$hook" "a cd after a |& moves nothing" "$WORK/real" Bash "$WORK/real/a" 'true |& cd b; echo a > ../../y.log'
     # A cd on a line of its own in the body of a compound command or a
     # function moves nothing: b/ exists under the temporary real/a/, so a
     # cd read as top-level would move the directory there and allow the >.
