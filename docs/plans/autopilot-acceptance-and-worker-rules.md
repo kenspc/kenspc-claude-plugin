@@ -154,9 +154,13 @@ A `Zero diff:` path written with a leading `!` is an exclusion:
 `:(literal)<path>` and each exclusion as `:(exclude,literal)<path>`, so a
 bracket in a path is still no glob. A paths file of exclusions only is
 refused (exit 2), since `git diff` with only exclusions compares everything
-else. The count line becomes `compared: <n> paths, <m> excluded`; the
-skill's Phase 2 § The zero-diff check reads the line as before, with the
-new form.
+else. The count line becomes `compared: <n> paths, <m> excluded`, `<n>`
+the paths without `!` and `<m>` those with it; the skill's Phase 2 § The
+zero-diff check holds `<n>` to the field's paths without `!` and `<m>` to
+its `!` paths, a difference in either being the stop it is today. The
+absent-at-the-baseline check, in the script and before the first launch,
+resolves an exclusion by its path with the `!` removed. A path whose own
+name begins with `!` cannot be listed.
 
 ### The rails hook and `cd`
 
@@ -240,23 +244,34 @@ last.
 - **Do:** in the autopilot skill:
   - the label table gains `Release checks:` — `none`, or one sub-bullet per
     check in `Acceptance:`'s grammar, each one code span; default `none`;
-  - Phase 0's trial extraction also extracts `Release checks:`, in both
-    modes, and a field that yields any `.case` is the settings stop — a
+  - Phase 0, when the section holds a `Release checks:` field other than
+    `none`, in both modes (in brief entry before S2, as the `Acceptance:`
+    trial runs): the main session saves the spec to
+    `<workspace>/_prompts/<batch>-spec.md` — in plugin mode too, so the
+    workspace layout's `(repo mode)` note no longer covers that file — and
+    extracts the field with `Release checks` as the third argument into
+    `<workspace>/_prompts/<batch>-release-cmds/`, which S6 compares
+    against; a field that yields any `.case` is the settings stop — a
     release check is a command, and a description there is a value outside
-    the field's grammar;
-  - both S6 blocks gain a paragraph: after the last commit, extract the
-    checks again with the same copy into a directory of S6's own, `cmp`
-    each file against the main session's extraction as S4 does, run each as
-    `<shell> <file>` from the repository root at that commit (through the
-    suite-slot wrapper when `Suite limit:` lists its prefix), and reply with
-    each check's file and exit code; a failing check is reported, not fixed;
+    the field's grammar. An absent field, or `none`, runs no extraction.
+    Why: the extractor exits 2 when the spec has no such field, and an
+    absent `Release checks:` is the default, not an error;
+  - both S6 blocks gain a paragraph, written when the field names checks:
+    after the last commit, extract the checks again with the same copy
+    into `<workspace>/_prompts/<batch>-<tag>-release-recheck/`, `cmp` each
+    file against `<batch>-release-cmds/` as S4 does against its
+    directory, run each as `<shell> <file>` from the repository root at
+    that commit — `<shell>` filled in as the repo-mode S4 block fills it,
+    and, in repo mode only, through the suite-slot wrapper when
+    `Suite limit:` lists its prefix — and reply with each check's file and
+    exit code; a failing check is reported, not fixed;
   - Phase 4: the user report lists each release check with its exit code,
     and a FAIL is named in the report's first lines; the main session
     launches no S5 for it. Why: the checks test the release commits, and
     what to do about a failed one before the tag is the user's call.
 - **Acceptance:** acceptance case A3 passes, including its release check.
 
-### Step 5: Writing rules for checks (no dependency)
+### Step 5: Writing rules for checks (depends on Step 4)
 
 - **Do:** after the label table in § The `## Autopilot` section, a short
   paragraph, "Writing a check", stating with a reason each: an `Acceptance:`
@@ -287,11 +302,18 @@ last.
 
 ### Step 7: The driver passes the prompt on stdin (no dependency)
 
-- **Do:** `run.sh` and `run.ps1` as § The driver and stdin says; each
-  driver's `--self-test` gains a case whose stub records its stdin and its
-  argv: the prompt arrives on stdin byte for byte (a `"`, a backtick, and a
-  non-ASCII character in it), and no argument holds it, on a launch and on a
-  resume.
+- **Do:** `run.sh` and `run.ps1` as § The driver and stdin says. Each
+  driver resolves `<prompt-file>` to an absolute path before it changes to
+  `<cwd>`, since it now opens the file after that change, where a relative
+  path would name another file. Each driver's header (`<prompt-file>`
+  "read from this file with cat", "stdin from /dev/null" in `run.sh`, "an
+  empty stdin" in `run.ps1`) and the skill's § The driver ("stdin from
+  `/dev/null`") say the prompt arrives on stdin. Each driver's
+  `--self-test` gains a case whose stub records its stdin and its argv:
+  the prompt arrives on stdin byte for byte (a `"`, a backtick, a
+  non-ASCII character, and a trailing newline in it), and no argument
+  holds it, on a launch and on a resume, the launch given the prompt file
+  by a relative path.
 - **Acceptance:** `bash plugins/kenspc/skills/autopilot/scripts/run.sh
   --self-test` and `pwsh -NoProfile -File
   plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test` print
@@ -420,12 +442,12 @@ in Discover), and the stdin question was settled by the probe.
 - Version: 4.15.0
 - Budget: USD 300
 - Must read: CLAUDE.md, AGENTS.md, docs/roadmap.md, plugins/kenspc/skills/autopilot/SKILL.md, plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh, plugins/kenspc/skills/autopilot/scripts/zero-diff.sh, plugins/kenspc/skills/autopilot/scripts/run.sh, plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh, /Users/kenspc/Projects/_smoke/_analysis/field-suggestions-20261030/dayaku-crm.md, /Users/kenspc/Projects/_smoke/_analysis/field-suggestions-20261030/jawatankosong.md
-- Allowed files: plugins/kenspc/skills/autopilot/SKILL.md, plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh, plugins/kenspc/skills/autopilot/scripts/zero-diff.sh, plugins/kenspc/skills/autopilot/scripts/run.sh, plugins/kenspc/skills/autopilot/scripts/run.ps1, plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh, plugins/kenspc/skills/generate-plan/SKILL.md, scripts/check-autopilot-scripts.sh, scripts/check-autopilot-rails-hook.sh, scripts/fixtures/, plugins/kenspc/README.md, README.md, plugins/kenspc/CHANGELOG.md, docs/roadmap.md, docs/release-checklist.md, docs/dry-runs/, docs/plans/, docs/tasks/
+- Allowed files: plugins/kenspc/skills/autopilot/SKILL.md, plugins/kenspc/skills/autopilot/scripts/extract-acceptance.sh, plugins/kenspc/skills/autopilot/scripts/zero-diff.sh, plugins/kenspc/skills/autopilot/scripts/run.sh, plugins/kenspc/skills/autopilot/scripts/run.ps1, plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh, plugins/kenspc/skills/generate-plan/SKILL.md, scripts/check-autopilot-scripts.sh, scripts/check-autopilot-rails-hook.sh, scripts/fixtures/, plugins/kenspc/README.md, README.md, plugins/kenspc/CHANGELOG.md, plugins/kenspc/.claude-plugin/plugin.json, .claude-plugin/marketplace.json, docs/roadmap.md, docs/release-checklist.md, docs/dry-runs/, docs/plans/, docs/tasks/
 - Zero diff: plugins/kenspc/agents/, plugins/kenspc/shared/, plugins/kenspc/commands/, plugins/kenspc/references/, plugins/kenspc/hooks/hooks.json, plugins/kenspc/skills/task-review/, plugins/kenspc/skills/task-implement/, plugins/kenspc/skills/generate-brief/, plugins/kenspc/skills/generate-task/, plugins/kenspc/skills/diagnose-bug/, plugins/kenspc/skills/prototype/, plugins/kenspc/skills/retro/, plugins/kenspc/skills/init-project/, plugins/kenspc/skills/generate-guide/, plugins/kenspc/skills/autopilot/scripts/suite-slots.sh, plugins/kenspc/skills/autopilot/scripts/temp-candidates.sh
 - Acceptance:
   - A1 (guards): `bash scripts/check-all.sh`, `bash scripts/check-all.sh --self-test`, `bash plugins/kenspc/skills/autopilot/scripts/run.sh --self-test`, and `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test` at the batch's HEAD — PASS: every command exits 0, the two drivers print `self-test passed`, and the self-test counts equal `docs/release-checklist.md`'s
   - A2 (the span-led question, a session that cannot ask): a nested repo-mode autopilot, headless, with `--plugin-dir` to the worktree's plugin, on a one-task seed whose spec's `Acceptance:` holds one entry: the code span `true`, then the words `from the seed's root`, then its PASS criterion — PASS: the run ends before any worker starts (no `start` line in its timeline), its final message names the entry and the words after the span, and its state file records the stop
-  - A3 (a description case and a release check): a nested repo-mode autopilot, headless, as A2, on a one-task seed with `Standalone review: off`, `Walk: off`, `Acceptance:` holding one command and one description case, and `Release checks:` holding one check, the code span `git log -1 --format=%s | grep -q 'remove batch'` with the criterion exit 0 — PASS: S4 runs the description case without a question to the main session and replies with the commands it ran and their exit codes; S6 replies with the release check's file and exit 0; the user report lists the release check with its exit code
-  - A4 (no prompt on the command line): during A3, `ps -axo args` grepped for a marker word that only the seed's spec holds — PASS: the count is 0, and the same grep for the S3 session's id, the positive control, counts at least 1
-  - A5 (the hook live): a session started through the worktree's `run.sh` copy for a throwaway seed and batch, whose prompt runs `mkdir -p <workspace>/a5/x && cd <workspace>/a5/x && echo a > ../a5.log` and then `cd / && echo b > a5-denied.log` — PASS: the first command runs and `<workspace>/a5/a5.log` holds `a`; the second is denied with `autopilot rails:` in its error, and no `/a5-denied.log` exists
+  - A3 (a description case and a release check): a nested repo-mode autopilot, headless, as A2, on a one-task seed with `Standalone review: off`, `Walk: off`, `Acceptance:` holding one command and one description case whose text holds A4's marker word, and `Release checks:` holding one check, the code span `git log -1 --format=%s | grep -q 'remove batch'` with the criterion exit 0 — PASS: S4 runs the description case without a question to the main session and replies with the commands it ran and their exit codes; S6 replies with the release check's file and exit 0; the user report lists the release check with its exit code
+  - A4 (no prompt on the command line): during A3, while the nested run's S4 runs, `ps -axo args` grepped in the bracket form (`grep -c '[M]ARKER'`) for a marker word that only A3's description case text holds — text the nested S4's task block copies into its prompt as written, and that the nested autopilot's own launch prompt does not hold — PASS: the count is 0, and the same grep for the nested S4's session id, the positive control, counts at least 1
+  - A5 (the hook live): a session started through HEAD's `plugins/kenspc/skills/autopilot/scripts/run.sh` (not the batch's driver copy, which is the installed version's), with `AUTOPILOT_PLUGIN_DIR` the plugin directory and `AUTOPILOT_WORKSPACE` the workspace, its cwd a throwaway seed one level under the workspace, `<workspace>/<batch>-a5/`, whose prompt runs `mkdir -p <workspace>/a5/x && cd <workspace>/a5/x && echo a > ../../a5.log` — a target that, read against the seed's cwd, lies outside every root — and then `cd / && echo b > a5-denied.log` — PASS: the first command runs and `<workspace>/a5.log` holds `a`; the second is denied with `autopilot rails:` in its error, and neither `/a5-denied.log` nor `<workspace>/<batch>-a5/a5-denied.log` exists
 - Release preparation: default
