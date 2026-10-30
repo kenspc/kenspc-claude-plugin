@@ -112,6 +112,16 @@ file as written, one or more trailing newlines longer.
    commit.
 5. The batch runs under `/kenspc-autopilot` in plugin mode as version
    4.15.0.
+6. The review fix loop is bounded, ruled before the launch. The first S5
+   round after S3b and its narrowed review (`-s3c`) run as the skill says.
+   From the second narrowed review on, a HIGH row still goes to an S5, and a
+   MEDIUM or LOW row that names text an S5 of this batch added is not fixed
+   in this run: the main session rules it a follow-up and lists it on the
+   reviewer report's `Follow-up candidates` line, for the user to put on the
+   roadmap. Why: this batch edits the rails hook, and in the batches that
+   last changed it, each review round found new edge cases; in batch K five
+   narrowed reviews each found new MEDIUM rows in the text the previous fix
+   had just added, and the loop ended only when the user stopped it.
 
 ## Technical Approach
 
