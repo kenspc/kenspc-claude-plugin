@@ -1015,7 +1015,9 @@ of the changes S6 left.
 Every worker is one launch, one wait, one return.
 
 - **The launch.** Assemble `_prompts/<batch>-<tag>.md` from the preamble
-  and the task block; run the driver copy with the environment it needs —
+  and the task block, the preamble's `<role>` filled in as the worker's
+  role and its `<tag>` as the worker's own tag (`<batch>-s3`, the tag this
+  launch runs under) wherever they occur; run the driver copy with the environment it needs —
   `AUTOPILOT_LOGS=<workspace>/_logs`, `AUTOPILOT_BATCH=<batch>`,
   `AUTOPILOT_BUDGET_USD=<remaining>`, `AUTOPILOT_WORKSPACE=<workspace>`
   (below), `AUTOPILOT_MODEL` and `AUTOPILOT_EFFORT` (below),
@@ -1359,6 +1361,20 @@ measured figure: a project whose suite runs longer than an hour meets the
 stop on a healthy holder, and the stop's message shows the holder's
 command, so the user can tell and answer wait on.
 
+**A fetch the work needs.** A worker that asks for a package the
+project's lockfile or the spec already names, or for a tool or a browser
+build the work needs, that the machine does not hold (the preamble's
+§ 3) gets it from the main session: the main session fetches it, checks
+it against the registry's integrity hash where the registry publishes
+one, places it in the workspace, and answers with its path, recorded under
+the state file's `questions answered:` as any ruling is. A package that
+neither the lockfile nor the spec names is a new dependency, stop
+condition 7 (a), not a fetch. Why the main session: a worker has no
+network by its rails, and workers that met a missing package or a
+missing Playwright browser stopped to ask what the preamble did not say;
+the integrity check makes the fetched file the one the lockfile pins, not
+whatever the network served.
+
 ### A breach the main session rules benign
 
 A worker that breaches a rail still reports it and ends (the preamble's
@@ -1491,7 +1507,12 @@ a skip at any effort; the post-check catches it at every effort.
   `question <tag>: <one line>` and whose body gives the context, the
   options, and its suggested answer.
 - The answer is one message whose first line is `answer <tag>: <one line>`
-  and whose body is the decision, quoting nothing the worker sent. The main
+  and whose body is the decision, quoting nothing the worker sent. Its
+  `<tag>` repeats the tag of the question's first line as written,
+  whatever it is — the worker's own tag, or a topic label a worker used
+  in its place. Why as written: workers have opened questions under topic
+  labels, and an answer sent back under the worker's tag instead left the
+  worker to match it to its question by content. The main
   session sends it at once, ruled as § How the main session rules says,
   without asking the user. Why: the first line is what the transcript
   search finds, and the suggested answer is what makes the decision a
@@ -2548,6 +2569,10 @@ line is
     question <tag>: <one line>
 
 and whose body gives the context, the options, and your suggested answer.
+The tag on that line is your own, `<tag>`, the literal value written here,
+never a label for the question's topic: the answer repeats the tag of the
+question's first line, and a question opened under a topic label got its
+answer under another tag, matched only by its content.
 Then wait in place, one Bash call per iteration:
 
     n=0; until [ "$n" -ge 30 ]; do sleep 2; n=$((n+1)); done
@@ -2605,7 +2630,13 @@ git: no gh, and no git fetch, pull, push, ls-remote, remote update, or
 clone of a URL — ask <main name>, which gets anything the work needs from
 GitHub or a remote; the rails hook denies those calls, and a denial is not
 a breach. No resource the brief does not name — no database, no network
-service. No secrets in any file or
+service. A package the project's lockfile or the spec already names, or a
+tool or a browser build the work needs, that the machine does not hold,
+you ask <main name> for as § 1 says; <main name> fetches it and answers
+with a local path. That is a route, not a new rail. A package neither
+names is a new dependency, which stays the main session's stop condition
+7 (a): ask about it as § 1 says, and do not fetch it. No secrets in any
+file or
 message. Listing environment variables prints their names only, never
 their values: `bash -c 'compgen -e'` prints the names alone, while `env`
 or `printenv` cut at the `=` still prints every further line of a
@@ -2657,7 +2688,9 @@ reading of its 2.1.301 code, not measured.
 These rails bind every subagent you dispatch, and a subagent never sees
 this prompt: write them into every subagent prompt you compose, and into
 the CUSTOM_INSTRUCTIONS of the agent dispatches made by the skills you
-run. Carry every rail observation a subagent reports — under
+run. A summary with a path to the full text does not meet this: a
+subagent may never read the file, and the rails hook holds only part of
+the rails. Carry every rail observation a subagent reports — under
 `## Rail observations` or on a `Rail observations` line — into your own
 `## Rail observations`, naming the subagent and quoting a denial's reason
 as it gave it.
@@ -3207,7 +3240,11 @@ Rules for the walk:
   directory and this session's working directory; move each into
   <workspace>/_logs/<batch>-walk/ with mv, never a copy, since one given
   a relative name lands in the working directory, the repository, where a
-  copy would leave an untracked file a later commit could take in.
+  copy would leave an untracked file a later commit could take in. Give
+  each screenshot a file name that begins <batch>-walk-, and move each by
+  its exact name, never by a glob, since the Playwright MCP's output
+  directory is shared by every session on the machine: a glob there takes
+  in another session's screenshots.
 
 Write <workspace>/_logs/<batch>-walk/walk.md: per flow, the steps, what
 was seen, PASS or FAIL against what must be seen, and the screenshot

@@ -509,7 +509,17 @@ autopilot SKILL.md; this task does not edit that file.
 
 ### Task 9: Worker rules in the preamble and S4w
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: § Launch, wait, return's launch bullet now says the preamble's `<role>` and `<tag>` are filled in when `_prompts/<batch>-<tag>.md` is assembled, since no sentence said when `<role>` was filled, and the task ties `<tag>` to that moment. § 1's sentence names the tag as `<tag>` in backticks, so the filled-in preamble reads "your own, `<batch>-s3`, the literal value written here". The main session's fetch answer is a bold-led paragraph of its own in § How the main session rules ("A fetch the work needs"), after the suite-slot one, recorded under `questions answered:` as any ruling is. The preamble names stop condition 7 (a) as the main session's, since a worker has no stop conditions of its own.
+- Changes/tradeoffs: each rule carries its reason from roadmap item 46's incidents (topic-label questions answered under another tag, workers that stopped on a missing package or browser, the shared Playwright output directory). The fetch paragraph adds a reason for the integrity check (the fetched file is the one the lockfile pins). The S4w sentence went into the existing Screenshots bullet, after its mv rule.
+- Test map:
+  - question tag is the literal own tag, with reason (SKILL.md:2572) and the launch fills it in (SKILL.md:1018) → none: skill prose, held by the reviewers' reading (plan Step 9: no acceptance case runs it)
+  - answer repeats the question's tag as written (SKILL.md:1511) → none: skill prose, held by the reviewers' reading
+  - network route in § 3 (SKILL.md:2633) and the main session's answer (SKILL.md:1364) → none: skill prose, held by the reviewers' reading
+  - summary-with-path does not meet the rule (SKILL.md:2691) → none: skill prose, held by the reviewers' reading
+  - S4w screenshot names and exact-name moves (SKILL.md:3244) → none: skill prose, held by the reviewers' reading
 
 Plan Step 9. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
