@@ -3381,6 +3381,11 @@ in backticks, joined by ", "> — its words in order as whole words,
 anywhere in the file, runs instead as
 `bash <workspace>/_prompts/<batch>-suite-slots.sh run -- <shell> <file>`,
 as § 6's Suite limit line says], and reply with the cmp lines and each check's file and its exit code.
+Run them in this session, one after another, not through a subagent. Why:
+the checks run at one commit in one working tree and may start servers or
+suites, so they share the tree and the machine's ports. A command you add
+to inspect a result — reading a log, listing a directory — carries no
+redirect: a redirect to a path outside the locations § 3 names is a breach.
 A failing check is reported, not fixed: the tag is the user's call.]
 Reply with each commit's hash and subject.
 ````
@@ -3446,6 +3451,11 @@ extraction exits non-zero, the file names differ, or a file differs, run
 nothing and reply with its output, the listings, or the cmp output.
 Then run each check as `<shell> <file>` from the repository root at that
 commit, the file being in <workspace>/_prompts/<batch>-release-cmds/, and reply with the cmp lines and each check's file and its exit code.
+Run them in this session, one after another, not through a subagent. Why:
+the checks run at one commit in one working tree and may start servers or
+suites, so they share the tree and the machine's ports. A command you add
+to inspect a result — reading a log, listing a directory — carries no
+redirect: a redirect to a path outside the locations § 3 names is a breach.
 A failing check is reported, not fixed: the tag is the user's call.]
 No tag, no push, no release: those are the user's. Reply with each
 commit's hash and subject[, the two count lines, and each pre-flight
