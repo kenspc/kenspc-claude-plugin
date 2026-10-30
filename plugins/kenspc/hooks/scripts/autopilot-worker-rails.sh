@@ -153,8 +153,9 @@
 # writes); a redirection whose relative target follows a cd inside a
 # subshell, a pipeline, the body of an if, while, until, for, select, or
 # case command, a { } group, or a function, a cd after a keyword or a {
-# (then cd, { cd), or a pushd, which are not tracked and so read against
-# the directory before it, or follows a cd whose
+# (then cd, { cd), a cd reached through builtin cd, command cd, or an
+# assignment before it (VAR=x cd), or a pushd, which are not tracked and so
+# read against the directory before it, or follows a cd whose
 # target is not a literal, a cd joined by ||, or a || after a cd in its
 # list, not judged; remote git
 # through git lfs,
