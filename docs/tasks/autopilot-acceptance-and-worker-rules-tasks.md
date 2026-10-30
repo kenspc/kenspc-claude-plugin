@@ -447,7 +447,7 @@ Plan Step 7 and § The driver and stdin. Files:
 - Test map:
   - literal `cd` moves the directory after `&&` and `;` (autopilot-worker-rails.sh:262, :451) → scripts/check-autopilot-rails-hook.sh::"cd to an absolute literal path && a relative > read against it", "cd to a relative literal path; a relative > read against it", "cd / && a relative > read against /" and self-test mutant "cd-tracking removed"
   - a line end counts as `;` (autopilot-worker-rails.sh:531) → check-autopilot-rails-hook.sh::"cd / then a line end, a relative > read against /" (mutation-checked)
-  - `||` leaves the directory unknown (autopilot-worker-rails.sh:263) → check-autopilot-rails-hook.sh::"cd / || leaves the directory unknown" (mutation-checked)
+  - a `||` puts the directory back where it was before its list, and a `cd` after one moves nothing (clarification 8; autopilot-worker-rails.sh:378, :379) → check-autopilot-rails-hook.sh::"cd / || a relative >, read against the directory before the list"
   - `|` and lone `&` move nothing (autopilot-worker-rails.sh:262) → check-autopilot-rails-hook.sh::"cd / | cat > y.log, read against the input's cwd", "cd / & echo a > y.log, read against the input's cwd" (mutation-checked: every separator but `||` made to move it)
   - a `cd` inside a subshell moves nothing (autopilot-worker-rails.sh:236, :531, :559, the `sp == 0` guards) → check-autopilot-rails-hook.sh::"(cd /; echo a) > y.log, read against the input's cwd" (unchecked)
   - a subshell after the `cd` inherits it (autopilot-worker-rails.sh:451) → check-autopilot-rails-hook.sh::"cd / && a subshell holding a relative >, read against /"
