@@ -3853,6 +3853,7 @@ above, at each gate, are the rule, and this table repeats their outcomes.
 | The argument is neither a brief nor a spec | Which it is | The run ends with the reason |
 | Several plugins and no `Plugin:` | Which plugin | The run ends with the reason |
 | A start check fails, or a settings stop — a value outside its grammar, `Role settings` included, or `CLAUDE_CODE_EFFORT_LEVEL` set while a role declares an effort | — (a stop with its reason) | The run ends with the same message |
+| The trial extraction's `span-led:` line names `Acceptance:` entries (Phase 0 § The start checks; in brief entry before S2, Phase 1 step 6) | Stop to fix the spec, or run the entries as description cases | The run ends before the first launch (in brief entry, before S2), naming each entry and the words after its span |
 | The launch line shows no `crossSessionInbound` accept, and a settings file that exists cannot be read or parsed, a read of a Windows policy value fails for a reason other than an absent key or value, a source sets a value other than `accept`, `hold`, or `refuse`, or the server-managed settings cache (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/remote-settings.json`) exists | Whether a settings file accepts inbound messages | The run ends naming the launch line |
 | Budget: spent + projected > budget | Raise the budget to how much? | The run ends with spent, projected, and the remaining steps |
 | A cap exceeded | A new cap | The run ends with the counts |

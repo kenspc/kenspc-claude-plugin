@@ -1185,7 +1185,8 @@ design table (a supplied spec counts as approved) and at the tag, push, and
 release after the reports, and otherwise only on a stop condition. Phase
 0's questions about the run's inputs — no path, the entry kind, which
 plugin, an inbound setting it cannot read — are asked before the first
-launch, as part of the start. Every other point the spec leaves open is
+launch, as part of the start, and so, since 4.15.0, is the question about
+a span-led `Acceptance:` entry, which brief entry asks before S2 instead. Every other point the spec leaves open is
 the main session's to rule: a worker's question, a choice riding on a
 task-list confirmation, a question it raises itself, a review row's, an
 acceptance FAIL's, a walk FAIL's, or a BLOCKED task's classification, a
