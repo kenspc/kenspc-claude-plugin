@@ -106,7 +106,15 @@ and list in the `--self-test` paragraph (eleven becomes thirteen).
 
 ### Task 2: Phase 0 asks about span-led entries
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the span-led question is its own start-check bullet right after the trial-extraction bullet ("The same trial's second output line"), so it inherits that bullet's modes (repo mode; spec entry at Phase 0, brief entry before S2) without restating them; Phase 1 step 6 gains one clause so the brief-entry trial asks the same question before S2. The "run as description cases" answer is recorded under S4's tag, following the state file's rule that a ruling the main session raises is recorded "under the tag of the step it concerns". The new stop is listed first in "Stops stated at their own steps", since Phase 0 is the earliest step.
+- Changes/tradeoffs: beyond the spec, the cannot-ask sentence says the state file's `stops:` line records the stop, since acceptance case A2 checks the state file for it. The task's last bullet (a span-led `Release checks:` entry is the settings stop) is written by Task 4 with the `Release checks:` extraction, since that field does not exist before Task 4; nothing in Task 2's text refers to it.
+- Test map:
+  - span-led question, two answers, state record, cannot-ask stop (SKILL.md:751) → none: skill prose, held later by acceptance case A2 (plan § Testing Strategy); `bash scripts/check-all.sh` exits 0
+  - brief-entry trial asks the same question (SKILL.md:884) → none: skill prose, held by the reviewers' reading
+  - stop count eight and the list entry (SKILL.md:3523) → none: `grep -c 'Eight stops sit outside the numbered'` prints 1 (the task's criterion), no guard holds the count
 
 Depends on: Task 1
 

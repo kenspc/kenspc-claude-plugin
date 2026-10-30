@@ -748,6 +748,22 @@ reminder to work without stopping), the run ends with the same message.
   comment then read as a heading ended the section before its field,
   stopped there, with about USD 40 spent, at a point where only a user present
   could let it go on.
+- The same trial's second output line, `span-led:`, is read as well as its
+  counts: it names each `<nn>.case` whose text opens with a code span, an
+  entry such as `` `dotnet build` from the root — PASS: … `` that has
+  words between the span and ` — PASS: `. A list other than `none` is a
+  question to the user before any worker launches, quoting each entry as
+  the spec writes it, with two answers: stop to fix the spec, with nothing
+  spent; or run the entries as description cases, which the state file
+  records under `questions answered:`, under S4's tag, one line per entry
+  ending `(user)`, and which S4's block then lists as description cases.
+  In a session that cannot ask (a system reminder to work without
+  stopping), the run stops before the first launch, its final message
+  naming each entry and the words after its span, and the state file's
+  `stops:` line records it. Why a question and not a default: the words
+  after a span may say where or how the command runs — a directory, a
+  server it needs — and the skill does not guess them; an entry of this
+  shape was extracted as a description with no warning in five batches.
 
 Why before anything is written: an unattended run on the wrong base or a
 dirty tree is spent money, and every check is a condition a worker assumes.
@@ -864,8 +880,9 @@ The flow:
 5. Record the hash S1 replies with in the state file.
 6. In repo mode, run the trial extraction (Phase 0 § The start checks) on
    `git show <S1 hash>:<spec path>`, saved to
-   `<workspace>/_prompts/<batch>-spec.md`; a failure is the same stop,
-   before S2 is launched.
+   `<workspace>/_prompts/<batch>-spec.md`; a failure is the same stop, and
+   a `span-led:` list other than `none` the same question, before S2 is
+   launched.
 
 S1's task block carries: the draft-spec task — the shape of a decided spec
 with an empty decision column, the design table's options and leanings,
@@ -3501,9 +3518,10 @@ run overnight — the steps between, which needed no answer, waited with it,
 and S3b's fixes then changed the list again, so the question answered in
 the morning had to be asked a second time.
 
-**Stops stated at their own steps.** Seven stops sit outside the numbered
+**Stops stated at their own steps.** Eight stops sit outside the numbered
 list, each stated where it happens, and end the run the same way: a
-driver that refuses a launch (§ Launch, wait, return), a delivery notice
+span-led `Acceptance:` entry in a session that cannot ask (Phase 0 § The
+start checks), a driver that refuses a launch (§ Launch, wait, return), a delivery notice
 that the first message to a worker was held or refused (§ The message
 protocol), an artifact absent after a return (§ Phase transitions), an
 unmarked acceptance case that cannot be run (Phase 3's narrowing rule),
