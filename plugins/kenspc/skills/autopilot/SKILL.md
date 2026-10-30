@@ -224,7 +224,7 @@ starts, and a user who wants a smaller budget writes the field.
 | `Budget:` | `USD <n>` | `USD 200` |
 | `Caps:` | `<n> sessions, <m> resumes` | `16 sessions, 8 resumes` |
 | `Allowed files:` | paths, one per line or comma-separated | empty |
-| `Zero diff:` | paths for the zero-diff check | empty — no zero-diff check |
+| `Zero diff:` | paths for the zero-diff check; a path written with a leading `!` is an exclusion (`apps/web/src/, !apps/web/src/page.test.tsx` compares the directory but that file), at least one path has none, and a path whose own name begins with `!` cannot be listed | empty — no zero-diff check |
 | `Byte-identity exceptions:` | free text | empty |
 | `Run facts:` | sub-bullets of free text: measured facts of the machine that bind every worker and are not the spec's constraints (one heavy suite at a time, a shared `$TMPDIR`) | empty |
 | `Acceptance:` | `none`, or one sub-bullet per case: a command or a case description, its PASS criterion after ` — PASS: `, and `(optional)` at the end of a case that may be cut | `none` |
@@ -977,7 +977,7 @@ every `rulings.md` entry outside its grammar, and every row-3 or row-5
 FAIL is classified; every task S3 left BLOCKED
 has its entry under the state file's `blocked tasks:` section (§ The
 verdict loop after S3b); and the zero-diff check's exit code is 0, its
-`compared:` count equal to the field's (§ The zero-diff check), or
+`compared:` counts read as § The zero-diff check reads them, or
 `Zero diff:` is empty.
 
 **Constraints**: the main session commits nothing but clarification entries
@@ -1652,19 +1652,24 @@ S3b found again would otherwise be ruled twice, perhaps two ways.
 After S3b — after S3 when S3b does not run (`Standalone review: off`, or `auto` not triggered) — the main session runs the script copy from the repository
 root, `bash <workspace>/_prompts/<batch>-zero-diff.sh <baseline> <workspace>/_prompts/<batch>-zero-diff.txt`,
 the `Zero diff:` paths written to `_prompts/<batch>-zero-diff.txt` one per
-line before the first launch, and checks that the `compared:` count it
-prints equals the number of paths in the field. Exit 0 with that count
-passes; exit 1 — the stat names a changed path — is a stop naming the
-paths the stat names, and exit 2 or a count that differs is the same stop,
-naming the script's reason or both counts. With `Zero diff:`
+line before the first launch, an exclusion with its `!`, and checks the
+`compared: <n> paths, <m> excluded` line it prints: `<n>` equals the
+number of the field's paths without a `!`, and `<m>` the number of its `!`
+paths. Exit 0 with both counts equal passes; exit 1 — the stat names a
+changed path — is a stop naming the paths the stat names, and exit 2 or
+either count differing is the same stop, naming the script's reason or
+the counts beside the field's. With `Zero diff:`
 empty there is no check. Why the script and the count: a check typed as
 one shell line passed its paths as one word under zsh, so git compared one
 path that matched nothing and printed nothing — a pass with nothing
 compared, twice, until a control showed it; the script passes each path as
 its own argument, and a `compared:` count that differs from the field
 shows a list that did not arrive whole. Why the exit code and not the
-output: the script always prints its `compared:` line. Before the first launch, each path is resolved
-against the baseline, `git cat-file -e <baseline>:<path>`; a path absent
+output: the script always prints its `compared:` line. Why the
+exclusion form: a plan that had to leave one file of a directory out
+listed every other file of it by hand. Before the first launch, each path is resolved
+against the baseline, `git cat-file -e <baseline>:<path>`, an exclusion by
+its path without the `!`; a path absent
 there is named on the line after the settings line and in the report's
 zero-diff field. Why the check: the paths a batch promised not to touch
 are the one promise a review does not verify. Why the resolution, as a
@@ -2110,7 +2115,7 @@ compared is the step that keeps a retyped command from drifting.
 
 The zero-diff check runs again before S6 is launched, over
 `<baseline>..HEAD` as it then stands, and not after S6's commit; its exit
-code and `compared:` count are read as § The zero-diff check reads them,
+code and `compared:` counts are read as § The zero-diff check reads them,
 and the reviewer report's `zero diff:` field reports this run. Why
 before: S4 and S5 commit after the check that follows S3b — S3 when S3b does not run (`Standalone review: off`, or `auto` not triggered) — so their commits
 need one of their own; and in plugin mode the release commit edits, by
@@ -3682,7 +3687,7 @@ decisions the user has yet to see.
 - Main-session rulings: <n> | none
   <clarification> — <tag or step> — <question> → <ruling> — <reason> — <commits | no clarification commit (the spec was already removed) | no clarification commit (S6 left the spec changed)>
 - Settings edits: <each field a worker changed in the `## Autopilot` section, with the commit | none>
-- Files changed: <list>; zero diff: <compared <n> paths, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
+- Files changed: <list>; zero diff: <compared <n> paths, <m> excluded, exit <code>[, changed: <the paths the stat names>] | no check>[; absent at the baseline: <paths>]
 - Merge danger: <n> one-way, <u> unclear, <m> two-way
 - Byte-identity / guards / counts: <the pre-flight lines in plugin mode — the two count lines, and each pre-flight command beside them with its exit code, `<command> → exit <n>`, a non-zero one named as a pre-flight failure — or none: no checklist>
 - Acceptance: <one line per case: case, cost, result[, in the corrected form (<clarification>)]> | none named; S3b is the last check | none named; S3 is the last check | none named; S3b is the last review, the walk follows | none named; S3 is the last review, the walk follows
@@ -3880,8 +3885,8 @@ wording that closed it:
   that verdict or its review's DEFERRED rows triggering S3b (§ The verdict
   loop after S3b); S3b → Phase 3: its Schema F verdict, the
   `blocked tasks:` entry of every task S3 left BLOCKED, and the zero-diff
-  check's exit 0 with its `compared:` count equal to the field's, or
-  `Zero diff:` empty, which has no check. When S3b does not run
+  check's exit 0 with its `compared:` counts read as § The zero-diff check
+  reads them, or `Zero diff:` empty, which has no check. When S3b does not run
   (`Standalone review: off`, or `auto` not triggered; repo mode) there is
   no S3b: S3 → Phase 3 on S3's `.exit`, the HEAD it left, its Schema G
   verdict in its `result` other than `BLOCKED`, read by the verdict loop

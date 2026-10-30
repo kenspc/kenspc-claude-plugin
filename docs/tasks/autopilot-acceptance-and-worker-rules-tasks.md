@@ -301,7 +301,20 @@ Plan Step 5. Files: `plugins/kenspc/skills/autopilot/SKILL.md`,
 
 ### Task 6: `Zero diff:` exclusions
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: a bare `!` (an exclusion with no path) is refused, exit 2, as boundary input the task left open — with no path it would be `:(exclude,literal)` of nothing. The pathspecs are built into a second array, `specs`, beside `paths`, so the absent-at-the-baseline loop still reads the paths as written and strips the `!` itself; the self-test's "paths read as one word" mutant now targets `"${specs[@]}"`. The fixture repository gains `dir/keep.txt` and `dir/skip.txt` (skip changed after the baseline), and the exclusion fixtures list the directory as `dir/`, with the trailing slash the real `Zero diff:` fields use. The "literal magic dropped" mutant drops it from both forms (`:(literal)` and the `literal` of `:(exclude,literal)`).
+- Changes/tradeoffs: beyond the spec: a fixture for an exclusion absent at the baseline (named on stderr without its `!`, and an existing exclusion named nowhere) and one for a bare `!`; the skill's § The zero-diff check gains a Why for the exclusion form; the Phase transitions line (S3b → Phase 3) and the reviewer report's `zero diff:` field, both outside the places the task names, now read both counts, so every `compared:` reading the criterion greps names both or points at § The zero-diff check. The guard's mutant count is fifteen, counting from Task 1's thirteen.
+- Test map:
+  - `!` path becomes `:(exclude,literal)` (zero-diff.sh:89) → scripts/check-autopilot-scripts.sh::"zero-diff: excluded changed file" and self-test mutant "exclusion dropped"
+  - plain path becomes `:(literal)` (zero-diff.sh:94), exclusion literal too → scripts/check-autopilot-scripts.sh::"zero-diff: glob-character path", "zero-diff: bracketed exclusion" and self-test mutant "literal magic dropped"
+  - non-excluded sibling still compared (zero-diff.sh:121) → scripts/check-autopilot-scripts.sh::"zero-diff: changed sibling of an exclusion"
+  - exclusions only refused (zero-diff.sh:99) → scripts/check-autopilot-scripts.sh::"zero-diff: exclusions only" (mutation-checked)
+  - bare `!` refused (zero-diff.sh:85) → scripts/check-autopilot-scripts.sh::"zero-diff: a bare !" (mutation-checked)
+  - absent check strips the `!` (zero-diff.sh:114) → scripts/check-autopilot-scripts.sh::"zero-diff: the absent exclusion is not named as nope.txt", "zero-diff: excluded changed file wrote to stderr" (mutation-checked)
+  - count line `compared: <n> paths, <m> excluded` (zero-diff.sh:120) → every zero-diff count assertion of scripts/check-autopilot-scripts.sh; `grep -n 'compared: [0-9<n>]* paths"'` finds none (7 lines at the commit before the task)
+  - skill: label row, both counts, exclusion resolution (SKILL.md:227, :1655, :1672, and the `compared:` lines at :980, :2118, :3888) → none: skill prose, held by the reviewers' reading
 
 Depends on: Task 1
 

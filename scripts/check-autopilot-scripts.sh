@@ -49,7 +49,11 @@
 # baseline, paths with a space before or after them, a path holding glob
 # characters, a paths file with CRLF line ends, a long changed path, an empty
 # paths file, one of whitespace-only lines, a baseline that is not a commit, a
-# last line without a newline, a run from a subdirectory; a temp folder and its
+# last line without a newline, a run from a subdirectory, an excluded changed
+# file inside a listed directory, a changed sibling of an exclusion, a
+# bracketed exclusion beside the file it would match as a glob, an exclusion
+# absent at the baseline, a paths file of exclusions only, a bare `!` — the
+# count line held in its `compared: <n> paths, <m> excluded` form; a temp folder and its
 # before list, a cmds dir, the repository, another repository, and a seed for
 # the sweep; and, for the wrapper, under /bin/bash and with a lock directory
 # of each fixture's own under the work directory (KENSPC_SUITE_SLOTS_DIR): two
@@ -84,12 +88,14 @@
 #
 # Optional flag:
 #   --self-test    Copies the four scripts into the temp directory and turns
-#                  the guard red with thirteen mutants of the copies — the
+#                  the guard red with fifteen mutants of the copies — the
 #                  padding stripping removed from the extractor, its
 #                  continuation joining removed, its fence tracking removed,
 #                  its field argument ignored (always `Acceptance`), its
 #                  span-led test dropped (the line always `none`),
 #                  zero-diff.sh's paths passed to git diff as one word,
+#                  its exclusion dropped (a `!` path compared as a plain
+#                  path), its literal magic dropped,
 #                  temp-candidates.sh's before-list filter, origin
 #                  comparison, and symlink exclusion each removed, and
 #                  suite-slots.sh's count check made always true, its
@@ -305,12 +311,16 @@ printf 'y\n' > "$REPO/xy.txt"
 LONG="deeply/nested/directory/structure/for/the/stat/width/a-rather-long-file-name.txt"
 mkdir -p "$REPO/$(dirname "$LONG")"
 printf 'l\n' > "$REPO/$LONG"
+mkdir -p "$REPO/dir"
+printf 'k\n' > "$REPO/dir/keep.txt"
+printf 's\n' > "$REPO/dir/skip.txt"
 git -C "$REPO" add -A
 git -C "$REPO" commit -q -m baseline
 BASE=$(git -C "$REPO" rev-parse HEAD)
 printf 'b2\n' >> "$REPO/with space.txt"
 printf 'y2\n' >> "$REPO/xy.txt"
 printf 'l2\n' >> "$REPO/$LONG"
+printf 's2\n' >> "$REPO/dir/skip.txt"
 git -C "$REPO" commit -q -am change
 
 printf 'a.txt\nc.txt\n' > "$FX/paths-unchanged.txt"
@@ -323,6 +333,16 @@ printf 'a.txt\r\nwith space.txt\r\n' > "$FX/paths-crlf.txt"
 : > "$FX/paths-empty.txt"
 printf '  \n\t\n' > "$FX/paths-blank.txt"
 printf 'a.txt\nwith space.txt' > "$FX/paths-nonewline.txt"
+# Exclusions: the changed dir/skip.txt excluded from its listed directory;
+# the unchanged sibling excluded instead; a bracketed exclusion beside the
+# changed xy.txt it would match as a glob; exclusions only; a bare `!`;
+# and an exclusion absent at the baseline.
+printf 'dir/\n!dir/skip.txt\n' > "$FX/paths-excl.txt"
+printf 'dir/\n!dir/keep.txt\n' > "$FX/paths-excl-sibling.txt"
+printf 'xy.txt\n!x[y].txt\n' > "$FX/paths-excl-glob.txt"
+printf '!a.txt\n!dir/skip.txt\n' > "$FX/paths-excl-only.txt"
+printf 'a.txt\n!\n' > "$FX/paths-excl-bare.txt"
+printf 'a.txt\n!nope.txt\n' > "$FX/paths-excl-absent.txt"
 
 # A temp folder for temp-candidates.sh. Its before-state holds a hidden
 # entry, an unrelated directory, and, made before the batch, an entry with
@@ -948,15 +968,15 @@ run_checks() {
     rc=0
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-unchanged.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "zero-diff: unchanged paths exited $rc, expected 0"
-    [[ "$stdout" == "compared: 2 paths" ]] || fail "zero-diff: unchanged paths printed [$stdout]"
+    [[ "$stdout" == "compared: 2 paths, 0 excluded" ]] || fail "zero-diff: unchanged paths printed [$stdout]"
 
     # zero-diff: a changed path whose name holds a space, beside an unchanged
     # one, with a blank line between them.
     rc=0
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-changed.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 1 ]] || fail "zero-diff: changed path exited $rc, expected 1"
-    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
-        || fail "zero-diff: changed path's first line is not [compared: 2 paths]"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths, 0 excluded" ]] \
+        || fail "zero-diff: changed path's first line is not [compared: 2 paths, 0 excluded]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the changed path"
 
     # zero-diff: a path with a space before it, as a split on a comma leaves
@@ -964,8 +984,8 @@ run_checks() {
     rc=0
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-padded.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 1 ]] || fail "zero-diff: padded paths exited $rc, expected 1"
-    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
-        || fail "zero-diff: padded paths' first line is not [compared: 2 paths]"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths, 0 excluded" ]] \
+        || fail "zero-diff: padded paths' first line is not [compared: 2 paths, 0 excluded]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the padded changed path"
     [[ ! -s "$WORK/err" ]] || fail "zero-diff: padded paths wrote to stderr: $(cat "$WORK/err")"
 
@@ -974,8 +994,8 @@ run_checks() {
     rc=0
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-crlf.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 1 ]] || fail "zero-diff: CRLF paths exited $rc, expected 1"
-    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
-        || fail "zero-diff: CRLF paths' first line is not [compared: 2 paths]"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths, 0 excluded" ]] \
+        || fail "zero-diff: CRLF paths' first line is not [compared: 2 paths, 0 excluded]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: the stat does not name the changed path of the CRLF list"
 
     # zero-diff: an unchanged path holding glob characters is read literally,
@@ -983,7 +1003,45 @@ run_checks() {
     rc=0
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-glob.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "zero-diff: glob-character path exited $rc, expected 0"
-    [[ "$stdout" == "compared: 1 paths" ]] || fail "zero-diff: glob-character path printed [$stdout]"
+    [[ "$stdout" == "compared: 1 paths, 0 excluded" ]] || fail "zero-diff: glob-character path printed [$stdout]"
+
+    # zero-diff: an excluded file inside a listed directory changed — exit 0,
+    # the exclusion counted and not named absent; the unchanged sibling
+    # excluded instead — exit 1, the stat naming the changed file.
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-excl.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "zero-diff: excluded changed file exited $rc, expected 0 [$stdout]"
+    [[ "$stdout" == "compared: 1 paths, 1 excluded" ]] || fail "zero-diff: excluded changed file printed [$stdout]"
+    [[ ! -s "$WORK/err" ]] || fail "zero-diff: excluded changed file wrote to stderr: $(cat "$WORK/err")"
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-excl-sibling.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: changed sibling of an exclusion exited $rc, expected 1"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 1 paths, 1 excluded" ]] \
+        || fail "zero-diff: changed sibling of an exclusion: first line is not [compared: 1 paths, 1 excluded]"
+    printf '%s\n' "$stdout" | grep -qF 'dir/skip.txt' || fail "zero-diff: the stat does not name the changed sibling"
+
+    # zero-diff: a bracketed exclusion is read literally, so the changed
+    # xy.txt it would match as a glob is still compared.
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-excl-glob.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 1 ]] || fail "zero-diff: bracketed exclusion exited $rc, expected 1"
+    printf '%s\n' "$stdout" | grep -qF 'xy.txt' || fail "zero-diff: the bracketed exclusion hid xy.txt"
+
+    # zero-diff: an exclusion absent at the baseline is named without its !.
+    rc=0
+    stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-excl-absent.txt" 2>"$WORK/err") || rc=$?
+    [[ "$rc" -eq 0 ]] || fail "zero-diff: absent exclusion exited $rc, expected 0"
+    grep -qxF 'zero-diff.sh: absent at the baseline: nope.txt' "$WORK/err" \
+        || fail "zero-diff: the absent exclusion is not named as nope.txt [$(cat "$WORK/err")]"
+
+    # zero-diff: a paths file of exclusions only, and a bare !: exit 2.
+    rc=0
+    (cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-excl-only.txt") >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "zero-diff: exclusions only exited $rc, expected 2"
+    grep -qF 'exclusions only' "$WORK/err" || fail "zero-diff: exclusions only gave no reason [$(cat "$WORK/err")]"
+    rc=0
+    (cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-excl-bare.txt") >/dev/null 2>"$WORK/err" || rc=$?
+    [[ "$rc" -eq 2 ]] || fail "zero-diff: a bare ! exited $rc, expected 2"
 
     # zero-diff: a changed long path is named in full, not shortened to .../
     rc=0
@@ -996,7 +1054,7 @@ run_checks() {
     stdout=$(cd "$REPO" && bash "$zd" "$BASE" "$FX/paths-absent.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 0 ]] || fail "zero-diff: absent path exited $rc, expected 0"
     grep -qF 'absent.txt' "$WORK/err" || fail "zero-diff: the absent path is not named on stderr"
-    [[ "$stdout" == "compared: 2 paths" ]] || fail "zero-diff: absent path printed [$stdout]"
+    [[ "$stdout" == "compared: 2 paths, 0 excluded" ]] || fail "zero-diff: absent path printed [$stdout]"
 
     # zero-diff: an empty paths file, one of whitespace-only lines, and a
     # baseline that is not a commit are usage errors.
@@ -1015,8 +1073,8 @@ run_checks() {
     rc=0
     stdout=$(cd "$REPO/deeply" && bash "$zd" "$BASE" "$FX/paths-nonewline.txt" 2>"$WORK/err") || rc=$?
     [[ "$rc" -eq 1 ]] || fail "zero-diff: no final newline, from a subdirectory, exited $rc, expected 1"
-    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths" ]] \
-        || fail "zero-diff: no final newline, from a subdirectory: first line is not [compared: 2 paths]"
+    [[ "$(printf '%s\n' "$stdout" | head -n 1)" == "compared: 2 paths, 0 excluded" ]] \
+        || fail "zero-diff: no final newline, from a subdirectory: first line is not [compared: 2 paths, 0 excluded]"
     printf '%s\n' "$stdout" | grep -qF 'with space.txt' || fail "zero-diff: from a subdirectory, the stat does not name the changed path"
 
     # temp-candidates: --snapshot records every top-level name, the hidden
@@ -1144,24 +1202,37 @@ run_self_test() {
 
     # Mutant 6: the paths passed to git diff as one word.
     name="paths read as one word"
-    mutate "$zd" "$m_zd" 's/HEAD -- "\${paths\[@\]}"/HEAD -- "${paths[*]}"/' "$name"
+    mutate "$zd" "$m_zd" 's/HEAD -- "\${specs\[@\]}"/HEAD -- "${specs[*]}"/' "$name"
     run_checks "$ex" "$m_zd" "$tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 7: the before list no longer filters, so entries older than the
+    # Mutant 7: the exclusion dropped, so a ! path is compared as a plain
+    # path.
+    name="exclusion dropped"
+    mutate "$zd" "$m_zd" 's/=":(exclude,literal)/=":(literal)/' "$name"
+    run_checks "$ex" "$m_zd" "$tc" "$ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 8: the literal magic dropped, so a bracket is a glob again.
+    name="literal magic dropped"
+    mutate "$zd" "$m_zd" 's/=":(exclude,literal)/=":(exclude)/; s/=":(literal)\$p"/="$p"/' "$name"
+    run_checks "$ex" "$m_zd" "$tc" "$ss" 2>/dev/null
+    if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
+
+    # Mutant 9: the before list no longer filters, so entries older than the
     # batch are listed.
     name="before-list filter removed"
     mutate "$tc" "$m_tc" 's/if grep -qxF -- "\$name" "\$before"; then/if false; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 8: any clone counts, whatever its origin.
+    # Mutant 10: any clone counts, whatever its origin.
     name="origin comparison removed"
     mutate "$tc" "$m_tc" 's/if \[ "\$p" = "\$r" \]; then/if :; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 9: a symbolic link is judged by what it points to.
+    # Mutant 11: a symbolic link is judged by what it points to.
     name="symlink exclusion removed"
     mutate "$tc" "$m_tc" 's/if \[ ! -L "\$e" \] && \[ -O "\$e" \]; then/if [ -O "$e" ]; then/' "$name"
     run_checks "$ex" "$zd" "$m_tc" "$ss" 2>/dev/null
@@ -1171,25 +1242,25 @@ run_self_test() {
     # scripts' fixtures cannot see a change to the wrapper, and each full
     # pass pays the wrapper fixtures' sleeps again.
 
-    # Mutant 10: every caller enters, whatever the count.
+    # Mutant 12: every caller enters, whatever the count.
     name="count check always true"
     mutate "$ss" "$m_ss" 's/if \[ "\$live" -lt "\$limit" \]; then # count check/if true; then # count check/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 11: a stale holder is counted as live, never reclaimed.
+    # Mutant 13: a stale holder is counted as live, never reclaimed.
     name="stale-holder reclaim removed"
     mutate "$ss" "$m_ss" 's/if holder_alive; then # live-holder check/if true; then # live-holder check/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 12: the holder file outlives the wrapper.
+    # Mutant 14: the holder file outlives the wrapper.
     name="release on exit removed"
     mutate "$ss" "$m_ss" 's/\[ "\$holder_written" -eq 1 \] && rm -f "\$holder" # release on exit/: # release on exit/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
     if [[ "$failures" -gt 0 ]]; then echo "OK    mutant '$name': red ($failures assertions failed)"; else echo "FAIL  mutant '$name': the guard stayed green" >&2; bad=1; fi
 
-    # Mutant 13: a nested call waits for a slot like any other.
+    # Mutant 15: a nested call waits for a slot like any other.
     name="nesting check removed"
     mutate "$ss" "$m_ss" 's/if \[ "\${KENSPC_SUITE_SLOT_HELD:-}" = 1 \]; then/if false; then/' "$name"
     run_slot_only "$m_ss" 2>/dev/null
