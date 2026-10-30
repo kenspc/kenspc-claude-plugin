@@ -240,6 +240,22 @@ starts, and a user who wants a smaller budget writes the field.
 | `Suite limit:` | a positive integer N, with one sub-bullet per command prefix, each one code span (repo mode only) | unset — no lock |
 | `Role settings:` | one sub-bullet per role, `- <role>: model <model>[, effort <level>]` or `- <role>: effort <level>`: `<role>` one of `S1`, `S2`, `S3`, `S3b`, `S4`, `S4w`, `S5`, `S6`; `<model>` one token with no whitespace and no comma, passed to `--model` as written; `<level>` one of `low`, `medium`, `high`, `xhigh`, `max` | empty — every role runs at the pass-through values |
 
+**Writing a check.** Three rules for `Acceptance:` and `Release checks:`
+entries, each with its reason:
+
+- A command is one code span alone before ` — PASS: `. Why: words after
+  the span make the entry a description, which S4 runs as its text
+  describes and `Release checks:` refuses; the start checks ask about such
+  an entry rather than guess what the words say.
+- A check over the lines the batch added, or one proving a name is gone,
+  excludes the spec's and the task document's paths — `docs/plans/` and
+  `docs/tasks/` where the chain writes them. Why: both documents sit in
+  the tree until S6 removes them, and both name what the batch adds and
+  removes, so the check matches the batch's own plan.
+- A check finds a commit by its subject, never by its position (`HEAD~2`,
+  "the last five commits"). Why: S6 and later fixes add commits, and a
+  position that named the right commit at S4 names another at S6.
+
 A label written with a note, `- <Label> (<note>): <value>`, is read as
 `- <Label>: <value>` when the label is known, and the note is carried with
 the field: for `Acceptance:`, as the run-notes line of both S4 task blocks

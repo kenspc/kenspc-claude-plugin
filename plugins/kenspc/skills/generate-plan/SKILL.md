@@ -298,11 +298,13 @@ element is indistinguishable from a forgotten one.
   section is `## Autopilot`, written to the grammar in
   `${CLAUDE_PLUGIN_ROOT}/skills/autopilot/SKILL.md` § The `## Autopilot`
   section, read there by path at run time. Before the draft is printed,
-  check three things, and fix a failure in the draft before the print:
+  check four things, and fix a failure in the draft before the print:
   every label is one that section's table lists (a note in parentheses
   after the label is allowed); `Budget:` is exactly `USD <n>`, a note going
-  in the label's parentheses and never after the value; and every
-  `Acceptance:` sub-bullet holds ` — PASS: `. Why: plans written without
+  in the label's parentheses and never after the value; every
+  `Acceptance:` and `Release checks:` sub-bullet holds ` — PASS: `; and a
+  sub-bullet of either field whose text opens with a code span has
+  nothing between the span and ` — PASS: `. Why: plans written without
   the grammar broke it — a `Budget: USD 300` followed by a sentence — and
   the autopilot stops on a value outside its grammar only after the plan
   is approved and committed; read by path, the grammar has one source, so

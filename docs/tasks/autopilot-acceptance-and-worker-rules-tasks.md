@@ -253,7 +253,14 @@ Plan Step 4. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 5: Writing rules for checks
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: the "Writing a check" paragraph is a bold lead-in with three bullets, each ending in its `Why:`, placed directly after the label table and before the note-label paragraph. generate-plan's fourth item is a clause of the existing sentence; the sentence's closing `Why:` was left as it stands, since it gives the reason for the whole pre-print check.
+- Changes/tradeoffs: the first rule's reason names both consequences in this batch's design (S4 runs a description as its text describes; `Release checks:` refuses one) and the start checks' question, so the rule points at the behavior Tasks 2–4 added.
+- Test map:
+  - three writing rules with reasons (autopilot SKILL.md:243) → none: skill prose, held by the reviewers' reading (plan Step 5's acceptance)
+  - generate-plan's four checks naming both fields and the span-to-PASS check (generate-plan SKILL.md:301) → none: skill prose; `grep -n 'check four things'` finds it
 
 Depends on: Task 4
 
