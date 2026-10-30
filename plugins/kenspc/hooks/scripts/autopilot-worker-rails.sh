@@ -58,8 +58,18 @@
 #       target lies outside every root, by the root check (b) uses. The
 #       target is read after a leading ~ or ~$USER (unquoted), $HOME,
 #       ${HOME}, $TMPDIR, or ${TMPDIR} is expanded from the hook's
-#       environment, resolved against the input's cwd when relative, with .
-#       and .. collapsed as written. Not judged: a target holding any other
+#       environment, resolved when relative against the tracked directory,
+#       with . and .. collapsed as written. The tracked directory starts as
+#       the input's cwd; a top-level simple command cd <word>, its word one
+#       literal path (no $, backtick, glob character, or ~), joined to what
+#       follows by && or ; (a line end counts as ;), moves it, resolved
+#       against the current one, for the redirections after it, a subshell
+#       after it included, and an absolute word moves it even when the
+#       current one is unknown; a cd with no word, cd -, a word that opens
+#       with -, more than one word, or a word that is no literal path, and a
+#       cd joined by ||, leave it unknown, and a cd before a | or a lone &
+#       moves nothing (bash runs it in a subshell). Not judged: a relative
+#       target while the directory is unknown, a target holding any other
 #       expansion (a ~ naming another user too), a command substitution, a
 #       glob or a brace, or single-quoted text with a leading ~ or a $ in it
 #       (other single-quoted text is literal and judged); /dev/null,
@@ -133,8 +143,11 @@
 # trap body (trap 'rm -rf "$d"' EXIT, a quoted argument run at exit),
 # interpreter-level deletes (python, node, perl), git clean, and writes
 # through Bash other than a redirection (cp, mv, tee, an interpreter's own
-# writes); a redirection whose relative target follows a cd earlier in the
-# same command, read against the input's cwd; remote git through git lfs,
+# writes); a redirection whose relative target follows a cd inside a
+# subshell or a pipeline, a cd after a keyword or a { (then cd, { cd), or
+# a pushd, read against the directory before it, or follows a cd whose
+# target is not a literal or a cd joined by ||, not judged; remote git
+# through git lfs,
 # git submodule update --remote, or a git alias; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
 # ($'\x72m', kept as written), rm after a redirection written before the command
@@ -220,7 +233,36 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # holds the single quote.
 RM_AWK=$JSON_AWK'
 function flush() { if (inw) { nw++; w[nw] = cur; wq[nw] = cq; wd[nw] = cd }; cur = ""; inw = 0; cq = 0; cd = 0 }
-function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; nw = base }
+function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; if (sp == 0 && nw > base) cdword(); nw = base }
+# cdword() runs at the end of each top-level simple command and sets pend:
+# "\001" when the command is no cd; otherwise the directory the cd moves
+# to, or "" when the hook cannot read its target as one literal path (no
+# word, cd -, a word that opens with -, more than one word, or a word
+# holding $, a backtick, a glob character, a brace, or ~). cdsep() applies
+# it at the separator that follows. Why only a literal at the top level:
+# the denials this tracking removes were all cd <literal> && … > <relative>,
+# and a narrower rule that the scoping of bash cannot contradict is safer than a
+# wider one the scanner cannot read.
+function cdword(   a) {
+  pend = "\001"
+  if (w[base + 1] != "cd") return
+  pend = ""
+  if (nw != base + 2) return
+  a = w[base + 2]
+  if (a == "" || a ~ /^-/ || a ~ /[$`*?[{~]/ || a ~ /[\t\n]/ || index(a, "\002") > 0) return
+  if (a ~ /^\//) pend = collapse(a)
+  else if (wdir ~ /^\//) pend = collapse(wdir "/" a)
+}
+# cdsep(s): s is the separator after a top-level command and the character
+# after it. A pending cd moves the tracked directory, wdir, after && or ;
+# (a line end is passed as ;), leaves it unknown ("") after ||, and moves
+# nothing before a | or a lone &, which run the cd in a subshell.
+function cdsep(s) {
+  if (pend == "\001") return
+  if (s == "&&" || substr(s, 1, 1) == ";") wdir = pend
+  else if (s == "||") wdir = ""
+  pend = "\001"
+}
 # bname splits on / rather than sub(/.*\//, ...): the awk macOS ships
 # retries that regex from every position of a word with no slash, which
 # made a 64 KB command word take about 15 seconds.
@@ -380,7 +422,8 @@ function collapse(p,   n, a, i, m, s, out) {
 # other than a leading ~ (unquoted), $HOME, ${HOME}, $TMPDIR, or ${TMPDIR}
 # (set), a substitution, a glob or a brace, a target with single-quoted
 # text that begins with ~ or holds a $ (which part was quoted is not
-# kept), and a relative target with no absolute cwd. Other single-quoted
+# kept), and a relative target with no absolute tracked directory (wdir,
+# the cwd of the input as cdsep() moves it). Other single-quoted
 # text is literal and judged as written. The terminal and descriptor
 # files are no write.
 function target(t, q, d,   o, v, r, u) {
@@ -405,7 +448,7 @@ function target(t, q, d,   o, v, r, u) {
   if (v == "") return
   if (r ~ /[$`*?[{]/) return
   if (v != "\001") t = v r
-  if (t !~ /^\//) { if (cwd !~ /^\//) return; t = cwd "/" t }
+  if (t !~ /^\//) { if (wdir !~ /^\//) return; t = wdir "/" t }
   t = collapse(t)
   if (!(t in tseen)) { tseen[t] = 1; nt++; tl[nt] = t "\t" o }
 }
@@ -485,7 +528,7 @@ function scan(c,   n, i, ch, nx) {
       cur = cur ch; i++; continue
     }
     if (ch == " " || ch == "\t") { flush(); i++; continue }
-    if (ch == "\n") { endcmd(); i++; if (nh > 0) i = heredocs(c, i); continue }
+    if (ch == "\n") { endcmd(); if (sp == 0) cdsep(";"); i++; if (nh > 0) i = heredocs(c, i); continue }
     # A line continuation right after an unquoted < or > moves ltgt past
     # it: bash joins the lines before it splits words, so >\<newline>& is
     # still >&, and the & or | after it stays in the word.
@@ -513,7 +556,7 @@ function scan(c,   n, i, ch, nx) {
     # pairs take over 3 seconds, and a quoted or escaped < or > ("a>"|rm)
     # is no redirection, so the | after it still ends the command.
     if ((ch == "&" || ch == "|") && (nx == ">" || ltgt == i - 1)) { cur = cur ch; inw = 1; i++; continue }
-    if (ch == ";" || ch == "&" || ch == "|") { endcmd(); i++; continue }
+    if (ch == ";" || ch == "&" || ch == "|") { endcmd(); if (sp == 0) cdsep(ch nx); i++; continue }
     if (ch == "<" || ch == ">") ltgt = i
     # An unquoted > clears the quote flags of the word, so they describe the
     # text after the last > of the word, its target: quoted text before the
@@ -530,6 +573,7 @@ END {
   if (c == "\001") exit 3
   home = ENVIRON["HOME"]; tmpd = ENVIRON["TMPDIR"]; user = ENVIRON["USER"]
   cwd = jstr(buf, "cwd"); if (cwd == "\001") cwd = ENVIRON["PWD"]
+  wdir = cwd; pend = "\001"
   # The listed suite prefixes (-v suites, "|"-joined), each split into its
   # words once: SD[k] the prefix as named, SN[k] its words from its command
   # word on, SW[k, m] the m-th of them, the first one its base name. The

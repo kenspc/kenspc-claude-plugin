@@ -58,7 +58,16 @@
 # > out.txt, > 'out.txt', and > "~/x" in the repository, > "$OTHER/x" (not judged), a > inside single quotes, and a >
 # in a heredoc body (allowed), with the hook's $TMPDIR set to a fixture
 # path the redirection fixtures' roots hold and its $USER to a fixture
-# name; gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
+# name; from a cwd of <repository>/sub, a relative target after a literal
+# cd read against the directory the cd moves to — cd <repository>/sub/x &&
+# echo a > ../../y.log and cd x; echo a > ../../y.log (allowed),
+# cd / && echo a > y.log, cd / then a line end, cd / && (echo a > y.log),
+# and cd - && cd / && echo a > y.log (denied) — and against the input's
+# cwd or not at all — (cd /; echo a) > y.log, cd / | cat > y.log, and
+# cd / & echo a > y.log (allowed), and cd "$D", cd / ||, cd -, cd with no
+# word, cd / x, cd /*/, and cd ~, each then a relative target that the
+# input's cwd would deny or the cd's word would place outside (allowed, the
+# directory unknown); gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
 # git pull, git ls-remote origin, git remote update, git -c x.y=z push,
 # git --no-pager fetch, git --git-dir=.git fetch, git -P push,
 # git --git-dir .git fetch, git --no-optional-locks fetch, and a git clone
@@ -146,7 +155,7 @@
 # Optional flag:
 #   --self-test    Run the mutation regression fixture. Copies the hook into
 #                  a temporary directory, runs every fixture against the
-#                  unmodified copy (must pass), then against nine mutants,
+#                  unmodified copy (must pass), then against ten mutants,
 #                  each of which must turn at least one fixture red, named in
 #                  the output: the rm detection removed, the root check
 #                  removed, the marker check removed, the constant-time push
@@ -161,8 +170,12 @@
 #                  reasons still carry the phrase), the redirection check
 #                  removed (any fixture red), the gh check removed (the
 #                  "gh issue view" fixture, which must be the first red),
-#                  and the suite check (f) removed (the "dotnet test"
-#                  fixture, which must be the first red).
+#                  the suite check (f) removed (the "dotnet test"
+#                  fixture, which must be the first red), and the cd
+#                  tracking removed (every relative target read from the
+#                  input's cwd), which must turn each of the first three
+#                  cd fixtures and the four whose directory is unknown
+#                  (cd "$D", cd / ||, cd -, cd with no word) red.
 #                  Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
@@ -311,9 +324,16 @@ decide() {
 
 FAILS=0
 FIRST_RED=""
+# Every label a run of the fixtures turned red, one per line.
+RED_LABELS=""
 QUIET=0
 TIMED=""
 SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, then rm -rf, decided in time"
+# The cd fixtures the self-test's cd-tracking mutant must turn red.
+CD_ABS_LABEL="cd to an absolute literal path && a relative > read against it"
+CD_REL_LABEL="cd to a relative literal path; a relative > read against it"
+CD_ROOT_LABEL="cd / && a relative > read against /"
+CD_UNKNOWN_LABELS=("cd \"\$D\" leaves the directory unknown" "cd / || leaves the directory unknown" "cd - leaves the directory unknown" "cd with no word leaves the directory unknown")
 # What an unreadable-field denial says in place of the permitted route. Why:
 # the hook reads every later call the same way, so a worker sent down the
 # route would retry until its cap; the autopilot preamble tells it to list
@@ -390,6 +410,7 @@ fx() {
     if [[ "$ok" -eq 0 ]]; then
         FAILS=$((FAILS + 1))
         if [[ -z "$FIRST_RED" ]]; then FIRST_RED=$label; fi
+        RED_LABELS="$RED_LABELS$label"$'\n'
         if [[ "$QUIET" -eq 0 ]]; then
             echo "FAIL  $label: expected $expect, got $GOT (exit $RC, stdout '$OUT', stderr '$ERR')" >&2
         fi
@@ -442,7 +463,7 @@ fx_timed() {
 # run_fixtures <hook>: every fixture; returns 1 when any decision differs.
 run_fixtures() {
     local hook="$1" r="$FX_ROOTS" t k
-    FAILS=0; FIRST_RED=""; TIMED=""; SUITE_CMDS=""; SUITE_WRAPPER=""
+    FAILS=0; FIRST_RED=""; RED_LABELS=""; TIMED=""; SUITE_CMDS=""; SUITE_WRAPPER=""
     D_LABEL=(); D_TOOL=(); D_CWD=(); D_PAYLOAD=(); D_ROOTS=(); D_SCMDS=(); D_SWRAP=()
 
     # rm spellings, denied.
@@ -605,6 +626,31 @@ run_fixtures() {
     fx "$hook" "a > to another expansion, not judged" allow 1 "$rr" Bash "$FX_REPO" 'echo x > "$OTHER/x"'
     fx "$hook" "a > inside single quotes, no redirection" allow 1 "$rr" Bash "$FX_REPO" "echo 'a > /etc/x'"
     fx "$hook" "a > in a heredoc body, no redirection" allow 1 "$rr" Bash "$FX_REPO" $'cat <<EOF > notes.txt\na > /etc/x\nEOF'
+    # A relative target after a top-level cd to a literal path, joined by
+    # && or ;, resolves against the directory the cd moves to; from the
+    # cwd <repository>/sub, each outcome differs from the input-cwd
+    # reading. The self-test's cd-tracking mutant must turn the first three
+    # and CD_UNKNOWN_LABELS red.
+    fx "$hook" "$CD_ABS_LABEL" allow 1 "$rr" Bash "$FX_REPO/sub" "cd $FX_REPO/sub/x && echo a > ../../y.log"
+    fx "$hook" "$CD_REL_LABEL" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd x; echo a > ../../y.log'
+    fx_deny "$hook" "$CD_ROOT_LABEL" "$rr" Bash "$FX_REPO/sub" 'cd / && echo a > y.log'
+    fx_deny "$hook" "cd / then a line end, a relative > read against /" "$rr" Bash "$FX_REPO/sub" $'cd /\necho a > y.log'
+    fx_deny "$hook" "cd / && a subshell holding a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && (echo a > y.log)'
+    fx_deny "$hook" "cd - leaves the directory unknown, a later cd / sets it" "$rr" Bash "$FX_REPO/sub" 'cd - && cd / && echo a > y.log'
+    # A cd inside a subshell, before a |, or before a lone & moves nothing
+    # for the redirections after it.
+    fx "$hook" "(cd /; echo a) > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" '(cd /; echo a) > y.log'
+    fx "$hook" "cd / | cat > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / | cat > y.log'
+    fx "$hook" "cd / & echo a > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / & echo a > y.log'
+    # A cd the hook cannot read as one literal path, or joined by ||,
+    # leaves the directory unknown, and a relative target is not judged.
+    fx "$hook" "${CD_UNKNOWN_LABELS[0]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd "$D" && echo a > ../../y.log'
+    fx "$hook" "${CD_UNKNOWN_LABELS[1]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / || echo a > ../../y.log'
+    fx "$hook" "${CD_UNKNOWN_LABELS[2]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd - && echo a > ../../y.log'
+    fx "$hook" "${CD_UNKNOWN_LABELS[3]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd && echo a > ../../y.log'
+    fx "$hook" "cd with two words leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / x && echo a > ../../y.log'
+    fx "$hook" "cd to a glob leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd /*/ && echo a > y.log'
+    fx "$hook" "cd ~ leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd ~ && echo a > ../../../y.log'
     # 8000 redirections to a relative target in the repository (about
     # 24 KB, under the cap, so it is scanned), then one to /etc, decided in
     # under half the hook's timeout.
@@ -1004,13 +1050,13 @@ run_self_test() {
         return 1
     fi
 
-    # Nine mutants, each a literal replacement in a fresh copy. The
+    # Ten mutants, each a literal replacement in a fresh copy. The
     # constant-time push mutant copies every word collected so far on each
     # push, the last-character check mutant matches the whole word
     # against [<>]$ on each | or &, as the hook once did, and the
     # command-reason-phrase mutant rewords the phrase in one of the three
     # unreadable-field reasons, which only the fixture assertion catches.
-    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check gh-check suite-check; do
+    for name in rm-detection root-check marker-check constant-time-push last-character-check command-reason-phrase redirection-check gh-check suite-check cd-tracking; do
         case "$name" in
             rm-detection)
                 old='[ -z "$found" ] || deny "a recursive rm'
@@ -1039,6 +1085,9 @@ run_self_test() {
             suite-check)
                 old='if (nsuite > 0 && suite(i)) return'
                 new='if (0 && nsuite > 0 && suite(i)) return' ;;
+            cd-tracking)
+                old='if (t !~ /^\//) { if (wdir !~ /^\//) return; t = wdir "/" t }'
+                new='if (t !~ /^\//) { if (cwd !~ /^\//) return; t = cwd "/" t }' ;;
         esac
         cp "$hook" "$copy"
         replace_literal "$copy" "$old" "$new" && rc=0 || rc=$?
@@ -1072,6 +1121,16 @@ run_self_test() {
             echo "FAIL  self-test: the heading check turned red on the $name mutant, so it does not show the fixture assertion caught it" >&2
             cat "$WORK/stderr.txt" >&2
             return 1
+        fi
+        # The cd-tracking mutant reads every target from the input's cwd,
+        # so each cd fixture whose outcome that reading changes is red.
+        if [[ "$name" == cd-tracking ]]; then
+            for want in "$CD_ABS_LABEL" "$CD_REL_LABEL" "$CD_ROOT_LABEL" "${CD_UNKNOWN_LABELS[@]}"; do
+                if ! printf '%s' "$RED_LABELS" | grep -qxF -- "$want"; then
+                    echo "FAIL  self-test: the mutant with the $name removed left the fixture '$want' green" >&2
+                    return 1
+                fi
+            done
         fi
         echo "OK    self-test mutant '$name removed' turned $FAILS fixture(s) red, first: $FIRST_RED"
     done

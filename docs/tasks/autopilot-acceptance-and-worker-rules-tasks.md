@@ -439,7 +439,22 @@ Plan Step 7 and § The driver and stdin. Files:
 
 ### Task 8: The rails hook follows a literal `cd`
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: a line end after a top-level `cd` counts as `;`, as in bash, so `cd /` on one line and a redirection on the next resolve against `/` (decided by the earlier slice that started this edit, recorded here). A `cd` before a lone `&` moves nothing, as before a `|`, since bash runs a backgrounded command in a subshell too. A `cd` word holding a brace, a tab or newline, or a `>` (a redirection glued to it) also leaves the directory unknown, beside the `$`, backtick, glob characters, and `~` the task names; a `cd` carrying any redirection has more than one word and so leaves it unknown. The tracking runs in `endcmd()`, after the command's own redirections are judged, so `cd / > y.log` reads `y.log` against the directory before the `cd`, as bash opens it. The self-test's cd-tracking mutant swaps `wdir` for the input's `cwd` in `target()`, and the guard checks each of the seven fixtures the task names turned red by its label (a new `RED_LABELS` list `fx` fills), not only that some fixture did.
+- Changes/tradeoffs: beyond the spec, fixtures for the decisions above and for branches the task's list leaves unheld: `cd /` then a line end (denied), `cd / && (echo a > y.log)` (denied, the subshell after the `cd` included), `cd - && cd / && …` (denied, an absolute word sets an unknown directory), `cd / & echo a > y.log` (allowed), and `cd / x`, `cd /*/`, `cd ~` (allowed, unknown), each chosen so the other reading gives the other outcome. The hook's known-miss line also names a `cd` after a keyword or a `{` (`then cd`, `{ cd`), which the scanner does not read as a `cd` command, beside the four forms the task lists. The comment reword in the `RM_AWK` program by the main session (clarification 5) is kept as written; every edit to the hook was made on a scratch copy (attempt 5's `t8-tree/`), checked with `bash -n` and the guard run from that tree, then copied into place.
+- Test map:
+  - literal `cd` moves the directory after `&&` and `;` (autopilot-worker-rails.sh:262, :451) → scripts/check-autopilot-rails-hook.sh::"cd to an absolute literal path && a relative > read against it", "cd to a relative literal path; a relative > read against it", "cd / && a relative > read against /" and self-test mutant "cd-tracking removed"
+  - a line end counts as `;` (autopilot-worker-rails.sh:531) → check-autopilot-rails-hook.sh::"cd / then a line end, a relative > read against /" (mutation-checked)
+  - `||` leaves the directory unknown (autopilot-worker-rails.sh:263) → check-autopilot-rails-hook.sh::"cd / || leaves the directory unknown" (mutation-checked)
+  - `|` and lone `&` move nothing (autopilot-worker-rails.sh:262) → check-autopilot-rails-hook.sh::"cd / | cat > y.log, read against the input's cwd", "cd / & echo a > y.log, read against the input's cwd" (mutation-checked: every separator but `||` made to move it)
+  - a `cd` inside a subshell moves nothing (autopilot-worker-rails.sh:236, :531, :559, the `sp == 0` guards) → check-autopilot-rails-hook.sh::"(cd /; echo a) > y.log, read against the input's cwd" (unchecked)
+  - a subshell after the `cd` inherits it (autopilot-worker-rails.sh:451) → check-autopilot-rails-hook.sh::"cd / && a subshell holding a relative >, read against /"
+  - no word, `cd -`, more than one word, `$`, glob, `~` leave it unknown (autopilot-worker-rails.sh:249, :250, :252) → check-autopilot-rails-hook.sh::"cd with no word …", "cd - leaves the directory unknown", "cd with two words …", "cd \"$D\" …", "cd to a glob …", "cd ~ …"
+  - an absolute word sets an unknown directory (autopilot-worker-rails.sh:253) → check-autopilot-rails-hook.sh::"cd - leaves the directory unknown, a later cd / sets it"
+  - the seven named fixtures red under the mutant (check-autopilot-rails-hook.sh:1127) → `bash scripts/check-autopilot-rails-hook.sh --self-test` prints "cd-tracking removed' turned 12 fixture(s) red"
+  - header text (d) and the known misses (autopilot-worker-rails.sh:62, :146) → none: comment text, held by the reviewers' reading
 
 Plan Step 8 and § The rails hook and `cd`. Files:
 `plugins/kenspc/hooks/scripts/autopilot-worker-rails.sh`,
