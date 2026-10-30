@@ -95,12 +95,14 @@ items 42, 46, 48, and 49.
 ### Fixed
 
 - The autopilot worker rails hook resolves a redirection's relative target
-  against the directory a top-level `cd <literal path>` joined by `&&`,
-  or by `;` or a line end when its target is an existing directory, moved
-  it to, a subshell after it included. A `cd` it
-  cannot read as one literal path, or one joined by `||`, leaves the
-  directory unknown and the target unjudged, as does a `||` later in the
-  same list after a `cd`; a `cd` inside a subshell or
+  against the directory a top-level `cd <literal path>` moved it to: one
+  joined by `&&` with no `||` before it in its list, for the commands
+  joined to it by `&&`, a subshell among them included, or one alone in
+  its list and joined by `;` or a line end when its target is an existing
+  directory. The end of the list and a later `||` put the directory back
+  where it was before the list, and a `cd` after a `||` moves nothing. A
+  `cd` it cannot read as one literal path leaves the directory unknown and
+  the target unjudged; a `cd` inside a subshell or
   before a `|` or a lone `&` moves nothing. `check-autopilot-rails-hook.sh`
   gains the cd fixtures and a tenth hook-copy mutant, the cd tracking
   removed, which must turn each fixture the reading changes red.

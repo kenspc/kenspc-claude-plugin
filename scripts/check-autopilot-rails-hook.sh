@@ -75,8 +75,13 @@
 # true | cd b; echo a > ../../y.log from the temporary a/ (denied), cd b on a line of its own in the body
 # of an if, for, while, until, or case command, a { } group, or a function,
 # then echo a > ../../y.log after the body, from the temporary a/ (denied,
-# read against a/), and cd "$D", cd / ||, cd -, cd with no
-# word, cd / x, cd /*/, cd ~, and cd / && false ||, each then a relative
+# read against a/), against the directory before the list after a cd
+# whose run is not certain — cd / || echo a > ../../y.log, and from the
+# temporary a/, each then echo a > ../../y.log, cd b && true; and cd b &&
+# true then a line end, cd b && true &, true || cd b &&, false && cd b;,
+# and cd b && false ||, and from <repository>/sub cd / || if true; then
+# true; fi && cd tmp && echo a > ../../y.log (denied) — and cd "$D",
+# cd -, cd with no word, cd / x, cd /*/, and cd ~, each then a relative
 # target that the input's cwd would deny or the cd's word would place
 # outside (allowed, the directory unknown); gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
 # git pull, git ls-remote origin, git remote update, git -c x.y=z push,
@@ -185,8 +190,8 @@
 #                  fixture, which must be the first red), and the cd
 #                  tracking removed (every relative target read from the
 #                  input's cwd), which must turn each of the first three
-#                  cd fixtures and the four whose directory is unknown
-#                  (cd "$D", cd / ||, cd -, cd with no word) red.
+#                  cd fixtures and the three whose directory is unknown
+#                  (cd "$D", cd -, cd with no word) red.
 #                  Then the restored copy
 #                  must pass again. A mutation whose target text is not
 #                  found exactly once is exit 2 (stale fixture), never a pass.
@@ -344,7 +349,7 @@ SUBST_TIMED_LABEL="a command of 12000 \$( ) substitutions under the length cap, 
 CD_ABS_LABEL="cd to an absolute literal path && a relative > read against it"
 CD_REL_LABEL="cd to a relative literal path; a relative > read against it"
 CD_ROOT_LABEL="cd / && a relative > read against /"
-CD_UNKNOWN_LABELS=("cd \"\$D\" leaves the directory unknown" "cd / || leaves the directory unknown" "cd - leaves the directory unknown" "cd with no word leaves the directory unknown")
+CD_UNKNOWN_LABELS=("cd \"\$D\" leaves the directory unknown" "cd - leaves the directory unknown" "cd with no word leaves the directory unknown")
 # What an unreadable-field denial says in place of the permitted route. Why:
 # the hook reads every later call the same way, so a worker sent down the
 # route would retry until its cap; the autopilot preamble tells it to list
@@ -704,18 +709,32 @@ echo a > ../../y.log'
   cd b
 }
 echo a > ../../y.log'
-    # A cd the hook cannot read as one literal path, or joined by ||,
-    # leaves the directory unknown, and a relative target is not judged.
+    # A cd the hook cannot read as one literal path leaves the directory
+    # unknown, and a relative target is not judged.
     fx "$hook" "${CD_UNKNOWN_LABELS[0]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd "$D" && echo a > ../../y.log'
-    fx "$hook" "${CD_UNKNOWN_LABELS[1]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / || echo a > ../../y.log'
-    fx "$hook" "${CD_UNKNOWN_LABELS[2]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd - && echo a > ../../y.log'
-    fx "$hook" "${CD_UNKNOWN_LABELS[3]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd && echo a > ../../y.log'
+    fx "$hook" "${CD_UNKNOWN_LABELS[1]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd - && echo a > ../../y.log'
+    fx "$hook" "${CD_UNKNOWN_LABELS[2]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd && echo a > ../../y.log'
     fx "$hook" "cd with two words leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / x && echo a > ../../y.log'
     fx "$hook" "cd to a glob leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd /*/ && echo a > y.log'
     fx "$hook" "cd ~ leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd ~ && echo a > ../../../y.log'
-    # A || later in the list leaves the directory unknown: the command after
-    # it runs when the cd failed, too.
-    fx "$hook" "cd / && false || leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / && false || echo a > y.log'
+    # A cd whose run is not certain leaves the directory where it was before
+    # its list: the echo after cd / || runs only when the cd failed, so in
+    # <repository>/sub, where ../../y.log lies outside. From the temporary
+    # a/, b/ an existing directory there and the roots real/ alone, a cd b
+    # that moved the directory would allow each ../../y.log below: a cd b
+    # joined by && whose list then ends at ;, a line end, or a lone &, a cd
+    # after a || or after a &&, and a || later in the list after a cd.
+    fx_deny "$hook" "cd / || a relative >, read against the directory before the list" "$rr" Bash "$FX_REPO/sub" 'cd / || echo a > ../../y.log'
+    fx_deny "$hook" "cd b && true; a relative >, read against the directory before the list" "$WORK/real" Bash "$WORK/real/a" 'cd b && true; echo a > ../../y.log'
+    fx_deny "$hook" "cd b && true then a line end, a relative > read against the directory before the list" "$WORK/real" Bash "$WORK/real/a" $'cd b && true\necho a > ../../y.log'
+    fx_deny "$hook" "cd b && true & a relative >, read against the directory before the list" "$WORK/real" Bash "$WORK/real/a" 'cd b && true & echo a > ../../y.log'
+    fx_deny "$hook" "true || cd b && a relative >, read against the directory before the list" "$WORK/real" Bash "$WORK/real/a" 'true || cd b && echo a > ../../y.log'
+    fx_deny "$hook" "false && cd b; a relative >, read against the directory before the list" "$WORK/real" Bash "$WORK/real/a" 'false && cd b; echo a > ../../y.log'
+    fx_deny "$hook" "cd b && false || a relative >, read against the directory before the list" "$WORK/real" Bash "$WORK/real/a" 'cd b && false || echo a > ../../y.log'
+    # A ; inside a compound command body begins no list, so the || before
+    # the if still keeps cd tmp from moving the directory: bash runs it in
+    # /, after cd / succeeded, and writes /y.log.
+    fx_deny "$hook" "cd / || an if body, then cd tmp && a relative >, read against the directory before the list" "$rr" Bash "$FX_REPO/sub" 'cd / || if true; then true; fi && cd tmp && echo a > ../../y.log'
     # 8000 redirections to a relative target in the repository (about
     # 24 KB, under the cap, so it is scanned), then one to /etc, decided in
     # under half the hook's timeout.

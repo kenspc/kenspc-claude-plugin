@@ -60,22 +60,25 @@
 #       ${HOME}, $TMPDIR, or ${TMPDIR} is expanded from the hook's
 #       environment, resolved when relative against the tracked directory,
 #       with . and .. collapsed as written. The tracked directory starts as
-#       the input's cwd; a top-level simple command cd <word>, its word one
-#       literal path (no $, backtick, glob character, or ~), joined to what
-#       follows by &&, or by ; (a line end counts as ;) when its target is
-#       an existing directory as the hook runs, moves it, resolved against
-#       the current one, for the redirections after it, a subshell after it
-#       included, and an absolute word moves it even when the current one is
-#       unknown; a cd joined by ; whose target is no directory, or past the
-#       200 directory tests one call gets, leaves it where it was, as bash
-#       stays after a cd that fails; a cd with no word, cd -, a word that
-#       opens with -, more than one word, or a word that is no literal path,
-#       and a cd joined by ||, leave it unknown, and so does a || later in
-#       the same list after a cd that moved it at a &&; a cd in any element
-#       of a pipeline, or before a lone &, moves nothing (bash runs it in a
-#       subshell), and so does a
-#       cd in the body of an if, while, until, for, select, or case
-#       command, a { } group, or a function. Not judged: a relative
+#       the input's cwd. A top-level simple command cd <word>, its word one
+#       literal path (no $, backtick, glob character, or ~), moves it,
+#       resolved against the current one (an absolute word even when the
+#       current one is unknown), in two cases: joined by && with no ||
+#       before it in its and-or list, for the commands joined to it by &&
+#       after it, a subshell among them included; and alone in its list,
+#       joined by ; (a line end counts as ;), past the list when its target
+#       is an existing directory as the hook runs, as bash stays after a cd
+#       that fails. The end of the list (;, a line end, or a lone &) and a
+#       || later in it put the directory back where it was before the list,
+#       since bash runs what follows them whether the cd ran or not. Every
+#       other literal cd moves nothing: one after a ||, one alone whose
+#       target is no directory or past the 200 directory tests one call
+#       gets, one in any element of a pipeline or before a lone & (bash runs
+#       it in a subshell), and one in the body of an if, while, until, for,
+#       select, or case command, a { } group, or a function. A cd with no
+#       word, cd -, a word that opens with -, more than one word, or a word
+#       that is no literal path leaves the directory unknown where a
+#       literal cd would move it. Not judged: a relative
 #       target while the directory is unknown, a target holding any other
 #       expansion (a ~ naming another user too), a command substitution, a
 #       glob or a brace, or single-quoted text with a leading ~ or a $ in it
@@ -155,9 +158,10 @@
 # case command, a { } group, or a function, a cd after a keyword or a {
 # (then cd, { cd), a cd reached through builtin cd, command cd, or an
 # assignment before it (VAR=x cd), or a pushd, which are not tracked and so
-# read against the directory before it, or follows a cd whose
-# target is not a literal, a cd joined by ||, or a || after a cd in its
-# list, not judged; remote git
+# read against the directory before it, or follows a cd whose run is not
+# certain — one after a ||, or one joined by && read past the end of its
+# list or past a later || — read against the directory before its list,
+# or follows a cd whose target is not a literal, not judged; remote git
 # through git lfs,
 # git submodule update --remote, or a git alias; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
@@ -283,20 +287,26 @@ function kwd(   i, x) {
   }
 }
 # cdsep(s): s is the separator after a top-level command and the character
-# after it. A pending cd moves the tracked directory, wdir, after &&; after
-# ; (a line end is passed as ;) it moves it only when its target is an
-# existing directory (isdir), and otherwise wdir stays where it was, since
-# bash carries on after a cd that failed and the old directory then holds;
-# after || it leaves wdir unknown (""), and before a | or a lone & it moves
-# nothing, since bash runs the cd in a subshell there; pin marks the
-# command after a | (or |&), the next element of a pipeline, whose cd
-# moves nothing either (cdword), as bash runs each element in a subshell. A || later in the
-# same list, after a cd that moved wdir at a &&, leaves wdir unknown too
-# (lcd), since the command after it also runs when that cd failed; the
-# list ends at a ; or a lone &. A line end with no command since the last
-# separator (after &&, ||, or |, where bash reads on) ends nothing (cmdn).
-# Why the test only after ;: a cd that fails before && stops the commands
-# joined to it, while one before ; does not.
+# after it. ldir is wdir, the tracked directory, as it was when the current
+# and-or list began; lop marks a && or || seen in the list, lor a ||. A
+# pending cd moves wdir after && when no || came before it in the list,
+# for the commands joined to it by && after it; a || puts wdir back to
+# ldir, and so does the end of the list (; or a line end, passed as ;, or
+# a lone &), since bash runs what follows a || when the cd failed, and
+# what follows the list whether the cd ran or not. A list that is the cd
+# alone, ended by ;, moves wdir past its end only when the target is an
+# existing directory (isdir), as bash stays after a cd that fails; a cd
+# the hook cannot read sets "" there, which leaves wdir unknown. A cd
+# after a || moves nothing, as it may never run, and so does one before a
+# | or a lone &, which bash runs in a subshell; pin marks the command after
+# a | (or |&), the next element of a pipeline, whose cd moves nothing
+# either (cdword). Inside a compound command body (kd > 0), where a cd
+# moves nothing, a ; or a lone & still puts wdir back to ldir but begins
+# no list: the body is one command of the list around it, so a || before
+# the body still keeps a cd after it from moving wdir. A line end with
+# no command since the last separator (after &&, ||, or |, where bash
+# reads on) ends nothing (cmdn). Why no test after &&: a cd that fails
+# before && stops the commands joined to it.
 function cdsep(s,   k) {
   if (s == "&&") k = "a"
   else if (s == "||") k = "o"
@@ -305,13 +315,14 @@ function cdsep(s,   k) {
   else k = "b"
   if (k == "e" && !cmdn) return
   cmdn = 0
-  if (pend != "\001") {
-    if (k == "a") { wdir = pend; lcd = 1 }
-    else if (k == "e") { if (pend == "" || pend == wdir || isdir(pend)) wdir = pend }
-    else if (k == "o") wdir = ""
+  if (k == "a" && pend != "\001" && !lor) wdir = pend
+  else if (k == "o") { wdir = ldir; lor = 1 }
+  else if (k == "e" || k == "b") {
+    if (k == "e" && !lop && pend != "\001" && (pend == "" || pend == wdir || isdir(pend))) wdir = pend
+    else wdir = ldir
+    if (kd == 0) { ldir = wdir; lop = 0; lor = 0 }
   }
-  if (k == "o" && lcd) wdir = ""
-  if (k == "e" || k == "b") lcd = 0
+  if (k == "a" || k == "o") lop = 1
   pin = (k == "p")
   pend = "\001"
 }
@@ -575,7 +586,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; lcd = 0; ntest = 0; kd = 0; pin = 0
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; ldir = wdir; lop = 0; lor = 0; ntest = 0; kd = 0; pin = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }

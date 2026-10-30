@@ -2142,11 +2142,15 @@ It runs only when you type the command.
   `${HOME}`, `$TMPDIR`, or `${TMPDIR}` is expanded and `.` and `..` are
   collapsed, a relative target against the call's working directory or,
   since 4.15.0, against the directory a top-level `cd <literal path>`
-  joined by `&&`, or by `;` or a line end when its target is an existing
-  directory, moved it to; a `cd` the hook cannot
+  moved it to: one joined by `&&` with no `||` before it in its list, for
+  the commands joined to it by `&&`, or one alone in its list and joined
+  by `;` or a line end when its target is an existing directory; the end
+  of the list and a `||` later in it put the directory back where it was
+  before the list, and a `cd` after a `||` moves nothing, since bash runs
+  what follows them whether the `cd` ran or not; a `cd` the hook cannot
   read as one literal path (no word, `cd -`, an option, more than one
-  word, a `$`, a glob, or `~`), or one joined by `||`, leaves the directory
-  unknown, as does a `||` later in the same list after a `cd`, and a
+  word, a `$`, a glob, or `~`) leaves the directory
+  unknown, and a
   relative target after it is not judged, while a `cd`
   inside a subshell or before a `|` or a lone `&` moves nothing, as bash
   runs it in a subshell; a
