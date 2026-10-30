@@ -595,6 +595,15 @@ in Discover), and the stdin question was settled by the probe.
     same class as F3 and SG1, which need the candidate-directory design;
     F2 (LOW) — `cd out && cd .. && …` is denied although it lands inside
     the roots, a false deny on the safe side.
+12. (S4; ruled by the main session) A1–A5 passed (record
+    `docs/dry-runs/autopilot-acceptance-and-worker-rules-acceptance.md`,
+    3240f4d). S4's two observations are classified as observations,
+    recorded and listed as follow-up candidates, with no fix in this
+    batch: `APPEND_SP` on a nested autopilot's launch line reaches every
+    worker of the nested batch, which weakens A3's "S4 asked no question"
+    as evidence (S2, S3, and S6 there still asked by message); and the
+    re-check directory name `<batch>-<tag>-recheck` repeats the batch name,
+    since a tag already begins with it. Neither changes what a case checks.
 
 ## Autopilot
 
