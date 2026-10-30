@@ -82,7 +82,8 @@
 # of an if, for, while, until, select, or case command, a { } group, or a
 # function written f() { or function f {,
 # then echo a > ../../y.log after the body, from the temporary a/ (denied,
-# read against a/), against the directory before the list after a cd
+# read against a/), while a cd b on the line after a closed if body moves
+# it (allowed, read against b/), against the directory before the list after a cd
 # whose run is not certain — cd / || echo a > ../../y.log, and from the
 # temporary a/, each then echo a > ../../y.log, cd b && true; and cd b &&
 # true then a line end, cd b && true &, true || cd b &&, false && cd b;,
@@ -747,6 +748,9 @@ echo a > ../../y.log'
   cd b
 done
 echo a > ../../y.log'
+    # A cd after the body closes is top-level again and moves the
+    # directory: read against b/, ../../y.log lies inside real/.
+    fx "$hook" "a cd after a closed if body moves the directory" allow 1 "$WORK/real" Bash "$WORK/real/a" $'if true; then true; fi\ncd b; echo a > ../../y.log'
     # A cd the hook cannot read as one literal path leaves the directory
     # unknown, and a relative target is not judged.
     fx "$hook" "${CD_UNKNOWN_LABELS[0]}" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd "$D" && echo a > ../../y.log'
