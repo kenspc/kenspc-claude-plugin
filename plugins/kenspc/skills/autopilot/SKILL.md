@@ -3379,7 +3379,8 @@ Then run each check as `<shell> <file>` from the repository root at that
 commit, the file being in <workspace>/_prompts/<batch>-release-cmds/[; a file that holds one of the Suite limit commands — <the prefixes, each
 in backticks, joined by ", "> — its words in order as whole words,
 anywhere in the file, runs instead as
-`bash <workspace>/_prompts/<batch>-suite-slots.sh run -- <shell> <file>`], and reply with the cmp lines and each check's file and its exit code.
+`bash <workspace>/_prompts/<batch>-suite-slots.sh run -- <shell> <file>`,
+as § 6's Suite limit line says], and reply with the cmp lines and each check's file and its exit code.
 A failing check is reported, not fixed: the tag is the user's call.]
 Reply with each commit's hash and subject.
 ````
