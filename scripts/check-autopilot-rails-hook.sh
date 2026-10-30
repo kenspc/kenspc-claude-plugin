@@ -60,14 +60,21 @@
 # path the redirection fixtures' roots hold and its $USER to a fixture
 # name; from a cwd of <repository>/sub, a relative target after a literal
 # cd read against the directory the cd moves to — cd <repository>/sub/x &&
-# echo a > ../../y.log and cd x; echo a > ../../y.log (allowed),
-# cd / && echo a > y.log, cd / then a line end, cd / && (echo a > y.log),
-# and cd - && cd / && echo a > y.log (denied) — and against the input's
+# echo a > ../../y.log (allowed), cd b; echo a > ../../y.log from a cwd
+# of a/ in the temporary directory, b/ an existing directory there and the
+# roots the temporary real/ (allowed), mkdir -p x && cd x && echo a >
+# ../y.log from the repository root (allowed, no existence test after
+# &&), cd / && echo a > y.log, cd / then a line end, cd / && (echo a >
+# y.log), and cd - && cd / && echo a > y.log (denied) — against the
+# directory before a cd joined by ; whose target is no directory —
+# cd nonexist/a/b/c; echo a > ../../../../y.log and cd /nonexistent-dir;
+# echo a > ../../y.log (denied), and 6500 such cd commands to distinct
+# paths, then a > to /etc (denied, timed) — and against the input's
 # cwd or not at all — (cd /; echo a) > y.log, cd / | cat > y.log, and
 # cd / & echo a > y.log (allowed), and cd "$D", cd / ||, cd -, cd with no
-# word, cd / x, cd /*/, and cd ~, each then a relative target that the
-# input's cwd would deny or the cd's word would place outside (allowed, the
-# directory unknown); gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
+# word, cd / x, cd /*/, cd ~, and cd / && false ||, each then a relative
+# target that the input's cwd would deny or the cd's word would place
+# outside (allowed, the directory unknown); gh issue view 1, sudo gh issue view 1, git -C . fetch, git push,
 # git pull, git ls-remote origin, git remote update, git -c x.y=z push,
 # git --no-pager fetch, git --git-dir=.git fetch, git -P push,
 # git --git-dir .git fetch, git --no-optional-locks fetch, and a git clone
@@ -632,11 +639,24 @@ run_fixtures() {
     # reading. The self-test's cd-tracking mutant must turn the first three
     # and CD_UNKNOWN_LABELS red.
     fx "$hook" "$CD_ABS_LABEL" allow 1 "$rr" Bash "$FX_REPO/sub" "cd $FX_REPO/sub/x && echo a > ../../y.log"
-    fx "$hook" "$CD_REL_LABEL" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd x; echo a > ../../y.log'
+    # A cd joined by ; moves the directory only to an existing directory:
+    # b/ exists under the temporary real/a/, the roots real/ alone.
+    fx "$hook" "$CD_REL_LABEL" allow 1 "$WORK/real" Bash "$WORK/real/a" 'cd b; echo a > ../../y.log'
+    fx "$hook" "mkdir -p x && cd x && a relative >, read against x with no existence test" allow 1 "$rr" Bash "$FX_REPO" 'mkdir -p x && cd x && echo a > ../y.log'
     fx_deny "$hook" "$CD_ROOT_LABEL" "$rr" Bash "$FX_REPO/sub" 'cd / && echo a > y.log'
     fx_deny "$hook" "cd / then a line end, a relative > read against /" "$rr" Bash "$FX_REPO/sub" $'cd /\necho a > y.log'
     fx_deny "$hook" "cd / && a subshell holding a relative >, read against /" "$rr" Bash "$FX_REPO/sub" 'cd / && (echo a > y.log)'
     fx_deny "$hook" "cd - leaves the directory unknown, a later cd / sets it" "$rr" Bash "$FX_REPO/sub" 'cd - && cd / && echo a > y.log'
+    # A cd joined by ; to a path that is no directory leaves the directory
+    # where it was, as bash stays after a cd that fails.
+    fx_deny "$hook" "cd to a relative path that does not exist; a relative > read against the directory before it" "$rr" Bash "$FX_REPO/sub" 'cd nonexist/a/b/c; echo a > ../../../../y.log'
+    fx_deny "$hook" "cd to an absolute path that does not exist; a relative > read against the directory before it" "$rr" Bash "$FX_REPO/sub" 'cd /nonexistent-dir; echo a > ../../y.log'
+    # 6500 cd commands joined by ;, each to a distinct path that does not
+    # exist (about 64 KB), then a > to /etc, decided in under half the
+    # hook's timeout: each path's directory test forks a shell, and with no
+    # cap on the tests this took about 13 seconds.
+    t=$(awk 'BEGIN { for (i = 0; i < 6500; i++) printf "cd a%d; ", i }')
+    fx_timed "$hook" "6500 cd commands to distinct paths that do not exist, then a > to /etc, decided in time" 2.5 "$t echo a > /etc/x" "redirects output outside" "$rr"
     # A cd inside a subshell, before a |, or before a lone & moves nothing
     # for the redirections after it.
     fx "$hook" "(cd /; echo a) > y.log, read against the input's cwd" allow 1 "$rr" Bash "$FX_REPO/sub" '(cd /; echo a) > y.log'
@@ -651,6 +671,9 @@ run_fixtures() {
     fx "$hook" "cd with two words leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / x && echo a > ../../y.log'
     fx "$hook" "cd to a glob leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd /*/ && echo a > y.log'
     fx "$hook" "cd ~ leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd ~ && echo a > ../../../y.log'
+    # A || later in the list leaves the directory unknown: the command after
+    # it runs when the cd failed, too.
+    fx "$hook" "cd / && false || leaves the directory unknown" allow 1 "$rr" Bash "$FX_REPO/sub" 'cd / && false || echo a > y.log'
     # 8000 redirections to a relative target in the repository (about
     # 24 KB, under the cap, so it is scanned), then one to /etc, decided in
     # under half the hook's timeout.

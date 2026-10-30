@@ -62,13 +62,17 @@
 #       with . and .. collapsed as written. The tracked directory starts as
 #       the input's cwd; a top-level simple command cd <word>, its word one
 #       literal path (no $, backtick, glob character, or ~), joined to what
-#       follows by && or ; (a line end counts as ;), moves it, resolved
-#       against the current one, for the redirections after it, a subshell
-#       after it included, and an absolute word moves it even when the
-#       current one is unknown; a cd with no word, cd -, a word that opens
-#       with -, more than one word, or a word that is no literal path, and a
-#       cd joined by ||, leave it unknown, and a cd before a | or a lone &
-#       moves nothing (bash runs it in a subshell). Not judged: a relative
+#       follows by &&, or by ; (a line end counts as ;) when its target is
+#       an existing directory as the hook runs, moves it, resolved against
+#       the current one, for the redirections after it, a subshell after it
+#       included, and an absolute word moves it even when the current one is
+#       unknown; a cd joined by ; whose target is no directory, or past the
+#       200 directory tests one call gets, leaves it where it was, as bash
+#       stays after a cd that fails; a cd with no word, cd -, a word that
+#       opens with -, more than one word, or a word that is no literal path,
+#       and a cd joined by ||, leave it unknown, and so does a || later in
+#       the same list after a cd that moved it at a &&; and a cd before a |
+#       or a lone & moves nothing (bash runs it in a subshell). Not judged: a relative
 #       target while the directory is unknown, a target holding any other
 #       expansion (a ~ naming another user too), a command substitution, a
 #       glob or a brace, or single-quoted text with a leading ~ or a $ in it
@@ -146,7 +150,8 @@
 # writes); a redirection whose relative target follows a cd inside a
 # subshell or a pipeline, a cd after a keyword or a { (then cd, { cd), or
 # a pushd, read against the directory before it, or follows a cd whose
-# target is not a literal or a cd joined by ||, not judged; remote git
+# target is not a literal, a cd joined by ||, or a || after a cd in its
+# list, not judged; remote git
 # through git lfs,
 # git submodule update --remote, or a git alias; also rm reached through a
 # variable or an alias, or spelled through the escapes of $'...'
@@ -233,7 +238,7 @@ END { v = jstr(buf, key); if (v == "\001") exit 3; printf "%s", v }
 # holds the single quote.
 RM_AWK=$JSON_AWK'
 function flush() { if (inw) { nw++; w[nw] = cur; wq[nw] = cq; wd[nw] = cd }; cur = ""; inw = 0; cq = 0; cd = 0 }
-function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; if (sp == 0 && nw > base) cdword(); nw = base }
+function endcmd() { flush(); if (nw > base && found == "") { check(); redir() }; if (sp == 0 && nw > base) { cmdn = 1; cdword() }; nw = base }
 # cdword() runs at the end of each top-level simple command and sets pend:
 # "\001" when the command is no cd; otherwise the directory the cd moves
 # to, or "" when the hook cannot read its target as one literal path (no
@@ -254,14 +259,48 @@ function cdword(   a) {
   else if (wdir ~ /^\//) pend = collapse(wdir "/" a)
 }
 # cdsep(s): s is the separator after a top-level command and the character
-# after it. A pending cd moves the tracked directory, wdir, after && or ;
-# (a line end is passed as ;), leaves it unknown ("") after ||, and moves
-# nothing before a | or a lone &, which run the cd in a subshell.
-function cdsep(s) {
-  if (pend == "\001") return
-  if (s == "&&" || substr(s, 1, 1) == ";") wdir = pend
-  else if (s == "||") wdir = ""
+# after it. A pending cd moves the tracked directory, wdir, after &&; after
+# ; (a line end is passed as ;) it moves it only when its target is an
+# existing directory (isdir), and otherwise wdir stays where it was, since
+# bash carries on after a cd that failed and the old directory then holds;
+# after || it leaves wdir unknown (""), and before a | or a lone & it moves
+# nothing, since bash runs the cd in a subshell there. A || later in the
+# same list, after a cd that moved wdir at a &&, leaves wdir unknown too
+# (lcd), since the command after it also runs when that cd failed; the
+# list ends at a ; or a lone &. A line end with no command since the last
+# separator (after &&, ||, or |, where bash reads on) ends nothing (cmdn).
+# Why the test only after ;: a cd that fails before && stops the commands
+# joined to it, while one before ; does not.
+function cdsep(s,   k) {
+  if (s == "&&") k = "a"
+  else if (s == "||") k = "o"
+  else if (substr(s, 1, 1) == "|") k = "p"
+  else if (substr(s, 1, 1) == ";") k = "e"
+  else k = "b"
+  if (k == "e" && !cmdn) return
+  cmdn = 0
+  if (pend != "\001") {
+    if (k == "a") { wdir = pend; lcd = 1 }
+    else if (k == "e") { if (pend == "" || pend == wdir || isdir(pend)) wdir = pend }
+    else if (k == "o") wdir = ""
+  }
+  if (k == "o" && lcd) wdir = ""
+  if (k == "e" || k == "b") lcd = 0
   pend = "\001"
+}
+# isdir(p): whether the absolute path p is an existing directory when the
+# hook runs, by test -d in a shell, each path tested once. Past 200 tests a
+# path counts as no directory, which keeps wdir where it was. Why a cap:
+# each test forks a shell, about 2 ms apiece under the awk macOS ships, and
+# 64 KB of cd commands to distinct paths would outlast the timeout of the
+# hook, where a run denies nothing.
+function isdir(p,   i, ch, q) {
+  if (p in dseen) return dseen[p]
+  if (ntest >= 200) return 0
+  ntest++; q = sq
+  for (i = 1; i <= length(p); i++) { ch = substr(p, i, 1); q = q ((ch == sq) ? sq "\\" sq sq : ch) }
+  dseen[p] = (system("test -d " q sq) == 0)
+  return dseen[p]
 }
 # bname splits on / rather than sub(/.*\//, ...): the awk macOS ships
 # retries that regex from every position of a word with no slash, which
@@ -368,6 +407,7 @@ function gitremote(i,   j, a, s) {
 # enclosing words out and back made a command of many $( ) take tens of
 # seconds at the length cap.
 function push(ret, cl) {
+  if (sp == 0) cmdn = 1
   sp++; sret[sp] = ret; scl[sp] = cl; sbase[sp] = base
   scur[sp] = cur; sinw[sp] = inw; scq[sp] = cq; scd[sp] = cd
   base = nw; cur = ""; inw = 0; cq = 0; cd = 0; st = "N"
@@ -508,7 +548,7 @@ function heredocs(c, i,   m, k, j) {
 }
 function scan(c,   n, i, ch, nx) {
   lines(c)
-  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1
+  n = length(c); i = 1; st = "N"; sp = 0; base = 0; nw = 0; cur = ""; inw = 0; cq = 0; cd = 0; nh = 0; ltgt = -1; cmdn = 0; lcd = 0; ntest = 0
   while (i <= n && found == "") {
     ch = substr(c, i, 1); nx = substr(c, i + 1, 1)
     if (st == "S") { if (ch == sq) st = "N"; else cur = cur ch; i++; continue }
@@ -556,7 +596,9 @@ function scan(c,   n, i, ch, nx) {
     # pairs take over 3 seconds, and a quoted or escaped < or > ("a>"|rm)
     # is no redirection, so the | after it still ends the command.
     if ((ch == "&" || ch == "|") && (nx == ">" || ltgt == i - 1)) { cur = cur ch; inw = 1; i++; continue }
-    if (ch == ";" || ch == "&" || ch == "|") { endcmd(); if (sp == 0) cdsep(ch nx); i++; continue }
+    # && and || are read as one separator, and so is |&, so that their
+    # second character is not read as a lone & or a |.
+    if (ch == ";" || ch == "&" || ch == "|") { endcmd(); if (sp == 0) cdsep(ch nx); i += (ch nx == "&&" || ch nx == "||" || ch nx == "|&") ? 2 : 1; continue }
     if (ch == "<" || ch == ">") ltgt = i
     # An unquoted > clears the quote flags of the word, so they describe the
     # text after the last > of the word, its target: quoted text before the
