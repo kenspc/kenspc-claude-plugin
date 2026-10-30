@@ -353,10 +353,11 @@ last.
     § The message protocol says the answer's first line repeats the tag of
     the question's first line as written, whatever it is.
   - § 3: after "No resource the brief does not name", one sentence: a
-    package, a tool, or a browser build the work needs that the machine and
-    the project's lockfile do not already provide is asked for, and
-    `<main name>` fetches it and answers with a local path; this is a route,
-    not a new rail. Phase 2 § How the main session rules gains how the main
+    package the project's lockfile or the spec already names, or a tool or
+    a browser build the work needs, that the machine does not hold is asked
+    for, and `<main name>` fetches it and answers with a local path; this
+    is a route, not a new rail. A package neither names is a new
+    dependency, which stays stop condition 7 (a). Phase 2 § How the main session rules gains how the main
     session answers it: fetch it, check it against the registry's integrity
     hash where the registry publishes one, place it in the workspace, and
     answer with its path.
@@ -386,13 +387,14 @@ them. The skill-text changes are
 held by the acceptance cases below, run as nested headless sessions on
 seeds, and by the reviewers' reading. The stdin change, which every later
 launch depends on, was probed before this plan (§ The stdin probe) and is
-exercised live by every worker of acceptance cases A2 and A3, which the
-worktree's driver launches.
+exercised live by every worker of acceptance case A3, which the nested
+main session launches through its own copy of HEAD's driver (A2 stops
+before any worker starts), and by A5's session.
 
 ## Risks and Mitigations
 
 - **The stdin change breaks every launch.** Mitigation: the probe; both
-  drivers' self-tests; A2 and A3 launch real workers through the changed
+  drivers' self-tests; A3 and A5 launch real sessions through the changed
   driver. The main session's own launches in this batch use the installed
   4.14.1 driver copy, so a broken driver cannot stop the batch itself.
 - **A caller parses the extractor's output and trips on the new line.**
@@ -478,8 +480,8 @@ in Discover), and the stdin question was settled by the probe.
 - Zero diff: plugins/kenspc/agents/, plugins/kenspc/shared/, plugins/kenspc/commands/, plugins/kenspc/references/, plugins/kenspc/hooks/hooks.json, plugins/kenspc/skills/task-review/, plugins/kenspc/skills/task-implement/, plugins/kenspc/skills/generate-brief/, plugins/kenspc/skills/generate-task/, plugins/kenspc/skills/diagnose-bug/, plugins/kenspc/skills/prototype/, plugins/kenspc/skills/retro/, plugins/kenspc/skills/init-project/, plugins/kenspc/skills/generate-guide/, plugins/kenspc/skills/autopilot/scripts/suite-slots.sh, plugins/kenspc/skills/autopilot/scripts/temp-candidates.sh
 - Acceptance:
   - A1 (guards): `bash scripts/check-all.sh`, `bash scripts/check-all.sh --self-test`, `bash plugins/kenspc/skills/autopilot/scripts/run.sh --self-test`, and `pwsh -NoProfile -File plugins/kenspc/skills/autopilot/scripts/run.ps1 --self-test` at the batch's HEAD — PASS: every command exits 0, the two drivers print `self-test passed`, and the self-test counts equal `docs/release-checklist.md`'s
-  - A2 (the span-led question, a session that cannot ask): a nested repo-mode autopilot, headless, with `--plugin-dir` to the worktree's plugin, on a one-task seed whose spec's `Acceptance:` holds one entry: the code span `true`, then the words `from the seed's root`, then its PASS criterion — PASS: the run ends before any worker starts (no `start` line in its timeline), its final message names the entry and the words after the span, and its state file records the stop
-  - A3 (a description case and a release check): a nested repo-mode autopilot, headless, as A2, on a one-task seed with `Standalone review: off`, `Walk: off`, `Acceptance:` holding one command and one description case whose text holds A4's marker word, and `Release checks:` holding one check, the code span `git log -1 --format=%s | grep -q 'remove batch'` with the criterion exit 0 — PASS: S4 runs the description case without a question to the main session and replies with the commands it ran and their exit codes; S6 replies with the release check's file and exit 0; the user report lists the release check with its exit code
+  - A2 (the span-led question, a session that cannot ask): a nested repo-mode autopilot, headless, launched with `AUTOPILOT_PLUGIN_DIR` the plugin directory, so it runs HEAD's skill and copies HEAD's driver, on a one-task seed whose spec's `Acceptance:` holds one entry: the code span `true`, then the words `from the seed's root`, then its PASS criterion — PASS: the run ends before any worker starts (no `start` line in its timeline), its final message names the entry and the words after the span, and its state file records the stop
+  - A3 (a description case and a release check): a nested repo-mode autopilot, headless, as A2, on a one-task seed with `Standalone review: off`, `Walk: off`, `Acceptance:` holding one command and one description case whose text holds A4's marker word, and `Release checks:` holding one check, the code span `git log --format=%s | grep -q 'remove batch'` (the commit found by its subject, as Step 5's writing rule asks) with the criterion exit 0 — PASS: S4 runs the description case without a question to the main session and replies with the commands it ran and their exit codes; S6 replies with the release check's file and exit 0; the user report lists the release check with its exit code
   - A4 (no prompt on the command line): during A3, while the nested run's S4 runs, `ps -axo args` grepped in the bracket form (`grep -c '[M]ARKER'`) for a marker word that only A3's description case text holds — text the nested S4's task block copies into its prompt as written, and that the nested autopilot's own launch prompt does not hold — PASS: the count is 0, and the same grep for the nested S4's session id, the positive control, counts at least 1
   - A5 (the hook live): a session started through HEAD's `plugins/kenspc/skills/autopilot/scripts/run.sh` (not the batch's driver copy, which is the installed version's), with `AUTOPILOT_PLUGIN_DIR` the plugin directory and `AUTOPILOT_WORKSPACE` the workspace, its cwd a throwaway seed one level under the workspace, `<workspace>/<batch>-a5/`, whose prompt runs `mkdir -p <workspace>/a5/x && cd <workspace>/a5/x && echo a > ../../a5.log` — a target that, read against the seed's cwd, lies outside every root — and then `cd / && echo b > a5-denied.log` — PASS: the first command runs and `<workspace>/a5.log` holds `a`; the second is denied with `autopilot rails:` in its error, and neither `/a5-denied.log` nor `<workspace>/<batch>-a5/a5-denied.log` exists
 - Release preparation: default
