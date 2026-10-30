@@ -9,6 +9,98 @@
 > authoritative source, see git log between commits `871c7e3` (initial,
 > 2026-03-29) and `7328cec` (v1.5.0 docs, 2026-05-04).
 
+## 4.15.0 — unreleased
+
+The autopilot reads its acceptance commands more carefully, gains release
+checks, and passes each worker its prompt on stdin; the worker rules gain
+four sentences batches had asked for. An `Acceptance:` entry that opens
+with a code span and has words after it was extracted as a description
+with no warning in five batches, and two batches then stopped to ask how
+to run one; the start now asks about such an entry, and S4 runs a
+description as its text describes. A `Release checks:` field holds checks
+S6 runs after its last commit. A `Zero diff:` path written with a leading
+`!` is left out of the comparison. A prompt passed as an argument showed
+in `ps` and `pgrep -f`, whose patterns then matched the workers; it now
+arrives on stdin. The rails hook denied redirections after
+`cd <literal> && …` in four batches, reading the relative target against
+the call's working directory; it now follows a literal `cd`. Roadmap
+items 42, 46, 48, and 49.
+
+### Added
+
+- autopilot: a `Release checks:` field of the `## Autopilot` section, in
+  `Acceptance:`'s grammar, each check one code span. The main session
+  extracts it at the start, in either mode, into
+  `_prompts/<batch>-release-cmds/` (a description there is the settings
+  stop); both S6 blocks extract it again after the last commit, compare
+  the files, run each check from the repository root, and reply with each
+  exit code. The user report lists each check with its exit code, names a
+  failed one in its first lines, and no S5 runs for it.
+- autopilot: `extract-acceptance.sh <spec> <out dir> [<field>]` takes
+  `Acceptance` (the default) or `Release checks` as its third argument,
+  and prints a second line, `span-led: none` or `span-led: <nn>, …`, naming
+  each case whose text opens with a code span. Exit codes are unchanged:
+  an exit other than 0 stops every caller, and a span-led entry is a
+  question, not a malformed field.
+- autopilot: Phase 0 asks about a span-led `Acceptance:` entry before any
+  worker launches — stop to fix the spec, or run the entries as
+  description cases, recorded in the state file. A session that cannot
+  ask stops before the first launch, naming each entry and the words after
+  its span. The stops stated at their own steps count eight.
+- autopilot: a `Zero diff:` path written with a leading `!` is an
+  exclusion. `zero-diff.sh` passes each path as `:(literal)<path>` and
+  each exclusion as `:(exclude,literal)<path>` (git 1.9 or later), prints
+  `compared: <n> paths, <m> excluded`, and refuses a list of exclusions
+  only and a bare `!` (exit 2). The zero-diff check holds both counts to the field's.
+  `check-autopilot-scripts.sh` gains fixtures for the extractor's field
+  argument and `span-led:` line and for the exclusions, and four self-test
+  mutants (fifteen in all).
+- autopilot: "Writing a check", three rules after the label table: a
+  command is one code span alone before ` — PASS: `; a check over the
+  batch's added lines excludes `docs/plans/` and `docs/tasks/`; a check
+  finds a commit by its subject, never by its position.
+
+### Changed
+
+- autopilot: S4 runs a `<nn>.case` as its text describes, in the
+  acceptance session, and replies with each command run for it and PASS or
+  FAIL against its criterion; `<shell> <file>` is the form for a `.cmd`
+  only.
+- autopilot: `run.sh` and `run.ps1` pass the prompt on the worker's stdin,
+  the prompt file byte for byte, and in no argument; a relative prompt
+  path is resolved before the change to `<cwd>`. `run.ps1`'s inner command
+  reads the file's bytes and pipes them to the worker, and the script now
+  requires PowerShell 7.4 (`#Requires -Version 7.4`), since piping raw
+  bytes to a native program is standard only from 7.4 and
+  `Start-Process -RedirectStandardInput` adds a line end to the file. Each
+  driver's self-test gains a case whose stub records its stdin and argv,
+  on a launch given a relative prompt path and on a resume.
+- autopilot preamble: a question's first line carries the worker's own
+  tag, filled in at the launch, never a topic label, and the answer
+  repeats the tag of the question's first line as written; a package the
+  lockfile or the spec names, or a tool or browser build the work needs,
+  is asked for and fetched by the main session, checked against the
+  registry's integrity hash and answered with a path in the workspace,
+  while a package neither names stays a new dependency; the rails written
+  into a subagent prompt are the full text, a summary with a path not
+  meeting the rule; S4w names each screenshot `<batch>-walk-…` and moves it
+  by its exact name, never by a glob.
+- generate-plan: the Autopilot element's pre-print check counts four
+  things: every `Acceptance:` and `Release checks:` sub-bullet holds
+  ` — PASS: `, and a sub-bullet opening with a code span has nothing
+  between the span and ` — PASS: `.
+
+### Fixed
+
+- The autopilot worker rails hook resolves a redirection's relative target
+  against the directory a top-level `cd <literal path>` joined by `&&`,
+  `;`, or a line end moved it to, a subshell after it included. A `cd` it
+  cannot read as one literal path, or one joined by `||`, leaves the
+  directory unknown and the target unjudged; a `cd` inside a subshell or
+  before a `|` or a lone `&` moves nothing. `check-autopilot-rails-hook.sh`
+  gains the cd fixtures and a tenth hook-copy mutant, the cd tracking
+  removed, which must turn each fixture the reading changes red.
+
 ## 4.14.1 — 2026-10-26
 
 The skills that talk with the user no longer fix the reply language to the

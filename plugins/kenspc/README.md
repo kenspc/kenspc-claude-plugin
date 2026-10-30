@@ -16,7 +16,7 @@ window and dispatches agents, far more than any request should start in passing.
 | init-project | Sets a project up for the kenspc chain in one run: an empty directory (after `git init`, first branch `main`), a directory of files once you confirm it is the project, a new app inside another repository (its `AGENTS.md` and `CLAUDE.md` pair only, and its stack's plugins on your yes), or an existing repository, where it writes only what is missing. Interviews you in five skippable rounds — project; shape and stack; UI; delivery; collaboration — reading the commands from the files rather than asking; offers to scaffold each app with its stack's official generator and, with no remote, to create a private GitHub repository. Offers to turn on the Claude Code plugins the stacks need — each language's LSP plugin, and `microsoft-docs` for .NET or Azure — in the project's `.claude/settings.json`, naming any language server missing from your PATH. Writes `AGENTS.md` as the index (commands, hard rules including two safety rules, a Documents table, workflow), a `CLAUDE.md` that imports it, and topic documents under `docs/`, marking what you did not answer `TBD(init): …`; runs its checks, asks you to confirm the file list, and commits. A rerun fills only the `TBD(init):` markers you answer. See [Project setup](#project-setup). No review phase: its mechanical checks and your confirmation of the file list are the gate. |
 | generate-brief | Two-phase requirement brief generation: structured discovery conversation against the shared discovery framework (five dimensions, four input clarity levels), then writes a shareable brief to `docs/briefs/`. The brief always carries an Open Questions section: each question the discussion could not settle, marked `open` or `needs prototype` (with `Settled by:`, the result that would settle it), or `none` when nothing is open; the next-step suggestion names `/kenspc-prototype` for each `needs prototype` entry before `/kenspc-plan`. No review phase — brief is a discovery artifact, not a verifiable spec; review happens downstream when generate-plan consumes the brief. |
 | prototype | Answers one open question from a brief with a throwaway prototype — logic, UI, or a feature slice. Before the prototype's first file is written, sends its frame as a message of its own — the question, the result that settles it, the kind, the location, and the resources, among them any tracked file an in-app prototype modifies — then builds the smallest thing that settles it (under `prototypes/<slug>/` by default), runs it, and commits it (`chore: add prototype <slug>`); writes the answer, the evidence, and the commit hash into the brief's entry; then removes the prototype in the next commit (`chore: remove prototype <slug>`). A location conflict, a connection your development configuration does not name, a new table or column on the development database, an in-app UI prototype's location and uncommitted files, an entry that already holds an answer, named or taken when none is named (prototype it again?), and a named entry whose status word the skill does not recognize (prototype it, or stop) are each asked about; for either entry, a "stop" or a "no" leaves the brief unchanged, and a session that cannot ask stops the same way, its last message opening with the frame. When the answer is your judgment (how a UI reads), the skill shows you the prototype after the add commit and waits for your verdict; a session that cannot ask commits and removes it and leaves the entry `needs prototype`, with what to look at and how. No review phase: the prototype is discarded, and its answer is reviewed where a plan uses it. |
-| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. The draft lives in a file, `<name>.draft.md` beside where the plan goes, from its first print: every print reads that file in full, a revision edits it, and approval renames it to the plan, so the written plan is the approved text by construction; a change asked for at approval gets the full draft printed again, to approve. In a session that cannot ask, the run stops at the draft, printed in full, with nothing but the draft file written, no review, and no commit, until a later reply approves it; a run that ends without approval names the draft file as yours to keep or delete. Asked for a plan to run under `/kenspc-autopilot`, it ends the plan with an `## Autopilot` section written to the autopilot's grammar, read from that skill by path, and checks every label, `Budget:` as exactly `USD <n>`, and every `Acceptance:` case for ` — PASS: ` before the print. |
+| generate-plan | Three-phase plan document generation: collaborative discovery (uses shared discovery framework, detects briefs as input; on a brief with a `needs prototype` Open Questions entry, first asks whether to prototype it — ending the run with a `/kenspc-prototype` line — or carry it into the plan's Open Questions), drafting with self-challenge, and automated verification via review agent across four review angles (feasibility, completeness, consistency, clarity). Every plan carries a Documentation impact section — the durable documents its steps make stale, or `N/A — <reason>` — which the completeness angle checks. The draft lives in a file, `<name>.draft.md` beside where the plan goes, from its first print: every print reads that file in full, a revision edits it, and approval renames it to the plan, so the written plan is the approved text by construction; a change asked for at approval gets the full draft printed again, to approve. In a session that cannot ask, the run stops at the draft, printed in full, with nothing but the draft file written, no review, and no commit, until a later reply approves it; a run that ends without approval names the draft file as yours to keep or delete. Asked for a plan to run under `/kenspc-autopilot`, it ends the plan with an `## Autopilot` section written to the autopilot's grammar, read from that skill by path, and checks every label, `Budget:` as exactly `USD <n>`, every `Acceptance:` and `Release checks:` sub-bullet for ` — PASS: `, and that a sub-bullet opening with a code span has nothing between the span and ` — PASS: ` before the print. |
 | generate-task | Decomposes a plan document into fine-grained executable tasks by reading actual code, written in the plan's language. When the plan's Documentation impact names documents, appends a Doc-sync task that depends on every other task. Confirms decomposition with user, then self-reviews via review agent across three review angles (completeness including Doc-sync coverage, execution order, consistency with the project's instruction files). The task document's Context carries ``Related plan: `<plan path>` ``, the plan's path relative to the repository root and the label in English whatever the document's language, from which the review skills' Merge danger section reads the plan's Risks. |
 | diagnose-bug | Reproduce-first diagnosis of a bug you have observed. Reproduces it with a failing test, committed before any diagnosis, or records the manual steps when no failing-capable test can be written; finds the root cause through a hypothesis loop (three to five hypotheses, each verified, when the reproduction does not show the cause); then writes a task document for task-implement — a fix task, a regression-test task for the adjacent cases, and a Doc-sync task when durable documents are affected. A fix that needs a new dependency, an API contract change, a database schema change, or a configuration change gets a brief for `/kenspc-plan` instead. No review phase: you confirm the task list before it is written. |
 | task-implement | Automated batch task implementation from a task document. Validates input is a task document (not a plan). Confirms scope with user before starting. Each task is built, tested, committed, and marked complete, written against what the five reviewers will check (`shared/review-bar.md`), and its Implementation notes carry a `Test map:` naming the test that fails when each branch, guard, limit, stated rule, or decided behavior the task adds breaks, or why none can; a task whose `Depends on` line names a task that is not DONE is marked BLOCKED instead (dependency gate). A Doc-sync task promotes earlier tasks' decisions into the documents it lists; a decision none of them fits is reported under Decisions needing a home with a suggested destination. A document with more than 12 incomplete tasks is implemented in slices of 12 — one batch confirmation, one implementer dispatch per slice, and one merged summary. Automatically runs task-review on completion with a consolidated final report. A task document with no TODO or IN PROGRESS task gets the counts of its DONE and BLOCKED tasks and a `/kenspc-task-review <path>` line for reviewing the finished work — with a BLOCKED task, also that it runs again only once its Status is set back to TODO — and nothing else runs. The final report carries a `Merge danger` section between the verdict and the next steps, under every verdict, BLOCKED included: over the task document's history, from the commit that added it to HEAD, which changes cannot be undone in one step and how far a failure would reach, each with its `file:line` evidence (see [Recommended Workflow](#recommended-workflow)). |
@@ -752,7 +752,12 @@ The batch name is the argument file's base name without its extension.
 When the session was started otherwise, the run uses the name `ListAgents`
 prints on its first line and records it. Bypass permissions and accepted
 inbound messages are what let a worker's question reach the main session
-without a prompt to approve it.
+without a prompt to approve it. A worker's question opens
+`question <tag>:` with the worker's own tag, filled into its prompt at the
+launch, and the answer opens `answer <tag>:` with the tag of the
+question's first line as written, whatever it is (since 4.15.0): workers
+that opened questions under topic labels got their answers under another
+tag, matched only by content.
 
 When the launch line carries no `crossSessionInbound` accept, the run
 reads the value from the settings files Claude Code reads it from — the
@@ -798,7 +803,7 @@ later run or not. A known label written with a note,
 `Acceptance (in the order listed, …):` becomes a `Run notes:` line in the
 acceptance session's prompt, and any other field's note is named on the
 line after the settings line; an unknown label with a note is still
-ignored and named. The twenty-one labels and their defaults:
+ignored and named. The twenty-two labels and their defaults:
 
 - `Baseline:` a commit (a SHA, or `HEAD`) — HEAD at the start of the run
 - `Mode:` `repo` or `plugin` — detected from the layout (a
@@ -810,7 +815,11 @@ ignored and named. The twenty-one labels and their defaults:
 - `Budget:` `USD <n>` — `USD 200`
 - `Caps:` `<n> sessions, <m> resumes` — `16 sessions, 8 resumes`
 - `Allowed files:` paths, one per line or comma-separated — empty
-- `Zero diff:` paths the batch promises not to touch — empty, no check
+- `Zero diff:` paths the batch promises not to touch — empty, no check.
+  Since 4.15.0 a path written with a leading `!` is an exclusion:
+  `apps/web/src/, !apps/web/src/page.test.tsx` compares the directory but
+  that file. At least one path has no `!`, and a path whose own name
+  begins with `!` cannot be listed
 - `Byte-identity exceptions:` free text — empty
 - `Run facts:` sub-bullets of free text — measured facts of the machine
   that bind every worker and are not the spec's constraints, such as one
@@ -834,6 +843,19 @@ ignored and named. The twenty-one labels and their defaults:
   end of a case that may be cut — `none`
 - `Acceptance record:` a path the S4 results are written to (repo mode) —
   unset, nothing written into the repository
+- `Release checks:` (since 4.15.0) `none`, or one sub-bullet per check in
+  `Acceptance:`'s grammar, each one code span, its PASS criterion after
+  ` — PASS: ` — `none`. S6 runs them after its last commit (see Release
+  checks below); a check that is a description, not one code span, is a
+  settings stop, since S6 runs each check from its file
+
+  Writing a check (since 4.15.0): an `Acceptance:` or `Release checks:`
+  command is one code span alone before ` — PASS: `, since words after the
+  span make it a description; a check over the lines the batch added, or
+  one proving a name is gone, excludes the spec's and the task document's
+  paths (`docs/plans/`, `docs/tasks/`), since both sit in the tree until
+  S6 removes them; and a check finds a commit by its subject, never by its
+  position (`HEAD~2`), since S6 and later fixes add commits
 - `Release preparation:` `default`, `keep`, or sub-bullets of instructions
   — `default`
 - `Standalone review:` `on`, `off`, or `auto` — `auto` in `repo` mode,
@@ -935,7 +957,9 @@ under `~/Projects/_smoke/` by default, or the directory `Workspace:` names:
     _prompts/      the copied driver <batch>-run.sh and scripts <batch>-extract-acceptance.sh,
                    <batch>-zero-diff.sh, <batch>-temp-candidates.sh, and <batch>-suite-slots.sh, the <batch>-zero-diff.txt paths list, the preamble, the task
                    blocks, the assembled prompts, and in repo mode S4's <batch>-spec.md, the trial extraction's
-                   <batch>-trial-cmds/, and the extracted <batch>-s4-cmds/
+                   <batch>-trial-cmds/, and the extracted <batch>-s4-cmds/; with Release checks: naming
+                   checks, in either mode, <batch>-spec.md, <batch>-release-cmds/, and S6's
+                   <batch>-<tag>-release-recheck/
     _logs/         <tag>.json  <tag>.err  <tag>.pid  <tag>.exit  <tag>.session
                    <batch>-timeline.log  <batch>-costs.txt  <batch>-state.md  <batch>-report.md
                    <batch>-tmp-before.txt  <batch>-tmp-candidates.txt  the temp folder before and after
@@ -975,7 +999,13 @@ through `git rm`. No `git push`, `git tag`, or release. No GitHub and no
 remote git (since 4.7.0): no `gh`, and no `git fetch`, `pull`, `push`,
 `ls-remote`, `remote update`, or `clone` of a URL — the worker asks the
 main session, which gets anything the work needs from GitHub or a remote.
-No resource the brief does not name; no secrets. Nothing under `~/.claude`, by a file tool
+No resource the brief does not name; no secrets. A package the project's
+lockfile or the spec already names, or a tool or a browser build the work
+needs, that the machine does not hold is asked for (since 4.15.0): the
+main session fetches it, checks it against the registry's integrity hash
+where the registry publishes one, places it in the workspace, and answers
+with its path — a route, not a new rail; a package neither names is a new
+dependency, and so a stop. Nothing under `~/.claude`, by a file tool
 or a shell command — a memory note included: a lesson worth keeping goes
 under `## Lessons for the main session` in the worker's final message,
 which the main session records in the state file and on the reviewer
@@ -1003,7 +1033,9 @@ since `env` cut at the `=` still prints the further lines of a multi-line
 value. A worker's subagents
 never see its prompt, so the rails tell the worker to write them into
 every subagent prompt it composes and into the `CUSTOM_INSTRUCTIONS` of the agent
-dispatches its skills make. One of those rails (since 4.9.0) says how a
+dispatches its skills make — in full: a summary with a path to the full
+text does not meet the rule (since 4.15.0), since a subagent may never
+read the file and the rails hook holds only part of the rails. One of those rails (since 4.9.0) says how a
 worker uses subagents: a worker is the top-level session of its own
 process and may dispatch subagents, each with `run_in_background: false`,
 while a subagent it dispatches dispatches none and starts no `claude -p` —
@@ -1134,6 +1166,19 @@ or an edit — when both reports list the ruling, marked
 `no clarification commit (S6 left the spec changed)`, and the change
 among what needs you. Nothing is pushed, tagged, or released.
 
+**Release checks (since 4.15.0).** When `Release checks:` names checks,
+the main session extracts them at the start, in either mode, into
+`_prompts/<batch>-release-cmds/` (a check that is a description stops
+the run there). After its last commit, S6 extracts them again, shows each
+file equal to the first extraction, runs each from the repository root at
+that commit — in `repo` mode through the suite-slot wrapper when
+`Suite limit:` lists its prefix — and replies with each check's file and
+exit code. The user report lists each release check with its exit code,
+and a failed one — an exit other than 0, or a re-extraction that did not
+match and so ran nothing — is named in the report's first lines. No S5
+runs for it: the checks test the release commits, and what to do about a
+failed one before the tag is your call.
+
 **The two gates.** The run stops for you at the decisions on a brief's
 design table (a supplied spec counts as approved) and at the tag, push, and
 release after the reports, and otherwise only on a stop condition. Phase
@@ -1206,15 +1251,24 @@ its settings to `_prompts/<batch>-spec.md` and runs the copied
 `extract-acceptance.sh` on it, which writes each `Acceptance:` case to
 `<nn>.cmd` — the text of its one code span as it stands, one padding space
 removed from each end when both are there — or, for a case description,
-`<nn>.case`, and prints `commands: <n>, cases: <m>`; the main session
-checks both counts against its own reading of the field. The script skips
+`<nn>.case`, and prints `commands: <n>, cases: <m>` and, on a second line
+(since 4.15.0), `span-led: none` or `span-led: <nn>, <nn>, …` — the cases
+whose text opens with a code span, such as
+`` `dotnet build` from the root — PASS: … ``; the main session
+checks both counts against its own reading of the field. A third
+argument, `Release checks`, reads that field instead of `Acceptance:`. The script skips
 the lines of fenced code blocks, so a script kept in one inside the
 `## Autopilot` section — a `# ` comment in column 0 included — neither
 ends the section nor reads as a field. The same extraction runs once
 before the first paid session, into `_prompts/<batch>-trial-cmds/`, as a
 start check — in brief entry after S1 commits the spec and before S2 —
 so a spec the script misreads stops the run before anything is spent,
-not at acceptance. S4 extracts the
+not at acceptance. A `span-led:` list other than `none` is a question to
+you before any worker launches (since 4.15.0), quoting each entry: stop
+to fix the spec, with nothing spent, or run the entries as description
+cases. Unattended, the run stops there instead, naming each entry and the
+words after its span, since those words may say where or how the command
+runs and the skill does not guess them. S4 extracts the
 commands again into a directory of its own, shows `cmp` equal for every
 file and one `cmp` of two differing files reporting the difference, runs
 each command itself, one after another and not through a subagent (since
@@ -1223,15 +1277,24 @@ or suites, so they share the tree and the machine's ports), as
 `<shell> <file>` in the shell your session's Bash tool
 runs, adds no redirect to a command it writes to inspect a result, and
 replies with each command's exit code and the evidence it leaves — the
-files, logs, or clones it writes, by path. A count that differs, an
+files, logs, or clones it writes, by path. A `<nn>.case` (since 4.15.0)
+is run as its text describes, in the acceptance session itself, and the
+reply names each command run for it with its exit code, and PASS or FAIL
+judged against its criterion: two batches had stopped to ask how to run a
+description case, since the session was told to run every case as
+`<shell> <file>`. A count that differs, an
 extraction that fails, or a file that differs is the stop for an
 acceptance case that cannot be run. The zero-diff check runs the copied
 `zero-diff.sh` over the `Zero diff:` paths, written one per line to
 `_prompts/<batch>-zero-diff.txt`: it passes each path to `git diff --stat`
-as its own argument, prints `compared: <n> paths` before the stat, and
-exits 0 when nothing changed and 1 when something did; the check passes on
-exit 0 with that count equal to the field's, and anything else stops the
-run naming what it saw. Each main session once wrote its own extractor
+as its own argument — `:(literal)<path>`, or `:(exclude,literal)<path>`
+for a path written with a leading `!` (since 4.15.0; git 1.9 or later) —
+prints `compared: <n> paths, <m> excluded` before the stat, and exits 0
+when nothing changed and 1 when something did; a list of exclusions only
+is exit 2, since a `git diff` with only exclusions compares everything
+else, and so is a bare `!` with no path. The check passes on exit 0 with both counts equal to the field's —
+`<n>` its paths without `!`, `<m>` those with it — and anything else stops
+the run naming what it saw. Each main session once wrote its own extractor
 and zero-diff call, and both went wrong: commands with a stray backtick at
 each end, and a check whose paths arrived as one word and compared
 nothing.
@@ -1323,7 +1386,11 @@ input or a message; checks each port with
 only the processes it started, found by their listener, showing each port
 free afterwards. It writes `walk.md` — per flow, the steps, what was
 seen, PASS or FAIL, and the screenshot paths — and moves its screenshots
-under `_logs/<batch>-walk/`. A port held by a process it did not start is
+under `_logs/<batch>-walk/`, each given a file name that begins
+`<batch>-walk-` and moved by its exact name, never by a glob (since
+4.15.0), since the Playwright MCP's output directory is shared by every
+session on the machine and a glob there once took in another walk's
+files. A port held by a process it did not start is
 a question to the main session, which rules wait (S4w re-checks every 10
 minutes, for at most 60) or skip, recorded `not walked: port <n> in use`;
 an app it cannot start is `not walked: <reason>`, and a batch with no user
@@ -1382,8 +1449,9 @@ to wait on, end that process yourself, or end the run (see Suite slots). When on
 option stays inside the contract — defer to a follow-up, leave as is — the
 main session takes it and records it instead of asking, and a ruling to
 leave a locked point as it stands and record the finding as a follow-up
-is its own, not a stop. Seven stops are stated at their own steps: a driver
-that refuses a launch, a delivery notice that the first message to a
+is its own, not a stop. Eight stops are stated at their own steps: a
+span-led `Acceptance:` entry in a session that cannot ask (since 4.15.0),
+a driver that refuses a launch, a delivery notice that the first message to a
 worker was held or refused, an artifact absent after a return, an unmarked
 acceptance case that cannot be run, the skipped-gate check failing a
 second time, a usage-limit end when the main session is headless or
@@ -1545,8 +1613,11 @@ scripts beside it, `extract-acceptance.sh`, `zero-diff.sh`,
 — a running batch keeps the text it started with even when a `plugin`-mode
 implementation edits them; it starts each
 worker with `--name <tag>`, `--settings '{"crossSessionInbound":"accept"}'`,
-`--permission-mode bypassPermissions`, `--output-format json`, a session id
-written to `<tag>.session` before the process starts, and — when the
+`--permission-mode bypassPermissions`, `--output-format json`, the prompt
+on stdin (since 4.15.0: the prompt file, byte for byte, never a terminal
+and in no argument, since a prompt passed as an argument showed in `ps`
+and `pgrep -f`, whose patterns then matched the workers themselves), a
+session id written to `<tag>.session` before the process starts, and — when the
 command exists — wrapped in `caffeinate -i`, so a macOS machine does not
 sleep under a running worker while the main session waits with no Bash
 call running. It passes `--model` when `AUTOPILOT_MODEL` is non-empty,
@@ -1587,23 +1658,27 @@ release checklist greps for the lines as they stand.
 It has the same interface, environment variables, files, timeline lines,
 and refusals, and also
 refuses a logs directory or tag holding `[`, `]`, `*`, or `?`, which
-`Start-Process` cannot redirect to. It runs under PowerShell 7.3 or later
-as
+`Start-Process` cannot redirect to. It runs under PowerShell 7.4 or later
+(7.3 or later before 4.15.0) as
 `pwsh -NoProfile -File <path>/run.ps1 <tag> <cwd> <prompt-file> [--resume <session-id>]`;
 7.0 to 7.2 drop the double quotes inside the arguments they pass to the
-worker, which would break its `--settings` JSON and its prompt.
+worker, which would break its `--settings` JSON, and piping the prompt's
+raw bytes to the native `claude` is standard only from 7.4.
 Its `pwsh -NoProfile -File <path>/run.ps1 --self-test` launches a
 `claude.ps1` stub, put first on a temporary PATH entry, through the same
 path and prints `self-test passed`. On macOS and Linux it also launches a
 native `#!/bin/sh` stub, as the installed `claude` is a native program, and
-compares the `-p` and `--settings` values that stub receives, byte for
-byte, with a prompt that holds double quotes and with the settings JSON.
+compares the `--settings` value that stub receives, byte for byte, with
+the settings JSON, and a second one's stdin, on a launch and a resume,
+with the prompt file, which holds a double quote, a backtick, a
+non-ASCII character, and a trailing newline.
 
 It starts the worker with `Start-Process pwsh`, and the inner command
 travels base64-encoded with `-EncodedCommand`, so a path that holds a space
 or a single quote arrives unchanged. On Windows the window is hidden. The
-prompt is read from the file with `Get-Content -Raw`, as `run.sh` reads it
-with `cat`. The files it writes and its `started` line end with LF, with no
+inner command reads the prompt file's bytes (`Get-Content -AsByteStream
+-Raw`) and pipes them to the worker, as `run.sh` gives it the file as its
+stdin; the launched pwsh's own stdin stays an empty file. The files it writes and its `started` line end with LF, with no
 byte-order mark, on every platform, so they read as `run.sh`'s do.
 
 The launched pwsh's own standard streams go to three more files in the
@@ -2062,7 +2137,14 @@ It runs only when you type the command.
   call, and, since 4.10.0, with `Suite limit:` set, a listed suite command
   run without the suite-slot wrapper (see Suite slots). A redirection's target is judged after a leading `~`, `$HOME`,
   `${HOME}`, `$TMPDIR`, or `${TMPDIR}` is expanded and `.` and `..` are
-  collapsed, a relative target against the call's working directory; a
+  collapsed, a relative target against the call's working directory or,
+  since 4.15.0, against the directory a top-level `cd <literal path>`
+  joined by `&&`, `;`, or a line end moved it to; a `cd` the hook cannot
+  read as one literal path (no word, `cd -`, an option, more than one
+  word, a `$`, a glob, or `~`), or one joined by `||`, leaves the directory
+  unknown, and a relative target after it is not judged, while a `cd`
+  inside a subshell or before a `|` or a lone `&` moves nothing, as bash
+  runs it in a subshell; a
   target holding any other expansion, a command substitution, or a glob,
   or single-quoted text that begins with `~` or holds a `$`, is not judged
   (other single-quoted text is literal and judged), `/dev/null`, `/dev/stdout`,
@@ -2087,8 +2169,9 @@ It runs only when you type the command.
   (`trap 'rm -rf "$d"' EXIT`), interpreter-level deletes
   (Python, Node, Perl), `git clean`, and writes through Bash other than a
   redirection (`cp`, `mv`, `tee`, an interpreter's own writes), and a
-  redirection whose relative target follows a `cd` earlier in the same
-  command, which it reads against the call's working directory; also an
+  redirection whose relative target follows a `cd` inside a subshell or
+  a pipeline, a `cd` after a keyword or a `{` (`then cd`, `{ cd`), or a
+  `pushd`, which it reads against the directory before it; also an
   `rm` reached through a variable or an alias,
   or spelled through the escapes of `$'…'` (`$'\x72m'`),
   an `rm` after a redirection written before the command name
@@ -2145,7 +2228,9 @@ It runs only when you type the command.
   check. The Playwright MCP writes screenshots only under its own output
   directory and the session's working directory, so S4w moves each into
   the workspace, never copying one; a screenshot given a relative file
-  name lands in the repository first.
+  name lands in the repository first. That output directory is shared by
+  every session on the machine, so each screenshot's name begins
+  `<batch>-walk-` and S4w moves it by that exact name, never by a glob.
 - **A role's model reaches every subagent of its worker.** The plugin's
   agents declare `model: inherit`, which resolves to the model of the
   session that dispatches them, so inside an autopilot worker it is the

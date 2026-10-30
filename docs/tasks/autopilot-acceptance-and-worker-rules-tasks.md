@@ -559,7 +559,12 @@ Plan Step 9. File: `plugins/kenspc/skills/autopilot/SKILL.md`.
 
 ### Task 10: Doc-sync
 
-**Status:** TODO
+**Status:** DONE
+
+**Implementation notes:**
+- Decisions: promoted — T-004: a failed release check counts a re-extraction that did not match as well as an exit other than 0, and a span-led `Release checks:` entry is the settings stop, not a question (plugin README § Release checks and the `Release checks:` label bullet; CHANGELOG Added); T-006: a bare `!` is refused, exit 2 (plugin README § Acceptance commands and the zero-diff check; CHANGELOG Added); T-008: a line end after a top-level `cd` counts as `;`, and a `cd` before a `|` or a lone `&` moves nothing (plugin README § Known behavior, the rails-hook bullet; CHANGELOG Fixed); T-009: the preamble's `<tag>` is filled in at the launch, as `<role>` is (plugin README § Autopilot, the question-tag sentence). Needs a home — none of Tasks 1-9's decisions; one maintainer rule from the plan's clarification 5, not a task decision, is listed in the run report's Decisions needing a home. Every other decision of Tasks 1-9 is local and stays in its task's notes.
+- Changes/tradeoffs: beyond the listed items, the plugin README's "Seven stops are stated at their own steps" became eight with the span-led stop (the skill's count, Task 2), the label count went from twenty-one to twenty-two, the workspace layout names the release-check directories, the "Writing a check" rules are summarized under the `Release checks:` label bullet, and the Known-behavior S4w bullet names the batch-unique screenshot names; roadmap item 11's other bullet (native argument passing through `claude.cmd`) now says the prompt arrives on stdin, since it named the prompt as an argument. The release-checklist counts were not changed: `bash scripts/check-all.sh --self-test` still prints `guards run: 17` and `self-tests run: 16`, the numbers it states. Roadmap items 42, 46, 48, and 49 and their renumbering are left to S6's release commit (clarification 4). The root `README.md` was not edited: it is not a listed document, and its autopilot and generate-plan rows name nothing this batch changed.
+- Test map: none (no behavior added or altered)
 
 Depends on: Task 1-9
 

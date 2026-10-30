@@ -226,9 +226,10 @@ its number.
       written before the driver returns, and the inner command's failure
       reason reaches `<tag>.err` instead.
     - Native argument passing through the `claude.cmd` shim: the worker's
-      `--settings` JSON and a prompt that holds `"` arrive unchanged. The
-      self-test compares both byte for byte only through a `#!/bin/sh`
-      stub, on macOS and Linux.
+      `--settings` JSON arrives unchanged, and the prompt piped to its
+      stdin (since 4.15.0) arrives byte for byte. The self-test compares
+      both byte for byte only through a `#!/bin/sh` stub, on macOS and
+      Linux.
     - The `run.ps1` pid's command line carries no tag, while the skill's
       leftover-pid check reads the driver's command line with the tag
       (`<batch>-run.sh <tag> …`) and takes any other as a leftover from a
@@ -245,8 +246,9 @@ its number.
       directory holding `x1` and `xm` saw `x[1m]` arrive as `x1 xm`, and
       intact where nothing matched. pwsh on Windows does not glob, and on
       macOS and Linux the skill runs `run.sh`, which passes the value
-      intact. A fix replaces the native call itself and keeps the empty
-      stdin, the two redirections, and the status that becomes `.exit`;
+      intact. A fix replaces the native call itself and keeps the prompt
+      file's bytes piped to the worker's stdin, the two redirections, and
+      the status that becomes `.exit`;
       with it, both drivers' self-tests gain a bracketed `--model` launch
       beside a decoy file, which neither has today (the batch I spec's
       clarifications on its review's deferred findings,
