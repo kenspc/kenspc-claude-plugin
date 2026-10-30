@@ -66,8 +66,8 @@ items 42, 46, 48, and 49.
 
 - autopilot: S4 runs a `<nn>.case` as its text describes, in the
   acceptance session, and replies with each command run for it and PASS or
-  FAIL against its criterion; `<shell> <file>` is the form for a `.cmd`
-  only.
+  FAIL against its criterion; `<shell> <file>` is the form for a
+  `<nn>.cmd` or `<nn>.corrected.cmd` only.
 - autopilot: `run.sh` and `run.ps1` pass the prompt on the worker's stdin,
   the prompt file byte for byte, and in no argument; a relative prompt
   path is resolved before the change to `<cwd>`. `run.ps1`'s inner command
