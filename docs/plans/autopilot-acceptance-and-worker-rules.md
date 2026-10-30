@@ -578,6 +578,23 @@ in Discover), and the stdin question was settled by the probe.
      roadmap item 48, which removed false denials of
      `cd <literal> && … > <relative>`; the hook stays a best-effort guard
      behind the preamble's rails, which still bind.
+10. (S3b; ruled by the main session) All 14 findings are fixed: a
+    `cd`'s redirection words are dropped before its word count (B1, HIGH);
+    a separator inside a compound body keeps the tracked directory (V2);
+    a `cd` to an existing directory is tracked by its physical path (a
+    symlink resolved); the missing fixtures and the run.sh CDPATH case are
+    added; both S6 release-check paragraphs keep S4's run-in-this-session
+    and no-redirect rules; Task 8's notes follow clarification 8; an
+    exported CDPATH and zsh's last pipeline element are named as known
+    misses, their modelling deferred with F3 and SG1 (clarification 9).
+11. (S3b's deferred rows; ruled by the main session) DEFER both to a
+    follow-up, listed on the reviewer report's `Follow-up candidates`
+    line: F1 (MEDIUM, code-fixer's own) — a `||` inside a compound body
+    resets the tracked directory, so `cd / && { false || echo a > y.log; }`
+    is allowed; no looser than the hook before this batch, and of the
+    same class as F3 and SG1, which need the candidate-directory design;
+    F2 (LOW) — `cd out && cd .. && …` is denied although it lands inside
+    the roots, a false deny on the safe side.
 
 ## Autopilot
 
