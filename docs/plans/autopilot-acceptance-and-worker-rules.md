@@ -170,8 +170,11 @@ one literal path — no `$`, backtick, glob character, or `~` — and which is
 joined to what follows by `&&` or `;` at the top level (not inside `( )`,
 not before a `|`) sets that directory, resolved against the current one, for
 the redirections after it, a subshell after it included, since a subshell
-inherits the directory. A `cd` whose target the hook cannot read as a
-literal, or one joined by `||`, leaves the directory unknown, and a later
+inherits the directory. An absolute word sets the directory even when the
+current one is unknown. A `cd` whose target the hook cannot read as a
+literal — `cd` with no word (the home directory), `cd -` (the previous
+directory), a word that opens with `-` (an option), or more than one
+word — or one joined by `||`, leaves the directory unknown, and a later
 relative target is then judged as today's "relative target with no absolute
 cwd" (not judged). The header's known-miss line for the case is replaced by
 the forms still missed (`cd` inside a subshell or a pipeline, `pushd`, a
@@ -203,7 +206,8 @@ last.
 - **Do:** in `scripts/extract-acceptance.sh`, the optional third argument
   selects the field (`Acceptance` or `Release checks`; any other value is
   exit 2); the label match takes the field's name, note included; the
-  second output line lists span-led cases. The header's usage and output
+  second output line lists span-led cases; the stderr reasons that name
+  `Acceptance:` today name the field read. The header's usage and output
   sections say so.
 - **Guard:** `scripts/check-autopilot-scripts.sh` gains fixtures: a
   `Release checks:` field beside an `Acceptance:` field, each extracted
@@ -217,16 +221,20 @@ last.
 
 ### Step 2: Phase 0 asks about span-led entries (depends on Step 1)
 
-- **Do:** in the autopilot skill's start checks, the trial extraction (repo
-  mode; in brief entry before S2) reads the `span-led:` line. A non-empty
-  list is a question to the user before any worker: the entries quoted, and
-  two answers — stop to fix the spec (nothing is spent), or run them as
-  descriptions, which the state file records and S4's block lists as
+- **Do:** in the autopilot skill's start checks, the `Acceptance:` trial
+  extraction (repo mode; in brief entry before S2) reads the `span-led:`
+  line. A non-empty list is a question to the user before any worker: the
+  entries quoted, and two answers — stop to fix the spec (nothing is
+  spent), or run them as descriptions, which the state file records under
+  `questions answered:`, ending `(user)`, and S4's block lists as
   description cases. The prose states, at that question: "In a session that
   cannot ask (a system reminder to work without stopping), …" the run stops
   before the first launch, naming the entries, since the words after a span
   may say where or how the command runs and the skill does not guess them.
-  The stop conditions list names the new stop.
+  Templates § The stop conditions names the new stop under "Stops stated at
+  their own steps", whose count goes from seven to eight. A span-led entry
+  under `Release checks:` is a `.case`, and so already the settings stop
+  of Step 4.
 - **Acceptance:** acceptance case A2 passes.
 
 ### Step 3: S4 runs a description case (no dependency)
@@ -281,9 +289,12 @@ last.
   document's directories), since both sit in the tree until S6 removes them;
   a check finds a commit by its subject, never by its position, since S6 and
   later fixes add commits. In generate-plan's Autopilot element, the
-  pre-print check gains a fourth item: a sub-bullet of `Acceptance:` or
-  `Release checks:` whose text opens with a code span has nothing between
-  the span and ` — PASS: `.
+  pre-print check's third item ("every `Acceptance:` sub-bullet holds
+  ` — PASS: `") covers `Release checks:` sub-bullets too, and the check
+  gains a fourth item: a sub-bullet of `Acceptance:` or `Release checks:`
+  whose text opens with a code span has nothing between the span and
+  ` — PASS: `; the item count in its sentence ("check three things")
+  follows.
 - **Acceptance:** `bash scripts/check-all.sh` exits 0; the paragraph names
   the three rules, each with its reason, and generate-plan's check names
   both fields (a reading by the reviewers).
@@ -329,7 +340,8 @@ last.
   `cd x; echo a > ../../y.log` judged from `x`; `(cd /; echo) > y.log`
   judged from the input's cwd; `cd "$D" && echo a > y.log` not judged;
   `cd x | cat > y.log` judged from the input's cwd; `cd / || echo a > y.log`
-  not judged. Self-test mutant: the `cd` tracking removed.
+  not judged; `cd - && echo a > y.log` and `cd && echo a > y.log` not
+  judged. Self-test mutant: the `cd` tracking removed.
 - **Acceptance:** the guard and its self-test exit 0; acceptance case A5
   passes.
 
@@ -368,7 +380,9 @@ last.
 ## Testing Strategy
 
 Each script change is held by its guard's fixtures and a self-test mutant
-that must turn the guard red (Steps 1, 6, 7, 8). The skill-text changes are
+that must turn the guard red (Steps 1, 6, 7, 8); each guard's header,
+which lists its fixtures and counts its self-test mutants, is updated with
+them. The skill-text changes are
 held by the acceptance cases below, run as nested headless sessions on
 seeds, and by the reviewers' reading. The stdin change, which every later
 launch depends on, was probed before this plan (§ The stdin probe) and is
@@ -396,6 +410,18 @@ worktree's driver launches.
 - **An older plugin reads a spec with `Release checks:`.** It ignores the
   unknown label and names it on the line after the settings line, so the
   checks are not run, but the user sees why.
+- **`run.ps1`'s inner pwsh does not hand its redirected stdin to the
+  native `claude`.** The driver starts a pwsh that runs `claude`, and
+  whether the native call reads the outer redirection has not been probed.
+  Mitigation: the self-test's stub records its stdin byte for byte, so a
+  lost or re-encoded prompt fails `run.ps1 --self-test` (A1) before the
+  batch ends.
+- **The installed 4.14.1 hook also fires in A5's session.** Whether a
+  `--plugin-dir` copy replaces the installed plugin of the same name for
+  its hooks, or runs beside it, has not been probed here; beside it, the
+  old hook denies A5's first command. Mitigation: before an A5 FAIL is
+  classified as a defect, the main session checks for this cause, as
+  Phase 3's corrected-case evidence asks.
 
 ## Documentation impact
 
@@ -404,22 +430,28 @@ worktree's driver launches.
   `Release checks:`, the span-led question, description cases in S4, the
   `!` form of `Zero diff:`, the prompt on stdin, the network route, the
   question-tag echo, batch-unique screenshot names, and the hook's `cd`
-  handling. Steps 2–9.
-- `README.md` — the autopilot skill's summary row, when it names the
-  `## Autopilot` fields or the hook; otherwise
-  `README.md — N/A for this document: the summary row names neither the
-  fields nor the hook` (checked in Step 10).
-- `plugins/kenspc/CHANGELOG.md` — a 4.15.0 entry under `— unreleased`:
+  handling. Steps 2–9. Also the skills table's generate-plan row, which
+  names the pre-print checks ("every `Acceptance:` case for ` — PASS: `"):
+  `Release checks:` and the span-to-PASS check. Step 5.
+- `README.md` — N/A for this document: the autopilot skill's summary row
+  ("Runs one batch unattended … two human gates") and the generate-plan row
+  name neither the `## Autopilot` fields, the hook, nor the pre-print
+  checks.
+- `plugins/kenspc/CHANGELOG.md` — a `## 4.15.0 — unreleased` entry:
   Added (`Release checks:`, the `!` exclusion, the span-led question),
   Changed (S4's description cases, the stdin prompt, the preamble's
   sentences, generate-plan's pre-print check), Fixed (the hook's `cd`).
   Every step.
 - `docs/roadmap.md` — items 42, 46, 48, and 49 leave the file at release;
   item 31's F1 stays; item 11's mention of "the empty stdin" is reworded to
-  the prompt file on stdin; the remaining field suggestions are renumbered.
-  Steps 7 and 10 (S6 at release).
-- `docs/release-checklist.md` — the guard and self-test counts. Steps 1, 6,
-  7, 8.
+  the prompt file on stdin (Step 7); the remaining field suggestions are
+  renumbered at release, with the references inside the file that follow
+  the numbers — the section intro's "Items 49–51 are workarounds" and item
+  47's "they are items 50 and 51".
+- `docs/release-checklist.md` — N/A for this document: the steps add
+  fixtures and mutants to existing guards and no guard file, so
+  `guards run: 17` and `self-tests run: 16` stay, and no step changes what
+  rows 11 and 15 describe; the new behavior is accepted by A2–A5.
 - `AGENTS.md` — N/A for this document: no convention, orchestration
   pattern, or guard set changes; the guards gain fixtures, not files.
 - `CLAUDE.md` — N/A for this document: no Claude Code-specific rule changes.
