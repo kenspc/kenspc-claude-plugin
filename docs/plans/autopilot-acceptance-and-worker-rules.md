@@ -541,6 +541,43 @@ in Discover), and the stdin question was settled by the probe.
    process's standard input (Decision 3), and PowerShell 7.3 is out of
    support. This departs from § The driver and stdin's "through its
    process start's standard input" on that evidence.
+7. (S3's review, first round; ruled by the main session) All 16 findings
+   are fixed. For the rails hook rows (E1/B3, B1, B2) the cd tracking is
+   never looser than the hook before this batch where the tracking cannot
+   be sure a `cd` ran: a literal `cd` joined by `;` or a line end moves the
+   tracked directory only when its target is an existing directory when
+   the hook runs; a `cd` inside a compound or function body, or in a
+   pipeline, moves nothing; after a `||` the directory is unknown, as
+   § The rails hook and `cd` says. Every hook edit is made on a scratch
+   copy, checked, then copied into place.
+8. (S3's review, second round; ruled by the main session) V1 (README and
+   CHANGELOG describe the tracking as it stands), F1 (a literal `cd` whose
+   run is not certain leaves the tracked directory where it was before its
+   and-or list), and F2 (at most 200 tracked `cd` commands per call, under
+   the hook's 5-second timeout) are fixed. Step 8's fixture
+   `cd / || echo a > ../../y.log` becomes denied: the `echo` runs only when
+   `cd /` failed, so in the input's cwd, where `../../y.log` lies outside
+   the root, and "allowed" there would be a write outside the roots by
+   bash's own semantics.
+9. (S3's verdict FAIL; ruled by the main session) Three cd-tracking gaps
+   remain after S3's review, each no looser than the hook before this
+   batch, which read every relative target against the input's cwd:
+   - V2 (regression-verifier, MEDIUM): a `;` or a line end inside a
+     compound body resets the tracked directory, so
+     `cd /etc && { true; echo a > passwd; }` is allowed. FIX in the next
+     review's fix round (S3b, or an S5): a separator inside a body keeps
+     the tracked directory, with deny fixtures for the `{ }`, `if`, `for`,
+     and line-end forms.
+   - F3 (code-fixer, MEDIUM) and SG1 (the security-guidance hook, flagged
+     HIGH): a `cd` after `||` (`false || cd /etc && echo a > passwd`), a
+     `cd` followed by `||`, and a `cd` inside a body
+     (`if true; then cd /etc; fi; echo a > passwd`) are judged against one
+     directory only. DEFER to a follow-up, listed on the reviewer report's
+     `Follow-up candidates` line: closing them needs a set of candidate
+     directories in place of the single tracked one, a design beyond
+     roadmap item 48, which removed false denials of
+     `cd <literal> && … > <relative>`; the hook stays a best-effort guard
+     behind the preamble's rails, which still bind.
 
 ## Autopilot
 
