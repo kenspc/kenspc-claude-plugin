@@ -495,6 +495,26 @@ before any worker starts), and by A5's session.
 None. The four design questions were ruled in Discover (§ Decisions settled
 in Discover), and the stdin question was settled by the probe.
 
+## Clarifications during implementation
+
+1. (S2, task-list confirmation; ruled by the main session) The ten tasks
+   are confirmed: Tasks 1–9 map to Steps 1–9 and Task 10 is the Doc-sync
+   task; no task lies outside the plan.
+2. (S2; ruled by the main session) Task 6 depends on Task 1 although
+   Step 6 says "no dependency": sequencing only, since both edit
+   `scripts/check-autopilot-scripts.sh`'s header and its self-test mutant
+   count. Why: it changes the order, not what Step 6 builds, and avoids a
+   count conflict in one shared file.
+3. (S2; ruled by the main session) Acceptance cases A1–A5 run at S4; each
+   task's criteria are checks the implementer can run or read, naming the
+   case that holds them later, as § Testing Strategy places them.
+4. (S2; ruled by the main session) Removing roadmap items 42, 46, 48, and
+   49 and renumbering the remaining field suggestions happen in the release
+   commit (S6), as § Documentation impact says ("at release"); the Doc-sync
+   task rewords only item 11's "the empty stdin" and carries Step 10's
+   criterion that `bash scripts/check-all.sh --self-test` counts match
+   `docs/release-checklist.md`.
+
 ## Autopilot
 
 - Mode: plugin
