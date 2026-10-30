@@ -199,11 +199,13 @@ launch() {
   # transcript before the stop.
   grep -q '[^[:space:]]' "$prompt_file" || die "empty prompt file $prompt_file"
   # The file is opened as the worker's stdin after the change to <cwd>,
-  # where a relative path would name another file.
+  # where a relative path would name another file. CDPATH is emptied for
+  # the cd, which would otherwise search an exported CDPATH, pick another
+  # directory, and echo it as a second line of the path.
   case $prompt_file in
     /*) ;;
     *)
-      pdir=$(cd "$(dirname "$prompt_file")" && pwd) || die "cannot resolve the directory of $prompt_file"
+      pdir=$(CDPATH= cd -- "$(dirname "$prompt_file")" && pwd) || die "cannot resolve the directory of $prompt_file"
       prompt_file=$pdir/$(basename "$prompt_file")
       ;;
   esac
